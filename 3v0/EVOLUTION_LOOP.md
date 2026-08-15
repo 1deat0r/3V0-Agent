@@ -992,3 +992,88 @@ unhealed until the next session's wake, which may not come for days.
   the shared profile's MEMORY.md; the clean fix is moving siblings onto their
   own profiles.
 
+## Stone 15 — per-project reviewers/daemons (built + tested + live-deployed)
+
+Since Stone 9's cwd scoping, the own-clock daemon has *skipped* sibling
+sessions (`skipped:project`), so F1NANCE/Axiom durable facts were simply lost
+(their foreground `memory` writes land in the shared profile's MEMORY.md, and
+the bridge's scoped mirror refuses to replay them into 3V0's store). The
+operator already chose **per-project stores**; this stone gives each sibling
+its own reviewer/daemon so those stores actually get written.
+
+### The design decision (verified against the code before building)
+
+- **Store-only.** `record.py`/`sync.py` *replace* the whole MEMORY.md/USER.md
+  from the store, so a sibling reviewer must never project into a sibling's
+  own profile — F1NANCE's `~/.hermes/profiles/f1nance/memories/` is F1NANCE's
+  namespace and would be clobbered. Sibling facts are written to
+  `3v0/data/<project>/memory.json` only (3V0's *sidecar record* of the
+  sibling), via a new `record.py --no-export`.
+- **Memory-only.** Siblings manage their own skills (or have none under 3V0's
+  store); 3V0 does not decommission sibling skills. The skill axis is skipped
+  (no skill store, no ACTIVE SKILLS block, skill decisions refused).
+- **Strict cwd (no fail-open).** An empty/unknown cwd is a *primary*-project
+  signal (3V0's fail-open); a sibling reviewer admits only its own repo +
+  subdirs, so a cwd-less session can't be folded into a sibling store.
+- **Per-project review log.** `3v0_reviews/<project>/reviews.jsonl` (the
+  threev0 log stays put, preserving its dedupe history), so the per-session
+  dedupe and cooldown don't collide across projects.
+
+### What was built
+
+- **`core/projects.py`** — `ProjectSpec` + `resolve_project(name, body_root,
+  profile_home, home, cwd_override)`: the registry of the three projects, their
+  store paths, cwd roots, and the `primary` / `memory_only` / `store_only`
+  properties. `THREEV0_PROJECT_CWD` redirects a sibling's repo root for
+  tests/migration.
+- **`review_session.py`** gained `--project` / `THREEV0_PROJECT` and a
+  `_resolve_project()` that (re)binds the project-scoped globals (store,
+  profile_mem, skill store, review log, cwd roots, flags, charter). The
+  `memory_only` / `store_only` flags are **authoritative over env overrides**
+  (a stray `THREEV0_SKILL_STORE` can't re-enable the skill axis). The
+  `_is_threev0_cwd` predicate became `_is_project_cwd`. `_apply_decisions`
+  refuses skill actions when memory-only and appends `--no-export` when
+  store-only; `_sync()` no-ops for store-only projects. The charter is
+  project-templated ("You are {project}'s ... reviewer").
+- **`record.py`** gained `--no-export` (persist to store, skip the profile
+  projection).
+- **`3v0/deploy/f1nance-review.service` + `3v0/deploy/axiom-review.service`**
+  — per-project own-clock daemons (same shape as `3v0-review.service`, with
+  `Environment=THREEV0_PROJECT=<name>`).
+- `.gitignore`: the store-lock rule now covers `3v0/data/**/*.lock` (sibling
+  stores live in subdirectories).
+
+### Verification
+
+- **+9 tests (160 green, was 151):** `test_projects.py` (project resolution
+  truth table, memory-only/store-only/primary flags, cwd override, unknown
+  raises) + `TestSiblingProjects` (sibling reviews its own session store-only;
+  skips a primary session; strict on empty cwd; refuses skill decisions).
+- **Live E2E (real DeepSeek):** `--latest --project f1nance` reviewed its 1
+  eligible session (consolidated the two overlapping carved facts, captured an
+  operator-environment fact); `--latest --project axiom` reviewed its 4
+  eligible sessions (2 facts superseded, an identity fact, a clean no-op, and
+  **two refusals from the temporal guard** — "fact newer than session under
+  review"). Both wrote to their own stores only; 3V0's store and F1NANCE's
+  profile MEMORY.md were untouched (verified). Both daemons deployed +
+  enabled.
+
+### Known limitation (accepted, not fixed)
+
+Sibling reviewers capture **operator-global** facts that surface in a sibling
+session (e.g. the shared Hermes `tsc` terminal-guard quirk, GitHub-auth setup)
+into the sibling's sidecar store. They're true, durable, and not lost; a future
+stone could route such facts to the primary store, but cross-store dedup isn't
+worth it now.
+
+### Still open (unchanged, explicit)
+
+- **Profile MEMORY.md sharing** — sibling `memory`-tool writes still land in
+  the shared profile's MEMORY.md; the clean fix is moving siblings onto their
+  own profiles (F1NANCE already has `~/.hermes/profiles/f1nance`; Axiom does
+  not).
+- **Sibling foreground write mirror** — the bridge's `_is_threev0_cwd` gate
+  (Stone 10) still *refuses* sibling foreground `memory`/`skill_manage` writes
+  rather than routing them to sibling stores; the review daemons are the only
+  sibling writers today.
+

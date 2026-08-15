@@ -52,6 +52,11 @@ code.
   store-first skill decisions (`skill_update` / `skill_retract` /
   `skill_absorb`) as JSON-safe results. Never destroys — supersession and
   absorb/retract terminals are recoverable via `history()`.
+- `core/projects.py` — the project registry (Stone 15): `ProjectSpec` +
+  `resolve_project()` for the three projects sharing the `3v0` profile's
+  `state.db` (3V0 primary, F1NANCE, Axiom), their per-project stores under
+  `data/<project>/`, and the `primary` / `memory_only` / `store_only`
+  properties that scope the review driver to one project's sessions.
 - `data/memory.json` — the store's source of truth (seeded from the profile).
 - `data/skills.json` — the skill store's source of truth (seeded from
   agent-created skills).
@@ -61,7 +66,8 @@ code.
 - `scripts/sync.py` — reconcile store ↔ profile (report by default, `--write`
   to converge).
 - `scripts/record.py` — record/correct (or `--retract`) a fact in the store,
-  then re-export the derived view to the profile. `--json` emits a
+  then re-export the derived view to the profile (`--no-export` skips the
+  projection for store-only sibling projects). `--json` emits a
   machine-readable result (the CLI half of the `threev0_record` tool).
 - `scripts/record_skills.py` — the skill CLI half (Stone 8): apply a
   store-first skill decision (`--action skill_update`/`skill_retract`/
@@ -91,7 +97,10 @@ code.
   transport retry/backoff, a full-capture charter (stand-alone capable), and
   a fix for a silent `_load_session` column-walk bug that read
   `last_activity_at` as `cwd` and mis-scoped every session as a sibling
-  project.
+  project. Stone 15 made it project-aware: `--project` / `THREEV0_PROJECT`
+  scope it to one project (3V0 primary, F1NANCE, Axiom), with siblings
+  store-only (no profile projection, `--no-export`) and memory-only (no skill
+  axis), strict cwd scoping, and a per-project review log.
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, registers the
@@ -101,7 +110,9 @@ code.
   and enabled in `config.yaml`; see `EVOLUTION_LOOP.md`.
 - `deploy/3v0-review.service` — systemd *user* unit (Stone 9) that supervises
   the own-clock daemon (`review_session.py --daemon`); systemd is only the
-  supervisor — the clock is 3V0's own.
+  supervisor — the clock is 3V0's own. Stone 15 added
+  `deploy/f1nance-review.service` + `deploy/axiom-review.service`, the
+  per-project sibling reviewers (store-only, memory-only).
 - `tests/` — tests for the native core.
 
 ## Direction (v0.01 in progress)
@@ -118,7 +129,10 @@ code.
    at wake (with full-content capture on patch). Stone 4 (curator state) is
    live: the reconciler folds the curator's active/stale/archived state into
    the store and never re-exports an archived skill. The evolution loop is
-   closed for memory + skills; next is direction 3.
+   closed for memory + skills; next is direction 3. Stone 15 extended the
+   review loop to the sibling projects (F1NANCE, Axiom) via per-project
+   reviewers/daemons — each reviews its own sessions into its own store,
+   store-only and memory-only.
 3. **Own capabilities/tools** — designed for 3V0's purposes, not Hermes's.
    In progress: the read half is live (`threev0_store`, a read-only query tool
    over the native stores registered by the bridge plugin). The write half is

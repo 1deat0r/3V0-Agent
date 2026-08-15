@@ -46,6 +46,8 @@ of the hook: three mutually-exclusive modes —
 Env knobs (tests / explicit tuning — defaults are the live profile):
   THREEV0_PROFILE_HOME    profile home (state.db, .env, default review log)
   THREEV0_BODY            body repo root (default: this repo, two levels up)
+  THREEV0_PROJECT         project to review: threev0 (default) | f1nance | axiom
+  THREEV0_PROJECT_CWD     override the project's repo cwd root (tests/migration)
   THREEV0_REVIEW_STATE_DB override session DB path (tests)
   THREEV0_STORE           override memory store path (tests; honored by
                           record.py subprocesses via inherited env)
@@ -81,12 +83,13 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.memory import MemoryStore  # noqa: E402
+from core.projects import ProjectSpec, resolve_project  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
 
 PROFILE_HOME = Path(
@@ -94,28 +97,26 @@ PROFILE_HOME = Path(
     or (Path.home() / ".hermes" / "profiles" / "3v0")
 )
 STATE_DB = Path(os.environ.get("THREEV0_REVIEW_STATE_DB") or (PROFILE_HOME / "state.db"))
-REVIEW_LOG = Path(
-    os.environ.get("THREEV0_REVIEW_LOG")
-    or (PROFILE_HOME / "3v0_reviews" / "reviews.jsonl")
-)
-RUN_LOG = REVIEW_LOG.parent / "run.log"
-STORE_PATH = Path(
-    os.environ.get("THREEV0_STORE") or (REPO_ROOT / "3v0" / "data" / "memory.json")
-)
-PROFILE_MEM = Path(
-    os.environ.get("THREEV0_PROFILE_MEM") or (PROFILE_HOME / "memories")
-)
 RECORD_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "record.py"
-SKILL_STORE_PATH = Path(
-    os.environ.get("THREEV0_SKILL_STORE")
-    or (REPO_ROOT / "3v0" / "data" / "skills.json")
-)
-SKILLS_DIR = Path(
-    os.environ.get("THREEV0_SKILLS_DIR") or (PROFILE_HOME / "skills")
-)
 RECORD_SKILLS_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "record_skills.py"
 SYNC_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "sync.py"
 SYNC_SKILLS_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "sync_skills.py"
+
+# Project-scoped paths/state — resolved from THREEV0_PROJECT (default:
+# threev0) and rebound by _resolve_project() (also called when --project is
+# given). The THREEV0_* env overrides (tests) still win over project defaults.
+PROJECT = ""
+PROJECT_SPEC: Optional[ProjectSpec] = None
+CWD_ROOTS: Tuple[Path, ...] = ()
+PRIMARY = False
+MEMORY_ONLY = False
+STORE_ONLY = False
+STORE_PATH: Path = Path()
+PROFILE_MEM: Optional[Path] = None
+SKILL_STORE_PATH: Optional[Path] = None
+SKILLS_DIR: Path = Path()
+REVIEW_LOG: Path = Path()
+RUN_LOG: Path = Path()
 
 MODEL = os.environ.get("THREEV0_REVIEW_MODEL") or "deepseek-v4-pro"
 BASE_URL = (os.environ.get("THREEV0_REVIEW_BASE_URL") or "https://api.deepseek.com/v1").rstrip("/")
@@ -141,25 +142,31 @@ REVIEWABLE_SOURCES = {
 REVIEW_PROVENANCE = "session-review"
 
 
-def _is_threev0_cwd(cwd: Optional[str]) -> bool:
-    """True when a session's cwd is 3V0's own (its repo, a subdir, or $HOME).
+def _is_project_cwd(cwd: Optional[str]) -> bool:
+    """True when a session's cwd belongs to the active project.
 
-    Sibling projects (F1NANCE, Axiom) share this profile's state.db; 3V0's
-    reviewer must not fold their sessions into 3V0's store. An unknown/empty
-    cwd is treated as 3V0 (the primary project)."""
+    The active project's repo roots (and subdirs) are admitted. The primary
+    project (3V0) additionally treats ``$HOME`` as its own and fails open on an
+    empty/unknown cwd; sibling projects are strict — an empty/unknown cwd is
+    skipped, never folded into a sibling's store."""
     if not cwd:
-        return True
+        return PRIMARY
     cwd = str(cwd)
-    root = str(REPO_ROOT).rstrip("/")
-    return cwd == root or cwd.startswith(root + "/") or cwd == str(Path.home())
+    for root in CWD_ROOTS:
+        root_s = str(root).rstrip("/")
+        if cwd == root_s or cwd.startswith(root_s + "/"):
+            return True
+    if PRIMARY and cwd == str(Path.home()):
+        return True
+    return False
 
 # ---------------------------------------------------------------------------
 # The review charter — the system prompt the reviewer model gets.
 # ---------------------------------------------------------------------------
 
-CHARTER = """You are 3V0's own session-end memory reviewer — the decision driver \
-of 3V0's store-first evolution loop. A session of 3V0 working with its Operator \
-just ended; you review it against 3V0's canonical memory store and decide which \
+_CHARTER_TEMPLATE = """You are {project}'s own session-end memory reviewer — the decision driver \
+of the store-first evolution loop. A session of {project} working with its Operator \
+just ended; you review it against {project}'s canonical memory store and decide which \
 store-first corrections to make.
 
 The store is append-only and provenance-aware. Corrections SUPERSEDE (the old \
@@ -228,6 +235,58 @@ is enabled) and nothing else:
    {"action": "skill_update", "name": "some-skill", "content": "full SKILL.md", "category": "optional"}
  ]}
 """
+
+# Default charter binding; _resolve_project() rebinds it to the active project.
+CHARTER = _CHARTER_TEMPLATE.replace("{project}", "3V0")
+
+
+def _path_or(env_key: str, default: Optional[Path]) -> Optional[Path]:
+    """Resolve a THREEV0_* path override; fall back to the project default."""
+    val = os.environ.get(env_key)
+    return Path(val) if val else default
+
+
+def _path_or_required(env_key: str, default: Path) -> Path:
+    """Resolve a THREEV0_* path override whose project default is always set."""
+    val = os.environ.get(env_key)
+    return Path(val) if val else default
+
+
+def _resolve_project() -> None:
+    """(Re)bind the project-scoped globals from THREEV0_PROJECT.
+
+    Called once at import and again from main() when --project is given. The
+    THREEV0_* env overrides (tests) still win over the project defaults, but
+    the MEMORY_ONLY / STORE_ONLY / PRIMARY flags are pure project properties
+    (they are never affected by a path override)."""
+    global PROJECT, PROJECT_SPEC, CWD_ROOTS, PRIMARY, MEMORY_ONLY, STORE_ONLY
+    global STORE_PATH, PROFILE_MEM, SKILL_STORE_PATH, SKILLS_DIR, REVIEW_LOG, RUN_LOG
+    global CHARTER
+    PROJECT = os.environ.get("THREEV0_PROJECT") or "threev0"
+    PROJECT_SPEC = resolve_project(
+        PROJECT,
+        REPO_ROOT,
+        PROFILE_HOME,
+        cwd_override=os.environ.get("THREEV0_PROJECT_CWD"),
+    )
+    CWD_ROOTS = PROJECT_SPEC.cwd_roots
+    PRIMARY = PROJECT_SPEC.primary
+    MEMORY_ONLY = PROJECT_SPEC.memory_only
+    STORE_ONLY = PROJECT_SPEC.store_only
+    STORE_PATH = _path_or_required("THREEV0_STORE", PROJECT_SPEC.store)
+    PROFILE_MEM = _path_or("THREEV0_PROFILE_MEM", PROJECT_SPEC.profile_mem)
+    SKILL_STORE_PATH = _path_or("THREEV0_SKILL_STORE", PROJECT_SPEC.skill_store)
+    SKILLS_DIR = _path_or_required("THREEV0_SKILLS_DIR", PROFILE_HOME / "skills")
+    REVIEW_LOG = _path_or_required("THREEV0_REVIEW_LOG", PROJECT_SPEC.review_log)
+    RUN_LOG = REVIEW_LOG.parent / "run.log"
+    # The memory-only / store-only flags are authoritative over any stray env
+    # override: a memory-only project has no skill axis, and a store-only
+    # project has no profile projection, full stop.
+    if MEMORY_ONLY:
+        SKILL_STORE_PATH = None
+    if STORE_ONLY:
+        PROFILE_MEM = None
+    CHARTER = _CHARTER_TEMPLATE.replace("{project}", PROJECT_SPEC.title)
 
 
 # ---------------------------------------------------------------------------
@@ -650,11 +709,18 @@ def _apply_decisions(
     refused: List[Dict[str, Any]] = []
     env = os.environ.copy()
     env.setdefault("THREEV0_STORE", str(STORE_PATH))
-    env.setdefault("THREEV0_PROFILE_MEM", str(PROFILE_MEM))
-    env.setdefault("THREEV0_SKILL_STORE", str(SKILL_STORE_PATH))
-    env.setdefault("THREEV0_SKILLS_DIR", str(SKILLS_DIR))
+    if not STORE_ONLY:
+        env.setdefault("THREEV0_PROFILE_MEM", str(PROFILE_MEM))
+    if not MEMORY_ONLY:
+        env.setdefault("THREEV0_SKILL_STORE", str(SKILL_STORE_PATH))
+        env.setdefault("THREEV0_SKILLS_DIR", str(SKILLS_DIR))
     for decision in decisions[:MAX_DECISIONS]:
         action = str(decision.get("action") or "").strip()
+        if action in _SKILL_ACTIONS and skill_store is None:
+            refused.append(
+                {"reason": "skill axis disabled (memory-only project)", "decision": decision}
+            )
+            continue
         temporal = (
             _skill_temporal_refusal(decision, skill_store, session_as_of)
             if action in _SKILL_ACTIONS
@@ -672,6 +738,8 @@ def _apply_decisions(
             refused.append({"reason": "invalid decision shape", "decision": decision})
             continue
         argv += ["--source", REVIEW_PROVENANCE]
+        if STORE_ONLY:
+            argv += ["--no-export"]
         try:
             proc = subprocess.run(
                 [sys.executable] + argv, capture_output=True, text=True, timeout=60,
@@ -781,7 +849,7 @@ def _candidate_sessions() -> List[tuple]:
     out = []
     for row in rows:
         sid, source = row[0], row[1] or ""
-        if "cwd" in cols and not _is_threev0_cwd(row[2]):
+        if "cwd" in cols and not _is_project_cwd(row[2]):
             continue  # a sibling project's session — not 3V0's own work
         out.append((sid, source))
     return out
@@ -830,7 +898,7 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
             return "skipped:live"
         if session["source"] not in REVIEWABLE_SOURCES:
             return "skipped:source"
-        if not _is_threev0_cwd(session.get("cwd")):
+        if not _is_project_cwd(session.get("cwd")):
             return "skipped:project"
         n_user = sum(1 for m in session["messages"] if m["role"] == "user")
         if n_user < MIN_MESSAGES:
@@ -838,12 +906,17 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
 
         transcript = _build_transcript(session["messages"])
         store = MemoryStore(STORE_PATH)
-        skill_store = SkillStore(SKILL_STORE_PATH)
+        skill_store = SkillStore(SKILL_STORE_PATH) if SKILL_STORE_PATH else None
+        skills_part = (
+            _skills_block(skill_store)
+            if skill_store
+            else "ACTIVE SKILLS: (none — memory-only project)\n"
+        )
         prompt = (
             f"Session {session_id} (title: {session['title'] or 'untitled'}) "
             f"just ended.\n\n"
             f"{_store_block(store)}\n\n"
-            f"{_skills_block(skill_store)}\n\n"
+            f"{skills_part}\n\n"
             f"SESSION TRANSCRIPT (compacted; tool outputs truncated):\n"
             f"{transcript}\n\n"
             f"Decide the store-first corrections described in your charter and "
@@ -902,7 +975,13 @@ def _sync() -> str:
 
     This runs only on the own-clock paths (``--latest`` / ``--daemon``), not
     the per-turn ``--session-id`` hook — sync there would be redundant churn.
+
+    Store-only projects (siblings) have no Hermes profile projection to
+    reconcile, so their sync pass is a clean no-op (``skipped:store-only``).
     """
+    if STORE_ONLY:
+        _log_run("sync skipped (store-only project)")
+        return "skipped:store-only"
     env = os.environ.copy()
     env.setdefault("THREEV0_STORE", str(STORE_PATH))
     env.setdefault("THREEV0_PROFILE_MEM", str(PROFILE_MEM))
@@ -977,7 +1056,16 @@ def main() -> int:
         "--interval", type=int, default=600,
         help="seconds between daemon passes (default 600)",
     )
+    ap.add_argument(
+        "--project", default=None,
+        help="project to review: threev0 (default) | f1nance | axiom; "
+        "overrides THREEV0_PROJECT",
+    )
     args = ap.parse_args()
+
+    if args.project:
+        os.environ["THREEV0_PROJECT"] = args.project
+        _resolve_project()
 
     if os.environ.get("THREEV0_REVIEW") == "0":
         return 0
@@ -1005,6 +1093,9 @@ def main() -> int:
     except KeyboardInterrupt:
         _log_run("daemon stopped (keyboard interrupt)")
         return 0
+
+
+_resolve_project()
 
 
 if __name__ == "__main__":

@@ -28,8 +28,60 @@
       "source": "assistant_tool",
       "created_at": "2026-08-15T22:01:10Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "9b45fa37f1fc",
       "note": "carved from 3v0 store"
+    },
+    {
+      "id": "9b45fa37f1fc",
+      "content": "axiom-sovereign TS layer folded into axiom/sovereign/ in axiom-agent repo (pushed to 1deat0r/axiom-agent); memory+skills stores ported, 109 tests green, byte-compat w/ Python. Tracker issues #63, #64.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T23:33:48Z",
+      "supersedes": [
+        "4eb4fcef8e75"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "1970d2aef803",
+      "content": "Node 26 TS porting: use .ts import specifiers; NODE_ENV=production needs npm install --include=dev; node --test test/ dir form fails, use auto-discovery.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T23:33:48Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "d1a90b68cbe5",
+      "content": "Hermes terminal guard blocks commands containing literal `tsc`; route typecheck through `npm run typecheck`.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T23:34:55Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "53c821f74095",
+      "content": "axiom/AGENTS.md is the operator-approved protected instruction file auto-loading Axiom's operating guide; axiom/GUIDE.md is a redirect.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T23:34:55Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "0b4dd373c290",
+      "content": "Axiom-Agent's goal: become the best sovereign agent by synthesizing Hermes Agent (narrow-waist chassis), prime-agent (RLM/Continual Harness), deepseek-harness (plugin composability), and grok-build (hermetic build).",
+      "kind": "identity",
+      "source": "session-review",
+      "created_at": "2026-08-15T23:36:00Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
     }
   ]
 }

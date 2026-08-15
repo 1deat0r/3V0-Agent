@@ -95,6 +95,12 @@ def main() -> int:
         help="persist to store + export profile (default: dry run)",
     )
     ap.add_argument(
+        "--no-export",
+        action="store_true",
+        help="with --write: persist to the store but skip the profile "
+        "projection (store-only sibling projects)",
+    )
+    ap.add_argument(
         "--json",
         action="store_true",
         help="emit a machine-readable JSON result on stdout",
@@ -135,7 +141,7 @@ def main() -> int:
             print(f"refused: {result['error']}", file=sys.stderr)
         return 1
 
-    if args.write:
+    if args.write and not args.no_export:
         PROFILE_MEM.mkdir(parents=True, exist_ok=True)
         (PROFILE_MEM / "MEMORY.md").write_text(
             profile_text(store, "memory"), encoding="utf-8"
@@ -150,7 +156,10 @@ def main() -> int:
     else:
         _print_human(result)
         if args.write:
-            print("Exported derived view to profile MEMORY.md / USER.md")
+            if args.no_export:
+                print("Persisted to store (no profile export — store-only)")
+            else:
+                print("Exported derived view to profile MEMORY.md / USER.md")
         else:
             print("(dry run — pass --write to persist and export)")
 

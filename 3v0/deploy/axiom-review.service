@@ -1,0 +1,33 @@
+# Axiom own-clock session reviewer (Stone 15 — per-project reviewers).
+#
+# Axiom sessions (cwd = ~/Projects/axiom-agent) share the 3v0 profile's
+# state.db but their facts belong in Axiom's own store
+# (3v0/data/axiom/memory.json), NOT 3V0's. This daemon runs the same review
+# driver with THREEV0_PROJECT=axiom: store-only (no profile projection — Axiom
+# has no Hermes profile) and memory-only (no skill axis), strict cwd scoping.
+# systemd is only the supervisor (restart on crash); the clock is 3V0's own.
+#
+# Install (as the user):
+#   cp 3v0/deploy/axiom-review.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now axiom-review.service
+#   systemctl --user status axiom-review.service
+# Stop / disable:
+#   systemctl --user disable --now axiom-review.service
+# One-shot (no daemon):
+#   python3 "3v0/scripts/review_session.py" --latest --project axiom
+
+[Unit]
+Description=Axiom own-clock session reviewer (store-only, memory-only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=THREEV0_PROJECT=axiom
+ExecStart=/usr/bin/python3 "/home/mustbearn/Projects/AI Agents/3V0 Agent/3v0/scripts/review_session.py" --daemon --interval 360
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target

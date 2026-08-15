@@ -1,0 +1,33 @@
+# F1NANCE own-clock session reviewer (Stone 15 — per-project reviewers).
+#
+# F1NANCE sessions (cwd = ~/Projects/AI Agents/F1NANCE Agent) share the 3v0
+# profile's state.db but their facts belong in F1NANCE's own store
+# (3v0/data/f1nance/memory.json), NOT 3V0's. This daemon runs the same review
+# driver with THREEV0_PROJECT=f1nance: store-only (no profile projection) and
+# memory-only (no skill axis), strict cwd scoping. systemd is only the
+# supervisor (restart on crash); the clock is 3V0's own.
+#
+# Install (as the user):
+#   cp 3v0/deploy/f1nance-review.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now f1nance-review.service
+#   systemctl --user status f1nance-review.service
+# Stop / disable:
+#   systemctl --user disable --now f1nance-review.service
+# One-shot (no daemon):
+#   python3 "3v0/scripts/review_session.py" --latest --project f1nance
+
+[Unit]
+Description=F1NANCE own-clock session reviewer (store-only, memory-only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=THREEV0_PROJECT=f1nance
+ExecStart=/usr/bin/python3 "/home/mustbearn/Projects/AI Agents/3V0 Agent/3v0/scripts/review_session.py" --daemon --interval 360
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target

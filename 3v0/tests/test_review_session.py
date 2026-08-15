@@ -878,17 +878,17 @@ class TestProjectScoping(Env):
     """3V0's reviewer must not fold sibling projects' sessions (F1NANCE,
     Axiom) into 3V0's store — sessions are scoped by cwd."""
 
-    def test_is_threev0_cwd_truth_table(self):
+    def test_is_project_cwd_truth_table(self):
         mod = DRIVER_MOD
         root = str(mod.REPO_ROOT)
-        self.assertTrue(mod._is_threev0_cwd(root))
-        self.assertTrue(mod._is_threev0_cwd(root + "/sub"))
-        self.assertTrue(mod._is_threev0_cwd(str(Path.home())))
-        self.assertTrue(mod._is_threev0_cwd(""))
-        self.assertTrue(mod._is_threev0_cwd(None))
-        self.assertFalse(mod._is_threev0_cwd("/home/mustbearn/Projects/axiom-agent"))
+        self.assertTrue(mod._is_project_cwd(root))
+        self.assertTrue(mod._is_project_cwd(root + "/sub"))
+        self.assertTrue(mod._is_project_cwd(str(Path.home())))
+        self.assertTrue(mod._is_project_cwd(""))
+        self.assertTrue(mod._is_project_cwd(None))
+        self.assertFalse(mod._is_project_cwd("/home/mustbearn/Projects/axiom-agent"))
         self.assertFalse(
-            mod._is_threev0_cwd("/home/mustbearn/Projects/AI Agents/F1NANCE Agent")
+            mod._is_project_cwd("/home/mustbearn/Projects/AI Agents/F1NANCE Agent")
         )
 
     def test_candidate_scan_excludes_sibling_projects(self):
@@ -925,6 +925,113 @@ class TestProjectScoping(Env):
         )
         _run_driver("88888888_888888_axiom", self.env)
         self.assertEqual(self.log_entries(), [])  # cwd guard skips it
+
+
+class TestSiblingProjects(Env):
+    """Stone 15: per-project reviewers. A sibling project's own ``--project``
+    pass reviews its sessions into its own store, store-only (no profile
+    projection) and memory-only (no skill axis), and is strict about cwd (no
+    fail-open — an empty/unknown cwd is skipped, never folded in)."""
+
+    def _f1_env(self, f1_root: Path) -> dict:
+        return dict(
+            self.env,
+            THREEV0_PROJECT="f1nance",
+            THREEV0_PROJECT_CWD=str(f1_root),
+        )
+
+    def test_sibling_reviews_own_session_store_only(self):
+        f1_root = Path(self.tmp.name) / "F1NANCE Agent"
+        f1_root.mkdir(parents=True)
+        _seed_rich_sessions(
+            self.db_path,
+            [{"id": "11111111_111111_f1", "source": "tui", "cwd": str(f1_root)}],
+        )
+        self.decisions_file.write_text(
+            json.dumps(
+                {
+                    "summary": "capture a F1NANCE fact",
+                    "decisions": [
+                        {
+                            "action": "record",
+                            "kind": "memory",
+                            "content": "F1NANCE: market-data stack is yfinance+FRED+EDGAR.",
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        _run_driver("11111111_111111_f1", self._f1_env(f1_root))
+
+        store = MemoryStore(self.store_path)
+        active = {f.content for f in store.active()}
+        self.assertIn("F1NANCE: market-data stack is yfinance+FRED+EDGAR.", active)
+        # store-only: no profile projection was written
+        self.assertFalse((self.profile_mem / "MEMORY.md").exists())
+        self.assertFalse((self.profile_mem / "USER.md").exists())
+        entry = self.log_entries()[0]
+        self.assertEqual(entry["session_id"], "11111111_111111_f1")
+        self.assertEqual(entry["applied"], 1)
+
+    def test_sibling_skips_primary_project_session(self):
+        f1_root = Path(self.tmp.name) / "F1NANCE Agent"
+        f1_root.mkdir(parents=True)
+        _seed_rich_sessions(
+            self.db_path,
+            [{"id": "22222222_222222_3v0", "source": "tui", "cwd": str(REPO_ROOT)}],
+        )
+        self.decisions_file.write_text(
+            json.dumps({"summary": "no-op", "decisions": []}), encoding="utf-8"
+        )
+        _run_driver("22222222_222222_3v0", self._f1_env(f1_root))
+        self.assertEqual(self.log_entries(), [])  # skipped:project
+
+    def test_sibling_is_strict_on_empty_cwd(self):
+        # A session with no cwd is NOT the sibling's — strict (no fail-open),
+        # unlike the primary reviewer.
+        f1_root = Path(self.tmp.name) / "F1NANCE Agent"
+        f1_root.mkdir(parents=True)
+        _seed_rich_sessions(
+            self.db_path,
+            [{"id": "33333333_333333_nocwd", "source": "tui", "cwd": ""}],
+        )
+        self.decisions_file.write_text(
+            json.dumps({"summary": "no-op", "decisions": []}), encoding="utf-8"
+        )
+        _run_driver("33333333_333333_nocwd", self._f1_env(f1_root))
+        self.assertEqual(self.log_entries(), [])
+
+    def test_sibling_refuses_skill_decisions(self):
+        # Memory-only: a skill_retract emitted by the model is refused, never
+        # routed to record_skills.py (which would hit 3V0's skill store).
+        f1_root = Path(self.tmp.name) / "F1NANCE Agent"
+        f1_root.mkdir(parents=True)
+        _seed_rich_sessions(
+            self.db_path,
+            [{"id": "44444444_444444_skill", "source": "tui", "cwd": str(f1_root)}],
+        )
+        self.decisions_file.write_text(
+            json.dumps(
+                {
+                    "summary": "bogus skill decision",
+                    "decisions": [
+                        {"action": "skill_retract", "name": "some-skill"},
+                        {
+                            "action": "record",
+                            "kind": "memory",
+                            "content": "F1NANCE fact.",
+                        },
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        _run_driver("44444444_444444_skill", self._f1_env(f1_root))
+        entry = self.log_entries()[0]
+        self.assertEqual(entry["applied"], 1)      # the memory record
+        self.assertEqual(entry["refused"], 1)      # the skill decision
+        self.assertIn("skill axis disabled", entry["refused_details"][0]["reason"])
 
 
 class TestMirrorScoping(unittest.TestCase):
