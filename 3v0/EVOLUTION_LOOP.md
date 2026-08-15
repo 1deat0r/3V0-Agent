@@ -743,3 +743,54 @@ store and dropped from the profile projection. Still open: per-project
 *reviewers/daemons* to review F1NANCE/Axiom sessions into their own stores
 (their sessions are simply skipped by 3V0's daemon for now).
 
+## Stone 10 — scoped write mirror (memory + skills)
+
+Closed the **second** cross-project pollution vector. The reviewer was scoped
+by `cwd` in the prior session, but the `native-store-bridge` plugin's
+foreground write mirror still replayed **every** successful `memory` /
+`skill_manage` write into 3V0's stores regardless of project — so a sibling
+session's foreground `memory` write still leaked facts into 3V0's store (the
+F1NANCE fact carved out on 2026-08-16 was exactly this).
+
+The seam: the `post_tool_call` payload already carries `session_id`
+(`agent.session_id`), and the background-review fork **shares the parent's
+session_id** (`agent/background_review.py` pins `review_agent.session_id =
+agent.session_id`). So one gate closes both the foreground mirror and the
+fork's mirror.
+
+The fix mirrors the reviewer's own gate exactly:
+
+- `_session_cwd(session_id)` — column-aware read of the session's `cwd` from
+  the profile's `state.db`; returns `None` (fail-open) on a missing DB, missing
+  row, or missing `cwd` column.
+- `_is_threev0_cwd(cwd, body_root)` — the same predicate the reviewer uses:
+  admit the 3V0 repo + subdirs + `$HOME`, reject everything else; empty/None
+  fails open (the primary project).
+- `_session_is_threev0(session_id)` — no id → True; else look up the cwd and
+  apply the gate.
+- `_mirror_memory` / `_mirror_skill` now early-return (debug-log) when the
+  writing session is a sibling project, before any ingest runs.
+
+Fail-open is deliberate and the only correct posture for a best-effort
+observer: an unknown session id, a missing `cwd` column (e.g. the minimal
+test fixture), or a lookup error must never block a legitimate 3V0 write.
+
+### Verification
+
+- 6 new tests (139 total green, was 133): the pure `_is_threev0_cwd` predicate,
+  the `state.db` cwd lookup + gate, the missing-column fail-open, sibling-skip
+  for both mirrors, and a fail-open still-mirrors positive control.
+- **Live E2E against the real `state.db`**: 3V0 sessions → admitted
+  (`threev0=True`), F1NANCE and Axiom sessions → blocked (`threev0=False`),
+  empty/unknown id → fail-open (`threev0=True`).
+
+### Still open (unchanged, explicit)
+
+- **Fork-disable** — still the operator's call.
+- **Skill-axis temporal guard** — a symmetric `_temporal_refusal` on skill
+  versions is the remaining regression surface for the own-clock.
+- **Per-project reviewers/daemons** — F1NANCE/Axiom sessions are still simply
+  skipped until they get their own reviewers (F1NANCE already has
+  `~/.hermes/profiles/f1nance`; moving them onto their own profiles is the
+  longer-term clean fix, per the handoff).
+

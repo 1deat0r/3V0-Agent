@@ -840,5 +840,181 @@ class TestProjectScoping(Env):
         self.assertEqual(self.log_entries(), [])  # cwd guard skips it
 
 
+class TestMirrorScoping(unittest.TestCase):
+    """Stone 10: the write mirror is scoped to 3V0's own sessions by cwd.
+
+    The plugin's ``_on_post_tool_call`` mirrors ``memory``/``skill_manage``
+    writes into 3V0's native stores. That must only happen for 3V0's own
+    sessions — sibling projects (F1NANCE, Axiom) share this profile's
+    state.db and their sessions must not leak facts into 3V0's stores.
+    """
+
+    def _load_plugin(self):
+        spec = importlib.util.spec_from_file_location(
+            "native_store_bridge_scoping", PLUGIN_INIT
+        )
+        assert spec is not None and spec.loader is not None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_is_threev0_cwd_pure(self):
+        mod = self._load_plugin()
+        body = Path("/home/me/Projects/AI Agents/3V0 Agent")
+        # fail-open on empty/None (primary project)
+        self.assertTrue(mod._is_threev0_cwd("", body))
+        self.assertTrue(mod._is_threev0_cwd(None, body))
+        # 3V0's own: the repo, a subdir, or $HOME
+        self.assertTrue(mod._is_threev0_cwd(str(body), body))
+        self.assertTrue(mod._is_threev0_cwd(str(body) + "/3v0/data", body))
+        self.assertTrue(mod._is_threev0_cwd(str(Path.home()), body))
+        # sibling projects must be rejected
+        self.assertFalse(mod._is_threev0_cwd("/home/me/Projects/axiom-agent", body))
+        self.assertFalse(
+            mod._is_threev0_cwd("/home/me/Projects/AI Agents/F1NANCE Agent", body)
+        )
+
+    def test_session_cwd_lookup_and_gate(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            base = Path(tmp.name)
+            body = base / "3V0 Agent"
+            db = base / "state.db"
+            conn = sqlite3.connect(str(db))
+            conn.executescript(
+                "CREATE TABLE sessions (id TEXT PRIMARY KEY, source TEXT NOT NULL, cwd TEXT);"
+            )
+            conn.execute(
+                "INSERT INTO sessions (id, source, cwd) VALUES ('s_3v0', 'tui', ?)",
+                (str(body),),
+            )
+            conn.execute(
+                "INSERT INTO sessions (id, source, cwd) VALUES ('s_sibling', 'tui', ?)",
+                (str(base / "axiom-agent"),),
+            )
+            conn.execute(
+                "INSERT INTO sessions (id, source, cwd) VALUES ('s_empty', 'tui', '')"
+            )
+            conn.commit()
+            conn.close()
+
+            mod = self._load_plugin()
+            with mock.patch.object(mod, "_profile_home", return_value=base), \
+                 mock.patch.object(mod, "_resolve_body_root", return_value=body):
+                # fail-open: no id, unknown id, or empty cwd -> treated as 3V0
+                self.assertTrue(mod._session_is_threev0(""))
+                self.assertTrue(mod._session_is_threev0("s_missing"))
+                self.assertTrue(mod._session_is_threev0("s_empty"))
+                # 3V0's own repo -> admitted
+                self.assertTrue(mod._session_is_threev0("s_3v0"))
+                # sibling repo -> blocked
+                self.assertFalse(mod._session_is_threev0("s_sibling"))
+        finally:
+            tmp.cleanup()
+
+    def test_session_cwd_missing_column_fails_open(self):
+        # The minimal test-fixture schema has no cwd column -> fail-open.
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            base = Path(tmp.name)
+            db = base / "state.db"
+            conn = sqlite3.connect(str(db))
+            conn.executescript(
+                "CREATE TABLE sessions (id TEXT PRIMARY KEY, source TEXT NOT NULL);"
+            )
+            conn.execute("INSERT INTO sessions (id, source) VALUES ('s', 'tui')")
+            conn.commit()
+            conn.close()
+            mod = self._load_plugin()
+            with mock.patch.object(mod, "_profile_home", return_value=base):
+                self.assertIsNone(mod._session_cwd("s"))
+                self.assertTrue(mod._session_is_threev0("s"))
+        finally:
+            tmp.cleanup()
+
+    def test_mirror_memory_skips_sibling_session(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            base = Path(tmp.name)
+            body = base / "3V0 Agent"
+            db = base / "state.db"
+            conn = sqlite3.connect(str(db))
+            conn.executescript(
+                "CREATE TABLE sessions (id TEXT PRIMARY KEY, source TEXT NOT NULL, cwd TEXT);"
+            )
+            conn.execute(
+                "INSERT INTO sessions (id, source, cwd) VALUES ('s_sibling', 'tui', ?)",
+                (str(base / "F1NANCE Agent"),),
+            )
+            conn.commit()
+            conn.close()
+
+            mod = self._load_plugin()
+            with mock.patch.object(mod, "_profile_home", return_value=base), \
+                 mock.patch.object(mod, "_resolve_body_root", return_value=body), \
+                 mock.patch.object(mod, "_run_ingest") as run_ingest:
+                mod._mirror_memory(
+                    {"target": "memory", "action": "add", "content": "leak me"},
+                    json.dumps({"success": True}),
+                    session_id="s_sibling",
+                )
+                run_ingest.assert_not_called()
+        finally:
+            tmp.cleanup()
+
+    def test_mirror_skill_skips_sibling_session(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            base = Path(tmp.name)
+            body = base / "3V0 Agent"
+            db = base / "state.db"
+            conn = sqlite3.connect(str(db))
+            conn.executescript(
+                "CREATE TABLE sessions (id TEXT PRIMARY KEY, source TEXT NOT NULL, cwd TEXT);"
+            )
+            conn.execute(
+                "INSERT INTO sessions (id, source, cwd) VALUES ('s_sibling', 'tui', ?)",
+                (str(base / "axiom-agent"),),
+            )
+            conn.commit()
+            conn.close()
+
+            mod = self._load_plugin()
+            with mock.patch.object(mod, "_profile_home", return_value=base), \
+                 mock.patch.object(mod, "_resolve_body_root", return_value=body), \
+                 mock.patch.object(mod, "_run_ingest") as run_ingest:
+                mod._mirror_skill(
+                    {"name": "some-skill", "action": "create"},
+                    json.dumps({"success": True}),
+                    session_id="s_sibling",
+                )
+                run_ingest.assert_not_called()
+        finally:
+            tmp.cleanup()
+
+    def test_mirror_memory_fail_open_still_mirrors(self):
+        # A missing session id must NOT block the primary project's mirror.
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            base = Path(tmp.name)
+            body = base / "body"
+            scripts = body / "3v0" / "scripts"
+            scripts.mkdir(parents=True)
+            (scripts / "ingest.py").write_text("", encoding="utf-8")
+
+            mod = self._load_plugin()
+            with mock.patch.object(mod, "_profile_home", return_value=base), \
+                 mock.patch.object(mod, "_resolve_body_root", return_value=body), \
+                 mock.patch.object(mod, "_run_ingest") as run_ingest:
+                mod._mirror_memory(
+                    {"target": "memory", "action": "add", "content": "a fact"},
+                    json.dumps({"success": True}),
+                    session_id="",
+                )
+                run_ingest.assert_called_once()
+        finally:
+            tmp.cleanup()
+
+
 if __name__ == "__main__":
     unittest.main()

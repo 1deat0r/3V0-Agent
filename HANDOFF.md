@@ -61,13 +61,15 @@ pointer to what was live at the last session's end.*
   into 3V0's store. Carved `3v0/data/axiom/memory.json` (seeded with the two
   leaked Axiom facts, retracted from 3V0's store) + an empty
   `3v0/data/f1nance/memory.json`. F1NANCE/Axiom sessions are skipped by 3V0's
-  daemon until they get their own reviewers. **Still open: the
-  `native-store-bridge` plugin's foreground `memory`-mirror is NOT scoped** —
-  it mirrors every foreground memory write into 3V0's store regardless of
-  project, so sibling sessions still leak facts in (e.g. a F1NANCE fact landed
-  2026-08-16). Next fix: scope the bridge by session cwd (same
-  `_is_threev0_cwd` gate as the reviewer), or move F1NANCE/Axiom onto their own
-  Hermes profiles (F1NANCE already has `~/.hermes/profiles/f1nance`).
+  daemon until they get their own reviewers. **The
+  `native-store-bridge` plugin's foreground write mirror is now scoped
+  (Stone 10)** — both the `memory` and `skill_manage` mirrors refuse to replay
+  when the writing session's `cwd` (from `state.db`) is a sibling project,
+  using the same `_is_threev0_cwd` gate as the reviewer (fail-open on an
+  unknown/empty session id). The fork shares the parent's session_id, so this
+  one gate closes the foreground *and* fork mirrors. Longer-term: moving
+  F1NANCE/Axiom onto their own Hermes profiles (F1NANCE already has
+  `~/.hermes/profiles/f1nance`) is still the cleaner fix.
 - **Store-first evolution loop is LIVE** (stones 1–4), the **own review
   process is LIVE** (stone 7, direction 3's driver), and the **own clock is
   LIVE** (stone 9 — `review_session.py --daemon` deployed as the systemd user
@@ -95,6 +97,20 @@ pointer to what was live at the last session's end.*
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Scoped write mirror, Stone 10 — the second cross-project pollution vector
+  closed (this session, BUILT + tested + live-E2E-verified).** The reviewer
+  was scoped by `cwd` last session, but the bridge's foreground mirror still
+  replayed every `memory`/`skill_manage` write into 3V0's stores regardless of
+  project. Closed it: `_session_cwd` (column-aware `state.db` read) +
+  `_is_threev0_cwd` (the reviewer's exact predicate) + a fail-open
+  `_session_is_threev0` gate threaded through `_mirror_memory`/`_mirror_skill`.
+  The `post_tool_call` payload carries `session_id`, and the background-review
+  fork shares the parent's session_id (`background_review.py:889`), so one gate
+  closes both the foreground and fork mirrors. Fail-open on unknown/empty id or
+  missing `cwd` column. 6 new tests (139 green). Live E2E against the real
+  `state.db`: 3V0 admitted, F1NANCE/Axiom blocked, empty/unknown fail-open.
+  Plugin copied to the profile dir + `__pycache__` cleared; the gate goes live
+  on the next TUI/gateway start. Design in `3v0/EVOLUTION_LOOP.md` (Stone 10).
 - **Own clock, Stone 9 — the first Hermes-independent autonomous process
   (this session, BUILT + deployed + live-E2E-verified).** Direction 4's
   opening: `review_session.py` gained `--latest` (single-shot: newest
@@ -117,10 +133,9 @@ pointer to what was live at the last session's end.*
   the `ended_at IS NOT NULL` filter — fixed by making the candidate scan
   fail-safe (unreadable schema → review nothing). Design + all three bugs in
   `3v0/EVOLUTION_LOOP.md` (Stone 9).
-  **Next:** scope the `native-store-bridge` plugin's foreground
-  `memory`-mirror to 3V0 sessions (same `_is_threev0_cwd` gate as the
-  reviewer) — the one remaining cross-project pollution vector; then the
-  skill-axis temporal guard; then verify the daemon's backlog drain is clean
+  **Next:** the skill-axis temporal guard (a symmetric `_temporal_refusal` on
+  skill versions — the one remaining regression surface for the own-clock),
+  then verify the daemon's backlog drain is clean
   (`tail ~/.hermes/profiles/3v0/3v0_reviews/reviews.jsonl`). The fork-disable
   stays the operator's explicit call.
 - **Fable 5 study → two new skills (this session).** Researched Anthropic's

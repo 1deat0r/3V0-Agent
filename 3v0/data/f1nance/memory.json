@@ -10,6 +10,16 @@
       "supersedes": [],
       "superseded_by": "",
       "note": "carved from 3v0 store"
+    },
+    {
+      "id": "6681f0e8781e",
+      "content": "F1NANCE Agent: Hermes hardfork ~/Projects/AI Agents/F1NANCE Agent; profile ~/.hermes/profiles/f1nance (deepseek-v4-pro). Operator=1deat0r. Trajectory: become standalone agent separate from Hermes (profile=bootstrap).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T22:04:49Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": "carved from 3v0 store"
     }
   ]
 }

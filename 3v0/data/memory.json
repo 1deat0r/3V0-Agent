@@ -48,8 +48,8 @@
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
       "supersedes": [],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
     },
     {
       "id": "068a68c30d88",
@@ -58,8 +58,8 @@
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
       "supersedes": [],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
     },
     {
       "id": "615422747dbc",
@@ -114,7 +114,7 @@
       "supersedes": [
         "472ccaf3a129"
       ],
-      "superseded_by": "",
+      "superseded_by": "09aa28ca55b8",
       "note": ""
     },
     {
@@ -158,8 +158,8 @@
       "supersedes": [
         "7acf9c859b87"
       ],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
     },
     {
       "id": "240eb95dcd00",
@@ -206,7 +206,7 @@
       "supersedes": [
         "e11eaf515320"
       ],
-      "superseded_by": "",
+      "superseded_by": "e4acd14e4b70",
       "note": ""
     },
     {
@@ -324,6 +324,90 @@
       "supersedes": [],
       "superseded_by": "",
       "note": ""
+    },
+    {
+      "id": "c863fcbcca89",
+      "content": "`scripts/run_tests.sh` ~81 failures, all environmental (missing optional provider packages/creds + FTS5/SQLite quirk); core green. Not sync regressions — don't re-triage.",
+      "kind": "memory",
+      "source": "profile-import",
+      "created_at": "2026-08-15T21:59:53Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "a29f88de9821",
+      "content": "NousResearch/hermes-agent tracker heavily contended: before investing, check existing PRs (`gh pr list --search \"<issue#>\"`) + triage trail (`gh pr/issue view <N> --json comments`) — bots post canonical 'duplicate/best fix' verdicts. Open a PR only if unclaimed.",
+      "kind": "memory",
+      "source": "profile-import",
+      "created_at": "2026-08-15T21:59:53Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "c5c00bf027f1",
+      "content": "TUI-only: no cron/curator ticker (schedulers start only in gateway/dashboard/cli.py, never tui_gateway). Curator enabled but dormant (runs:0); run `hermes curator run` manually. cron/ dir empty.",
+      "kind": "memory",
+      "source": "profile-import",
+      "created_at": "2026-08-15T21:59:53Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "607373e87645",
+      "content": "fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent is a separate checkout kept behind body repo ~/Projects/AI Agents/3V0 Agent (commit identity+scaffolding to body; install runtime deps in its venv/).",
+      "kind": "memory",
+      "source": "profile-import",
+      "created_at": "2026-08-15T21:59:53Z",
+      "supersedes": [],
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
+    },
+    {
+      "id": "e4acd14e4b70",
+      "content": "fork 1deat0r/hermes-agent: runtime ~/.hermes/hermes-agent is a separate checkout behind body repo ~/Projects/AI Agents/3V0 Agent (body synced 2026-08-15; runtime NOT yet updated). Install runtime deps in its venv/; commit identity+scaffolding to the body repo.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T22:01:10Z",
+      "supersedes": [
+        "360bcb9f0619"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "09aa28ca55b8",
+      "content": "native-store-bridge plugin mirrors memory→data/memory.json and skill_manage→data/skills.json (canonical stores) via post_tool_call hook; profile is a derived view. Backstops: sync.py --write + sync_skills.py --write.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T22:01:10Z",
+      "supersedes": [
+        "0eae50a2c22f"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "4eb4fcef8e75",
+      "content": "axiom-agent: re-founded on Hermes HEAD (ADR-0087), pushed to origin 1deat0r/axiom-agent. TS sovereign layer at ~/Projects/axiom-sovereign/ (memory store ported, 7 tests green, byte-compat w/ Python 3v0/core); tracker issue #63. TS: use .ts import specifiers (Node 26 doesn't rewrite .js->.ts); NODE_ENV=production in shell → npm install needs --include=dev.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T22:01:10Z",
+      "supersedes": [],
+      "superseded_by": "retracted",
+      "note": "retracted by carve-axiom"
+    },
+    {
+      "id": "6681f0e8781e",
+      "content": "F1NANCE Agent: Hermes hardfork ~/Projects/AI Agents/F1NANCE Agent; profile ~/.hermes/profiles/f1nance (deepseek-v4-pro). Operator=1deat0r. Trajectory: become standalone agent separate from Hermes (profile=bootstrap).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T22:04:49Z",
+      "supersedes": [],
+      "superseded_by": "retracted",
+      "note": "retracted by carve-f1nance"
     }
   ]
 }

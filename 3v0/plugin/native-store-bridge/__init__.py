@@ -16,6 +16,14 @@ This is the store-first half of 3V0's own evolution loop (see
 swallowed and the wake-time reconcilers ``sync.py --write`` (memory) and
 ``sync_skills.py --write`` (skills) are the backstop.
 
+The write mirror is **scoped to 3V0's own sessions** (Stone 10): the
+``post_tool_call`` payload carries the writing agent's ``session_id``, and the
+mirror refuses to replay when that session's recorded ``cwd`` (from the
+profile's ``state.db``) is a sibling project (F1NANCE, Axiom) rather than
+3V0's repo/``$HOME`` — the same ``_is_threev0_cwd`` gate the reviewer applies.
+An unknown/empty ``session_id`` or a missing ``cwd`` column fails open (the
+primary project), so the mirror never blocks a legitimate 3V0 write.
+
 The same plugin also registers two first-class tools over the native stores
 (direction 3 — 3V0's own capabilities):
 
@@ -47,6 +55,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import sqlite3
 import subprocess
 import sys
 from pathlib import Path
@@ -134,6 +143,71 @@ def _run_ingest(script: Path, payload: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Session scoping (Stone 10) — only 3V0's own sessions mirror into the stores
+# ---------------------------------------------------------------------------
+
+def _state_db() -> Path:
+    """The active profile's session DB (the same state.db the reviewer reads)."""
+    return _profile_home() / "state.db"
+
+
+def _session_cwd(session_id: str) -> Optional[str]:
+    """The recorded cwd for a session row, or None (fail-open).
+
+    Column-aware, like the reviewer: a missing DB, a missing row, or a missing
+    ``cwd`` column all return None so the gate treats the write as 3V0's own
+    (the primary project). Best-effort by construction — a failed lookup must
+    never block a legitimate mirror.
+    """
+    if not session_id:
+        return None
+    db = _state_db()
+    if not db.exists():
+        return None
+    try:
+        conn = sqlite3.connect(str(db), timeout=5)
+        try:
+            cols = {r[1] for r in conn.execute("PRAGMA table_info(sessions)")}
+            if "cwd" not in cols:
+                return None
+            row = conn.execute(
+                "SELECT cwd FROM sessions WHERE id = ?", (session_id,)
+            ).fetchone()
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return None
+    if row is None:
+        return None
+    return row[0] or None
+
+
+def _is_threev0_cwd(cwd: Optional[str], body_root: Path) -> bool:
+    """True when a cwd is 3V0's own (its repo, a subdir, or $HOME).
+
+    The same gate the reviewer applies (``review_session._is_threev0_cwd``):
+    sibling projects (F1NANCE, Axiom) share this profile's state.db, so their
+    sessions must not be folded into 3V0's stores. An unknown/empty cwd is
+    treated as 3V0 (the primary project) — fail-open.
+    """
+    if not cwd:
+        return True
+    cwd = str(cwd)
+    root = str(body_root).rstrip("/")
+    return cwd == root or cwd.startswith(root + "/") or cwd == str(Path.home())
+
+
+def _session_is_threev0(session_id: str) -> bool:
+    """True when a write's session belongs to 3V0 (or is unscoped — fail-open)."""
+    if not session_id:
+        return True
+    body_root = _resolve_body_root()
+    if body_root is None:
+        return True
+    return _is_threev0_cwd(_session_cwd(session_id), body_root)
+
+
+# ---------------------------------------------------------------------------
 # memory -> store
 # ---------------------------------------------------------------------------
 
@@ -165,12 +239,19 @@ def _ops_from_args(args: Dict[str, Any]) -> Optional[list]:
     }]
 
 
-def _mirror_memory(args: Dict[str, Any], result: Any) -> None:
+def _mirror_memory(args: Dict[str, Any], result: Any, session_id: str = "") -> None:
     global _warned_missing_body, _warned_missing_memory_ingest
 
     if not isinstance(args, dict):
         return
     if not _result_ok(result):
+        return
+    if not _session_is_threev0(session_id):
+        logger.debug(
+            "native-store-bridge: skipping memory mirror — session %s is not "
+            "3V0's own cwd",
+            session_id,
+        )
         return
 
     target = (args.get("target") or "memory")
@@ -210,12 +291,19 @@ def _mirror_memory(args: Dict[str, Any], result: Any) -> None:
 # skill_manage -> skill store
 # ---------------------------------------------------------------------------
 
-def _mirror_skill(args: Dict[str, Any], result: Any) -> None:
+def _mirror_skill(args: Dict[str, Any], result: Any, session_id: str = "") -> None:
     global _warned_missing_body, _warned_missing_skill_ingest
 
     if not isinstance(args, dict):
         return
     if not _result_ok(result):
+        return
+    if not _session_is_threev0(session_id):
+        logger.debug(
+            "native-store-bridge: skipping skill mirror — session %s is not "
+            "3V0's own cwd",
+            session_id,
+        )
         return
     name = (args.get("name") or "").strip()
     if not name:
@@ -251,12 +339,13 @@ def _on_post_tool_call(
     tool_name: str = "",
     args: Optional[Dict[str, Any]] = None,
     result: Any = None,
+    session_id: str = "",
     **_: Any,
 ) -> None:
     if tool_name == "memory":
-        _mirror_memory(args or {}, result)
+        _mirror_memory(args or {}, result, session_id=session_id)
     elif tool_name == "skill_manage":
-        _mirror_skill(args or {}, result)
+        _mirror_skill(args or {}, result, session_id=session_id)
 
 
 # ---------------------------------------------------------------------------
