@@ -53,15 +53,16 @@ def main() -> int:
 
     store = MemoryStore(STORE_PATH)
     try:
-        result = record(
-            store,
-            args.content,
-            args.kind,
-            args.source,
-            supersede_id=args.supersedes_id,
-            supersede_contains=args.supersedes_contains,
-            persist=args.write,
-        )
+        with store.mutate():
+            result = record(
+                store,
+                args.content,
+                args.kind,
+                args.source,
+                supersede_id=args.supersedes_id,
+                supersede_contains=args.supersedes_contains,
+                persist=args.write,
+            )
     except RecordError as e:
         print(f"record refused: {e}", file=sys.stderr)
         return 1

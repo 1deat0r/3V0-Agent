@@ -41,6 +41,8 @@ data/
 !3v0/data/
 !3v0/data/memory.json
 !3v0/scripts/export_to_profile.py
+# Runtime sidecar from the cross-process store lock (core/memory.locked()).
+3v0/data/*.lock
 .pytest_cache/
 test_durations.json
 .pytest-cache/

@@ -23,10 +23,50 @@ from __future__ import annotations
 import json
 import time
 import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
+# fcntl is Unix-only; on Windows there is no equivalent advisory lock exposed
+# by the stdlib, so locking degrades to a no-op there (the store is single-host
+# by design — see EVOLUTION_LOOP.md).
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows
+    fcntl = None
+
 _VALID_KINDS = {"memory", "user", "identity", "directive"}
+
+# ``superseded_by`` sentinel for a fact that was REMOVED (no successor exists).
+# Distinct from a real fact id, so ``history()`` terminates the chain at the
+# retracted fact, and ``active()``/``export()`` exclude it.
+RETRACTED = "retracted"
+
+
+@contextmanager
+def locked(path: str | Path):
+    """Serialize cross-process read-modify-write on the store at ``path``.
+
+    An advisory ``flock`` on a ``<store>.lock`` sidecar so the background
+    review fork's ``ingest.py`` subprocess and a foreground ``record.py`` /
+    ``sync.py`` cannot interleave load→mutate→save on the same JSON file.
+    Degrades to a no-op where ``fcntl`` is unavailable.
+    """
+    lock_path = Path(path).with_suffix(Path(path).suffix + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    if fcntl is None:
+        yield
+        return
+    fd = open(lock_path, "a+", encoding="utf-8")
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        fd.close()
 
 
 @dataclass
@@ -56,6 +96,9 @@ class MemoryStore:
 
     # -- persistence -------------------------------------------------------
     def _load(self) -> None:
+        if not self.path.exists():
+            self.facts = []
+            return
         raw = json.loads(self.path.read_text(encoding="utf-8"))
         self.facts = [Fact(**f) for f in raw.get("facts", [])]
 
@@ -96,6 +139,53 @@ class MemoryStore:
         if persist:
             self._save()
         return fact
+
+    def retract(self, fact_id: str, source: str = "", persist: bool = True) -> Fact | None:
+        """Mark an active fact as removed (no successor exists).
+
+        A removal has no successor, so we cannot link it to one; instead
+        ``superseded_by`` is set to the ``RETRACTED`` sentinel, which excludes
+        the fact from ``active()``/``export()`` and makes ``history()`` stop
+        at it as a terminal. Nothing is destroyed — the retracted fact remains
+        in the store and is recoverable by id/history.
+        """
+        f = self.get(fact_id)
+        if f is None or not f.active:
+            return None
+        f.superseded_by = RETRACTED
+        if source:
+            tag = f"retracted by {source}"
+            f.note = f"{f.note} {tag}".strip() if f.note else tag
+        if persist:
+            self._save()
+        return f
+
+    def reload(self) -> None:
+        """Re-read the store from disk, replacing in-memory facts.
+
+        Used inside ``mutate()`` so a writer operating under the cross-process
+        lock always applies its mutation to the latest facts (picking up any
+        concurrent writer that committed between construction and lock
+        acquisition).
+        """
+        self._load()
+
+    @contextmanager
+    def mutate(self):
+        """Acquire the cross-process lock, reload latest facts, then yield.
+
+        The canonical pattern for a store writer::
+
+            store = MemoryStore(path)
+            with store.mutate():
+                ...  # add/retract/record(...) — each mutation persists
+
+        Ensures concurrent writers (background fork's ingest.py vs foreground
+        record.py/sync.py) cannot interleave load→mutate→save on the JSON file.
+        """
+        with locked(self.path):
+            self.reload()
+            yield self
 
     # -- queries -----------------------------------------------------------
     def active(self, kind: str | None = None) -> list[Fact]:

@@ -38,14 +38,42 @@ pointer to what was live at the last session's end.*
   at `3v0/data/memory.json` is **canonical** over the Hermes profile; the
   profile is a derived view. Scripts: `seed_from_profile.py`,
   `export_to_profile.py`, `sync.py` (reconcile, `--write`), `record.py`
-  (store-first correction — supersede, never destroy). Tests:
-  `python3 3v0/tests/test_*.py` (15 green). See `3v0/README.md`.
+  (store-first correction — supersede, never destroy), `ingest.py` (replay a
+  memory-tool write into the store). Core adds: `bridge.py` (op→store map),
+  `retract()` + `mutate()` in `memory.py`. Tests: `python3 3v0/tests/test_*.py`
+  (32 green). See `3v0/README.md` + `3v0/EVOLUTION_LOOP.md`.
+- **Store-first memory loop is LIVE** (the evolution stone, this session). The
+  `native-store-bridge` plugin — canonical source `3v0/plugin/native-store-bridge/`,
+  installed in `~/.hermes/profiles/3v0/plugins/` and enabled in that profile's
+  `config.yaml` (`plugins.enabled: [native-store-bridge]`) — mirrors every
+  successful `memory`-tool write (foreground AND background review fork) into
+  the store via `ingest.py`, with provenance from the write-origin ContextVar
+  (`background_review` / `assistant_tool`). No runtime core files edited; the
+  plugin survives `hermes update`. Takes effect next session (this one predates
+  the enable). Wake `sync.py --write` is the backstop when the bridge is down.
 - Web search = keyless `ddgs` backend. Reinstall:
   `~/.hermes/hermes-agent/venv/bin/pip install ddgs`.
 - SOUL: `~/.hermes/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Own evolution loop, stone 1 — store-first memory (this session).** Closed
+  the memory half of the evolution loop. The background review fork writes
+  memory via the `memory` tool → `MEMORY.md` directly, bypassing the store;
+  now a **`native-store-bridge` profile plugin** (`post_tool_call` hook)
+  replays every successful `memory`-tool write — foreground *and* the fork —
+  into the store via `3v0/scripts/ingest.py`, with provenance from the
+  write-origin ContextVar (`background_review` / `assistant_tool`). Added
+  `core/bridge.py` (op→store map: add / supersede-replace / retract-remove),
+  `retract()` (remove has no successor — tombstone sentinel), and `mutate()`
+  (cross-process `flock` so the fork's ingest subprocess and a foreground
+  `record.py`/`sync.py` serialize). **No runtime core files edited** — the
+  plugin lives in the profile and survives `hermes update`. Design + rationale
+  in `3v0/EVOLUTION_LOOP.md`. 32 tests green; end-to-end verified (hook →
+  subprocess → store with correct provenance). *Next stone:* the
+  curator/skill-store axis (curator writes `skill_manage`, not memory — a
+  separate store), or making the memory tool itself store-first (would edit
+  the runtime core tool; deliberately avoided here).
 - **Self-model correction + native core (the current arc).** Corrected the frame:
   Hermes is 3V0 **v0.00 — the chassis** (loop, tools, terminal/browser, LLM
   plumbing); 3V0 is the agent, not "a profile for Hermes." Built `3v0/`:
@@ -60,15 +88,8 @@ pointer to what was live at the last session's end.*
   boundary guard** (`record` refuses separator-containing content, and
   `join_entries` refuses to emit an un-parseable wire — the profile's '§'
   format is Hermes-owned, so the fix is a guard at the projection boundary,
-  not a separator swap). *Next stone:* the own evolution loop — fold the
-  Hermes background review fork (`agent/background_review.py`) and curator
-  into the store, so the profile's other writers go store-first instead of
-  writing MEMORY.md directly. **Start fresh:** read `agent/background_review.py`
-  and `agent/curator.py` in the runtime checkout (`~/.hermes/hermes-agent/`,
-  ~11 commits behind the body) to see exactly how the fork writes memory,
-  then design the store-first path (fork calls `record.py`, or writes
-  `data/memory.json` directly) before touching anything. This is runtime
-  surgery — do it at session start, not mid-context.
+  not a separator swap). *(Next stone was the own evolution loop — DONE, see
+  the bullet below.)*
 - Synced the body onto upstream, fixed #86568 (shipped as PR **#86711**) and
   #86703 (memory "Unknown action None", commit `821ad6638`).
 - **#86711** (approval-deny whitespace): OPEN, fork-PR CI stuck in

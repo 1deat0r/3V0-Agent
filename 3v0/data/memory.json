@@ -70,6 +70,16 @@
       "supersedes": [],
       "superseded_by": "",
       "note": ""
+    },
+    {
+      "id": "ad67c22c4cc7",
+      "content": "Memory writes (foreground + background-review fork) mirror store-first into 3v0/data/memory.json via the native-store-bridge plugin (post_tool_call hook); store canonical, profile derived; wake sync.py --write is the backstop.",
+      "kind": "memory",
+      "source": "profile-import",
+      "created_at": "2026-08-15T07:10:12Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
     }
   ]
 }

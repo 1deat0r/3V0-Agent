@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.memory import MemoryStore  # noqa: E402
-from core.sync import profile_text, sync_kind  # noqa: E402
+from core.sync import SyncReport, profile_text, sync_kind  # noqa: E402
 
 PROFILE_MEM = Path.home() / ".hermes" / "profiles" / "3v0" / "memories"
 STORE_PATH = REPO_ROOT / "3v0" / "data" / "memory.json"
@@ -38,10 +38,19 @@ def main() -> int:
     mem_md = (PROFILE_MEM / "MEMORY.md").read_text(encoding="utf-8")
     user_md = (PROFILE_MEM / "USER.md").read_text(encoding="utf-8")
 
-    reports = {
-        "memory": sync_kind(store, mem_md, "memory", args.write),
-        "user": sync_kind(store, user_md, "user", args.write),
-    }
+    reports: dict[str, SyncReport] = {}
+    with store.mutate():
+        reports = {
+            "memory": sync_kind(store, mem_md, "memory", args.write),
+            "user": sync_kind(store, user_md, "user", args.write),
+        }
+        if args.write:
+            (PROFILE_MEM / "MEMORY.md").write_text(
+                profile_text(store, "memory"), encoding="utf-8"
+            )
+            (PROFILE_MEM / "USER.md").write_text(
+                profile_text(store, "user"), encoding="utf-8"
+            )
 
     for kind, r in reports.items():
         print(
@@ -56,12 +65,6 @@ def main() -> int:
             print(f"  ->export {e[:60]!r}")
 
     if args.write:
-        (PROFILE_MEM / "MEMORY.md").write_text(
-            profile_text(store, "memory"), encoding="utf-8"
-        )
-        (PROFILE_MEM / "USER.md").write_text(
-            profile_text(store, "user"), encoding="utf-8"
-        )
         print("Wrote reconciled MEMORY.md / USER.md")
 
     return 0

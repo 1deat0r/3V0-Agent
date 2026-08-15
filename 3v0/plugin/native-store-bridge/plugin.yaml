@@ -1,0 +1,6 @@
+name: native-store-bridge
+version: 0.1.0
+description: "Mirror memory-tool writes into 3V0's native store (store-first provenance)."
+author: "3V0 Agent"
+hooks:
+  - post_tool_call
