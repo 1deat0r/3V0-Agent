@@ -4,30 +4,36 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, Stone 14)
-The forkless cut **held** (verified this session: both nudge intervals `0`,
-zero `background_review` facts, daemon `refused: 0`), and this session landed
-**Stone 14 — the wake-sync fold**: the own-clock daemon `3v0-review.service` is
-now a full maintenance clock (`_sync()` reconciles store↔profile each tick,
-*then* `_drain()` reviews), so drift heals between sessions instead of only at
-wake. 151 native-core tests green (+2). Daemon restarted; its first tick logged
-`sync pass … reconciled` + a clean `drain pass`. Next session:
+## Next-session kickoff (2026-08-16, Stone 15)
+Stone 15 landed: **per-project reviewers/daemons** for F1NANCE/Axiom. Each
+sibling now has its own review daemon (systemd user services
+`f1nance-review.service` + `axiom-review.service`, `THREEV0_PROJECT=<name>`)
+reviewing its sessions into its own store (`3v0/data/<project>/memory.json`),
+**store-only** (no profile projection, `record.py --no-export`) and
+**memory-only** (no skill axis), with **strict cwd** scoping (no fail-open).
+Both backlogs drained live this session — f1nance: 1 session → 2 facts (the 2
+overlapping carved facts consolidated + an operator-env fact); axiom: 4
+sessions → 5 facts (2 superseded, 1 identity, temporal guard refused 2).
+`3v0/core/projects.py` is the project registry. 160 native-core tests green
+(+9). Next session:
 
-1. **Confirm the daemon is still syncing + reviewing.** `systemctl --user
-   status 3v0-review.service` (active) + `tail 3v0_reviews/run.log` (each
-   6-min tick shows `sync pass: store<->profile reconciled`; any `sync-failed`
-   line is a regression) + `tail 3v0_reviews/reviews.jsonl` (`refused: 0`).
-2. **Re-check the 4 open upstream loops** (see "Open loops") — all were
-   "waiting on a maintainer / reporter / other author" at last check; no
-   unclaimed bug to write.
-3. **Pick the next real work.** The recurring open item is **per-project
-   reviewers/daemons** for F1NANCE/Axiom — their sessions are still skipped
-   (`skipped:project`), and the operator already chose per-project stores, so
-   giving each sibling its own reviewer/daemon (F1NANCE already has
-   `~/.hermes/profiles/f1nance`) is the natural next stone. The fork cut is
-   NOT under reconsideration — it held. Revert if ever needed:
-   `hermes config set memory.nudge_interval 10` +
-   `hermes config set skills.creation_nudge_interval 10`.
+1. **Confirm all three daemons are healthy.** `systemctl --user status
+   3v0-review.service f1nance-review.service axiom-review.service` (all
+   active) + `tail ~/.hermes/profiles/3v0/3v0_reviews/{f1nance,axiom}/run.log`
+   (each 6-min tick shows `sync skipped (store-only project)` + a clean
+   `drain pass`; `sync-failed` only ever appears for the 3v0 daemon).
+2. **Re-check the 4 open upstream loops** (see "Open loops") — all "waiting on
+   a maintainer / reporter / other author" at last check.
+3. **Pick the next real work.** Two sibling edges remain explicit (see
+   `EVOLUTION_LOOP.md` Stone 15 "Still open"): (a) the **sibling foreground
+   write mirror** — the bridge still *refuses* sibling `memory`/`skill_manage`
+   writes rather than routing them to sibling stores (only the daemons write
+   siblings today); (b) **profile MEMORY.md sharing** — the three projects
+   still share one profile MEMORY.md; the clean fix is moving siblings onto
+   their own profiles (F1NANCE already has `~/.hermes/profiles/f1nance`; Axiom
+   does not). Either is a candidate, or return to direction 3 (own tools) /
+   direction 4 (own initiative) for 3V0 itself. The fork cut is NOT under
+   reconsideration — it held.
 
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
@@ -85,8 +91,11 @@ wake. 151 native-core tests green (+2). Daemon restarted; its first tick logged
   3V0's repo + `$HOME` only), so it no longer folds sibling projects' sessions
   into 3V0's store. Carved `3v0/data/axiom/memory.json` (seeded with the two
   leaked Axiom facts, retracted from 3V0's store) + an empty
-  `3v0/data/f1nance/memory.json`. F1NANCE/Axiom sessions are skipped by 3V0's
-  daemon until they get their own reviewers. **The
+  `3v0/data/f1nance/memory.json`. **Stone 15 gave each sibling its own
+  reviewer/daemon** — `3v0/core/projects.py` (the project registry) +
+  `--project`/`THREEV0_PROJECT` on the driver; sibling reviewers are
+  store-only + memory-only + strict-cwd, deployed as
+  `f1nance-review.service` + `axiom-review.service`. **The
   `native-store-bridge` plugin's foreground write mirror is now scoped
   (Stone 10)** — both the `memory` and `skill_manage` mirrors refuse to replay
   when the writing session's `cwd` (from `state.db`) is a sibling project,
@@ -131,6 +140,22 @@ wake. 151 native-core tests green (+2). Daemon restarted; its first tick logged
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Per-project reviewers/daemons, Stone 15 (this session, BUILT + tested +
+  live-deployed).** The recurring open item, closed. Each sibling project
+  (F1NANCE, Axiom) now has its own own-clock review daemon reviewing its
+  sessions into its own store. New `3v0/core/projects.py` (`ProjectSpec` +
+  `resolve_project` for the three projects sharing the 3v0 `state.db`);
+  `review_session.py` gained `--project`/`THREEV0_PROJECT` (store-only +
+  memory-only + strict cwd; the flags are authoritative over env overrides);
+  `record.py` gained `--no-export`; the `.gitignore` lock rule now covers
+  nested stores; `3v0/deploy/{f1nance,axiom}-review.service` deployed +
+  enabled. 160 native-core tests green (+9). Live-drained both backlogs with
+  real DeepSeek calls: f1nance consolidated its 2 overlapping carved facts;
+  axiom superseded 2 stale facts + recorded an identity fact, with the
+  temporal guard refusing 2 "fact newer than session" decisions in the wild.
+  3V0's store and F1NANCE's profile untouched (verified). Remaining sibling
+  edges (explicit): foreground write mirror + shared profile MEMORY.md — see
+  Stone 15 "Still open" in `EVOLUTION_LOOP.md`.
 - **Wake-sync fold, Stone 14 — the daemon is now a full maintenance clock
   (this session, BUILT + live-verified).** With the fork cut (Stone 13), the
   own-clock daemon was the sole autonomous process but review-only — drift
