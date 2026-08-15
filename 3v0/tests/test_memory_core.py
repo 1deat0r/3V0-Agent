@@ -16,7 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.memory import MemoryStore  # noqa: E402
-from core.profile_io import split_entries  # noqa: E402
+from core.profile_io import join_entries, split_entries  # noqa: E402
 
 
 class TestMemoryCore(unittest.TestCase):
@@ -64,7 +64,7 @@ class TestMemoryCore(unittest.TestCase):
         '§', must re-split into the identical ordered list. Known boundary:
         facts containing a literal '§' or leading/trailing whitespace do not
         survive the delimiter — that is the separator's contract, and the
-        current store contains neither.
+        record path now refuses '§' before it reaches the store.
         """
         s = MemoryStore(self.path)
         contents = [
@@ -74,8 +74,13 @@ class TestMemoryCore(unittest.TestCase):
         ]
         for c in contents:
             s.add(c, "memory", "test")
-        mem = "\n§\n".join(f.content for f in s.active("memory"))
+        mem = join_entries([f.content for f in s.active("memory")])
         self.assertEqual(split_entries(mem), contents)
+
+    def test_join_refuses_separator_in_content(self) -> None:
+        """The wire-format owner refuses to emit an un-parseable profile."""
+        with self.assertRaises(ValueError):
+            join_entries(["fine", "contains § separator"])
 
 
 if __name__ == "__main__":

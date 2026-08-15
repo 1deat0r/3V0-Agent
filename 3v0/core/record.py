@@ -20,6 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .memory import Fact, MemoryStore
+from .profile_io import SEPARATOR, contains_separator
 
 
 class RecordError(Exception):
@@ -48,6 +49,11 @@ def record(
     to disk (dry-run). The caller must still re-export the profile separately
     to keep it a derived view of the store.
     """
+    if contains_separator(content):
+        raise RecordError(
+            f"content contains the '{SEPARATOR}' profile separator and cannot "
+            "be projected to the profile; rephrase it before recording"
+        )
     if supersede_id is not None and supersede_contains is not None:
         raise RecordError("give at most one of supersede_id / supersede_contains")
 

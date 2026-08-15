@@ -3,14 +3,23 @@
 Entries are separated by '§'. This module is the single owner of that format
 so seed/export/sync never disagree on how the profile is parsed or written.
 
-Known boundary: an entry containing a literal '§' or leading/trailing
-whitespace does not survive a round-trip. The current store contains neither;
-swap to a structured separator before the store grows enough for it to matter.
+The '§' separator is Hermes-owned — it is how the host's own memory tool reads
+and writes the profile, so 3V0 cannot swap it unilaterally. The store
+(data/memory.json) is JSON and can hold anything; the profile is a *projection*
+of the store, and a fact containing a literal '§' (or leading/trailing
+whitespace) cannot round-trip through it. The guard lives here, at the
+boundary: join_entries refuses to emit an un-parseable wire, and the record
+path refuses such content before it enters the store.
 """
 
 from __future__ import annotations
 
 SEPARATOR = "§"
+
+
+def contains_separator(content: str) -> bool:
+    """True if content contains the profile entry separator (cannot round-trip)."""
+    return SEPARATOR in content
 
 
 def split_entries(md: str) -> list[str]:
@@ -19,5 +28,15 @@ def split_entries(md: str) -> list[str]:
 
 
 def join_entries(entries: list[str]) -> str:
-    """Join entries into a memories .md body (inverse of split_entries)."""
+    """Join entries into a memories .md body (inverse of split_entries).
+
+    Refuses any entry containing the separator: emitting it would produce a
+    wire the next split_entries (and Hermes's own memory tool) mis-parses.
+    """
+    for entry in entries:
+        if contains_separator(entry):
+            raise ValueError(
+                f"entry contains the '{SEPARATOR}' separator and cannot be "
+                f"projected to the profile: {entry[:40]!r}"
+            )
     return f"\n{SEPARATOR}\n".join(entries)
