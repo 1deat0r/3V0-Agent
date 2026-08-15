@@ -28,7 +28,7 @@
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "360bcb9f0619",
       "note": ""
     },
     {
@@ -193,6 +193,18 @@
       "created_at": "2026-08-15T11:45:43Z",
       "supersedes": [
         "a2fcaf2121b0"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "360bcb9f0619",
+      "content": "fork 1deat0r/hermes-agent (GH acct mustbearnold→1deat0r; upstream via fork feature branch + PR). Runtime executes ~/.hermes/hermes-agent — a separate checkout kept behind the body repo ~/Projects/AI Agents/3V0 Agent (body synced to upstream 2026-08-15; runtime NOT yet updated): install runtime deps in its venv/, commit identity+scaffolding to the body repo.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T11:57:20Z",
+      "supersedes": [
+        "e11eaf515320"
       ],
       "superseded_by": "",
       "note": ""
