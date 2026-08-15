@@ -671,7 +671,7 @@ Hermes-independent process that reviews on 3V0's own schedule.
   cost is ~zero: an idle tick (nothing unreviewed) makes no LLM call, just one
   cheap SQL query.
 
-### Two live bugs found and fixed (the reviewer was failing silently in the wild)
+### Three live bugs found and fixed (the reviewer was failing silently in the wild)
 
 Auditing before building surfaced that the ONE successful review in the log was
 the exception — the hook's reviews had been failing silently since go-live:
@@ -699,10 +699,18 @@ the exception — the hook's reviews had been failing silently since go-live:
    repaired store-first (the corrected fact supersedes the wrong one; the whole
    chain stays recoverable via `history()`).
 
+3. **Live-session review (found while watching the deployed daemon).** The
+   daemon's second tick reviewed a still-open session: a transient schema-read
+   failure made `_session_columns()` return an empty set, silently dropping the
+   `ended_at IS NOT NULL` filter — and the min-messages gate then admitted the
+   first live session with ≥3 user turns. Fix: `_session_columns()` returns
+   `None` on failure and `_candidate_sessions()` fails safe (returns [], logs
+   the abort) instead of falling through to an unfiltered query.
+
 ### Verification
 
-- 129 native-core tests green (was 122): +4 `--latest` selection, +1
-  empty-content detection, +2 temporal-guard.
+- 130 native-core tests green (was 122): +4 `--latest` selection, +1
+  empty-content detection, +2 temporal-guard, +1 candidate-scan fail-safe.
 - **Live E2E**: `--latest` reviewed real sessions with real DeepSeek calls —
   one applied 2 decisions (pre-guard), one a clean no-op — and the drain loop
   correctly skipped the sub-3-user-message sessions in id order.
@@ -720,4 +728,18 @@ the exception — the hook's reviews had been failing silently since go-live:
 - **Wake-sync fold** — the daemon is review-only; folding `sync.py --write` /
   `sync_skills.py --write` into the tick would make it a full maintenance
   clock. Deliberately deferred (keep the stone small).
+
+### Per-project scoping (live — 2026-08-16)
+
+The `3v0` profile now hosts **three projects** (3V0, F1NANCE Agent, Axiom
+Agent) in one `state.db`, so the own-clock was folding sibling projects'
+sessions into 3V0's store. Operator decision: **per-project stores**. The
+reviewer is now scoped by `cwd`: `_is_threev0_cwd` admits only 3V0's repo (and
+subdirs) plus `$HOME`, and `review_one` + `_candidate_sessions` both refuse
+sibling-project sessions. Carved `3v0/data/axiom/memory.json` (seeded with the
+two Axiom facts that had leaked into 3V0's store) and an empty
+`3v0/data/f1nance/memory.json`; the leaked facts were retracted from 3V0's
+store and dropped from the profile projection. Still open: per-project
+*reviewers/daemons* to review F1NANCE/Axiom sessions into their own stores
+(their sessions are simply skipped by 3V0's daemon for now).
 

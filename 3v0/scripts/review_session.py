@@ -129,6 +129,19 @@ REVIEWABLE_SOURCES = {
 
 REVIEW_PROVENANCE = "session-review"
 
+
+def _is_threev0_cwd(cwd: Optional[str]) -> bool:
+    """True when a session's cwd is 3V0's own (its repo, a subdir, or $HOME).
+
+    Sibling projects (F1NANCE, Axiom) share this profile's state.db; 3V0's
+    reviewer must not fold their sessions into 3V0's store. An unknown/empty
+    cwd is treated as 3V0 (the primary project)."""
+    if not cwd:
+        return True
+    cwd = str(cwd)
+    root = str(REPO_ROOT).rstrip("/")
+    return cwd == root or cwd.startswith(root + "/") or cwd == str(Path.home())
+
 # ---------------------------------------------------------------------------
 # The review charter — the system prompt the reviewer model gets.
 # ---------------------------------------------------------------------------
@@ -253,6 +266,8 @@ def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
             select.append("ended_at")
         if "last_activity_at" in cols:
             select.append("last_activity_at")
+        if "cwd" in cols:
+            select.append("cwd")
         row = conn.execute(
             f"SELECT {', '.join(select)} FROM sessions WHERE id = ?",
             (session_id,),
@@ -269,6 +284,11 @@ def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
         if as_of is None and "last_activity_at" in cols:
             if isinstance(row[idx], (int, float)):
                 as_of = float(row[idx])
+            idx += 1
+        cwd = ""
+        if "cwd" in cols:
+            cwd = row[idx] or ""
+            idx += 1
         msgs = conn.execute(
             "SELECT role, content, tool_name FROM messages "
             "WHERE session_id = ? AND active = 1 ORDER BY id",
@@ -282,6 +302,7 @@ def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
         "source": source,
         "title": title,
         "as_of": as_of,
+        "cwd": cwd,
         "messages": [
             {"role": role or "", "content": content or "", "tool_name": tool_name or ""}
             for role, content, tool_name in msgs
@@ -674,20 +695,28 @@ def _candidate_sessions() -> List[tuple]:
         where.append("hidden = 0")
     if "archived" in cols:
         where.append("archived = 0")
-    sql = "SELECT id, source FROM sessions"
+    select = ["id", "source"]
+    if "cwd" in cols:
+        select.append("cwd")
+    sql = f"SELECT {', '.join(select)} FROM sessions"
     if where:
         sql += " WHERE " + " AND ".join(where)
     sql += " ORDER BY id DESC"
     try:
         conn = sqlite3.connect(str(STATE_DB), timeout=5)
         try:
-            return [
-                (sid, source or "") for sid, source in conn.execute(sql).fetchall()
-            ]
+            rows = conn.execute(sql).fetchall()
         finally:
             conn.close()
     except sqlite3.Error:
         return []
+    out = []
+    for row in rows:
+        sid, source = row[0], row[1] or ""
+        if "cwd" in cols and not _is_threev0_cwd(row[2]):
+            continue  # a sibling project's session — not 3V0's own work
+        out.append((sid, source))
+    return out
 
 
 def review_one(session_id: str) -> str:
@@ -720,6 +749,8 @@ def review_one(session_id: str) -> str:
             return "skipped:missing"
         if session["source"] not in REVIEWABLE_SOURCES:
             return "skipped:source"
+        if not _is_threev0_cwd(session.get("cwd")):
+            return "skipped:project"
         n_user = sum(1 for m in session["messages"] if m["role"] == "user")
         if n_user < MIN_MESSAGES:
             return "skipped:min_messages"

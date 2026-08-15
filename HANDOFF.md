@@ -52,8 +52,16 @@ pointer to what was live at the last session's end.*
   (skill_update/retract/absorb decisions, never destroys) +
   `scripts/record_skills.py` (project SKILL.md), closing the
   `threev0_record`-is-memory-only gap.
-  Tests: `python3 3v0/tests/test_*.py` (129 green). See `3v0/README.md` +
+  Tests: `python3 3v0/tests/test_*.py` (133 green). See `3v0/README.md` +
   `3v0/EVOLUTION_LOOP.md`.
+- **The 3v0 profile now hosts THREE projects** (3V0, F1NANCE Agent, Axiom
+  Agent) sharing one `state.db`. Operator decision (clarify, 2026-08-16):
+  **per-project stores**. The reviewer is scoped by `cwd` (`_is_threev0_cwd`:
+  3V0's repo + `$HOME` only), so it no longer folds sibling projects' sessions
+  into 3V0's store. Carved `3v0/data/axiom/memory.json` (seeded with the two
+  leaked Axiom facts, retracted from 3V0's store) + an empty
+  `3v0/data/f1nance/memory.json`. F1NANCE/Axiom sessions are skipped by 3V0's
+  daemon until they get their own reviewers.
 - **Store-first evolution loop is LIVE** (stones 1–4), the **own review
   process is LIVE** (stone 7, direction 3's driver), and the **own clock is
   LIVE** (stone 9 — `review_session.py --daemon` deployed as the systemd user
@@ -97,8 +105,12 @@ pointer to what was live at the last session's end.*
   **temporal guard** (`_temporal_refusal` refuses supersede/retract of any
   fact newer than the session; plain records pass; no-op without a session
   timestamp). Store repaired store-first (axiom-agent "sovereign on stock
-  Hermes" restored over the wrong "Prime Agent fork" fact). 129 tests green
-  (was 122). Design + both bugs in `3v0/EVOLUTION_LOOP.md` (Stone 9).
+  Hermes" restored over the wrong "Prime Agent fork" fact). 133 tests green
+  (was 122). A third bug surfaced while watching the deployed daemon: it
+  reviewed a still-open session when a transient schema-read failure dropped
+  the `ended_at IS NOT NULL` filter — fixed by making the candidate scan
+  fail-safe (unreadable schema → review nothing). Design + all three bugs in
+  `3v0/EVOLUTION_LOOP.md` (Stone 9).
   **Next:** the skill-axis temporal guard (the one remaining regression
   surface for the own-clock, a symmetric `_temporal_refusal` on skill
   versions), then verify the daemon's backlog drain is clean after a few

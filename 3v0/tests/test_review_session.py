@@ -560,7 +560,8 @@ def _seed_rich_sessions(path: Path, rows) -> None:
         CREATE TABLE sessions (
             id TEXT PRIMARY KEY, source TEXT NOT NULL, title TEXT,
             ended_at REAL, parent_session_id TEXT,
-            hidden INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0
+            hidden INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0,
+            cwd TEXT NOT NULL DEFAULT ''
         );
         CREATE TABLE messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -575,8 +576,8 @@ def _seed_rich_sessions(path: Path, rows) -> None:
     for row in rows:
         sid = row["id"]
         conn.execute(
-            "INSERT INTO sessions (id, source, title, ended_at, parent_session_id, hidden, archived) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO sessions (id, source, title, ended_at, parent_session_id, hidden, archived, cwd) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 sid,
                 row.get("source", "tui"),
@@ -585,6 +586,7 @@ def _seed_rich_sessions(path: Path, rows) -> None:
                 row.get("parent_session_id"),
                 row.get("hidden", 0),
                 row.get("archived", 0),
+                row.get("cwd", ""),
             ),
         )
         for i in range(row.get("user_messages", 4)):
@@ -783,6 +785,59 @@ class TestLLMEmptyContent(unittest.TestCase):
             os.environ.pop("THREEV0_REVIEW_LOG", None)
             os.environ.pop("DEEPSEEK_API_KEY", None)
             tmp.cleanup()
+
+
+class TestProjectScoping(Env):
+    """3V0's reviewer must not fold sibling projects' sessions (F1NANCE,
+    Axiom) into 3V0's store — sessions are scoped by cwd."""
+
+    def test_is_threev0_cwd_truth_table(self):
+        mod = DRIVER_MOD
+        root = str(mod.REPO_ROOT)
+        self.assertTrue(mod._is_threev0_cwd(root))
+        self.assertTrue(mod._is_threev0_cwd(root + "/sub"))
+        self.assertTrue(mod._is_threev0_cwd(str(Path.home())))
+        self.assertTrue(mod._is_threev0_cwd(""))
+        self.assertTrue(mod._is_threev0_cwd(None))
+        self.assertFalse(mod._is_threev0_cwd("/home/mustbearn/Projects/axiom-agent"))
+        self.assertFalse(
+            mod._is_threev0_cwd("/home/mustbearn/Projects/AI Agents/F1NANCE Agent")
+        )
+
+    def test_candidate_scan_excludes_sibling_projects(self):
+        _seed_rich_sessions(
+            self.db_path,
+            [
+                {"id": "88888888_888888_axiom", "source": "tui", "cwd": "/home/mustbearn/Projects/axiom-agent"},
+                {"id": "77777777_777777_fin", "source": "tui", "cwd": "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"},
+                {"id": "66666666_666666_3v0", "source": "tui", "cwd": str(REPO_ROOT)},
+                {"id": "55555555_555555_home", "source": "tui", "cwd": str(Path.home())},
+            ],
+        )
+        os.environ["THREEV0_REVIEW_STATE_DB"] = str(self.db_path)
+        os.environ["THREEV0_REVIEW_LOG"] = str(self.review_log)
+        try:
+            mod = _load_driver()
+            ids = [sid for sid, _ in mod._candidate_sessions()]
+            self.assertIn("66666666_666666_3v0", ids)
+            self.assertIn("55555555_555555_home", ids)
+            self.assertNotIn("88888888_888888_axiom", ids)
+            self.assertNotIn("77777777_777777_fin", ids)
+        finally:
+            os.environ.pop("THREEV0_REVIEW_STATE_DB", None)
+            os.environ.pop("THREEV0_REVIEW_LOG", None)
+
+    def test_review_skips_sibling_project_session(self):
+        _seed_rich_sessions(
+            self.db_path,
+            [{"id": "88888888_888888_axiom", "source": "tui",
+              "cwd": "/home/mustbearn/Projects/axiom-agent", "user_messages": 4}],
+        )
+        self.decisions_file.write_text(
+            json.dumps({"summary": "no-op", "decisions": []}), encoding="utf-8"
+        )
+        _run_driver("88888888_888888_axiom", self.env)
+        self.assertEqual(self.log_entries(), [])  # cwd guard skips it
 
 
 if __name__ == "__main__":
