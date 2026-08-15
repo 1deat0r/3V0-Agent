@@ -330,6 +330,22 @@ class TestMemoryToolDispatcher:
         assert "the real one" in store.memory_entries
         assert "ignored" not in store.memory_entries
 
+    def test_null_action_reports_clear_error(self, store):
+        # A strict provider sends `action: null` instead of omitting the key.
+        # The handler default only applies to a MISSING key, so null reaches
+        # memory_tool() as None and used to fall through every branch to the
+        # confusing "Unknown action None" (#86703).
+        result = json.loads(memory_tool(action=None, target="memory", store=store))
+        assert result["success"] is False
+        assert "Missing required 'action'" in result["error"]
+        assert "Unknown action" not in result["error"]
+
+    def test_unknown_action_still_distinct(self, store):
+        # A genuinely unknown (non-empty) action keeps the existing message.
+        result = json.loads(memory_tool(action="delete", target="memory", store=store))
+        assert result["success"] is False
+        assert "Unknown action 'delete'" in result["error"]
+
 
 class TestMemoryBatch:
     """The 'operations' batch shape: atomic, all-or-nothing, final-budget."""
