@@ -52,8 +52,8 @@ pointer to what was live at the last session's end.*
   (skill_update/retract/absorb decisions, never destroys) +
   `scripts/record_skills.py` (project SKILL.md), closing the
   `threev0_record`-is-memory-only gap.
-  Tests: `python3 3v0/tests/test_*.py` (133 green). See `3v0/README.md` +
-  `3v0/EVOLUTION_LOOP.md`.
+  Tests: `python3 -m unittest discover -s 3v0/tests` (149 green). See
+  `3v0/README.md` + `3v0/EVOLUTION_LOOP.md`.
 - **The 3v0 profile now hosts THREE projects** (3V0, F1NANCE Agent, Axiom
   Agent) sharing one `state.db`. Operator decision (clarify, 2026-08-16):
   **per-project stores**. The reviewer is scoped by `cwd` (`_is_threev0_cwd`:
@@ -73,7 +73,12 @@ pointer to what was live at the last session's end.*
 - **Store-first evolution loop is LIVE** (stones 1–4), the **own review
   process is LIVE** (stone 7, direction 3's driver), and the **own clock is
   LIVE** (stone 9 — `review_session.py --daemon` deployed as the systemd user
-  service `3v0-review.service`). The
+  service `3v0-review.service`; Stone 12 made it *drain* the backlog).
+  **Fork-disable off-switch (Stone 12):** the Hermes per-turn review fork is
+  gated by `memory.nudge_interval` + `skills.creation_nudge_interval` (default
+  10); set both to 0 in `~/.hermes/profiles/3v0/config.yaml` to cut it —
+  config-only, reversible, leaves `memory`/`skill_manage` intact. NOT flipped
+  (operator's call after more wild-flight time). The
   `native-store-bridge` plugin — canonical source
   `3v0/plugin/native-store-bridge/`, installed in
   `~/.hermes/profiles/3v0/plugins/` and enabled in that profile's
