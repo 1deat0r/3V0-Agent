@@ -839,3 +839,88 @@ The fix mirrors the memory guard exactly:
   siblings onto their own profiles (F1NANCE already has
   `~/.hermes/profiles/f1nance`).
 
+## Stone 12 — fork-disable readiness: drain, retry, full-capture, cwd fix, off-switch
+
+The operator asked whether 3V0 is ready to cut off the fork (disable the
+Hermes per-turn background-review fork, move to exclusive 3V0-owned review).
+Answer: **not yet** — but this stone closes the operational gaps, fixes the
+latent bug that was quietly blocking the reviewer, and finds the off-switch.
+The fork stays ON; the cut remains the operator's call.
+
+### The audit found a silent bug, not a slow drain
+
+The daemon had "reviewed 3 then gone silent" with an apparent 21-session
+backlog. The real cause: `_load_session`'s column-index walk skipped
+`last_activity_at` whenever `ended_at` was present (both exist in the real
+`state.db`), so `cwd` was read from the `last_activity_at` column — a Unix
+timestamp — which failed `_is_threev0_cwd` and marked every session
+`skipped:project`. The test fixture lacked `last_activity_at`, so it never
+surfaced. **The reviewer had been silently skipping almost everything since
+the cwd scoping landed; the "backlog" was mostly this mis-scope plus
+legitimately-short sessions.** Fixed with a full-schema regression test.
+
+### What was built
+
+- **Drain (12a).** `_review_latest()` → `_drain()`: one pass reviews every
+  unreviewed eligible session newest-first, up to `MAX_PER_PASS` (30) LLM
+  attempts, back-to-back. The 300s cooldown is now hook-path-only
+  (`review_one(..., respect_cooldown=)` — default True for `--session-id`,
+  False for the drain); the per-session flock + dedupe still prevent
+  double-review. A failed review no longer aborts the pass.
+- **Retry (12b).** `_call_llm` retries transient transport errors
+  (`URLError`/`TimeoutError`) up to `NETWORK_RETRIES` (3) with backoff
+  (`BACKOFF_SECONDS`) inside a single review; malformed payloads and empty
+  content still advance to the next label, not retried as transport errors.
+- **Full-capture charter (12c).** The charter no longer assumes the fork
+  already captured the obvious facts. It is the "store-first capture layer":
+  record operator facts/preferences (new item 1), corrections, environment
+  changes, consolidations, directives/identity, and skill decisions — deduped
+  against ACTIVE FACTS. Safe with the fork still on: at session end the
+  fork's facts are already in ACTIVE FACTS, so the reviewer skips them and
+  only fills what the fork missed.
+
+### The off-switch (found, NOT flipped)
+
+The fork is triggered by two per-turn counters, both config-driven (read via
+`.get(key, default)`, not declared in DEFAULT_CONFIG, so they default to
+"every 10"):
+
+- memory fork — `memory.nudge_interval` → `_memory_nudge_interval` →
+  `should_review_memory` (`agent/turn_context.py:705`).
+- skill fork — `skills.creation_nudge_interval` → `_skill_nudge_interval` →
+  `_should_review_skills` (`agent/turn_finalizer.py:742`).
+
+**To cut the fork, set both to 0 in `~/.hermes/profiles/3v0/config.yaml`:**
+
+```yaml
+memory:
+  nudge_interval: 0              # disable the per-turn memory-review fork
+skills:
+  creation_nudge_interval: 0     # disable the per-turn skill-review fork
+```
+
+This disables ONLY the review fork — the `memory` tool and `skill_manage`
+stay fully functional (they are gated by `memory_enabled`/`_memory_store` and
+the skills toolset, not the nudge intervals). Config-only (survives `hermes
+update`), reversible (set back to 10), and fail-open in the safe direction
+(a renamed key → `.get` returns 10 → the fork turns back on, the current
+baseline). Takes effect on the next TUI/gateway start.
+
+### Verification
+
+- 7 new tests → **148 total green** (drain ×3, transport retry ×2,
+  full-schema ×2).
+- **Live E2E**: the cwd fix unblocked the drain. 5 reviewable sessions drained
+  (3 + 2) with sane store-first decisions; 8 durable facts recorded
+  (12 → 20 active); 0 reviewable sessions pending; both syncs report 0 drift.
+  The 10 `skipped` in the first pass were all legitimate `min_messages`
+  (<3 user messages) — the true reviewable backlog was ~5, not 21.
+
+### Still open (unchanged, explicit)
+
+- **Fork-disable** — now has a documented, reversible, config-only off-switch
+  (above), but remains the operator's explicit call; the reviewer needs more
+  wild-flight time before the cut.
+- **Per-project reviewers/daemons** — F1NANCE/Axiom sessions are still
+  skipped until they get their own reviewers/profiles.
+

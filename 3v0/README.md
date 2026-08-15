@@ -83,10 +83,15 @@ code.
   decisions (memory: record/supersede/retract; skills: update/retract/
   absorb — Stone 8), applies them via `record.py` / `record_skills.py`, and
   appends to the review log (profile-side `3v0_reviews/reviews.jsonl`; never
-  in the body repo). Stone 9 added the own clock — `--latest` (newest
-  unreviewed *ended* session) and `--daemon [--interval N]` — plus a temporal
-  guard so a review can never supersede/retract a fact newer than the session
-  under review.
+  in the body repo). Stone 9 added the own clock — `--latest` /
+  `--daemon [--interval N]` (drain the unreviewed backlog, up to
+  `MAX_PER_PASS` per pass) — plus the temporal guard (memory + skills,
+  Stones 9/11) so a review can never supersede/retract a fact or skill
+  version newer than the session under review. Stone 12 hardened it: bounded
+  transport retry/backoff, a full-capture charter (stand-alone capable), and
+  a fix for a silent `_load_session` column-walk bug that read
+  `last_activity_at` as `cwd` and mis-scoped every session as a sibling
+  project.
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, registers the

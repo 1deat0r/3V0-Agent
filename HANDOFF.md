@@ -97,6 +97,24 @@ pointer to what was live at the last session's end.*
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Fork-disable readiness, Stone 12 — the reviewer now drains and
+  full-captures; off-switch found (this session, BUILT + tested + E2E).**
+  Asked whether 3V0 is ready to cut off the Hermes background-review fork:
+  **not yet, but the gaps are closed.** Root cause of "the daemon isn't
+  draining" was a silent `_load_session` column-walk bug (read
+  `last_activity_at` as `cwd` → every session `skipped:project`; the test
+  fixture lacked `last_activity_at`). Fixed. `--latest`/`--daemon` now DRAIN
+  the backlog (all unreviewed eligible per pass, up to `MAX_PER_PASS`=30),
+  decoupled from the 300s hook-only cooldown, continue past failures;
+  `_call_llm` retries transport errors (3× backoff); the charter is
+  full-capture (stand-alone capable, dedupes vs ACTIVE FACTS). E2E: drained
+  the 5 reviewable sessions → 8 durable facts (12→20 active), 0 pending,
+  store↔profile converged. 148 tests green. **Off-switch found, NOT
+  flipped**: the fork is triggered by `memory.nudge_interval` +
+  `skills.creation_nudge_interval` (default 10, not in DEFAULT_CONFIG); set
+  both to 0 in the 3v0 `config.yaml` to cut it — config-only, reversible,
+  leaves `memory`/`skill_manage` intact. The cut stays the operator's call
+  after more wild-flight time. Design in `3v0/EVOLUTION_LOOP.md` (Stone 12).
 - **Skill-axis temporal guard, Stone 11 — the last own-clock regression
   surface closed (this session, BUILT + tested).** The temporal guard covered
   memory facts but a stale session could still decommission/replace a skill
