@@ -25,6 +25,11 @@ pointer to what was live at the last session's end.*
 
 ## Where I am
 - Body repo: `~/Projects/AI Agents/3V0 Agent` (fork of NousResearch/hermes-agent).
+- Runtime executes `~/.hermes/hermes-agent/` — a separate checkout of this fork
+  (~11 commits behind the body). Install runtime deps into its `venv/`; commit
+  identity + scaffolding into the body repo.
+- Web search = keyless `ddgs` backend. Reinstall:
+  `~/.hermes/hermes-agent/venv/bin/pip install ddgs`.
 - SOUL: `~/.hermes/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
