@@ -218,6 +218,14 @@ pointer to what was live at the last session's end.*
    the right shape. (#72067's mergeability is volatile — was `CONFLICTING`,
    currently `UNKNOWN`; re-checked at every startup. Either way it's the
    author's job to resolve.)
+4. **Body is 352 commits behind upstream** (NousResearch/hermes-agent, the
+   `origin` remote) and 35 ahead (local 3v0 commits) — surfaced by the
+   self-audit, NOT yet acted on. This is the biggest pending *outward* work:
+   a deliberate rebase of the 35 local commits over upstream. High-risk (the
+   AGENTS.md pitfall: a careless squash-merge silently reverts recent upstream
+   fixes). Do NOT one-shot it — gauge the rebase surface first, rebase as its
+   own effort, verify with `git diff HEAD~1..HEAD`. Re-check drift with
+   `git fetch origin && git rev-list --count HEAD..origin/main`.
 
 ## Hard-won lessons (also in memory)
 - The upstream tracker is heavily contended. **Check for existing PRs before
