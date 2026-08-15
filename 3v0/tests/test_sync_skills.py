@@ -106,6 +106,50 @@ class TestSyncSkills(unittest.TestCase):
         # profile left untouched (operational truth preserved)
         self.assertEqual(find_skill_md(self.skills_dir, "foo").content, "---\nname: foo\nlive\n")
 
+    def test_folds_curator_state(self) -> None:
+        _mk_skill(self.skills_dir, "foo", "---\nname: foo\n")
+        self.store.add("foo", "create", "a", content="---\nname: foo\n")
+        r = sync_skills(
+            self.store, self.skills_dir, {"foo"}, write=True, curator_states={"foo": "stale"}
+        )
+        self.assertIn("foo: active->stale", r.state_changes)
+        self.assertEqual(self.store.state("foo"), "stale")
+        # content in agreement -> no other drift
+        self.assertEqual(r.imported, [])
+        self.assertEqual(r.edited, [])
+
+    def test_state_fold_is_idempotent(self) -> None:
+        _mk_skill(self.skills_dir, "foo", "---\nname: foo\n")
+        self.store.add("foo", "create", "a", content="---\nname: foo\n")
+        cs = {"foo": "stale"}
+        sync_skills(self.store, self.skills_dir, {"foo"}, write=True, curator_states=cs)
+        r2 = sync_skills(self.store, self.skills_dir, {"foo"}, write=True, curator_states=cs)
+        self.assertEqual(r2.state_changes, [])
+        self.assertTrue(r2.clean)
+
+    def test_archived_skill_not_exported(self) -> None:
+        # Store has it, live profile lacks it, curator says archived -> not
+        # "missing", so it must NOT be re-materialized.
+        self.store.add("foo", "create", "a", content="---\nname: foo\nbody\n", category="dev")
+        r = sync_skills(
+            self.store, self.skills_dir, {"foo"}, write=True, curator_states={"foo": "archived"}
+        )
+        self.assertEqual(r.exported, [])
+        self.assertIn("foo: active->archived", r.state_changes)
+        self.assertIsNone(find_skill_md(self.skills_dir, "foo"))  # stayed archived
+
+    def test_archive_dir_excluded_from_live_index(self) -> None:
+        # A skill whose directory lives only under .archive/ is not seen as live,
+        # and with curator state archived it folds state without re-exporting.
+        _mk_skill(self.skills_dir, "foo", "---\nname: foo\n", category=".archive")
+        self.store.add("foo", "create", "a", content="---\nname: foo\n")
+        r = sync_skills(
+            self.store, self.skills_dir, {"foo"}, write=True, curator_states={"foo": "archived"}
+        )
+        self.assertEqual(r.exported, [])
+        self.assertEqual(r.imported, [])
+        self.assertEqual(self.store.state("foo"), "archived")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

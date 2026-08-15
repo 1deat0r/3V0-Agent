@@ -50,19 +50,23 @@ class SkillFile:
 
 
 def skill_index(skills_dir: Path) -> dict[str, SkillFile]:
-    """Map every skill name under ``skills_dir`` to its SKILL.md.
+    """Map every *live* skill name under ``skills_dir`` to its SKILL.md.
 
     One walk of the tree; on a name collision the first match wins (the
     resolver treats ambiguous names as an error, so this is a rare guard, not a
-    resolution strategy).
+    resolution strategy). Skills under ``.archive/`` are excluded — archived
+    skills are not live in the profile and their content is already frozen in
+    the store.
     """
     index: dict[str, SkillFile] = {}
     for md in skills_dir.rglob("SKILL.md"):
+        dir_rel = md.parent.relative_to(skills_dir)
+        if any(part == ".archive" for part in dir_rel.parts):
+            continue
         name = md.parent.name
         if name in index:
             continue
-        rel = md.parent.relative_to(skills_dir)
-        category = "" if rel.parent == Path(".") else str(rel.parent)
+        category = "" if dir_rel.parent == Path(".") else str(dir_rel.parent)
         try:
             index[name] = SkillFile(name, md.read_text(encoding="utf-8"), category, md)
         except OSError:

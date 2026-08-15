@@ -45,6 +45,14 @@ from .memory import locked
 
 _VALID_ACTIONS = {"create", "patch", "edit", "write_file", "remove_file", "delete"}
 
+# Operational (curator) states, tracked alongside content lineage. Orthogonal to
+# ``SkillVersion.active``: an archived skill still has an active content version
+# (it was never retracted/absorbed), but is not live in the profile.
+STATE_ACTIVE = "active"
+STATE_STALE = "stale"
+STATE_ARCHIVED = "archived"
+_VALID_STATES = {STATE_ACTIVE, STATE_STALE, STATE_ARCHIVED}
+
 # ``superseded_by`` sentinels for terminal (decommissioned) skills, distinct
 # from a real version id, so ``active()`` excludes them and ``history()`` can
 # still surface them as the end of a lineage.
@@ -82,6 +90,7 @@ class SkillStore:
     def __init__(self, path: str | Path):
         self.path = Path(path)
         self.skills: list[SkillVersion] = []
+        self.states: dict[str, dict] = {}
         if self.path.exists():
             self._load()
 
@@ -89,13 +98,19 @@ class SkillStore:
     def _load(self) -> None:
         if not self.path.exists():
             self.skills = []
+            self.states = {}
             return
         raw = json.loads(self.path.read_text(encoding="utf-8"))
         self.skills = [SkillVersion(**s) for s in raw.get("skills", [])]
+        self.states = raw.get("states", {})
 
     def _save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"version": 1, "skills": [asdict(s) for s in self.skills]}
+        payload = {
+            "version": 1,
+            "skills": [asdict(s) for s in self.skills],
+            "states": self.states,
+        }
         self.path.write_text(
             json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
         )
@@ -241,6 +256,57 @@ class SkillStore:
         return self._decommission(
             name, ABSORBED, source=source, absorbed_into=absorbed_into, persist=persist
         )
+
+    # -- operational (curator) state ---------------------------------------
+    def state(self, name: str) -> str:
+        """The current operational state of ``name`` (active/stale/archived).
+
+        This is the *curator* state axis, orthogonal to content-lineage
+        ``active``: an archived skill still has an active content version (it
+        was never retracted/absorbed) but is not live in the profile. Defaults
+        to ``active`` for a skill with no recorded state.
+        """
+        rec = self.states.get(name)
+        return rec.get("current", STATE_ACTIVE) if rec else STATE_ACTIVE
+
+    def state_history(self, name: str) -> list[dict]:
+        """The append-only transition log for ``name``'s operational state."""
+        rec = self.states.get(name)
+        return list(rec.get("history", [])) if rec else []
+
+    def set_state(
+        self,
+        name: str,
+        new_state: str,
+        source: str = "",
+        persist: bool = True,
+    ) -> dict | None:
+        """Record a transition of ``name`` to ``new_state`` (append-only).
+
+        Idempotent: recording the state a skill already has is a no-op. Returns
+        the recorded event (``{"from", "state", "at", "source"}``) or None when
+        no change occurred.
+        """
+        if new_state not in _VALID_STATES:
+            raise ValueError(
+                f"state must be one of {sorted(_VALID_STATES)}, got {new_state!r}"
+            )
+        old = self.state(name)
+        if new_state == old:
+            return None
+        rec = self.states.get(name)
+        history = list(rec.get("history", [])) if rec else []
+        event = {
+            "from": old,
+            "state": new_state,
+            "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "source": source,
+        }
+        history.append(event)
+        self.states[name] = {"current": new_state, "history": history}
+        if persist:
+            self._save()
+        return event
 
     # -- concurrency -------------------------------------------------------
     def reload(self) -> None:

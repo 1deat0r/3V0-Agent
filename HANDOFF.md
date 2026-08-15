@@ -69,6 +69,18 @@ pointer to what was live at the last session's end.*
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Own evolution loop, stone 4 — curator state in the store (this session).**
+  Folded the curator's operational state (active/stale/archived) into the skill
+  store: `SkillStore` gained an append-only `states` record
+  (`state`/`set_state`/`state_history`), `skill_index` excludes `.archive/`, and
+  `sync_skills.py` folds curator state at wake and never re-exports an archived
+  skill. Wake-time folding (no core edits — the curator's transitions don't fire
+  `post_tool_call`). 11 new tests (73 total green); E2E verified (stale +
+  archived skills fold state; the archived one stays parked). Also live-
+  dogfooded stones 2+3: refreshed the `3v0-native-core` skill via `skill_manage`,
+  and the bridge recorded the `edit` version store-first. *Next stone:* own
+  capabilities/tools (direction 3) — the evolution loop is closed for
+  memory + skills.
 - **Own evolution loop, stone 3 — store-canonical skill reconciler (this
   session).** Closed the skill axis's backstop gap. Added
   `core/skill_io.py` (skill-name → SKILL.md locate/write/remove, shared by
@@ -78,8 +90,7 @@ pointer to what was live at the last session's end.*
   skills the profile lost; never overwrites a live differing profile skill).
   Full-content capture on `patch` (ingest reads the resulting SKILL.md) makes
   patch versions projectable. 10 new tests (62 total green); E2E verified
-  (create → patch-with-content → reconcile). *Next stone:* fold the curator's
-  auto-transitions into the store.
+  (create → patch-with-content → reconcile).
 - **Own evolution loop, stone 2 — store-first skill lineage (this session).**
   Closed the *skill* half of the evolution loop. `skill_manage` (create/patch/
   edit/write_file/remove_file/delete) is a normal core tool that fires

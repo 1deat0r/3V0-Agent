@@ -195,19 +195,18 @@ There is **no wake-time skill reconciler yet** (unlike memory's `sync.py`), so
 the bridge is the primary writer — a future stone can add a `sync_skills.py`
 that reconciles store ↔ SKILL.md once the store becomes canonical.
 
-### Open questions — decided for stone 3, then implemented
+### Open questions — decided for stones 3 and 4, then implemented
 
 1. **Canonicality — DECIDED (stone 3).** The skill store is now canonical over
    SKILL.md for its *tracked namespace* (agent-created + store-known skills),
    with the same asymmetric, loss-free resolution as memory's sync (see the
    Stone 3 section below). Full-content capture on `patch` closes the
    projection gap so patch versions are projectable too.
-2. **Curator auto-transitions — still open.** The curator's state machine
-   (active/stale/archived via `.usage.json` + `.curator_state`) is still
-   Hermes-owned; the store records `skill_manage` writes, not state
-   transitions.
+2. **Curator auto-transitions — DECIDED (stone 4).** The curator's operational
+   state (active/stale/archived) is folded into the store as an append-only
+   `states` record at wake (see the Stone 4 section below).
 3. **Bundled skills — still open.** The store excludes bundled/hub skills by
-   design; a full catalog lineage would be a separate seed.
+   design; a full catalog lineage would be a separate seed, not a stone.
 
 ---
 
@@ -256,3 +255,39 @@ E2E test that `export`s them (then `rm -rf`s its temp dir) leaves the *next*
 duplicate SKILL.md files to `/tmp` and reported the real skills "missing". Use
 `env VAR=val cmd` (inline, non-persistent) for E2E runs, or `unset` the
 overrides before running against the live profile.
+
+---
+
+## Stone 4 — curator state in the store (live)
+
+The fourth stone folds the curator's *operational state* into the store, closing
+open question #2. Stones 1–3 recorded `skill_manage` *writes*; the curator also
+runs a state machine (active → stale → archived via `.usage.json`, with archive
+moving the skill dir to `.archive/`) that the bridge cannot observe — it goes
+through `skill_usage.set_state` / `archive_skill`, not a tool that fires
+`post_tool_call`. So the state axis is folded at wake, like memory's
+profile-import backstop.
+
+### Design
+
+- **Store schema** gains a `states` record parallel to the content versions:
+  `{"states": {"<name>": {"current": "...", "history": [{"from","state","at","source"}...]}}}`.
+  `SkillStore.state(name)` / `set_state(name, state, source)` /
+  `state_history(name)` — append-only, idempotent, orthogonal to content
+  lineage (an archived skill still has an active content version).
+- **`skill_index` excludes `.archive/`** — archived skills are not live, so the
+  reconciler no longer mistakes them for "missing" skills.
+- **`sync_skills` folds state first**, then does content reconciliation with an
+  archive guard: a store-active skill whose live profile entry is absent is
+  *exported* only when it is NOT curator-archived (an archived skill is not
+  lost, it's parked).
+
+### Why wake-time folding (not transition-time)
+
+The curator (`agent/curator.py`) is a runtime core file in the managed checkout;
+editing it to write the store would not survive `hermes update`. Its transitions
+don't fire a `post_tool_call` the plugin can observe. So the store learns the
+curator's state at wake — the same degradation contract as memory: exact
+provenance when the bridge sees a write, folded `curator`-state at wake
+otherwise. The curator stays Hermes-owned (operational); the store stays
+3V0-owned (canonical record).

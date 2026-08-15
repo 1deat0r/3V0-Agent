@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -28,7 +29,10 @@ from core.skill_io import find_skill_md, profile_skills_dir  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
 
 SKILLS_DIR = profile_skills_dir()
-STORE_PATH = REPO_ROOT / "3v0" / "data" / "skills.json"
+# Override for tests: point at a scratch store instead of the real one.
+STORE_PATH = Path(
+    os.environ.get("THREEV0_SKILL_STORE") or (REPO_ROOT / "3v0" / "data" / "skills.json")
+)
 
 
 def main() -> int:

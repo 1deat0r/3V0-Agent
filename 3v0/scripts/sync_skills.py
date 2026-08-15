@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -25,16 +26,30 @@ from core.skill_io import profile_skills_dir  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
 from core.sync_skills import sync_skills  # noqa: E402
 
-STORE_PATH = REPO_ROOT / "3v0" / "data" / "skills.json"
+# Override for tests: point at a scratch store instead of the real one.
+STORE_PATH = Path(
+    os.environ.get("THREEV0_SKILL_STORE") or (REPO_ROOT / "3v0" / "data" / "skills.json")
+)
 
 
 def _agent_created(skills_dir: Path) -> set[str]:
     """Skill names whose ``.usage.json`` entry has ``created_by == "agent"``."""
+    return {name for name, meta in _usage(skills_dir).items() if meta.get("created_by") == "agent"}
+
+
+def _curator_states(skills_dir: Path) -> dict[str, str]:
+    """Skill name -> operational state (active/stale/archived) from ``.usage.json``."""
+    return {
+        name: meta.get("state", "active")
+        for name, meta in _usage(skills_dir).items()
+    }
+
+
+def _usage(skills_dir: Path) -> dict:
     usage_path = skills_dir / ".usage.json"
     if not usage_path.exists():
-        return set()
-    usage = json.loads(usage_path.read_text(encoding="utf-8"))
-    return {name for name, meta in usage.items() if meta.get("created_by") == "agent"}
+        return {}
+    return json.loads(usage_path.read_text(encoding="utf-8"))
 
 
 def main() -> int:
@@ -50,12 +65,18 @@ def main() -> int:
     store = SkillStore(STORE_PATH)
 
     with store.mutate():
-        report = sync_skills(store, skills_dir, _agent_created(skills_dir), args.write)
+        report = sync_skills(
+            store,
+            skills_dir,
+            _agent_created(skills_dir),
+            args.write,
+            curator_states=_curator_states(skills_dir),
+        )
 
     print(
         f"imported={len(report.imported)} edited={len(report.edited)} "
         f"dropped={len(report.dropped)} exported={len(report.exported)} "
-        f"unresolved={len(report.unresolved)}"
+        f"unresolved={len(report.unresolved)} state_changes={len(report.state_changes)}"
     )
     for e in report.imported:
         print(f"  +import  {e}")
@@ -67,6 +88,8 @@ def main() -> int:
         print(f"  ->export {e}")
     for e in report.unresolved:
         print(f"  ?unres   {e}")
+    for e in report.state_changes:
+        print(f"  ^state   {e}")
 
     if args.write:
         print("Wrote reconciled skills.json / SKILL.md")

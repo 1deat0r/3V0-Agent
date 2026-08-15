@@ -29,15 +29,19 @@ code.
   memory loop.
 - `core/skills.py` — provenance-aware, versioned skill-lineage store: every
   skill create/rewrite/decommission is a version with supersession,
-  absorption, and recoverable history. The skill axis of the evolution loop.
+  absorption, and recoverable history, plus an append-only operational
+  (curator) `states` record (active/stale/archived). The skill axis of the
+  evolution loop.
 - `core/skill_bridge.py` — map a Hermes `skill_manage` write (create/patch/
   edit/write_file/remove_file/delete) onto the skill store, with supersession
   and absorb/retract terminals.
 - `core/skill_io.py` — single owner of skill-name → SKILL.md path/content
-  mapping (locate/write/remove), shared by seed/ingest/sync_skills.
+  mapping (locate/write/remove, `.archive/` excluded), shared by
+  seed/ingest/sync_skills.
 - `core/sync_skills.py` — reconcile the skill store with the profile's SKILL.md
-  files (store canonical over its tracked namespace, profile authoritative for
-  content the store lacks).
+  files and fold the curator's operational state (active/stale/archived) into
+  the store. Store canonical over its tracked namespace; profile authoritative
+  for content the store lacks.
 - `data/memory.json` — the store's source of truth (seeded from the profile).
 - `data/skills.json` — the skill store's source of truth (seeded from
   agent-created skills).
@@ -72,8 +76,10 @@ code.
    — a versioned record of 3V0's own skill evolution with supersession,
    absorption, and recoverable history. Stone 3 (store-canonical skill
    reconciliation) is live: `sync_skills.py --write` reconciles store ↔ SKILL.md
-   at wake (with full-content capture on patch). Next: fold the curator's
-   auto-transitions into the store.
+   at wake (with full-content capture on patch). Stone 4 (curator state) is
+   live: the reconciler folds the curator's active/stale/archived state into
+   the store and never re-exports an archived skill. The evolution loop is
+   closed for memory + skills; next is direction 3.
 3. **Own capabilities/tools** — designed for 3V0's purposes, not Hermes's.
 4. **Own roadmap of versions** — Hermes recedes from "what 3V0 is" to "a
    runtime 3V0 currently runs on."

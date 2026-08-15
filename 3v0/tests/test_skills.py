@@ -116,6 +116,58 @@ class TestSkillStore(unittest.TestCase):
             self.assertEqual(s2.latest_active("foo").content, "v2")
 
 
+class TestSkillState(unittest.TestCase):
+    def test_state_defaults_active(self) -> None:
+        s, _ = _store()
+        self.assertEqual(s.state("foo"), "active")
+        self.assertEqual(s.state_history("foo"), [])
+
+    def test_set_state_records_transition(self) -> None:
+        s, _ = _store()
+        ev = s.set_state("foo", "stale", "curator")
+        self.assertEqual(ev["from"], "active")
+        self.assertEqual(ev["state"], "stale")
+        self.assertEqual(ev["source"], "curator")
+        self.assertEqual(s.state("foo"), "stale")
+        self.assertEqual([e["state"] for e in s.state_history("foo")], ["stale"])
+
+    def test_set_state_is_idempotent(self) -> None:
+        s, _ = _store()
+        s.set_state("foo", "stale", "curator")
+        self.assertIsNone(s.set_state("foo", "stale", "curator"))
+        self.assertEqual(len(s.state_history("foo")), 1)
+
+    def test_state_chain_records_full_history(self) -> None:
+        s, _ = _store()
+        s.set_state("foo", "stale", "curator")
+        s.set_state("foo", "archived", "curator")
+        s.set_state("foo", "active", "curator")
+        self.assertEqual(s.state("foo"), "active")
+        self.assertEqual(
+            [e["state"] for e in s.state_history("foo")], ["stale", "archived", "active"]
+        )
+
+    def test_set_state_rejects_unknown(self) -> None:
+        s, _ = _store()
+        with self.assertRaises(ValueError):
+            s.set_state("foo", "banana")
+
+    def test_state_persists_roundtrip(self) -> None:
+        s1, path = _store()
+        s1.set_state("foo", "archived", "curator")
+        s2 = SkillStore(path)
+        self.assertEqual(s2.state("foo"), "archived")
+        self.assertEqual(s2.state_history("foo")[0]["state"], "archived")
+
+    def test_state_orthogonal_to_content_active(self) -> None:
+        # an archived skill still has an active content version (not retracted)
+        s, _ = _store()
+        s.add("foo", "create", "a", content="c")
+        s.set_state("foo", "archived", "curator")
+        self.assertIsNotNone(s.latest_active("foo"))
+        self.assertIn("foo", s.active_names())
+
+
 class TestSkillBridge(unittest.TestCase):
     def test_create(self) -> None:
         s, _ = _store()
