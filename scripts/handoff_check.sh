@@ -27,6 +27,8 @@ echo
 echo "== SYNC (store canonical -> profile) =="
 python3 3v0/scripts/sync.py --write 2>&1
 echo
+python3 3v0/scripts/sync_skills.py --write 2>&1
+echo
 
 echo "== OPEN LOOPS =="
 for entry in "${LOOPS[@]}"; do

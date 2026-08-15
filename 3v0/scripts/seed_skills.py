@@ -24,24 +24,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
+from core.skill_io import find_skill_md, profile_skills_dir  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
 
-PROFILE = Path.home() / ".hermes" / "profiles" / "3v0"
-SKILLS_DIR = PROFILE / "skills"
+SKILLS_DIR = profile_skills_dir()
 STORE_PATH = REPO_ROOT / "3v0" / "data" / "skills.json"
-
-
-def _find_skill_md(name: str) -> tuple[str, str]:
-    """Return (content, category) for ``name``'s SKILL.md, or ("", "")."""
-    for md in SKILLS_DIR.rglob("SKILL.md"):
-        if md.parent.name == name:
-            rel = md.parent.relative_to(SKILLS_DIR)
-            category = "" if rel.parent == Path(".") else str(rel.parent)
-            try:
-                return md.read_text(encoding="utf-8"), category
-            except OSError:
-                return "", ""
-    return "", ""
 
 
 def main() -> int:
@@ -70,12 +57,12 @@ def main() -> int:
     for name, meta in usage.items():
         if meta.get("created_by") != "agent":
             continue
-        content, category = _find_skill_md(name)
-        if not content:
+        sf = find_skill_md(SKILLS_DIR, name)
+        if sf is None or not sf.content:
             continue  # archived / moved off the live path — skip
         created_at = meta.get("created_at", "")
         note = f"seeded from profile" + (f" (created {created_at})" if created_at else "")
-        store.add(name, "create", "profile-import", content=content, category=category, note=note)
+        store.add(name, "create", "profile-import", content=sf.content, category=sf.category, note=note)
         n += 1
 
     print(f"Seeded {n} agent-created skills -> {STORE_PATH}")

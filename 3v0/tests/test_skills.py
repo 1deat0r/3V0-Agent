@@ -146,6 +146,19 @@ class TestSkillBridge(unittest.TestCase):
         self.assertIn("old", v.note)
         self.assertIn("new", v.note)
 
+    def test_patch_carries_resolved_content_when_supplied(self) -> None:
+        s, _ = _store()
+        apply_skill_op(s, {"action": "create", "name": "foo", "content": "v1"}, "a")
+        n = apply_skill_op(
+            s,
+            {"action": "patch", "name": "foo", "old_string": "old", "new_string": "new", "content": "v1-patched"},
+            "background_review",
+        )
+        self.assertEqual(n, 1)
+        v = s.latest_active("foo")
+        self.assertEqual(v.action, "patch")
+        self.assertEqual(v.content, "v1-patched")
+
     def test_edit_records_full_content(self) -> None:
         s, _ = _store()
         apply_skill_op(s, {"action": "create", "name": "foo", "content": "v1"}, "a")

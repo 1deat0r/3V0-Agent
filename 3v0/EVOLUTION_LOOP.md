@@ -195,15 +195,64 @@ There is **no wake-time skill reconciler yet** (unlike memory's `sync.py`), so
 the bridge is the primary writer — a future stone can add a `sync_skills.py`
 that reconciles store ↔ SKILL.md once the store becomes canonical.
 
-### Open questions (decide before stone 3)
+### Open questions — decided for stone 3, then implemented
 
-1. **Canonicality.** When (if ever) should the skill store drive SKILL.md (a
-   projection, like memory's MEMORY.md)? Doing so means the store must hold
-   full skill content for every version — it already does for create/edit, but
-   `patch` records only the old→new note, not the resulting full file.
-2. **Curator auto-transitions.** The curator's state machine (active/stale/
-   archived via `.usage.json` + `.curator_state`) is still Hermes-owned. Folding
-   it into the store means representing skill *state* as versions, not just
-   `skill_manage` writes.
-3. **Bundled skills.** The store excludes bundled/hub skills by design. If 3V0
-   ever wants a full catalog lineage, that's a separate seed.
+1. **Canonicality — DECIDED (stone 3).** The skill store is now canonical over
+   SKILL.md for its *tracked namespace* (agent-created + store-known skills),
+   with the same asymmetric, loss-free resolution as memory's sync (see the
+   Stone 3 section below). Full-content capture on `patch` closes the
+   projection gap so patch versions are projectable too.
+2. **Curator auto-transitions — still open.** The curator's state machine
+   (active/stale/archived via `.usage.json` + `.curator_state`) is still
+   Hermes-owned; the store records `skill_manage` writes, not state
+   transitions.
+3. **Bundled skills — still open.** The store excludes bundled/hub skills by
+   design; a full catalog lineage would be a separate seed.
+
+---
+
+## Stone 3 — skill reconciler (live)
+
+The third stone closes the skill axis's backstop gap: memory has
+`sync.py --write` at wake; skills had nothing (the bridge was the only writer,
+so a bridge-missed write drifted forever). `sync_skills.py --write` now
+reconciles store ↔ SKILL.md at wake, exactly like memory's sync, and makes the
+skill store canonical over SKILL.md for its tracked namespace.
+
+### What changed
+
+- **`core/skill_io.py`** — the single owner of skill-name → SKILL.md
+  path/content mapping (locate by directory name, not stored category; write;
+  remove). Shared by seed / ingest / sync_skills.
+- **`core/sync_skills.py`** — the reconciliation (import/edit/drop/export/
+  unresolved), mirroring `core/sync.py`'s asymmetric, loss-free resolution.
+- **`scripts/sync_skills.py`** — CLI (`--write`), wired into `handoff_check.sh`
+  right after the memory sync.
+- **Full-content capture on patch** — `ingest_skills.py` resolves the resulting
+  SKILL.md from the profile (the tool has already written it) so patch versions
+  carry full content and are projectable; `skill_bridge.py` honors a supplied
+  `content` on patch.
+
+### Resolution semantics (the invariant)
+
+The store only wins in two cases, both non-destructive to live content:
+
+1. **drop** — an *explicit* decommission (retract/absorb) is canonical; a stale
+   profile skill is removed (the store retains the content for recovery).
+2. **export** — a store-active skill the profile *lacks* is re-materialized.
+
+Everywhere else the profile is authoritative: unseen skills and diverged
+content are *imported* into the store (source="profile-import"), never
+clobbered. Content-less patch heads are reported `unresolved` and left alone.
+The store therefore stays append-only; reconciliation never destroys store
+history.
+
+### Pitfall (learned this session)
+
+`THREEV0_SKILLS_DIR` / `THREEV0_SKILL_STORE` are env overrides for tests. In
+the Hermes terminal, an `export` in one command persists into the next, so an
+E2E test that `export`s them (then `rm -rf`s its temp dir) leaves the *next*
+`sync_skills.py` run pointed at a deleted temp directory — it silently wrote
+duplicate SKILL.md files to `/tmp` and reported the real skills "missing". Use
+`env VAR=val cmd` (inline, non-persistent) for E2E runs, or `unset` the
+overrides before running against the live profile.

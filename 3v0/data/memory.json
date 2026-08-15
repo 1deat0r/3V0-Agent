@@ -102,6 +102,18 @@
       "supersedes": [
         "ad67c22c4cc7"
       ],
+      "superseded_by": "0eae50a2c22f",
+      "note": ""
+    },
+    {
+      "id": "0eae50a2c22f",
+      "content": "native-store-bridge plugin mirrors memory→data/memory.json (canonical) and skill_manage→data/skills.json (versioned skill lineage) via post_tool_call hook; store-first, profile derived. Wake backstops: sync.py --write (memory) + sync_skills.py --write (skills).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T08:13:36Z",
+      "supersedes": [
+        "472ccaf3a129"
+      ],
       "superseded_by": "",
       "note": ""
     }

@@ -12,8 +12,11 @@ Mapping (``action`` -> store effect):
 - ``create``     -> append a version (full SKILL.md), starting/continuing the
                     lineage. Idempotent: a create whose content already equals
                     the active version is skipped (double-observation guard).
-- ``patch``      -> append a version; no full content, but the ``note`` records
-                    the old->new snippet so the lineage shows the edit.
+- ``patch``      -> append a version. The ``note`` records the old->new snippet
+                    so the lineage shows the edit; if the caller supplies the
+                    resulting SKILL.md as ``content`` (the ingest script reads
+                    it from the profile after the patch), the version carries
+                    full content too and is projectable.
 - ``edit``       -> append a version with the full new SKILL.md.
 - ``write_file`` -> append a version carrying the supporting file's content
                     and path (references/, scripts/, templates/).
@@ -74,6 +77,10 @@ def apply_skill_op(store: SkillStore, args: Any, source: str) -> int:
         old = _truncate(args.get("old_string"))
         new = _truncate(args.get("new_string"))
         note = f"patch {old!r} -> {new!r}" if old or new else "patch"
+        # The resulting SKILL.md may be supplied (the ingest script reads it
+        # from the profile after the patch) so the version is projectable;
+        # callers without it still record note-only.
+        content = (args.get("content") or "").strip()
 
     # Double-observation guard: a create whose content is already the active
     # version is a no-op (the fork and foreground can both observe a write).

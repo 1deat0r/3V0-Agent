@@ -5,9 +5,13 @@ Reads a JSON payload on stdin describing one skill_manage write and replays it
 against the skill store under the cross-process lock. Called by the
 ``native-store-bridge`` profile plugin's ``post_tool_call`` hook as a
 best-effort subprocess: every failure is reported on stderr with a non-zero
-exit so the caller can swallow it. There is no wake-time skill reconciler yet
-(the store is a lineage mirror, not yet canonical over SKILL.md), so the bridge
-is the primary writer; ``seed_skills.py`` establishes the baseline.
+exit so the caller can swallow it.
+
+For a ``patch`` the tool args carry only the old/new snippets; the resulting
+SKILL.md is resolved from the profile (which the tool has already written) so
+the recorded version carries full content and can be projected back by
+``sync_skills.py``. If the file can't be read, the version degrades to
+note-only.
 
 Payload shape (a single JSON object):
 
@@ -41,6 +45,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.skill_bridge import apply_skill_op  # noqa: E402
+from core.skill_io import find_skill_md, profile_skills_dir  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
 
 # Override for tests: point at a scratch store instead of the real one.
@@ -64,6 +69,13 @@ def main() -> int:
     if not isinstance(args, dict):
         print("ingest_skills: 'args' must be an object", file=sys.stderr)
         return 2
+
+    # A patch's tool args carry only old/new snippets; resolve the resulting
+    # SKILL.md from the profile so the recorded version is projectable.
+    if args.get("action") == "patch":
+        sf = find_skill_md(profile_skills_dir(), (args.get("name") or "").strip())
+        if sf is not None:
+            args = {**args, "content": sf.content}
 
     store = SkillStore(STORE_PATH)
     try:

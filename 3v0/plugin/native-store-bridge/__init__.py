@@ -6,15 +6,15 @@ cron), this plugin replays the same operation against the matching native store
 in ``<body>/3v0/data/``:
 
 - ``memory``       -> ``data/memory.json``  (facts; canonical, profile is a projection)
-- ``skill_manage`` -> ``data/skills.json``  (skill lineage; profile stays operational)
+- ``skill_manage`` -> ``data/skills.json``  (skill lineage; store canonical over SKILL.md)
 
 so the stores stay the auditable record of 3V0's own evolution and the profile
 remains a derived / operational view.
 
 This is the store-first half of 3V0's own evolution loop (see
 ``3v0/EVOLUTION_LOOP.md``). It is best-effort by construction: any failure is
-swallowed and, for memory, the wake-time ``sync.py --write`` reconciles as the
-backstop (the skill store has no reconciler yet — the bridge is its writer).
+swallowed and the wake-time reconcilers ``sync.py --write`` (memory) and
+``sync_skills.py --write`` (skills) are the backstop.
 
 No runtime core files are edited. The plugin lives in the profile
 (``~/.hermes/profiles/3v0/plugins/``) and survives ``hermes update``.

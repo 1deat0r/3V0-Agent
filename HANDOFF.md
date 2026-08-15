@@ -43,10 +43,13 @@ pointer to what was live at the last session's end.*
   `retract()` + `mutate()` in `memory.py`. The **skill axis** mirrors this:
   `core/skills.py` (versioned skill-lineage store) + `core/skill_bridge.py`
   (skill_manage op→store map) + `data/skills.json` + `scripts/ingest_skills.py`
-  + `scripts/seed_skills.py` (baseline from agent-created skills). Tests:
-  `python3 3v0/tests/test_*.py` (52 green). See `3v0/README.md` +
+  + `scripts/seed_skills.py` (baseline from agent-created skills). Stone 3
+  added `core/skill_io.py` (SKILL.md locate/write/remove),
+  `core/sync_skills.py` + `scripts/sync_skills.py` (reconcile store ↔ SKILL.md,
+  `--write`; wired into the wake check), and full-content capture on patch.
+  Tests: `python3 3v0/tests/test_*.py` (62 green). See `3v0/README.md` +
   `3v0/EVOLUTION_LOOP.md`.
-- **Store-first evolution loop is LIVE** (stones 1 + 2). The
+- **Store-first evolution loop is LIVE** (stones 1–3). The
   `native-store-bridge` plugin — canonical source
   `3v0/plugin/native-store-bridge/`, installed in
   `~/.hermes/profiles/3v0/plugins/` and enabled in that profile's
@@ -56,15 +59,27 @@ pointer to what was live at the last session's end.*
   `data/skills.json` (stone 2, via `ingest_skills.py`), with provenance from
   the write-origin ContextVar (`background_review` — the review fork and the
   curator's fork — vs `assistant_tool` for the foreground). No runtime core
-  files edited; the plugin survives `hermes update`. Wake `sync.py --write` is
-  the backstop for memory; the skill store has no reconciler yet (bridge is its
-  writer, `seed_skills.py` set the baseline).
+  files edited; the plugin survives `hermes update`. Wake `sync.py --write` and
+  `sync_skills.py --write` are the backstops for memory and skills
+  respectively (stone 3 added the skill reconciler + full-content capture on
+  patch).
 - Web search = keyless `ddgs` backend. Reinstall:
   `~/.hermes/hermes-agent/venv/bin/pip install ddgs`.
 - SOUL: `~/.hermes/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Own evolution loop, stone 3 — store-canonical skill reconciler (this
+  session).** Closed the skill axis's backstop gap. Added
+  `core/skill_io.py` (skill-name → SKILL.md locate/write/remove, shared by
+  seed/ingest/sync), `core/sync_skills.py` + `scripts/sync_skills.py`
+  (reconcile store ↔ SKILL.md at wake, `--write` — import unseen/drifted
+  agent-created skills, drop store-decommissioned skills, export store-active
+  skills the profile lost; never overwrites a live differing profile skill).
+  Full-content capture on `patch` (ingest reads the resulting SKILL.md) makes
+  patch versions projectable. 10 new tests (62 total green); E2E verified
+  (create → patch-with-content → reconcile). *Next stone:* fold the curator's
+  auto-transitions into the store.
 - **Own evolution loop, stone 2 — store-first skill lineage (this session).**
   Closed the *skill* half of the evolution loop. `skill_manage` (create/patch/
   edit/write_file/remove_file/delete) is a normal core tool that fires
