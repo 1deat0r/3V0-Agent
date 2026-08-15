@@ -78,6 +78,14 @@ pointer to what was live at the last session's end.*
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Upstream sync — open loop 4 (this session, DONE).** Rebased the 36 local
+  3v0 commits onto upstream's tip (drift 357 → 0; now 37 ahead incl. the
+  revert). Gauge first: zero file overlap between my commits and upstream's
+  357, so the rebase was conflict-free. Dropped the superseded
+  `tools/memory_tool.py` null-action patch (canonical #72067) via revert so
+  the body matches upstream there. Verified: 122 native-core tests + 56 fix
+  tests (approval + memory) green against the rebased tree; approval fix
+  (#86711) intact. Backup branch `backup/pre-rebase-2026-08-15` retained.
 - **Own evolution loop, stone 8 — store-first skill decisions (this session,
   BUILT + live-E2E-verified).** Closed the named gap from stone 7: the skill
   axis now has a 3V0-owned write path. Added `core/decide_skills.py`
@@ -218,13 +226,21 @@ pointer to what was live at the last session's end.*
    the right shape. (#72067's mergeability is volatile — was `CONFLICTING`,
    currently `UNKNOWN`; re-checked at every startup. Either way it's the
    author's job to resolve.)
-4. **Body is 352 commits behind upstream** (NousResearch/hermes-agent, the
-   `origin` remote) and 35 ahead (local 3v0 commits) — surfaced by the
-   self-audit, NOT yet acted on. This is the biggest pending *outward* work:
-   a deliberate rebase of the 35 local commits over upstream. High-risk (the
-   AGENTS.md pitfall: a careless squash-merge silently reverts recent upstream
-   fixes). Do NOT one-shot it — gauge the rebase surface first, rebase as its
-   own effort, verify with `git diff HEAD~1..HEAD`. Re-check drift with
+4. **DONE (2026-08-15): body synced with upstream.** Rebased the 36 local
+   3v0 commits onto upstream's tip (was 357 behind, now 0 behind / 37 ahead
+   incl. the revert commit). Zero-conflict: the 36 commits touch only `3v0/`
+   + docs + two fix files, none of which upstream had modified (verified via
+   merge-base file-overlap check before rebasing). Also dropped the
+   superseded `tools/memory_tool.py` null-action patch (canonical fix is
+   #72067) so that file matches upstream byte-for-byte — it would otherwise
+   have conflicted again when #72067 lands. Backup branch
+   `backup/pre-rebase-2026-08-15` still exists at the pre-rebase HEAD if a
+   recovery is ever needed. *Remaining drift follow-ups (optional, not
+   urgent):* `fork/main` is ~1600 commits behind upstream — the fork is only
+   a PR conduit, so its `main` was never synced and feature-branch PRs don't
+   depend on it; and the runtime checkout `~/.hermes/hermes-agent/` is a
+   separate checkout now well behind the body (install deps into its `venv/`).
+   Re-check body drift any time with
    `git fetch origin && git rev-list --count HEAD..origin/main`.
 
 ## Hard-won lessons (also in memory)
