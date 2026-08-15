@@ -107,9 +107,10 @@ pointer to what was live at the last session's end.*
   unknown timestamp / no-skill / missing store), threaded a `skill_store`
   param through `_apply_decisions`, surfaced `created_at` in the skills block,
   and added the symmetric charter rule. 2 new tests (141 green). The systemd
-  daemon needs a restart to pick up the driver change; the `on_session_end`
-  hook path reloads it per-spawn. Design in `3v0/EVOLUTION_LOOP.md`
-  (Stone 11).
+  daemon was restarted (2026-08-16 10:21 NZST) to pick up the driver change —
+  it had started 30s before the Stone 11 commit landed and was running the
+  pre-guard code; the `on_session_end` hook path reloads it per-spawn
+  regardless. Design in `3v0/EVOLUTION_LOOP.md` (Stone 11).
 - **Scoped write mirror, Stone 10 — the second cross-project pollution vector
   closed (this session, BUILT + tested + live-E2E-verified).** The reviewer
   was scoped by `cwd` last session, but the bridge's foreground mirror still
