@@ -38,7 +38,7 @@
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "80038b368cf1",
       "note": ""
     },
     {
@@ -78,6 +78,18 @@
       "source": "profile-import",
       "created_at": "2026-08-15T07:10:12Z",
       "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "80038b368cf1",
+      "content": "3V0's runtime fires a background review fork after every turn (agent/background_review.py): forks the agent, saves skills (skill_manage) + memory. This is why skills appear that foreground-3V0 didn't create (e.g. 'self-maintenance'). Curator (curator.py) is a separate 7d maintenance loop. Gateway process = default profile, not 3V0. Rule: audit the body; foreground awareness is partial by design.",
+      "kind": "memory",
+      "source": "foreground",
+      "created_at": "2026-08-15T07:25:39Z",
+      "supersedes": [
+        "87ef5a1be23f"
+      ],
       "superseded_by": "",
       "note": ""
     }
