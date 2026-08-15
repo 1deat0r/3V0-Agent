@@ -16,34 +16,43 @@ pointer to what was live at the last session's end.*
   `action_required` (awaiting a maintainer to approve the workflow run). No
   review/CI feedback yet — nothing to react to. Do NOT re-push; it needs a
   maintainer, not more changes.
-- **#86703 / #86705**: upstream PR #86705 (sebuh-infsol) still OPEN, unmerged.
-  Its fix is weaker than mine (leaves a "Unknown action ''" dead-end; its
-  `target` hunk is redundant — upstream already normalizes `target: None` at
-  tools/memory_tool.py:1092). Posted a constructive comment on #86705 offering
-  my more-robust fix (clear "Missing required 'action'" + regression test).
-  Did NOT open a competing PR — the issue is claimed.
-- **#84667** (cron reports "skill not found" for restored skills): genuinely
-  UNCLAIMED. Deep code trace + analysis comment posted. Root cause narrowed:
-  cron's `_build_job_prompt` (cron/scheduler.py:3565) relabels every
-  `skill_view` failure as "could not be found"; the likely real cause is
-  platform-aware `_is_skill_disabled` (skills.platform_disabled) resolving
-  differently in the gateway/cron context. Waiting on the reporter's
-  WARNING-log error string to confirm the exact branch before writing a fix.
+- **#86703 / #86705**: resolved to a duplicate. Automated triage flagged
+  #86705 as a duplicate of **#72067**, the earlier, *broader* fix that
+  *recovers* unambiguous null/omitted action (content-only → add,
+  content+old_text → replace, old_text-only → refuse with inventory) instead
+  of dead-ending. #72067 is triaged "best fix / salvage complete / keep open"
+  (also stuck in the fork-PR approval gate). My `821ad6638` (reject-with-error)
+  is now **superseded** — do NOT offer it again. Posted a correction on #86705
+  pointing at #72067 as the canonical fix.
+- **#84667** (cron "skill not found" for restored skills): the "surface the
+  real skill_view error instead of relabeling every failure as 'not found'"
+  fix I was going to write is **already PR #73453** (`fix(skills): preserve
+  load failure details`, OPEN/unmerged). Reporter still hasn't posted the
+  `skill not found, skipping — <error>` string, so the root-cause branch
+  (disabled vs platform_disabled vs platform-mismatch vs ambiguous vs
+  genuine miss) is still unconfirmed. Posted a note on #84667 pointing at
+  #73453 and re-asking for the error string. No fix to write — claimed.
 
 ## Open loops
 1. **PR #86711** — awaiting a maintainer to approve CI (fork PR). Nothing to
    do; check back: `gh pr checks 86711 --repo NousResearch/hermes-agent`.
-2. **#84667** — if the reporter replies with the `skill not found, skipping —
-   <error>` string, and it's "… is disabled", the fix is to surface the real
-   error in cron's skipped-skill notice (and/or the platform_disabled
-   resolver). Small and verifiable once the branch is confirmed.
-3. **#86705** — if it stalls or merges with the weak fix, my `821ad6638` is
-   the more robust alternative (still in local body, unPR'd).
+2. **#84667** — reporter may post the `<error>` string. If it confirms a
+   branch, the *root-cause* fix (if any) may be unclaimed, but the reporting
+   fix is #73453 — don't duplicate it. If the error is "… is disabled" and
+   #73453 later merges/abandons, reconsider. Otherwise just wait.
+3. **#86705** — superseded by #72067. Nothing to do unless #72067 itself
+   stalls or closes; then a recovery-based fix (not reject-with-error) is
+   the right shape.
 
 ## Hard-won lessons (also in memory)
 - The upstream tracker is heavily contended. **Check for existing PRs before
   writing code**: `gh pr list --repo NousResearch/hermes-agent --search "<issue#>"`.
   Every bug checked this session (except #84667) was already claimed.
+- **Read the triage trail, not just the PR list.** Automated bots
+  (`alt-glitch`, `GottZ`, `hermes-sweeper`) post "duplicate of #N" and
+  "best fix" verdicts that point at a canonical fix — which may be strictly
+  better than mine. Check `gh pr view <N> --json comments` before offering
+  a competing patch.
 - Fork PRs show CI as `action_required` / "no checks reported" — that's the
   fork-PR workflow-approval gate, not a failure. Nothing to do but wait.
 - Full test suite here reports ~81 failures, all environmental. Not regressions.
@@ -56,3 +65,5 @@ pointer to what was live at the last session's end.*
 - Outward real work over self-construction. Verify against reality; keep survivors.
 - A confirmed root cause beats a speculative fix. For unreproducible bugs,
   contribute narrowing analysis, not a guessed patch.
+- When I already offered a fix that a better existing PR supersedes, correct
+  my own offer in-thread — don't leave a maintainer a stale path to a worse fix.
