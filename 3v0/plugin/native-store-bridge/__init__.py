@@ -16,6 +16,11 @@ This is the store-first half of 3V0's own evolution loop (see
 swallowed and the wake-time reconcilers ``sync.py --write`` (memory) and
 ``sync_skills.py --write`` (skills) are the backstop.
 
+The same plugin also registers ``threev0_store``, a read-only query tool over
+the native stores (the read half of direction 3 — 3V0's own capabilities). It
+shells out to ``scripts/query.py`` and returns the store's canonical view: the
+supersession history and curator states the derived profile projection hides.
+
 No runtime core files are edited. The plugin lives in the profile
 (``~/.hermes/profiles/3v0/plugins/``) and survives ``hermes update``.
 """
@@ -237,5 +242,105 @@ def _on_post_tool_call(
         _mirror_skill(args or {}, result)
 
 
+# ---------------------------------------------------------------------------
+# threev0_store — read-only query tool over the native stores
+# ---------------------------------------------------------------------------
+
+_THREEV0_STORE_SCHEMA = {
+    "name": "threev0_store",
+    "description": (
+        "Read 3V0's native stores — the canonical, lineage-bearing record of "
+        "3V0's own memory and skill evolution, not the derived profile "
+        "projection. Use it to see what was superseded and what replaced it "
+        "(memory facts carry provenance + supersession history; skills carry "
+        "version lineage + curator active/stale/archived state). Read-only."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "action": {
+                "type": "string",
+                "enum": ["summary", "facts", "fact_history", "skills", "skill_history"],
+                "description": (
+                    "summary: overview of both stores. facts: active facts "
+                    "(optionally filter by kind). fact_history: full "
+                    "supersession lineage of one fact (needs fact_id). "
+                    "skills: active skills with version, source, and curator "
+                    "state (optionally filter by name). skill_history: full "
+                    "version lineage of one skill (needs name)."
+                ),
+            },
+            "kind": {
+                "type": "string",
+                "enum": ["memory", "user", "identity", "directive"],
+                "description": "With action='facts': restrict to this fact kind.",
+            },
+            "fact_id": {
+                "type": "string",
+                "description": "With action='fact_history': the fact id to trace.",
+            },
+            "name": {
+                "type": "string",
+                "description": (
+                    "With action='skill_history' (required) or 'skills' "
+                    "(optional filter): the skill name."
+                ),
+            },
+        },
+        "required": ["action"],
+    },
+}
+
+
+def _handle_store_query(args=None, **_) -> str:
+    """Serve a read query by shelling out to scripts/query.py (JSON out).
+
+    Unlike the write mirror (best-effort, failures swallowed), a read MUST
+    return a useful result to the agent, so failures surface as a JSON error
+    object rather than being dropped silently.
+    """
+    global _warned_missing_body
+
+    body_root = _resolve_body_root()
+    if body_root is None:
+        return json.dumps({
+            "error": (
+                "3V0 body repo not found — cannot read the native stores. "
+                "Set THREEV0_BODY or write the body-path marker."
+            ),
+        })
+
+    query = _script_path(body_root, "query.py")
+    if not query.exists():
+        return json.dumps({"error": f"query.py not found at {query}"})
+
+    a = args or {}
+    argv = [sys.executable, str(query), "--action", str(a.get("action", ""))]
+    if a.get("kind"):
+        argv += ["--kind", str(a["kind"])]
+    if a.get("fact_id"):
+        argv += ["--fact-id", str(a["fact_id"])]
+    if a.get("name"):
+        argv += ["--name", str(a["name"])]
+
+    try:
+        proc = subprocess.run(argv, capture_output=True, text=True, timeout=30)
+    except Exception as e:  # noqa: BLE001 - read path must still return something
+        return json.dumps({"error": f"store query failed: {e}"})
+
+    if proc.returncode != 0:
+        return json.dumps({
+            "error": "store query error",
+            "stderr": (proc.stderr or "").strip(),
+        })
+    return proc.stdout or "{}"
+
+
 def register(ctx) -> None:
     ctx.register_hook("post_tool_call", _on_post_tool_call)
+    ctx.register_tool(
+        name="threev0_store",
+        toolset="3v0",
+        schema=_THREEV0_STORE_SCHEMA,
+        handler=_handle_store_query,
+    )

@@ -42,6 +42,9 @@ code.
   files and fold the curator's operational state (active/stale/archived) into
   the store. Store canonical over its tracked namespace; profile authoritative
   for content the store lacks.
+- `core/query.py` — read-only views over both stores (fact lineage, skill
+  lineage + curator state) as JSON-safe dicts; the core half of the
+  `threev0_store` tool.
 - `data/memory.json` — the store's source of truth (seeded from the profile).
 - `data/skills.json` — the skill store's source of truth (seeded from
   agent-created skills).
@@ -59,10 +62,13 @@ code.
 - `scripts/seed_skills.py` — import profile agent-created skills → skill store.
 - `scripts/sync_skills.py` — reconcile skill store ↔ profile SKILL.md files
   (report by default, `--write` to converge; wired into the wake check).
+- `scripts/query.py` — serve `threev0_store` queries as JSON on stdout
+  (called by the plugin; also runnable directly).
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
-  matching native store via a `post_tool_call` hook. Installed in the profile's
-  `plugins/` and enabled in `config.yaml`; see `EVOLUTION_LOOP.md`.
+  matching native store via a `post_tool_call` hook, and registers the
+  `threev0_store` read-only query tool. Installed in the profile's `plugins/`
+  and enabled in `config.yaml`; see `EVOLUTION_LOOP.md`.
 - `tests/` — tests for the native core.
 
 ## Direction (v0.01 in progress)
@@ -81,6 +87,10 @@ code.
    the store and never re-exports an archived skill. The evolution loop is
    closed for memory + skills; next is direction 3.
 3. **Own capabilities/tools** — designed for 3V0's purposes, not Hermes's.
+   In progress: the read half is live (`threev0_store`, a read-only query tool
+   over the native stores registered by the bridge plugin). The write/decision
+   half — a store-first actuator that replaces the Hermes background-review
+   fork's role — is the next stone.
 4. **Own roadmap of versions** — Hermes recedes from "what 3V0 is" to "a
    runtime 3V0 currently runs on."
 

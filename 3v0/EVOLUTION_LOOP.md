@@ -291,3 +291,54 @@ curator's state at wake — the same degradation contract as memory: exact
 provenance when the bridge sees a write, folded `curator`-state at wake
 otherwise. The curator stays Hermes-owned (operational); the store stays
 3V0-owned (canonical record).
+
+---
+
+## Direction 3 / Stone 5 — own tools: the read half (live)
+
+Directions 1–2 made the stores canonical and *recorded* the evolution loop.
+They did not make it *driven by 3V0*: at runtime 3V0 only sees the derived
+profile projection (MEMORY.md / USER.md, the live SKILL.md files) and reaches
+the canonical store only by shelling out through the terminal tool. Direction 3
+is 3V0's own actuator surface — tools designed for 3V0's purposes, not
+Hermes's. Its first stone is the read half: a first-class query tool over the
+native stores.
+
+### Design
+
+- **`core/query.py`** — read-only views over `MemoryStore` + `SkillStore`,
+  returning JSON-safe dicts (fact lineage, skill version lineage + curator
+  state). Calls only query methods; never mutates either store. stdlib only.
+- **`scripts/query.py`** — the CLI: `--action summary | facts | fact_history |
+  skills | skill_history` with `--kind` / `--fact-id` / `--name` filters, JSON
+  on stdout.
+- **`threev0_store` tool** — registered by the existing `native-store-bridge`
+  profile plugin (same `register(ctx)`, a new `ctx.register_tool` call, toolset
+  `"3v0"`). The handler shells out to `scripts/query.py` and returns its stdout
+  — the same body-root resolution + subprocess pattern as the write mirror, but
+  failures surface as a JSON error (a read must return something, unlike the
+  best-effort write mirror).
+
+### Exposure: progressive disclosure (by design, not a bug)
+
+`threev0_store` is a *plugin* tool, so it is eligible for Tool Search's
+progressive-disclosure bridge (`tools/tool_search.py`): non-core (plugin/MCP)
+tools are deferred behind `tool_search` / `tool_describe` / `tool_call` the
+moment any deferrable tool exists, and their catalog is listed in the session's
+deferred-tool catalog. Core tools (`_HERMES_CORE_TOOLS`) never defer; a plugin
+tool is always eligible. This is the Footprint Ladder's plugin rung working as
+intended — zero always-on schema cost on turns 3V0 doesn't query its store —
+and the same posture as the `project_*` tools. Reach it via
+`tool_search("store query")` → `tool_describe("threev0_store")` →
+`tool_call(...)`.
+
+### Open questions
+
+1. **Write half (not yet).** The tool is read-only. The own-evolution loop's
+   *decision* actuator — a store-first write/record tool that replaces the
+   Hermes background-review fork's role — is the next stone, and builds on this
+   read surface.
+2. **Rung reconsideration.** If the store query proves to be used constantly,
+   the plugin-rung deferral (3 extra round-trips) may justify a companion skill
+   that pins the reach pattern, or a lower-footprint re-design. Decide with
+   usage data, not now.
