@@ -424,3 +424,90 @@ live next session (same constraint the read half hit).
 2. **Store-first skill decisions.** Whether the skill store should ever become
    the operational origin (write store-first, project to SKILL.md), or stay an
    auditable record behind the `skill_manage` bridge. Not this stone.
+
+---
+
+## Direction 3 / Stone 7 — fork settled (trigger decided; process not built)
+
+Stone 6 closed with Stone 7's fork unresolved. It is settled here, *before*
+any process code, because a driver built on an unswept premise would violate
+the "don't over-engineer" invariant. Three sub-questions, three answers, all
+verified against the runtime checkout (`~/.hermes/hermes-agent/`).
+
+### The scheduler-infra question — settled by fact
+
+Does the 3v0 profile even have a scheduler ticking in TUI-only use? **No.**
+
+- `InProcessCronScheduler().start(...)` is called in exactly two places:
+  `gateway/run.py` (messaging gateway) and `hermes_cli/web_server.py`
+  (dashboard). The TUI gateway (`tui_gateway/server.py`) never starts a
+  scheduler — its `_cron_sig()` only watches `cron/jobs.json` mtime for UI
+  change signals. The 3v0 profile's `cron/` directory is empty.
+- `maybe_run_curator()` is called only from `cli.py` (classic CLI session
+  start) and `gateway/run.py` (gateway tick) — **not** from `tui_gateway`. So
+  the curator's 7-day maintenance loop also does not tick in TUI-only use.
+- The gateway process runs the *default* profile, not 3v0.
+
+Conclusion: in TUI-only use (3V0's primary mode today), the **only**
+autonomous post-turn machinery that fires is the Hermes background-review fork
+(in-process, per turn). Cron and the curator are both dormant.
+
+### The trigger fork — settled
+
+Three candidates, weighed against the above:
+
+1. **cron (time-triggered) — OUT.** No scheduler tick in the TUI; a
+   cron-triggered 3V0 review would never fire in the primary usage mode, and
+   the gateway that *does* tick runs the default profile, not 3v0.
+2. **idle-gated — NOT a trigger.** There is no standalone idle ticker in the
+   TUI. The curator's `min_idle_hours` is a *condition* layered on a
+   session-start/gateway-tick trigger, not a third trigger type. "Idle-gated"
+   collapses to "hook-triggered + idle-throttled."
+3. **`on_session_end` lifecycle hook — CHOSEN.** Fires reliably in all three
+   modes: `tui_gateway/server.py:_finalize_session`, `cli.py` (atexit + `/new`
+   boundary), and the gateway. It reviews the session that *just* happened — a
+   fresh, complete transcript — the closest session-granular replacement for
+   the fork's post-turn role.
+
+`on_session_start` was the runner-up: same reliability, but it reviews the
+*previous* (already-persisted) session with a one-session lag and cannot
+capture the session that just ended until the next start. `on_session_end`
+wins on freshness.
+
+### Accepted tradeoffs (honest, not hidden)
+
+- **Cadence drops from per-turn to per-session.** The Hermes fork saves
+  memory/skills after every turn; a session-end review saves once per session.
+  Memory made mid-session is not reviewed until the session closes.
+- **Best-effort by construction.** `on_session_end` often fires on the crash
+  path (`interrupted=True`); a review spawned there may not complete on a
+  force-quit. This is the same degradation contract the fork already has.
+- **The hook spawns a detached review** (thread/process); it does not block
+  teardown.
+
+### The fork-disable decision — SEPARATE, LATER, EXPLICIT (operator's call)
+
+Turning off the Hermes background-review fork is **not** part of this
+settlement. It is a runtime config change to the operator's environment with
+two consequences that must be surfaced explicitly, not folded in:
+
+1. Autonomous memory saving changes cadence (per-turn → per-session).
+2. **Skill saving stops entirely** until a store-first *skill* write path
+   exists — `threev0_record` is memory-only (skills were out of scope in
+   Stone 6). Disabling the fork today would silently orphan autonomous skill
+   evolution.
+
+Default posture: leave the fork **on** until 3V0's own driver is built AND
+proven, then ask the operator explicitly, with the skills gap on the table.
+
+### Open build questions (for Stone 7's build, not this settlement)
+
+1. **Tool whitelist for the review fork.** The current fork whitelists
+   `["memory", "skills"]` (core tools). A 3V0-owned review fork needs
+   `threev0_store` / `threev0_record` (plugin tools) plus `session_search` to
+   read recent sessions — whether a forked `AIAgent` whitelist can name plugin
+   tools must be verified at build time (else the hook shells out to a CLI
+   driver instead of forking an agent).
+2. **Idle/interval throttle.** Whether the session-end review should skip when
+   the operator has been continuously active (layering the curator's
+   idle-throttle concept) is a build-time knob, not part of this settlement.

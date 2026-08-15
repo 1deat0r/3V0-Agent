@@ -116,6 +116,26 @@
       ],
       "superseded_by": "",
       "note": ""
+    },
+    {
+      "id": "01382f2740ea",
+      "content": "3v0 profile has NO cron scheduler ticking in TUI-only use: InProcessCronScheduler starts only in the messaging gateway (gateway/run.py) and the dashboard (hermes_cli/web_server.py), not the TUI gateway; tui_gateway merely watches cron/jobs.json for UI. The 3v0 profile's cron/ dir is empty. Any Stone 7 review process must not assume a cron ticker in TUI.",
+      "kind": "memory",
+      "source": "foreground",
+      "created_at": "2026-08-15T10:00:30Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "dfd47d760784",
+      "content": "Stone 7 trigger SETTLED (2026-08-15): use the on_session_end plugin hook. cron is dead in TUI (InProcessCronScheduler ticks only in gateway/dashboard, not tui_gateway; 3v0 cron dir empty) and idle is a throttle, not a trigger. The 3V0-owned review forks off session close (detached, best-effort), consumes threev0_store + threev0_record. Fork-disable (Hermes background-review fork) is a SEPARATE later operator decision: leave ON until 3V0's driver is proven; note the skills gap (threev0_record is memory-only).",
+      "kind": "directive",
+      "source": "foreground",
+      "created_at": "2026-08-15T10:04:30Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
     }
   ]
 }
