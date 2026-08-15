@@ -636,8 +636,11 @@ def _acquire_session_lock(session_id: str):
         return None
 
 
-def _session_columns() -> set:
-    """Column names of the sessions table (best-effort; empty when missing)."""
+def _session_columns() -> Optional[set]:
+    """Column names of the sessions table, or None when the schema cannot be
+    inspected (a transient lock / missing DB). Callers MUST treat None as "do
+    not proceed" — never as "no columns", which would silently drop the
+    ended_at filter and let a review touch a still-open session."""
     if not STATE_DB.exists():
         return set()
     try:
@@ -647,14 +650,21 @@ def _session_columns() -> set:
         finally:
             conn.close()
     except sqlite3.Error:
-        return set()
+        return None
 
 
 def _candidate_sessions() -> List[tuple]:
     """Session ``(id, source)`` rows, newest first, that are 3V0's own *ended*
     top-level sessions worth considering. Column-existence-aware so it works
-    against the real state.db AND the minimal test-fixture schema."""
+    against the real state.db AND the minimal test-fixture schema.
+
+    FAIL-SAFE: if the schema cannot be inspected (``_session_columns`` returns
+    None), return [] — never fall through to an unfiltered query that would
+    surface still-open (live) sessions."""
     cols = _session_columns()
+    if cols is None:
+        _log_run("candidate scan aborted: sessions schema unreadable")
+        return []
     where = []
     if "ended_at" in cols:
         where.append("ended_at IS NOT NULL")      # skip the live session

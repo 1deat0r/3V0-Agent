@@ -678,6 +678,19 @@ class TestLatestSelection(Env):
         _run_latest(self.env)
         self.assertEqual([e["session_id"] for e in self.log_entries()], [sid])
 
+    def test_candidate_scan_failsafe_on_unreadable_schema(self):
+        # An unreadable schema must yield NO candidates — never fall through
+        # to an unfiltered query that would surface still-open (live) sessions.
+        os.environ["THREEV0_REVIEW_STATE_DB"] = str(self.db_path)
+        os.environ["THREEV0_REVIEW_LOG"] = str(self.review_log)
+        try:
+            mod = _load_driver()
+            with mock.patch.object(mod, "_session_columns", return_value=None):
+                self.assertEqual(mod._candidate_sessions(), [])
+        finally:
+            os.environ.pop("THREEV0_REVIEW_STATE_DB", None)
+            os.environ.pop("THREEV0_REVIEW_LOG", None)
+
 
 class TestTemporalGuard(Env):
     """A review of a session that PREDATES a fact must not supersede/retract
