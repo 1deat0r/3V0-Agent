@@ -74,6 +74,7 @@ class MemoryStore:
         source: str,
         supersedes: list[str] | None = None,
         note: str = "",
+        persist: bool = True,
     ) -> Fact:
         if kind not in _VALID_KINDS:
             raise ValueError(f"kind must be one of {sorted(_VALID_KINDS)}, got {kind!r}")
@@ -92,7 +93,8 @@ class MemoryStore:
             for old in self.facts:
                 if old.id == target_id and old.active:
                     old.superseded_by = fact.id
-        self._save()
+        if persist:
+            self._save()
         return fact
 
     # -- queries -----------------------------------------------------------

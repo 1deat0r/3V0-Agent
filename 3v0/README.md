@@ -20,12 +20,16 @@ code.
   profile a derived view; sync imports profile-only entries, drops superseded
   ones from the profile, and exports store-only facts — never deleting store
   history.
+- `core/record.py` — the store-first correction path: supersede an old fact
+  (recoverable via history) instead of silently rewriting.
 - `data/memory.json` — the store's source of truth (seeded from the profile).
 - `scripts/seed_from_profile.py` — import profile MEMORY.md / USER.md → store.
 - `scripts/export_to_profile.py` — emit store → MEMORY.md / USER.md (derived
   view of the store; the profile becomes a projection, not the origin).
 - `scripts/sync.py` — reconcile store ↔ profile (report by default, `--write`
   to converge).
+- `scripts/record.py` — record/correct a fact in the store, then re-export the
+  derived view to the profile.
 - `tests/` — tests for the native core.
 
 ## Direction (v0.01 in progress)
