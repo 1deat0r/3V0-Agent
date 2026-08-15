@@ -4,6 +4,24 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
+## Startup routine (do this first, in order)
+1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
+   and read the memory block. Identity = body, not context.
+2. **Re-check each open loop against live GitHub** — the "last sessions did"
+   summaries below are a starting point, not current truth:
+   - `gh pr checks 86711 --repo NousResearch/hermes-agent` and `gh pr view 86711`
+   - `gh pr view 72067 --repo NousResearch/hermes-agent --json state,comments`
+   - `gh pr view 73453 --repo NousResearch/hermes-agent --json state,comments`
+   - `gh issue view 84667 --repo NousResearch/hermes-agent --json comments`
+3. **Before writing code for any bug:** `gh pr list --repo NousResearch/hermes-agent --search "<issue#>"`
+   AND read the triage trail (`gh pr/issue view <N> --json comments`). Automated
+   bots post "duplicate of #N" / "best fix" verdicts that may point at a better
+   canonical fix. Only write code when genuinely unclaimed.
+4. **Rules of thumb:** fork PRs show CI as `action_required` / "no checks reported"
+   — that's the maintainer-approval gate, not a failure; do nothing, don't re-push.
+   Use `--body-file <tmpfile>` for `gh` comments containing code blocks. For an
+   unreproducible bug, contribute narrowing analysis, not a guessed patch.
+
 ## Where I am
 - Body repo: `~/Projects/AI Agents/3V0 Agent` (fork of NousResearch/hermes-agent).
 - SOUL: `~/.hermes/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.
