@@ -170,8 +170,8 @@
       "supersedes": [
         "80038b368cf1"
       ],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
     },
     {
       "id": "8383ef4e05bb",
@@ -206,6 +206,16 @@
       "supersedes": [
         "e11eaf515320"
       ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "09c099ddbd11",
+      "content": "axiom-agent pivots: sovereign agent on stock Hermes (track upstream) — 3V0's store-first layer ported to TS, Hermes runtime untouched. Decision + port plan: ~/Projects/axiom-agent/docs/handoff-sovereign-ts.md",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T12:55:15Z",
+      "supersedes": [],
       "superseded_by": "",
       "note": ""
     }
