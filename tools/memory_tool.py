@@ -1106,16 +1106,6 @@ def memory_tool(
         return json.dumps(result, ensure_ascii=False)
 
     # --- Single-op path ---------------------------------------------------
-    # A strict provider may send ``action: null`` instead of omitting the key:
-    # the registry handler's ``args.get("action", "")`` default only fires on a
-    # MISSING key, so a present-but-null action reaches this path as None and
-    # falls through every branch to the confusing "Unknown action None" error.
-    # Normalize it and reject a missing/empty action with a clear message.
-    if action is None:
-        action = ""
-    if not action:
-        return tool_error("Missing required 'action'. Use: add, replace, remove.", success=False)
-
     # Validate required params BEFORE the gate so an invalid write is rejected
     # immediately instead of being staged and only failing at approve time.
     if action == "add" and not content:
