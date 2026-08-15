@@ -1,4 +1,5 @@
 .DS_Store
+.directory
 /venv/
 /venv.old/
 /venv.stale.runtime-*/
