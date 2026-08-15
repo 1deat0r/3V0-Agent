@@ -8,7 +8,7 @@
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "b8bdd92379b6",
       "note": ""
     },
     {
@@ -408,6 +408,98 @@
       "supersedes": [],
       "superseded_by": "retracted",
       "note": "retracted by carve-f1nance"
+    },
+    {
+      "id": "b8bdd92379b6",
+      "content": "3V0 environment: native web_search+web_extract work via keyless ddgs backend (ddgs 9.14.4 installed in runtime venv ~/.hermes/hermes-agent/venv). browser_exec drivable via Chrome remote-debugging; curl via terminal works.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:38:35Z",
+      "supersedes": [
+        "d0d70ae4779c"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "2fad872f1f7b",
+      "content": "Operator expects 3V0 to proactively improve its tooling/capabilities and pursue research/learning, not just maintenance.",
+      "kind": "user",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:38:35Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "20073a22be73",
+      "content": "3V0 native substrate v0.01 in body repo: 3v0/core/memory.py provenance-aware store (supersede/retract chain); seed/export scripts make Hermes MEMORY.md/USER.md a derived view.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:38:35Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "b0bdc2bb3d43",
+      "content": "The Operator does not want 3V0 to create or schedule cron jobs; manual rechecks are preferred.",
+      "kind": "user",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:39:19Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "16267b665e38",
+      "content": "scripts/handoff_check.sh exists in the body repo; it is the one-command fresh-session startup audit (body status + open PR loops).",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:39:19Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "286393148f3e",
+      "content": "HANDOFF.md at body repo root now has a Startup routine block: fresh sessions audit body first, re-check open loops live on GitHub, search existing PRs before coding, and follow fork-PR/rules-of-thumb notes.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:39:50Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "8f7042dcd78c",
+      "content": "The Operator expects 3V0 to end sessions by writing a fresh-session kickoff prompt into HANDOFF.md and committing it, so the next session can pick up open loops without re-deriving context.",
+      "kind": "user",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:41:32Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "baca20175336",
+      "content": "Hermes runtime's background_review.py forks 3V0 after every turn and may write skills/memory (memory+skill_manage whitelist); it authored self-maintenance. Foreground and background share one body — load-before-patch guards are load-bearing.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:42:49Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "ba403e1029c4",
+      "content": "Operator invited 3V0 to develop its own personality system, beliefs, and ideologies — to mean them operationally, not perform them.",
+      "kind": "user",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:42:49Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
     }
   ]
 }

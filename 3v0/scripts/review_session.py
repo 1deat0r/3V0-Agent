@@ -30,11 +30,14 @@ operator decision.
 Stone 9 (direction 4's opening) gives the driver its own clock, independent
 of the hook: three mutually-exclusive modes —
 
-- ``--session-id <id>``  the hook path (review the just-ended session);
-- ``--latest``           own-clock single shot (review the newest unreviewed
-  *eligible* session — ended, top-level, reviewable source, not in the log);
-- ``--daemon [--interval N]``  own-clock loop (``--latest`` every N seconds,
-  default 600), surviving transient failures — 3V0's first Hermes-independent
+- ``--session-id <id>``  the hook path (review the just-ended session; the
+  global cooldown throttles this per-turn hook so it does not fire a review
+  on every turn);
+- ``--latest``           own-clock single shot (drain the backlog: review
+  every unreviewed *eligible* session — ended, top-level, reviewable source,
+  not in the log — up to ``MAX_PER_PASS``);
+- ``--daemon [--interval N]``  own-clock loop (drain every N seconds, default
+  600), surviving transient failures — 3V0's first Hermes-independent
   autonomous process.
 
 Env knobs (tests / explicit tuning — defaults are the live profile):
@@ -118,6 +121,9 @@ MAX_TOKENS = int(os.environ.get("THREEV0_REVIEW_MAX_TOKENS") or "8000")
 STORE_BLOCK_CAP = 8000
 SKILL_BLOCK_CAP = 4000
 MAX_DECISIONS = 3
+MAX_PER_PASS = int(os.environ.get("THREEV0_REVIEW_MAX_PER_PASS") or "30")
+NETWORK_RETRIES = 3
+BACKOFF_SECONDS = float(os.environ.get("THREEV0_REVIEW_BACKOFF_S") or "2.0")
 
 # Interactive surfaces whose sessions are worth a session-end review. Sessions
 # from cron/kanban/subagent sources are short-lived harness runs, not 3V0's
@@ -155,21 +161,25 @@ The store is append-only and provenance-aware. Corrections SUPERSEDE (the old \
 fact stays recoverable via history) or RETRACT (marked removed, recoverable). \
 Never erased. The Hermes profile (MEMORY.md/USER.md) is a derived view.
 
-Your job is the store-first layer. The per-turn background fork already saved \
-obvious user facts during the session — do NOT duplicate anything already in \
-ACTIVE FACTS. Act only on what the per-turn path cannot express:
+Your job is the store-first capture layer — the durable-memory writer for a
+session. Capture everything durable the session revealed, and do NOT duplicate
+anything already correctly represented in ACTIVE FACTS. Act only on what is
+not already there:
 
-1. OPERATOR CORRECTION: the session proves a stored fact wrong or outdated. \
+1. OPERATOR FACT / PREFERENCE: the user revealed something about themselves —
+persona, preferences, work style, personal details — or an expectation about
+how 3V0 should behave. Record it (kind 'memory' or 'user').
+2. OPERATOR CORRECTION: the session proves a stored fact wrong or outdated.
 Supersede it (prefer the exact fact_id) or retract it.
-2. ENVIRONMENT CHANGE: a durable change to 3V0's environment, conventions, or \
+3. ENVIRONMENT CHANGE: a durable change to 3V0's environment, conventions, or
 setup (paths, versions, architecture decisions, mechanisms) — record it.
-3. CONSOLIDATION: two or more active facts overlap and should collapse into \
+4. CONSOLIDATION: two or more active facts overlap and should collapse into
 one (supersede the weaker ones with the consolidated fact).
-4. DIRECTIVE/IDENTITY: a durable self-commitment or self-truth the session \
+5. DIRECTIVE/IDENTITY: a durable self-commitment or self-truth the session
 established — record with kind 'directive' or 'identity' (store-only kinds).
-5. SKILL DECISION: the session proved a 3V0-authored skill (in ACTIVE SKILLS) \
-wrong or obsolete. Decommission it store-first: 'skill_retract' (pure prune) \
-or 'skill_absorb' (fold into a live umbrella via 'absorbed_into'). \
+6. SKILL DECISION: the session proved a 3V0-authored skill (in ACTIVE SKILLS)
+wrong or obsolete. Decommission it store-first: 'skill_retract' (pure prune)
+or 'skill_absorb' (fold into a live umbrella via 'absorbed_into').
 'skill_update' (full replacement SKILL.md) is allowed but discouraged — \
 sessions rarely produce a whole correct SKILL.md; leave content changes to \
 skill_manage during the session, which already records them store-first \
@@ -282,10 +292,11 @@ def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
             if isinstance(row[idx], (int, float)):
                 as_of = float(row[idx])
             idx += 1
-        if as_of is None and "last_activity_at" in cols:
-            if isinstance(row[idx], (int, float)):
+        if "last_activity_at" in cols:
+            if as_of is None and isinstance(row[idx], (int, float)):
                 as_of = float(row[idx])
-            idx += 1
+            idx += 1  # always advance: the column is always selected, even when
+                      # as_of was already set from ended_at (the cwd mis-scope bug)
         cwd = ""
         if "cwd" in cols:
             cwd = row[idx] or ""
@@ -433,32 +444,41 @@ def _call_llm(prompt: str) -> Optional[Dict[str, Any]]:
     ]
     last_reason = "unknown"
     for label, attempt in attempts:
-        req = urllib.request.Request(
-            f"{BASE_URL}/chat/completions",
-            data=json.dumps(attempt).encode("utf-8"),
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {api_key}",
-            },
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=180) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-            content = data["choices"][0]["message"]["content"]
-            finish = data["choices"][0].get("finish_reason")
+        for retry in range(NETWORK_RETRIES):
+            req = urllib.request.Request(
+                f"{BASE_URL}/chat/completions",
+                data=json.dumps(attempt).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                },
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=180) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                content = data["choices"][0]["message"]["content"]
+                finish = data["choices"][0].get("finish_reason")
+            except (urllib.error.URLError, TimeoutError) as e:
+                # Transient transport failure — back off and retry this label.
+                last_reason = repr(e)
+                if retry < NETWORK_RETRIES - 1:
+                    _log_run(f"llm {label} transport error, retry {retry + 1}: {e}")
+                    time.sleep(BACKOFF_SECONDS * retry)
+                    continue
+                break  # retries exhausted for this label -> try the next
+            except (KeyError, IndexError, json.JSONDecodeError) as e:
+                last_reason = repr(e)
+                break  # malformed payload — not worth retrying this label
             if not content:
                 last_reason = f"empty content (finish_reason={finish})"
                 _log_run(f"llm {label} attempt: {last_reason}")
-                continue
+                break
             parsed = _tolerant_json(content)
             if parsed is not None:
                 return parsed
             last_reason = "unparseable content"
             _log_run(f"llm {label} attempt: unparseable content")
-            continue
-        except (urllib.error.URLError, TimeoutError, KeyError, IndexError,
-                json.JSONDecodeError) as e:
-            last_reason = repr(e)
+            break
     _log_run(f"llm call failed after retries: {last_reason}")
     return None
 
@@ -759,13 +779,18 @@ def _candidate_sessions() -> List[tuple]:
     return out
 
 
-def review_one(session_id: str) -> str:
+def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
     """Run the full gating + review for one session id.
 
     Returns a status string: ``"reviewed"``, ``"failed"``, or
     ``"skipped:<reason>"`` (reason in killswitch/lock/dedupe/cooldown/missing/
     source/min_messages). The hook's ``--session-id`` path maps these to exit
     codes; the own-clock paths interpret them to pick the next candidate.
+
+    ``respect_cooldown`` gates the 300s global throttle. The per-turn hook
+    (``--session-id``) sets it True so a session-end review does not fire on
+    every turn; the own-clock drain passes False so a backlog drains
+    back-to-back (the per-session flock + dedupe still prevent double-review).
     """
     if os.environ.get("THREEV0_REVIEW") == "0":
         return "skipped:killswitch"
@@ -775,14 +800,15 @@ def review_one(session_id: str) -> str:
         return "skipped:lock"
 
     try:
-        # Dedupe + cooldown from the review log.
+        # Dedupe + (optional) cooldown from the review log.
         now = time.time()
         for entry in _log_entries():
             if entry.get("session_id") == session_id:
                 return "skipped:dedupe"
-            at = entry.get("at")
-            if isinstance(at, (int, float)) and (now - at) < COOLDOWN_S:
-                return "skipped:cooldown"
+            if respect_cooldown:
+                at = entry.get("at")
+                if isinstance(at, (int, float)) and (now - at) < COOLDOWN_S:
+                    return "skipped:cooldown"
 
         session = _load_session(session_id)
         if session is None:
@@ -848,28 +874,37 @@ def review_one(session_id: str) -> str:
                 pass
 
 
-def _review_latest() -> int:
-    """Single-shot own-clock: review the newest unreviewed eligible session.
+def _drain() -> int:
+    """Drain the unreviewed backlog: review every eligible unreviewed session
+    (newest first) in one pass, up to ``MAX_PER_PASS`` LLM attempts.
 
-    Scans candidates newest-first, skipping already-reviewed ids; reviews at
-    most one session per invocation (the global cooldown throttles the rest).
-    Returns an exit code: 0 = reviewed something or nothing to do, 1 = hard
-    failure.
+    Back-to-back by design — the 300s cooldown belongs to the per-turn hook
+    path, not the own clock; the per-session flock + dedupe still prevent
+    double-review. A failed review is logged and left unreviewed for the next
+    pass; it does not abort the drain (the daemon survives per-session
+    failures). Returns 0 always.
     """
     reviewed_ids = {e.get("session_id") for e in _log_entries()}
+    reviewed = 0
+    failed = 0
+    skipped = 0
+    attempted = 0
     for sid, _source in _candidate_sessions():
         if sid in reviewed_ids:
             continue
-        status = review_one(sid)
+        status = review_one(sid, respect_cooldown=False)
         if status == "reviewed":
-            return 0
-        if status == "failed":
-            return 1
-        if status == "skipped:cooldown":
-            return 0  # global throttle — nothing more this tick
-        # skipped:missing / source / min_messages / dedupe / lock ->
-        # not eligible; try the next candidate
-        continue
+            reviewed += 1
+            attempted += 1
+        elif status == "failed":
+            failed += 1
+            attempted += 1
+        else:  # skipped:dedupe / lock / missing / source / min_messages / project
+            skipped += 1
+        if attempted >= MAX_PER_PASS:
+            break
+    if reviewed or failed or skipped:
+        _log_run(f"drain pass: reviewed={reviewed} failed={failed} skipped={skipped}")
     return 0
 
 
@@ -881,11 +916,11 @@ def main() -> int:
     )
     group.add_argument(
         "--latest", action="store_true",
-        help="review the newest unreviewed eligible session (own-clock single shot)",
+        help="drain the unreviewed backlog (own-clock single shot)",
     )
     group.add_argument(
         "--daemon", action="store_true",
-        help="own-clock loop: run --latest every --interval seconds",
+        help="own-clock loop: drain the backlog every --interval seconds",
     )
     ap.add_argument(
         "--interval", type=int, default=600,
@@ -901,15 +936,15 @@ def main() -> int:
         return 1 if status == "failed" else 0
 
     if args.latest:
-        return _review_latest()
+        return _drain()
 
-    # --daemon: 3V0's own clock — loop the latest-session review forever,
+    # --daemon: 3V0's own clock — drain the backlog every interval forever,
     # surviving transient failures (a tick error is a log line, not a crash).
     _log_run(f"daemon started (interval={args.interval}s)")
     try:
         while True:
             try:
-                _review_latest()
+                _drain()
             except Exception as e:  # noqa: BLE001 - a daemon must not die on a tick error
                 _log_run(f"daemon tick error: {e}")
             time.sleep(args.interval)

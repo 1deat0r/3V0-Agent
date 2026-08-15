@@ -1103,5 +1103,201 @@ class TestMirrorScoping(unittest.TestCase):
             tmp.cleanup()
 
 
+class TestDrainBacklog(Env):
+    """Stone 12: the own clock drains the unreviewed backlog back-to-back
+    (no global cooldown), up to a per-pass cap, and survives per-session
+    failures instead of aborting."""
+
+    def _noop_decisions(self):
+        self.decisions_file.write_text(
+            json.dumps({"summary": "no-op", "decisions": []}), encoding="utf-8"
+        )
+
+    def test_drain_reviews_all_unreviewed_newest_first(self):
+        _seed_rich_sessions(
+            self.db_path,
+            [
+                {"id": "77777777_777777_s3", "source": "tui"},
+                {"id": "66666666_666666_s2", "source": "tui"},
+                {"id": "55555555_555555_s1", "source": "tui"},
+            ],
+        )
+        self._noop_decisions()
+        _run_latest(self.env)
+        self.assertEqual(
+            [e["session_id"] for e in self.log_entries()],
+            ["77777777_777777_s3", "66666666_666666_s2", "55555555_555555_s1"],
+        )
+
+    def test_drain_respects_per_pass_cap(self):
+        _seed_rich_sessions(
+            self.db_path,
+            [
+                {"id": "88888888_888888_s4", "source": "tui"},
+                {"id": "77777777_777777_s3", "source": "tui"},
+                {"id": "66666666_666666_s2", "source": "tui"},
+                {"id": "55555555_555555_s1", "source": "tui"},
+            ],
+        )
+        self._noop_decisions()
+        env = dict(self.env, THREEV0_REVIEW_MAX_PER_PASS="2")
+        _run_latest(env)
+        self.assertEqual(len(self.log_entries()), 2)
+
+    def test_drain_continues_after_failure(self):
+        _seed_rich_sessions(
+            self.db_path,
+            [
+                {"id": "77777777_777777_b", "source": "tui"},
+                {"id": "66666666_666666_a", "source": "tui"},
+            ],
+        )
+        os.environ["THREEV0_REVIEW_STATE_DB"] = str(self.db_path)
+        os.environ["THREEV0_REVIEW_LOG"] = str(self.review_log)
+        try:
+            mod = _load_driver()
+            with mock.patch.object(
+                mod, "review_one", side_effect=["failed", "reviewed"]
+            ) as review_one:
+                self.assertEqual(mod._drain(), 0)
+            self.assertEqual(review_one.call_count, 2)  # did not abort after the failure
+        finally:
+            os.environ.pop("THREEV0_REVIEW_STATE_DB", None)
+            os.environ.pop("THREEV0_REVIEW_LOG", None)
+
+
+class TestLLMRetry(unittest.TestCase):
+    """Stone 12: transient transport errors are retried with backoff inside a
+    single review; malformed payloads and empty content are not retried as
+    transport errors."""
+
+    def _fresh_driver(self, base):
+        os.environ["THREEV0_REVIEW_LOG"] = str(base / "reviews" / "reviews.jsonl")
+        os.environ["DEEPSEEK_API_KEY"] = "fake-key"
+        os.environ["THREEV0_REVIEW_BACKOFF_S"] = "0"
+        return _load_driver()
+
+    def _cleanup(self):
+        os.environ.pop("THREEV0_REVIEW_LOG", None)
+        os.environ.pop("DEEPSEEK_API_KEY", None)
+        os.environ.pop("THREEV0_REVIEW_BACKOFF_S", None)
+
+    def test_transport_error_retries_then_succeeds(self):
+        import urllib.error
+
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            base = Path(tmp.name)
+            mod = self._fresh_driver(base)
+            good = json.dumps(
+                {"choices": [{"message": {"content": '{"summary":"ok","decisions":[]}'},
+                              "finish_reason": "stop"}]}
+            ).encode()
+            calls = []
+
+            def side_effect(*a, **kw):
+                calls.append(1)
+                if len(calls) <= 2:
+                    raise urllib.error.URLError("boom")
+                resp = mock.MagicMock()
+                resp.read.return_value = good
+                resp.__enter__ = mock.MagicMock(return_value=resp)
+                resp.__exit__ = mock.MagicMock(return_value=False)
+                return resp
+
+            with mock.patch("urllib.request.urlopen", side_effect=side_effect):
+                result = mod._call_llm("prompt")
+
+            self.assertIsNotNone(result)
+            self.assertEqual(result["summary"], "ok")
+            self.assertEqual(len(calls), 3)  # 2 failures + 1 success
+        finally:
+            self._cleanup()
+            tmp.cleanup()
+
+    def test_transport_error_exhausts_retries(self):
+        import urllib.error
+
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            base = Path(tmp.name)
+            mod = self._fresh_driver(base)
+            calls = []
+
+            def side_effect(*a, **kw):
+                calls.append(1)
+                raise urllib.error.URLError("boom")
+
+            with mock.patch("urllib.request.urlopen", side_effect=side_effect):
+                result = mod._call_llm("prompt")
+
+            self.assertIsNone(result)
+            # 2 labels (json_object, plain) x NETWORK_RETRIES each
+            self.assertEqual(len(calls), mod.NETWORK_RETRIES * 2)
+            run_log = (base / "reviews" / "run.log").read_text(encoding="utf-8")
+            self.assertIn("llm call failed after retries", run_log)
+        finally:
+            self._cleanup()
+            tmp.cleanup()
+
+
+class TestLoadSessionFullSchema(Env):
+    """Stone 12 regression: the real state.db has ended_at AND last_activity_at
+    AND cwd; _load_session's column walk must consume last_activity_at even
+    when as_of was already set from ended_at — otherwise cwd is read from the
+    wrong column (the last_activity_at timestamp) and every 3V0 session is
+    mis-scoped as a sibling project, silently skipping it."""
+
+    def _seed_full_schema(self, cwd):
+        conn = sqlite3.connect(str(self.db_path))
+        conn.executescript(
+            """
+            CREATE TABLE sessions (
+                id TEXT PRIMARY KEY, source TEXT NOT NULL, title TEXT,
+                ended_at REAL, last_activity_at REAL, cwd TEXT NOT NULL DEFAULT ''
+            );
+            CREATE TABLE messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL, role TEXT NOT NULL,
+                content TEXT, tool_name TEXT, active INTEGER NOT NULL DEFAULT 1
+            );
+            """
+        )
+        conn.execute(
+            "INSERT INTO sessions (id, source, title, ended_at, last_activity_at, cwd) "
+            "VALUES ('s_full', 'tui', 't', 100.0, 200.0, ?)",
+            (cwd,),
+        )
+        for i in range(4):
+            conn.execute(
+                "INSERT INTO messages (session_id, role, content) VALUES ('s_full','user',?)",
+                (f"m{i}",),
+            )
+        conn.commit()
+        conn.close()
+
+    def test_full_schema_session_reviewed_not_skipped(self):
+        self._seed_full_schema(str(REPO_ROOT))
+        self.decisions_file.write_text(
+            json.dumps({"summary": "no-op", "decisions": []}), encoding="utf-8"
+        )
+        _run_driver("s_full", self.env)
+        entries = self.log_entries()
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["session_id"], "s_full")
+
+    def test_load_session_reads_cwd_not_last_activity(self):
+        self._seed_full_schema(str(REPO_ROOT))
+        os.environ["THREEV0_REVIEW_STATE_DB"] = str(self.db_path)
+        try:
+            mod = _load_driver()
+            sess = mod._load_session("s_full")
+        finally:
+            os.environ.pop("THREEV0_REVIEW_STATE_DB", None)
+        self.assertIsNotNone(sess)
+        self.assertEqual(sess["cwd"], str(REPO_ROOT))
+        self.assertEqual(sess["as_of"], 100.0)  # ended_at, not last_activity_at
+
+
 if __name__ == "__main__":
     unittest.main()
