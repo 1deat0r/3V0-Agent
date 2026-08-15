@@ -750,6 +750,93 @@ class TestTemporalGuard(Env):
         )
 
 
+class TestSkillTemporalGuard(Env):
+    """A review of a session that PREDATES a skill's active version must not
+    decommission/replace that skill — the reviewer cannot disprove something
+    recorded after the session ended (the skill-axis counterpart of the memory
+    temporal guard)."""
+
+    def test_skill_temporal_refusal_truth_table(self):
+        mod = DRIVER_MOD
+        _seed_skill(self.skill_store_path, self.skills_dir, "some-skill")
+        skill_store = SkillStore(self.skill_store_path)
+        past, future = time.time() - 3600, time.time() + 3600
+        # decommission/replace a skill NEWER than the session -> refuse
+        self.assertIsNotNone(
+            mod._skill_temporal_refusal(
+                {"action": "skill_retract", "name": "some-skill"}, skill_store, past
+            )
+        )
+        self.assertIsNotNone(
+            mod._skill_temporal_refusal(
+                {"action": "skill_absorb", "name": "some-skill", "absorbed_into": "u"},
+                skill_store, past,
+            )
+        )
+        self.assertIsNotNone(
+            mod._skill_temporal_refusal(
+                {"action": "skill_update", "name": "some-skill", "content": "x"},
+                skill_store, past,
+            )
+        )
+        # a skill OLDER than the session -> allow
+        self.assertIsNone(
+            mod._skill_temporal_refusal(
+                {"action": "skill_retract", "name": "some-skill"}, skill_store, future
+            )
+        )
+        # no session timestamp -> guard off (minimal fixture path)
+        self.assertIsNone(
+            mod._skill_temporal_refusal(
+                {"action": "skill_retract", "name": "some-skill"}, skill_store, None
+            )
+        )
+        # a non-skill action is not guarded here (handled by _temporal_refusal)
+        self.assertIsNone(
+            mod._skill_temporal_refusal(
+                {"action": "record", "kind": "memory", "content": "x"}, skill_store, past
+            )
+        )
+        # a skill with no active version is not guarded (backend refuses/creates)
+        self.assertIsNone(
+            mod._skill_temporal_refusal(
+                {"action": "skill_retract", "name": "no-such-skill"}, skill_store, past
+            )
+        )
+        # no skill store -> guard off
+        self.assertIsNone(
+            mod._skill_temporal_refusal(
+                {"action": "skill_retract", "name": "some-skill"}, None, past
+            )
+        )
+
+    def test_skill_retract_of_newer_version_refused_e2e(self):
+        _seed_skill(self.skill_store_path, self.skills_dir, "fresh-skill")
+        _seed_rich_sessions(
+            self.db_path,
+            [{"id": "55555555_555555_old", "source": "tui",
+              "ended_at": time.time() - 3600, "user_messages": 4}],
+        )
+        self.decisions_file.write_text(
+            json.dumps(
+                {
+                    "summary": "regression attempt",
+                    "decisions": [{"action": "skill_retract", "name": "fresh-skill"}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        _run_driver("55555555_555555_old", self.env)
+        entries = self.log_entries()
+        self.assertEqual(entries[0]["applied"], 0)
+        self.assertEqual(entries[0]["refused"], 1)
+        self.assertIn("newer than session", entries[0]["refused_details"][0]["reason"])
+        store = SkillStore(self.skill_store_path)
+        self.assertIsNotNone(store.latest_active("fresh-skill"))  # not retracted
+        # projection untouched
+        self.assertTrue((self.skills_dir / "fresh-skill" / "SKILL.md").exists())
+
+
 class TestLLMEmptyContent(unittest.TestCase):
     """Stone 9 bug-fix: a reasoning model that empties ``content`` (its
     thinking consumed the token budget) must be detected and logged, not

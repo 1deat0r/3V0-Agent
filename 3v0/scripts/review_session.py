@@ -196,8 +196,9 @@ fact_id.
 store-only; memory/user also project to the profile).
 - Skill decisions name a skill exactly as it appears in ACTIVE SKILLS, and \
 only decommission skills the session actually proved wrong or obsolete — \
-never on a hunch. 'skill_absorb' requires the umbrella to be a live ACTIVE \
-SKILL (it must already exist).
+never on a hunch. NEVER decommission or replace a skill whose ACTIVE \
+version's created_at is NEWER than the session under review. 'skill_absorb' \
+requires the umbrella to be a live ACTIVE SKILL (it must already exist).
 
 Reply with ONE JSON object (the word json appears here on purpose; JSON mode \
 is enabled) and nothing else:
@@ -357,9 +358,9 @@ def _skills_block(store: SkillStore) -> str:
     """Active 3V0-authored skills — the skill-decision context (capped)."""
     rows = []
     for v in store.active():
-        rows.append(f"- {v.name} | {store.state(v.name)} | last {v.action} by {v.source}")
+        rows.append(f"- {v.name} | {store.state(v.name)} | {v.created_at} | last {v.action} by {v.source}")
     block = (
-        "ACTIVE SKILLS (name | curator state | last action by source):\n"
+        "ACTIVE SKILLS (name | curator state | created_at | last action by source):\n"
         + ("\n".join(rows) or "(no 3V0-authored skills)")
     )
     if len(block) > SKILL_BLOCK_CAP:
@@ -573,15 +574,50 @@ def _temporal_refusal(
     return None
 
 
+def _skill_temporal_refusal(
+    decision: Dict[str, Any],
+    skill_store: Optional[SkillStore],
+    session_as_of: Optional[float],
+) -> Optional[str]:
+    """Refuse a skill decision that would decommission or replace a skill whose
+    ACTIVE version is NEWER than the session under review — a session predating
+    the current version cannot disprove it. The symmetric counterpart of
+    ``_temporal_refusal`` for the skill axis.
+
+    Returns a refusal reason string, or None when the decision is temporally
+    safe (or the session timestamp is unknown, in which case the guard is a
+    no-op — the minimal test fixture has no ``ended_at`` column). A skill name
+    with no active version is not guarded: the backend either refuses
+    (retract/absorb of an unknown name) or creates a fresh version (update of a
+    new name), neither of which is a temporal regression.
+    """
+    if session_as_of is None or skill_store is None:
+        return None
+    action = str(decision.get("action") or "").strip()
+    if action not in _SKILL_ACTIONS:
+        return None
+    name = str(decision.get("name") or "").strip()
+    if not name:
+        return None
+    target = skill_store.latest_active(name)
+    if target is None:
+        return None
+    ts = _parse_created_ts(target.created_at)
+    if ts is not None and ts > session_as_of:
+        return "skill version newer than session under review"
+    return None
+
+
 def _apply_decisions(
     decisions: List[Dict[str, Any]],
     store: MemoryStore,
     session_as_of: Optional[float],
+    skill_store: Optional[SkillStore] = None,
 ) -> Dict[str, Any]:
     """Run each decision through record.py / record_skills.py (the threev0_record
     backend): memory actions -> record.py, skill actions -> record_skills.py.
-    A memory supersede/retract targeting a fact newer than the session is
-    refused by the temporal guard before it reaches the backend."""
+    A supersede/retract targeting a fact or skill version NEWER than the
+    session is refused by the temporal guard before it reaches the backend."""
     applied: List[Dict[str, Any]] = []
     refused: List[Dict[str, Any]] = []
     env = os.environ.copy()
@@ -591,7 +627,11 @@ def _apply_decisions(
     env.setdefault("THREEV0_SKILLS_DIR", str(SKILLS_DIR))
     for decision in decisions[:MAX_DECISIONS]:
         action = str(decision.get("action") or "").strip()
-        temporal = _temporal_refusal(decision, store, session_as_of)
+        temporal = (
+            _skill_temporal_refusal(decision, skill_store, session_as_of)
+            if action in _SKILL_ACTIONS
+            else _temporal_refusal(decision, store, session_as_of)
+        )
         if temporal:
             refused.append({"reason": temporal, "decision": decision})
             continue
@@ -777,7 +817,7 @@ def review_one(session_id: str) -> str:
         decisions = answer.get("decisions") if isinstance(answer, dict) else None
         if not isinstance(decisions, list):
             decisions = []
-        result = _apply_decisions(decisions, store, session.get("as_of"))
+        result = _apply_decisions(decisions, store, session.get("as_of"), skill_store)
 
         entry = {
             "session_id": session_id,

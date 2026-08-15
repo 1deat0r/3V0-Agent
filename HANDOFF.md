@@ -97,6 +97,19 @@ pointer to what was live at the last session's end.*
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Skill-axis temporal guard, Stone 11 — the last own-clock regression
+  surface closed (this session, BUILT + tested).** The temporal guard covered
+  memory facts but a stale session could still decommission/replace a skill
+  whose ACTIVE version was recorded after it ended. Added
+  `_skill_temporal_refusal` (mirrors `_temporal_refusal`: refuse a
+  `skill_retract`/`skill_absorb`/`skill_update` whose target skill's active
+  version `created_at` is NEWER than the session's `as_of`; fail-open on
+  unknown timestamp / no-skill / missing store), threaded a `skill_store`
+  param through `_apply_decisions`, surfaced `created_at` in the skills block,
+  and added the symmetric charter rule. 2 new tests (141 green). The systemd
+  daemon needs a restart to pick up the driver change; the `on_session_end`
+  hook path reloads it per-spawn. Design in `3v0/EVOLUTION_LOOP.md`
+  (Stone 11).
 - **Scoped write mirror, Stone 10 — the second cross-project pollution vector
   closed (this session, BUILT + tested + live-E2E-verified).** The reviewer
   was scoped by `cwd` last session, but the bridge's foreground mirror still
@@ -133,11 +146,11 @@ pointer to what was live at the last session's end.*
   the `ended_at IS NOT NULL` filter — fixed by making the candidate scan
   fail-safe (unreadable schema → review nothing). Design + all three bugs in
   `3v0/EVOLUTION_LOOP.md` (Stone 9).
-  **Next:** the skill-axis temporal guard (a symmetric `_temporal_refusal` on
-  skill versions — the one remaining regression surface for the own-clock),
-  then verify the daemon's backlog drain is clean
-  (`tail ~/.hermes/profiles/3v0/3v0_reviews/reviews.jsonl`). The fork-disable
-  stays the operator's explicit call.
+  **Done (Stone 11):** the skill-axis temporal guard — a symmetric
+  `_temporal_refusal` on skill versions — and the daemon's backlog drain was
+  verified clean (`reviews.jsonl` shows the temporal guard already refusing a
+  "fact newer than session" supersession in the wild). The fork-disable stays
+  the operator's explicit call.
 - **Fable 5 study → two new skills (this session).** Researched Anthropic's
   Claude Fable 5 (Mythos-class; launched 2026-06-09, pulled under export
   controls 06-12, redeployed 07-01) from primary sources (announcement,

@@ -794,3 +794,48 @@ test fixture), or a lookup error must never block a legitimate 3V0 write.
   `~/.hermes/profiles/f1nance`; moving them onto their own profiles is the
   longer-term clean fix, per the handoff).
 
+## Stone 11 — skill-axis temporal guard (built + tested)
+
+Closed the last own-clock regression surface flagged in Stones 9/10: the
+temporal guard covered memory facts, but a `skill_retract` / `skill_absorb` /
+`skill_update` from a stale session could still decommission or replace a skill
+whose ACTIVE version was recorded *after* the session ended — the exact same
+"backlog drain reverts newer work" bug, on the skill axis.
+
+The fix mirrors the memory guard exactly:
+
+- **`_skill_temporal_refusal(decision, skill_store, session_as_of)`** — the
+  symmetric counterpart of `_temporal_refusal`. For a skill decision it looks
+  up the skill's *active* version (`SkillStore.latest_active(name)`) and
+  refuses when that version's `created_at` (parsed by the existing
+  `_parse_created_ts`) is NEWER than the session's `as_of`. A skill name with
+  no active version is not guarded — the backend either refuses
+  (retract/absorb of an unknown name) or creates a fresh version (update of a
+  new name), neither of which is a temporal regression. `skill_store=None` or
+  `session_as_of=None` fail open (the minimal fixture has no `ended_at`).
+- **`_apply_decisions` gained a `skill_store` parameter** and routes skill
+  actions through `_skill_temporal_refusal`, memory actions through the
+  existing `_temporal_refusal` — one guard per axis, applied before the
+  decision reaches `record.py` / `record_skills.py`.
+- **`_skills_block` now surfaces `created_at`**, and the charter gained the
+  symmetric rule ("NEVER decommission or replace a skill whose ACTIVE
+  version's created_at is NEWER than the session under review") so the model
+  can avoid emitting doomed decisions in the first place.
+
+### Verification
+
+- 2 new tests (`TestSkillTemporalGuard`: an 8-way truth table + an E2E
+  `skill_retract` of a newer version refused, skill + SKILL.md untouched) —
+  **141 total green** (was 139).
+
+### Still open (unchanged, explicit)
+
+- **Fork-disable** — still the operator's call.
+- **Per-project reviewers/daemons** — F1NANCE/Axiom sessions are still simply
+  skipped until they get their own reviewers.
+- **Profile MEMORY.md sharing** — the three projects still share the `3v0`
+  profile; the *store* mirror is scoped (Stone 10), but sibling `memory`-tool
+  writes still land in the shared MEMORY.md directly. The clean fix is moving
+  siblings onto their own profiles (F1NANCE already has
+  `~/.hermes/profiles/f1nance`).
+
