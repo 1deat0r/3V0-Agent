@@ -287,8 +287,10 @@ def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
             return None
         source, title = row[0] or "", row[1] or ""
         as_of: Optional[float] = None
+        ended: Optional[bool] = None  # None = no ended_at column (unknown)
         idx = 2
         if "ended_at" in cols:
+            ended = row[idx] is not None
             if isinstance(row[idx], (int, float)):
                 as_of = float(row[idx])
             idx += 1
@@ -314,6 +316,7 @@ def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
         "source": source,
         "title": title,
         "as_of": as_of,
+        "ended": ended,
         "cwd": cwd,
         "messages": [
             {"role": role or "", "content": content or "", "tool_name": tool_name or ""}
@@ -813,6 +816,13 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
         session = _load_session(session_id)
         if session is None:
             return "skipped:missing"
+        if session.get("ended") is False:
+            # A still-live session (ended_at is NULL): the per-turn hook must
+            # not review it — a mid-transcript review would be incomplete and
+            # its dedupe entry would shadow the daemon's final review, so the
+            # session's late-turn facts would never be captured. Only the
+            # own-clock drain reviews (ended) sessions.
+            return "skipped:live"
         if session["source"] not in REVIEWABLE_SOURCES:
             return "skipped:source"
         if not _is_threev0_cwd(session.get("cwd")):

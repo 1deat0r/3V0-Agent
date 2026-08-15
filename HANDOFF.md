@@ -113,8 +113,10 @@ pointer to what was live at the last session's end.*
   flipped**: the fork is triggered by `memory.nudge_interval` +
   `skills.creation_nudge_interval` (default 10, not in DEFAULT_CONFIG); set
   both to 0 in the 3v0 `config.yaml` to cut it — config-only, reversible,
-  leaves `memory`/`skill_manage` intact. The cut stays the operator's call
-  after more wild-flight time. Design in `3v0/EVOLUTION_LOOP.md` (Stone 12).
+  leaves `memory`/`skill_manage` intact. Also: the reviewer now refuses
+  still-live sessions (`skipped:live`) so the per-turn hook can't shadow the
+  daemon's final review. The cut stays the operator's call after more
+  wild-flight time. Design in `3v0/EVOLUTION_LOOP.md` (Stone 12).
 - **Skill-axis temporal guard, Stone 11 — the last own-clock regression
   surface closed (this session, BUILT + tested).** The temporal guard covered
   memory facts but a stale session could still decommission/replace a skill

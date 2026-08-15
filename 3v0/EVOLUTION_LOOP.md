@@ -878,6 +878,14 @@ legitimately-short sessions.** Fixed with a full-schema regression test.
   against ACTIVE FACTS. Safe with the fork still on: at session end the
   fork's facts are already in ACTIVE FACTS, so the reviewer skips them and
   only fills what the fork missed.
+- **Live-session skip (12d).** `_load_session` now returns an `ended` flag
+  (`None` = no `ended_at` column, else True/False); `review_one` refuses a
+  still-live session (`skipped:live`). The `on_session_end` hook fires on
+  every turn, not at session close — without this gate a mid-transcript
+  review would be incomplete AND its dedupe entry would shadow the daemon's
+  final review, so late-turn facts would be missed once the fork is cut. The
+  own-clock drain (which already filters `ended_at IS NOT NULL`) is now the
+  sole reviewer of *ended* sessions.
 
 ### The off-switch (found, NOT flipped)
 
@@ -908,8 +916,8 @@ baseline). Takes effect on the next TUI/gateway start.
 
 ### Verification
 
-- 7 new tests → **148 total green** (drain ×3, transport retry ×2,
-  full-schema ×2).
+- 8 new tests → **149 total green** (drain ×3, transport retry ×2,
+  full-schema ×2, live-session skip ×1).
 - **Live E2E**: the cwd fix unblocked the drain. 5 reviewable sessions drained
   (3 + 2) with sane store-first decisions; 8 durable facts recorded
   (12 → 20 active); 0 reviewable sessions pending; both syncs report 0 drift.

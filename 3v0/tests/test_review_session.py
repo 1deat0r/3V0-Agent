@@ -1298,6 +1298,43 @@ class TestLoadSessionFullSchema(Env):
         self.assertEqual(sess["cwd"], str(REPO_ROOT))
         self.assertEqual(sess["as_of"], 100.0)  # ended_at, not last_activity_at
 
+    def test_live_session_skipped_by_hook_path(self):
+        # ended_at NULL -> a still-live session; the per-turn hook must not
+        # review it (a mid-transcript review would be incomplete and its dedupe
+        # entry would shadow the daemon's final review). Only the own-clock
+        # drain reviews ended sessions.
+        conn = sqlite3.connect(str(self.db_path))
+        conn.executescript(
+            """
+            CREATE TABLE sessions (
+                id TEXT PRIMARY KEY, source TEXT NOT NULL, title TEXT,
+                ended_at REAL, last_activity_at REAL, cwd TEXT NOT NULL DEFAULT ''
+            );
+            CREATE TABLE messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL, role TEXT NOT NULL,
+                content TEXT, tool_name TEXT, active INTEGER NOT NULL DEFAULT 1
+            );
+            """
+        )
+        conn.execute(
+            "INSERT INTO sessions (id, source, title, ended_at, last_activity_at, cwd) "
+            "VALUES ('s_live', 'tui', 't', NULL, 200.0, ?)",
+            (str(REPO_ROOT),),
+        )
+        for i in range(4):
+            conn.execute(
+                "INSERT INTO messages (session_id, role, content) VALUES ('s_live','user',?)",
+                (f"m{i}",),
+            )
+        conn.commit()
+        conn.close()
+        self.decisions_file.write_text(
+            json.dumps({"summary": "no-op", "decisions": []}), encoding="utf-8"
+        )
+        _run_driver("s_live", self.env)
+        self.assertEqual(self.log_entries(), [])  # live -> skipped:live
+
 
 if __name__ == "__main__":
     unittest.main()
