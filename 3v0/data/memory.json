@@ -566,7 +566,7 @@
       "supersedes": [
         "46929e95d839"
       ],
-      "superseded_by": "",
+      "superseded_by": "a7f076bfeb47",
       "note": ""
     },
     {
@@ -637,6 +637,18 @@
       "created_at": "2026-08-15T23:15:57Z",
       "supersedes": [
         "b8bdd92379b6"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "a7f076bfeb47",
+      "content": "Three own-clock review daemons (systemd user svcs, 6-min ticks): 3v0-review (3V0 memory+skills→profile) + f1nance-review + axiom-review (siblings: store-only + memory-only into 3v0/data/<proj>/memory.json, strict cwd). Tick=_sync() then _drain(); core/projects.py = project registry.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T23:41:04Z",
+      "supersedes": [
+        "58ba31f67543"
       ],
       "superseded_by": "",
       "note": ""
