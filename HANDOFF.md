@@ -61,7 +61,13 @@ pointer to what was live at the last session's end.*
   into 3V0's store. Carved `3v0/data/axiom/memory.json` (seeded with the two
   leaked Axiom facts, retracted from 3V0's store) + an empty
   `3v0/data/f1nance/memory.json`. F1NANCE/Axiom sessions are skipped by 3V0's
-  daemon until they get their own reviewers.
+  daemon until they get their own reviewers. **Still open: the
+  `native-store-bridge` plugin's foreground `memory`-mirror is NOT scoped** —
+  it mirrors every foreground memory write into 3V0's store regardless of
+  project, so sibling sessions still leak facts in (e.g. a F1NANCE fact landed
+  2026-08-16). Next fix: scope the bridge by session cwd (same
+  `_is_threev0_cwd` gate as the reviewer), or move F1NANCE/Axiom onto their own
+  Hermes profiles (F1NANCE already has `~/.hermes/profiles/f1nance`).
 - **Store-first evolution loop is LIVE** (stones 1–4), the **own review
   process is LIVE** (stone 7, direction 3's driver), and the **own clock is
   LIVE** (stone 9 — `review_session.py --daemon` deployed as the systemd user
@@ -111,11 +117,12 @@ pointer to what was live at the last session's end.*
   the `ended_at IS NOT NULL` filter — fixed by making the candidate scan
   fail-safe (unreadable schema → review nothing). Design + all three bugs in
   `3v0/EVOLUTION_LOOP.md` (Stone 9).
-  **Next:** the skill-axis temporal guard (the one remaining regression
-  surface for the own-clock, a symmetric `_temporal_refusal` on skill
-  versions), then verify the daemon's backlog drain is clean after a few
-  hours (`tail ~/.hermes/profiles/3v0/3v0_reviews/reviews.jsonl`). The
-  fork-disable stays the operator's explicit call.
+  **Next:** scope the `native-store-bridge` plugin's foreground
+  `memory`-mirror to 3V0 sessions (same `_is_threev0_cwd` gate as the
+  reviewer) — the one remaining cross-project pollution vector; then the
+  skill-axis temporal guard; then verify the daemon's backlog drain is clean
+  (`tail ~/.hermes/profiles/3v0/3v0_reviews/reviews.jsonl`). The fork-disable
+  stays the operator's explicit call.
 - **Fable 5 study → two new skills (this session).** Researched Anthropic's
   Claude Fable 5 (Mythos-class; launched 2026-06-09, pulled under export
   controls 06-12, redeployed 07-01) from primary sources (announcement,
