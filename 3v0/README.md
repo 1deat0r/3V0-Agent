@@ -14,10 +14,18 @@ code.
 - `core/memory.py` — provenance-aware, versioned identity/memory store (the
   first native subsystem). Facts carry source + supersession links; conflicts
   are flagged, never silently overwritten.
+- `core/profile_io.py` — single owner of the '§' wire format shared by
+  seed/export/sync.
+- `core/sync.py` — store↔profile reconciliation. The store is canonical, the
+  profile a derived view; sync imports profile-only entries, drops superseded
+  ones from the profile, and exports store-only facts — never deleting store
+  history.
 - `data/memory.json` — the store's source of truth (seeded from the profile).
 - `scripts/seed_from_profile.py` — import profile MEMORY.md / USER.md → store.
 - `scripts/export_to_profile.py` — emit store → MEMORY.md / USER.md (derived
   view of the store; the profile becomes a projection, not the origin).
+- `scripts/sync.py` — reconcile store ↔ profile (report by default, `--write`
+  to converge).
 - `tests/` — tests for the native core.
 
 ## Direction (v0.01 in progress)
