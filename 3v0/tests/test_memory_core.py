@@ -6,6 +6,7 @@ Run directly:
 
 from __future__ import annotations
 
+import importlib.util
 import os
 import sys
 import tempfile
@@ -16,6 +17,22 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.memory import MemoryStore  # noqa: E402
+
+
+def _load_module(name: str, path: Path):
+    """Import a non-package script by path (scripts/ has no __init__.py)."""
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"could not load module spec for {path}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+_seed = _load_module(
+    "seed_from_profile", REPO_ROOT / "3v0" / "scripts" / "seed_from_profile.py"
+)
+split_entries = _seed.split_entries
 
 
 class TestMemoryCore(unittest.TestCase):
@@ -54,6 +71,27 @@ class TestMemoryCore(unittest.TestCase):
         s = MemoryStore(self.path)
         with self.assertRaises(ValueError):
             s.add("x", "bogus", "test")
+
+    def test_profile_derived_view_roundtrip(self) -> None:
+        """seed→export contract: the §-joined derived view splits back exactly.
+
+        Locks the "profile is a derived view" claim made by
+        seed_from_profile.py / export_to_profile.py: active facts, joined on
+        '§', must re-split into the identical ordered list. Known boundary:
+        facts containing a literal '§' or leading/trailing whitespace do not
+        survive the delimiter — that is the separator's contract, and the
+        current store contains neither.
+        """
+        s = MemoryStore(self.path)
+        contents = [
+            "fact one",
+            "fact with (parens) and commas, fine",
+            "multi\nline\nfact",
+        ]
+        for c in contents:
+            s.add(c, "memory", "test")
+        mem = "\n§\n".join(f.content for f in s.active("memory"))
+        self.assertEqual(split_entries(mem), contents)
 
 
 if __name__ == "__main__":
