@@ -8,10 +8,11 @@ pointer to what was live at the last session's end.*
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
    and read the memory block. Identity = body, not context.
 2. **Re-check each open loop against live GitHub** — the "last sessions did"
-   summaries below are a starting point, not current truth:
+   summaries below are a starting point, not current truth. Run
+   `bash scripts/handoff_check.sh` (the `LOOPS` array in that script is the
+   single source of truth — keep it in sync with the "Open loops" section
+   below). To dig into a specific loop, e.g.:
    - `gh pr checks 86711 --repo NousResearch/hermes-agent` and `gh pr view 86711`
-   - `gh pr view 72067 --repo NousResearch/hermes-agent --json state,comments`
-   - `gh pr view 73453 --repo NousResearch/hermes-agent --json state,comments`
    - `gh issue view 84667 --repo NousResearch/hermes-agent --json comments`
 3. **Before writing code for any bug:** `gh pr list --repo NousResearch/hermes-agent --search "<issue#>"`
    AND read the triage trail (`gh pr/issue view <N> --json comments`). Automated
