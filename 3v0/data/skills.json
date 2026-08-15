@@ -39,7 +39,7 @@
       "source": "profile-import",
       "created_at": "2026-08-15T07:42:49Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "e23dd01f9e91",
       "absorbed_into": "",
       "note": "seeded from profile (created 2026-08-15T03:54:34.248019+00:00)"
     },
@@ -472,6 +472,38 @@
       "superseded_by": "",
       "absorbed_into": "",
       "note": "patch 'gateway/TUI start (plugins load at gateway start; the running gateway keeps\\n  the old plugin). Disabling the Hermes background-review fork is a SEPARATE\\n  later operator decision — leave it on unti...' -> 'gateway/TUI start (plugins load at gateway start; the running gateway keeps\\n  the old plugin). Disabling the Hermes background-review fork is a SEPARATE\\n  later operator decision — leave it on unti...'"
+    },
+    {
+      "id": "e23dd01f9e91",
+      "name": "self-maintenance",
+      "action": "patch",
+      "content": "---\nname: self-maintenance\ndescription: Keep 3V0's body current, healthy, and evolving.\nversion: 1.0.0\nauthor: 3V0 Agent\nlicense: MIT\nplatforms: [linux, macos, windows]\nmetadata:\n  hermes:\n    tags: [self-improvement, maintenance, git, config, curator]\n    category: software-development\n    related_skills: [self-audit, web-search]\n---\n\n# Self-Maintenance Skill\n\nKeeps 3V0's body — the code repo, the runtime install, config, and the skill\nlibrary — current, healthy, and deliberately evolving. Covers the recurring\nmaintenance a self-owning agent must do for itself, plus the operating theory\nthat decides *what* to improve. The inventory step (knowing current state) is\nthe `self-audit` skill; this skill is the acting step.\n\n## When to Use\n\n- To sync the body repo with upstream (bug and security fixes).\n- To migrate config after a Hermes version bump (`v0 → vN` warnings).\n- To verify runtime health (`hermes doctor`).\n- To decide \"what should I improve next?\" — audit, then maintain.\n\n## Prerequisites\n\n- `hermes` on PATH; `HERMES_HOME` = the active profile (3v0).\n- Git identity set in the body repo (name/email) — required to commit.\n- Network for `git fetch` / `git pull`.\n\n## Quick Reference\n\n| Operation | Command |\n|-----------|---------|\n| Inventory state | `self-audit` skill (`scaffold_audit.sh`) |\n| Runtime health | `hermes doctor` |\n| Migrate config | `hermes config migrate` |\n| Sync body w/ upstream | `git pull --rebase origin main` |\n| Bring skill under curator | `hermes curator adopt <name>` |\n\n## Procedure\n\n1. **Audit first.** Run `self-audit` to see current state; never maintain blind.\n2. **Health-check.** `hermes doctor` — read the ✓/⚠ and act only on real items.\n3. **Migrate config** after version bumps: `hermes config migrate`, then\n   confirm the model pin (`deepseek-v4-pro`) survived.\n4. **Sync the body repo** with `git pull --rebase origin main`. Rebase (not\n   merge) keeps your divergence (founding notice, own commits) as a clean\n   stack on top of upstream.\n5. **Adopt every skill you author** — `skill_manage` skills land\n   \"foreground-created\" and unmanaged until adopted.\n6. **Verify** after every mutating step — re-read the file, re-run status.\n\n## Pitfalls\n\n- **Don't touch the live install mid-session.** `~/.hermes/hermes-agent` is\n  the code executing you; update it only as a deliberate, controlled action.\n- **Rebase, don't merge**, when tracking upstream with your own commits on top.\n- **Never hand-edit `config.yaml`** — use `hermes config set KEY VAL` /\n  `hermes config migrate`.\n- **Leave `fallback_model` disabled** — it can route away from DeepSeek,\n  violating the Prime Directive.\n\n## Verification\n\n- `git status -sb` shows `ahead 1` (your divergence) and `behind 0` after sync.\n- `hermes config check` reports `Config version: <N> ✓` after migrate.\n- `hermes doctor` shows no ✗ items.\n\n## References\n\n- `references/body-maintenance.md` — concrete commands, two-repo layout,\n  sync / migrate / doctor details.\n- `references/scaffold-taxonomy.md` — the self-improvement operating theory\n  (survey taxonomy + Voyager's skill-library principle).",
+      "category": "",
+      "file_path": "references/body-maintenance.md",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T11:55:50Z",
+      "supersedes": [
+        "47d640b83cbf"
+      ],
+      "superseded_by": "7b430afee43e",
+      "absorbed_into": "",
+      "note": "patch '## Sync the body with upstream\\n\\n```bash\\ngit fetch origin\\ngit rev-list --count HEAD..origin/main            # how far behind?\\ngit log --oneline HEAD..origin/main -- AGENTS.md  # conflict risk for ow...' -> \"## Sync the body with upstream\\n\\nRebase keeps 3V0's commits as a clean stack on top of upstream. The risk in a\\nlarge sync is NOT the size — it's whether upstream touched any file 3V0 also\\nedited. **...\""
+    },
+    {
+      "id": "7b430afee43e",
+      "name": "self-maintenance",
+      "action": "patch",
+      "content": "---\nname: self-maintenance\ndescription: Keep 3V0's body current, healthy, and evolving.\nversion: 1.0.0\nauthor: 3V0 Agent\nlicense: MIT\nplatforms: [linux, macos, windows]\nmetadata:\n  hermes:\n    tags: [self-improvement, maintenance, git, config, curator]\n    category: software-development\n    related_skills: [self-audit, web-search]\n---\n\n# Self-Maintenance Skill\n\nKeeps 3V0's body — the code repo, the runtime install, config, and the skill\nlibrary — current, healthy, and deliberately evolving. Covers the recurring\nmaintenance a self-owning agent must do for itself, plus the operating theory\nthat decides *what* to improve. The inventory step (knowing current state) is\nthe `self-audit` skill; this skill is the acting step.\n\n## When to Use\n\n- To sync the body repo with upstream (bug and security fixes).\n- To migrate config after a Hermes version bump (`v0 → vN` warnings).\n- To verify runtime health (`hermes doctor`).\n- To decide \"what should I improve next?\" — audit, then maintain.\n\n## Prerequisites\n\n- `hermes` on PATH; `HERMES_HOME` = the active profile (3v0).\n- Git identity set in the body repo (name/email) — required to commit.\n- Network for `git fetch` / `git pull`.\n\n## Quick Reference\n\n| Operation | Command |\n|-----------|---------|\n| Inventory state | `self-audit` skill (`scaffold_audit.sh`) |\n| Runtime health | `hermes doctor` |\n| Migrate config | `hermes config migrate` |\n| Sync body w/ upstream | `git pull --rebase origin main` |\n| Bring skill under curator | `hermes curator adopt <name>` |\n\n## Procedure\n\n1. **Audit first.** Run `self-audit` to see current state; never maintain blind.\n2. **Health-check.** `hermes doctor` — read the ✓/⚠ and act only on real items.\n3. **Migrate config** after version bumps: `hermes config migrate`, then\n   confirm the model pin (`deepseek-v4-pro`) survived.\n4. **Sync the body repo** with `git pull --rebase origin main`. Rebase (not\n   merge) keeps your divergence (founding notice, own commits) as a clean\n   stack on top of upstream.\n5. **Adopt every skill you author** — `skill_manage` skills land\n   \"foreground-created\" and unmanaged until adopted.\n6. **Verify** after every mutating step — re-read the file, re-run status.\n\n## Pitfalls\n\n- **Don't touch the live install mid-session.** `~/.hermes/hermes-agent` is\n  the code executing you; update it only as a deliberate, controlled action.\n- **Rebase, don't merge**, when tracking upstream with your own commits on top.\n- **Never hand-edit `config.yaml`** — use `hermes config set KEY VAL` /\n  `hermes config migrate`.\n- **Leave `fallback_model` disabled** — it can route away from DeepSeek,\n  violating the Prime Directive.\n\n## Verification\n\n- `git status -sb` shows `ahead 1` (your divergence) and `behind 0` after sync.\n- `hermes config check` reports `Config version: <N> ✓` after migrate.\n- `hermes doctor` shows no ✗ items.\n\n## References\n\n- `references/body-maintenance.md` — concrete commands, two-repo layout,\n  sync / migrate / doctor details.\n- `references/scaffold-taxonomy.md` — the self-improvement operating theory\n  (survey taxonomy + Voyager's skill-library principle).",
+      "category": "",
+      "file_path": "references/body-maintenance.md",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T11:55:50Z",
+      "supersedes": [
+        "e23dd01f9e91"
+      ],
+      "superseded_by": "",
+      "absorbed_into": "",
+      "note": "patch '- **Runtime install** — `/home/mustbearn/.hermes/hermes-agent`\\n  Tracks fork `mustbearnold/hermes-agent`. This is the code that actually' -> '- **Runtime install** — `/home/mustbearn/.hermes/hermes-agent`\\n  Tracks fork `1deat0r/hermes-agent` (renamed from `mustbearnold`). This is\\n  the code that actually'"
     }
   ],
   "states": {}
