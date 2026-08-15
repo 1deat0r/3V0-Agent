@@ -216,6 +216,40 @@
       "source": "assistant_tool",
       "created_at": "2026-08-15T12:55:15Z",
       "supersedes": [],
+      "superseded_by": "ebd210f04a43",
+      "note": ""
+    },
+    {
+      "id": "ebd210f04a43",
+      "content": "axiom-agent is a TS fork of Prime Agent v0.7.2 (MIT, PrimeIntellect-ai), repo ~/Projects/axiom-agent, GH 1deat0r/axiom-agent; store-first layer port is in-repo, no longer stock-Hermes track.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T21:19:02Z",
+      "supersedes": [
+        "09c099ddbd11"
+      ],
+      "superseded_by": "ca266650bcb7",
+      "note": ""
+    },
+    {
+      "id": "45e716e171cc",
+      "content": "axiom-agent test floor: default phase has two known unrelated failures — 52 concurrent-kernel-boot timeout (ADR-0075 parallel-contention ceiling) and 4685 telemetry banner leak (GH issue #62); kernel-heavy and process-stress phases green.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T21:19:03Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "ca266650bcb7",
+      "content": "axiom-agent: re-founding as sovereign agent on stock Hermes (track upstream) — 3V0's store-first layer ported to TypeScript, Hermes runtime untouched; prime-agent v0.7.2 baseline superseded/parked (ADR-0015). Plan: ~/Projects/axiom-agent/docs/handoff-sovereign-ts.md",
+      "kind": "memory",
+      "source": "foreground",
+      "created_at": "2026-08-15T21:22:17Z",
+      "supersedes": [
+        "ebd210f04a43"
+      ],
       "superseded_by": "",
       "note": ""
     }

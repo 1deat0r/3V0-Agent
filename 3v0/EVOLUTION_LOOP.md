@@ -640,3 +640,84 @@ the memory axis exactly.
   evolution. Still the operator's explicit call, after 3V0's driver has proven
   itself in the wild.
 
+---
+
+## Direction 4 / Stone 9 — the own clock (built + live + deployed)
+
+Direction 4 is the frontier: "Hermes recedes to a runtime 3V0 runs on." Its
+opening stone is not a full runtime (reimplementing the agent loop would break
+the "don't over-engineer" invariant) — it is **own initiative**: a 3V0-owned,
+Hermes-independent process that reviews on 3V0's own schedule.
+
+### What was built
+
+- **`review_session.py` gained three modes** (mutually exclusive):
+  - `--session-id <id>` — the hook path (unchanged);
+  - `--latest` — own-clock single shot: review the newest unreviewed
+    *eligible* session (ended, top-level, reviewable source, not in the log);
+  - `--daemon [--interval N]` — own-clock loop: `--latest` every N seconds,
+    surviving transient failures (a tick error is a log line, not a crash).
+  `main()` was refactored into `review_one(session_id) -> status` (returns
+  `reviewed` / `failed` / `skipped:<reason>`), with `_candidate_sessions()`
+  (column-existence-aware: filters `ended_at IS NOT NULL`,
+  `parent_session_id IS NULL`, `hidden=0`, `archived=0` against the real
+  schema, degrades cleanly on the minimal test fixture) and `_review_latest()`
+  (scans newest-first, dedupes by the review log, reviews at most one per
+  invocation).
+
+- **Deploy artifact** `3v0/deploy/3v0-review.service` — a systemd *user*
+  service supervising `--daemon --interval 360`. systemd only restarts it on
+  crash; the clock is 3V0's own. Installed + enabled on this host. Steady-state
+  cost is ~zero: an idle tick (nothing unreviewed) makes no LLM call, just one
+  cheap SQL query.
+
+### Two live bugs found and fixed (the reviewer was failing silently in the wild)
+
+Auditing before building surfaced that the ONE successful review in the log was
+the exception — the hook's reviews had been failing silently since go-live:
+
+1. **Reasoning-model empty content.** `max_tokens: 2500` was too small:
+   DeepSeek-v4-pro puts thinking in `reasoning_content`; on a large transcript
+   the reasoning consumed the whole budget, leaving `content` empty.
+   `_tolerant_json("")` returned None and `_call_llm` failed with no
+   diagnostic. Fix: `max_tokens` 2500 → 8000 (`THREEV0_REVIEW_MAX_TOKENS`),
+   and empty/unparseable `content` is now a *detected* soft failure that logs
+   `finish_reason` and advances to the next attempt.
+
+2. **Temporal regression (the serious one).** The reviewer superseded a correct
+   fact ("axiom-agent: sovereign on stock Hermes") with stale content ("TS fork
+   of Prime Agent") because it reviewed a session that *predated* the fact
+   (ended ~18 min before the fact was recorded). An own-clock draining old
+   backlog sessions would systematically revert newer facts. Fix: **the
+   temporal guard** — `_load_session` captures the session's
+   `ended_at`/`last_activity_at` as `as_of`; `_temporal_refusal` refuses any
+   `retract` or `record`-with-`supersedes` whose target fact's `created_at` is
+   NEWER than `session_as_of` (a session predating a fact cannot disprove it).
+   Plain records are unaffected; the guard is a no-op when the session
+   timestamp is unknown (minimal fixture). The ACTIVE FACTS block now carries
+   `created_at`, and the charter forbids superseding newer facts. The store was
+   repaired store-first (the corrected fact supersedes the wrong one; the whole
+   chain stays recoverable via `history()`).
+
+### Verification
+
+- 129 native-core tests green (was 122): +4 `--latest` selection, +1
+  empty-content detection, +2 temporal-guard.
+- **Live E2E**: `--latest` reviewed real sessions with real DeepSeek calls —
+  one applied 2 decisions (pre-guard), one a clean no-op — and the drain loop
+  correctly skipped the sub-3-user-message sessions in id order.
+- Daemon deployed: `systemctl --user status 3v0-review.service` = active.
+
+### Still open (unchanged, explicit)
+
+- **Fork-disable** — still the operator's call; the own-clock now runs in
+  parallel with the fork (both share the one per-5-min review cooldown).
+- **Skill axis temporal guard** — the guard covers memory facts; a
+  `skill_retract`/`skill_absorb` from a stale session is still possible in
+  principle, but the charter already biases hard against decommission and the
+  skill store is independently versioned. A symmetric guard on skill versions
+  is a candidate follow-up.
+- **Wake-sync fold** — the daemon is review-only; folding `sync.py --write` /
+  `sync_skills.py --write` into the tick would make it a full maintenance
+  clock. Deliberately deferred (keep the stone small).
+

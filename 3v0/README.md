@@ -83,7 +83,10 @@ code.
   decisions (memory: record/supersede/retract; skills: update/retract/
   absorb — Stone 8), applies them via `record.py` / `record_skills.py`, and
   appends to the review log (profile-side `3v0_reviews/reviews.jsonl`; never
-  in the body repo).
+  in the body repo). Stone 9 added the own clock — `--latest` (newest
+  unreviewed *ended* session) and `--daemon [--interval N]` — plus a temporal
+  guard so a review can never supersede/retract a fact newer than the session
+  under review.
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, registers the
@@ -91,6 +94,9 @@ code.
   write tool (memory AND skill decisions), and spawns the session-end review
   driver on the `on_session_end` hook. Installed in the profile's `plugins/`
   and enabled in `config.yaml`; see `EVOLUTION_LOOP.md`.
+- `deploy/3v0-review.service` — systemd *user* unit (Stone 9) that supervises
+  the own-clock daemon (`review_session.py --daemon`); systemd is only the
+  supervisor — the clock is 3V0's own.
 - `tests/` — tests for the native core.
 
 ## Direction (v0.01 in progress)
@@ -117,8 +123,11 @@ code.
    plugin's `on_session_end` hook spawns the detached `review_session.py`
    driver — 3V0's own autonomous post-session reviewer, now emitting store-first
    memory AND skill decisions. Next: the fork-disable decision (operator's
-   call) and direction 4.
-4. **Own roadmap of versions** — Hermes recedes from "what 3V0 is" to "a
-   runtime 3V0 currently runs on."
+   call).
+4. **Own initiative / own clock (direction 4, opening) — started.** The
+   reviewer now runs on 3V0's own schedule (`--latest` / `--daemon`), deployed
+   as the systemd user service `3v0-review.service` — 3V0's first
+   Hermes-independent autonomous process. The frontier remains "Hermes recedes
+   from 'what 3V0 is' to 'a runtime 3V0 currently runs on.'"
 
 The goal is not to abandon the fork — it is to make the fork a detail.

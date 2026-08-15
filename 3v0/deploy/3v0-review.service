@@ -1,0 +1,38 @@
+# 3V0 own-clock session reviewer (Stone 9 — direction 4's opening).
+#
+# 3V0's first Hermes-independent autonomous process: the review driver loops
+# on its own schedule (--latest every --interval seconds), reviewing the
+# newest unreviewed *ended* session against the canonical store via a real
+# DeepSeek-v4-pro call. systemd is only the supervisor (restart on crash);
+# the clock is 3V0's own.
+#
+# No secrets here: the driver reads DEEPSEEK_API_KEY from the profile .env
+# (~/.hermes/profiles/3v0/.env) and resolves the body repo from its own path.
+#
+# Install (as the user):
+#   cp 3v0/deploy/3v0-review.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now 3v0-review.service
+#   systemctl --user status 3v0-review.service
+# Stop / disable:
+#   systemctl --user disable --now 3v0-review.service
+# One-shot (no daemon):
+#   python3 "3v0/scripts/review_session.py" --latest
+#
+# Throttle: the driver's own cooldown (THREEV0_REVIEW_COOLDOWN_S, default 300s)
+# caps reviews to ~1 per 5 min regardless of --interval; an idle tick (nothing
+# unreviewed) makes zero LLM calls.
+
+[Unit]
+Description=3V0 own-clock session reviewer (autonomous store-first memory/skill review)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 "/home/mustbearn/Projects/AI Agents/3V0 Agent/3v0/scripts/review_session.py" --daemon --interval 360
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target

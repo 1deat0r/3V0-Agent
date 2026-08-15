@@ -27,6 +27,16 @@ skill's full content (``skill_update``) — applied through
 ``scripts/record_skills.py``. Leaving the fork enabled is a separate, later
 operator decision.
 
+Stone 9 (direction 4's opening) gives the driver its own clock, independent
+of the hook: three mutually-exclusive modes —
+
+- ``--session-id <id>``  the hook path (review the just-ended session);
+- ``--latest``           own-clock single shot (review the newest unreviewed
+  *eligible* session — ended, top-level, reviewable source, not in the log);
+- ``--daemon [--interval N]``  own-clock loop (``--latest`` every N seconds,
+  default 600), surviving transient failures — 3V0's first Hermes-independent
+  autonomous process.
+
 Env knobs (tests / explicit tuning — defaults are the live profile):
   THREEV0_PROFILE_HOME    profile home (state.db, .env, default review log)
   THREEV0_BODY            body repo root (default: this repo, two levels up)
@@ -42,6 +52,8 @@ Env knobs (tests / explicit tuning — defaults are the live profile):
   THREEV0_REVIEW_MIN_MESSAGES  min user messages to review (default 3)
   THREEV0_REVIEW_COOLDOWN_S    min seconds between reviews (default 300)
   THREEV0_REVIEW_TRANSCRIPT_CAP transcript char cap (default 40000)
+  THREEV0_REVIEW_MAX_TOKENS   completion budget (default 8000; the reasoning
+                          model needs headroom or it empties ``content``)
   THREEV0_REVIEW_LLM=fake + THREEV0_REVIEW_DECISIONS=<json file>
                           offline mode: read the model's answer from a file
                           (never touches the network)
@@ -53,6 +65,7 @@ Env knobs (tests / explicit tuning — defaults are the live profile):
 from __future__ import annotations
 
 import argparse
+import calendar
 import json
 import os
 import sqlite3
@@ -101,6 +114,7 @@ BASE_URL = (os.environ.get("THREEV0_REVIEW_BASE_URL") or "https://api.deepseek.c
 MIN_MESSAGES = int(os.environ.get("THREEV0_REVIEW_MIN_MESSAGES") or "3")
 COOLDOWN_S = int(os.environ.get("THREEV0_REVIEW_COOLDOWN_S") or "300")
 TRANSCRIPT_CAP = int(os.environ.get("THREEV0_REVIEW_TRANSCRIPT_CAP") or "40000")
+MAX_TOKENS = int(os.environ.get("THREEV0_REVIEW_MAX_TOKENS") or "8000")
 STORE_BLOCK_CAP = 8000
 SKILL_BLOCK_CAP = 4000
 MAX_DECISIONS = 3
@@ -155,6 +169,9 @@ surfaced. Bias strongly toward zero decisions.
 
 Rules:
 - At most 3 decisions. Prefer fewer.
+- NEVER supersede or retract a fact whose created_at is NEWER than the session
+under review (compare against the session's date): a session predating a fact
+cannot disprove it.
 - A 'record' MUST be a declarative fact, compact (under ~220 characters), \
 with no '§' character (it cannot round-trip to the profile projection).
 - Supersession: prefer 'supersedes_id' with an exact fact_id from ACTIVE \
@@ -219,17 +236,39 @@ def _load_api_key() -> Optional[str]:
 
 
 def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
-    """Read the session row + ordered messages from the profile's state.db."""
+    """Read the session row + ordered messages from the profile's state.db.
+
+    Also captures the session's end/last-activity timestamp (``as_of``, a Unix
+    float) when the schema carries it — used by the temporal guard so a review
+    cannot supersede facts recorded *after* the session ended. Column-aware:
+    the minimal test fixture has neither column, so ``as_of`` is None there.
+    """
     if not STATE_DB.exists():
         return None
     conn = sqlite3.connect(str(STATE_DB), timeout=5)
     try:
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(sessions)")}
+        select = ["source", "title"]
+        if "ended_at" in cols:
+            select.append("ended_at")
+        if "last_activity_at" in cols:
+            select.append("last_activity_at")
         row = conn.execute(
-            "SELECT source, title FROM sessions WHERE id = ?", (session_id,)
+            f"SELECT {', '.join(select)} FROM sessions WHERE id = ?",
+            (session_id,),
         ).fetchone()
         if row is None:
             return None
         source, title = row[0] or "", row[1] or ""
+        as_of: Optional[float] = None
+        idx = 2
+        if "ended_at" in cols:
+            if isinstance(row[idx], (int, float)):
+                as_of = float(row[idx])
+            idx += 1
+        if as_of is None and "last_activity_at" in cols:
+            if isinstance(row[idx], (int, float)):
+                as_of = float(row[idx])
         msgs = conn.execute(
             "SELECT role, content, tool_name FROM messages "
             "WHERE session_id = ? AND active = 1 ORDER BY id",
@@ -242,6 +281,7 @@ def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
     return {
         "source": source,
         "title": title,
+        "as_of": as_of,
         "messages": [
             {"role": role or "", "content": content or "", "tool_name": tool_name or ""}
             for role, content, tool_name in msgs
@@ -282,11 +322,11 @@ def _build_transcript(messages: List[Dict[str, str]], cap: int = TRANSCRIPT_CAP)
 
 
 def _store_block(store: MemoryStore) -> str:
-    """Active facts with ids — the decision context (capped)."""
+    """Active facts with ids + timestamps — the decision context (capped)."""
     rows = []
     for fact in store.active():
-        rows.append(f"- {fact.id} | {fact.kind} | {fact.content}")
-    block = "ACTIVE FACTS (id | kind | content):\n" + ("\n".join(rows) or "(store empty)")
+        rows.append(f"- {fact.id} | {fact.kind} | {fact.created_at} | {fact.content}")
+    block = "ACTIVE FACTS (id | kind | created_at | content):\n" + ("\n".join(rows) or "(store empty)")
     if len(block) > STORE_BLOCK_CAP:
         block = block[: STORE_BLOCK_CAP - 40] + "\n… [store block truncated] …"
     return block
@@ -339,7 +379,15 @@ def _tolerant_json(text: str) -> Optional[Dict[str, Any]]:
 
 
 def _call_llm(prompt: str) -> Optional[Dict[str, Any]]:
-    """One DeepSeek chat-completion call (JSON mode, tolerant retry)."""
+    """One DeepSeek chat-completion call (JSON mode, tolerant retry).
+
+    DeepSeek-v4-pro is a reasoning model: its thinking goes to
+    ``reasoning_content`` and the final answer to ``content``. A too-small
+    ``max_tokens`` lets the reasoning consume the whole budget, leaving
+    ``content`` empty — a silent failure unless detected. So: a generous
+    budget, and empty/unparseable ``content`` is a soft failure that advances
+    to the next attempt (with a specific log line instead of a silent None).
+    """
     canned = _load_canned()
     if os.environ.get("THREEV0_REVIEW_LLM") == "fake":
         return canned
@@ -355,11 +403,14 @@ def _call_llm(prompt: str) -> Optional[Dict[str, Any]]:
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.2,
-        "max_tokens": 2500,
+        "max_tokens": MAX_TOKENS,
     }
-    attempts = [dict(body, response_format={"type": "json_object"}), body]
-    last: Optional[BaseException] = None
-    for attempt in attempts:
+    attempts = [
+        ("json_object", dict(body, response_format={"type": "json_object"})),
+        ("plain", body),
+    ]
+    last_reason = "unknown"
+    for label, attempt in attempts:
         req = urllib.request.Request(
             f"{BASE_URL}/chat/completions",
             data=json.dumps(attempt).encode("utf-8"),
@@ -369,14 +420,24 @@ def _call_llm(prompt: str) -> Optional[Dict[str, Any]]:
             },
         )
         try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
+            with urllib.request.urlopen(req, timeout=180) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
             content = data["choices"][0]["message"]["content"]
-            return _tolerant_json(content)
+            finish = data["choices"][0].get("finish_reason")
+            if not content:
+                last_reason = f"empty content (finish_reason={finish})"
+                _log_run(f"llm {label} attempt: {last_reason}")
+                continue
+            parsed = _tolerant_json(content)
+            if parsed is not None:
+                return parsed
+            last_reason = "unparseable content"
+            _log_run(f"llm {label} attempt: unparseable content")
+            continue
         except (urllib.error.URLError, TimeoutError, KeyError, IndexError,
                 json.JSONDecodeError) as e:
-            last = e
-    _log_run(f"llm call failed after retries: {last}")
+            last_reason = repr(e)
+    _log_run(f"llm call failed after retries: {last_reason}")
     return None
 
 
@@ -446,9 +507,60 @@ def _skill_decision_argv(decision: Dict[str, Any]) -> Optional[List[str]]:
     ]
 
 
-def _apply_decisions(decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _parse_created_ts(created_at: str) -> Optional[float]:
+    """Parse a Fact ``created_at`` (UTC ``YYYY-MM-DDTHH:MM:SSZ``) to a Unix
+    timestamp; None when absent/unparseable."""
+    try:
+        return calendar.timegm(time.strptime(created_at, "%Y-%m-%dT%H:%M:%SZ"))
+    except (ValueError, TypeError):
+        return None
+
+
+def _temporal_refusal(
+    decision: Dict[str, Any], store: MemoryStore, session_as_of: Optional[float]
+) -> Optional[str]:
+    """Refuse a decision that would supersede/retract a fact NEWER than the
+    session under review — a session predating a fact cannot disprove it.
+
+    Returns a refusal reason string, or None when the decision is temporally
+    safe (or the session timestamp is unknown, in which case the guard is a
+    no-op — the minimal test fixture has no ``ended_at`` column).
+    """
+    if session_as_of is None:
+        return None
+    action = str(decision.get("action") or "").strip()
+    if action == "retract":
+        target = store.get(str(decision.get("fact_id") or "").strip())
+    elif action == "record":
+        supersedes_id = str(decision.get("supersedes_id") or "").strip()
+        if supersedes_id:
+            target = store.get(supersedes_id)
+        elif decision.get("supersedes"):
+            sub = str(decision["supersedes"]).strip()
+            target = next(
+                (f for f in store.active() if sub and sub in f.content), None
+            )
+        else:
+            return None
+    else:
+        return None
+    if target is None:
+        return None
+    ts = _parse_created_ts(target.created_at)
+    if ts is not None and ts > session_as_of:
+        return "fact newer than session under review"
+    return None
+
+
+def _apply_decisions(
+    decisions: List[Dict[str, Any]],
+    store: MemoryStore,
+    session_as_of: Optional[float],
+) -> Dict[str, Any]:
     """Run each decision through record.py / record_skills.py (the threev0_record
-    backend): memory actions -> record.py, skill actions -> record_skills.py."""
+    backend): memory actions -> record.py, skill actions -> record_skills.py.
+    A memory supersede/retract targeting a fact newer than the session is
+    refused by the temporal guard before it reaches the backend."""
     applied: List[Dict[str, Any]] = []
     refused: List[Dict[str, Any]] = []
     env = os.environ.copy()
@@ -458,6 +570,10 @@ def _apply_decisions(decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
     env.setdefault("THREEV0_SKILLS_DIR", str(SKILLS_DIR))
     for decision in decisions[:MAX_DECISIONS]:
         action = str(decision.get("action") or "").strip()
+        temporal = _temporal_refusal(decision, store, session_as_of)
+        if temporal:
+            refused.append({"reason": temporal, "decision": decision})
+            continue
         argv = (
             _skill_decision_argv(decision)
             if action in _SKILL_ACTIONS
@@ -520,35 +636,83 @@ def _acquire_session_lock(session_id: str):
         return None
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description="3V0-owned session-end review driver")
-    ap.add_argument("--session-id", required=True)
-    args = ap.parse_args()
-    session_id = args.session_id
+def _session_columns() -> set:
+    """Column names of the sessions table (best-effort; empty when missing)."""
+    if not STATE_DB.exists():
+        return set()
+    try:
+        conn = sqlite3.connect(str(STATE_DB), timeout=5)
+        try:
+            return {r[1] for r in conn.execute("PRAGMA table_info(sessions)")}
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return set()
 
+
+def _candidate_sessions() -> List[tuple]:
+    """Session ``(id, source)`` rows, newest first, that are 3V0's own *ended*
+    top-level sessions worth considering. Column-existence-aware so it works
+    against the real state.db AND the minimal test-fixture schema."""
+    cols = _session_columns()
+    where = []
+    if "ended_at" in cols:
+        where.append("ended_at IS NOT NULL")      # skip the live session
+    if "parent_session_id" in cols:
+        where.append("parent_session_id IS NULL")  # skip delegated subagents
+    if "hidden" in cols:
+        where.append("hidden = 0")
+    if "archived" in cols:
+        where.append("archived = 0")
+    sql = "SELECT id, source FROM sessions"
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY id DESC"
+    try:
+        conn = sqlite3.connect(str(STATE_DB), timeout=5)
+        try:
+            return [
+                (sid, source or "") for sid, source in conn.execute(sql).fetchall()
+            ]
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return []
+
+
+def review_one(session_id: str) -> str:
+    """Run the full gating + review for one session id.
+
+    Returns a status string: ``"reviewed"``, ``"failed"``, or
+    ``"skipped:<reason>"`` (reason in killswitch/lock/dedupe/cooldown/missing/
+    source/min_messages). The hook's ``--session-id`` path maps these to exit
+    codes; the own-clock paths interpret them to pick the next candidate.
+    """
     if os.environ.get("THREEV0_REVIEW") == "0":
-        return 0
+        return "skipped:killswitch"
 
     lock_fd = _acquire_session_lock(session_id)
     if lock_fd is None:
-        return 0  # another review for this session is running
+        return "skipped:lock"
 
     try:
         # Dedupe + cooldown from the review log.
         now = time.time()
         for entry in _log_entries():
             if entry.get("session_id") == session_id:
-                return 0
+                return "skipped:dedupe"
             at = entry.get("at")
             if isinstance(at, (int, float)) and (now - at) < COOLDOWN_S:
-                return 0
+                return "skipped:cooldown"
 
         session = _load_session(session_id)
-        if session is None or session["source"] not in REVIEWABLE_SOURCES:
-            return 0
+        if session is None:
+            return "skipped:missing"
+        if session["source"] not in REVIEWABLE_SOURCES:
+            return "skipped:source"
         n_user = sum(1 for m in session["messages"] if m["role"] == "user")
         if n_user < MIN_MESSAGES:
-            return 0
+            return "skipped:min_messages"
 
         transcript = _build_transcript(session["messages"])
         store = MemoryStore(STORE_PATH)
@@ -567,12 +731,12 @@ def main() -> int:
         answer = _call_llm(prompt)
         if answer is None:
             _log_run(f"review {session_id}: llm call failed")
-            return 1
+            return "failed"
 
         decisions = answer.get("decisions") if isinstance(answer, dict) else None
         if not isinstance(decisions, list):
             decisions = []
-        result = _apply_decisions(decisions)
+        result = _apply_decisions(decisions, store, session.get("as_of"))
 
         entry = {
             "session_id": session_id,
@@ -594,13 +758,83 @@ def main() -> int:
             f"review {session_id}: applied={entry['applied']} "
             f"refused={entry['refused']} requested={entry['decisions_requested']}"
         )
-        return 0
+        return "reviewed"
     finally:
         if lock_fd is not None:
             try:
                 os.close(lock_fd)
             except OSError:
                 pass
+
+
+def _review_latest() -> int:
+    """Single-shot own-clock: review the newest unreviewed eligible session.
+
+    Scans candidates newest-first, skipping already-reviewed ids; reviews at
+    most one session per invocation (the global cooldown throttles the rest).
+    Returns an exit code: 0 = reviewed something or nothing to do, 1 = hard
+    failure.
+    """
+    reviewed_ids = {e.get("session_id") for e in _log_entries()}
+    for sid, _source in _candidate_sessions():
+        if sid in reviewed_ids:
+            continue
+        status = review_one(sid)
+        if status == "reviewed":
+            return 0
+        if status == "failed":
+            return 1
+        if status == "skipped:cooldown":
+            return 0  # global throttle — nothing more this tick
+        # skipped:missing / source / min_messages / dedupe / lock ->
+        # not eligible; try the next candidate
+        continue
+    return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="3V0-owned session review driver")
+    group = ap.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--session-id", help="review this exact session (the hook path)"
+    )
+    group.add_argument(
+        "--latest", action="store_true",
+        help="review the newest unreviewed eligible session (own-clock single shot)",
+    )
+    group.add_argument(
+        "--daemon", action="store_true",
+        help="own-clock loop: run --latest every --interval seconds",
+    )
+    ap.add_argument(
+        "--interval", type=int, default=600,
+        help="seconds between daemon passes (default 600)",
+    )
+    args = ap.parse_args()
+
+    if os.environ.get("THREEV0_REVIEW") == "0":
+        return 0
+
+    if args.session_id:
+        status = review_one(args.session_id)
+        return 1 if status == "failed" else 0
+
+    if args.latest:
+        return _review_latest()
+
+    # --daemon: 3V0's own clock — loop the latest-session review forever,
+    # surviving transient failures (a tick error is a log line, not a crash).
+    _log_run(f"daemon started (interval={args.interval}s)")
+    try:
+        while True:
+            try:
+                _review_latest()
+            except Exception as e:  # noqa: BLE001 - a daemon must not die on a tick error
+                _log_run(f"daemon tick error: {e}")
+            time.sleep(args.interval)
+    except KeyboardInterrupt:
+        _log_run("daemon stopped (keyboard interrupt)")
+        return 0
 
 
 if __name__ == "__main__":

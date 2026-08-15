@@ -20,6 +20,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -546,6 +547,228 @@ class TestHookSpawn(unittest.TestCase):
                 ):
                     os.environ.pop(key, None)
         finally:
+            tmp.cleanup()
+
+
+def _seed_rich_sessions(path: Path, rows) -> None:
+    """A state.db with the *real* sessions schema shape (ended_at,
+    parent_session_id, hidden, archived) and multiple sessions, so the
+    --latest candidate filters can be exercised against a faithful schema."""
+    conn = sqlite3.connect(str(path))
+    conn.executescript(
+        """
+        CREATE TABLE sessions (
+            id TEXT PRIMARY KEY, source TEXT NOT NULL, title TEXT,
+            ended_at REAL, parent_session_id TEXT,
+            hidden INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE TABLE messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT,
+            tool_name TEXT,
+            active INTEGER NOT NULL DEFAULT 1
+        );
+        """
+    )
+    for row in rows:
+        sid = row["id"]
+        conn.execute(
+            "INSERT INTO sessions (id, source, title, ended_at, parent_session_id, hidden, archived) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                sid,
+                row.get("source", "tui"),
+                row.get("title", "fixture"),
+                row.get("ended_at", 1.0),
+                row.get("parent_session_id"),
+                row.get("hidden", 0),
+                row.get("archived", 0),
+            ),
+        )
+        for i in range(row.get("user_messages", 4)):
+            conn.execute(
+                "INSERT INTO messages (session_id, role, content) VALUES (?, 'user', ?)",
+                (sid, f"user message {i}"),
+            )
+        conn.execute(
+            "INSERT INTO messages (session_id, role, content) VALUES (?, 'assistant', ?)",
+            (sid, "assistant reply"),
+        )
+    conn.commit()
+    conn.close()
+
+
+def _run_latest(env: dict, expect_code: int = 0) -> subprocess.CompletedProcess:
+    proc = subprocess.run(
+        [sys.executable, str(DRIVER), "--latest"],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert proc.returncode == expect_code, (
+        f"exit={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
+    )
+    return proc
+
+
+class TestLatestSelection(Env):
+    """Stone 9: --latest picks the newest unreviewed *eligible* session,
+    skipping live / subagent / non-reviewable / already-reviewed rows, and
+    degrades to a clean no-op when nothing is eligible."""
+
+    def _noop_decisions(self):
+        self.decisions_file.write_text(
+            json.dumps({"summary": "no-op", "decisions": []}), encoding="utf-8"
+        )
+
+    def _preseed_reviewed(self, sid: str):
+        self.review_log.parent.mkdir(parents=True, exist_ok=True)
+        self.review_log.write_text(
+            # a PAST timestamp: it must dedupe without tripping the cooldown
+            json.dumps({"session_id": sid, "at": time.time() - 3600}) + "\n",
+            encoding="utf-8",
+        )
+
+    def test_latest_reviews_newest_unreviewed_eligible(self):
+        _seed_rich_sessions(
+            self.db_path,
+            [
+                {"id": "99999999_999999_sub", "parent_session_id": "x", "source": "tui"},
+                {"id": "88888888_888888_live", "ended_at": None, "source": "tui"},
+                {"id": "77777777_777777_cron", "source": "cron"},
+                {"id": "66666666_666666_done", "source": "tui"},
+                {"id": "55555555_555555_new", "source": "tui"},
+            ],
+        )
+        self._noop_decisions()
+        self._preseed_reviewed("66666666_666666_done")
+        _run_latest(self.env)
+        entries = self.log_entries()
+        self.assertEqual(len(entries), 2)
+        self.assertEqual(entries[-1]["session_id"], "55555555_555555_new")
+
+    def test_latest_noop_when_only_ineligible(self):
+        _seed_rich_sessions(
+            self.db_path,
+            [
+                {"id": "99999999_999999_sub", "parent_session_id": "x", "source": "tui"},
+                {"id": "88888888_888888_live", "ended_at": None, "source": "tui"},
+                {"id": "77777777_777777_cron", "source": "cron"},
+            ],
+        )
+        self._noop_decisions()
+        _run_latest(self.env)
+        self.assertEqual(self.log_entries(), [])
+
+    def test_latest_noop_when_all_reviewed(self):
+        _seed_rich_sessions(self.db_path, [{"id": "55555555_555555_done", "source": "tui"}])
+        self._noop_decisions()
+        self._preseed_reviewed("55555555_555555_done")
+        _run_latest(self.env)
+        self.assertEqual(len(self.log_entries()), 1)  # only the pre-existing entry
+
+    def test_latest_minimal_schema_reviews_session(self):
+        # The minimal fixture has no ended_at/parent columns; the
+        # column-existence-aware query must still surface the session.
+        sid = _seed_session_db(self.db_path, source="tui", user_messages=4)
+        self._noop_decisions()
+        _run_latest(self.env)
+        self.assertEqual([e["session_id"] for e in self.log_entries()], [sid])
+
+
+class TestTemporalGuard(Env):
+    """A review of a session that PREDATES a fact must not supersede/retract
+    that fact — the reviewer cannot disprove something recorded after the
+    session ended (the own-clock regression bug)."""
+
+    def test_supersede_of_newer_fact_refused_e2e(self):
+        _seed_rich_sessions(
+            self.db_path,
+            [{"id": "55555555_555555_old", "source": "tui", "ended_at": time.time() - 3600}],
+        )
+        self.decisions_file.write_text(
+            json.dumps(
+                {
+                    "summary": "regression attempt",
+                    "decisions": [
+                        {"action": "record", "kind": "memory", "content": "regressed",
+                         "supersedes_id": self.ids["stale"]},
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        _run_driver("55555555_555555_old", self.env)
+        entries = self.log_entries()
+        self.assertEqual(entries[0]["applied"], 0)
+        self.assertEqual(entries[0]["refused"], 1)
+        self.assertIn("newer than session", entries[0]["refused_details"][0]["reason"])
+        store = MemoryStore(self.store_path)
+        self.assertTrue(store.get(self.ids["stale"]).active)  # not superseded
+
+    def test_temporal_refusal_truth_table(self):
+        mod = DRIVER_MOD
+        store = MemoryStore(self.store_path)
+        past, future = time.time() - 3600, time.time() + 3600
+        # retract a fact NEWER than the session -> refuse
+        self.assertIsNotNone(
+            mod._temporal_refusal({"action": "retract", "fact_id": self.ids["stale"]}, store, past)
+        )
+        # retract a fact OLDER than the session -> allow
+        self.assertIsNone(
+            mod._temporal_refusal({"action": "retract", "fact_id": self.ids["stale"]}, store, future)
+        )
+        # no session timestamp -> guard off (minimal fixture path)
+        self.assertIsNone(
+            mod._temporal_refusal({"action": "retract", "fact_id": self.ids["stale"]}, store, None)
+        )
+        # supersede-by-id of a newer fact -> refuse
+        self.assertIsNotNone(
+            mod._temporal_refusal({"action": "record", "supersedes_id": self.ids["stale"]}, store, past)
+        )
+        # a plain record (no supersede) is never temporally refused
+        self.assertIsNone(
+            mod._temporal_refusal({"action": "record", "kind": "memory", "content": "x"}, store, past)
+        )
+
+
+class TestLLMEmptyContent(unittest.TestCase):
+    """Stone 9 bug-fix: a reasoning model that empties ``content`` (its
+    thinking consumed the token budget) must be detected and logged, not
+    fail silently as a generic 'llm call failed'."""
+
+    def test_empty_content_is_detected_and_logged(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            base = Path(tmp.name)
+            os.environ["THREEV0_REVIEW_LOG"] = str(base / "reviews" / "reviews.jsonl")
+            os.environ["DEEPSEEK_API_KEY"] = "fake-key"
+            try:
+                # Fresh module load so RUN_LOG is bound to the temp path.
+                mod = _load_driver()
+            finally:
+                pass
+
+            fake_resp = mock.MagicMock()
+            fake_resp.read.return_value = json.dumps(
+                {"choices": [{"message": {"content": ""}, "finish_reason": "length"}]}
+            ).encode()
+            fake_resp.__enter__ = mock.MagicMock(return_value=fake_resp)
+            fake_resp.__exit__ = mock.MagicMock(return_value=False)
+
+            with mock.patch("urllib.request.urlopen", return_value=fake_resp):
+                result = mod._call_llm("some prompt")
+
+            self.assertIsNone(result)
+            run_log = (base / "reviews" / "run.log").read_text(encoding="utf-8")
+            self.assertIn("empty content", run_log)
+            self.assertIn("finish_reason=length", run_log)
+        finally:
+            os.environ.pop("THREEV0_REVIEW_LOG", None)
+            os.environ.pop("DEEPSEEK_API_KEY", None)
             tmp.cleanup()
 
 

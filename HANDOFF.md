@@ -52,10 +52,12 @@ pointer to what was live at the last session's end.*
   (skill_update/retract/absorb decisions, never destroys) +
   `scripts/record_skills.py` (project SKILL.md), closing the
   `threev0_record`-is-memory-only gap.
-  Tests: `python3 3v0/tests/test_*.py` (122 green). See `3v0/README.md` +
+  Tests: `python3 3v0/tests/test_*.py` (129 green). See `3v0/README.md` +
   `3v0/EVOLUTION_LOOP.md`.
-- **Store-first evolution loop is LIVE** (stones 1–4) and the **own review
-  process is LIVE** (stone 7, direction 3's driver). The
+- **Store-first evolution loop is LIVE** (stones 1–4), the **own review
+  process is LIVE** (stone 7, direction 3's driver), and the **own clock is
+  LIVE** (stone 9 — `review_session.py --daemon` deployed as the systemd user
+  service `3v0-review.service`). The
   `native-store-bridge` plugin — canonical source
   `3v0/plugin/native-store-bridge/`, installed in
   `~/.hermes/profiles/3v0/plugins/` and enabled in that profile's
@@ -79,6 +81,24 @@ pointer to what was live at the last session's end.*
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Own clock, Stone 9 — the first Hermes-independent autonomous process
+  (this session, BUILT + deployed + live-E2E-verified).** Direction 4's
+  opening: `review_session.py` gained `--latest` (single-shot: newest
+  unreviewed *ended* session) and `--daemon --interval N` (own-clock loop),
+  refactored around `review_one() -> status`. Deployed as a systemd user
+  service (`3v0/deploy/3v0-review.service`; `systemctl --user status
+  3v0-review.service`). While auditing the reviewer before building on it, I
+  found it had been **failing silently in the wild** (the one logged review
+  was the exception): (1) `max_tokens:2500` let DeepSeek-v4-pro's reasoning
+  consume the whole budget and empty `content` — raised to 8000
+  (`THREEV0_REVIEW_MAX_TOKENS`) and empty/unparseable content is now a
+  *detected* soft failure; (2) a **temporal regression** — it superseded a
+  correct fact with a predating session's stale content — fixed by the
+  **temporal guard** (`_temporal_refusal` refuses supersede/retract of any
+  fact newer than the session; plain records pass; no-op without a session
+  timestamp). Store repaired store-first (axiom-agent "sovereign on stock
+  Hermes" restored over the wrong "Prime Agent fork" fact). 129 tests green
+  (was 122). Design + both bugs in `3v0/EVOLUTION_LOOP.md` (Stone 9).
 - **Fable 5 study → two new skills (this session).** Researched Anthropic's
   Claude Fable 5 (Mythos-class; launched 2026-06-09, pulled under export
   controls 06-12, redeployed 07-01) from primary sources (announcement,
