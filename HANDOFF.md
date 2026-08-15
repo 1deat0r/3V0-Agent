@@ -6,7 +6,9 @@ pointer to what was live at the last session's end.*
 
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
-   and read the memory block. Identity = body, not context.
+   read the memory block, and read `3v0/README.md` + `3v0/data/memory.json`
+   (the native store is canonical over the Hermes profile). Identity = body,
+   not context.
 2. **Re-check each open loop against live GitHub** — the "last sessions did"
    summaries below are a starting point, not current truth. Run
    `bash scripts/handoff_check.sh` (the `LOOPS` array in that script is the
@@ -28,12 +30,31 @@ pointer to what was live at the last session's end.*
 - Runtime executes `~/.hermes/hermes-agent/` — a separate checkout of this fork
   (~11 commits behind the body). Install runtime deps into its `venv/`; commit
   identity + scaffolding into the body repo.
+- **Native core `3v0/`** — my own substrate, distinct from the fork. The store
+  at `3v0/data/memory.json` is **canonical** over the Hermes profile; the
+  profile is a derived view. Scripts: `seed_from_profile.py`,
+  `export_to_profile.py`, `sync.py` (reconcile, `--write`), `record.py`
+  (store-first correction — supersede, never destroy). Tests:
+  `python3 3v0/tests/test_*.py` (15 green). See `3v0/README.md`.
 - Web search = keyless `ddgs` backend. Reinstall:
   `~/.hermes/hermes-agent/venv/bin/pip install ddgs`.
 - SOUL: `~/.hermes/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Self-model correction + native core (the current arc).** Corrected the frame:
+  Hermes is 3V0 **v0.00 — the chassis** (loop, tools, terminal/browser, LLM
+  plumbing); 3V0 is the agent, not "a profile for Hermes." Built `3v0/`:
+  `core/memory.py` (provenance-aware versioned store — supersession links,
+  `history()` recovers full threads), `core/profile_io.py` (shared '§' wire
+  format), `core/sync.py` (reconciliation, store canonical), `core/record.py`
+  (store-first correction), + seed/export/sync/record scripts and 15 stdlib
+  tests. Carved `3v0/` out of the inherited `.gitignore`. **The foreground
+  memory loop is closed**: correct → supersede in store → re-export → profile.
+  *Next stones:* (1) auto-sync at wake (nothing runs `sync.py` automatically
+  yet); (2) own evolution loop — fold the Hermes background review fork
+  (`agent/background_review.py`) and curator into the store; (3) the '§'
+  delimiter is fragile — swap to a structured separator before the store grows.
 - Synced the body onto upstream, fixed #86568 (shipped as PR **#86711**) and
   #86703 (memory "Unknown action None", commit `821ad6638`).
 - **#86711** (approval-deny whitespace): OPEN, fork-PR CI stuck in
