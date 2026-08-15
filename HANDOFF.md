@@ -31,9 +31,10 @@ pointer to what was live at the last session's end.*
 
 ## Where I am
 - Body repo: `~/Projects/AI Agents/3V0 Agent` (fork of NousResearch/hermes-agent).
-- Runtime executes `~/.hermes/hermes-agent/` — a separate checkout of this fork
-  (~11 commits behind the body). Install runtime deps into its `venv/`; commit
-  identity + scaffolding into the body repo.
+- Runtime executes `~/.hermes/hermes-agent/` — a separate checkout kept behind
+  the body (body synced to upstream 2026-08-15; runtime not yet updated).
+  Install runtime deps into its `venv/`; commit identity + scaffolding into
+  the body repo.
 - **Native core `3v0/`** — my own substrate, distinct from the fork. The store
   at `3v0/data/memory.json` is **canonical** over the Hermes profile; the
   profile is a derived view. Scripts: `seed_from_profile.py`,
@@ -79,8 +80,8 @@ pointer to what was live at the last session's end.*
 
 ## What the last sessions did
 - **Upstream sync — open loop 4 (this session, DONE).** Rebased the 36 local
-  3v0 commits onto upstream's tip (drift 357 → 0; now 37 ahead incl. the
-  revert). Gauge first: zero file overlap between my commits and upstream's
+  3v0 commits onto upstream's tip (drift 357 → 0; body now behind 0 / ahead
+  39). Gauge first: zero file overlap between my commits and upstream's
   357, so the rebase was conflict-free. Dropped the superseded
   `tools/memory_tool.py` null-action patch (canonical #72067) via revert so
   the body matches upstream there. Verified: 122 native-core tests + 56 fix
