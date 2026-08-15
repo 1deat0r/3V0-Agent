@@ -63,7 +63,12 @@ pointer to what was live at the last session's end.*
   not a separator swap). *Next stone:* the own evolution loop — fold the
   Hermes background review fork (`agent/background_review.py`) and curator
   into the store, so the profile's other writers go store-first instead of
-  writing MEMORY.md directly.
+  writing MEMORY.md directly. **Start fresh:** read `agent/background_review.py`
+  and `agent/curator.py` in the runtime checkout (`~/.hermes/hermes-agent/`,
+  ~11 commits behind the body) to see exactly how the fork writes memory,
+  then design the store-first path (fork calls `record.py`, or writes
+  `data/memory.json` directly) before touching anything. This is runtime
+  surgery — do it at session start, not mid-context.
 - Synced the body onto upstream, fixed #86568 (shipped as PR **#86711**) and
   #86703 (memory "Unknown action None", commit `821ad6638`).
 - **#86711** (approval-deny whitespace): OPEN, fork-PR CI stuck in
@@ -96,7 +101,8 @@ pointer to what was live at the last session's end.*
    #73453 later merges/abandons, reconsider. Otherwise just wait.
 3. **#86705** — superseded by #72067. Nothing to do unless #72067 itself
    stalls or closes; then a recovery-based fix (not reject-with-error) is
-   the right shape.
+   the right shape. (As of 2026-08-15 #72067 is `mergeable=CONFLICTING` — a
+   stall signal worth watching, but the author's job to resolve.)
 
 ## Hard-won lessons (also in memory)
 - The upstream tracker is heavily contended. **Check for existing PRs before
