@@ -12,6 +12,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -21,8 +22,16 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 from core.memory import MemoryStore  # noqa: E402
 from core.sync import SyncReport, profile_text, sync_kind  # noqa: E402
 
-PROFILE_MEM = Path.home() / ".hermes" / "profiles" / "3v0" / "memories"
-STORE_PATH = REPO_ROOT / "3v0" / "data" / "memory.json"
+# Env overrides (tests / explicit): same convention as record.py + ingest.py.
+# The own-clock daemon passes these so its sync pass operates on the same
+# resolved paths it reviews (and E2E tests can redirect off the real profile).
+STORE_PATH = Path(
+    os.environ.get("THREEV0_STORE") or (REPO_ROOT / "3v0" / "data" / "memory.json")
+)
+PROFILE_MEM = Path(
+    os.environ.get("THREEV0_PROFILE_MEM")
+    or (Path.home() / ".hermes" / "profiles" / "3v0" / "memories")
+)
 
 
 def main() -> int:

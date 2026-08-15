@@ -932,3 +932,63 @@ baseline). Takes effect on the next TUI/gateway start.
 - **Per-project reviewers/daemons** — F1NANCE/Axiom sessions are still
   skipped until they get their own reviewers/profiles.
 
+---
+
+## Stone 13 — fork cut (flipped 2026-08-16)
+
+Stone 12 found the off-switch; this session flipped it. The operator delegated
+the call ("do what you think is best"); the cut was verified end-to-end before
+and after. Both `memory.nudge_interval` and `skills.creation_nudge_interval`
+are now `0` in `~/.hermes/profiles/3v0/config.yaml` (set via `hermes config
+set` — config-only, reversible to 10). The Hermes per-turn background-review
+fork no longer spawns; the own-clock daemon `3v0-review.service` is the sole
+memory/skill writer. Store-first supersession recorded the stale "fork still
+on" facts. The kickoff verification (next session's wake): both intervals
+resolve to 0, zero `background_review`-provenance facts in the store, daemon
+active with `refused: 0` — all three held.
+
+## Stone 14 — wake-sync fold: the daemon becomes a full maintenance clock
+
+Stone 9 deliberately deferred folding the wake-time reconcilers (`sync.py
+--write` / `sync_skills.py --write`) into the own-clock tick. The fork cut
+(Stone 13) makes the fold necessary rather than nice-to-have: with the fork
+gone, the daemon is the sole autonomous process, and it was review-only —
+profile↔store drift (a bridge-missed `memory`/`skill_manage` write) would sit
+unhealed until the next session's wake, which may not come for days.
+
+### What changed
+
+- **`review_session.py` gained `_sync()`** — runs `sync.py --write` +
+  `sync_skills.py --write` as best-effort subprocesses (the same env-passing +
+  logging contract as `_apply_decisions`), returning `"synced"` or
+  `"sync-failed:<script>"`. Both reconcilers are idempotent and
+  `flock`-locked (`mutate()`), so a sync pass racing a foreground bridge
+  mirror serializes instead of corrupting.
+- **Own-clock paths only.** `--latest` and the `--daemon` loop call `_sync()`
+  *before* `_drain()`, so a review sees the reconciled store. The per-turn
+  `--session-id` hook does NOT sync (redundant churn).
+- **`sync.py` now honors `THREEV0_STORE` / `THREEV0_PROFILE_MEM`** (matching
+  `record.py`/`ingest.py`) — the daemon passes the same resolved paths it
+  reviews, and E2E tests redirect off the real profile. `sync_skills.py`
+  already honored its overrides via `skill_io.profile_skills_dir()`.
+
+### Verification
+
+- 2 new tests (151 green, was 149): an E2E `--latest` run imports a
+  profile-only fact into the store (proving sync runs before drain AND that
+  `sync.py` honors the env overrides), and a unit test proves `_sync` degrades
+  to `"sync-failed"` (no crash) on a failed subprocess launch.
+- **Live:** `systemctl --user restart 3v0-review.service` → the daemon's first
+  tick logged `sync pass: store<->profile reconciled` + a clean `drain pass`,
+  so the fold is live in the wild.
+
+### Still open (unchanged, explicit)
+
+- **Per-project reviewers/daemons** — F1NANCE/Axiom sessions are still
+  skipped until they get their own reviewers/profiles (the operator's
+  per-project-stores decision; F1NANCE already has
+  `~/.hermes/profiles/f1nance`).
+- **Profile MEMORY.md sharing** — sibling `memory`-tool writes still land in
+  the shared profile's MEMORY.md; the clean fix is moving siblings onto their
+  own profiles.
+

@@ -1166,6 +1166,55 @@ class TestDrainBacklog(Env):
             os.environ.pop("THREEV0_REVIEW_LOG", None)
 
 
+class TestSyncFold(Env):
+    """Stone 14: the own clock now heals store<->profile drift — the wake-time
+    reconcilers (sync.py + sync_skills.py) are folded into the maintenance
+    tick, run before the drain. With the Hermes fork cut, this makes the
+    daemon a full maintenance clock (heal + review), not a review-only loop."""
+
+    def _noop_decisions(self):
+        self.decisions_file.write_text(
+            json.dumps({"summary": "no-op", "decisions": []}), encoding="utf-8"
+        )
+
+    def test_latest_imports_profile_only_fact(self):
+        # A profile MEMORY.md entry the store lacks (a bridge-missed write)
+        # must be imported into the store by the own-clock sync pass. This is
+        # also the guard that sync.py honors the THREEV0_STORE /
+        # THREEV0_PROFILE_MEM overrides — without them the import would land
+        # in the real store and the temp store would stay untouched.
+        self.profile_mem.mkdir(parents=True, exist_ok=True)
+        (self.profile_mem / "MEMORY.md").write_text(
+            "Operator drives a manual-shift car.\n", encoding="utf-8"
+        )
+        (self.profile_mem / "USER.md").write_text("", encoding="utf-8")
+        _seed_rich_sessions(
+            self.db_path, [{"id": "55555555_555555_s1", "source": "tui"}]
+        )
+        self._noop_decisions()
+        _run_latest(self.env)
+
+        store = MemoryStore(self.store_path)
+        active = {f.content for f in store.active()}
+        self.assertIn("Operator drives a manual-shift car.", active)
+
+    def test_sync_fails_gracefully_on_bad_script(self):
+        # A sync subprocess that fails to launch must not crash the tick —
+        # _sync returns a 'sync-failed' status and the drain still runs.
+        # Load a fresh driver with the review log redirected to a temp path so
+        # the failure's _log_run call does not write to the real run.log.
+        os.environ["THREEV0_REVIEW_LOG"] = str(self.review_log)
+        try:
+            mod = _load_driver()
+            with mock.patch.object(
+                mod.subprocess, "run", side_effect=OSError("no such script")
+            ):
+                status = mod._sync()
+            self.assertEqual(status, "sync-failed:sync.py")
+        finally:
+            os.environ.pop("THREEV0_REVIEW_LOG", None)
+
+
 class TestLLMRetry(unittest.TestCase):
     """Stone 12: transient transport errors are retried with backoff inside a
     single review; malformed payloads and empty content are not retried as

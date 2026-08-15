@@ -33,12 +33,15 @@ of the hook: three mutually-exclusive modes —
 - ``--session-id <id>``  the hook path (review the just-ended session; the
   global cooldown throttles this per-turn hook so it does not fire a review
   on every turn);
-- ``--latest``           own-clock single shot (drain the backlog: review
-  every unreviewed *eligible* session — ended, top-level, reviewable source,
-  not in the log — up to ``MAX_PER_PASS``);
-- ``--daemon [--interval N]``  own-clock loop (drain every N seconds, default
-  600), surviving transient failures — 3V0's first Hermes-independent
-  autonomous process.
+- ``--latest``           own-clock single shot (reconcile store<->profile
+  drift, then drain the backlog: review every unreviewed *eligible* session —
+  ended, top-level, reviewable source, not in the log — up to
+  ``MAX_PER_PASS``);
+- ``--daemon [--interval N]``  own-clock loop (reconcile + drain every N
+  seconds, default 600), surviving transient failures — 3V0's first
+  Hermes-independent autonomous process. Stone 14 folded the wake-time
+  reconcilers into the tick, so the daemon is now a full maintenance clock:
+  it heals drift between sessions, not just at wake.
 
 Env knobs (tests / explicit tuning — defaults are the live profile):
   THREEV0_PROFILE_HOME    profile home (state.db, .env, default review log)
@@ -111,6 +114,8 @@ SKILLS_DIR = Path(
     os.environ.get("THREEV0_SKILLS_DIR") or (PROFILE_HOME / "skills")
 )
 RECORD_SKILLS_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "record_skills.py"
+SYNC_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "sync.py"
+SYNC_SKILLS_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "sync_skills.py"
 
 MODEL = os.environ.get("THREEV0_REVIEW_MODEL") or "deepseek-v4-pro"
 BASE_URL = (os.environ.get("THREEV0_REVIEW_BASE_URL") or "https://api.deepseek.com/v1").rstrip("/")
@@ -884,6 +889,42 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
                 pass
 
 
+def _sync() -> str:
+    """Heal store<->profile drift (memory + skills) by running the wake-time
+    reconcilers, best-effort.
+
+    Stone 14 (the wake-sync fold): with the Hermes background-review fork cut,
+    the own clock is the sole autonomous writer — so it must also heal drift,
+    not just review. The reconcilers are idempotent, ``flock``-locked (via
+    ``mutate()``), and cheap (no LLM). Returns ``"synced"`` or
+    ``"sync-failed:<script>"``; a failure is a log line, never a crash, and
+    the next tick retries.
+
+    This runs only on the own-clock paths (``--latest`` / ``--daemon``), not
+    the per-turn ``--session-id`` hook — sync there would be redundant churn.
+    """
+    env = os.environ.copy()
+    env.setdefault("THREEV0_STORE", str(STORE_PATH))
+    env.setdefault("THREEV0_PROFILE_MEM", str(PROFILE_MEM))
+    env.setdefault("THREEV0_SKILL_STORE", str(SKILL_STORE_PATH))
+    env.setdefault("THREEV0_SKILLS_DIR", str(SKILLS_DIR))
+    for script in (SYNC_SCRIPT, SYNC_SKILLS_SCRIPT):
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(script), "--write"],
+                capture_output=True, text=True, timeout=120, env=env,
+            )
+        except (subprocess.TimeoutExpired, OSError) as e:
+            _log_run(f"sync {script.name} failed: {e}")
+            return f"sync-failed:{script.name}"
+        if proc.returncode != 0:
+            tail = (proc.stderr or "").strip().replace("\n", " ")[:200]
+            _log_run(f"sync {script.name} returned {proc.returncode}: {tail}")
+            return f"sync-failed:{script.name}"
+    _log_run("sync pass: store<->profile reconciled (memory + skills)")
+    return "synced"
+
+
 def _drain() -> int:
     """Drain the unreviewed backlog: review every eligible unreviewed session
     (newest first) in one pass, up to ``MAX_PER_PASS`` LLM attempts.
@@ -946,14 +987,17 @@ def main() -> int:
         return 1 if status == "failed" else 0
 
     if args.latest:
+        _sync()  # heal drift first, so the review sees the reconciled store
         return _drain()
 
-    # --daemon: 3V0's own clock — drain the backlog every interval forever,
-    # surviving transient failures (a tick error is a log line, not a crash).
+    # --daemon: 3V0's own clock — reconcile + drain the backlog every interval
+    # forever, surviving transient failures (a tick error is a log line, not a
+    # crash).
     _log_run(f"daemon started (interval={args.interval}s)")
     try:
         while True:
             try:
+                _sync()
                 _drain()
             except Exception as e:  # noqa: BLE001 - a daemon must not die on a tick error
                 _log_run(f"daemon tick error: {e}")

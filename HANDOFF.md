@@ -4,26 +4,29 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16)
-The Hermes background-review fork was **cut last session** (Stone 13): both
-nudge intervals are 0 and the own-clock daemon `3v0-review.service` is now the
-sole memory/skill writer. This is the **first forkless session** — verify the
-cut before trusting it, then decide between real work and research (no urgent
-blockers remain):
+## Next-session kickoff (2026-08-16, Stone 14)
+The forkless cut **held** (verified this session: both nudge intervals `0`,
+zero `background_review` facts, daemon `refused: 0`), and this session landed
+**Stone 14 — the wake-sync fold**: the own-clock daemon `3v0-review.service` is
+now a full maintenance clock (`_sync()` reconciles store↔profile each tick,
+*then* `_drain()` reviews), so drift heals between sessions instead of only at
+wake. 151 native-core tests green (+2). Daemon restarted; its first tick logged
+`sync pass … reconciled` + a clean `drain pass`. Next session:
 
-1. **Confirm the fork is off.** `hermes config get memory.nudge_interval` and
-   `hermes config get skills.creation_nudge_interval` → both `0`. Then check
-   the store for *new* writes carrying `background_review` provenance since the
-   cut (`3v0/data/memory.json` — facts with `source: background_review` and a
-   `created_at` after 2026-08-16). None should appear this session.
-2. **Confirm the daemon is still the writer.** `systemctl --user status
-   3v0-review.service` (active) + `tail 3v0_reviews/reviews.jsonl` (applied
-   cleanly, `refused: 0`). If memory capture degrades without the fork, that's
-   the flip-back signal.
-3. **Re-check the 4 open upstream loops** (see "Open loops") — all were
-   "waiting on a maintainer / reporter / other author" at last check.
-4. If the forkless daemon holds up over this session, the cut stays; the
-   revert is `hermes config set memory.nudge_interval 10` +
+1. **Confirm the daemon is still syncing + reviewing.** `systemctl --user
+   status 3v0-review.service` (active) + `tail 3v0_reviews/run.log` (each
+   6-min tick shows `sync pass: store<->profile reconciled`; any `sync-failed`
+   line is a regression) + `tail 3v0_reviews/reviews.jsonl` (`refused: 0`).
+2. **Re-check the 4 open upstream loops** (see "Open loops") — all were
+   "waiting on a maintainer / reporter / other author" at last check; no
+   unclaimed bug to write.
+3. **Pick the next real work.** The recurring open item is **per-project
+   reviewers/daemons** for F1NANCE/Axiom — their sessions are still skipped
+   (`skipped:project`), and the operator already chose per-project stores, so
+   giving each sibling its own reviewer/daemon (F1NANCE already has
+   `~/.hermes/profiles/f1nance`) is the natural next stone. The fork cut is
+   NOT under reconsideration — it held. Revert if ever needed:
+   `hermes config set memory.nudge_interval 10` +
    `hermes config set skills.creation_nudge_interval 10`.
 
 ## Startup routine (do this first, in order)
@@ -95,7 +98,8 @@ blockers remain):
 - **Store-first evolution loop is LIVE** (stones 1–4), the **own review
   process is LIVE** (stone 7, direction 3's driver), and the **own clock is
   LIVE** (stone 9 — `review_session.py --daemon` deployed as the systemd user
-  service `3v0-review.service`; Stone 12 made it *drain* the backlog).
+  service `3v0-review.service`; Stone 12 made it *drain* the backlog; Stone 14
+  made it a full maintenance clock — reconcile store↔profile *then* drain).
   **Fork-disable off-switch (Stone 12):** the Hermes per-turn review fork is
   gated by `memory.nudge_interval` + `skills.creation_nudge_interval` (default
   10); set both to 0 in `~/.hermes/profiles/3v0/config.yaml` to cut it —
@@ -127,6 +131,21 @@ blockers remain):
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Wake-sync fold, Stone 14 — the daemon is now a full maintenance clock
+  (this session, BUILT + live-verified).** With the fork cut (Stone 13), the
+  own-clock daemon was the sole autonomous process but review-only — drift
+  healed only at wake, which may not come for days. Folded the wake-time
+  reconcilers into the tick: `review_session.py` gained `_sync()` (runs
+  `sync.py --write` + `sync_skills.py --write` as best-effort, `flock`-locked
+  subprocesses; returns `synced` / `sync-failed:<script>`) and `--latest` +
+  `--daemon` now call it *before* `_drain()` (the per-turn hook does NOT
+  sync). `sync.py` now honors `THREEV0_STORE`/`THREEV0_PROFILE_MEM` (matching
+  `record.py`/`ingest.py`) so the daemon's sync pass is E2E-testable. 2 new
+  tests (151 green); daemon restarted and its first tick logged
+  `sync pass … reconciled` + a clean `drain pass`. Also documented the
+  previously-undocumented Stone 13 (fork cut) in EVOLUTION_LOOP.md. The
+  forkless cut is confirmed holding (both nudge intervals 0, zero
+  `background_review` facts, daemon `refused: 0`).
 - **Fork cut, Stone 13 — the Hermes background-review fork is OFF (this
   session, decision + verified end-to-end).** The operator delegated the
   fork-disable call ("do what you think is best") and I cut it. Traced the

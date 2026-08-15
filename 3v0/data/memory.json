@@ -342,7 +342,7 @@
       "source": "profile-import",
       "created_at": "2026-08-15T21:59:53Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "d525aa478ad3",
       "note": ""
     },
     {
@@ -374,7 +374,7 @@
       "supersedes": [
         "360bcb9f0619"
       ],
-      "superseded_by": "",
+      "superseded_by": "c27f52517f28",
       "note": ""
     },
     {
@@ -386,8 +386,8 @@
       "supersedes": [
         "0eae50a2c22f"
       ],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
     },
     {
       "id": "4eb4fcef8e75",
@@ -418,7 +418,7 @@
       "supersedes": [
         "d0d70ae4779c"
       ],
-      "superseded_by": "",
+      "superseded_by": "ac2ca563b28f",
       "note": ""
     },
     {
@@ -438,7 +438,7 @@
       "source": "session-review",
       "created_at": "2026-08-15T22:38:35Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "61707db32f31",
       "note": ""
     },
     {
@@ -458,7 +458,7 @@
       "source": "session-review",
       "created_at": "2026-08-15T22:39:19Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "9d783088af63",
       "note": ""
     },
     {
@@ -468,8 +468,8 @@
       "source": "session-review",
       "created_at": "2026-08-15T22:39:50Z",
       "supersedes": [],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
     },
     {
       "id": "8f7042dcd78c",
@@ -510,7 +510,7 @@
       "supersedes": [
         "ecea9d569ddd"
       ],
-      "superseded_by": "",
+      "superseded_by": "58ba31f67543",
       "note": ""
     },
     {
@@ -542,7 +542,7 @@
       "supersedes": [
         "73a569ca94f0"
       ],
-      "superseded_by": "",
+      "superseded_by": "97c8cbac8a73",
       "note": ""
     },
     {
@@ -553,6 +553,90 @@
       "created_at": "2026-08-15T23:02:07Z",
       "supersedes": [
         "baca20175336"
+      ],
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
+    },
+    {
+      "id": "58ba31f67543",
+      "content": "Own-clock daemon 3v0-review.service (Stone 14) is the sole memory/skill writer: each 6-min tick runs _sync() (reconciles store<->profile; sync.py now honors THREEV0_STORE/PROFILE_MEM) then _drain() (reviews backlog); temporal guards on both axes.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T23:15:57Z",
+      "supersedes": [
+        "46929e95d839"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "97c8cbac8a73",
+      "content": "Hermes background-review fork OFF (2026-08-16, operator delegated the call): memory.nudge_interval=0 + skills.creation_nudge_interval=0 in ~/.hermes/profiles/3v0/config.yaml (read at agent init). Reversible: set both back to 10. Foreground 3V0 + own-clock daemon share the body — load-before-patch guards stay load-bearing.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T23:15:57Z",
+      "supersedes": [
+        "cd096aaf4fc4"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "9d783088af63",
+      "content": "HANDOFF.md Startup block + scripts/handoff_check.sh = the one-command fresh-session audit (body status, store sync, live loop re-check). Search existing PRs + read triage trail before coding; follow fork-PR rules-of-thumb.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T23:15:57Z",
+      "supersedes": [
+        "16267b665e38"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "61707db32f31",
+      "content": "Native core 3v0/ (body repo): memory.py + skills.py provenance-aware canonical stores (supersede/retract, recoverable history); native-store-bridge plugin mirrors memory/skill_manage writes into them; MEMORY.md/USER.md/SKILL.md are derived views; backstops sync.py + sync_skills.py --write.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T23:15:57Z",
+      "supersedes": [
+        "20073a22be73"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "c27f52517f28",
+      "content": "fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent is a separate checkout behind body repo (body synced 2026-08-15, runtime not yet updated).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T23:15:57Z",
+      "supersedes": [
+        "e4acd14e4b70"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "d525aa478ad3",
+      "content": "NousResearch/hermes-agent tracker heavily contended: check existing PRs (`gh pr list --search \"<issue#>\"`) + triage trail before coding — bots post canonical 'duplicate/best fix' verdicts.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T23:15:57Z",
+      "supersedes": [
+        "a29f88de9821"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "ac2ca563b28f",
+      "content": "3V0 env: web_search+web_extract work via keyless ddgs backend (ddgs 9.14.4 in runtime venv). browser_exec via Chrome remote-debugging; curl via terminal works.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T23:15:57Z",
+      "supersedes": [
+        "b8bdd92379b6"
       ],
       "superseded_by": "",
       "note": ""
