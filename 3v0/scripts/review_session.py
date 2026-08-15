@@ -1,0 +1,515 @@
+#!/usr/bin/env python3
+"""3V0-owned session-end review — the Stone 7 decision driver.
+
+Direction 3 closes the own-evolution loop with a *process* 3V0 itself drives:
+at session end, the ``native-store-bridge`` plugin's ``on_session_end`` hook
+spawns this driver as a **detached subprocess** (survives teardown; a TUI quit
+kills the gateway process, which would take an in-process review thread with
+it). The driver then:
+
+1. reads the just-ended session transcript from the profile's ``state.db``,
+2. reads the current canonical memory store (active facts + lineage),
+3. asks the Prime-Directive model (DeepSeek-v4-pro via the DeepSeek API) for
+   **store-first** decisions — record / supersede / retract,
+4. applies each accepted decision through ``scripts/record.py --json --write``
+   (the exact backend the ``threev0_record`` tool wraps), and
+5. appends an auditable entry to a review log.
+
+It is best-effort by construction: any failure degrades to a log entry and a
+non-zero exit that the hook swallows. The wake-time ``sync.py --write`` remains
+the backstop reconciler.
+
+The Hermes background-review fork still owns per-turn memory + ALL skill
+capture (this driver is memory-only; store-first *skill* decisions are out of
+scope). Leaving the fork enabled is a separate, later operator decision.
+
+Env knobs (tests / explicit tuning — defaults are the live profile):
+  THREEV0_PROFILE_HOME    profile home (state.db, .env, default review log)
+  THREEV0_BODY            body repo root (default: this repo, two levels up)
+  THREEV0_REVIEW_STATE_DB override session DB path (tests)
+  THREEV0_STORE           override memory store path (tests; honored by
+                          record.py subprocesses via inherited env)
+  THREEV0_PROFILE_MEM     override profile projection dir (tests)
+  THREEV0_REVIEW_LOG      override the review log jsonl (tests)
+  THREEV0_REVIEW=0        disable the review entirely (kill switch)
+  THREEV0_REVIEW_MIN_MESSAGES  min user messages to review (default 3)
+  THREEV0_REVIEW_COOLDOWN_S    min seconds between reviews (default 300)
+  THREEV0_REVIEW_TRANSCRIPT_CAP transcript char cap (default 40000)
+  THREEV0_REVIEW_LLM=fake + THREEV0_REVIEW_DECISIONS=<json file>
+                          offline mode: read the model's answer from a file
+                          (never touches the network)
+  THREEV0_REVIEW_MODEL / THREEV0_REVIEW_BASE_URL / DEEPSEEK_API_KEY
+                          LLM routing (defaults: deepseek-v4-pro @
+                          api.deepseek.com/v1 — the Prime Directive)
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sqlite3
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "3v0"))
+
+from core.memory import MemoryStore  # noqa: E402
+
+PROFILE_HOME = Path(
+    os.environ.get("THREEV0_PROFILE_HOME")
+    or (Path.home() / ".hermes" / "profiles" / "3v0")
+)
+STATE_DB = Path(os.environ.get("THREEV0_REVIEW_STATE_DB") or (PROFILE_HOME / "state.db"))
+REVIEW_LOG = Path(
+    os.environ.get("THREEV0_REVIEW_LOG")
+    or (PROFILE_HOME / "3v0_reviews" / "reviews.jsonl")
+)
+RUN_LOG = REVIEW_LOG.parent / "run.log"
+STORE_PATH = Path(
+    os.environ.get("THREEV0_STORE") or (REPO_ROOT / "3v0" / "data" / "memory.json")
+)
+PROFILE_MEM = Path(
+    os.environ.get("THREEV0_PROFILE_MEM") or (PROFILE_HOME / "memories")
+)
+RECORD_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "record.py"
+
+MODEL = os.environ.get("THREEV0_REVIEW_MODEL") or "deepseek-v4-pro"
+BASE_URL = (os.environ.get("THREEV0_REVIEW_BASE_URL") or "https://api.deepseek.com/v1").rstrip("/")
+MIN_MESSAGES = int(os.environ.get("THREEV0_REVIEW_MIN_MESSAGES") or "3")
+COOLDOWN_S = int(os.environ.get("THREEV0_REVIEW_COOLDOWN_S") or "300")
+TRANSCRIPT_CAP = int(os.environ.get("THREEV0_REVIEW_TRANSCRIPT_CAP") or "40000")
+STORE_BLOCK_CAP = 8000
+MAX_DECISIONS = 3
+
+# Interactive surfaces whose sessions are worth a session-end review. Sessions
+# from cron/kanban/subagent sources are short-lived harness runs, not 3V0's
+# own work with the operator.
+REVIEWABLE_SOURCES = {
+    "", "tui", "cli", "desktop", "webui", "acp", "webhook",
+    "api_server", "local", "test",
+}
+
+REVIEW_PROVENANCE = "session-review"
+
+# ---------------------------------------------------------------------------
+# The review charter — the system prompt the reviewer model gets.
+# ---------------------------------------------------------------------------
+
+CHARTER = """You are 3V0's own session-end memory reviewer — the decision driver \
+of 3V0's store-first evolution loop. A session of 3V0 working with its Operator \
+just ended; you review it against 3V0's canonical memory store and decide which \
+store-first corrections to make.
+
+The store is append-only and provenance-aware. Corrections SUPERSEDE (the old \
+fact stays recoverable via history) or RETRACT (marked removed, recoverable). \
+Never erased. The Hermes profile (MEMORY.md/USER.md) is a derived view.
+
+Your job is the store-first layer. The per-turn background fork already saved \
+obvious user facts during the session — do NOT duplicate anything already in \
+ACTIVE FACTS. Act only on what the per-turn path cannot express:
+
+1. OPERATOR CORRECTION: the session proves a stored fact wrong or outdated. \
+Supersede it (prefer the exact fact_id) or retract it.
+2. ENVIRONMENT CHANGE: a durable change to 3V0's environment, conventions, or \
+setup (paths, versions, architecture decisions, mechanisms) — record it.
+3. CONSOLIDATION: two or more active facts overlap and should collapse into \
+one (supersede the weaker ones with the consolidated fact).
+4. DIRECTIVE/IDENTITY: a durable self-commitment or self-truth the session \
+established — record with kind 'directive' or 'identity' (store-only kinds).
+
+NEVER record: task progress, session outcomes, completed-work logs, transient \
+errors, 'command not found' style environment hiccups, or anything that will \
+be stale in a week. A no-op review is a correct review when nothing durable \
+surfaced. Bias strongly toward zero decisions.
+
+Rules:
+- At most 3 decisions. Prefer fewer.
+- A 'record' MUST be a declarative fact, compact (under ~220 characters), \
+with no '§' character (it cannot round-trip to the profile projection).
+- Supersession: prefer 'supersedes_id' with an exact fact_id from ACTIVE \
+FACTS. Use 'supersedes' (substring) only when you are sure it matches exactly \
+one active fact. Never both.
+- Retraction: only facts the session proved wrong or obsolete, by exact \
+fact_id.
+- Kinds: memory, user, identity, directive (directive/identity are \
+store-only; memory/user also project to the profile).
+
+Reply with ONE JSON object (the word json appears here on purpose; JSON mode \
+is enabled) and nothing else:
+
+{"summary": "one line, or 'no-op'",
+ "decisions": [
+   {"action": "record", "kind": "memory", "content": "...", "supersedes_id": "..."},
+   {"action": "record", "kind": "memory", "content": "...", "supersedes": "exact substring"},
+   {"action": "retract", "fact_id": "..."}
+ ]}
+"""
+
+
+# ---------------------------------------------------------------------------
+# Small helpers
+# ---------------------------------------------------------------------------
+
+def _log_run(line: str) -> None:
+    """Append a diagnostic line to the driver's own run log (best-effort)."""
+    try:
+        RUN_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with open(RUN_LOG, "a", encoding="utf-8") as fh:
+            fh.write(f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} {line}\n")
+    except OSError:
+        pass
+
+
+def _load_api_key() -> Optional[str]:
+    """DEEPSEEK_API_KEY from the environment, else the profile's .env."""
+    env = os.environ.get("DEEPSEEK_API_KEY")
+    if env:
+        return env
+    dotenv = PROFILE_HOME / ".env"
+    try:
+        for raw in dotenv.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            if key.strip() == "DEEPSEEK_API_KEY":
+                val = value.strip().strip('"').strip("'")
+                return val or None
+    except OSError:
+        return None
+    return None
+
+
+def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
+    """Read the session row + ordered messages from the profile's state.db."""
+    if not STATE_DB.exists():
+        return None
+    conn = sqlite3.connect(str(STATE_DB), timeout=5)
+    try:
+        row = conn.execute(
+            "SELECT source, title FROM sessions WHERE id = ?", (session_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        source, title = row[0] or "", row[1] or ""
+        msgs = conn.execute(
+            "SELECT role, content, tool_name FROM messages "
+            "WHERE session_id = ? AND active = 1 ORDER BY id",
+            (session_id,),
+        ).fetchall()
+    except sqlite3.Error:
+        return None
+    finally:
+        conn.close()
+    return {
+        "source": source,
+        "title": title,
+        "messages": [
+            {"role": role or "", "content": content or "", "tool_name": tool_name or ""}
+            for role, content, tool_name in msgs
+        ],
+    }
+
+
+def _build_transcript(messages: List[Dict[str, str]], cap: int = TRANSCRIPT_CAP) -> str:
+    """Compact the session into review text: user/assistant text, tool calls
+    as names, tool outputs truncated; head+tail trim under the char cap."""
+    lines: List[str] = []
+    first_user: Optional[str] = None
+    for m in messages:
+        role = m["role"]
+        content = m["content"].strip()
+        if role == "user" and content:
+            if first_user is None:
+                first_user = content
+            lines.append(f"USER: {content}")
+        elif role == "assistant":
+            if m["tool_name"]:
+                lines.append(f"ASSISTANT[tool {m['tool_name']} returned]")
+            elif content:
+                lines.append(f"ASSISTANT: {content[:1500]}")
+        elif role == "tool":
+            if content:
+                lines.append(f"TOOL OUTPUT: {content[:300]}")
+    if not lines:
+        return "(no transcript)"
+    text = "\n".join(lines)
+    if len(text) <= cap:
+        return text
+    head_keep = min(2000, cap // 2)
+    tail_keep = cap - head_keep
+    head = text[:head_keep]
+    tail = text[-tail_keep:] if tail_keep > 0 else ""
+    return head + "\n… [middle truncated] …\n" + tail
+
+
+def _store_block(store: MemoryStore) -> str:
+    """Active facts with ids — the decision context (capped)."""
+    rows = []
+    for fact in store.active():
+        rows.append(f"- {fact.id} | {fact.kind} | {fact.content}")
+    block = "ACTIVE FACTS (id | kind | content):\n" + ("\n".join(rows) or "(store empty)")
+    if len(block) > STORE_BLOCK_CAP:
+        block = block[: STORE_BLOCK_CAP - 40] + "\n… [store block truncated] …"
+    return block
+
+
+def _load_canned() -> Optional[Dict[str, Any]]:
+    """Offline fake-LLM mode: read the model's answer from a JSON file."""
+    path = os.environ.get("THREEV0_REVIEW_DECISIONS")
+    if not path:
+        return None
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"summary": "fake-mode parse failure", "decisions": []}
+
+
+def _tolerant_json(text: str) -> Optional[Dict[str, Any]]:
+    """Parse the model's answer: strip code fences, take the JSON object."""
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        stripped = stripped.split("\n", 1)[-1]
+        if stripped.rstrip().endswith("```"):
+            stripped = stripped.rstrip()[:-3]
+    try:
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        pass
+    start = stripped.find("{")
+    end = stripped.rfind("}")
+    if start == -1 or end <= start:
+        return None
+    try:
+        return json.loads(stripped[start : end + 1])
+    except json.JSONDecodeError:
+        return None
+
+
+def _call_llm(prompt: str) -> Optional[Dict[str, Any]]:
+    """One DeepSeek chat-completion call (JSON mode, tolerant retry)."""
+    canned = _load_canned()
+    if os.environ.get("THREEV0_REVIEW_LLM") == "fake":
+        return canned
+    api_key = _load_api_key()
+    if not api_key:
+        _log_run("llm call aborted: no DEEPSEEK_API_KEY")
+        return None
+
+    body: Dict[str, Any] = {
+        "model": MODEL,
+        "messages": [
+            {"role": "system", "content": CHARTER},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0.2,
+        "max_tokens": 2500,
+    }
+    attempts = [dict(body, response_format={"type": "json_object"}), body]
+    last: Optional[BaseException] = None
+    for attempt in attempts:
+        req = urllib.request.Request(
+            f"{BASE_URL}/chat/completions",
+            data=json.dumps(attempt).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            content = data["choices"][0]["message"]["content"]
+            return _tolerant_json(content)
+        except (urllib.error.URLError, TimeoutError, KeyError, IndexError,
+                json.JSONDecodeError) as e:
+            last = e
+    _log_run(f"llm call failed after retries: {last}")
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Decision application
+# ---------------------------------------------------------------------------
+
+def _decision_argv(decision: Dict[str, Any]) -> Optional[List[str]]:
+    """Map a model decision onto record.py argv; None for invalid shapes."""
+    action = str(decision.get("action") or "").strip()
+    if action == "retract":
+        fact_id = str(decision.get("fact_id") or "").strip()
+        if not fact_id:
+            return None
+        return [str(RECORD_SCRIPT), "--json", "--write", "--retract", fact_id]
+    if action != "record":
+        return None
+    kind = str(decision.get("kind") or "").strip()
+    content = str(decision.get("content") or "").strip()
+    if kind not in {"memory", "user", "identity", "directive"} or not content:
+        return None
+    argv = [
+        str(RECORD_SCRIPT), "--json", "--write",
+        "--kind", kind, "--content", content,
+    ]
+    if decision.get("supersedes_id"):
+        argv += ["--supersedes-id", str(decision["supersedes_id"]).strip()]
+    elif decision.get("supersedes"):
+        argv += ["--supersedes", str(decision["supersedes"]).strip()]
+    return argv
+
+
+def _apply_decisions(decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Run each decision through record.py (the threev0_record backend)."""
+    applied: List[Dict[str, Any]] = []
+    refused: List[Dict[str, Any]] = []
+    env = os.environ.copy()
+    env.setdefault("THREEV0_STORE", str(STORE_PATH))
+    env.setdefault("THREEV0_PROFILE_MEM", str(PROFILE_MEM))
+    for decision in decisions[:MAX_DECISIONS]:
+        argv = _decision_argv(decision)
+        if argv is None:
+            refused.append({"reason": "invalid decision shape", "decision": decision})
+            continue
+        argv += ["--source", REVIEW_PROVENANCE]
+        try:
+            proc = subprocess.run(
+                [sys.executable] + argv, capture_output=True, text=True, timeout=60,
+                env=env,
+            )
+        except (subprocess.TimeoutExpired, OSError) as e:
+            refused.append({"reason": f"record.py failed: {e}", "decision": decision})
+            continue
+        out = (proc.stdout or "").strip()
+        try:
+            result = json.loads(out) if out else {}
+        except json.JSONDecodeError:
+            result = {"error": "unparseable record.py output"}
+        if proc.returncode == 0 and "error" not in result:
+            applied.append(result)
+        else:
+            refused.append(
+                {"reason": result.get("error", "record.py returned non-zero"),
+                 "decision": decision}
+            )
+    return {"applied": applied, "refused": refused}
+
+
+# ---------------------------------------------------------------------------
+# Gating + main
+# ---------------------------------------------------------------------------
+
+def _log_entries() -> List[Dict[str, Any]]:
+    """All review-log entries (best-effort; [] when missing/unreadable)."""
+    try:
+        return [
+            json.loads(line)
+            for line in REVIEW_LOG.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
+def _acquire_session_lock(session_id: str):
+    """Non-blocking per-session flock; returns the fd or None when held."""
+    try:
+        import fcntl
+
+        lock_dir = REVIEW_LOG.parent / ".locks"
+        lock_dir.mkdir(parents=True, exist_ok=True)
+        fd = os.open(str(lock_dir / f"review_{session_id}.lock"), os.O_CREAT | os.O_RDWR)
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return fd
+    except (OSError, ImportError):
+        return None
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="3V0-owned session-end review driver")
+    ap.add_argument("--session-id", required=True)
+    args = ap.parse_args()
+    session_id = args.session_id
+
+    if os.environ.get("THREEV0_REVIEW") == "0":
+        return 0
+
+    lock_fd = _acquire_session_lock(session_id)
+    if lock_fd is None:
+        return 0  # another review for this session is running
+
+    try:
+        # Dedupe + cooldown from the review log.
+        now = time.time()
+        for entry in _log_entries():
+            if entry.get("session_id") == session_id:
+                return 0
+            at = entry.get("at")
+            if isinstance(at, (int, float)) and (now - at) < COOLDOWN_S:
+                return 0
+
+        session = _load_session(session_id)
+        if session is None or session["source"] not in REVIEWABLE_SOURCES:
+            return 0
+        n_user = sum(1 for m in session["messages"] if m["role"] == "user")
+        if n_user < MIN_MESSAGES:
+            return 0
+
+        transcript = _build_transcript(session["messages"])
+        store = MemoryStore(STORE_PATH)
+        prompt = (
+            f"Session {session_id} (title: {session['title'] or 'untitled'}) "
+            f"just ended.\n\n"
+            f"{_store_block(store)}\n\n"
+            f"SESSION TRANSCRIPT (compacted; tool outputs truncated):\n"
+            f"{transcript}\n\n"
+            f"Decide the store-first corrections described in your charter and "
+            f"output the single JSON object."
+        )
+
+        answer = _call_llm(prompt)
+        if answer is None:
+            _log_run(f"review {session_id}: llm call failed")
+            return 1
+
+        decisions = answer.get("decisions") if isinstance(answer, dict) else None
+        if not isinstance(decisions, list):
+            decisions = []
+        result = _apply_decisions(decisions)
+
+        entry = {
+            "session_id": session_id,
+            "at": now,
+            "source": session["source"],
+            "model": MODEL,
+            "summary": str(answer.get("summary", ""))[:300] if isinstance(answer, dict) else "",
+            "decisions_requested": len(decisions),
+            "applied": len(result["applied"]),
+            "refused": len(result["refused"]),
+            "refused_details": [
+                {"reason": r["reason"]} for r in result["refused"]
+            ],
+        }
+        REVIEW_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with open(REVIEW_LOG, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        _log_run(
+            f"review {session_id}: applied={entry['applied']} "
+            f"refused={entry['refused']} requested={entry['decisions_requested']}"
+        )
+        return 0
+    finally:
+        if lock_fd is not None:
+            try:
+                os.close(lock_fd)
+            except OSError:
+                pass
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

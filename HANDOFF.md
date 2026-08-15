@@ -47,9 +47,10 @@ pointer to what was live at the last session's end.*
   added `core/skill_io.py` (SKILL.md locate/write/remove),
   `core/sync_skills.py` + `scripts/sync_skills.py` (reconcile store ↔ SKILL.md,
   `--write`; wired into the wake check), and full-content capture on patch.
-  Tests: `python3 3v0/tests/test_*.py` (62 green). See `3v0/README.md` +
+  Tests: `python3 3v0/tests/test_*.py` (106 green). See `3v0/README.md` +
   `3v0/EVOLUTION_LOOP.md`.
-- **Store-first evolution loop is LIVE** (stones 1–3). The
+- **Store-first evolution loop is LIVE** (stones 1–4) and the **own review
+  process is LIVE** (stone 7, direction 3's driver). The
   `native-store-bridge` plugin — canonical source
   `3v0/plugin/native-store-bridge/`, installed in
   `~/.hermes/profiles/3v0/plugins/` and enabled in that profile's
@@ -62,13 +63,37 @@ pointer to what was live at the last session's end.*
   files edited; the plugin survives `hermes update`. Wake `sync.py --write` and
   `sync_skills.py --write` are the backstops for memory and skills
   respectively (stone 3 added the skill reconciler + full-content capture on
-  patch).
+  patch). Stone 7's `on_session_end` hook spawns the detached
+  `3v0/scripts/review_session.py` driver (see "What the last sessions did").
+  **Remember after editing the body plugin:** copy `__init__.py` +
+  `plugin.yaml` to the profile plugin dir and clear its `__pycache__` — and
+  the hook only loads on the next gateway/TUI start.
 - Web search = keyless `ddgs` backend. Reinstall:
   `~/.hermes/hermes-agent/venv/bin/pip install ddgs`.
 - SOUL: `~/.hermes/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Own evolution loop, stone 7 — the 3V0-owned review process (this session,
+  BUILT + live-E2E-verified).** Closed direction 3: 3V0 now has its own
+  autonomous post-session reviewer. `native-store-bridge` v0.5.0 registers an
+  `on_session_end` hook that spawns `3v0/scripts/review_session.py` as a
+  **detached subprocess** (detached because a TUI quit kills the gateway
+  process — an in-process fork-agent review would almost never complete; the
+  fork-agent whitelist question was verified YES-possible but is wrong for
+  teardown-time review). The driver: gates (reviewable source, ≥3 user msgs,
+  per-session dedupe, 5m cooldown) → reads the session from `state.db` →
+  one DeepSeek-v4-pro JSON call with the store's active facts as context →
+  applies record/supersede/retract decisions via `record.py` (the
+  `threev0_record` backend) → appends to
+  `~/.hermes/profiles/3v0/3v0_reviews/reviews.jsonl`. 14 new tests (106 total
+  green). **Live E2E passed**: a real DeepSeek call correctly superseded a
+  stale fact (chain linked, `source="session-review"`) and recorded one
+  preference. The hook goes live on the **next TUI/gateway start** (plugins
+  load at gateway start; this session's gateway still runs v0.4.0). The
+  Hermes background-review fork stays ON (operator's later call). Skills stay
+  on the Hermes path (`threev0_record` is memory-only). Design + verification
+  in `3v0/EVOLUTION_LOOP.md` (Stone 7 section).
 - **Own evolution loop, stone 4 — curator state in the store (this session).**
   Folded the curator's operational state (active/stale/archived) into the skill
   store: `SkillStore` gained an append-only `states` record

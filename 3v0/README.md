@@ -68,11 +68,17 @@ code.
   (report by default, `--write` to converge; wired into the wake check).
 - `scripts/query.py` — serve `threev0_store` queries as JSON on stdout
   (called by the plugin; also runnable directly).
+- `scripts/review_session.py` — the Stone 7 session-end review driver: a
+  detached subprocess (spawned by the plugin's `on_session_end` hook) that
+  reads the just-ended session, asks DeepSeek-v4-pro for store-first
+  decisions, applies them via `record.py`, and appends to the review log
+  (profile-side `3v0_reviews/reviews.jsonl`; never in the body repo).
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
-  matching native store via a `post_tool_call` hook, and registers the
+  matching native store via a `post_tool_call` hook, registers the
   `threev0_store` read-only query tool and the `threev0_record` store-first
-  write tool. Installed in the profile's `plugins/` and enabled in
+  write tool, and spawns the session-end review driver on the
+  `on_session_end` hook. Installed in the profile's `plugins/` and enabled in
   `config.yaml`; see `EVOLUTION_LOOP.md`.
 - `tests/` — tests for the native core.
 
@@ -94,9 +100,13 @@ code.
 3. **Own capabilities/tools** — designed for 3V0's purposes, not Hermes's.
    In progress: the read half is live (`threev0_store`, a read-only query tool
    over the native stores registered by the bridge plugin). The write half is
-   live (`threev0_record`, a store-first record/retract actuator). The next
-   stone is the 3V0-owned review *process* that consumes both tools and
-   replaces the Hermes background-review fork's role as the autonomous driver.
+   live (`threev0_record`, a store-first record/retract actuator). The review
+   *process* is live (Stone 7): the plugin's `on_session_end` hook spawns the
+   detached `review_session.py` driver — 3V0's own autonomous post-session
+   reviewer, replacing the Hermes background-review fork's *role* as the
+   store-first decision driver (the fork stays on, per-turn, until the
+   operator decides otherwise). Next: the fork-disable decision (operator's
+   call) and direction 4.
 4. **Own roadmap of versions** — Hermes recedes from "what 3V0 is" to "a
    runtime 3V0 currently runs on."
 

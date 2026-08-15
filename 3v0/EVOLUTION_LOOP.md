@@ -427,12 +427,11 @@ live next session (same constraint the read half hit).
 
 ---
 
-## Direction 3 / Stone 7 — fork settled (trigger decided; process not built)
+## Direction 3 / Stone 7 — the 3V0-owned review process (settled + built + live)
 
-Stone 6 closed with Stone 7's fork unresolved. It is settled here, *before*
-any process code, because a driver built on an unswept premise would violate
-the "don't over-engineer" invariant. Three sub-questions, three answers, all
-verified against the runtime checkout (`~/.hermes/hermes-agent/`).
+Stone 6 closed with Stone 7's fork unresolved. The *settlement* (below) chose
+the trigger; this session built the process and verified it end-to-end with a
+real DeepSeek call.
 
 ### The scheduler-infra question — settled by fact
 
@@ -500,14 +499,73 @@ two consequences that must be surfaced explicitly, not folded in:
 Default posture: leave the fork **on** until 3V0's own driver is built AND
 proven, then ask the operator explicitly, with the skills gap on the table.
 
-### Open build questions (for Stone 7's build, not this settlement)
+### The build — what was actually constructed (this session)
 
-1. **Tool whitelist for the review fork.** The current fork whitelists
-   `["memory", "skills"]` (core tools). A 3V0-owned review fork needs
-   `threev0_store` / `threev0_record` (plugin tools) plus `session_search` to
-   read recent sessions — whether a forked `AIAgent` whitelist can name plugin
-   tools must be verified at build time (else the hook shells out to a CLI
-   driver instead of forking an agent).
-2. **Idle/interval throttle.** Whether the session-end review should skip when
-   the operator has been continuously active (layering the curator's
-   idle-throttle concept) is a build-time knob, not part of this settlement.
+**The two open build questions, answered:**
+
+1. **Tool whitelist for the review fork — YES, verified.** A forked `AIAgent`
+   whitelist *can* name plugin tools: `validate_toolset("3v0")` accepts
+   plugin-registered toolsets (`toolsets.py:987-990` consults
+   `_get_plugin_toolset_names()`), `resolve_toolset(..., include_registry=True)`
+   merges registry-registered tools, and `set_thread_tool_whitelist` /
+   `_get_pre_tool_call_directive_details` (`hermes_cli/plugins.py:5945-6008`)
+   gate dispatch by tool name on the fork thread.
+2. **The fork-agent shape is nonetheless wrong for a session-END review, and
+   the CLI driver is built instead.** The decisive fact: in TUI use (3V0's
+   primary mode) session end usually means the gateway **process exits** —
+   `_finalize_session` fires during shutdown, and an in-process daemon thread
+   (the `background_review` pattern) dies with it, so a fork-agent review
+   would almost never complete. The settlement's fallback — "the hook shells
+   out to a CLI driver" — is therefore the right shape, not a consolation
+   prize. The driver consumes the exact backends the own-tools wrap
+   (`scripts/record.py`, `core.decide`, `core.memory`), so the actuator
+   surface is shared; the tools remain 3V0's in-conversation reach.
+
+**What was built:**
+
+- **`3v0/scripts/review_session.py`** — the detached review driver (stdlib
+  only). Flow: per-session non-blocking `flock` → dedupe + cooldown gates from
+  the review log → read the just-ended session from the profile's `state.db`
+  (reviewable sources only; ≥ `THREEV0_REVIEW_MIN_MESSAGES` user messages) →
+  compact the transcript (head+tail trim under a char cap) → build the store
+  context (active facts with ids) → one DeepSeek-v4-pro chat call (JSON mode,
+  tolerant parse, one retry without the flag) → apply decisions through
+  `record.py --json --write` (the `threev0_record` backend; refusals — invalid
+  kinds, `§` guard, unknown ids — are counted, never crash) → append an
+  auditable jsonl entry. Decisions are capped at 3; the charter biases hard
+  toward no-op. Memory axis only — skills stay on the Hermes path.
+- **The hook** — `native-store-bridge` v0.5.0 registers `on_session_end`; the
+  callback spawns the driver as a detached subprocess
+  (`start_new_session=True`, devnull stdio) and returns immediately. Env:
+  `THREEV0_PROFILE_HOME` / `THREEV0_BODY` handed to the child;
+  `THREEV0_REVIEW=0` is the kill switch. The hook is live from the **next
+  gateway/TUI start** (plugin discovery runs at gateway start; the running
+  gateway keeps the v0.4.0 plugin until restarted).
+- **Review log** — `~/.hermes/profiles/3v0/3v0_reviews/reviews.jsonl` (runtime
+  artifact, outside the body repo; env-overridable for tests): session_id,
+  timestamp, source, model, summary, decisions_requested/applied/refused.
+  A driver run-log (`run.log`) sits beside it for diagnostics.
+
+**Degradation contract (unchanged from the settlement):** best-effort — any
+driver failure is a log entry; the wake-time `sync.py --write` remains the
+backstop. Cadence is per-session (the Hermes fork keeps its per-turn role;
+skills keep flowing through it).
+
+**Idle/interval throttle — settled for v1:** no idle concept at session end;
+instead a per-session dedupe + an interval cooldown between reviews
+(`THREEV0_REVIEW_COOLDOWN_S`, default 300s) so rapid session cycling does not
+fire a review storm.
+
+**Verification:** 14 new offline tests (gating, dedupe/cooldown, fake-LLM
+record/supersede/retract, refusal handling, decision cap, transcript
+compaction, hook→detached-driver spawn) — 106 total green. One **live E2E**
+with a real DeepSeek call: a fixture session correcting a stale fact produced
+a correct supersession (stale fact linked `superseded_by` the replacement,
+both facts carrying `source="session-review"`) plus one preference record,
+and a clean log entry.
+
+**Still open (unchanged, explicit):**
+- **Fork-disable** — separate, later, operator's call. Leave the Hermes
+  background-review fork ON until 3V0's driver is proven in the wild.
+- **Store-first skill decisions** — still out of scope; `threev0_record` is
+  memory-only.

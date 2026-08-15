@@ -28,6 +28,13 @@ The same plugin also registers two first-class tools over the native stores
   Unlike the best-effort write *mirror* above, this is a direct actuator —
   a refusal surfaces as a JSON error the agent can see and correct.
 
+The plugin's third surface is 3V0's own review *process* (direction 3's
+driver, Stone 7): an ``on_session_end`` hook spawns the detached
+``scripts/review_session.py`` driver, which reviews the just-ended session
+against the canonical store and makes store-first decisions
+(record/supersede/retract) via the DeepSeek API. Detached so it survives
+gateway teardown (a TUI quit kills the process — a thread would die with it).
+
 No runtime core files are edited. The plugin lives in the profile
 (``~/.hermes/profiles/3v0/plugins/``) and survives ``hermes update``.
 """
@@ -247,6 +254,73 @@ def _on_post_tool_call(
         _mirror_memory(args or {}, result)
     elif tool_name == "skill_manage":
         _mirror_skill(args or {}, result)
+
+
+# ---------------------------------------------------------------------------
+# on_session_end -> 3V0-owned session-end review (Stone 7)
+# ---------------------------------------------------------------------------
+
+_warned_missing_review_driver = False
+
+
+def _on_session_end(
+    session_id: str = "",
+    **_: Any,
+) -> None:
+    """Spawn the 3V0-owned session-end review driver as a detached subprocess.
+
+    Best-effort by construction: a detached process (not a thread) so the
+    review survives gateway teardown — in TUI use, session end usually means
+    the gateway process exits, and a thread would die with it. The driver
+    applies its own gates (reviewable source, min messages, dedupe,
+    cooldown) and any failure degrades to a log entry. Never blocks teardown.
+    """
+    global _warned_missing_review_driver, _warned_missing_body
+
+    if os.environ.get("THREEV0_REVIEW") == "0":
+        return
+    if not session_id:
+        return
+
+    body_root = _resolve_body_root()
+    if body_root is None:
+        if not _warned_missing_body:
+            _warned_missing_body = True
+            logger.warning(
+                "native-store-bridge: cannot locate 3V0 body repo "
+                "(set THREEV0_BODY or write %s) — session-end review skipped",
+                _profile_home() / "3v0_body_path",
+            )
+        return
+
+    driver = _script_path(body_root, "review_session.py")
+    if not driver.exists():
+        if not _warned_missing_review_driver:
+            _warned_missing_review_driver = True
+            logger.warning(
+                "native-store-bridge: review_session.py not found at %s — "
+                "session-end review skipped",
+                driver,
+            )
+        return
+
+    env = os.environ.copy()
+    env.setdefault("THREEV0_PROFILE_HOME", str(_profile_home()))
+    if os.environ.get("THREEV0_BODY"):
+        env.setdefault("THREEV0_BODY", os.environ["THREEV0_BODY"])
+    else:
+        env.setdefault("THREEV0_BODY", str(body_root))
+    try:
+        subprocess.Popen(
+            [sys.executable, str(driver), "--session-id", str(session_id)],
+            env=env,
+            start_new_session=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError:
+        pass
 
 
 # ---------------------------------------------------------------------------
@@ -482,6 +556,7 @@ def _handle_store_record(args=None, **_) -> str:
 
 def register(ctx) -> None:
     ctx.register_hook("post_tool_call", _on_post_tool_call)
+    ctx.register_hook("on_session_end", _on_session_end)
     ctx.register_tool(
         name="threev0_store",
         toolset="3v0",
