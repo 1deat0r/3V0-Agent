@@ -99,6 +99,11 @@ pointer to what was live at the last session's end.*
   timestamp). Store repaired store-first (axiom-agent "sovereign on stock
   Hermes" restored over the wrong "Prime Agent fork" fact). 129 tests green
   (was 122). Design + both bugs in `3v0/EVOLUTION_LOOP.md` (Stone 9).
+  **Next:** the skill-axis temporal guard (the one remaining regression
+  surface for the own-clock, a symmetric `_temporal_refusal` on skill
+  versions), then verify the daemon's backlog drain is clean after a few
+  hours (`tail ~/.hermes/profiles/3v0/3v0_reviews/reviews.jsonl`). The
+  fork-disable stays the operator's explicit call.
 - **Fable 5 study → two new skills (this session).** Researched Anthropic's
   Claude Fable 5 (Mythos-class; launched 2026-06-09, pulled under export
   controls 06-12, redeployed 07-01) from primary sources (announcement,
