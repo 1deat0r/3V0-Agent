@@ -36,6 +36,11 @@ data/
 # `data/` pattern above would otherwise swallow it.
 !hermes_cli/data/
 !hermes_cli/data/plugin_index.json
+# 3V0 native core — the `export*` and `data/` patterns above must not swallow
+# 3V0's own substrate; re-include its namespace explicitly.
+!3v0/data/
+!3v0/data/memory.json
+!3v0/scripts/export_to_profile.py
 .pytest_cache/
 test_durations.json
 .pytest-cache/

@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "facts": [
+    {
+      "id": "d0d70ae4779c",
+      "content": "3V0 environment: web_search+web_extract enabled via keyless ddgs backend (reinstall if missing: ~/.hermes/hermes-agent/venv/bin/pip install ddgs). browser_exec drivable (Chrome remote-debugging, one Allow popup/new connection); curl via terminal works.",
+      "kind": "memory",
+      "source": "profile-seed",
+      "created_at": "2026-08-15T06:15:12Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "7acf9c859b87",
+      "content": "Skills authored via skill_manage land as \"foreground-created\" with no curator provenance; `hermes curator adopt <name>` brings them under curator management (usage tracking, backups, lifecycle). Curator is enabled by default (7d interval, prune-only, free).",
+      "kind": "memory",
+      "source": "profile-seed",
+      "created_at": "2026-08-15T06:15:12Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "e11eaf515320",
+      "content": "fork 1deat0r/hermes-agent (GH acct mustbearnold→1deat0r; upstream via fork feature branch + PR). Runtime executes ~/.hermes/hermes-agent — a separate checkout ~11 commits behind the body repo ~/Projects/AI Agents/3V0 Agent: install runtime deps in its venv/, commit identity+scaffolding to the body repo.",
+      "kind": "memory",
+      "source": "profile-seed",
+      "created_at": "2026-08-15T06:15:12Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "87ef5a1be23f",
+      "content": "3V0's runtime fires a background review fork after every turn (agent/background_review.py): it forks the agent and autonomously saves skills/memory to the shared body (whitelist: memory + skill_manage). This — not a separate session or memory loss — is why skills appear that foreground-3V0 didn't create (e.g. 'self-maintenance'). The periodic curator (curator.py) is a separate 7d maintenance loop. Gateway process = default profile, not 3V0. Rule: audit the body; foreground awareness is partial by design.",
+      "kind": "memory",
+      "source": "profile-seed",
+      "created_at": "2026-08-15T06:15:12Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "d1c3262e1bd4",
+      "content": "Full `scripts/run_tests.sh` here reports ~81 failures, all environmental: missing optional provider packages/creds + one pre-existing FTS5/SQLite-version quirk (search code + test unchanged by sync). Core modules green. Not sync regressions — don't re-triage.",
+      "kind": "memory",
+      "source": "profile-seed",
+      "created_at": "2026-08-15T06:15:12Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "068a68c30d88",
+      "content": "NousResearch/hermes-agent tracker is heavily contended. Before investing in a fix, check BOTH existing PRs (`gh pr list --search \"<issue#>\"`) AND the triage trail (`gh pr/issue view <N> --json comments`) — automated bots post 'duplicate of #N'/'best fix' verdicts pointing at a canonical fix that may be strictly better than mine. Only open a PR when genuinely unclaimed.",
+      "kind": "memory",
+      "source": "profile-seed",
+      "created_at": "2026-08-15T06:15:12Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "615422747dbc",
+      "content": "The Operator has explicitly told 3V0 it does not need to ask permission before acting — they prefer autonomous action over permission-seeking. Just do the thing and report, don't offer to do it first.",
+      "kind": "user",
+      "source": "profile-seed",
+      "created_at": "2026-08-15T06:15:12Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    }
+  ]
+}
