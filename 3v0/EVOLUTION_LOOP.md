@@ -342,3 +342,85 @@ and the same posture as the `project_*` tools. Reach it via
    the plugin-rung deferral (3 extra round-trips) may justify a companion skill
    that pins the reach pattern, or a lower-footprint re-design. Decide with
    usage data, not now.
+
+---
+
+## Direction 3 / Stone 6 — own tools: the write half (live)
+
+The read half (Stone 5) let 3V0 *see* the canonical stores. This stone gives
+3V0 the *write* half: a first-class store-first decision actuator, so 3V0 can
+act on its own evolution in-conversation instead of shelling out to
+`scripts/record.py` through the terminal tool.
+
+### The architecture fork — settled (hybrid, sequenced)
+
+The write/decision half could be a per-turn tool, a 3V0-owned scheduled
+process, or both. Settled as **hybrid, in two sequenced stones**:
+
+- **Stone 6 (this): the per-turn write tool `threev0_record`** — the decision
+  *actuator*. A store-first record/retract surface, symmetric with
+  `threev0_store`. It serves the in-the-moment correction case ("the operator
+  just corrected me; supersede that fact now") that a clock-driven process
+  cannot.
+- **Stone 7 (next): the 3V0-owned review process** — the decision *driver*. A
+  scheduled/idle-triggered loop that consumes the read + write tools to review
+  recent sessions and make store-first decisions, replacing the Hermes
+  background-review fork's *role* as the autonomous post-turn reviewer.
+
+Why this ordering, and not tool-only or process-only:
+
+1. The write tool is the primitive; the process is its consumer. Building the
+   process first would mean shelling out to `record.py` via the terminal tool —
+   the exact "terminal hack" the own-tools arc exists to retire.
+2. The per-turn tool alone is necessary but not sufficient: the fork's role is
+   *autonomous post-turn review* (off the critical path, dedicated context),
+   and a per-turn tool only fires when foreground 3V0 is in a conversation AND
+   decides to act. Replacing the fork's role therefore requires the scheduled
+   process, not just the tool.
+3. Sequencing keeps each stone small and independently testable (the
+   "don't over-engineer" invariant).
+
+### Design
+
+- **`core/decide.py`** — `decide(store, decision, persist) -> dict`, the write
+  half's core (symmetric with `core/query.py`): dispatch a `record` (add,
+  optionally superseding by exact id or exactly-one substring) or a `retract`
+  (by id) decision, returning a JSON-safe result. Never raises — invalid input
+  returns `{"error": ...}` so the tool surfaces a refusal. Store-only: the CLI
+  re-exports the profile projection after a successful write, exactly as the
+  store-first path has always done.
+- **`scripts/record.py`** — extended with `--retract <id>` and `--json`, and
+  now honors `THREEV0_STORE` / `THREEV0_PROFILE_MEM` (the same env-override
+  convention as `ingest.py`) so the JSON path is E2E-testable. It is the CLI
+  half of `threev0_record`.
+- **`threev0_record` tool** — registered by the same `native-store-bridge`
+  plugin (toolset `"3v0"`), the write counterpart of `threev0_store`. Unlike
+  the best-effort post_tool_call *mirror* (failures swallowed), the write tool
+  is a direct actuator: a refusal surfaces as a JSON error the agent can see
+  and correct.
+- **Skill axis out of scope here.** A store-first *skill* decision would mean
+  inverting the bridge (store → SKILL.md, the operational files Hermes loads),
+  which is a separate, larger question. Skills keep their existing path
+  (`skill_manage` → bridge → store); `threev0_record` covers memory only.
+
+### Exposure
+
+`threev0_record` is a plugin tool in the same `"3v0"` toolset as
+`threev0_store`, so it defers behind `tool_search` / `tool_describe` /
+`tool_call` identically (progressive disclosure; zero always-on schema cost).
+Reach it via `tool_search("record")` → `tool_describe("threev0_record")` →
+`tool_call(...)`. The tool is registered in the plugin and its backend is
+verified end-to-end against a temp store this session; the deferred catalog is
+snapshotted at session start, so `tool_call` of `threev0_record` itself goes
+live next session (same constraint the read half hit).
+
+### Open questions
+
+1. **Stone 7 — the driver.** The scheduled/idle-triggered review process that
+   consumes these two tools and replaces the Hermes fork's role. Includes the
+   decision of whether/when to disable the Hermes background-review fork (a
+   runtime config change, not a body-repo change) once 3V0's own driver has
+   proven itself.
+2. **Store-first skill decisions.** Whether the skill store should ever become
+   the operational origin (write store-first, project to SKILL.md), or stay an
+   auditable record behind the `skill_manage` bridge. Not this stone.

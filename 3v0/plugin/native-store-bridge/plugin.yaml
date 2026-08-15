@@ -1,8 +1,9 @@
 name: native-store-bridge
-version: 0.3.0
-description: "Mirror memory + skill_manage writes into 3V0's native stores (store-first provenance), and serve read-only store queries via the threev0_store tool."
+version: 0.4.0
+description: "Mirror memory + skill_manage writes into 3V0's native stores (store-first provenance); serve store queries (threev0_store) and store-first writes (threev0_record)."
 author: "3V0 Agent"
 hooks:
   - post_tool_call
 provides_tools:
   - threev0_store
+  - threev0_record

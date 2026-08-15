@@ -16,10 +16,17 @@ This is the store-first half of 3V0's own evolution loop (see
 swallowed and the wake-time reconcilers ``sync.py --write`` (memory) and
 ``sync_skills.py --write`` (skills) are the backstop.
 
-The same plugin also registers ``threev0_store``, a read-only query tool over
-the native stores (the read half of direction 3 — 3V0's own capabilities). It
-shells out to ``scripts/query.py`` and returns the store's canonical view: the
-supersession history and curator states the derived profile projection hides.
+The same plugin also registers two first-class tools over the native stores
+(direction 3 — 3V0's own capabilities):
+
+- ``threev0_store`` — the read half: a read-only query tool that shells out to
+  ``scripts/query.py`` and returns the store's canonical view (supersession
+  history and curator states) the derived profile projection hides.
+- ``threev0_record`` — the write half: a store-first decision actuator that
+  shells out to ``scripts/record.py`` (record a fact, optionally superseding
+  an old one, or retract one by id), then re-exports the profile projection.
+  Unlike the best-effort write *mirror* above, this is a direct actuator —
+  a refusal surfaces as a JSON error the agent can see and correct.
 
 No runtime core files are edited. The plugin lives in the profile
 (``~/.hermes/profiles/3v0/plugins/``) and survives ``hermes update``.
@@ -336,6 +343,143 @@ def _handle_store_query(args=None, **_) -> str:
     return proc.stdout or "{}"
 
 
+# ---------------------------------------------------------------------------
+# threev0_record — store-first write tool over the memory store
+# ---------------------------------------------------------------------------
+
+_THREEV0_RECORD_SCHEMA = {
+    "name": "threev0_record",
+    "description": (
+        "Write to 3V0's native memory store — the store-first decision "
+        "actuator (the write half of 3V0's own evolution loop). Record a new "
+        "fact, optionally superseding an old one (flagged and recoverable, "
+        "never erased), or retract one by id. The store is the canonical "
+        "origin; the Hermes profile (MEMORY.md/USER.md) is re-exported as a "
+        "derived view after the write. Use threev0_store to read the store "
+        "first (e.g. to find a fact_id to supersede or retract). Corrections "
+        "go here, not through the Hermes memory tool, so supersession is "
+        "recorded instead of silently overwritten."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "action": {
+                "type": "string",
+                "enum": ["record", "retract"],
+                "description": (
+                    "record: add a fact, optionally superseding an old one. "
+                    "retract: remove an active fact by id (recoverable, no "
+                    "successor)."
+                ),
+            },
+            "kind": {
+                "type": "string",
+                "enum": ["memory", "user", "identity", "directive"],
+                "description": (
+                    "With action='record' (required): the fact's kind. "
+                    "identity/directive are store-only (not projected to the "
+                    "profile)."
+                ),
+            },
+            "content": {
+                "type": "string",
+                "description": (
+                    "With action='record' (required): the new fact text."
+                ),
+            },
+            "fact_id": {
+                "type": "string",
+                "description": (
+                    "With action='retract' (required): the fact id to remove. "
+                    "With action='record' (optional): supersede the fact with "
+                    "this exact id."
+                ),
+            },
+            "supersedes": {
+                "type": "string",
+                "description": (
+                    "With action='record' (optional): supersede the active "
+                    "fact whose content contains this substring (must match "
+                    "exactly one)."
+                ),
+            },
+            "source": {
+                "type": "string",
+                "description": "Optional provenance label (default 'foreground').",
+            },
+        },
+        "required": ["action"],
+    },
+}
+
+
+def _handle_store_record(args=None, **_) -> str:
+    """Serve a store-first write by shelling out to scripts/record.py (JSON).
+
+    Unlike the best-effort write mirror (post_tool_call, failures swallowed),
+    this is a direct actuator: the agent asked to write, so a refusal or a
+    failed subprocess surfaces as a JSON error object it can see and correct.
+    """
+    global _warned_missing_body
+
+    body_root = _resolve_body_root()
+    if body_root is None:
+        return json.dumps({
+            "error": (
+                "3V0 body repo not found — cannot write the native store. "
+                "Set THREEV0_BODY or write the body-path marker."
+            ),
+        })
+
+    script = _script_path(body_root, "record.py")
+    if not script.exists():
+        return json.dumps({"error": f"record.py not found at {script}"})
+
+    a = args or {}
+    action = str(a.get("action", "")).strip()
+    if action not in {"record", "retract"}:
+        return json.dumps({"error": f"unknown action {action!r}"})
+
+    argv = [sys.executable, str(script), "--json", "--write"]
+    if action == "retract":
+        fact_id = str(a.get("fact_id", "")).strip()
+        if not fact_id:
+            return json.dumps({"error": "fact_id is required for action='retract'"})
+        argv += ["--retract", fact_id]
+    else:
+        kind = str(a.get("kind", "")).strip()
+        content = str(a.get("content", "")).strip()
+        if not kind or not content:
+            return json.dumps({
+                "error": "kind and content are required for action='record'",
+            })
+        argv += ["--kind", kind, "--content", content]
+        if a.get("fact_id"):
+            argv += ["--supersedes-id", str(a["fact_id"])]
+        if a.get("supersedes"):
+            argv += ["--supersedes", str(a["supersedes"])]
+
+    if a.get("source"):
+        argv += ["--source", str(a["source"])]
+
+    try:
+        proc = subprocess.run(argv, capture_output=True, text=True, timeout=30)
+    except Exception as e:  # noqa: BLE001 - write path must still return something
+        return json.dumps({"error": f"store record failed: {e}"})
+
+    if proc.returncode != 0:
+        # record.py prints a JSON refusal to stdout on a clean error; fall
+        # back to stderr only when stdout is empty (a crash, not a refusal).
+        out = (proc.stdout or "").strip()
+        if out:
+            return out
+        return json.dumps({
+            "error": "store record error",
+            "stderr": (proc.stderr or "").strip(),
+        })
+    return proc.stdout or "{}"
+
+
 def register(ctx) -> None:
     ctx.register_hook("post_tool_call", _on_post_tool_call)
     ctx.register_tool(
@@ -343,4 +487,10 @@ def register(ctx) -> None:
         toolset="3v0",
         schema=_THREEV0_STORE_SCHEMA,
         handler=_handle_store_query,
+    )
+    ctx.register_tool(
+        name="threev0_record",
+        toolset="3v0",
+        schema=_THREEV0_RECORD_SCHEMA,
+        handler=_handle_store_record,
     )

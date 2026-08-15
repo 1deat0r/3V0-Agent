@@ -45,6 +45,9 @@ code.
 - `core/query.py` — read-only views over both stores (fact lineage, skill
   lineage + curator state) as JSON-safe dicts; the core half of the
   `threev0_store` tool.
+- `core/decide.py` — store-first write decisions (record a fact, optionally
+  superseding an old one, or retract by id) as JSON-safe results; the core
+  half of the `threev0_record` tool (the write counterpart of `query.py`).
 - `data/memory.json` — the store's source of truth (seeded from the profile).
 - `data/skills.json` — the skill store's source of truth (seeded from
   agent-created skills).
@@ -53,8 +56,9 @@ code.
   view of the store; the profile becomes a projection, not the origin).
 - `scripts/sync.py` — reconcile store ↔ profile (report by default, `--write`
   to converge).
-- `scripts/record.py` — record/correct a fact in the store, then re-export the
-  derived view to the profile.
+- `scripts/record.py` — record/correct (or `--retract`) a fact in the store,
+  then re-export the derived view to the profile. `--json` emits a
+  machine-readable result (the CLI half of the `threev0_record` tool).
 - `scripts/ingest.py` — replay a memory-tool write into the store under lock
   (JSON on stdin). Called by the `native-store-bridge` plugin.
 - `scripts/ingest_skills.py` — replay a `skill_manage` write into the skill
@@ -67,8 +71,9 @@ code.
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, and registers the
-  `threev0_store` read-only query tool. Installed in the profile's `plugins/`
-  and enabled in `config.yaml`; see `EVOLUTION_LOOP.md`.
+  `threev0_store` read-only query tool and the `threev0_record` store-first
+  write tool. Installed in the profile's `plugins/` and enabled in
+  `config.yaml`; see `EVOLUTION_LOOP.md`.
 - `tests/` — tests for the native core.
 
 ## Direction (v0.01 in progress)
@@ -88,9 +93,10 @@ code.
    closed for memory + skills; next is direction 3.
 3. **Own capabilities/tools** — designed for 3V0's purposes, not Hermes's.
    In progress: the read half is live (`threev0_store`, a read-only query tool
-   over the native stores registered by the bridge plugin). The write/decision
-   half — a store-first actuator that replaces the Hermes background-review
-   fork's role — is the next stone.
+   over the native stores registered by the bridge plugin). The write half is
+   live (`threev0_record`, a store-first record/retract actuator). The next
+   stone is the 3V0-owned review *process* that consumes both tools and
+   replaces the Hermes background-review fork's role as the autonomous driver.
 4. **Own roadmap of versions** — Hermes recedes from "what 3V0 is" to "a
    runtime 3V0 currently runs on."
 
