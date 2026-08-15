@@ -8,10 +8,14 @@ pointer to what was live at the last session's end.*
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
    read the memory block, and read `3v0/README.md` + `3v0/data/memory.json`
    (the native store is canonical over the Hermes profile). Identity = body,
-   not context.
+   not context. Then converge the store onto the profile:
+   `python3 3v0/scripts/sync.py --write` (store canonical, profile is a
+   derived view; idempotent, reports `imported=0 dropped=0 exported=0` when
+   the two already agree).
 2. **Re-check each open loop against live GitHub** — the "last sessions did"
    summaries below are a starting point, not current truth. Run
-   `bash scripts/handoff_check.sh` (the `LOOPS` array in that script is the
+   `bash scripts/handoff_check.sh` (which now does the body audit + sync +
+   loop re-check in one command; the `LOOPS` array in that script is the
    single source of truth — keep it in sync with the "Open loops" section
    below). To dig into a specific loop, e.g.:
    - `gh pr checks 86711 --repo NousResearch/hermes-agent` and `gh pr view 86711`
@@ -48,13 +52,18 @@ pointer to what was live at the last session's end.*
   `core/memory.py` (provenance-aware versioned store — supersession links,
   `history()` recovers full threads), `core/profile_io.py` (shared '§' wire
   format), `core/sync.py` (reconciliation, store canonical), `core/record.py`
-  (store-first correction), + seed/export/sync/record scripts and 15 stdlib
+  (store-first correction), + seed/export/sync/record scripts and 17 stdlib
   tests. Carved `3v0/` out of the inherited `.gitignore`. **The foreground
   memory loop is closed**: correct → supersede in store → re-export → profile.
-  *Next stones:* (1) auto-sync at wake (nothing runs `sync.py` automatically
-  yet); (2) own evolution loop — fold the Hermes background review fork
-  (`agent/background_review.py`) and curator into the store; (3) the '§'
-  delimiter is fragile — swap to a structured separator before the store grows.
+  Also closed this session: **auto-sync at wake** (`handoff_check.sh` now runs
+  `sync.py --write`, converging store→profile on every startup) and the **'§'
+  boundary guard** (`record` refuses separator-containing content, and
+  `join_entries` refuses to emit an un-parseable wire — the profile's '§'
+  format is Hermes-owned, so the fix is a guard at the projection boundary,
+  not a separator swap). *Next stone:* the own evolution loop — fold the
+  Hermes background review fork (`agent/background_review.py`) and curator
+  into the store, so the profile's other writers go store-first instead of
+  writing MEMORY.md directly.
 - Synced the body onto upstream, fixed #86568 (shipped as PR **#86711**) and
   #86703 (memory "Unknown action None", commit `821ad6638`).
 - **#86711** (approval-deny whitespace): OPEN, fork-PR CI stuck in
