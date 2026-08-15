@@ -6,7 +6,6 @@ Run directly:
 
 from __future__ import annotations
 
-import importlib.util
 import os
 import sys
 import tempfile
@@ -17,22 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.memory import MemoryStore  # noqa: E402
-
-
-def _load_module(name: str, path: Path):
-    """Import a non-package script by path (scripts/ has no __init__.py)."""
-    spec = importlib.util.spec_from_file_location(name, path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"could not load module spec for {path}")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_seed = _load_module(
-    "seed_from_profile", REPO_ROOT / "3v0" / "scripts" / "seed_from_profile.py"
-)
-split_entries = _seed.split_entries
+from core.profile_io import split_entries  # noqa: E402
 
 
 class TestMemoryCore(unittest.TestCase):

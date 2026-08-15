@@ -20,15 +20,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.memory import MemoryStore  # noqa: E402
+from core.profile_io import split_entries  # noqa: E402
 
 PROFILE = Path.home() / ".hermes" / "profiles" / "3v0"
 STORE_PATH = REPO_ROOT / "3v0" / "data" / "memory.json"
-
-
-def split_entries(md: str) -> list[str]:
-    """Split a memories .md file on '§' separators into non-empty entries."""
-    parts = [p.strip() for p in md.split("§")]
-    return [p for p in parts if p]
 
 
 def main() -> int:
