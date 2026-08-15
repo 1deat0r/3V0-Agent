@@ -28,6 +28,7 @@ sys.path.insert(0, str(THREEV0))
 sys.path.insert(0, str(THREEV0 / "core"))
 
 from core.memory import MemoryStore  # noqa: E402
+from core.skills import ABSORBED, RETRACTED, SkillStore  # noqa: E402
 
 DRIVER = THREEV0 / "scripts" / "review_session.py"
 PLUGIN_INIT = THREEV0 / "plugin" / "native-store-bridge" / "__init__.py"
@@ -100,6 +101,19 @@ def _seed_session_db(path: Path, source: str, user_messages: int) -> str:
     return sid
 
 
+def _seed_skill(skill_store_path: Path, skills_dir: Path, name: str, category: str = "") -> str:
+    """Seed a skill into a temp skill store + project its SKILL.md into a temp
+    profile skills dir. Returns the version id."""
+    store = SkillStore(skill_store_path)
+    content = f"---\nname: {name}\n---\n# {name} body\n"
+    with store.mutate():
+        v = store.add(name, "create", "test", content=content, category=category)
+    target = skills_dir / category / name if category else skills_dir / name
+    target.mkdir(parents=True, exist_ok=True)
+    (target / "SKILL.md").write_text(content, encoding="utf-8")
+    return v.id
+
+
 def _run_driver(sid: str, env: dict, expect_code: int = 0) -> subprocess.CompletedProcess:
     proc = subprocess.run(
         [sys.executable, str(DRIVER), "--session-id", sid],
@@ -125,6 +139,8 @@ class Env(unittest.TestCase):
         self.db_path = base / "state.db"
         self.review_log = base / "reviews" / "reviews.jsonl"
         self.profile_mem = base / "profile_memories"
+        self.skill_store_path = base / "skills.json"
+        self.skills_dir = base / "profile_skills"
         self.decisions_file = base / "decisions.json"
         self.env = os.environ.copy()
         self.env.update(
@@ -132,6 +148,8 @@ class Env(unittest.TestCase):
                 "THREEV0_REVIEW_STATE_DB": str(self.db_path),
                 "THREEV0_STORE": str(self.store_path),
                 "THREEV0_PROFILE_MEM": str(self.profile_mem),
+                "THREEV0_SKILL_STORE": str(self.skill_store_path),
+                "THREEV0_SKILLS_DIR": str(self.skills_dir),
                 "THREEV0_REVIEW_LOG": str(self.review_log),
                 "THREEV0_REVIEW_LLM": "fake",
                 "THREEV0_REVIEW_DECISIONS": str(self.decisions_file),
@@ -323,6 +341,67 @@ class TestFakeLLMDecisions(Env):
         self.assertEqual(self.log_entries(), [])
 
 
+class TestFakeLLMSkillDecisions(Env):
+    """Stone 8: the driver emits store-first skill decisions, applied through
+    record_skills.py (store mutation + SKILL.md projection)."""
+
+    def _run_skill_decisions(self, decisions, user_messages=4):
+        sid = _seed_session_db(self.db_path, source="tui", user_messages=user_messages)
+        self.decisions_file.write_text(
+            json.dumps({"summary": "skill decisions", "decisions": decisions}),
+            encoding="utf-8",
+        )
+        _run_driver(sid, self.env)
+        return sid
+
+    def test_skill_retract_decommissions_and_projects(self):
+        _seed_skill(self.skill_store_path, self.skills_dir, "obsolete-skill")
+        self._run_skill_decisions(
+            [{"action": "skill_retract", "name": "obsolete-skill"}]
+        )
+        store = SkillStore(self.skill_store_path)
+        versions = store.versions("obsolete-skill")
+        self.assertEqual(len(versions), 1)
+        self.assertEqual(versions[0].superseded_by, RETRACTED)
+        self.assertIsNone(store.latest_active("obsolete-skill"))
+        # projection removed the live SKILL.md
+        self.assertFalse((self.skills_dir / "obsolete-skill" / "SKILL.md").exists())
+        entries = self.log_entries()
+        self.assertEqual(entries[0]["applied"], 1)
+        self.assertEqual(entries[0]["refused"], 0)
+
+    def test_skill_absorb_records_umbrella(self):
+        _seed_skill(self.skill_store_path, self.skills_dir, "old-skill")
+        _seed_skill(self.skill_store_path, self.skills_dir, "umbrella")
+        self._run_skill_decisions(
+            [{"action": "skill_absorb", "name": "old-skill", "absorbed_into": "umbrella"}]
+        )
+        store = SkillStore(self.skill_store_path)
+        self.assertEqual(store.versions("old-skill")[0].superseded_by, ABSORBED)
+        self.assertEqual(store.absorbed_by("umbrella"), ["old-skill"])
+        self.assertIsNotNone(store.latest_active("umbrella"))
+
+    def test_skill_update_projects_new_content(self):
+        _seed_skill(self.skill_store_path, self.skills_dir, "live-skill")
+        new_content = "---\nname: live-skill\n---\n# v2\n"
+        self._run_skill_decisions(
+            [{"action": "skill_update", "name": "live-skill", "content": new_content}]
+        )
+        store = SkillStore(self.skill_store_path)
+        head = store.latest_active("live-skill")
+        assert head is not None  # narrow Optional for the type checker
+        self.assertEqual(head.action, "edit")
+        self.assertEqual(head.content, new_content.strip())
+        md = (self.skills_dir / "live-skill" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertEqual(md, new_content)
+
+    def test_unknown_skill_retract_refused(self):
+        self._run_skill_decisions([{"action": "skill_retract", "name": "does-not-exist"}])
+        entries = self.log_entries()
+        self.assertEqual(entries[0]["applied"], 0)
+        self.assertEqual(entries[0]["refused"], 1)
+
+
 class TestUnitHelpers(unittest.TestCase):
     def test_tolerant_json_fences_and_prose(self):
         mod = DRIVER_MOD
@@ -354,6 +433,28 @@ class TestUnitHelpers(unittest.TestCase):
              "supersedes": "sub"}
         )
         self.assertIn("--supersedes", argv)
+
+    def test_skill_decision_argv_shapes(self):
+        mod = DRIVER_MOD
+        self.assertIsNone(mod._skill_decision_argv({"action": "record"}))
+        self.assertIsNone(mod._skill_decision_argv({"action": "skill_retract"}))
+        self.assertIsNone(mod._skill_decision_argv({"action": "skill_update", "name": "x"}))
+        self.assertIsNone(mod._skill_decision_argv({"action": "skill_absorb", "name": "x"}))
+        argv = mod._skill_decision_argv({"action": "skill_retract", "name": "obsolete-skill"})
+        self.assertIn("--action", argv)
+        self.assertIn("skill_retract", argv)
+        self.assertIn("obsolete-skill", argv)
+        argv = mod._skill_decision_argv(
+            {"action": "skill_absorb", "name": "a", "absorbed_into": "b"}
+        )
+        self.assertIn("--absorbed-into", argv)
+        self.assertIn("b", argv)
+        argv = mod._skill_decision_argv(
+            {"action": "skill_update", "name": "a", "content": "full", "category": "cat"}
+        )
+        self.assertIn("--content", argv)
+        self.assertIn("--category", argv)
+        self.assertIn("cat", argv)
 
     def test_transcript_compaction(self):
         mod = DRIVER_MOD

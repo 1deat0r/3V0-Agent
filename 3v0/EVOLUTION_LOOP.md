@@ -569,3 +569,74 @@ and a clean log entry.
   background-review fork ON until 3V0's driver is proven in the wild.
 - **Store-first skill decisions** — still out of scope; `threev0_record` is
   memory-only.
+
+---
+
+## Direction 3 / Stone 8 — store-first skill decisions (built + live-E2E-verified)
+
+Stone 7 closed the *process* but left the skill axis on the Hermes path: the
+review driver and `threev0_record` were memory-only, so a store-first *skill*
+write did not exist — and that was the precondition for ever disabling the
+Hermes fork (skill saving would stop entirely). Stone 8 closes it, mirroring
+the memory axis exactly.
+
+### What was built
+
+- **`core/decide_skills.py`** — the skill decision layer (the `decide.py`
+  counterpart). `decide_skill(store, decision, persist)` applies one of three
+  store-first actions and returns a JSON-safe result, never raising:
+  - `skill_update` — append an `edit` version with full replacement SKILL.md,
+    superseding the active version;
+  - `skill_retract` — decommission with no successor (recoverable `RETRACTED`
+    terminal);
+  - `skill_absorb` — fold into an umbrella (`absorbed_into`), the `ABSORBED`
+    terminal.
+  Store-only by construction; the CLI does the projection.
+- **`scripts/record_skills.py`** — the CLI backend (the `record.py`
+  counterpart). Applies the decision under the store lock, then projects the
+  derived view: `skill_update` overwrites the existing SKILL.md in place
+  (found by name, so a category move never orphans a duplicate) or writes a
+  new one; `skill_retract`/`skill_absorb` remove the live skill directory.
+  `--json` backs the tool; dry-run by default.
+- **Review driver** (`review_session.py`) — the consumer. The charter gained
+  a fifth consideration (skill decisions, biased hard toward *decommission* —
+  retract/absorb — over authoring full content, which stays on `skill_manage`),
+  an `ACTIVE SKILLS` context block, `_skill_decision_argv`, and routing in
+  `_apply_decisions` (memory → `record.py`, skills → `record_skills.py`). The
+  decision cap (3) spans both axes.
+- **`threev0_record` tool** (plugin v0.6.0) — gained the three skill actions
+  (`name`/`category`/`absorbed_into` params); the write half now covers both
+  native stores.
+
+### Design notes (honest, not hidden)
+
+- **Content whitespace.** `decide_skills._update` strips content for the store
+  (consistent with `skill_bridge.py`), while the projection writes the raw
+  CLI arg verbatim. `sync_skills.py` compares `head.content.strip()` vs
+  `profile.content.strip()`, so the difference is tolerated — no spurious
+  drift. The review driver passes skill content verbatim (only rejects
+  whitespace-only), so the projected SKILL.md keeps its trailing newline.
+- **Conservative charter.** A session-end review should *decommission* skills
+  the session proved wrong/obsolete; it should not author new SKILL.md content
+  (sessions rarely produce a whole correct file). `skill_update` is allowed
+  but discouraged, and `skill_absorb` requires the umbrella to already exist.
+
+### Verification
+
+- **11 new `test_decide_skills.py`** (update supersession chain, retract,
+  absorb, refusal cases, dry-run) + **5 new review-driver tests** (fake-LLM
+  skill retract/absorb/update with SKILL.md projection, unknown-name refusal,
+  argv shapes). **122 total green** (was 106).
+- **Live E2E** with a real DeepSeek call: a fixture session stating a skill
+  was obsolete produced a correct `skill_retract` decision — the store linked
+  `superseded_by="retracted"` with `source="session-review"`, and the SKILL.md
+  was removed from the (temp) profile. Review log `applied=1 refused=0`.
+- Plugin v0.6.0 copied to the profile (skill actions go live on the next
+  TUI/gateway start, same as Stone 7's hook).
+
+**Still open (unchanged, explicit):**
+- **Fork-disable** — now *unblocked*: a store-first skill write path exists,
+  so disabling the Hermes background-review fork would no longer orphan skill
+  evolution. Still the operator's explicit call, after 3V0's driver has proven
+  itself in the wild.
+

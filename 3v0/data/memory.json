@@ -18,7 +18,7 @@
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "a12caa65afc8",
       "note": ""
     },
     {
@@ -90,7 +90,7 @@
       "supersedes": [
         "87ef5a1be23f"
       ],
-      "superseded_by": "",
+      "superseded_by": "240eb95dcd00",
       "note": ""
     },
     {
@@ -124,7 +124,7 @@
       "source": "foreground",
       "created_at": "2026-08-15T10:00:30Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "8383ef4e05bb",
       "note": ""
     },
     {
@@ -145,6 +145,54 @@
       "created_at": "2026-08-15T11:18:49Z",
       "supersedes": [
         "dfd47d760784"
+      ],
+      "superseded_by": "e6db27405ed4",
+      "note": ""
+    },
+    {
+      "id": "a12caa65afc8",
+      "content": "Curator is ENABLED but dormant in TUI-only use (runs:0 ever — ticks only from cli.py/gateway; run `hermes curator run` manually).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T11:32:15Z",
+      "supersedes": [
+        "7acf9c859b87"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "240eb95dcd00",
+      "content": "Curator (curator.py) is a separate maintenance loop (dormant in TUI).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T11:32:15Z",
+      "supersedes": [
+        "80038b368cf1"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "8383ef4e05bb",
+      "content": "3v0 profile has NO cron or curator ticker in TUI-only use: InProcessCronScheduler + maybe_run_curator start only in gateway/run.py, dashboard (web_server.py), and cli.py — never tui_gateway. The 3v0 cron/ dir is empty; Stone 7's review rides on_session_end, not cron.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-15T11:32:15Z",
+      "supersedes": [
+        "01382f2740ea"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "e6db27405ed4",
+      "content": "Stone 8 BUILT (2026-08-15): store-first skill decisions close the skill axis - core/decide_skills.py (skill_update/retract/absorb, never destroys) + scripts/record_skills.py (projects SKILL.md); threev0_record gained skill actions; the review driver emits memory AND skill decisions (biased to decommission). Fork-disable is now UNBLOCKED (store-first skill evolution exists) but remains a SEPARATE later operator decision - leave the Hermes review fork ON until 3V0's driver is proven in the wild.",
+      "kind": "directive",
+      "source": "foreground",
+      "created_at": "2026-08-15T11:45:43Z",
+      "supersedes": [
+        "a2fcaf2121b0"
       ],
       "superseded_by": "",
       "note": ""

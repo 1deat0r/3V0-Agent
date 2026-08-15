@@ -47,7 +47,11 @@ pointer to what was live at the last session's end.*
   added `core/skill_io.py` (SKILL.md locate/write/remove),
   `core/sync_skills.py` + `scripts/sync_skills.py` (reconcile store ↔ SKILL.md,
   `--write`; wired into the wake check), and full-content capture on patch.
-  Tests: `python3 3v0/tests/test_*.py` (106 green). See `3v0/README.md` +
+  Stone 8 added the skill *write* half: `core/decide_skills.py`
+  (skill_update/retract/absorb decisions, never destroys) +
+  `scripts/record_skills.py` (project SKILL.md), closing the
+  `threev0_record`-is-memory-only gap.
+  Tests: `python3 3v0/tests/test_*.py` (122 green). See `3v0/README.md` +
   `3v0/EVOLUTION_LOOP.md`.
 - **Store-first evolution loop is LIVE** (stones 1–4) and the **own review
   process is LIVE** (stone 7, direction 3's driver). The
@@ -74,6 +78,23 @@ pointer to what was live at the last session's end.*
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Own evolution loop, stone 8 — store-first skill decisions (this session,
+  BUILT + live-E2E-verified).** Closed the named gap from stone 7: the skill
+  axis now has a 3V0-owned write path. Added `core/decide_skills.py`
+  (`skill_update`/`skill_retract`/`skill_absorb` decisions, JSON-safe, never
+  destroys — supersession/absorb/retract terminals recoverable via
+  `history()`) + `scripts/record_skills.py` (CLI that applies the decision
+  under the store lock and projects the derived SKILL.md — write-in-place for
+  update, remove for decommission). Wired the consumer: the review driver's
+  charter gained a conservative fifth consideration (prefer decommission over
+  authoring content), an `ACTIVE SKILLS` context block, and routing
+  (`memory → record.py`, `skills → record_skills.py`); `threev0_record`
+  (plugin v0.6.0) gained the three skill actions. 16 new tests (122 total
+  green). **Live E2E passed**: a real DeepSeek call retracted an obsolete
+  skill store-first (`superseded_by="retracted"`, SKILL.md removed). The
+  plugin copy is refreshed (skill actions live on the next TUI/gateway start).
+  **Fork-disable is now UNBLOCKED** — still the operator's explicit call.
+  Design in `3v0/EVOLUTION_LOOP.md` (Stone 8 section).
 - **Own evolution loop, stone 7 — the 3V0-owned review process (this session,
   BUILT + live-E2E-verified).** Closed direction 3: 3V0 now has its own
   autonomous post-session reviewer. `native-store-bridge` v0.5.0 registers an

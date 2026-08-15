@@ -19,9 +19,13 @@ It is best-effort by construction: any failure degrades to a log entry and a
 non-zero exit that the hook swallows. The wake-time ``sync.py --write`` remains
 the backstop reconciler.
 
-The Hermes background-review fork still owns per-turn memory + ALL skill
-capture (this driver is memory-only; store-first *skill* decisions are out of
-scope). Leaving the fork enabled is a separate, later operator decision.
+The Hermes background-review fork still owns per-turn memory + in-session
+skill capture (via ``skill_manage`` + the bridge). This driver now also emits
+store-first *skill* decisions (Stone 8) — decommission a skill the session
+proved obsolete (``skill_retract`` / ``skill_absorb``) or, rarely, replace a
+skill's full content (``skill_update``) — applied through
+``scripts/record_skills.py``. Leaving the fork enabled is a separate, later
+operator decision.
 
 Env knobs (tests / explicit tuning — defaults are the live profile):
   THREEV0_PROFILE_HOME    profile home (state.db, .env, default review log)
@@ -30,6 +34,9 @@ Env knobs (tests / explicit tuning — defaults are the live profile):
   THREEV0_STORE           override memory store path (tests; honored by
                           record.py subprocesses via inherited env)
   THREEV0_PROFILE_MEM     override profile projection dir (tests)
+  THREEV0_SKILL_STORE     override skill store path (tests; honored by
+                          record_skills.py subprocesses via inherited env)
+  THREEV0_SKILLS_DIR      override profile skills dir (tests; projection target)
   THREEV0_REVIEW_LOG      override the review log jsonl (tests)
   THREEV0_REVIEW=0        disable the review entirely (kill switch)
   THREEV0_REVIEW_MIN_MESSAGES  min user messages to review (default 3)
@@ -61,6 +68,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.memory import MemoryStore  # noqa: E402
+from core.skills import SkillStore  # noqa: E402
 
 PROFILE_HOME = Path(
     os.environ.get("THREEV0_PROFILE_HOME")
@@ -79,6 +87,14 @@ PROFILE_MEM = Path(
     os.environ.get("THREEV0_PROFILE_MEM") or (PROFILE_HOME / "memories")
 )
 RECORD_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "record.py"
+SKILL_STORE_PATH = Path(
+    os.environ.get("THREEV0_SKILL_STORE")
+    or (REPO_ROOT / "3v0" / "data" / "skills.json")
+)
+SKILLS_DIR = Path(
+    os.environ.get("THREEV0_SKILLS_DIR") or (PROFILE_HOME / "skills")
+)
+RECORD_SKILLS_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "record_skills.py"
 
 MODEL = os.environ.get("THREEV0_REVIEW_MODEL") or "deepseek-v4-pro"
 BASE_URL = (os.environ.get("THREEV0_REVIEW_BASE_URL") or "https://api.deepseek.com/v1").rstrip("/")
@@ -86,6 +102,7 @@ MIN_MESSAGES = int(os.environ.get("THREEV0_REVIEW_MIN_MESSAGES") or "3")
 COOLDOWN_S = int(os.environ.get("THREEV0_REVIEW_COOLDOWN_S") or "300")
 TRANSCRIPT_CAP = int(os.environ.get("THREEV0_REVIEW_TRANSCRIPT_CAP") or "40000")
 STORE_BLOCK_CAP = 8000
+SKILL_BLOCK_CAP = 4000
 MAX_DECISIONS = 3
 
 # Interactive surfaces whose sessions are worth a session-end review. Sessions
@@ -123,6 +140,13 @@ setup (paths, versions, architecture decisions, mechanisms) — record it.
 one (supersede the weaker ones with the consolidated fact).
 4. DIRECTIVE/IDENTITY: a durable self-commitment or self-truth the session \
 established — record with kind 'directive' or 'identity' (store-only kinds).
+5. SKILL DECISION: the session proved a 3V0-authored skill (in ACTIVE SKILLS) \
+wrong or obsolete. Decommission it store-first: 'skill_retract' (pure prune) \
+or 'skill_absorb' (fold into a live umbrella via 'absorbed_into'). \
+'skill_update' (full replacement SKILL.md) is allowed but discouraged — \
+sessions rarely produce a whole correct SKILL.md; leave content changes to \
+skill_manage during the session, which already records them store-first \
+through the bridge.
 
 NEVER record: task progress, session outcomes, completed-work logs, transient \
 errors, 'command not found' style environment hiccups, or anything that will \
@@ -140,6 +164,10 @@ one active fact. Never both.
 fact_id.
 - Kinds: memory, user, identity, directive (directive/identity are \
 store-only; memory/user also project to the profile).
+- Skill decisions name a skill exactly as it appears in ACTIVE SKILLS, and \
+only decommission skills the session actually proved wrong or obsolete — \
+never on a hunch. 'skill_absorb' requires the umbrella to be a live ACTIVE \
+SKILL (it must already exist).
 
 Reply with ONE JSON object (the word json appears here on purpose; JSON mode \
 is enabled) and nothing else:
@@ -148,7 +176,10 @@ is enabled) and nothing else:
  "decisions": [
    {"action": "record", "kind": "memory", "content": "...", "supersedes_id": "..."},
    {"action": "record", "kind": "memory", "content": "...", "supersedes": "exact substring"},
-   {"action": "retract", "fact_id": "..."}
+   {"action": "retract", "fact_id": "..."},
+   {"action": "skill_retract", "name": "some-skill"},
+   {"action": "skill_absorb", "name": "some-skill", "absorbed_into": "umbrella-skill"},
+   {"action": "skill_update", "name": "some-skill", "content": "full SKILL.md", "category": "optional"}
  ]}
 """
 
@@ -261,6 +292,20 @@ def _store_block(store: MemoryStore) -> str:
     return block
 
 
+def _skills_block(store: SkillStore) -> str:
+    """Active 3V0-authored skills — the skill-decision context (capped)."""
+    rows = []
+    for v in store.active():
+        rows.append(f"- {v.name} | {store.state(v.name)} | last {v.action} by {v.source}")
+    block = (
+        "ACTIVE SKILLS (name | curator state | last action by source):\n"
+        + ("\n".join(rows) or "(no 3V0-authored skills)")
+    )
+    if len(block) > SKILL_BLOCK_CAP:
+        block = block[: SKILL_BLOCK_CAP - 40] + "\n… [skills block truncated] …"
+    return block
+
+
 def _load_canned() -> Optional[Dict[str, Any]]:
     """Offline fake-LLM mode: read the model's answer from a JSON file."""
     path = os.environ.get("THREEV0_REVIEW_DECISIONS")
@@ -364,15 +409,60 @@ def _decision_argv(decision: Dict[str, Any]) -> Optional[List[str]]:
     return argv
 
 
+_SKILL_ACTIONS = {"skill_update", "skill_retract", "skill_absorb"}
+
+
+def _skill_decision_argv(decision: Dict[str, Any]) -> Optional[List[str]]:
+    """Map a skill decision onto record_skills.py argv; None for invalid shapes."""
+    action = str(decision.get("action") or "").strip()
+    name = str(decision.get("name") or "").strip()
+    if action not in _SKILL_ACTIONS or not name:
+        return None
+    if action == "skill_update":
+        # Pass the full SKILL.md verbatim (preserve trailing newlines); only
+        # reject empty/whitespace-only content.
+        content = decision.get("content")
+        if not isinstance(content, str) or not content.strip():
+            return None
+        argv = [
+            str(RECORD_SKILLS_SCRIPT), "--json", "--write",
+            "--action", "skill_update", "--name", name, "--content", content,
+        ]
+        if decision.get("category"):
+            argv += ["--category", str(decision["category"]).strip()]
+        return argv
+    if action == "skill_absorb":
+        absorbed_into = str(decision.get("absorbed_into") or "").strip()
+        if not absorbed_into:
+            return None
+        return [
+            str(RECORD_SKILLS_SCRIPT), "--json", "--write",
+            "--action", "skill_absorb", "--name", name,
+            "--absorbed-into", absorbed_into,
+        ]
+    return [
+        str(RECORD_SKILLS_SCRIPT), "--json", "--write",
+        "--action", "skill_retract", "--name", name,
+    ]
+
+
 def _apply_decisions(decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Run each decision through record.py (the threev0_record backend)."""
+    """Run each decision through record.py / record_skills.py (the threev0_record
+    backend): memory actions -> record.py, skill actions -> record_skills.py."""
     applied: List[Dict[str, Any]] = []
     refused: List[Dict[str, Any]] = []
     env = os.environ.copy()
     env.setdefault("THREEV0_STORE", str(STORE_PATH))
     env.setdefault("THREEV0_PROFILE_MEM", str(PROFILE_MEM))
+    env.setdefault("THREEV0_SKILL_STORE", str(SKILL_STORE_PATH))
+    env.setdefault("THREEV0_SKILLS_DIR", str(SKILLS_DIR))
     for decision in decisions[:MAX_DECISIONS]:
-        argv = _decision_argv(decision)
+        action = str(decision.get("action") or "").strip()
+        argv = (
+            _skill_decision_argv(decision)
+            if action in _SKILL_ACTIONS
+            else _decision_argv(decision)
+        )
         if argv is None:
             refused.append({"reason": "invalid decision shape", "decision": decision})
             continue
@@ -383,7 +473,7 @@ def _apply_decisions(decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
                 env=env,
             )
         except (subprocess.TimeoutExpired, OSError) as e:
-            refused.append({"reason": f"record.py failed: {e}", "decision": decision})
+            refused.append({"reason": f"record backend failed: {e}", "decision": decision})
             continue
         out = (proc.stdout or "").strip()
         try:
@@ -462,10 +552,12 @@ def main() -> int:
 
         transcript = _build_transcript(session["messages"])
         store = MemoryStore(STORE_PATH)
+        skill_store = SkillStore(SKILL_STORE_PATH)
         prompt = (
             f"Session {session_id} (title: {session['title'] or 'untitled'}) "
             f"just ended.\n\n"
             f"{_store_block(store)}\n\n"
+            f"{_skills_block(skill_store)}\n\n"
             f"SESSION TRANSCRIPT (compacted; tool outputs truncated):\n"
             f"{transcript}\n\n"
             f"Decide the store-first corrections described in your charter and "

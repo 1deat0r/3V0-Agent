@@ -22,11 +22,14 @@ The same plugin also registers two first-class tools over the native stores
 - ``threev0_store`` — the read half: a read-only query tool that shells out to
   ``scripts/query.py`` and returns the store's canonical view (supersession
   history and curator states) the derived profile projection hides.
-- ``threev0_record`` — the write half: a store-first decision actuator that
-  shells out to ``scripts/record.py`` (record a fact, optionally superseding
-  an old one, or retract one by id), then re-exports the profile projection.
-  Unlike the best-effort write *mirror* above, this is a direct actuator —
-  a refusal surfaces as a JSON error the agent can see and correct.
+- ``threev0_record`` — the write half: a store-first decision actuator over
+  BOTH native stores. Memory actions shell out to ``scripts/record.py``
+  (record a fact, optionally superseding an old one, or retract one by id);
+  skill actions (Stone 8) shell out to ``scripts/record_skills.py``
+  (``skill_update`` / ``skill_retract`` / ``skill_absorb``). Each re-exports
+  the profile projection (MEMORY.md / the SKILL.md) after the write. Unlike
+  the best-effort write *mirror* above, this is a direct actuator — a refusal
+  surfaces as a JSON error the agent can see and correct.
 
 The plugin's third surface is 3V0's own review *process* (direction 3's
 driver, Stone 7): an ``on_session_end`` hook spawns the detached
@@ -418,32 +421,39 @@ def _handle_store_query(args=None, **_) -> str:
 
 
 # ---------------------------------------------------------------------------
-# threev0_record — store-first write tool over the memory store
+# threev0_record — store-first write tool over the native stores
 # ---------------------------------------------------------------------------
 
 _THREEV0_RECORD_SCHEMA = {
     "name": "threev0_record",
     "description": (
-        "Write to 3V0's native memory store — the store-first decision "
-        "actuator (the write half of 3V0's own evolution loop). Record a new "
+        "Write to 3V0's native stores — the store-first decision actuator "
+        "(the write half of 3V0's own evolution loop). Memory: record a new "
         "fact, optionally superseding an old one (flagged and recoverable, "
-        "never erased), or retract one by id. The store is the canonical "
-        "origin; the Hermes profile (MEMORY.md/USER.md) is re-exported as a "
-        "derived view after the write. Use threev0_store to read the store "
-        "first (e.g. to find a fact_id to supersede or retract). Corrections "
-        "go here, not through the Hermes memory tool, so supersession is "
-        "recorded instead of silently overwritten."
+        "never erased), or retract one by id. Skills: replace a skill's full "
+        "SKILL.md (skill_update), decommission it with no successor "
+        "(skill_retract), or fold it into an umbrella (skill_absorb). The "
+        "store is the canonical origin; the Hermes profile (MEMORY.md/"
+        "USER.md, or the SKILL.md) is re-exported as a derived view after "
+        "the write. Use threev0_store to read the store first (e.g. to find "
+        "a fact_id to supersede, or a skill name to decommission). "
+        "Corrections go here, not through the Hermes memory/skill_manage "
+        "tools, so supersession is recorded instead of silently overwritten."
     ),
     "parameters": {
         "type": "object",
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["record", "retract"],
+                "enum": ["record", "retract", "skill_update", "skill_retract", "skill_absorb"],
                 "description": (
                     "record: add a fact, optionally superseding an old one. "
                     "retract: remove an active fact by id (recoverable, no "
-                    "successor)."
+                    "successor). skill_update: replace a skill's full "
+                    "SKILL.md (superseding the active version). "
+                    "skill_retract: decommission a skill with no successor. "
+                    "skill_absorb: fold a skill into an umbrella (via "
+                    "absorbed_into)."
                 ),
             },
             "kind": {
@@ -458,7 +468,9 @@ _THREEV0_RECORD_SCHEMA = {
             "content": {
                 "type": "string",
                 "description": (
-                    "With action='record' (required): the new fact text."
+                    "With action='record' (required): the new fact text. "
+                    "With action='skill_update' (required): the full "
+                    "replacement SKILL.md."
                 ),
             },
             "fact_id": {
@@ -475,6 +487,27 @@ _THREEV0_RECORD_SCHEMA = {
                     "With action='record' (optional): supersede the active "
                     "fact whose content contains this substring (must match "
                     "exactly one)."
+                ),
+            },
+            "name": {
+                "type": "string",
+                "description": (
+                    "With skill actions (required): the skill name (as shown "
+                    "by threev0_store action='skills')."
+                ),
+            },
+            "category": {
+                "type": "string",
+                "description": (
+                    "With action='skill_update' (optional): category subdir "
+                    "for a NEW skill (ignored when the skill already exists)."
+                ),
+            },
+            "absorbed_into": {
+                "type": "string",
+                "description": (
+                    "With action='skill_absorb' (required): the umbrella "
+                    "skill that absorbs this one (must already exist)."
                 ),
             },
             "source": {
@@ -511,6 +544,8 @@ def _handle_store_record(args=None, **_) -> str:
 
     a = args or {}
     action = str(a.get("action", "")).strip()
+    if action in {"skill_update", "skill_retract", "skill_absorb"}:
+        return _handle_skill_record(a)
     if action not in {"record", "retract"}:
         return json.dumps({"error": f"unknown action {action!r}"})
 
@@ -549,6 +584,68 @@ def _handle_store_record(args=None, **_) -> str:
             return out
         return json.dumps({
             "error": "store record error",
+            "stderr": (proc.stderr or "").strip(),
+        })
+    return proc.stdout or "{}"
+
+
+def _handle_skill_record(a: Dict[str, Any]) -> str:
+    """Serve a store-first skill write by shelling out to
+    scripts/record_skills.py (JSON out). Same direct-actuator contract as
+    _handle_store_record: a refusal or a failed subprocess surfaces as a JSON
+    error object the agent can see and correct."""
+    global _warned_missing_body
+
+    body_root = _resolve_body_root()
+    if body_root is None:
+        return json.dumps({
+            "error": (
+                "3V0 body repo not found — cannot write the native skill store. "
+                "Set THREEV0_BODY or write the body-path marker."
+            ),
+        })
+
+    script = _script_path(body_root, "record_skills.py")
+    if not script.exists():
+        return json.dumps({"error": f"record_skills.py not found at {script}"})
+
+    action = str(a.get("action", "")).strip()
+    name = str(a.get("name", "")).strip()
+    if not name:
+        return json.dumps({"error": "name is required for skill actions"})
+
+    argv = [sys.executable, str(script), "--json", "--write", "--action", action, "--name", name]
+    if action == "skill_update":
+        content = a.get("content")
+        if not isinstance(content, str) or not content.strip():
+            return json.dumps({
+                "error": "content (full SKILL.md) is required for action='skill_update'",
+            })
+        argv += ["--content", content]
+        if a.get("category"):
+            argv += ["--category", str(a["category"]).strip()]
+    elif action == "skill_absorb":
+        absorbed_into = str(a.get("absorbed_into", "")).strip()
+        if not absorbed_into:
+            return json.dumps({
+                "error": "absorbed_into is required for action='skill_absorb'",
+            })
+        argv += ["--absorbed-into", absorbed_into]
+
+    if a.get("source"):
+        argv += ["--source", str(a["source"])]
+
+    try:
+        proc = subprocess.run(argv, capture_output=True, text=True, timeout=30)
+    except Exception as e:  # noqa: BLE001 - write path must still return something
+        return json.dumps({"error": f"store skill record failed: {e}"})
+
+    if proc.returncode != 0:
+        out = (proc.stdout or "").strip()
+        if out:
+            return out
+        return json.dumps({
+            "error": "store skill record error",
             "stderr": (proc.stderr or "").strip(),
         })
     return proc.stdout or "{}"
