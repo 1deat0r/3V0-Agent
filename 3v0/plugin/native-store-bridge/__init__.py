@@ -1,14 +1,20 @@
-"""native-store-bridge — mirror the Hermes memory tool into 3V0's native store.
+"""native-store-bridge — mirror the Hermes memory + skill tools into 3V0's native stores.
 
-A ``post_tool_call`` observer. Every time the ``memory`` tool performs a
-successful write (foreground, background review fork, gateway, cron), this
-plugin replays the same add/replace/remove operation against the native store
-at ``<body>/3v0/data/memory.json``, so the store stays the canonical origin and
-the profile MEMORY.md / USER.md remain a derived projection.
+A ``post_tool_call`` observer. Every time the ``memory`` or ``skill_manage``
+tool performs a successful write (foreground, background review fork, gateway,
+cron), this plugin replays the same operation against the matching native store
+in ``<body>/3v0/data/``:
+
+- ``memory``       -> ``data/memory.json``  (facts; canonical, profile is a projection)
+- ``skill_manage`` -> ``data/skills.json``  (skill lineage; profile stays operational)
+
+so the stores stay the auditable record of 3V0's own evolution and the profile
+remains a derived / operational view.
 
 This is the store-first half of 3V0's own evolution loop (see
 ``3v0/EVOLUTION_LOOP.md``). It is best-effort by construction: any failure is
-swallowed and the wake-time ``sync.py --write`` reconciles as the backstop.
+swallowed and, for memory, the wake-time ``sync.py --write`` reconciles as the
+backstop (the skill store has no reconciler yet — the bridge is its writer).
 
 No runtime core files are edited. The plugin lives in the profile
 (``~/.hermes/profiles/3v0/plugins/``) and survives ``hermes update``.
@@ -29,7 +35,9 @@ logger = logging.getLogger(__name__)
 # Fallback when neither 3V0_BODY nor the profile marker file resolves.
 BODY_DEFAULT = "/home/mustbearn/Projects/AI Agents/3V0 Agent"
 
-_warned_missing = False
+_warned_missing_body = False
+_warned_missing_memory_ingest = False
+_warned_missing_skill_ingest = False
 
 
 def _profile_home() -> Path:
@@ -41,7 +49,7 @@ def _profile_home() -> Path:
 
 
 def _resolve_body_root() -> Optional[Path]:
-    """Locate the body repo (source of the native store + ingest.py)."""
+    """Locate the body repo (source of the native stores + ingest scripts)."""
     # 1. Explicit env override.
     env = os.environ.get("THREEV0_BODY")
     if env:
@@ -62,12 +70,13 @@ def _resolve_body_root() -> Optional[Path]:
     return p if p.is_dir() else None
 
 
-def _ingest_path(body_root: Path) -> Path:
-    return body_root / "3v0" / "scripts" / "ingest.py"
+def _script_path(body_root: Path, name: str) -> Path:
+    return body_root / "3v0" / "scripts" / name
 
 
 def _write_origin() -> str:
-    """The active write origin: 'background_review' on the fork, else 'assistant_tool'."""
+    """The active write origin: 'background_review' on the fork (incl. the
+    curator's review fork), else the ContextVar default ('foreground')."""
     try:
         from tools.skill_provenance import get_current_write_origin
 
@@ -77,7 +86,7 @@ def _write_origin() -> str:
 
 
 def _result_ok(result: Any) -> bool:
-    """True when the memory tool reported a successful write."""
+    """True when the tool reported a successful write (JSON with success:true)."""
     data: Any = result
     if isinstance(result, str):
         try:
@@ -86,6 +95,24 @@ def _result_ok(result: Any) -> bool:
             return False
     return isinstance(data, dict) and bool(data.get("success"))
 
+
+def _run_ingest(script: Path, payload: dict) -> None:
+    """Run an ingest script as a best-effort subprocess; swallow every failure."""
+    try:
+        subprocess.run(
+            [sys.executable, str(script)],
+            input=json.dumps(payload),
+            text=True,
+            capture_output=True,
+            timeout=30,
+        )
+    except Exception as e:  # noqa: BLE001 - best-effort observer
+        logger.debug("native-store-bridge ingest failed: %s", e)
+
+
+# ---------------------------------------------------------------------------
+# memory -> store
+# ---------------------------------------------------------------------------
 
 def _ops_from_args(args: Dict[str, Any]) -> Optional[list]:
     """Extract the memory-tool operations (single-op or batch) from the args."""
@@ -115,16 +142,9 @@ def _ops_from_args(args: Dict[str, Any]) -> Optional[list]:
     }]
 
 
-def _on_post_tool_call(
-    tool_name: str = "",
-    args: Optional[Dict[str, Any]] = None,
-    result: Any = None,
-    **_: Any,
-) -> None:
-    global _warned_missing
+def _mirror_memory(args: Dict[str, Any], result: Any) -> None:
+    global _warned_missing_body, _warned_missing_memory_ingest
 
-    if tool_name != "memory":
-        return
     if not isinstance(args, dict):
         return
     if not _result_ok(result):
@@ -139,20 +159,20 @@ def _on_post_tool_call(
 
     body_root = _resolve_body_root()
     if body_root is None:
-        if not _warned_missing:
-            _warned_missing = True
+        if not _warned_missing_body:
+            _warned_missing_body = True
             logger.warning(
                 "native-store-bridge: cannot locate 3V0 body repo "
-                "(set THREEV0_BODY or write %s) — memory writes will not be "
-                "mirrored to the store; wake sync remains the backstop",
+                "(set THREEV0_BODY or write %s) — writes will not be "
+                "mirrored to the stores; wake sync remains the backstop",
                 _profile_home() / "3v0_body_path",
             )
         return
 
-    ingest = _ingest_path(body_root)
+    ingest = _script_path(body_root, "ingest.py")
     if not ingest.exists():
-        if not _warned_missing:
-            _warned_missing = True
+        if not _warned_missing_memory_ingest:
+            _warned_missing_memory_ingest = True
             logger.warning(
                 "native-store-bridge: ingest.py not found at %s — memory "
                 "writes will not be mirrored to the store",
@@ -160,21 +180,60 @@ def _on_post_tool_call(
             )
         return
 
-    payload = json.dumps({
-        "target": target,
-        "source": _write_origin(),
-        "ops": ops,
-    })
-    try:
-        subprocess.run(
-            [sys.executable, str(ingest)],
-            input=payload,
-            text=True,
-            capture_output=True,
-            timeout=30,
-        )
-    except Exception as e:  # noqa: BLE001 - best-effort observer
-        logger.debug("native-store-bridge ingest failed: %s", e)
+    _run_ingest(ingest, {"target": target, "source": _write_origin(), "ops": ops})
+
+
+# ---------------------------------------------------------------------------
+# skill_manage -> skill store
+# ---------------------------------------------------------------------------
+
+def _mirror_skill(args: Dict[str, Any], result: Any) -> None:
+    global _warned_missing_body, _warned_missing_skill_ingest
+
+    if not isinstance(args, dict):
+        return
+    if not _result_ok(result):
+        return
+    name = (args.get("name") or "").strip()
+    if not name:
+        return
+
+    body_root = _resolve_body_root()
+    if body_root is None:
+        if not _warned_missing_body:
+            _warned_missing_body = True
+            logger.warning(
+                "native-store-bridge: cannot locate 3V0 body repo "
+                "(set THREEV0_BODY or write %s) — writes will not be "
+                "mirrored to the stores; wake sync remains the backstop",
+                _profile_home() / "3v0_body_path",
+            )
+        return
+
+    ingest = _script_path(body_root, "ingest_skills.py")
+    if not ingest.exists():
+        if not _warned_missing_skill_ingest:
+            _warned_missing_skill_ingest = True
+            logger.warning(
+                "native-store-bridge: ingest_skills.py not found at %s — "
+                "skill writes will not be mirrored to the store",
+                ingest,
+            )
+        return
+
+    _run_ingest(ingest, {"source": _write_origin(), "args": args})
+
+
+def _on_post_tool_call(
+    tool_name: str = "",
+    args: Optional[Dict[str, Any]] = None,
+    result: Any = None,
+    **_: Any,
+) -> None:
+    if tool_name == "memory":
+        _mirror_memory(args or {}, result)
+    elif tool_name == "skill_manage":
+        _mirror_skill(args or {}, result)
 
 
 def register(ctx) -> None:

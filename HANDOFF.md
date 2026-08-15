@@ -40,23 +40,46 @@ pointer to what was live at the last session's end.*
   `export_to_profile.py`, `sync.py` (reconcile, `--write`), `record.py`
   (store-first correction — supersede, never destroy), `ingest.py` (replay a
   memory-tool write into the store). Core adds: `bridge.py` (op→store map),
-  `retract()` + `mutate()` in `memory.py`. Tests: `python3 3v0/tests/test_*.py`
-  (32 green). See `3v0/README.md` + `3v0/EVOLUTION_LOOP.md`.
-- **Store-first memory loop is LIVE** (the evolution stone, this session). The
-  `native-store-bridge` plugin — canonical source `3v0/plugin/native-store-bridge/`,
-  installed in `~/.hermes/profiles/3v0/plugins/` and enabled in that profile's
+  `retract()` + `mutate()` in `memory.py`. The **skill axis** mirrors this:
+  `core/skills.py` (versioned skill-lineage store) + `core/skill_bridge.py`
+  (skill_manage op→store map) + `data/skills.json` + `scripts/ingest_skills.py`
+  + `scripts/seed_skills.py` (baseline from agent-created skills). Tests:
+  `python3 3v0/tests/test_*.py` (52 green). See `3v0/README.md` +
+  `3v0/EVOLUTION_LOOP.md`.
+- **Store-first evolution loop is LIVE** (stones 1 + 2). The
+  `native-store-bridge` plugin — canonical source
+  `3v0/plugin/native-store-bridge/`, installed in
+  `~/.hermes/profiles/3v0/plugins/` and enabled in that profile's
   `config.yaml` (`plugins.enabled: [native-store-bridge]`) — mirrors every
-  successful `memory`-tool write (foreground AND background review fork) into
-  the store via `ingest.py`, with provenance from the write-origin ContextVar
-  (`background_review` / `assistant_tool`). No runtime core files edited; the
-  plugin survives `hermes update`. Takes effect next session (this one predates
-  the enable). Wake `sync.py --write` is the backstop when the bridge is down.
+  successful `memory`-tool write into `data/memory.json` (stone 1, via
+  `ingest.py`) **and** every successful `skill_manage`-tool write into
+  `data/skills.json` (stone 2, via `ingest_skills.py`), with provenance from
+  the write-origin ContextVar (`background_review` — the review fork and the
+  curator's fork — vs `foreground`). No runtime core files edited; the plugin
+  survives `hermes update`. Wake `sync.py --write` is the backstop for memory;
+  the skill store has no reconciler yet (bridge is its writer, `seed_skills.py`
+  set the baseline).
 - Web search = keyless `ddgs` backend. Reinstall:
   `~/.hermes/hermes-agent/venv/bin/pip install ddgs`.
 - SOUL: `~/.hermes/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Own evolution loop, stone 2 — store-first skill lineage (this session).**
+  Closed the *skill* half of the evolution loop. `skill_manage` (create/patch/
+  edit/write_file/remove_file/delete) is a normal core tool that fires
+  `post_tool_call` and carries the same write-origin ContextVar — so the
+  **same** `native-store-bridge` plugin now mirrors every successful
+  `skill_manage` write into a new native **skill store** (`data/skills.json`)
+  via `ingest_skills.py`. Added `core/skills.py` (versioned lineage:
+  supersession on rewrite, `absorb`/`retract` terminals, recoverable
+  `history()`, `flock` `mutate()`) + `core/skill_bridge.py` (op→store map) +
+  `seed_skills.py` (baseline from the 4 agent-created skills — bundled/hub
+  excluded). **No runtime core files edited**; the plugin survives
+  `hermes update`. 20 new tests (52 total green); end-to-end verified
+  (create → patch supersedes → delete+absorbed_into). *Next stone:* make the
+  skill store canonical over SKILL.md, or fold the curator's auto-transitions
+  in. Design in `3v0/EVOLUTION_LOOP.md` (Stone 2 section).
 - **Own evolution loop, stone 1 — store-first memory (this session).** Closed
   the memory half of the evolution loop. The background review fork writes
   memory via the `memory` tool → `MEMORY.md` directly, bypassing the store;
@@ -70,10 +93,8 @@ pointer to what was live at the last session's end.*
   `record.py`/`sync.py` serialize). **No runtime core files edited** — the
   plugin lives in the profile and survives `hermes update`. Design + rationale
   in `3v0/EVOLUTION_LOOP.md`. 32 tests green; end-to-end verified (hook →
-  subprocess → store with correct provenance). *Next stone:* the
-  curator/skill-store axis (curator writes `skill_manage`, not memory — a
-  separate store), or making the memory tool itself store-first (would edit
-  the runtime core tool; deliberately avoided here).
+  subprocess → store with correct provenance). *Next stone was the skill axis
+  — done, see the bullet above.*
 - **Self-model correction + native core (the current arc).** Corrected the frame:
   Hermes is 3V0 **v0.00 — the chassis** (loop, tools, terminal/browser, LLM
   plumbing); 3V0 is the agent, not "a profile for Hermes." Built `3v0/`:

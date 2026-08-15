@@ -1,0 +1,254 @@
+"""3V0 core skill store — a provenance-aware, versioned skill-lineage store.
+
+The memory store (``core/memory.py``) made 3V0's *facts* canonical and
+recoverable. This is the same lesson applied to the next axis of the evolution
+loop: *skills*. Every time a skill is created, rewritten, patched, or
+decommissioned, that event is recorded as a version with provenance, and
+replacement links the old version to its successor. Nothing is ever destroyed —
+the lineage (which skill superseded which, which skill absorbed which) is the
+point.
+
+Design mirrors ``MemoryStore``:
+
+- A ``SkillVersion`` carries the skill name, the ``skill_manage`` action that
+  produced it, the content that action carried (full SKILL.md for create/edit,
+  file content for write_file), provenance, and supersession links.
+- A new version of a skill SUPERSEDES the previous active version of the same
+  name: the old version is marked inactive and linked forward, recoverable via
+  ``history()``.
+- Decommissioning has two shapes, both recoverable terminals:
+    - ``retract`` — a delete with no successor (pure prune). ``superseded_by``
+      is set to the ``RETRACTED`` sentinel.
+    - ``absorb`` — a delete with ``absorbed_into=<umbrella>`` (consolidation).
+      ``superseded_by`` is set to ``ABSORBED`` and ``absorbed_into`` records
+      which skill swallowed it.
+- Plain JSON on disk (stdlib only), with the same cross-process ``flock``
+  ``mutate()`` contract as ``MemoryStore`` so the background review fork's
+  ingest subprocess and a foreground writer serialize.
+
+Like the memory store, this is the *canonical record of 3V0's own evolution*,
+not (yet) the mechanism that drives the profile's SKILL.md files — the profile
+remains the operational system and the store the auditable mirror, exactly the
+posture stone 1 took for memory.
+"""
+
+from __future__ import annotations
+
+import json
+import time
+import uuid
+from contextlib import contextmanager
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+
+from .memory import locked
+
+_VALID_ACTIONS = {"create", "patch", "edit", "write_file", "remove_file", "delete"}
+
+# ``superseded_by`` sentinels for terminal (decommissioned) skills, distinct
+# from a real version id, so ``active()`` excludes them and ``history()`` can
+# still surface them as the end of a lineage.
+RETRACTED = "retracted"   # deleted with no successor (pure prune)
+ABSORBED = "absorbed"     # deleted with absorbed_into=<umbrella> (consolidation)
+
+
+@dataclass
+class SkillVersion:
+    id: str
+    name: str
+    action: str                 # create | patch | edit | write_file | remove_file | delete
+    content: str                # full SKILL.md (create/edit), file content (write_file), else ""
+    category: str = ""          # skills/<category> subdirectory, when known
+    file_path: str = ""         # for write_file / remove_file
+    source: str = ""            # e.g. "background_review", "assistant_tool", "profile-import"
+    created_at: str = ""
+    supersedes: list[str] = field(default_factory=list)
+    superseded_by: str = ""     # "" active | version id | RETRACTED | ABSORBED
+    absorbed_into: str = ""     # umbrella name when superseded_by == ABSORBED
+    note: str = ""
+
+    @property
+    def active(self) -> bool:
+        return not self.superseded_by
+
+    @property
+    def terminal(self) -> bool:
+        return self.superseded_by in (RETRACTED, ABSORBED)
+
+
+class SkillStore:
+    """Append-only skill lineage with supersession (no silent overwrite)."""
+
+    def __init__(self, path: str | Path):
+        self.path = Path(path)
+        self.skills: list[SkillVersion] = []
+        if self.path.exists():
+            self._load()
+
+    # -- persistence -------------------------------------------------------
+    def _load(self) -> None:
+        if not self.path.exists():
+            self.skills = []
+            return
+        raw = json.loads(self.path.read_text(encoding="utf-8"))
+        self.skills = [SkillVersion(**s) for s in raw.get("skills", [])]
+
+    def _save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {"version": 1, "skills": [asdict(s) for s in self.skills]}
+        self.path.write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+
+    # -- queries -----------------------------------------------------------
+    def versions(self, name: str) -> list[SkillVersion]:
+        """All recorded versions of a skill, in append (creation) order."""
+        return [s for s in self.skills if s.name == name]
+
+    def latest_active(self, name: str) -> SkillVersion | None:
+        """The currently-active version of ``name``, if one exists.
+
+        The invariant "each new non-terminal version supersedes the previous
+        active version of the same name" means at most one active version per
+        name: the head of the chain. A retracted/absorbed skill has none.
+        """
+        for s in reversed(self.versions(name)):
+            if s.active:
+                return s
+        return None
+
+    def active(self) -> list[SkillVersion]:
+        """One active version per currently-live skill (chain heads)."""
+        seen: set[str] = set()
+        out: list[SkillVersion] = []
+        for s in reversed(self.skills):
+            if s.name in seen:
+                continue
+            seen.add(s.name)
+            if s.active:
+                out.append(s)
+        return list(reversed(out))
+
+    def active_names(self) -> set[str]:
+        return {s.name for s in self.active()}
+
+    def absorbed_by(self, name: str) -> list[str]:
+        """Skills whose latest decommission was an absorb into ``name``."""
+        out: list[str] = []
+        for s in self.skills:
+            if s.superseded_by == ABSORBED and s.absorbed_into == name:
+                out.append(s.name)
+        return sorted(set(out))
+
+    def history(self, name: str) -> list[SkillVersion]:
+        """The full recorded lineage of a skill (audit trail, oldest first).
+
+        Append order IS the lineage order: supersession links walk forward
+        through versions of the same name, but a skill retracted and later
+        re-created starts a second chain — both chains are still returned here
+        so nothing is lost.
+        """
+        return self.versions(name)
+
+    # -- mutations ---------------------------------------------------------
+    def add(
+        self,
+        name: str,
+        action: str,
+        source: str,
+        content: str = "",
+        category: str = "",
+        file_path: str = "",
+        note: str = "",
+        supersedes: list[str] | None = None,
+        persist: bool = True,
+    ) -> SkillVersion:
+        """Append a version, superseding the current active version of ``name``.
+
+        ``supersedes`` is filled automatically from the current active version
+        unless the caller supplies it explicitly (the bridge may want to link a
+        non-head predecessor, but that is rare).
+        """
+        if action not in _VALID_ACTIONS:
+            raise ValueError(
+                f"action must be one of {sorted(_VALID_ACTIONS)}, got {action!r}"
+            )
+        if action == "delete":
+            raise ValueError("delete is terminal; use retract()/absorb() instead")
+
+        version = SkillVersion(
+            id=uuid.uuid4().hex[:12],
+            name=name,
+            action=action,
+            content=content,
+            category=category,
+            file_path=file_path,
+            source=source,
+            created_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            supersedes=list(supersedes) if supersedes else [],
+            note=note,
+        )
+
+        if not version.supersedes:
+            head = self.latest_active(name)
+            if head is not None:
+                version.supersedes = [head.id]
+
+        self.skills.append(version)
+        for target_id in version.supersedes:
+            for old in self.skills:
+                if old.id == target_id and old.active:
+                    old.superseded_by = version.id
+        if persist:
+            self._save()
+        return version
+
+    def _decommission(
+        self,
+        name: str,
+        sentinel: str,
+        source: str = "",
+        absorbed_into: str = "",
+        persist: bool = True,
+    ) -> SkillVersion | None:
+        """Mark the active version of ``name`` as a terminal (retract/absorb)."""
+        head = self.latest_active(name)
+        if head is None:
+            return None
+        head.superseded_by = sentinel
+        if absorbed_into:
+            head.absorbed_into = absorbed_into
+        if source:
+            verb = "absorbed into " + absorbed_into if absorbed_into else "retracted"
+            tag = f"{verb} by {source}"
+            head.note = f"{head.note} {tag}".strip() if head.note else tag
+        if persist:
+            self._save()
+        return head
+
+    def retract(self, name: str, source: str = "", persist: bool = True) -> SkillVersion | None:
+        """Decommission ``name`` with no successor (pure prune). Recoverable."""
+        return self._decommission(name, RETRACTED, source=source, persist=persist)
+
+    def absorb(
+        self,
+        name: str,
+        absorbed_into: str,
+        source: str = "",
+        persist: bool = True,
+    ) -> SkillVersion | None:
+        """Decommission ``name`` because its content was folded into ``absorbed_into``."""
+        return self._decommission(
+            name, ABSORBED, source=source, absorbed_into=absorbed_into, persist=persist
+        )
+
+    # -- concurrency -------------------------------------------------------
+    def reload(self) -> None:
+        self._load()
+
+    @contextmanager
+    def mutate(self):
+        """Cross-process lock + reload, mirroring ``MemoryStore.mutate()``."""
+        with locked(self.path):
+            self.reload()
+            yield self

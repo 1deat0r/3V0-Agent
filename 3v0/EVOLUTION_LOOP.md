@@ -127,11 +127,13 @@ reconciled idempotently, so the only cost of an ambiguous match is that
 provenance is `profile-import` instead of exact. Correctness first, provenance
 best-effort.
 
-### Open questions (decide before the next stone)
+### Open questions (decided for stone 2)
 
 1. **Curator.** The curator writes `skill_manage` (skills), not memory. Folding
-   *it* into the store is a different axis — a skill store — and is deliberately
-   out of scope here. This stone only closes the memory loop.
+   *it* into the store is a different axis — a skill store — and is **stone 2
+   (below)**. The curator's own *auto-transitions* (active/stale/archived) are
+   still out of scope: the skill store records `skill_manage` writes; the
+   curator's state machine is a separate Hermes loop, not yet folded in.
 2. **Profile still first-writer for memory.** The `memory` tool still writes
    MEMORY.md "first" and the bridge mirrors after. A future stone could make
    the *tool itself* store-first (the store writes, then projects to the
@@ -141,3 +143,66 @@ best-effort.
    (the tool's two targets). `identity`/`directive` stay store-only, written
    by `record.py` explicitly. Whether the fork should eventually write those
    is a later, separate question.
+
+---
+
+## Stone 2 — skill lineage (live)
+
+The second stone closes the *skill* half of the evolution loop, mirroring
+stone 1 exactly: a native store records 3V0's own skill evolution as a
+versioned lineage, and the `native-store-bridge` plugin (same `post_tool_call`
+hook) replays every successful `skill_manage` write into it.
+
+### Verified seam (same as memory)
+
+`skill_manage` is a *normal* core tool (not in `_AGENT_LOOP_TOOLS`), dispatched
+through `model_tools.handle_function_call`, which fires `_emit_post_tool_call_hook`
+for every agent including the fork. Its return value is
+`json.dumps({"success": bool, ...})`, so the same `_result_ok` works. Provenance
+uses the same `tools/skill_provenance.get_current_write_origin()` ContextVar —
+it is already read by `skill_manager_tool.py` itself to tag `created_by`
+(`"agent"` on the fork vs `"foreground-created"`).
+
+### Design
+
+```
+skill_manage tool (foreground OR background fork OR curator's review agent)
+   │  writes SKILL.md / supporting files (profile = operational system)
+   └─> post_tool_call hook fires (tool_name="skill_manage", args, result)
+        └─> native-store-bridge plugin (extended — same hook, second branch)
+             └─> subprocess: python3 3v0/scripts/ingest_skills.py
+                  └─> under cross-process lock: replay op into the skill store
+                       create/edit/write_file/remove_file/patch -> new version,
+                            superseding the active version of the same name
+                       delete (no absorbed_into)  -> retract (tombstone)
+                       delete (absorbed_into=X)   -> absorb (terminal, links X)
+```
+
+The skill store (`core/skills.py` + `core/skill_bridge.py`) is the *auditable
+record*, not (yet) the operational mechanism: the profile's SKILL.md files stay
+the system Hermes actually loads. Same posture as stone 1's memory store before
+the wake sync — **the skill store records lineage with recoverable history; it
+does not yet project back to SKILL.md.** The bridge is the skill store's only
+writer; `seed_skills.py` establishes the baseline (agent-created skills only —
+bundled/hub skills are 3V0's inherited catalog, not its evolution).
+
+### Failure and degradation semantics
+
+Best-effort by construction, exactly like memory: a missing body repo or a
+failed subprocess is swallowed and the `skill_manage` write behaves as before.
+There is **no wake-time skill reconciler yet** (unlike memory's `sync.py`), so
+the bridge is the primary writer — a future stone can add a `sync_skills.py`
+that reconciles store ↔ SKILL.md once the store becomes canonical.
+
+### Open questions (decide before stone 3)
+
+1. **Canonicality.** When (if ever) should the skill store drive SKILL.md (a
+   projection, like memory's MEMORY.md)? Doing so means the store must hold
+   full skill content for every version — it already does for create/edit, but
+   `patch` records only the old→new note, not the resulting full file.
+2. **Curator auto-transitions.** The curator's state machine (active/stale/
+   archived via `.usage.json` + `.curator_state`) is still Hermes-owned. Folding
+   it into the store means representing skill *state* as versions, not just
+   `skill_manage` writes.
+3. **Bundled skills.** The store excludes bundled/hub skills by design. If 3V0
+   ever wants a full catalog lineage, that's a separate seed.

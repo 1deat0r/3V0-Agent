@@ -27,7 +27,15 @@ code.
 - `core/bridge.py` — map a Hermes memory-tool write (add/replace/remove) onto
   the store, with supersession/retraction. The store side of the store-first
   memory loop.
+- `core/skills.py` — provenance-aware, versioned skill-lineage store: every
+  skill create/rewrite/decommission is a version with supersession,
+  absorption, and recoverable history. The skill axis of the evolution loop.
+- `core/skill_bridge.py` — map a Hermes `skill_manage` write (create/patch/
+  edit/write_file/remove_file/delete) onto the skill store, with supersession
+  and absorb/retract terminals.
 - `data/memory.json` — the store's source of truth (seeded from the profile).
+- `data/skills.json` — the skill store's source of truth (seeded from
+  agent-created skills).
 - `scripts/seed_from_profile.py` — import profile MEMORY.md / USER.md → store.
 - `scripts/export_to_profile.py` — emit store → MEMORY.md / USER.md (derived
   view of the store; the profile becomes a projection, not the origin).
@@ -37,10 +45,13 @@ code.
   derived view to the profile.
 - `scripts/ingest.py` — replay a memory-tool write into the store under lock
   (JSON on stdin). Called by the `native-store-bridge` plugin.
+- `scripts/ingest_skills.py` — replay a `skill_manage` write into the skill
+  store under lock (JSON on stdin). Called by the `native-store-bridge` plugin.
+- `scripts/seed_skills.py` — import profile agent-created skills → skill store.
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
-  mirrors every successful `memory`-tool write into the store via a
-  `post_tool_call` hook. Installed in the profile's `plugins/` and enabled in
-  `config.yaml`; see `EVOLUTION_LOOP.md`.
+  mirrors every successful `memory`- and `skill_manage`-tool write into the
+  matching native store via a `post_tool_call` hook. Installed in the profile's
+  `plugins/` and enabled in `config.yaml`; see `EVOLUTION_LOOP.md`.
 - `tests/` — tests for the native core.
 
 ## Direction (v0.01 in progress)
@@ -49,8 +60,12 @@ code.
    canonical, the profile a derived view.
 2. **Own evolution loop** — in progress. Stone 1 (store-first memory) is live:
    the `native-store-bridge` plugin mirrors all memory writes (foreground +
-   background review fork) into the store. Next: the curator/skill-store axis,
-   or making the memory tool itself store-first.
+   background review fork) into the store. Stone 2 (store-first skill lineage)
+   is live: the same plugin mirrors `skill_manage` writes into `data/skills.json`
+   — a versioned record of 3V0's own skill evolution with supersession,
+   absorption, and recoverable history. Next: make the skill store canonical
+   over SKILL.md (a projection, like memory), or fold the curator's
+   auto-transitions into the store.
 3. **Own capabilities/tools** — designed for 3V0's purposes, not Hermes's.
 4. **Own roadmap of versions** — Hermes recedes from "what 3V0 is" to "a
    runtime 3V0 currently runs on."
