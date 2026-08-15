@@ -77,8 +77,11 @@ pointer to what was live at the last session's end.*
   **Fork-disable off-switch (Stone 12):** the Hermes per-turn review fork is
   gated by `memory.nudge_interval` + `skills.creation_nudge_interval` (default
   10); set both to 0 in `~/.hermes/profiles/3v0/config.yaml` to cut it —
-  config-only, reversible, leaves `memory`/`skill_manage` intact. NOT flipped
-  (operator's call after more wild-flight time). The
+  config-only, reversible, leaves `memory`/`skill_manage` intact. **FLIPPED
+  2026-08-16** — both keys set to 0; the own-clock daemon `3v0-review.service`
+  is now the sole writer (revert: set both back to 10). Takes effect on the
+  next TUI/gateway start (intervals are read at agent init, not per-turn).
+  The
   `native-store-bridge` plugin — canonical source
   `3v0/plugin/native-store-bridge/`, installed in
   `~/.hermes/profiles/3v0/plugins/` and enabled in that profile's
@@ -102,6 +105,25 @@ pointer to what was live at the last session's end.*
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Fork cut, Stone 13 — the Hermes background-review fork is OFF (this
+  session, decision + verified end-to-end).** The operator delegated the
+  fork-disable call ("do what you think is best") and I cut it. Traced the
+  exact mechanism before flipping: `agent_init.py:1759/1863` read
+  `memory.nudge_interval` / `skills.creation_nudge_interval` (default 10, NOT
+  in DEFAULT_CONFIG) at agent-construction time; the per-turn gates are
+  `_memory_nudge_interval > 0` (`turn_context.py:705`) and
+  `_skill_nudge_interval > 0` (`turn_finalizer.py:742`), and the fork spawns
+  only if either is set. Set both to 0 in `~/.hermes/profiles/3v0/config.yaml`
+  via `hermes config set` (the config file is agent-edit-protected); verified
+  `load_config_readonly()` resolves both to 0. Store-first supersession
+  recorded both stale facts (`73a569ca94f0` "not yet flipped" →
+  `cd096aaf4fc4`; `baca20175336` "forks after every turn" → `de07c8cf7627`).
+  **Takes effect on the next TUI/gateway start** (intervals are read at agent
+  init, not per-turn). Revert = set both keys back to 10. Rationale: the
+  daemon has clean wild-flight across stones 9–12 (temporal guard firing in
+  the wild, backlog drained, 0 refused), the fork is redundant per-turn spend
+  plus a second writer on the same store, and the cut is a reversible
+  one-line config flip.
 - **Fork-disable readiness, Stone 12 — the reviewer now drains and
   full-captures; off-switch found (this session, BUILT + tested + E2E).**
   Asked whether 3V0 is ready to cut off the Hermes background-review fork:

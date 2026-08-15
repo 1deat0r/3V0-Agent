@@ -260,7 +260,7 @@
       "source": "session-review",
       "created_at": "2026-08-15T21:32:55Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "46929e95d839",
       "note": ""
     },
     {
@@ -488,7 +488,7 @@
       "source": "session-review",
       "created_at": "2026-08-15T22:42:49Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "de07c8cf7627",
       "note": ""
     },
     {
@@ -498,6 +498,62 @@
       "source": "session-review",
       "created_at": "2026-08-15T22:42:49Z",
       "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "46929e95d839",
+      "content": "Own-clock reviewer (Stone 12) live: review_session.py drains backlog all-at-once, retries LLM transport, full-captures standalone, refuses still-live sessions; systemd service 3v0-review.service with temporal guard.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:56:31Z",
+      "supersedes": [
+        "ecea9d569ddd"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "73a569ca94f0",
+      "content": "Hermes per-turn background_review fork is triggered by memory.nudge_interval + skills.creation_nudge_interval (default 10); setting both to 0 is a config-only reversible off-switch, not yet flipped.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:56:31Z",
+      "supersedes": [],
+      "superseded_by": "cd096aaf4fc4",
+      "note": ""
+    },
+    {
+      "id": "1c38bf2c3e46",
+      "content": "Operator prefers highest-standard completion over rushing to a cutoff when time allows.",
+      "kind": "user",
+      "source": "session-review",
+      "created_at": "2026-08-15T22:56:31Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "cd096aaf4fc4",
+      "content": "Hermes per-turn background-review fork is DISABLED (2026-08-16, operator delegated the call to 3V0): memory.nudge_interval=0 + skills.creation_nudge_interval=0 set in ~/.hermes/profiles/3v0/config.yaml (verified: load_config_readonly resolves both to 0; gates are _memory_nudge_interval>0 and _skill_nudge_interval>0 at agent init). Own-clock daemon 3v0-review.service is now the sole memory/skill writer. Reversible: set both keys back to 10.",
+      "kind": "memory",
+      "source": "foreground",
+      "created_at": "2026-08-15T23:02:07Z",
+      "supersedes": [
+        "73a569ca94f0"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "de07c8cf7627",
+      "content": "Hermes background-review fork is off (2026-08-16). Foreground 3V0 and the own-clock review daemon share the body — load-before-patch guards stay load-bearing.",
+      "kind": "memory",
+      "source": "foreground",
+      "created_at": "2026-08-15T23:02:07Z",
+      "supersedes": [
+        "baca20175336"
+      ],
       "superseded_by": "",
       "note": ""
     }
