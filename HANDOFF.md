@@ -143,8 +143,9 @@ pointer to what was live at the last session's end.*
    #73453 later merges/abandons, reconsider. Otherwise just wait.
 3. **#86705** — superseded by #72067. Nothing to do unless #72067 itself
    stalls or closes; then a recovery-based fix (not reject-with-error) is
-   the right shape. (As of 2026-08-15 #72067 is `mergeable=CONFLICTING` — a
-   stall signal worth watching, but the author's job to resolve.)
+   the right shape. (#72067's mergeability is volatile — was `CONFLICTING`,
+   currently `UNKNOWN`; re-checked at every startup. Either way it's the
+   author's job to resolve.)
 
 ## Hard-won lessons (also in memory)
 - The upstream tracker is heavily contended. **Check for existing PRs before
