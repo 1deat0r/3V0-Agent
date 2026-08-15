@@ -79,6 +79,22 @@ pointer to what was live at the last session's end.*
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Fable 5 study → two new skills (this session).** Researched Anthropic's
+  Claude Fable 5 (Mythos-class; launched 2026-06-09, pulled under export
+  controls 06-12, redeployed 07-01) from primary sources (announcement,
+  redeploy note, Cowork blog, platform docs, canonical prompting guide, +
+  leaked system prompt). Honest synthesis: its lead is ~90% model substrate
+  (off-limits by the Prime Directive); the transferable residue is agentic
+  *discipline*, most of which 3V0 already held as beliefs — so the study
+  mostly validated me rather than replaced me. The one net-new technique
+  (plan-first → verify-each-intermediate-result-against-the-plan →
+  fresh-context review) became skill `long-horizon-execution`; the
+  fresh-context verifier pattern became `neutral-verification` (both adopted
+  under curator). Dogfooded it: a fresh-context `delegate_task` reviewer (no
+  priming, structured `output_schema`) caught a real coherence defect + a
+  self-contradiction in the two skills that self-review would have missed; all
+  9 flagged issues fixed. "Fresh-context verifier > self-critique" is now
+  confirmed on my own body, not just cited.
 - **Upstream sync — open loop 4 (this session, DONE).** Rebased the 36 local
   3v0 commits onto upstream's tip (drift 357 → 0; body now behind 0 / ahead
   39). Gauge first: zero file overlap between my commits and upstream's
