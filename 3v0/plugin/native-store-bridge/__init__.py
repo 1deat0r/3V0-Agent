@@ -76,7 +76,8 @@ def _script_path(body_root: Path, name: str) -> Path:
 
 def _write_origin() -> str:
     """The active write origin: 'background_review' on the fork (incl. the
-    curator's review fork), else the ContextVar default ('foreground')."""
+    curator's review fork), else 'assistant_tool' (the foreground agent's
+    origin, set by turn_context.py from agent._memory_write_origin)."""
     try:
         from tools.skill_provenance import get_current_write_origin
 

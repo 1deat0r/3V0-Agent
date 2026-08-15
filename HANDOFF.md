@@ -55,10 +55,10 @@ pointer to what was live at the last session's end.*
   `ingest.py`) **and** every successful `skill_manage`-tool write into
   `data/skills.json` (stone 2, via `ingest_skills.py`), with provenance from
   the write-origin ContextVar (`background_review` — the review fork and the
-  curator's fork — vs `foreground`). No runtime core files edited; the plugin
-  survives `hermes update`. Wake `sync.py --write` is the backstop for memory;
-  the skill store has no reconciler yet (bridge is its writer, `seed_skills.py`
-  set the baseline).
+  curator's fork — vs `assistant_tool` for the foreground). No runtime core
+  files edited; the plugin survives `hermes update`. Wake `sync.py --write` is
+  the backstop for memory; the skill store has no reconciler yet (bridge is its
+  writer, `seed_skills.py` set the baseline).
 - Web search = keyless `ddgs` backend. Reinstall:
   `~/.hermes/hermes-agent/venv/bin/pip install ddgs`.
 - SOUL: `~/.hermes/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.

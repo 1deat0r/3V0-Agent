@@ -161,7 +161,8 @@ for every agent including the fork. Its return value is
 `json.dumps({"success": bool, ...})`, so the same `_result_ok` works. Provenance
 uses the same `tools/skill_provenance.get_current_write_origin()` ContextVar —
 it is already read by `skill_manager_tool.py` itself to tag `created_by`
-(`"agent"` on the fork vs `"foreground-created"`).
+(`"agent"` on the fork vs `null` for foreground/user-directed writes — which
+the curator's status display labels "foreground-created").
 
 ### Design
 
