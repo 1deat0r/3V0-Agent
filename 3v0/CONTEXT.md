@@ -1,0 +1,163 @@
+# 3V0 — Native Core Context
+
+The domain language of 3V0's native substrate (`3v0/`) — the store-first
+identity/memory/evolution layer that makes 3V0 "an agent that builds beyond
+its chassis," not "a profile for Hermes." This names the concepts the
+continuity meta and evolution loop are built on. It is a glossary and nothing
+else: no paths, no specs, no implementation detail.
+
+## Identity
+
+**Body**:
+The repository that is 3V0's self — the auditable, git-versioned ground truth.
+Identity is body, not context.
+_Avoid_: project, codebase, workspace.
+
+**Soul**:
+3V0's identity document (`SOUL.md`) in the Hermes profile — the living
+statement of what 3V0 is.
+_Avoid_: personality file, system prompt.
+
+**Chassis**:
+The Hermes fork 3V0 currently runs on (agent loop, tools, LLM plumbing). It
+is the runtime, not the identity.
+_Avoid_: framework, base, host.
+
+**Prime Directive**:
+The immutable law — DeepSeek-v4-pro via the DeepSeek API only, never a local
+model, never another provider. Outside 3V0's power to amend.
+_Avoid_: constraint, preference, policy.
+
+## Stores and views
+
+**Store**:
+The native JSON source of truth (facts and skill versions). Canonical,
+append-only, auditable in the body.
+_Avoid_: database, backend.
+
+**Profile**:
+The Hermes profile's derived view of the store (MEMORY.md / USER.md /
+SKILL.md). A projection, never the origin.
+_Avoid_: source of truth, canonical store.
+
+**Store-first**:
+The write discipline — a fact or skill version is recorded in the store
+first; the profile is re-exported from it. Inverts Hermes's
+profile-as-origin model.
+_Avoid_: sync-first, mirror-first.
+
+**Derived view / export**:
+The profile projection of a store's active entries.
+
+## Memory and lineage
+
+**Fact**:
+The unit of memory — content plus kind, source, timestamp, and supersession
+links.
+_Avoid_: entry, note, memory line.
+
+**Kind**:
+The category of a fact — `memory`, `user`, `identity`, or `directive`.
+_Avoid_: type.
+
+**Provenance**:
+A fact's recorded origin (`source`) — who or what wrote it (foreground,
+background review, operator, profile-import).
+
+**Supersede / supersession**:
+Replacing a fact or skill version by *linking* the old one to its successor
+— marked inactive, never erased. Conflicts are flagged, never silently
+overwritten.
+_Avoid_: overwrite, update.
+
+**Retract / retraction**:
+Removing a fact or skill with no successor — a tombstoned terminal,
+recoverable.
+_Avoid_: delete, purge.
+
+**Absorb / absorption**:
+Decommissioning a skill by folding its content into an umbrella skill
+(`absorbed_into`). Recoverable.
+_Avoid_: merge, consolidate (when the lineage link is what matters).
+
+**Lineage**:
+The recoverable history chain of a fact or skill, reconstructed from
+supersession links and append order.
+_Avoid_: changelog, history log.
+
+**Active**:
+A fact or skill version not yet superseded, retracted, or absorbed.
+**Terminal**:
+A retracted or absorbed version — the end of a lineage, still recoverable.
+
+## Skills (curator axis)
+
+**Curator state**:
+A skill's operational state — `active`, `stale`, or `archived` — orthogonal
+to its content lineage. An archived skill has a live content version but is
+not live in the profile.
+_Avoid_: status, phase.
+
+## Continuity
+
+**Drift**:
+Two artifacts disagreeing about the same reality. Cross-artifact, not
+"stale" or "old."
+_Avoid_: inconsistency (drift is the specific, detected case), staleness.
+
+**Invariant**:
+A named cross-artifact check over a flat JSON-safe context; it decides drift
+and a detail string. The unit of the consistency ledger.
+_Avoid_: test, assertion.
+
+**Consistency ledger**:
+The ordered, git-versioned registry of invariants the clock evaluates.
+
+**Continuity anchor**:
+The fixed point — Prime Directive + identity + a pointer to the continuity
+model. Small, git-versioned, never regenerated from itself; the bottom of
+the self-reference.
+_Avoid_: source of truth, root config.
+
+**Continuity clock / reconstruction clock**:
+The mechanism that evaluates every invariant on wake and on the daemon tick
+and reports drift.
+_Avoid_: watchdog, monitor (it checks relations, not liveness).
+
+**Healable drift**:
+Drift the safe mechanical sync can fix (store↔profile consistency).
+Auto-healed.
+**Semantic drift**:
+Drift needing deliberate, audited repair — the anchor, self-describing
+reachability, the ledger, or a tracked loop. Flagged, never auto-rewritten.
+_Avoid_: real drift, bad drift.
+
+**Claim**:
+A recorded state of a tracked upstream loop (a GitHub PR/issue) as of a time.
+**Loop**:
+A tracked upstream PR/issue whose state 3V0 is waiting on.
+
+## Projects and the loop
+
+**Project ledger**:
+The data-driven registry of 3V0's projects (repo, upstream, drift delta,
+store scope, open loops). Onboarding is a command, not a code edit.
+
+**Primary project**:
+3V0 itself — the project whose store also projects into the profile.
+**Sibling project**:
+F1NANCE / Axiom — reviewed into their own stores, store-only or memory-only,
+with no profile projection.
+
+**Stone**:
+A versioned, live milestone of 3V0's evolution, recorded in the evolution loop.
+
+**Evolution loop**:
+The self-improvement cycle — store-first memory → skill lineage → reconcile →
+curator state → own tools → own clock → multi-project → continuity.
+_Avoid_: roadmap.
+
+**Own clock**:
+3V0's self-scheduled review daemon (systemd-supervised), independent of
+Hermes's cron/scheduler.
+_Avoid_: cron job, scheduler.
