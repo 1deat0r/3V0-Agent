@@ -1343,7 +1343,7 @@ regardless of timing). Research settled it with two moves, both now built:
   wake, **never promoted**: it only ever writes the `.generated.md` sidecar,
   never the canonical `HANDOFF.md`.
 - Wired into `handoff_check.sh` (wake) as the final step.
-- 18 tests (`test_handoff.py`, pure). 246 native-core tests green.
+- 19 tests (`test_handoff.py`, pure). 247 native-core tests green.
 
 ### The shadow diff (the acceptance evidence)
 

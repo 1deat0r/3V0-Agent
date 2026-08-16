@@ -24,7 +24,7 @@ call, never self-authorized.
 - `handoff_check.sh` now derives the tracked-loop list from the claim registry
   (`3v0/data/continuity/claims.json` — the single source of truth; the old
   hand-synced `LOOPS` array is gone) and generates the draft as its final
-  step. 18 new tests; 247 native-core tests green.
+  step. 19 new tests; 247 native-core tests green.
 
 **Why fault-injection + shadow mode (the grill's verdict, now settled):**
 "trustworthy clock" was unfalsifiable ("a few wakes", no threshold, goalpost
@@ -190,7 +190,7 @@ drift before picking up the follow-ups.
   wired it into `handoff_check.sh` (final step). Retired the hand-synced
   `LOOPS` array in `handoff_check.sh` — the tracked-loop list is now derived
   from the claim registry (`claims.json`, the single source of truth), closing
-  the grill's A7 finding (three hand-synced loop lists). 18 new tests; 247
+  the grill's A7 finding (three hand-synced loop lists). 19 new tests; 247
   native-core tests green. The flip to generated-canonical stays the
   Operator's call (acceptance = shadow diff clean for N wakes). Two bugs found
   and fixed during the build: the `IFS= read` field-splitting bug in the
