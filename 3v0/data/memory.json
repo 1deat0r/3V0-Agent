@@ -726,7 +726,7 @@
       "source": "profile-import",
       "created_at": "2026-08-16T02:02:26Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "fe2bc53015fe",
       "note": ""
     },
     {
@@ -770,6 +770,28 @@
       "supersedes": [],
       "superseded_by": "retracted",
       "note": "retracted by foreground"
+    },
+    {
+      "id": "edab8653cee9",
+      "content": "Stone 17 continuity meta built (2026-08-16): anchor 3v0/CONTINUITY.md + core/continuity.py 6 invariants + scripts/continuity_check.py; wired into handoff_check.sh and 3v0-review daemon tick.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-16T03:32:41Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "fe2bc53015fe",
+      "content": "Own-clock review daemons (systemd user svcs, 6-min ticks): 3v0-review (memory+skills→profile), f1nance-review + axiom-review (store-only, strict cwd). Tick=_sync()+_drain()+_drift()+_continuity(); ledger data-driven; onboard via scripts/project.py add.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-16T03:32:42Z",
+      "supersedes": [
+        "24020e89abdb"
+      ],
+      "superseded_by": "",
+      "note": ""
     }
   ]
 }
