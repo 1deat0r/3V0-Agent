@@ -30,10 +30,20 @@ sessions → 5 facts (2 superseded, 1 identity, temporal guard refused 2).
    writes rather than routing them to sibling stores (only the daemons write
    siblings today); (b) **profile MEMORY.md sharing** — the three projects
    still share one profile MEMORY.md; the clean fix is moving siblings onto
-   their own profiles (F1NANCE already has `~/.hermes/profiles/f1nance`; Axiom
-   does not). Either is a candidate, or return to direction 3 (own tools) /
-   direction 4 (own initiative) for 3V0 itself. The fork cut is NOT under
-   reconsideration — it held.
+   their own profiles (F1NANCE has `~/.hermes/profiles/f1nance`; Axiom now has
+   `~/.hermes/profiles/axiom` — created this session). Either is a candidate,
+   or return to direction 3 (own tools) / direction 4 (own initiative) for
+   3V0 itself. The fork cut is NOT under reconsideration — it held.
+4. **Axiom launch is fixed** (this session). `~/.local/bin/axiom` is now a
+   real env-isolating launcher (replaces the old dangling symlink to the
+   archived `packages/coding-agent` CLI) → Axiom's own `.venv/bin/hermes -p axiom`,
+   stripping the 3V0-session `HERMES_*` / `PYTHONPATH` / `PYTHONHOME` /
+   `TERMINAL_CWD` leak that caused `AIAgent.__init__() got an unexpected
+   keyword argument 'max_run_cost_usd'`. Profile created:
+   `~/.hermes/profiles/axiom/` (SOUL from `axiom/SOUL.md`, deepseek config,
+   shared key, `axiom_body_path`). Verified: `axiom --version` → install dir
+   `~/Projects/axiom-agent`; `axiom chat -q` runs as Axiom; `run_agent` +
+   `tui_gateway` both resolve to Axiom and accept the param.
 
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
