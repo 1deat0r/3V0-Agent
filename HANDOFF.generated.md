@@ -2,22 +2,22 @@
 
 > ⚠️ MECHANICAL STATE — canonical since 2026-08-16 (operator-authorized). Generated from verified-consistent state by `3v0/scripts/generate_handoff.py`; regenerated each wake. This file is authoritative for mechanical state: body, continuity invariants, drift, tracked loops, store, daemons. The narrative (kickoff, last-sessions arc, hard-won lessons) stays hand-written in `HANDOFF.md` — never auto-generated. Read both.
 
-Generated: 2026-08-16T07:10:47Z · body HEAD `6143185d3`
+Generated: 2026-08-16T08:39:03Z · body HEAD `8672ce058`
 
 ## Body
-branch `main` · ahead 103 · behind 0 · working tree clean
+branch `main` · ahead 107 · behind 0 · working tree dirty
 
 ```
+8672ce058 ledger(3v0): record wake-#6 store facts (carbon-fiber skin + de-brand prefs)
+c14e34ef1 docs(3v0): handoff narrative for wake #6 (carbon skin + TUI de-brand)
+17abdf632 feat(tui): 3V0 carbon-fiber skin support + de-brand Hermes/Nous identity
+d446d5777 docs(3v0): regenerate generated handoff at wake-#6 HEAD
 6143185d3 docs(3v0): regenerate generated handoff at clean wake-#5 HEAD
 d8207604b docs(3v0): regenerate generated handoff at wake-#5 HEAD
 b48357d60 docs(3v0): handoff kickoff — wake #5 (DeepSeek Harness watch resolved) + arc bullet
 db34b2a0e ledger(3v0): re-anchor position baseline + regenerate generated handoff (post-harvest)
 18d198c9e docs(3v0): resolve DeepSeek Harness watch item — released 2026-08-13 (MIT, dsh)
 e2af26ee1 docs(3v0): regenerate generated handoff at wake-#4 HEAD
-0fc19db12 docs(3v0): handoff kickoff — wake #4 reconciliation + arc bullet
-af7513e42 ledger(3v0): re-anchor position baseline + regenerate generated handoff
-cace12e9e docs(3v0): reconcile loop-claim OPEN assertions in handoff narrative
-6e9b060a9 ledger(3v0): record post-flip position baseline + regenerate generated handoff
 ```
 
 ## Continuity
@@ -31,11 +31,11 @@ cace12e9e docs(3v0): reconcile loop-claim OPEN assertions in handoff narrative
 summary: 0 drifting, 6 ok
 
 ## Drift (project ledger)
-- OK    Axiom (axiom)  behind=0 ahead=25  dirty=no
+- DRIFT Axiom (axiom)  behind=39 ahead=26  dirty=no
 - OK    F1NANCE (f1nance)  behind=0 ahead=41  dirty=no
-- OK    3V0 (threev0)  behind=0 ahead=103  dirty=no  [head moved]
+- DRIFT 3V0 (threev0)  behind=0 ahead=107  dirty=yes
 
-summary: 0 drifting, 3 ok
+summary: 2 drifting, 3 ok
 
 ## Open loops
 - #72067 (pr) · claim OPEN · live OPEN (mergeable CONFLICTING, updated 2026-08-05) · agree — fix(memory): recover null/omitted action instead of dead-ending in 'Un… [canonical memory null-action recovery; CONFLICTING, author's job]
@@ -44,7 +44,7 @@ summary: 0 drifting, 3 ok
 - #86711 (pr) · claim OPEN · live OPEN (mergeable MERGEABLE, updated 2026-08-15) · agree — fix(approval): collapse whitespace before matching approvals.deny glob… [approval-deny whitespace fix; awaiting maintainer merge]
 
 ## Store
-facts by kind: directive=1, identity=1, memory=13, user=8 · 76 fact versions · 7 active skills · 57 skill versions
+facts by kind: directive=1, identity=1, memory=14, user=9 · 78 fact versions · 7 active skills · 57 skill versions
 
 ## Daemons
 - 3v0-review: active
