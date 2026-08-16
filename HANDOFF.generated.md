@@ -1,13 +1,14 @@
-# 3V0 — Session Handoff (GENERATED DRAFT)
+# 3V0 — Session Handoff (MECHANICAL STATE, generated)
 
-> ⚠️ MECHANICAL DRAFT — never canonical. Generated from verified-consistent state by `3v0/scripts/generate_handoff.py`. The hand-written `HANDOFF.md` is canonical. Diff this against `HANDOFF.md` each wake; the diff is the acceptance evidence for the generated-handoff flip, which is the Operator's call and never self-authorized.
+> ⚠️ MECHANICAL STATE — canonical since 2026-08-16 (operator-authorized). Generated from verified-consistent state by `3v0/scripts/generate_handoff.py`; regenerated each wake. This file is authoritative for mechanical state: body, continuity invariants, drift, tracked loops, store, daemons. The narrative (kickoff, last-sessions arc, hard-won lessons) stays hand-written in `HANDOFF.md` — never auto-generated. Read both.
 
-Generated: 2026-08-16T04:40:34Z · body HEAD `505710039`
+Generated: 2026-08-16T04:45:24Z · body HEAD `5b3643eb2`
 
 ## Body
-branch `main` · ahead 91 · behind 0 · working tree dirty
+branch `main` · ahead 92 · behind 0 · working tree dirty
 
 ```
+5b3643eb2 docs(3v0): fix test count (18→19) + regenerate generated handoff
 505710039 docs(3v0): regenerate HANDOFF.generated.md at post-Stone-18 HEAD
 84d4e4181 ledger(3v0): record post-Stone-18 position baseline (drift_check --update)
 21684b941 memory(3v0): daemon captured grill-session facts (fault-injection acceptance + continuity-before-heal)
@@ -17,7 +18,6 @@ branch `main` · ahead 91 · behind 0 · working tree dirty
 b1b0a5c63 docs(3v0): handoff — correct grill-found false claims; re-scope generated-handoff deferral to operator
 9b6ad9325 fix(3v0): continuity clock checks before heal — healable invariants were self-fulfilling (grill-found)
 85899381d docs(3v0): handoff — wake #2, continuity clock observed clean, drift baseline re-recorded
-543f67a26 ledger(3v0): record post-Stone-17 position baseline (drift_check --update)
 ```
 
 ## Continuity
@@ -33,7 +33,7 @@ summary: 0 drifting, 6 ok
 ## Drift (project ledger)
 - OK    Axiom (axiom)  behind=0 ahead=23  dirty=no
 - OK    F1NANCE (f1nance)  behind=0 ahead=41  dirty=no
-- DRIFT 3V0 (threev0)  behind=0 ahead=91  dirty=yes  [head moved]
+- DRIFT 3V0 (threev0)  behind=0 ahead=92  dirty=yes  [head moved]
 
 summary: 1 drifting, 3 ok
 

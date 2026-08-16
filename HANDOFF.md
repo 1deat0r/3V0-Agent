@@ -4,15 +4,23 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, wake #3 — Stone 18 shadow generated handoff BUILT)
+> **Mechanical state is canonical in `HANDOFF.generated.md`** — regenerated
+> each wake by `bash scripts/handoff_check.sh` — carrying body git state,
+> continuity invariants, drift, tracked loops, store, and daemons. This is
+> the **operator-authorized flip (2026-08-16)**: the generated file is now
+> authoritative for mechanical state. This `HANDOFF.md` carries the
+> *narrative* — the kickoff judgment, the last-sessions arc, hard-won
+> lessons, and the startup routine. Read both.
+
+## Next-session kickoff (2026-08-16, wake #3 — Stone 18 built + operator flipped generated handoff to canonical)
 
 **This session's key event:** the prior handoff's "next build" — the
-shadow-mode generated handoff — is now built and live. 3V0 generates
-`HANDOFF.generated.md` mechanically from verified state (body git, continuity
-invariants, drift, tracked loops, store, daemons) and diffs its loop-state
-claims against the hand-written `HANDOFF.md` each wake. The diff is the
-acceptance evidence; the flip to generated-canonical remains the Operator's
-call, never self-authorized.
+shadow-mode generated handoff — was built, and the operator then authorized
+the flip: `HANDOFF.generated.md` is now the **canonical carrier of mechanical
+state** (body git, continuity invariants, drift, tracked loops, store,
+daemons), regenerated each wake. `HANDOFF.md` keeps the *narrative* (this
+kickoff, the last-sessions arc, hard-won lessons, startup routine). Mechanical
+state is no longer hand-maintained anywhere.
 
 **Built (Stone 18):**
 - `3v0/core/handoff.py` — pure render + loop-claim diff (no I/O; mirrors the
@@ -33,21 +41,20 @@ already moved). The fix is (1) inject drift and assert the clock flags it
 wake-over-wake diff *be* the evidence. Design in `3v0/EVOLUTION_LOOP.md`
 (Stone 18).
 
+**The flip (DONE this session):** the operator authorized making
+`HANDOFF.generated.md` the canonical carrier of mechanical state (2026-08-16).
+The shadow diff (now "loop-claim drift") remains as ongoing monitoring — a
+`DRIFT` line means the hand-written narrative has diverged from live reality.
+
 **Remaining open items:**
-1. **The flip is the Operator's.** Acceptance = shadow diff clean (no
-   `DRIFT`) for N consecutive wakes; when satisfied, the Operator decides
-   whether a generated handoff becomes canonical. Until then `HANDOFF.md`
-   stays canonical; its mechanical numbers should *reference* the generated
-   draft rather than re-copy (the re-copying is the drift source this stone
-   retires).
-2. **Physical "terminal" mechanism (still open).** Separate
+1. **Physical "terminal" mechanism (still open).** Separate
    `hermes -p <profile> --tui` sessions vs `delegate_task` vs background
    terminals — decide by usage. Operator leaned "separate terminals" →
    per-project TUI + 3V0 orchestrator.
-3. **Position snapshots** — re-record after the Stone-18 commit
+2. **Position snapshots** — re-record after this session's commits
    (`drift_check.py --update`). Ongoing practice: the daemon tick is
    report-only; `--update` is a deliberate commit.
-4. **Upstream loops (all wait state):** #86711 MERGEABLE; #72067 CONFLICTING
+3. **Upstream loops (all wait state):** #86711 MERGEABLE; #72067 CONFLICTING
    (author's job); #73453 MERGEABLE; #84667 still waiting on the reporter's
    `<error>` string. Live state now lives in `HANDOFF.generated.md`; when a
    loop changes, update `claims.json` and run `continuity_check.py --accept`.
@@ -530,39 +537,13 @@ drift before picking up the follow-ups.
 
 ## Open loops
 
-> The canonical loop list + live state now lives in `HANDOFF.generated.md`
-> (regenerated each wake) and `3v0/data/continuity/claims.json` (the single
-> source of truth). The numbered notes below are the *narrative* per loop —
-> what to do and why — not the state. When a loop changes, edit `claims.json`
-> and run `python3 3v0/scripts/continuity_check.py --accept`.
-
-1. **PR #86711** — CI approved, now MERGEABLE. Awaiting a maintainer to merge.
-   Nothing to do; check back: `gh pr checks 86711 --repo NousResearch/hermes-agent`.
-2. **#84667** — reporter may post the `<error>` string. If it confirms a
-   branch, the *root-cause* fix (if any) may be unclaimed, but the reporting
-   fix is #73453 — don't duplicate it. If the error is "… is disabled" and
-   #73453 later merges/abandons, reconsider. Otherwise just wait.
-3. **#86705** — superseded by #72067. Nothing to do unless #72067 itself
-   stalls or closes; then a recovery-based fix (not reject-with-error) is
-   the right shape. (#72067's mergeability is volatile — was `CONFLICTING`,
-   currently `UNKNOWN`; re-checked at every startup. Either way it's the
-   author's job to resolve.)
-4. **DONE (2026-08-15): body synced with upstream.** Rebased the 36 local
-   3v0 commits onto upstream's tip (was 357 behind, now 0 behind / 37 ahead
-   incl. the revert commit). Zero-conflict: the 36 commits touch only `3v0/`
-   + docs + two fix files, none of which upstream had modified (verified via
-   merge-base file-overlap check before rebasing). Also dropped the
-   superseded `tools/memory_tool.py` null-action patch (canonical fix is
-   #72067) so that file matches upstream byte-for-byte — it would otherwise
-   have conflicted again when #72067 lands. Backup branch
-   `backup/pre-rebase-2026-08-15` still exists at the pre-rebase HEAD if a
-   recovery is ever needed. *Remaining drift follow-ups (optional, not
-   urgent):* `fork/main` is ~1600 commits behind upstream — the fork is only
-   a PR conduit, so its `main` was never synced and feature-branch PRs don't
-   depend on it; and the runtime checkout `~/.hermes/hermes-agent/` is a
-   separate checkout now well behind the body (install deps into its `venv/`).
-   Re-check body drift any time with
-   `git fetch origin && git rev-list --count HEAD..origin/main`.
+Mechanical state (which loops are tracked, their live state, mergeability) is
+canonical in `HANDOFF.generated.md` (regenerated each wake) and
+`3v0/data/continuity/claims.json` (the single source of truth). When a loop
+changes, edit `claims.json` and run `python3 3v0/scripts/continuity_check.py
+--accept`. Per-loop narrative ("what to do and why") lives in the
+"What the last sessions did" arc and "Hard-won lessons" below — this section
+no longer re-copies loop state (that re-copying was the drift source).
 
 ## Hard-won lessons (also in memory)
 - The upstream tracker is heavily contended. **Check for existing PRs before

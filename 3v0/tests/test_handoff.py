@@ -87,9 +87,13 @@ class TestRenderHandoff(unittest.TestCase):
                        "## Open loops", "## Store", "## Daemons", "## Startup (canonical)"):
             self.assertIn(header, md, header)
 
-    def test_never_canonical_banner(self):
+    def test_banner_marks_mechanical_state_canonical(self):
         md = render_handoff(_ctx())
         self.assertIn(GENERATED_BANNER, md)
+        # The flip is operator-authorized: the draft is canonical for
+        # mechanical state, and the narrative stays hand-written.
+        self.assertIn("canonical since 2026-08-16", GENERATED_BANNER)
+        self.assertIn("HANDOFF.md", GENERATED_BANNER)
 
     def test_includes_loop_numbers_and_states(self):
         md = render_handoff(_ctx())

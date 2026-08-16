@@ -6,7 +6,8 @@ a flat, JSON-safe context dict of collected facts and renders the mechanical
 (``scripts/generate_handoff.py``) gathers the facts; this module only
 *renders* and *decides*.
 
-The generated draft is **never canonical**. It carries the mechanical state a
+The generated draft is the **canonical carrier of mechanical state** since
+2026-08-16 (operator-authorized flip). It carries the mechanical state a
 fresh session must know and that drifts when hand-maintained: body git state,
 continuity invariants, the project-ledger drift report, the open upstream
 loops (from the claim registry + live GitHub), store counts, and daemon
@@ -15,13 +16,13 @@ judgment, the last-sessions arc, the hard-won lessons — which is 3V0's own
 account and must never be auto-generated (auto-rewriting one's own narrative
 is the self-reinforcing-bias trap named as weakness #2).
 
-The acceptance mechanism is the **shadow diff**: each wake the generated
-draft is diffed against the hand-written one. The loop-claim diff
-(``diff_loop_claims``) specifically measures how far the hand-written
-narrative's loop-state assertions have drifted from live reality — the exact
-failure the grill found in 2026-08-16 (three hand-synced loop lists that had
-already diverged). The flip from hand-written to generated is the Operator's
-call, never self-authorized; this module only produces the evidence.
+The loop-claim diff (``diff_loop_claims``) now serves as **ongoing drift
+monitoring**, not acceptance evidence: each wake it measures how far the
+hand-written narrative's loop-state assertions have drifted from live reality
+— the exact failure the grill found in 2026-08-16 (three hand-synced loop
+lists that had already diverged). The flip was the Operator's explicit call
+(2026-08-16), never self-authorized; this module produces the canonical
+mechanical state and the drift signal that guards it.
 
 Pure by construction: ``render_handoff`` and ``diff_loop_claims`` read the
 context dict and a string, and return strings / lists — no filesystem, no
@@ -43,11 +44,13 @@ GH_STATES = ("OPEN", "CLOSED", "MERGED")
 _STATE_RE = re.compile(r"\b(OPEN|CLOSED|MERGED)\b")
 
 GENERATED_BANNER = (
-    "> \u26a0\ufe0f MECHANICAL DRAFT \u2014 never canonical. Generated from "
-    "verified-consistent state by `3v0/scripts/generate_handoff.py`. The "
-    "hand-written `HANDOFF.md` is canonical. Diff this against `HANDOFF.md` "
-    "each wake; the diff is the acceptance evidence for the generated-handoff "
-    "flip, which is the Operator's call and never self-authorized."
+    "> \u26a0\ufe0f MECHANICAL STATE \u2014 canonical since 2026-08-16 "
+    "(operator-authorized). Generated from verified-consistent state by "
+    "`3v0/scripts/generate_handoff.py`; regenerated each wake. This file is "
+    "authoritative for mechanical state: body, continuity invariants, drift, "
+    "tracked loops, store, daemons. The narrative (kickoff, last-sessions arc, "
+    "hard-won lessons) stays hand-written in `HANDOFF.md` \u2014 never "
+    "auto-generated. Read both."
 )
 
 
@@ -263,7 +266,7 @@ def render_handoff(ctx: dict) -> str:
     mirror of the hand-written handoff's drift-prone parts.
     """
     parts: List[str] = []
-    parts.append("# 3V0 \u2014 Session Handoff (GENERATED DRAFT)")
+    parts.append("# 3V0 \u2014 Session Handoff (MECHANICAL STATE, generated)")
     parts.append("")
     parts.append(GENERATED_BANNER)
     parts.append("")

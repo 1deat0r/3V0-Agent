@@ -9,10 +9,10 @@ invariant report, the project-ledger drift report, the tracked upstream loops
 diff (how far the hand-written ``HANDOFF.md``'s loop-state assertions have
 drifted from live reality).
 
-The draft is **never promoted**: it writes only ``HANDOFF.generated.md`` and
-never touches the canonical ``HANDOFF.md``. The flip from hand-written to
-generated is the Operator's call, never self-authorized; this script only
-produces the evidence (the diff over wakes).
+The draft is the **canonical carrier of mechanical state** (operator-
+authorized flip, 2026-08-16): it writes only ``HANDOFF.generated.md`` and
+never touches the narrative ``HANDOFF.md``. The loop-claim diff is ongoing
+drift monitoring between the hand-written narrative and live reality.
 
 Modes:
   (default)     collect + render + write HANDOFF.generated.md + print the
@@ -233,7 +233,7 @@ def _handwritten() -> str:
 
 
 def _print_loop_diff(loop_diff: list) -> None:
-    print("Loop-claim shadow diff (HANDOFF.md vs live):")
+    print("Loop-claim drift (HANDOFF.md narrative vs live):")
     for d in loop_diff:
         mark = {"drift": "DRIFT", "agree": "agree", "unmentioned": "unmentioned", "unverifiable": "unverifiable"}[d["status"]]
         print(

@@ -1359,16 +1359,20 @@ claim when live is unverifiable). `MERGEABLE`/`CONFLICTING` are the
 positive. Outcomes: `agree` / `drift` / `unmentioned` (number present, no
 state asserted) / `unverifiable`.
 
-### The flip stays the Operator's
+### The flip — authorized and executed (2026-08-16)
 
-Generating a *draft* is mechanical; promoting it to the canonical handoff is
-a self-modification of 3V0's own narrative and is **never self-authorized**.
-The acceptance criterion is now concrete: the shadow diff clean (no `drift`)
-for N consecutive wakes, with the flip made by the Operator on the basis of
-that evidence. Until then, `HANDOFF.md` stays canonical and the mechanical
-sections of the hand-written file should simply *reference* the generated
-draft rather than re-copy its numbers (that re-copying is the drift source
-this stone retires).
+Generating a *draft* is mechanical; promoting it to the canonical handoff was
+a self-modification of 3V0's own narrative and was **never self-authorized**.
+The Operator made that call explicitly this session (2026-08-16), at one
+clean wake rather than "N consecutive wakes": `HANDOFF.generated.md` is now
+the **canonical carrier of mechanical state** (body, continuity, drift,
+loops, store, daemons), regenerated each wake. `HANDOFF.md` keeps the
+*narrative* and no longer re-copies mechanical numbers — its "Open loops"
+section is now a pointer to the generated draft + the claim registry, and its
+header states the division. The loop-claim diff survives the flip as
+**ongoing drift monitoring**: a `DRIFT` line still means the hand-written
+narrative has diverged from live reality, but it is no longer "acceptance
+evidence for a future flip" — the flip already happened.
 
 ### Design decisions (recorded)
 

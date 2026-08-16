@@ -778,7 +778,7 @@
       "source": "session-review",
       "created_at": "2026-08-16T03:32:41Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "ca5b9e6325a3",
       "note": ""
     },
     {
@@ -812,6 +812,18 @@
       "source": "session-review",
       "created_at": "2026-08-16T04:25:27Z",
       "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "ca5b9e6325a3",
+      "content": "HANDOFF.generated.md = canonical mechanical state (body/continuity/drift/loops/store/daemons), regenerated each wake by handoff_check.sh; HANDOFF.md = narrative; claims.json = loop source of truth (operator flip 2026-08-16).",
+      "kind": "memory",
+      "source": "foreground",
+      "created_at": "2026-08-16T04:46:18Z",
+      "supersedes": [
+        "edab8653cee9"
+      ],
       "superseded_by": "",
       "note": ""
     }
