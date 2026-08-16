@@ -2,12 +2,14 @@
 
 > ⚠️ MECHANICAL STATE — canonical since 2026-08-16 (operator-authorized). Generated from verified-consistent state by `3v0/scripts/generate_handoff.py`; regenerated each wake. This file is authoritative for mechanical state: body, continuity invariants, drift, tracked loops, store, daemons. The narrative (kickoff, last-sessions arc, hard-won lessons) stays hand-written in `HANDOFF.md` — never auto-generated. Read both.
 
-Generated: 2026-08-16T05:01:37Z · body HEAD `cace12e9e`
+Generated: 2026-08-16T05:04:11Z · body HEAD `0fc19db12`
 
 ## Body
-branch `main` · ahead 95 · behind 0 · working tree clean
+branch `main` · ahead 97 · behind 0 · working tree clean
 
 ```
+0fc19db12 docs(3v0): handoff kickoff — wake #4 reconciliation + arc bullet
+af7513e42 ledger(3v0): re-anchor position baseline + regenerate generated handoff
 cace12e9e docs(3v0): reconcile loop-claim OPEN assertions in handoff narrative
 6e9b060a9 ledger(3v0): record post-flip position baseline + regenerate generated handoff
 7dd4b4337 feat(3v0): operator-authorized flip — generated handoff is canonical mechanical state
@@ -16,8 +18,6 @@ cace12e9e docs(3v0): reconcile loop-claim OPEN assertions in handoff narrative
 84d4e4181 ledger(3v0): record post-Stone-18 position baseline (drift_check --update)
 21684b941 memory(3v0): daemon captured grill-session facts (fault-injection acceptance + continuity-before-heal)
 8603d265a feat(3v0): Stone 18 — shadow generated handoff (render + loop-claim diff + CLI)
-18e3f64e4 docs(3v0): handoff — deferral resolved by research: fault-injection acceptance + shadow-mode draft-first
-30f87785f test(3v0): fault-injection (chaos) validation of the continuity clock's collection half
 ```
 
 ## Continuity
@@ -31,9 +31,9 @@ cace12e9e docs(3v0): reconcile loop-claim OPEN assertions in handoff narrative
 summary: 0 drifting, 6 ok
 
 ## Drift (project ledger)
-- OK    Axiom (axiom)  behind=0 ahead=25  dirty=no  [head moved]
+- OK    Axiom (axiom)  behind=0 ahead=25  dirty=no
 - OK    F1NANCE (f1nance)  behind=0 ahead=41  dirty=no
-- OK    3V0 (threev0)  behind=0 ahead=95  dirty=no  [head moved]
+- OK    3V0 (threev0)  behind=0 ahead=97  dirty=no  [head moved]
 
 summary: 0 drifting, 3 ok
 
