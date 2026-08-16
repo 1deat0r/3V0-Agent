@@ -826,6 +826,26 @@
       ],
       "superseded_by": "",
       "note": ""
+    },
+    {
+      "id": "82848b07d347",
+      "content": "Operator prefers 3V0 TUI with a carbon-fiber palette (matte charcoal + titanium silver + EVO-green signal) and no visible Hermes/Nous branding.",
+      "kind": "user",
+      "source": "session-review",
+      "created_at": "2026-08-16T08:34:59Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "bc67403adc4f",
+      "content": "3V0's active skin is `3v0` (carbon-fiber) at ~/.hermes/profiles/3v0/skins/3v0.yaml, display.skin=3v0; TUI icon/tagline now skinnable and fork defaults de-branded to 3V0.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-16T08:34:59Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
     }
   ]
 }
