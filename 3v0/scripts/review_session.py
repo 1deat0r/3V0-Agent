@@ -1090,6 +1090,10 @@ def _continuity() -> str:
     heal is a deliberate ``--heal`` (or wake) act, and semantic drift is a
     deliberate-repair flag. Same posture as ``_drift()``: primary-project
     only, best-effort, a failure is a log line, never a crash.
+
+    Runs *before* ``_sync()`` in the tick so the two healable invariants
+    observe pre-heal drift — check-after-heal makes them structurally
+    self-fulfilling (Stone 17 fix, found by an adversarial grill 2026-08-16).
     """
     if not PRIMARY:
         return "skipped:not-primary"
@@ -1120,6 +1124,23 @@ def _continuity() -> str:
     suffix = f" ({', '.join(names)})" if names else ""
     _log_run(f"continuity pass: {drifting}/{total} drifting{suffix}")
     return "continuity-ok"
+
+
+def _tick() -> None:
+    """One maintenance-clock pass (Stone 17 fix): report continuity invariants
+    BEFORE healing, so the clock can observe pre-heal drift.
+
+    Order is load-bearing: ``_continuity()`` first — the two healable
+    invariants (``memory-profile``, ``skills-store``) must see the
+    store/profile state as it stands before ``_sync()`` reconciles it,
+    otherwise they are structurally self-fulfilling and can never fire.
+    ``_sync()`` then heals, ``_drain()`` reviews against the reconciled store,
+    and ``_drift()`` reports the multi-project ledger (independent of the
+    store/profile axis)."""
+    _continuity()
+    _sync()
+    _drain()
+    _drift()
 
 
 def main() -> int:
@@ -1162,17 +1183,14 @@ def main() -> int:
         _sync()  # heal drift first, so the review sees the reconciled store
         return _drain()
 
-    # --daemon: 3V0's own clock — reconcile + drain the backlog every interval
-    # forever, surviving transient failures (a tick error is a log line, not a
-    # crash).
+    # --daemon: 3V0's own clock — report continuity invariants (pre-heal),
+    # reconcile, drain the backlog, and report drift every interval forever,
+    # surviving transient failures (a tick error is a log line, not a crash).
     _log_run(f"daemon started (interval={args.interval}s)")
     try:
         while True:
             try:
-                _sync()
-                _drain()
-                _drift()
-                _continuity()
+                _tick()
             except Exception as e:  # noqa: BLE001 - a daemon must not die on a tick error
                 _log_run(f"daemon tick error: {e}")
             time.sleep(args.interval)

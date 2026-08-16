@@ -1365,6 +1365,31 @@ class TestContinuityTick(Env):
             os.environ.pop("THREEV0_REVIEW_LOG", None)
 
 
+class TestTickOrder(Env):
+    """Stone 17 fix: the tick must report continuity BEFORE healing, so the two
+    healable invariants observe pre-heal drift instead of being structurally
+    self-fulfilling (check-after-heal — found by an adversarial grill,
+    2026-08-16)."""
+
+    def test_tick_checks_continuity_before_syncing(self):
+        os.environ["THREEV0_REVIEW_LOG"] = str(self.review_log)
+        try:
+            mod = _load_driver()
+            order = []
+
+            def rec(name):
+                return lambda: order.append(name)
+
+            with mock.patch.object(mod, "_continuity", side_effect=rec("continuity")), \
+                    mock.patch.object(mod, "_sync", side_effect=rec("sync")), \
+                    mock.patch.object(mod, "_drain", side_effect=rec("drain")), \
+                    mock.patch.object(mod, "_drift", side_effect=rec("drift")):
+                mod._tick()
+            self.assertEqual(order, ["continuity", "sync", "drain", "drift"])
+        finally:
+            os.environ.pop("THREEV0_REVIEW_LOG", None)
+
+
 class TestLLMRetry(unittest.TestCase):
     """Stone 12: transient transport errors are retried with backoff inside a
     single review; malformed payloads and empty content are not retried as

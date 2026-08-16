@@ -24,6 +24,10 @@ echo
 git log --oneline -10
 echo
 
+echo "== CONTINUITY CHECK (invariants, pre-heal) =="
+python3 3v0/scripts/continuity_check.py 2>&1
+echo
+
 echo "== SYNC (store canonical -> profile) =="
 python3 3v0/scripts/sync.py --write 2>&1
 echo
@@ -49,8 +53,4 @@ done
 
 echo "== DRIFT CHECK (project ledger) =="
 python3 3v0/scripts/drift_check.py 2>&1
-echo
-
-echo "== CONTINUITY CHECK (invariants) =="
-python3 3v0/scripts/continuity_check.py 2>&1
 echo
