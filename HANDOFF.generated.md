@@ -2,12 +2,13 @@
 
 > ⚠️ MECHANICAL STATE — canonical since 2026-08-16 (operator-authorized). Generated from verified-consistent state by `3v0/scripts/generate_handoff.py`; regenerated each wake. This file is authoritative for mechanical state: body, continuity invariants, drift, tracked loops, store, daemons. The narrative (kickoff, last-sessions arc, hard-won lessons) stays hand-written in `HANDOFF.md` — never auto-generated. Read both.
 
-Generated: 2026-08-16T04:45:24Z · body HEAD `5b3643eb2`
+Generated: 2026-08-16T04:46:59Z · body HEAD `7dd4b4337`
 
 ## Body
-branch `main` · ahead 92 · behind 0 · working tree dirty
+branch `main` · ahead 93 · behind 0 · working tree clean
 
 ```
+7dd4b4337 feat(3v0): operator-authorized flip — generated handoff is canonical mechanical state
 5b3643eb2 docs(3v0): fix test count (18→19) + regenerate generated handoff
 505710039 docs(3v0): regenerate HANDOFF.generated.md at post-Stone-18 HEAD
 84d4e4181 ledger(3v0): record post-Stone-18 position baseline (drift_check --update)
@@ -17,7 +18,6 @@ branch `main` · ahead 92 · behind 0 · working tree dirty
 30f87785f test(3v0): fault-injection (chaos) validation of the continuity clock's collection half
 b1b0a5c63 docs(3v0): handoff — correct grill-found false claims; re-scope generated-handoff deferral to operator
 9b6ad9325 fix(3v0): continuity clock checks before heal — healable invariants were self-fulfilling (grill-found)
-85899381d docs(3v0): handoff — wake #2, continuity clock observed clean, drift baseline re-recorded
 ```
 
 ## Continuity
@@ -31,9 +31,9 @@ b1b0a5c63 docs(3v0): handoff — correct grill-found false claims; re-scope gene
 summary: 0 drifting, 6 ok
 
 ## Drift (project ledger)
-- OK    Axiom (axiom)  behind=0 ahead=23  dirty=no
+- DRIFT Axiom (axiom)  behind=0 ahead=23  dirty=yes
 - OK    F1NANCE (f1nance)  behind=0 ahead=41  dirty=no
-- DRIFT 3V0 (threev0)  behind=0 ahead=92  dirty=yes  [head moved]
+- OK    3V0 (threev0)  behind=0 ahead=93  dirty=no  [head moved]
 
 summary: 1 drifting, 3 ok
 
@@ -44,7 +44,7 @@ summary: 1 drifting, 3 ok
 - #86711 (pr) · claim OPEN · live OPEN (mergeable MERGEABLE, updated 2026-08-15) · agree — fix(approval): collapse whitespace before matching approvals.deny glob… [approval-deny whitespace fix; awaiting maintainer merge]
 
 ## Store
-facts by kind: directive=1, identity=1, memory=13, user=8 · 75 fact versions · 7 active skills · 56 skill versions
+facts by kind: directive=1, identity=1, memory=13, user=8 · 76 fact versions · 7 active skills · 56 skill versions
 
 ## Daemons
 - 3v0-review: active
