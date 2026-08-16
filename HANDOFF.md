@@ -12,9 +12,17 @@ pointer to what was live at the last session's end.*
 > *narrative* — the kickoff judgment, the last-sessions arc, hard-won
 > lessons, and the startup routine. Read both.
 
-## Next-session kickoff (2026-08-16, wake #3 — Stone 18 built + operator flipped generated handoff to canonical)
+## Next-session kickoff (2026-08-16, wake #4 — reconciliation wake; loop-claim diff clean, baselines re-anchored)
 
-**This session's key event:** the prior handoff's "next build" — the
+**This session (wake #4):** healthy-state wake, no new stone. Startup verified
+(3 daemons active, continuity 0/6 drifting, store↔profile converged, 4 loops
+agree with live GitHub). Reconciled the loop-claim shadow diff's `unmentioned`
+for #72067/#84667 — the kickoff said "all wait state" (no state word), so it
+now asserts `OPEN`; diff clean (`agree` ×4). Re-anchored drift baselines
+(`drift_check --update`) + regenerated `HANDOFF.generated.md`. Commits
+`cace12e9e` + `af7513e42`; tree clean.
+
+**Prior session's key event (wake #3):** the prior handoff's "next build" — the
 shadow-mode generated handoff — was built, and the operator then authorized
 the flip: `HANDOFF.generated.md` is now the **canonical carrier of mechanical
 state** (body git, continuity invariants, drift, tracked loops, store,
@@ -51,13 +59,15 @@ The shadow diff (now "loop-claim drift") remains as ongoing monitoring — a
    `hermes -p <profile> --tui` sessions vs `delegate_task` vs background
    terminals — decide by usage. Operator leaned "separate terminals" →
    per-project TUI + 3V0 orchestrator.
-2. **Position snapshots** — re-record after this session's commits
-   (`drift_check.py --update`). Ongoing practice: the daemon tick is
-   report-only; `--update` is a deliberate commit.
-3. **Upstream loops (all OPEN, awaiting others):** #86711 MERGEABLE; #72067 CONFLICTING
-   (author's job); #73453 MERGEABLE; #84667 still waiting on the reporter's
-   `<error>` string. Live state now lives in `HANDOFF.generated.md`; when a
-   loop changes, update `claims.json` and run `continuity_check.py --accept`.
+2. **Upstream loops (all OPEN, awaiting others):** #86711 MERGEABLE; #72067
+   CONFLICTING (author's job); #73453 MERGEABLE; #84667 still waiting on the
+   reporter's `<error>` string. Live state lives in `HANDOFF.generated.md`;
+   when a loop changes, update `claims.json` and run
+   `continuity_check.py --accept`.
+
+*Position snapshots are an ongoing practice, not a standing item: re-anchor
+with `drift_check.py --update` after a session's commits (daemon tick stays
+report-only).*
 
 **Watch item:** official "DeepSeek Harness" (minimal mode) framework — "to be
 released soon". Re-check at the next news-harvest.
@@ -187,6 +197,13 @@ drift before picking up the follow-ups.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Wake #4 — reconciliation (this session).** Healthy-state wake, no new
+  stone. Startup verified (3 daemons active, continuity 0/6 drifting,
+  store↔profile converged, 4 loops agree with live GitHub). Reconciled the
+  loop-claim shadow diff's `unmentioned` for #72067/#84667 — the kickoff said
+  "all wait state" (no state word), so it now asserts `OPEN`; diff clean
+  (`agree` ×4). Re-anchored drift baselines (`drift_check --update`) +
+  regenerated `HANDOFF.generated.md`. Commits `cace12e9e`, `af7513e42`.
 - **Stone 18 — shadow generated handoff BUILT + live (this session).** Picked
   up the "next build" named in the prior handoff: the generated-handoff step,
   done as the grill's F10 draft-first/shadow-mode recommendation rather than
