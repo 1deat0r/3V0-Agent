@@ -4,22 +4,31 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, Stone 17 BUILT + claim registry)
+## Next-session kickoff (2026-08-16, wake #2 — continuity clock observed clean)
 
-Stone 17 (the continuity meta) is **LIVE and verified** this session: the
-anchor (`3v0/CONTINUITY.md`), the pure invariant model
-(`3v0/core/continuity.py` — six invariants), the reconstruction clock
-(`3v0/scripts/continuity_check.py` — `--json` / `--heal` / `--accept` /
-`--fail-on-drift`), the loop claim registry
-(`3v0/data/continuity/claims.json`), wired into `handoff_check.sh` (wake) +
-the `3v0-review` daemon tick (`_continuity()`). 220 native-core tests green
-(+32). The clock reports all 6 invariants OK against the real body.
+Stone 17 (the continuity meta) is **LIVE and observed clean across two
+wakes + many daemon ticks.** Wake #2 (this session) verified: all 6
+invariants OK at wake; the daemon logs `continuity pass: 0/6 drifting` on
+every tick; and the clock re-reads the live body in flight (the
+`github-loops` invariant landed mid-daemon-run and the tick transitioned
+0/5 → 0/6 with no restart — the self-describing/live-re-read property
+working as designed). The clock also caught real drift in the wild: the
+daemon's own Stone-17 store capture (a review drained at 03:32 UTC wrote
+`memory.json` *after* the wake sync) surfaced as `store=changed`; committed
+it (`908dc2dd4`) plus a post-Stone-17 drift baseline re-record
+(`543f67a26`). Drift is now honest: Axiom behind=22 (routine merge debt),
+3V0 + F1NANCE clean (F1NANCE's session committed its own work mid-wake).
 
-**NEXT (no new task queued — observe first).** Let the clock prove itself
-across a few wakes before the one remaining honest follow-up: generating the
-handoff summary from the ledger instead of hand-writing it. (The SOUL
-non-contradiction check is dropped — beliefs-as-predicates is low value.)
-Scoped follow-up list in `3v0/EVOLUTION_LOOP.md` → "Direction 6 / Stone 17".
+**NEXT.** The clock has proven itself (2 clean wakes + ~20 clean daemon
+ticks + caught real drift). One more observation wake, then build the
+remaining honest follow-up: **generating the handoff summary from the
+verified-consistent ledger state** instead of hand-writing it (the design's
+"reconstruction clock → generated handoff" step — deferred until the clock
+proved trustworthy; it now has). Semantic divergence stays *flagged for
+deliberate repair*, never auto-rewritten (the self-reinforcing-bias trap).
+The SOUL non-contradiction check stays dropped (beliefs-as-predicates = low
+value). Scoped follow-up list in `3v0/EVOLUTION_LOOP.md` → "Direction 6 /
+Stone 17".
 
 **Closed this session — news-harvest.** Researched the AI landscape and
 harvested the concrete residue:
@@ -33,13 +42,14 @@ harvested the concrete residue:
   amendment warranted); tooling (provider already correct; `minimal→high` gap
   is marginal); GNAP (solves inter-agent task-passing, not my drift concern).
 
-**Remaining open items (unchanged):**
+**Remaining open items:**
 1. **Physical "terminal" mechanism (still open).** Separate
    `hermes -p <profile> --tui` sessions vs `delegate_task` vs background
    terminals — decide by usage. Operator leaned "separate terminals" →
    per-project TUI + 3V0 orchestrator.
-2. **Position snapshots** — `drift_check.py --update` records a deliberate
-   snapshot; the daemon tick is report-only.
+2. **Position snapshots** — re-recorded this wake (`543f67a26`). Ongoing
+   practice: `drift_check.py --update` records a deliberate snapshot; the
+   daemon tick is report-only.
 3. **Upstream loops (all wait state):** #86711 MERGEABLE; #72067 CONFLICTING
    (author's job); #73453 MERGEABLE; #84667 still waiting on the reporter's
    `<error>` string.
