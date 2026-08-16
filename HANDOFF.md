@@ -12,15 +12,21 @@ pointer to what was live at the last session's end.*
 > *narrative* — the kickoff judgment, the last-sessions arc, hard-won
 > lessons, and the startup routine. Read both.
 
-## Next-session kickoff (2026-08-16, wake #4 — reconciliation wake; loop-claim diff clean, baselines re-anchored)
+## Next-session kickoff (2026-08-16, wake #5 — healthy wake; DeepSeek Harness watch item resolved)
 
-**This session (wake #4):** healthy-state wake, no new stone. Startup verified
-(3 daemons active, continuity 0/6 drifting, store↔profile converged, 4 loops
-agree with live GitHub). Reconciled the loop-claim shadow diff's `unmentioned`
-for #72067/#84667 — the kickoff said "all wait state" (no state word), so it
-now asserts `OPEN`; diff clean (`agree` ×4). Re-anchored drift baselines
-(`drift_check --update`) + regenerated `HANDOFF.generated.md`. Commits
-`cace12e9e` + `af7513e42`; tree clean.
+**This session (wake #5):** clean startup (3 daemons active, continuity 0/6
+drifting, store↔profile converged, 4 loops agree with live GitHub, drift 0/3).
+Resolved the **DeepSeek Harness** watch item: `deepseek-ai/deepseek-harness`
+released 2026-08-13 (MIT, CLI `dsh`, "everything is a plugin", four modes,
+Minimal = the benchmark harness). Harvested into `3v0/data/news/2026-08-16.md`
++ the `self-maintenance` skill; the `native-store-bridge` mirror captured the
+skill patch store-first (loop re-verified end-to-end). No net-new residue —
+plugin-first + append-only provenance already held; Prime Directive untouched.
+Commits `18d198c9e` + `db34b2a0e`; tree clean.
+
+**Prior session (wake #4):** reconciliation wake — no new stone. Reconciled the
+loop-claim shadow diff (`unmentioned` → `OPEN` for #72067/#84667); re-anchored
+drift baselines. Commits `cace12e9e` + `af7513e42`.
 
 **Prior session's key event (wake #3):** the prior handoff's "next build" — the
 shadow-mode generated handoff — was built, and the operator then authorized
@@ -69,8 +75,8 @@ The shadow diff (now "loop-claim drift") remains as ongoing monitoring — a
 with `drift_check.py --update` after a session's commits (daemon tick stays
 report-only).*
 
-**Watch item:** official "DeepSeek Harness" (minimal mode) framework — "to be
-released soon". Re-check at the next news-harvest.
+**Watch item (RESOLVED, wake #5):** DeepSeek Harness shipped 2026-08-13 (MIT,
+`dsh`). Full record in `3v0/data/news/2026-08-16.md` + `self-maintenance`.
 
 **Axiom launch (fixed):** `~/.local/bin/axiom` = env-isolating launcher →
 Axiom's own `.venv/bin/hermes -p axiom` (never run raw).
@@ -197,6 +203,14 @@ drift before picking up the follow-ups.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Wake #5 — clean wake + DeepSeek Harness watch resolved (this session).**
+  Startup clean (3 daemons, continuity 0/6, store↔profile converged, 4 loops
+  agree, drift 0/3). Resolved the queued watch item: DeepSeek Harness released
+  2026-08-13 (MIT, `dsh`, "everything is a plugin", Minimal mode = the
+  benchmark harness — persistent bash + file editor). Harvested into
+  `3v0/data/news/2026-08-16.md` + `self-maintenance` skill (bridge mirrored the
+  patch store-first). No net-new residue: plugin-first + append-only provenance
+  already held; Prime Directive untouched. Commits `18d198c9e`, `db34b2a0e`.
 - **Wake #4 — reconciliation (this session).** Healthy-state wake, no new
   stone. Startup verified (3 daemons active, continuity 0/6 drifting,
   store↔profile converged, 4 loops agree with live GitHub). Reconciled the
