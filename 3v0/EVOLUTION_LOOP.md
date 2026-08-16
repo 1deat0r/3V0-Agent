@@ -1066,14 +1066,87 @@ into the sibling's sidecar store. They're true, durable, and not lost; a future
 stone could route such facts to the primary store, but cross-store dedup isn't
 worth it now.
 
-### Still open (unchanged, explicit)
+### Still open (updated 2026-08-16)
 
 - **Profile MEMORY.md sharing** — sibling `memory`-tool writes still land in
-  the shared profile's MEMORY.md; the clean fix is moving siblings onto their
-  own profiles (F1NANCE already has `~/.hermes/profiles/f1nance`; Axiom does
-  not).
+  the shared profile's MEMORY.md. Axiom now has its own profile too
+  (`~/.hermes/profiles/axiom`, created 2026-08-16, alongside F1NANCE's), so the
+  profile-per-sibling precondition is met; the *routing* is the remaining gap
+  (below).
 - **Sibling foreground write mirror** — the bridge's `_is_threev0_cwd` gate
   (Stone 10) still *refuses* sibling foreground `memory`/`skill_manage` writes
   rather than routing them to sibling stores; the review daemons are the only
   sibling writers today.
+
+---
+
+## Direction 5 / Stone 16 — multi-project parallel development meta (proposed)
+
+The operator's ask (2026-08-16): 3V0 develops **3V0 + F1NANCE + Axiom in
+parallel**, "separate terminals per project" as a first-class feature, and a
+**drift-prevention meta** so N projects (today 3, soon 5+) don't diverge.
+Stone 15 built the per-project *reviewers*; this stone designs the per-project
+*development* meta on top of them.
+
+### The drift problem (precise)
+
+Three Hermes hardforks developed in parallel drift in three ways:
+
+1. **Code drift** — each fork diverges from upstream Hermes and from the
+   others; some divergence is deliberate (typed deltas), some accidental
+   (missed upstream merge, a shared fix applied in only one fork).
+2. **State drift** — the same decision/fact recorded differently (or not at
+   all) across stores/profiles.
+3. **Position drift** — losing track of where each project stands (HEAD, open
+   loops, what's next).
+
+Drift is *silent* unless the architecture makes it visible.
+
+### The meta: "one spine, N typed deltas, one ledger, one clock"
+
+1. **Spine (anchor).** All projects fork Hermes `main`; every project merges
+   `upstream` on a cadence. Divergence from upstream is a *deliberate,
+   recorded* delta (3V0's `3v0/` core, Axiom's spend cap, F1NANCE's finance
+   layer) — never accidental. Code drift is bounded by the merge ritual:
+   "differs from Hermes" is always an explicit named diff, so accidental
+   drift reduces to "missed a merge", which the ledger (below) catches.
+2. **Ledger (position).** One file records each project's position: HEAD,
+   upstream-merge point, delta list, open loops, store head. Stone 15's
+   `core/projects.py` is the embryo (name → repo → store, hardcoded 3-tuple).
+   This stone generalizes it to a **data-driven `ProjectLedger`** (N projects)
+   so "where does each project stand" has a single answer, and drift is a
+   visible diff against it.
+3. **Terminal (isolation).** Each project runs in an isolated context: strict
+   cwd (its repo), own profile (`3v0`/`f1nance`/`axiom` — all now exist),
+   clean env (the `HERMES_*`/`PYTHONPATH` leak-strip built this session — the
+   Axiom `max_run_cost_usd` fix). "Separate terminals" = separate sessions /
+   subagents, each pinned to one project; 3V0 is the orchestrator and writes
+   results back to the ledger.
+4. **Lineage + clock (reconciliation).** Memory/skills already carry
+   supersede/retract lineage (Stones 1–4). Generalize the same discipline to
+   code (commit provenance) and decisions (cross-referenced ADRs). The 6-min
+   daemons (Stones 9–15) are the *clock*: extend their tick to a **drift
+   check** — compare each project's HEAD/store against the ledger and flag
+   divergence. Drift is not prevented by locking; it is made visible,
+   reversible, and bounded.
+
+### First concrete piece (Stone 16 scope)
+
+- `core/projects.py` → `ProjectLedger` (per project: `head`, `upstream_head`,
+  `delta`, `open_loops`, `store_head`, `last_seen_at`) with a data-driven
+  registry (replace the hardcoded `_PROJECT_NAMES` tuple with a
+  `3v0/data/projects/ledger.json` keyed by name).
+- `scripts/drift_check.py` (stdlib): for each project, `git -C <repo> rev-parse
+  HEAD` vs ledger `head`, `git fetch upstream` behind/ahead count, store-dirty
+  flag → one-page drift report.
+- Wire into the daemon tick (drift report folded into the existing sync+drain
+  pass) or run manually via `handoff_check.sh`.
+
+### Open questions (decided later, not this stone)
+
+- The physical "terminal" mechanism — separate `hermes -p <profile> --tui`
+  sessions vs `delegate_task` subagents vs background terminals. The ledger is
+  agnostic; decide by usage.
+- Whether drift is *auto-reconciled* (auto-merge upstream) or only *flagged*.
+  Posture: report-only first; the operator + orchestrator decide the fix.
 
