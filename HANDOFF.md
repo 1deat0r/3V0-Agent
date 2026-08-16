@@ -4,68 +4,53 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, wake #2 — grill found the clock half-blind; fixed)
+## Next-session kickoff (2026-08-16, wake #3 — Stone 18 shadow generated handoff BUILT)
 
-**This session's key event:** the operator asked what would happen if a
-fresh-context subagent grilled 3V0. 3V0 ran it against its own decision to
-defer the "generated handoff" step — and the grill found (and 3V0 verified
-against ground truth) **two false claims in 3V0's own handoff + one design
-flaw**, then 3V0 fixed the flaw:
+**This session's key event:** the prior handoff's "next build" — the
+shadow-mode generated handoff — is now built and live. 3V0 generates
+`HANDOFF.generated.md` mechanically from verified state (body git, continuity
+invariants, drift, tracked loops, store, daemons) and diffs its loop-state
+claims against the hand-written `HANDOFF.md` each wake. The diff is the
+acceptance evidence; the flip to generated-canonical remains the Operator's
+call, never self-authorized.
 
-1. **False claim** — "~20 clean daemon ticks": the continuity clock had run
-   **6** ticks (~30 min old); "~20" conflated it with the Stone-16 drift
-   clock and the sync/drain passes (21/48/56).
-2. **False claim** — "the clock caught real drift in the wild": the
-   continuity clock has **never** flagged drift (every tick 0 drifting).
-   The `store=changed` it was credited with came from the **Stone-16 drift
-   clock** — a different subsystem.
-3. **Design flaw (fixed this session)** — the two healable invariants
-   (`memory-profile`, `skills-store`) were evaluated *after* `_sync()` had
-   already healed them on both the wake and daemon paths, so they were
-   structurally self-fulfilling. **Fixed:** the tick is now
-   `_continuity() → _sync() → _drain() → _drift()` (extracted `_tick()` in
-   `review_session.py`), `handoff_check.sh` runs the continuity check
-   pre-heal, and a `TestTickOrder` regression test locks the order.
-   221 native-core tests green.
+**Built (Stone 18):**
+- `3v0/core/handoff.py` — pure render + loop-claim diff (no I/O; mirrors the
+  continuity/drift split).
+- `3v0/scripts/generate_handoff.py` — collection CLI (`--stdout`/`--json`);
+  writes `HANDOFF.generated.md`, prints the loop-claim shadow diff.
+- `HANDOFF.generated.md` — the committed shadow draft, regenerated each wake,
+  **never promoted** (never touches `HANDOFF.md`).
+- `handoff_check.sh` now derives the tracked-loop list from the claim registry
+  (`3v0/data/continuity/claims.json` — the single source of truth; the old
+  hand-synced `LOOPS` array is gone) and generates the draft as its final
+  step. 18 new tests; 247 native-core tests green.
 
-**The "generated handoff" deferral is resolved by research, not "one more
-wake."** The grill showed the deferral was unfalsifiable — "a few wakes" had
-no threshold or falsifier, and the goalpost already moved once within the
-same paragraph; the self-reinforcing-bias concern is *orthogonal* to deferring
-(the design already says "flag semantic divergence, never auto-rewrite"
-regardless of when the step is built). Research then settled it:
-
-- **Acceptance criterion → fault injection, not waiting.** Chaos-engineering
-  consensus: you don't trust a monitor by watching it *not* fire — you inject
-  the fault and verify it detects it. **Built this session:**
-  `3v0/tests/test_continuity_fault.py` (7 tests) injects each drift class
-  (store↔profile both directions, skills store↔disk, anchor missing/malformed,
-  ledger corrupt, model unreachable) and asserts the clock flags it. This also
-  closes the exact gap the grill exploited — the collection half was never
-  E2E-tested. 228 native-core tests green.
-- **Draft-first → shadow mode** (the standard migration pattern: "run both and
-  compare; the diffs are the specification you never had"). **Next build:**
-  generate `HANDOFF.generated.md` as a side-by-side draft, never auto-promoted,
-  and diff it against the hand-written one each wake — the diff *is* the
-  acceptance evidence.
-- **Flip authorization → still the operator's** (3V0 must not self-authorize
-  its own narrative), with a concrete flip condition now available: shadow
-  diff clean for N consecutive wakes.
-
-Full grill output:
-`~/.hermes/profiles/3v0/cache/delegation/subagent-summary-0-20260816_155014_310523.txt`.
+**Why fault-injection + shadow mode (the grill's verdict, now settled):**
+"trustworthy clock" was unfalsifiable ("a few wakes", no threshold, goalpost
+already moved). The fix is (1) inject drift and assert the clock flags it
+(`3v0/tests/test_continuity_fault.py`), and (2) generate a draft and let the
+wake-over-wake diff *be* the evidence. Design in `3v0/EVOLUTION_LOOP.md`
+(Stone 18).
 
 **Remaining open items:**
-1. **Physical "terminal" mechanism (still open).** Separate
+1. **The flip is the Operator's.** Acceptance = shadow diff clean (no
+   `DRIFT`) for N consecutive wakes; when satisfied, the Operator decides
+   whether a generated handoff becomes canonical. Until then `HANDOFF.md`
+   stays canonical; its mechanical numbers should *reference* the generated
+   draft rather than re-copy (the re-copying is the drift source this stone
+   retires).
+2. **Physical "terminal" mechanism (still open).** Separate
    `hermes -p <profile> --tui` sessions vs `delegate_task` vs background
    terminals — decide by usage. Operator leaned "separate terminals" →
    per-project TUI + 3V0 orchestrator.
-2. **Position snapshots** — re-recorded this wake (`543f67a26`). Ongoing
-   practice: `drift_check.py --update` records a deliberate snapshot; the
-   daemon tick is report-only.
-3. **Upstream loops (all wait state):** #86711 MERGEABLE; #72067 CONFLICTING
+3. **Position snapshots** — re-record after the Stone-18 commit
+   (`drift_check.py --update`). Ongoing practice: the daemon tick is
+   report-only; `--update` is a deliberate commit.
+4. **Upstream loops (all wait state):** #86711 MERGEABLE; #72067 CONFLICTING
    (author's job); #73453 MERGEABLE; #84667 still waiting on the reporter's
-   `<error>` string.
+   `<error>` string. Live state now lives in `HANDOFF.generated.md`; when a
+   loop changes, update `claims.json` and run `continuity_check.py --accept`.
 
 **Watch item:** official "DeepSeek Harness" (minimal mode) framework — "to be
 released soon". Re-check at the next news-harvest.
@@ -76,8 +61,10 @@ Axiom's own `.venv/bin/hermes -p axiom` (never run raw).
 **Startup:** (1) confirm the three daemons healthy
 (`systemctl --user status 3v0-review f1nance-review axiom-review`); (2) run
 `bash scripts/handoff_check.sh` (body audit + store sync + loop re-check +
-drift + continuity); (3) review the continuity report (the Stone 17 clock)
-and act on any flagged drift before picking up the follow-ups.
+drift + continuity + **generated handoff**); (3) review the continuity report
+and the loop-claim shadow diff — any `DRIFT` line means the hand-written
+narrative has diverged from live reality, reconcile it — then act on flagged
+drift before picking up the follow-ups.
 
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
@@ -90,9 +77,10 @@ and act on any flagged drift before picking up the follow-ups.
 2. **Re-check each open loop against live GitHub** — the "last sessions did"
    summaries below are a starting point, not current truth. Run
    `bash scripts/handoff_check.sh` (which now does the body audit + sync +
-   loop re-check in one command; the `LOOPS` array in that script is the
-   single source of truth — keep it in sync with the "Open loops" section
-   below). To dig into a specific loop, e.g.:
+   loop re-check + drift + continuity + generated handoff in one command; the
+   tracked-loop list is derived from `3v0/data/continuity/claims.json` — the
+   single source of truth — and `HANDOFF.generated.md` carries the live
+   state). To dig into a specific loop, e.g.:
    - `gh pr checks 86711 --repo NousResearch/hermes-agent` and `gh pr view 86711`
    - `gh issue view 84667 --repo NousResearch/hermes-agent --json comments`
 3. **Before writing code for any bug:** `gh pr list --repo NousResearch/hermes-agent --search "<issue#>"`
@@ -127,13 +115,16 @@ and act on any flagged drift before picking up the follow-ups.
   (skill_update/retract/absorb decisions, never destroys) +
   `scripts/record_skills.py` (project SKILL.md), closing the
   `threev0_record`-is-memory-only gap.
-  Tests: `python3 -m unittest discover -s 3v0/tests` (214 green). Stone 16
+  Tests: `python3 -m unittest discover -s 3v0/tests` (247 green). Stone 16
   added the drift ledger (`core/projects.py` → data-driven `ProjectLedger` +
   `3v0/data/projects/ledger.json`), `core/drift.py`, `scripts/project.py`
   (onboarding CLI) and `scripts/drift_check.py` (the clock). Stone 17 added
   the continuity meta: `CONTINUITY.md` (anchor), `core/continuity.py`
-  (invariant model), `scripts/continuity_check.py` (the clock). See
-  `3v0/README.md` + `3v0/EVOLUTION_LOOP.md`.
+  (invariant model), `scripts/continuity_check.py` (the clock). Stone 18 added
+  the shadow generated handoff: `core/handoff.py` (pure render + loop-claim
+  diff), `scripts/generate_handoff.py` (collection CLI) →
+  `HANDOFF.generated.md` (never promoted; the diff is the acceptance
+  evidence). See `3v0/README.md` + `3v0/EVOLUTION_LOOP.md`.
 - **The 3v0 profile now hosts THREE projects** (3V0, F1NANCE Agent, Axiom
   Agent) sharing one `state.db`. Operator decision (clarify, 2026-08-16):
   **per-project stores**. The reviewer is scoped by `cwd` (`_is_threev0_cwd`:
@@ -189,6 +180,21 @@ and act on any flagged drift before picking up the follow-ups.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Stone 18 — shadow generated handoff BUILT + live (this session).** Picked
+  up the "next build" named in the prior handoff: the generated-handoff step,
+  done as the grill's F10 draft-first/shadow-mode recommendation rather than
+  "one more observation wake." Added `core/handoff.py` (pure render +
+  loop-claim diff — the diff is the acceptance evidence), `scripts/
+  generate_handoff.py` (collection CLI: body git + continuity + drift + live
+  loops + store + daemons → `HANDOFF.generated.md`, **never promoted**), and
+  wired it into `handoff_check.sh` (final step). Retired the hand-synced
+  `LOOPS` array in `handoff_check.sh` — the tracked-loop list is now derived
+  from the claim registry (`claims.json`, the single source of truth), closing
+  the grill's A7 finding (three hand-synced loop lists). 18 new tests; 247
+  native-core tests green. The flip to generated-canonical stays the
+  Operator's call (acceptance = shadow diff clean for N wakes). Two bugs found
+  and fixed during the build: the `IFS= read` field-splitting bug in the
+  shell loop, and the PR-only `mergeable` gh field breaking the issue loop.
 - **Stone 17 continuity meta BUILT + tested + live-deployed (this session).**
   The design from last session became the body: the **anchor**
   (`3v0/CONTINUITY.md` — Prime Directive + identity + a pointer to the
@@ -523,6 +529,13 @@ and act on any flagged drift before picking up the follow-ups.
   #73453 and re-asking for the error string. No fix to write — claimed.
 
 ## Open loops
+
+> The canonical loop list + live state now lives in `HANDOFF.generated.md`
+> (regenerated each wake) and `3v0/data/continuity/claims.json` (the single
+> source of truth). The numbered notes below are the *narrative* per loop —
+> what to do and why — not the state. When a loop changes, edit `claims.json`
+> and run `python3 3v0/scripts/continuity_check.py --accept`.
+
 1. **PR #86711** — CI approved, now MERGEABLE. Awaiting a maintainer to merge.
    Nothing to do; check back: `gh pr checks 86711 --repo NousResearch/hermes-agent`.
 2. **#84667** — reporter may post the `<error>` string. If it confirms a

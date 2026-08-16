@@ -2,21 +2,17 @@
 # 3V0 handoff/startup audit — run from repo root.
 #
 # Audits the body (git), converges the native store onto the Hermes profile
-# (store is canonical, profile is a derived view), and re-checks the tracked
-# open loops against live GitHub in a single command — instead of the manual
-# multi-command dance.
+# (store is canonical, profile is a derived view), re-checks the tracked open
+# loops against live GitHub, and regenerates the mechanical handoff draft
+# (HANDOFF.generated.md) — instead of the manual multi-command dance.
 #
-# The LOOPS array is the single source of truth for what to re-check.
-# Keep it in sync with the "Open loops" section of HANDOFF.md.
+# The tracked-loop list is derived from the claim registry
+# (3v0/data/continuity/claims.json) — the single source of truth — NOT a
+# hand-synced array. When a loop is added/closed, edit claims.json and
+# `python3 3v0/scripts/continuity_check.py --accept` to re-record its state;
+# the "Open loops" section and the generated draft both follow automatically.
 set -uo pipefail
 REPO="NousResearch/hermes-agent"
-
-LOOPS=(
-  "pr 86711"
-  "pr 72067"
-  "pr 73453"
-  "issue 84667"
-)
 
 echo "== BODY =="
 git status --short --branch
@@ -34,10 +30,25 @@ echo
 python3 3v0/scripts/sync_skills.py --write 2>&1
 echo
 
-echo "== OPEN LOOPS =="
-for entry in "${LOOPS[@]}"; do
-  kind=${entry%% *}
-  num=${entry##* }
+echo "== OPEN LOOPS (claim registry) =="
+LOOP_LINES="$(python3 - <<'PY'
+import json, sys
+try:
+    data = json.load(open("3v0/data/continuity/claims.json", encoding="utf-8"))
+except Exception as e:
+    print(f"claims.json unreadable: {e}", file=sys.stderr)
+    raise SystemExit(0)
+loops = data.get("loops", {})
+for num in sorted(loops, key=lambda n: int(n) if str(n).isdigit() else 0):
+    spec = loops[num] if isinstance(loops[num], dict) else {}
+    print(f'{spec.get("kind", "pr")} {num}')
+PY
+)"
+if [[ -z "$LOOP_LINES" ]]; then
+  echo "(no loops in the claim registry)"
+fi
+while read -r kind num; do
+  [[ -z "$kind" ]] && continue
   echo "--- $kind #$num ---"
   if [[ "$kind" == "pr" ]]; then
     gh pr view "$num" --repo "$REPO" \
@@ -49,8 +60,12 @@ for entry in "${LOOPS[@]}"; do
       --jq '"state=\(.state) updated=\(.updatedAt) title=\(.title)"' 2>&1
   fi
   echo
-done
+done <<< "$LOOP_LINES"
 
 echo "== DRIFT CHECK (project ledger) =="
 python3 3v0/scripts/drift_check.py 2>&1
+echo
+
+echo "== GENERATED HANDOFF (shadow draft) =="
+python3 3v0/scripts/generate_handoff.py 2>&1
 echo
