@@ -46,3 +46,7 @@ for entry in "${LOOPS[@]}"; do
   fi
   echo
 done
+
+echo "== DRIFT CHECK (project ledger) =="
+python3 3v0/scripts/drift_check.py 2>&1
+echo

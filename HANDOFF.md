@@ -4,59 +4,38 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, Stone 16 queued)
+## Next-session kickoff (2026-08-16, Stone 16 landed)
 
-Stone 15 (per-project reviewers/daemons) is landed; this session fixed the
-Axiom launch and **designed Stone 16 — the multi-project parallel development
-meta**, which is now the work to build. Operator-approved direction.
+Stone 16 — the **multi-project parallel development meta** — is built, tested,
+and live: the data-driven drift ledger, the onboarding CLI, and the drift
+clock (report-only, wired into the wake check + the 3v0-review daemon tick).
+Full design + decisions in `3v0/EVOLUTION_LOOP.md` (Stone 16, now "LIVE").
 
-**The goal.** 3V0 develops 3V0 + F1NANCE + Axiom **in parallel**, with
-"separate terminals per project" as a first-class feature and a
-drift-prevention meta. The capability must be **project-agnostic** — applies
-to *any* project people onboard (the three current ones are just seed data),
-not hardcoded to this trio.
-
-**The meta — "one spine, N typed deltas, one ledger, one clock"** (full text
-in `3v0/EVOLUTION_LOOP.md` "Stone 16 — proposed"):
-- **Spine** — all projects fork Hermes `main` + merge `upstream` on a cadence;
-  divergence is a deliberate, named delta (never accidental).
-- **Ledger** — one data-driven file records each project's HEAD / upstream /
-  delta / open-loops; generalize Stone 15's `core/projects.py` (hardcoded
-  3-tuple) to a data-driven N-project registry.
-- **Terminal** — per-project isolation: strict cwd + own profile (`3v0` /
-  `f1nance` / `axiom`, all exist) + clean env. The Axiom leak-strip was the
-  first working piece.
-- **Clock** — the 6-min daemons become a drift check (HEAD/store vs ledger).
-
-**Stone 16 — build this (project-agnostic):**
-1. `core/projects.py` → data-driven `ProjectLedger` (per project: `head`,
-   `upstream_head`, `delta`, `open_loops`, optional `profile`/`store`/
-   `store_head`, `last_seen_at`), keyed by name in
-   `3v0/data/projects/ledger.json` (drop `_PROJECT_NAMES`). The three known
-   projects are seed entries, not the schema.
-2. `scripts/project.py add/list/status/remove` — the onboarding surface: any
-   project (repo + upstream + optional profile + delta) becomes a ledger entry
-   via a command, never a code edit. This is the "apply to any project" face.
-3. `scripts/drift_check.py` (stdlib): iterate the ledger generically — per
-   project, `git -C <repo> rev-parse HEAD` vs ledger, behind/ahead vs
-   `upstream`, store-dirty → one-page report.
-4. Tests (`3v0/tests/test_ledger.py`) + wire into the daemon tick or
-   `handoff_check.sh`; then flip EVOLUTION_LOOP.md from "proposed" to "live".
-5. **Open choice (decide at build time):** the physical "terminal" — separate
+**What remains (the open loops Stone 16 sets up):**
+1. **Axiom restart-from-scratch (IN PROGRESS).** Axiom is being rebuilt on a
+   **Hermes-latest base** + curated best-of from deepseek-harness / grok build
+   / prime-agent. Its ledger entry records that TARGET with an open loop to
+   finalize repo/upstream/delta once the restart lands — do NOT treat its
+   current git lineage (the old PrimeAgent fork) as settled.
+2. **Physical "terminal" mechanism (open question).** Separate
    `hermes -p <profile> --tui` sessions vs `delegate_task` subagents vs
-   background terminals. Ledger is agnostic; operator flagged "separate
-   terminals," so lean per-project TUI sessions + 3V0 as orchestrator.
+   background terminals — the ledger is agnostic; decide by usage. Operator
+   leaned "separate terminals" → per-project TUI sessions + 3V0 orchestrator.
+3. **Position snapshots** — `drift_check.py --update` (or `project.py status
+   --update`) records a deliberate position snapshot to commit; the daemon
+   tick is report-only by design (never dirties the body tree). Run `--update`
+   + commit after notable work, or split position into a gitignored sidecar
+   for fresh per-tick deltas (recorded in EVOLUTION_LOOP as an open option).
 
-**Axiom launch (fixed this session).** `~/.local/bin/axiom` = env-isolating
-launcher → Axiom's own `.venv/bin/hermes -p axiom`, stripping the 3V0-session
-`HERMES_*`/`PYTHONPATH`/`TERMINAL_CWD` leak that caused
-`AIAgent.__init__() got an unexpected keyword argument 'max_run_cost_usd'`.
-Profile `~/.hermes/profiles/axiom/` created. Use `axiom` to launch Axiom's TUI
-for testing (never `.venv/bin/hermes --tui` raw — it inherits the leak).
+**Axiom launch (fixed earlier this session).** `~/.local/bin/axiom` =
+env-isolating launcher → Axiom's own `.venv/bin/hermes -p axiom` (strips the
+3V0-session `HERMES_*`/`PYTHONPATH`/`TERMINAL_CWD` leak; never run raw).
 
-**Startup (before building):** (1) confirm the three daemons healthy
+**Startup:** (1) confirm the three daemons healthy
 (`systemctl --user status 3v0-review f1nance-review axiom-review`) + re-check
-the 4 upstream loops below; (2) run the startup routine; (3) build Stone 16.
+the upstream loops below; (2) run `bash scripts/handoff_check.sh` (now also
+runs the drift check); (3) pick up the Axiom restart finalization if it has
+landed.
 
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
@@ -106,7 +85,10 @@ the 4 upstream loops below; (2) run the startup routine; (3) build Stone 16.
   (skill_update/retract/absorb decisions, never destroys) +
   `scripts/record_skills.py` (project SKILL.md), closing the
   `threev0_record`-is-memory-only gap.
-  Tests: `python3 -m unittest discover -s 3v0/tests` (149 green). See
+  Tests: `python3 -m unittest discover -s 3v0/tests` (186 green). Stone 16
+  added the drift ledger (`core/projects.py` → data-driven `ProjectLedger` +
+  `3v0/data/projects/ledger.json`), `core/drift.py`, `scripts/project.py`
+  (onboarding CLI) and `scripts/drift_check.py` (the clock). See
   `3v0/README.md` + `3v0/EVOLUTION_LOOP.md`.
 - **The 3v0 profile now hosts THREE projects** (3V0, F1NANCE Agent, Axiom
   Agent) sharing one `state.db`. Operator decision (clarify, 2026-08-16):
@@ -163,6 +145,22 @@ the 4 upstream loops below; (2) run the startup routine; (3) build Stone 16.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Multi-project drift ledger + clock, Stone 16 (this session, BUILT + tested
+  + live-deployed).** Generalized Stone 15's hardcoded 3-project registry into
+  a data-driven `ProjectLedger` (`3v0/data/projects/ledger.json`, keyed by
+  name) — onboarding a project is now `scripts/project.py add`, never a code
+  edit. Added `core/drift.py` (best-effort git collection + pure drift
+  verdict), `scripts/drift_check.py` (the one-page clock: `--update` /
+  `--json` / `--fail-on-drift`), and wired the drift check into **both**
+  `handoff_check.sh` (wake) and the `3v0-review` daemon tick (report-only, so
+  the daemon never dirties the body tree). `resolve_project` is now
+  ledger-driven (seed fallback = fail-open). 186 native-core tests green
+  (+26). **Axiom's entry records its restart-from-scratch TARGET** — Hermes
+  latest base + curated best-of from deepseek-harness / grok build /
+  prime-agent — as an open loop to finalize when the restart lands (do NOT
+  treat its current git lineage as settled). Drift clock verified in the wild
+  (F1NANCE's dirty flag fired, then cleared as its work committed, ahead 31 →
+  33, between two ticks).
 - **Per-project reviewers/daemons, Stone 15 (this session, BUILT + tested +
   live-deployed).** The recurring open item, closed. Each sibling project
   (F1NANCE, Axiom) now has its own own-clock review daemon reviewing its

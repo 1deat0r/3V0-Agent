@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "projects": {
+    "threev0": {
+      "title": "3V0",
+      "repo": ".",
+      "upstream": "origin",
+      "upstream_ref": "main",
+      "delta": "3v0/ native core (identity, memory + skill stores, review daemons) — the self-construction layer on the Hermes chassis",
+      "track_upstream": true,
+      "profile": "3v0",
+      "store": "3v0/data/memory.json",
+      "skill_store": "3v0/data/skills.json",
+      "primary": true,
+      "head": null,
+      "upstream_head": null,
+      "store_head": null,
+      "open_loops": [],
+      "last_seen_at": null
+    },
+    "f1nance": {
+      "title": "F1NANCE",
+      "repo": "~/Projects/AI Agents/F1NANCE Agent",
+      "upstream": "origin",
+      "upstream_ref": "main",
+      "delta": "F1NANCE Agent — finance-layer hardfork of Hermes (fork remote: 1deat0r/f1nance-agent)",
+      "track_upstream": true,
+      "profile": "f1nance",
+      "store": "3v0/data/f1nance/memory.json",
+      "skill_store": null,
+      "primary": false,
+      "head": null,
+      "upstream_head": null,
+      "store_head": null,
+      "open_loops": [],
+      "last_seen_at": null
+    },
+    "axiom": {
+      "title": "Axiom",
+      "repo": "~/Projects/axiom-agent",
+      "upstream": "origin",
+      "upstream_ref": "main",
+      "delta": "Axiom — restart-from-scratch IN PROGRESS (2026-08-16): base = Hermes latest commit (NousResearch/hermes-agent), plus curated best-of from deepseek-harness / grok build / prime-agent. Not yet landed in git; entry provisional until the restart lands.",
+      "track_upstream": true,
+      "profile": "axiom",
+      "store": "3v0/data/axiom/memory.json",
+      "skill_store": null,
+      "primary": false,
+      "head": null,
+      "upstream_head": null,
+      "store_head": null,
+      "open_loops": [
+        "complete the restart-from-scratch: Hermes-latest base + deepseek-harness/grok/prime-agent picks",
+        "confirm the Hermes upstream remote name (origin?) once the restart lands"
+      ],
+      "last_seen_at": null
+    }
+  }
+}

@@ -1080,12 +1080,12 @@ worth it now.
 
 ---
 
-## Direction 5 / Stone 16 — multi-project parallel development meta (proposed)
+## Direction 5 / Stone 16 — multi-project parallel development meta (LIVE)
 
 The operator's ask (2026-08-16): 3V0 develops **3V0 + F1NANCE + Axiom in
 parallel**, "separate terminals per project" as a first-class feature, and a
 **drift-prevention meta** so N projects (today 3, soon 5+) don't diverge.
-Stone 15 built the per-project *reviewers*; this stone designs the per-project
+Stone 15 built the per-project *reviewers*; this stone built the per-project
 *development* meta on top of them.
 
 ### The drift problem (precise)
@@ -1130,34 +1130,69 @@ Drift is *silent* unless the architecture makes it visible.
    divergence. Drift is not prevented by locking; it is made visible,
    reversible, and bounded.
 
-### First concrete piece (Stone 16 scope)
+### What Stone 16 built
 
 **Project-agnostic by design.** Onboarding a project is *data*, never code: a
-ledger entry records `name` / `repo` / `upstream` / `delta`, plus optional
-Hermes-hardfork fields (`profile`, `store`) for siblings 3V0 reviews. The three
-known projects (3V0, F1NANCE, Axiom) are just seed entries; any git repo with
-an upstream is onboardable. 3V0's multi-project capability applies to *any*
-project, not this specific trio.
+ledger entry records `name` / `repo` / `upstream` / `delta` plus optional
+Hermes-hardfork fields (`profile`, `store`, `skill_store`). The three known
+projects (3V0, F1NANCE, Axiom) are seed entries; any git repo with an upstream
+is onboardable. 3V0's multi-project capability applies to *any* project, not
+this specific trio.
 
-- `core/projects.py` → `ProjectLedger` (per project: `head`, `upstream_head`,
-  `delta`, `open_loops`, optional `profile`/`store`/`store_head`,
-  `last_seen_at`), data-driven `3v0/data/projects/ledger.json` keyed by name
-  (replace the hardcoded `_PROJECT_NAMES` tuple).
-- `scripts/project.py` — the onboarding surface: `add <name> --repo <path>
-  [--upstream <remote>] [--profile <name>] [--delta <desc>]`, `list`,
-  `status`, `remove`. Adding a project = adding a ledger entry, never a code
-  edit.
-- `scripts/drift_check.py` (stdlib): iterates the ledger generically — for each
-  project, `git -C <repo> rev-parse HEAD` vs ledger `head`, behind/ahead vs
-  `upstream`, store-dirty flag → one-page drift report.
-- Wire into the daemon tick (drift report folded into the existing sync+drain
-  pass) or run manually via `handoff_check.sh`.
+- `core/projects.py` → **`ProjectLedger`** (data-driven
+  `3v0/data/projects/ledger.json`, keyed by name) replacing the hardcoded
+  `_PROJECT_NAMES` tuple. Per project: `name`/`title`/`repo`/`upstream`/
+  `upstream_ref`/`delta`/`track_upstream`/`profile`/`store`/`skill_store`/
+  `primary` + position (`head`/`upstream_head`/`store_head`/`open_loops`/
+  `last_seen_at`). Portable path forms (`"."` = body repo, `"~/..."` =
+  home-relative) keep the committed file machine-agnostic.
+- **Two views, one ledger.** `ProjectLedger` is the *position* view (drift
+  check); `ProjectSpec` (Stone 15, unchanged shape) is the *review-scoping*
+  view, and `resolve_project` is now ledger-driven (seed fallback when the
+  file is missing — fail-open so the daemons keep working on a fresh checkout).
+- `core/drift.py` — `collect_git_state` (best-effort `git` collection),
+  `store_hash` (sha256), `compute_drift` (pure verdict; the decision half is
+  unit-testable without git).
+- `scripts/project.py` — the onboarding surface: `add/list/status/remove`.
+  Onboarding is a command, never a code edit. `--profile <name>` marks a
+  reviewed hardfork (defaults its store to `3v0/data/<name>/memory.json`);
+  `--primary` is 3V0's slot; neither = drift-tracking only.
+- `scripts/drift_check.py` — the clock: one-page report over every project
+  (`--update` records a position snapshot, `--json` for the daemon,
+  `--fail-on-drift` for a CI-style gate).
+- Wired into **both** `handoff_check.sh` (wake) and the `3v0-review` daemon
+  tick (`_drift()`, report-only, primary-only).
+- Tests `test_ledger.py` + `test_drift.py` (+26 → 186 green; includes a real
+  throwaway git repo for `collect_git_state`).
 
-### Open questions (decided later, not this stone)
+### Design decisions (recorded)
+
+- **Report-only posture.** The daemon's drift tick is READ-ONLY — it never
+  writes the ledger, because position fields in the committed ledger would
+  dirty the body repo's working tree every 6 minutes (and falsify 3V0's own
+  "dirty" signal). Position snapshots are deliberate `drift_check.py --update`
+  commits; the daemon compares live HEAD/store against the last snapshot and
+  flags divergence.
+- **`track_upstream`.** A project that tracks its upstream flags "behind" as
+  drift; a pinned/deliberate hardfork reports behind/ahead as informational
+  only. (Axiom was the standing counterexample before its restart.)
+- **Axiom is mid restart-from-scratch (2026-08-16).** Its entry records the
+  TARGET — Hermes-latest commit as base, plus curated best-of from
+  deepseek-harness / grok build / prime-agent — with `track_upstream: true`
+  and an open loop to finalize once the restart lands. Until then its git repo
+  still holds the old lineage, so its drift signal is provisional.
+- **Verified in the wild:** F1NANCE's "dirty" flag fired, then cleared when
+  its work was committed (`ahead` 31 → 33) between two ticks — the clock
+  caught a real transient, not a bug.
+
+### Still open (decided later, not this stone)
 
 - The physical "terminal" mechanism — separate `hermes -p <profile> --tui`
   sessions vs `delegate_task` subagents vs background terminals. The ledger is
   agnostic; decide by usage.
 - Whether drift is *auto-reconciled* (auto-merge upstream) or only *flagged*.
   Posture: report-only first; the operator + orchestrator decide the fix.
+- Auto-snapshotting position (the daemon currently reports only; `--update` is
+  a deliberate commit). If fresh per-tick deltas are wanted, split position
+  into a gitignored sidecar rather than churning the committed ledger.
 

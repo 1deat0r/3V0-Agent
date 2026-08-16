@@ -101,6 +101,7 @@ RECORD_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "record.py"
 RECORD_SKILLS_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "record_skills.py"
 SYNC_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "sync.py"
 SYNC_SKILLS_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "sync_skills.py"
+DRIFT_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "drift_check.py"
 
 # Project-scoped paths/state — resolved from THREEV0_PROJECT (default:
 # threev0) and rebound by _resolve_project() (also called when --project is
@@ -1038,6 +1039,46 @@ def _drain() -> int:
     return 0
 
 
+def _drift() -> str:
+    """Run the multi-project drift check (Stone 16's clock) and log a summary.
+
+    Report-only: it never writes the ledger — position snapshots are deliberate
+    commits, not per-tick churn (the daemon must not dirty the body repo's
+    working tree). Only the primary project's daemon (3V0, the orchestrator)
+    runs it; sibling daemons are store-only reviewers, not the ledger's keeper.
+    Best-effort: a drift failure is a log line, never a crash.
+    """
+    if not PRIMARY:
+        return "skipped:not-primary"
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(DRIFT_SCRIPT), "--json"],
+            capture_output=True, text=True, timeout=120,
+        )
+    except (subprocess.TimeoutExpired, OSError) as e:
+        _log_run(f"drift check failed: {e}")
+        return f"drift-failed:{e}"
+    if proc.returncode != 0:
+        tail = (proc.stderr or "").strip().replace("\n", " ")[:200]
+        _log_run(f"drift check returned {proc.returncode}: {tail}")
+        return "drift-failed"
+    try:
+        result = json.loads(proc.stdout) if proc.stdout.strip() else {}
+    except json.JSONDecodeError:
+        _log_run("drift check output unparseable")
+        return "drift-failed"
+    total = result.get("total", 0)
+    drifting = result.get("drifting", 0)
+    names = [
+        r.get("name", "?")
+        for r in result.get("projects", [])
+        if isinstance(r, dict) and r.get("drifting")
+    ]
+    suffix = f" ({', '.join(names)})" if names else ""
+    _log_run(f"drift pass: {drifting}/{total} drifting{suffix}")
+    return "drift-ok"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="3V0-owned session review driver")
     group = ap.add_mutually_exclusive_group(required=True)
@@ -1087,6 +1128,7 @@ def main() -> int:
             try:
                 _sync()
                 _drain()
+                _drift()
             except Exception as e:  # noqa: BLE001 - a daemon must not die on a tick error
                 _log_run(f"daemon tick error: {e}")
             time.sleep(args.interval)

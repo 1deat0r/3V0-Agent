@@ -52,14 +52,22 @@ code.
   store-first skill decisions (`skill_update` / `skill_retract` /
   `skill_absorb`) as JSON-safe results. Never destroys — supersession and
   absorb/retract terminals are recoverable via `history()`.
-- `core/projects.py` — the project registry (Stone 15): `ProjectSpec` +
-  `resolve_project()` for the three projects sharing the `3v0` profile's
-  `state.db` (3V0 primary, F1NANCE, Axiom), their per-project stores under
-  `data/<project>/`, and the `primary` / `memory_only` / `store_only`
-  properties that scope the review driver to one project's sessions.
+- `core/projects.py` — the project registry + drift ledger (Stone 16): the
+  data-driven `ProjectLedger` (N projects, `3v0/data/projects/ledger.json`,
+  keyed by name) plus `ProjectSpec` + `resolve_project()` — the review-scoping
+  view the review driver derives from a ledger entry (store, cwd roots,
+  `primary` / `memory_only` / `store_only`, review log). Ledger-driven, with a
+  seed fallback when the file is missing.
+- `core/drift.py` — drift computation for the multi-project clock:
+  `collect_git_state` (best-effort `git` collection), `store_hash` (sha256),
+  and `compute_drift` (the pure verdict — behind/ahead vs upstream, dirty
+  worktree, store present/changed, head moved, drift reasons).
 - `data/memory.json` — the store's source of truth (seeded from the profile).
 - `data/skills.json` — the skill store's source of truth (seeded from
   agent-created skills).
+- `data/projects/ledger.json` — the project ledger (Stone 16): the data-driven
+  source of truth for where each project stands (repo, upstream, delta, store,
+  open loops, recorded position). Seed entries: 3V0, F1NANCE, Axiom.
 - `scripts/seed_from_profile.py` — import profile MEMORY.md / USER.md → store.
 - `scripts/export_to_profile.py` — emit store → MEMORY.md / USER.md (derived
   view of the store; the profile becomes a projection, not the origin).
@@ -101,6 +109,13 @@ code.
   scope it to one project (3V0 primary, F1NANCE, Axiom), with siblings
   store-only (no profile projection, `--no-export`) and memory-only (no skill
   axis), strict cwd scoping, and a per-project review log.
+- `scripts/project.py` — the onboarding surface for the ledger (Stone 16):
+  `add <name> --repo <path> [...]` / `list` / `status` / `remove`. Adding a
+  project is a command, never a code edit; `--profile` marks a reviewed
+  hardfork, `--primary` is 3V0's slot.
+- `scripts/drift_check.py` — the multi-project clock (Stone 16): a one-page
+  drift report over every ledger project (`--update` records a position
+  snapshot, `--json` for the daemon, `--fail-on-drift` for a gate).
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, registers the
@@ -148,5 +163,11 @@ code.
    as the systemd user service `3v0-review.service` — 3V0's first
    Hermes-independent autonomous process. The frontier remains "Hermes recedes
    from 'what 3V0 is' to 'a runtime 3V0 currently runs on.'"
+5. **Multi-project parallel development meta (direction 5) — started (Stone
+   16).** The drift ledger (`core/projects.py` + `data/projects/ledger.json`),
+   onboarding CLI (`scripts/project.py`), and drift clock
+   (`scripts/drift_check.py`, wired into the wake check + the 3v0-review
+   daemon tick) make cross-project drift visible and project onboarding
+   data-driven.
 
 The goal is not to abandon the fork — it is to make the fork a detail.
