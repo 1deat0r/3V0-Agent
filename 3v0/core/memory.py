@@ -35,7 +35,9 @@ try:
 except ImportError:  # pragma: no cover - Windows
     fcntl = None
 
-_VALID_KINDS = {"memory", "user", "identity", "directive"}
+KINDS = ("memory", "user", "identity", "directive")  # canonical fact kinds
+PROFILE_KINDS = ("memory", "user")  # the kinds that project to the Hermes profile
+_VALID_KINDS = set(KINDS)  # set for O(1) membership + sorted() in the error message
 
 # ``superseded_by`` sentinel for a fact that was REMOVED (no successor exists).
 # Distinct from a real fact id, so ``history()`` terminates the chain at the
@@ -193,6 +195,15 @@ class MemoryStore:
         if kind is not None:
             out = [f for f in out if f.kind == kind]
         return out
+
+    def matching(self, kind: str | None, substring: str) -> list[Fact]:
+        """Active facts whose content contains ``substring``.
+
+        The single substring-resolution algorithm. Callers branch their own
+        0/1/many policy: ``record`` refuses ambiguity; the bridge skips or
+        plain-adds. One place to change match semantics.
+        """
+        return [f for f in self.active(kind=kind) if substring in f.content]
 
     def get(self, fact_id: str) -> Fact | None:
         for f in self.facts:

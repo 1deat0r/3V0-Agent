@@ -22,18 +22,16 @@ mode (mutations land in memory only, nothing written to disk).
 
 from __future__ import annotations
 
-from .memory import MemoryStore
+from .memory import KINDS, MemoryStore
 from .query import fact_dict
 from .record import RecordError, record
-
-_VALID_KINDS = ("memory", "user", "identity", "directive")
 
 
 def _record(store: MemoryStore, d: dict, source: str, persist: bool) -> dict:
     kind = (d.get("kind") or "").strip()
     content = (d.get("content") or "").strip()
-    if kind not in _VALID_KINDS:
-        return {"error": f"kind must be one of {list(_VALID_KINDS)}, got {kind!r}"}
+    if kind not in KINDS:
+        return {"error": f"kind must be one of {list(KINDS)}, got {kind!r}"}
     if not content:
         return {"error": "content is required for action='record'"}
 

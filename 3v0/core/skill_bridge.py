@@ -33,9 +33,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .skills import SkillStore
-
-_VALID_ACTIONS = {"create", "patch", "edit", "write_file", "remove_file", "delete"}
+from .skills import ACTIONS, SkillStore
 _TERMINAL = "delete"
 
 
@@ -52,7 +50,7 @@ def apply_skill_op(store: SkillStore, args: Any, source: str) -> int:
         return 0
     action = args.get("action")
     name = (args.get("name") or "").strip()
-    if not name or action not in _VALID_ACTIONS:
+    if not name or action not in ACTIONS:
         return 0
 
     if action == _TERMINAL:

@@ -25,7 +25,8 @@ from __future__ import annotations
 from .query import version_dict
 from .skills import SkillStore
 
-_VALID_ACTIONS = ("skill_update", "skill_retract", "skill_absorb")
+SKILL_DECISION_ACTIONS = ("skill_update", "skill_retract", "skill_absorb")  # canonical store-first skill decisions
+_VALID_ACTIONS = SKILL_DECISION_ACTIONS  # backward-compat alias
 
 
 def _update(store: SkillStore, d: dict, source: str, persist: bool) -> dict:

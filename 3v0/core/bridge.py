@@ -27,11 +27,9 @@ store and profile idempotently — the only cost is that provenance degrades to
 
 from __future__ import annotations
 
-from .memory import MemoryStore
+from .memory import PROFILE_KINDS, MemoryStore
 from .profile_io import contains_separator
 from .record import RecordError, record
-
-_KINDS = {"memory", "user"}
 
 
 def _active_contents(store: MemoryStore, kind: str) -> set[str]:
@@ -49,8 +47,8 @@ def apply_ops(
     Each op is applied independently; a bad op (unknown action, missing field,
     separator-containing content) is skipped without failing the rest.
     """
-    if target not in _KINDS:
-        raise ValueError(f"target must be one of {sorted(_KINDS)}, got {target!r}")
+    if target not in PROFILE_KINDS:
+        raise ValueError(f"target must be one of {sorted(PROFILE_KINDS)}, got {target!r}")
     kind = target
     applied = 0
 
@@ -79,7 +77,7 @@ def apply_ops(
                 if not content:
                     continue
                 if old_text:
-                    matches = [f for f in store.active(kind=kind) if old_text in f.content]
+                    matches = store.matching(kind, old_text)
                     if len(matches) == 1:
                         record(store, content, kind, source, supersede_id=matches[0].id)
                         applied += 1
@@ -99,7 +97,7 @@ def apply_ops(
             elif action == "remove":
                 if not old_text:
                     continue
-                matches = [f for f in store.active(kind=kind) if old_text in f.content]
+                matches = store.matching(kind, old_text)
                 if len(matches) == 1:
                     store.retract(matches[0].id, source=source)
                     applied += 1

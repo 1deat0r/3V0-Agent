@@ -43,7 +43,8 @@ from pathlib import Path
 
 from .memory import locked
 
-_VALID_ACTIONS = {"create", "patch", "edit", "write_file", "remove_file", "delete"}
+ACTIONS = ("create", "patch", "edit", "write_file", "remove_file", "delete")  # canonical skill_manage actions
+_VALID_ACTIONS = set(ACTIONS)  # set for O(1) membership + sorted() in the error message
 
 # Operational (curator) states, tracked alongside content lineage. Orthogonal to
 # ``SkillVersion.active``: an archived skill still has an active content version

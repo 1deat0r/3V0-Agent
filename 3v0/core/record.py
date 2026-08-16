@@ -66,7 +66,7 @@ def record(
             raise RecordError(f"fact {supersede_id!r} is already superseded")
         targets = [target]
     elif supersede_contains is not None:
-        matches = [f for f in store.active(kind=kind) if supersede_contains in f.content]
+        matches = store.matching(kind, supersede_contains)
         if len(matches) != 1:
             raise RecordError(
                 f"need exactly one active {kind} fact containing "
