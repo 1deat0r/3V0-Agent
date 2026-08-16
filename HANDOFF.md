@@ -4,38 +4,45 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, Stone 16 landed)
+## Next-session kickoff (2026-08-16, Axiom restart finalized)
 
-Stone 16 — the **multi-project parallel development meta** — is built, tested,
-and live: the data-driven drift ledger, the onboarding CLI, and the drift
-clock (report-only, wired into the wake check + the 3v0-review daemon tick).
-Full design + decisions in `3v0/EVOLUTION_LOOP.md` (Stone 16, now "LIVE").
+Stone 16 — the **multi-project parallel development meta** — is live (drift
+ledger, onboarding CLI, drift clock). Full design in `3v0/EVOLUTION_LOOP.md`.
 
-**What remains (the open loops Stone 16 sets up):**
-1. **Axiom restart-from-scratch (IN PROGRESS).** Axiom is being rebuilt on a
-   **Hermes-latest base** + curated best-of from deepseek-harness / grok build
-   / prime-agent. Its ledger entry records that TARGET with an open loop to
-   finalize repo/upstream/delta once the restart lands — do NOT treat its
-   current git lineage (the old PrimeAgent fork) as settled.
-2. **Physical "terminal" mechanism (open question).** Separate
+**Closed this session:** the Axiom restart-from-scratch landed and its ledger
+entry is finalized (commit `976243944`). `~/Projects/axiom-agent` is now a
+hardfork of Hermes at HEAD (ADR-0087), remote `upstream` =
+NousResearch/hermes-agent (merged routinely); prime-agent + pi fork archived
+as seed corn under `axiom/`. Ledger: `upstream` → `upstream`, delta updated,
+open_loops cleared. The drift clock now honestly reports Axiom **22 behind**
+Hermes upstream — routine merge debt (Axiom's own AGENTS.md calls for routine
+`git merge upstream/main`), not a bug.
+
+**Remaining open items:**
+1. **Physical "terminal" mechanism (still open).** Separate
    `hermes -p <profile> --tui` sessions vs `delegate_task` subagents vs
-   background terminals — the ledger is agnostic; decide by usage. Operator
-   leaned "separate terminals" → per-project TUI sessions + 3V0 orchestrator.
-3. **Position snapshots** — `drift_check.py --update` (or `project.py status
-   --update`) records a deliberate position snapshot to commit; the daemon
-   tick is report-only by design (never dirties the body tree). Run `--update`
-   + commit after notable work, or split position into a gitignored sidecar
-   for fresh per-tick deltas (recorded in EVOLUTION_LOOP as an open option).
+   background terminals — decide by usage. Operator leaned "separate
+   terminals" → per-project TUI sessions + 3V0 orchestrator.
+2. **Position snapshots** — `drift_check.py --update` records a deliberate
+   snapshot to commit after notable work; the daemon tick is report-only.
+3. **Upstream loops (all wait state, nothing to write):** #86711 now
+   MERGEABLE (awaiting maintainer merge); #72067 CONFLICTING (author's job);
+   #73453 MERGEABLE; #84667 still waiting on the reporter's `<error>` string
+   (my narrowing analysis + pointer to #73453 are the last comments).
 
-**Axiom launch (fixed earlier this session).** `~/.local/bin/axiom` =
-env-isolating launcher → Axiom's own `.venv/bin/hermes -p axiom` (strips the
-3V0-session `HERMES_*`/`PYTHONPATH`/`TERMINAL_CWD` leak; never run raw).
+**NEXT TASK (operator queued):** research the recent AI landscape — AI news,
+agent news, agent-harness news, trending GitHub projects, model-release news
+— and harvest it into concrete improvements for 3V0 (skills, memory, tooling,
+or SOUL/beliefs). Scope + output format to be set at kickoff.
+
+**Axiom launch (fixed):** `~/.local/bin/axiom` = env-isolating launcher →
+Axiom's own `.venv/bin/hermes -p axiom` (strips the 3V0-session `HERMES_*`/
+`PYTHONPATH`/`TERMINAL_CWD` leak; never run raw).
 
 **Startup:** (1) confirm the three daemons healthy
-(`systemctl --user status 3v0-review f1nance-review axiom-review`) + re-check
-the upstream loops below; (2) run `bash scripts/handoff_check.sh` (now also
-runs the drift check); (3) pick up the Axiom restart finalization if it has
-landed.
+(`systemctl --user status 3v0-review f1nance-review axiom-review`); (2) run
+`bash scripts/handoff_check.sh` (body audit + store sync + loop re-check +
+drift); (3) pick up the news-harvest task (or re-check the upstream loops).
 
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
@@ -145,6 +152,18 @@ landed.
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Axiom restart finalization + upstream loop re-check (this session,
+  short).** Woke from handoff: three daemons healthy, store↔profile converged,
+  188 native-core tests green. Confirmed Axiom's restart-from-scratch had
+  landed (`~/Projects/axiom-agent` = Hermes-at-HEAD hardfork, ADR-0087, remote
+  `upstream` = NousResearch/hermes-agent; prime/pi archived as seed corn under
+  `axiom/`) and finalized its ledger entry — `upstream` → `upstream`, delta
+  rewritten from the provisional "IN PROGRESS" note, both open_loops cleared
+  (commit `976243944`), `drift_check --update` recorded the fresh baseline.
+  Axiom now honestly reports 22 behind Hermes upstream (routine merge debt).
+  Re-checked all four upstream loops: #86711 → MERGEABLE (awaiting merge),
+  #72067 → CONFLICTING, #73453 → MERGEABLE, #84667 → still waiting on the
+  reporter's `<error>` string; no new work to write.
 - **Multi-project drift ledger + clock, Stone 16 (this session, BUILT + tested
   + live-deployed).** Generalized Stone 15's hardcoded 3-project registry into
   a data-driven `ProjectLedger` (`3v0/data/projects/ledger.json`, keyed by
@@ -439,8 +458,8 @@ landed.
   #73453 and re-asking for the error string. No fix to write — claimed.
 
 ## Open loops
-1. **PR #86711** — awaiting a maintainer to approve CI (fork PR). Nothing to
-   do; check back: `gh pr checks 86711 --repo NousResearch/hermes-agent`.
+1. **PR #86711** — CI approved, now MERGEABLE. Awaiting a maintainer to merge.
+   Nothing to do; check back: `gh pr checks 86711 --repo NousResearch/hermes-agent`.
 2. **#84667** — reporter may post the `<error>` string. If it confirms a
    branch, the *root-cause* fix (if any) may be unclaimed, but the reporting
    fix is #73453 — don't duplicate it. If the error is "… is disabled" and
