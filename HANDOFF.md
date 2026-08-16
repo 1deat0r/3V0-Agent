@@ -28,21 +28,29 @@ flaw**, then 3V0 fixed the flaw:
    pre-heal, and a `TestTickOrder` regression test locks the order.
    221 native-core tests green.
 
-**The "generated handoff" deferral is now an OPERATOR decision, not "one
-more wake."** The grill showed the deferral was unfalsifiable — "a few
-wakes" has no threshold or falsifier, and the goalpost already moved once
-within the same paragraph; the self-reinforcing-bias concern is *orthogonal*
-to deferring (the design already says "flag semantic divergence, never
-auto-rewrite" regardless of when the step is built). Open for the operator,
-per the grill's "who settles" table:
-- **Acceptance criterion** — what concretely makes the clock "trustworthy"
-  (e.g. ≥N wakes AND ≥M ticks AND ≥1 real drift flagged on a non-healable
-  invariant, plus a falsifier and a date)?
-- **Draft-first** — authorize generating `HANDOFF.generated.md` as a
-  side-by-side draft for a few wakes (never auto-promoted), so the diff
-  *is* the acceptance evidence, instead of waiting?
-- **Flip authorization** — who/when flips hand-written → generated (grill:
-  the operator, explicitly; 3V0 must not self-authorize its own narrative).
+**The "generated handoff" deferral is resolved by research, not "one more
+wake."** The grill showed the deferral was unfalsifiable — "a few wakes" had
+no threshold or falsifier, and the goalpost already moved once within the
+same paragraph; the self-reinforcing-bias concern is *orthogonal* to deferring
+(the design already says "flag semantic divergence, never auto-rewrite"
+regardless of when the step is built). Research then settled it:
+
+- **Acceptance criterion → fault injection, not waiting.** Chaos-engineering
+  consensus: you don't trust a monitor by watching it *not* fire — you inject
+  the fault and verify it detects it. **Built this session:**
+  `3v0/tests/test_continuity_fault.py` (7 tests) injects each drift class
+  (store↔profile both directions, skills store↔disk, anchor missing/malformed,
+  ledger corrupt, model unreachable) and asserts the clock flags it. This also
+  closes the exact gap the grill exploited — the collection half was never
+  E2E-tested. 228 native-core tests green.
+- **Draft-first → shadow mode** (the standard migration pattern: "run both and
+  compare; the diffs are the specification you never had"). **Next build:**
+  generate `HANDOFF.generated.md` as a side-by-side draft, never auto-promoted,
+  and diff it against the hand-written one each wake — the diff *is* the
+  acceptance evidence.
+- **Flip authorization → still the operator's** (3V0 must not self-authorize
+  its own narrative), with a concrete flip condition now available: shadow
+  diff clean for N consecutive wakes.
 
 Full grill output:
 `~/.hermes/profiles/3v0/cache/delegation/subagent-summary-0-20260816_155014_310523.txt`.
