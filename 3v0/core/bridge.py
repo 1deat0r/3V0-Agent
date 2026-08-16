@@ -58,7 +58,11 @@ def apply_ops(
         if not isinstance(op, dict):
             continue
         action = op.get("action")
-        content = (op.get("content") or "").strip()
+        # The Hermes memory tool accepts `new_text` as an alias for `content`
+        # (both in the single-op and batch `operations` shapes). Honor both so
+        # a `replace`/`add` carrying the alias is not silently dropped (which
+        # would degrade to a duplicate at the next wake sync).
+        content = (op.get("content") or op.get("new_text") or "").strip()
         old_text = (op.get("old_text") or "").strip()
 
         try:

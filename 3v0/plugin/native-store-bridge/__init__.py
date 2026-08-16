@@ -222,7 +222,8 @@ def _ops_from_args(args: Dict[str, Any]) -> Optional[list]:
         return [
             {
                 "action": (op or {}).get("action"),
-                "content": (op or {}).get("content"),
+                # `new_text` is the memory tool's alias for `content`.
+                "content": (op or {}).get("content") or (op or {}).get("new_text"),
                 "old_text": (op or {}).get("old_text"),
             }
             for op in ops
@@ -234,7 +235,7 @@ def _ops_from_args(args: Dict[str, Any]) -> Optional[list]:
         return None
     return [{
         "action": action,
-        "content": args.get("content"),
+        "content": args.get("content") or args.get("new_text"),
         "old_text": args.get("old_text"),
     }]
 

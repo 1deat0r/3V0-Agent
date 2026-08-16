@@ -86,6 +86,25 @@ class TestBridge(unittest.TestCase):
             ["gh = mustbearnold", "gh = 1deat0r"],
         )
 
+    def test_replace_new_text_alias_supersedes(self) -> None:
+        # The memory tool documents `new_text` as an alias for `content`; the
+        # bridge must honor it so an aliased replace supersedes rather than
+        # degrading to a duplicate at the wake sync.
+        old = self.store.add("gh = mustbearnold", "memory", "test")
+        n = apply_ops(
+            self.store, "memory",
+            [{"action": "replace", "old_text": "mustbearnold", "new_text": "gh = 1deat0r"}],
+            "background_review",
+        )
+        self.assertEqual(n, 1)
+        self.assertFalse(old.active)
+        self.assertEqual(old.superseded_by, self.store.active("memory")[0].id)
+
+    def test_add_new_text_alias(self) -> None:
+        n = apply_ops(self.store, "memory", [{"action": "add", "new_text": "aliased"}], "a")
+        self.assertEqual(n, 1)
+        self.assertEqual(self.store.active("memory")[0].content, "aliased")
+
     def test_replace_without_match_plain_adds(self) -> None:
         self.store.add("existing", "memory", "test")
         n = apply_ops(
