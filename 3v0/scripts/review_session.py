@@ -76,7 +76,6 @@ Env knobs (tests / explicit tuning — defaults are the live profile):
 from __future__ import annotations
 
 import argparse
-import calendar
 import json
 import os
 import sqlite3
@@ -91,9 +90,37 @@ from typing import Any, Dict, List, Optional, Tuple
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
-from core.memory import MemoryStore  # noqa: E402
+from core.memory import KINDS, MemoryStore  # noqa: E402
 from core.projects import ProjectSpec, resolve_project  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
+from core.decide_skills import SKILL_DECISION_ACTIONS  # noqa: E402
+from core.review_decide import (  # noqa: E402
+    build_transcript,
+    parse_created_ts,
+    skill_temporal_refusal,
+    skills_block,
+    store_block,
+    temporal_refusal,
+    tolerant_json,
+)
+
+# The review decision functions now live in core/review_decide.py; the
+# underscore aliases keep this driver's own call sites and its tests (which
+# reach into this module's namespace) unchanged. _build_transcript is a thin
+# wrapper so the env-tunable TRANSCRIPT_CAP default is preserved.
+_tolerant_json = tolerant_json
+_parse_created_ts = parse_created_ts
+_temporal_refusal = temporal_refusal
+_skill_temporal_refusal = skill_temporal_refusal
+_store_block = store_block
+_skills_block = skills_block
+_SKILL_ACTIONS = SKILL_DECISION_ACTIONS
+
+
+def _build_transcript(messages: List[Dict[str, str]], cap: Optional[int] = None) -> str:
+    """Compact the session into review text (env-tunable default; see
+    core.review_decide.build_transcript)."""
+    return build_transcript(messages, cap=TRANSCRIPT_CAP if cap is None else cap)
 
 PROFILE_HOME = Path(
     os.environ.get("THREEV0_PROFILE_HOME")
@@ -394,63 +421,6 @@ def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
     }
 
 
-def _build_transcript(messages: List[Dict[str, str]], cap: int = TRANSCRIPT_CAP) -> str:
-    """Compact the session into review text: user/assistant text, tool calls
-    as names, tool outputs truncated; head+tail trim under the char cap."""
-    lines: List[str] = []
-    first_user: Optional[str] = None
-    for m in messages:
-        role = m["role"]
-        content = m["content"].strip()
-        if role == "user" and content:
-            if first_user is None:
-                first_user = content
-            lines.append(f"USER: {content}")
-        elif role == "assistant":
-            if m["tool_name"]:
-                lines.append(f"ASSISTANT[tool {m['tool_name']} returned]")
-            elif content:
-                lines.append(f"ASSISTANT: {content[:1500]}")
-        elif role == "tool":
-            if content:
-                lines.append(f"TOOL OUTPUT: {content[:300]}")
-    if not lines:
-        return "(no transcript)"
-    text = "\n".join(lines)
-    if len(text) <= cap:
-        return text
-    head_keep = min(2000, cap // 2)
-    tail_keep = cap - head_keep
-    head = text[:head_keep]
-    tail = text[-tail_keep:] if tail_keep > 0 else ""
-    return head + "\n… [middle truncated] …\n" + tail
-
-
-def _store_block(store: MemoryStore) -> str:
-    """Active facts with ids + timestamps — the decision context (capped)."""
-    rows = []
-    for fact in store.active():
-        rows.append(f"- {fact.id} | {fact.kind} | {fact.created_at} | {fact.content}")
-    block = "ACTIVE FACTS (id | kind | created_at | content):\n" + ("\n".join(rows) or "(store empty)")
-    if len(block) > STORE_BLOCK_CAP:
-        block = block[: STORE_BLOCK_CAP - 40] + "\n… [store block truncated] …"
-    return block
-
-
-def _skills_block(store: SkillStore) -> str:
-    """Active 3V0-authored skills — the skill-decision context (capped)."""
-    rows = []
-    for v in store.active():
-        rows.append(f"- {v.name} | {store.state(v.name)} | {v.created_at} | last {v.action} by {v.source}")
-    block = (
-        "ACTIVE SKILLS (name | curator state | created_at | last action by source):\n"
-        + ("\n".join(rows) or "(no 3V0-authored skills)")
-    )
-    if len(block) > SKILL_BLOCK_CAP:
-        block = block[: SKILL_BLOCK_CAP - 40] + "\n… [skills block truncated] …"
-    return block
-
-
 def _load_canned() -> Optional[Dict[str, Any]]:
     """Offline fake-LLM mode: read the model's answer from a JSON file."""
     path = os.environ.get("THREEV0_REVIEW_DECISIONS")
@@ -460,27 +430,6 @@ def _load_canned() -> Optional[Dict[str, Any]]:
         return json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {"summary": "fake-mode parse failure", "decisions": []}
-
-
-def _tolerant_json(text: str) -> Optional[Dict[str, Any]]:
-    """Parse the model's answer: strip code fences, take the JSON object."""
-    stripped = text.strip()
-    if stripped.startswith("```"):
-        stripped = stripped.split("\n", 1)[-1]
-        if stripped.rstrip().endswith("```"):
-            stripped = stripped.rstrip()[:-3]
-    try:
-        return json.loads(stripped)
-    except json.JSONDecodeError:
-        pass
-    start = stripped.find("{")
-    end = stripped.rfind("}")
-    if start == -1 or end <= start:
-        return None
-    try:
-        return json.loads(stripped[start : end + 1])
-    except json.JSONDecodeError:
-        return None
 
 
 def _call_llm(prompt: str) -> Optional[Dict[str, Any]]:
@@ -571,7 +520,7 @@ def _decision_argv(decision: Dict[str, Any]) -> Optional[List[str]]:
         return None
     kind = str(decision.get("kind") or "").strip()
     content = str(decision.get("content") or "").strip()
-    if kind not in {"memory", "user", "identity", "directive"} or not content:
+    if kind not in KINDS or not content:
         return None
     argv = [
         str(RECORD_SCRIPT), "--json", "--write",
@@ -582,9 +531,6 @@ def _decision_argv(decision: Dict[str, Any]) -> Optional[List[str]]:
     elif decision.get("supersedes"):
         argv += ["--supersedes", str(decision["supersedes"]).strip()]
     return argv
-
-
-_SKILL_ACTIONS = {"skill_update", "skill_retract", "skill_absorb"}
 
 
 def _skill_decision_argv(decision: Dict[str, Any]) -> Optional[List[str]]:
@@ -619,85 +565,6 @@ def _skill_decision_argv(decision: Dict[str, Any]) -> Optional[List[str]]:
         str(RECORD_SKILLS_SCRIPT), "--json", "--write",
         "--action", "skill_retract", "--name", name,
     ]
-
-
-def _parse_created_ts(created_at: str) -> Optional[float]:
-    """Parse a Fact ``created_at`` (UTC ``YYYY-MM-DDTHH:MM:SSZ``) to a Unix
-    timestamp; None when absent/unparseable."""
-    try:
-        return calendar.timegm(time.strptime(created_at, "%Y-%m-%dT%H:%M:%SZ"))
-    except (ValueError, TypeError):
-        return None
-
-
-def _temporal_refusal(
-    decision: Dict[str, Any], store: MemoryStore, session_as_of: Optional[float]
-) -> Optional[str]:
-    """Refuse a decision that would supersede/retract a fact NEWER than the
-    session under review — a session predating a fact cannot disprove it.
-
-    Returns a refusal reason string, or None when the decision is temporally
-    safe (or the session timestamp is unknown, in which case the guard is a
-    no-op — the minimal test fixture has no ``ended_at`` column).
-    """
-    if session_as_of is None:
-        return None
-    action = str(decision.get("action") or "").strip()
-    if action == "retract":
-        target = store.get(str(decision.get("fact_id") or "").strip())
-    elif action == "record":
-        supersedes_id = str(decision.get("supersedes_id") or "").strip()
-        if supersedes_id:
-            target = store.get(supersedes_id)
-        elif decision.get("supersedes"):
-            sub = str(decision["supersedes"]).strip()
-            target = next(
-                (f for f in store.active() if sub and sub in f.content), None
-            )
-        else:
-            return None
-    else:
-        return None
-    if target is None:
-        return None
-    ts = _parse_created_ts(target.created_at)
-    if ts is not None and ts > session_as_of:
-        return "fact newer than session under review"
-    return None
-
-
-def _skill_temporal_refusal(
-    decision: Dict[str, Any],
-    skill_store: Optional[SkillStore],
-    session_as_of: Optional[float],
-) -> Optional[str]:
-    """Refuse a skill decision that would decommission or replace a skill whose
-    ACTIVE version is NEWER than the session under review — a session predating
-    the current version cannot disprove it. The symmetric counterpart of
-    ``_temporal_refusal`` for the skill axis.
-
-    Returns a refusal reason string, or None when the decision is temporally
-    safe (or the session timestamp is unknown, in which case the guard is a
-    no-op — the minimal test fixture has no ``ended_at`` column). A skill name
-    with no active version is not guarded: the backend either refuses
-    (retract/absorb of an unknown name) or creates a fresh version (update of a
-    new name), neither of which is a temporal regression.
-    """
-    if session_as_of is None or skill_store is None:
-        return None
-    action = str(decision.get("action") or "").strip()
-    if action not in _SKILL_ACTIONS:
-        return None
-    name = str(decision.get("name") or "").strip()
-    if not name:
-        return None
-    target = skill_store.latest_active(name)
-    if target is None:
-        return None
-    ts = _parse_created_ts(target.created_at)
-    if ts is not None and ts > session_as_of:
-        return "skill version newer than session under review"
-    return None
 
 
 def _apply_decisions(
