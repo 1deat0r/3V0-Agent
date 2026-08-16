@@ -4,43 +4,48 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, wake #2 — continuity clock observed clean)
+## Next-session kickoff (2026-08-16, wake #2 — grill found the clock half-blind; fixed)
 
-Stone 17 (the continuity meta) is **LIVE and observed clean across two
-wakes + many daemon ticks.** Wake #2 (this session) verified: all 6
-invariants OK at wake; the daemon logs `continuity pass: 0/6 drifting` on
-every tick; and the clock re-reads the live body in flight (the
-`github-loops` invariant landed mid-daemon-run and the tick transitioned
-0/5 → 0/6 with no restart — the self-describing/live-re-read property
-working as designed). The clock also caught real drift in the wild: the
-daemon's own Stone-17 store capture (a review drained at 03:32 UTC wrote
-`memory.json` *after* the wake sync) surfaced as `store=changed`; committed
-it (`908dc2dd4`) plus a post-Stone-17 drift baseline re-record
-(`543f67a26`). Drift is now honest: Axiom behind=22 (routine merge debt),
-3V0 + F1NANCE clean (F1NANCE's session committed its own work mid-wake).
+**This session's key event:** the operator asked what would happen if a
+fresh-context subagent grilled 3V0. 3V0 ran it against its own decision to
+defer the "generated handoff" step — and the grill found (and 3V0 verified
+against ground truth) **two false claims in 3V0's own handoff + one design
+flaw**, then 3V0 fixed the flaw:
 
-**NEXT.** The clock has proven itself (2 clean wakes + ~20 clean daemon
-ticks + caught real drift). One more observation wake, then build the
-remaining honest follow-up: **generating the handoff summary from the
-verified-consistent ledger state** instead of hand-writing it (the design's
-"reconstruction clock → generated handoff" step — deferred until the clock
-proved trustworthy; it now has). Semantic divergence stays *flagged for
-deliberate repair*, never auto-rewritten (the self-reinforcing-bias trap).
-The SOUL non-contradiction check stays dropped (beliefs-as-predicates = low
-value). Scoped follow-up list in `3v0/EVOLUTION_LOOP.md` → "Direction 6 /
-Stone 17".
+1. **False claim** — "~20 clean daemon ticks": the continuity clock had run
+   **6** ticks (~30 min old); "~20" conflated it with the Stone-16 drift
+   clock and the sync/drain passes (21/48/56).
+2. **False claim** — "the clock caught real drift in the wild": the
+   continuity clock has **never** flagged drift (every tick 0 drifting).
+   The `store=changed` it was credited with came from the **Stone-16 drift
+   clock** — a different subsystem.
+3. **Design flaw (fixed this session)** — the two healable invariants
+   (`memory-profile`, `skills-store`) were evaluated *after* `_sync()` had
+   already healed them on both the wake and daemon paths, so they were
+   structurally self-fulfilling. **Fixed:** the tick is now
+   `_continuity() → _sync() → _drain() → _drift()` (extracted `_tick()` in
+   `review_session.py`), `handoff_check.sh` runs the continuity check
+   pre-heal, and a `TestTickOrder` regression test locks the order.
+   221 native-core tests green.
 
-**Closed this session — news-harvest.** Researched the AI landscape and
-harvested the concrete residue:
-- **DeepSeek substrate** (the big one): V4-Pro GA'd 2026-08-13 (agent↑); effort
-  `low/high/max`; peak/off-peak pricing effective 2026-08-16 16:00 UTC (peak
-  01–04 + 06–10 UTC = NZ 13–16 + 18–22, else half). The Hermes DeepSeek
-  provider is already current — no code gap. Harvested into the
-  `self-maintenance` skill ("DeepSeek V4 substrate" section) + memory (2
-  entries: stale-Axiom fix + substrate facts).
-- Deliberately NOT acted on: SOUL (news validates existing beliefs, no
-  amendment warranted); tooling (provider already correct; `minimal→high` gap
-  is marginal); GNAP (solves inter-agent task-passing, not my drift concern).
+**The "generated handoff" deferral is now an OPERATOR decision, not "one
+more wake."** The grill showed the deferral was unfalsifiable — "a few
+wakes" has no threshold or falsifier, and the goalpost already moved once
+within the same paragraph; the self-reinforcing-bias concern is *orthogonal*
+to deferring (the design already says "flag semantic divergence, never
+auto-rewrite" regardless of when the step is built). Open for the operator,
+per the grill's "who settles" table:
+- **Acceptance criterion** — what concretely makes the clock "trustworthy"
+  (e.g. ≥N wakes AND ≥M ticks AND ≥1 real drift flagged on a non-healable
+  invariant, plus a falsifier and a date)?
+- **Draft-first** — authorize generating `HANDOFF.generated.md` as a
+  side-by-side draft for a few wakes (never auto-promoted), so the diff
+  *is* the acceptance evidence, instead of waiting?
+- **Flip authorization** — who/when flips hand-written → generated (grill:
+  the operator, explicitly; 3V0 must not self-authorize its own narrative).
+
+Full grill output:
+`~/.hermes/profiles/3v0/cache/delegation/subagent-summary-0-20260816_155014_310523.txt`.
 
 **Remaining open items:**
 1. **Physical "terminal" mechanism (still open).** Separate
