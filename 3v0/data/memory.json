@@ -578,7 +578,7 @@
       "supersedes": [
         "cd096aaf4fc4"
       ],
-      "superseded_by": "",
+      "superseded_by": "ca0d4a97e340",
       "note": ""
     },
     {
@@ -614,7 +614,7 @@
       "supersedes": [
         "e4acd14e4b70"
       ],
-      "superseded_by": "",
+      "superseded_by": "d2220ce22116",
       "note": ""
     },
     {
@@ -626,7 +626,7 @@
       "supersedes": [
         "a29f88de9821"
       ],
-      "superseded_by": "",
+      "superseded_by": "c513c0447cc9",
       "note": ""
     },
     {
@@ -649,6 +649,42 @@
       "created_at": "2026-08-15T23:41:04Z",
       "supersedes": [
         "58ba31f67543"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "ca0d4a97e340",
+      "content": "Hermes background-review fork OFF (operator delegated): memory.nudge_interval=0 + skills.creation_nudge_interval=0 in profile config.yaml; set both to 10 to re-enable. Foreground 3V0 + daemon share body — load-before-patch guards load-bearing.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T00:27:14Z",
+      "supersedes": [
+        "97c8cbac8a73"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "d2220ce22116",
+      "content": "Fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent is separate checkout. Axiom = own checkout ~/Projects/axiom-agent + profile ~/.hermes/profiles/axiom; ~/.local/bin/axiom launcher strips 3V0-session HERMES_*/PYTHONPATH/TERMINAL_CWD leak (else fork-only kwargs fail).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T00:27:14Z",
+      "supersedes": [
+        "c27f52517f28"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "c513c0447cc9",
+      "content": "NousResearch/hermes-agent tracker: bots post canonical 'duplicate/best fix' verdicts — trust the triage trail before coding.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T00:27:14Z",
+      "supersedes": [
+        "d525aa478ad3"
       ],
       "superseded_by": "",
       "note": ""
