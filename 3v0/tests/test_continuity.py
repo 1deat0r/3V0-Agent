@@ -22,6 +22,7 @@ from core.continuity import (  # noqa: E402
     CANONICAL_MODEL_PATHS,
     DEFAULT_INVARIANTS,
     check_anchor,
+    check_github_loops,
     check_ledger,
     check_memory_profile,
     check_self_describing,
@@ -46,6 +47,10 @@ def _ctx(**kw) -> dict:
         "skills": {
             "imported": 0, "edited": 0, "dropped": 0,
             "exported": 0, "unresolved": 0, "state_changes": 0,
+        },
+        "github_loops": {
+            "86711": {"kind": "pr", "claimed_state": "OPEN", "live_state": "OPEN", "live_ok": True},
+            "84667": {"kind": "issue", "claimed_state": "OPEN", "live_state": "OPEN", "live_ok": True},
         },
         "ledger_ok": True,
         "ledger_count": 3,
@@ -148,6 +153,41 @@ class TestLedger(unittest.TestCase):
 
     def test_ledger_not_healable(self):
         inv = next(i for i in DEFAULT_INVARIANTS if i.name == "ledger")
+        self.assertFalse(inv.healable)
+
+
+class TestGithubLoops(unittest.TestCase):
+    def test_clean_ok(self):
+        self.assertFalse(check_github_loops(_ctx()).drift)
+
+    def test_state_change_drifts(self):
+        loops = {
+            "86711": {"kind": "pr", "claimed_state": "OPEN", "live_state": "MERGED", "live_ok": True},
+        }
+        r = check_github_loops(_ctx(github_loops=loops))
+        self.assertTrue(r.drift)
+        self.assertIn("OPEN->MERGED", r.detail)
+
+    def test_unverifiable_drifts(self):
+        loops = {
+            "86711": {"kind": "pr", "claimed_state": "OPEN", "live_state": None,
+                      "live_ok": False, "live_error": "gh timeout"},
+        }
+        r = check_github_loops(_ctx(github_loops=loops))
+        self.assertTrue(r.drift)
+        self.assertIn("unverifiable", r.detail)
+
+    def test_empty_registry_drifts(self):
+        r = check_github_loops(_ctx(github_loops={}))
+        self.assertTrue(r.drift)
+
+    def test_unreadable_registry_drifts(self):
+        r = check_github_loops(_ctx(github_loops={}, github_loops_error="no such file"))
+        self.assertTrue(r.drift)
+        self.assertIn("claim registry unreadable", r.detail)
+
+    def test_not_healable(self):
+        inv = next(i for i in DEFAULT_INVARIANTS if i.name == "github-loops")
         self.assertFalse(inv.healable)
 
 

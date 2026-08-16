@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "repo": "NousResearch/hermes-agent",
+  "loops": {
+    "86711": {
+      "kind": "pr",
+      "state": "OPEN",
+      "note": "approval-deny whitespace fix; awaiting maintainer merge",
+      "as_of": "2026-08-16T03:22:00Z"
+    },
+    "72067": {
+      "kind": "pr",
+      "state": "OPEN",
+      "note": "canonical memory null-action recovery; CONFLICTING, author's job",
+      "as_of": "2026-08-16T03:22:00Z"
+    },
+    "73453": {
+      "kind": "pr",
+      "state": "OPEN",
+      "note": "preserve skill load failure details; awaiting merge",
+      "as_of": "2026-08-16T03:22:00Z"
+    },
+    "84667": {
+      "kind": "issue",
+      "state": "OPEN",
+      "note": "cron skill-not-found; waiting on reporter's <error> string",
+      "as_of": "2026-08-16T03:22:00Z"
+    }
+  }
+}

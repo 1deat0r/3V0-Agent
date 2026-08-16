@@ -16,12 +16,15 @@ report).
 Options:
   --heal           run the safe mechanical heal (sync.py --write +
                    sync_skills.py --write), then re-report post-heal state
+  --accept         deliberately re-record loop claims from live GitHub, then
+                   re-report (the semantic-repair path for the github-loops
+                   invariant; distinct from --heal's mechanical sync)
   --json           machine-readable JSON on stdout (for the daemon tick)
   --fail-on-drift  exit 1 when any invariant reports drift (CI-style gate)
 
 Env (tests / explicit): THREEV0_BODY, THREEV0_ANCHOR, THREEV0_STORE,
   THREEV0_PROFILE_MEM, THREEV0_SKILL_STORE, THREEV0_SKILLS_DIR,
-  THREEV0_LEDGER.
+  THREEV0_LEDGER, THREEV0_CLAIMS.
 """
 
 from __future__ import annotations
@@ -62,6 +65,10 @@ LEDGER_PATH = Path(
     os.environ.get("THREEV0_LEDGER")
     or (BODY / "3v0" / "data" / "projects" / "ledger.json")
 )
+CLAIMS_PATH = Path(
+    os.environ.get("THREEV0_CLAIMS")
+    or (BODY / "3v0" / "data" / "continuity" / "claims.json")
+)
 SYNC_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "sync.py"
 SYNC_SKILLS_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "sync_skills.py"
 
@@ -96,6 +103,88 @@ def _agent_created(skills_dir: Path) -> set:
 
 def _curator_states(skills_dir: Path) -> dict:
     return {n: m.get("state", "active") for n, m in _usage(skills_dir).items()}
+
+
+def _load_claims() -> dict:
+    """Load the loop claim registry; ``{"error": ...}`` when missing/bad."""
+    try:
+        data = json.loads(CLAIMS_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        return {"error": str(e)}
+    if not isinstance(data, dict) or not isinstance(data.get("loops"), dict):
+        return {"error": f"malformed claim registry: {CLAIMS_PATH}"}
+    return data
+
+
+def _gh_loop_state(kind: str, num: str, repo: str) -> tuple:
+    """Live ``state`` for one loop via ``gh``; returns (ok, state, error)."""
+    cmd = ["gh", kind, "view", num, "--repo", repo, "--json", "state", "--jq", ".state"]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    except (subprocess.TimeoutExpired, OSError) as e:
+        return False, None, str(e)
+    if proc.returncode != 0:
+        return False, None, (proc.stderr or "").strip().replace("\n", " ")[:120]
+    return True, (proc.stdout or "").strip(), None
+
+
+def _collect_github_loops(ctx: dict) -> None:
+    """Collect claim-vs-live for every tracked loop (best-effort)."""
+    claims = _load_claims()
+    if "error" in claims:
+        ctx["github_loops_error"] = claims["error"]
+        ctx["github_loops"] = {}
+        return
+    repo = claims.get("repo") or "NousResearch/hermes-agent"
+    loops: dict = {}
+    for lid, spec in (claims.get("loops") or {}).items():
+        kind = (spec.get("kind") or "pr") if isinstance(spec, dict) else "pr"
+        ok, state, err = _gh_loop_state(kind, str(lid), repo)
+        loops[str(lid)] = {
+            "kind": kind,
+            "claimed_state": spec.get("state") if isinstance(spec, dict) else None,
+            "live_state": state,
+            "live_ok": ok,
+            "live_error": err,
+        }
+    ctx["github_loops"] = loops
+
+
+def _accept_claims() -> List[str]:
+    """Deliberately re-record the live state as each loop's new claim.
+
+    The semantic-repair path (distinct from ``--heal``'s mechanical sync): a
+    loop's state changed and the operator confirms the new reality. Rewrites
+    the committed ``claims.json``; best-effort, one outcome string per loop.
+    """
+    claims = _load_claims()
+    if "error" in claims:
+        return [f"claim registry unreadable: {claims['error']}"]
+    repo = claims.get("repo") or "NousResearch/hermes-agent"
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    outcomes: List[str] = []
+    updated: dict = {}
+    for lid, spec in (claims.get("loops") or {}).items():
+        kind = (spec.get("kind") or "pr") if isinstance(spec, dict) else "pr"
+        ok, state, err = _gh_loop_state(kind, str(lid), repo)
+        if not ok:
+            outcomes.append(f"{lid}:unverifiable:{err}")
+            continue
+        old = spec.get("state") if isinstance(spec, dict) else None
+        new_spec = dict(spec) if isinstance(spec, dict) else {"kind": "pr"}
+        new_spec["kind"] = kind
+        new_spec["state"] = state
+        new_spec["as_of"] = now
+        updated[str(lid)] = new_spec
+        outcomes.append(f"{lid}:{old}->{state}")
+    claims["loops"] = updated
+    try:
+        CLAIMS_PATH.write_text(
+            json.dumps(claims, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+    except OSError as e:
+        outcomes.append(f"write failed: {e}")
+    return outcomes
 
 
 def _collect() -> dict:
@@ -163,6 +252,9 @@ def _collect() -> dict:
         ctx["ledger_count"] = 0
         ctx["ledger_detail"] = str(e)
 
+    # upstream loops (claim registry <-> live GitHub)
+    _collect_github_loops(ctx)
+
     return ctx
 
 
@@ -191,15 +283,20 @@ def _heal() -> List[str]:
     return outcomes
 
 
-def run_check(heal: bool = False) -> dict:
-    """Collect facts, evaluate invariants, optionally heal first."""
+def run_check(heal: bool = False, accept: bool = False) -> dict:
+    """Collect facts, evaluate invariants, optionally heal / accept first."""
     healed: List[str] = []
+    accepted: List[str] = []
     if heal:
         healed = _heal()
+    if accept:
+        accepted = _accept_claims()
     report = evaluate(DEFAULT_INVARIANTS, _collect())
     report["checked_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     if healed:
         report["healed"] = healed
+    if accepted:
+        report["accepted"] = accepted
     return report
 
 
@@ -223,16 +320,22 @@ def _print_human(result: dict) -> None:
     )
     if result.get("healed"):
         print("healed: " + ", ".join(result["healed"]))
+    if result.get("accepted"):
+        print("accepted: " + ", ".join(result["accepted"]))
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="one-page continuity report")
     ap.add_argument("--heal", action="store_true", help="safe mechanical heal, then re-report")
+    ap.add_argument(
+        "--accept", action="store_true",
+        help="re-record loop claims from live GitHub, then re-report",
+    )
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     ap.add_argument("--fail-on-drift", action="store_true", help="exit 1 if any invariant drifts")
     args = ap.parse_args()
 
-    result = run_check(heal=args.heal)
+    result = run_check(heal=args.heal, accept=args.accept)
     if args.json:
         print(json.dumps(result, ensure_ascii=False))
     else:

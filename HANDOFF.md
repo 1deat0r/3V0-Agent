@@ -4,23 +4,22 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, Stone 17 BUILT)
+## Next-session kickoff (2026-08-16, Stone 17 BUILT + claim registry)
 
 Stone 17 (the continuity meta) is **LIVE and verified** this session: the
 anchor (`3v0/CONTINUITY.md`), the pure invariant model
-(`3v0/core/continuity.py`), the reconstruction clock
-(`3v0/scripts/continuity_check.py` — `--json` / `--heal` / `--fail-on-drift`),
-wired into `handoff_check.sh` (wake) + the `3v0-review` daemon tick
-(`_continuity()`). 214 native-core tests green (+26). The clock reports all 5
-invariants OK against the real body, and the daemon's first post-restart tick
-logged `continuity pass: 0/5 drifting`.
+(`3v0/core/continuity.py` — six invariants), the reconstruction clock
+(`3v0/scripts/continuity_check.py` — `--json` / `--heal` / `--accept` /
+`--fail-on-drift`), the loop claim registry
+(`3v0/data/continuity/claims.json`), wired into `handoff_check.sh` (wake) +
+the `3v0-review` daemon tick (`_continuity()`). 220 native-core tests green
+(+32). The clock reports all 6 invariants OK against the real body.
 
 **NEXT (no new task queued — observe first).** Let the clock prove itself
-across a few wakes before the two honest follow-ups: (1) the HANDOFF↔GitHub
-loop invariant + SOUL non-contradiction check (both need a machine-readable
-*claim registry* first), and (2) generating the handoff summary from the
-ledger instead of hand-writing it. Scoped follow-up list in
-`3v0/EVOLUTION_LOOP.md` → "Direction 6 / Stone 17".
+across a few wakes before the one remaining honest follow-up: generating the
+handoff summary from the ledger instead of hand-writing it. (The SOUL
+non-contradiction check is dropped — beliefs-as-predicates is low value.)
+Scoped follow-up list in `3v0/EVOLUTION_LOOP.md` → "Direction 6 / Stone 17".
 
 **Closed this session — news-harvest.** Researched the AI landscape and
 harvested the concrete residue:

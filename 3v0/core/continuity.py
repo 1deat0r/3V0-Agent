@@ -133,6 +133,34 @@ def check_ledger(ctx: dict) -> InvariantResult:
     )
 
 
+def check_github_loops(ctx: dict) -> InvariantResult:
+    """Tracked upstream loops (the claim registry) agree with live GitHub.
+
+    Each loop records a *claim* (its state at ``as_of``); the check flags when
+    live state diverges from the claim — a PR I was waiting on merged, an
+    issue closed — or when a loop could not be verified (fail loud, never
+    silent: an unverifiable claim is itself a gap to flag). Semantic drift:
+    repaired deliberately via ``--accept``, never auto-healed."""
+    err = ctx.get("github_loops_error")
+    if err:
+        return InvariantResult(True, f"claim registry unreadable: {err}")
+    loops = ctx.get("github_loops") or {}
+    if not loops:
+        return InvariantResult(True, "claim registry empty (no loops tracked)")
+    problems = []
+    for lid in sorted(loops):
+        loop = loops[lid]
+        if not loop.get("live_ok"):
+            problems.append(f"{lid}: unverifiable ({loop.get('live_error', 'gh failed')})")
+        elif loop.get("live_state") != loop.get("claimed_state"):
+            problems.append(
+                f"{lid}: {loop.get('claimed_state', '?')}->{loop.get('live_state', '?')}"
+            )
+    if problems:
+        return InvariantResult(True, "; ".join(problems))
+    return InvariantResult(False, f"claims agree with live GitHub ({len(loops)} loops)")
+
+
 # ---------------------------------------------------------------------------
 # The invariant registry — the "consistency ledger" (ordered, git-versioned).
 # ---------------------------------------------------------------------------
@@ -157,6 +185,10 @@ DEFAULT_INVARIANTS: List[Invariant] = [
     Invariant(
         "ledger", "project ledger (reconstruction clock data) parseable",
         healable=False, check=check_ledger,
+    ),
+    Invariant(
+        "github-loops", "tracked upstream loops agree with live GitHub",
+        healable=False, check=check_github_loops,
     ),
 ]
 

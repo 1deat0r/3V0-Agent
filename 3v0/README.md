@@ -63,9 +63,10 @@ code.
   and `compute_drift` (the pure verdict — behind/ahead vs upstream, dirty
   worktree, store present/changed, head moved, drift reasons).
 - `core/continuity.py` — the invariant model of the continuity meta (Stone
-  17): five cross-artifact invariants (`anchor`, `self-describing`,
-  `memory-profile`, `skills-store`, `ledger`), each a pure check over a
-  JSON-safe context; the decision half only (no git/network/file I/O).
+  17): six cross-artifact invariants (`anchor`, `self-describing`,
+  `memory-profile`, `skills-store`, `ledger`, `github-loops`), each a pure
+  check over a JSON-safe context; the decision half only (no git/network/file
+  I/O).
 - `CONTINUITY.md` — the continuity anchor (Stone 17): the fixed point
   (Prime Directive + identity + a pointer to the continuity model),
   git-versioned, never regenerated from itself.
@@ -75,6 +76,9 @@ code.
 - `data/projects/ledger.json` — the project ledger (Stone 16): the data-driven
   source of truth for where each project stands (repo, upstream, delta, store,
   open loops, recorded position). Seed entries: 3V0, F1NANCE, Axiom.
+- `data/continuity/claims.json` — the loop claim registry (Stone 17): per
+  tracked upstream loop, a recorded state + as-of; the `github-loops`
+  invariant diffs claims against live `gh`, `--accept` re-records reality.
 - `scripts/seed_from_profile.py` — import profile MEMORY.md / USER.md → store.
 - `scripts/export_to_profile.py` — emit store → MEMORY.md / USER.md (derived
   view of the store; the profile becomes a projection, not the origin).
@@ -124,8 +128,9 @@ code.
   drift report over every ledger project (`--update` records a position
   snapshot, `--json` for the daemon, `--fail-on-drift` for a gate).
 - `scripts/continuity_check.py` — the reconstruction clock (Stone 17): a
-  one-page continuity report over the five invariants (`--heal` runs the safe
-  mechanical sync, `--json` for the daemon, `--fail-on-drift` for a gate).
+  one-page continuity report over the six invariants (`--heal` runs the safe
+  mechanical sync, `--accept` re-records loop claims from live GitHub,
+  `--json` for the daemon, `--fail-on-drift` for a gate).
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, registers the
