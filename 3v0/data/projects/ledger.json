@@ -4,22 +4,19 @@
     "axiom": {
       "title": "Axiom",
       "repo": "~/Projects/axiom-agent",
-      "upstream": "origin",
+      "upstream": "upstream",
       "upstream_ref": "main",
-      "delta": "Axiom — restart-from-scratch IN PROGRESS (2026-08-16): base = Hermes latest commit (NousResearch/hermes-agent), plus curated best-of from deepseek-harness / grok build / prime-agent. Not yet landed in git; entry provisional until the restart lands.",
+      "delta": "Axiom — hardfork of Hermes Agent at HEAD (ADR-0087); `upstream` = NousResearch/hermes-agent merged routinely. prime-agent + pi fork archived as seed corn; Axiom's own layer (SOUL, AGENTS, ADR series 0087+, port queue) lives under `axiom/`, re-implementing archived prime-era capabilities as tracked ports.",
       "track_upstream": true,
       "profile": "axiom",
       "store": "3v0/data/axiom/memory.json",
       "skill_store": null,
       "primary": false,
       "head": "b33c53aac25f18cd4edefe51410687fc748be647",
-      "upstream_head": "9e00aec9ac44b7d2e8508ab90cb06c5e1b8def3e",
+      "upstream_head": "460d345642ee3d143a3e461abe39fd42b86a7e54",
       "store_head": "6db5dbd70bcdf83d9c34c378ce989de73253cd128abb7ee2f857a1e8cec0a0c9",
-      "open_loops": [
-        "complete the restart-from-scratch: Hermes-latest base + deepseek-harness/grok/prime-agent picks",
-        "confirm the Hermes upstream remote name (origin?) once the restart lands"
-      ],
-      "last_seen_at": "2026-08-16T02:00:13Z"
+      "open_loops": [],
+      "last_seen_at": "2026-08-16T02:47:53Z"
     },
     "f1nance": {
       "title": "F1NANCE",
@@ -36,7 +33,7 @@
       "upstream_head": "460d345642ee3d143a3e461abe39fd42b86a7e54",
       "store_head": "30b9b0588d63465e6f66109290b3cce4e535f674cb351811b9d248ea4979fcb1",
       "open_loops": [],
-      "last_seen_at": "2026-08-16T02:00:13Z"
+      "last_seen_at": "2026-08-16T02:47:53Z"
     },
     "threev0": {
       "title": "3V0",
@@ -49,11 +46,11 @@
       "store": "3v0/data/memory.json",
       "skill_store": "3v0/data/skills.json",
       "primary": true,
-      "head": "f035a0aeecb8aaf666ac05e715d5408cd157cf70",
+      "head": "02d017e94de5131ba8b4c19b22c111c984be0db4",
       "upstream_head": "45af7a71fcd420b4422d2c074b1ce58b9ce0d048",
-      "store_head": "f792191b07a4dfa3af6d14fc747bd9f74a3ac8c3b444ef4e0475f7febb14dcd5",
+      "store_head": "b5b73ab6cb41e7168f5b848bc8f7dfddfc869fadbc0aa17d8eed1c29563db6e1",
       "open_loops": [],
-      "last_seen_at": "2026-08-16T02:00:13Z"
+      "last_seen_at": "2026-08-16T02:47:53Z"
     }
   }
 }
