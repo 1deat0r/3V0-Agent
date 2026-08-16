@@ -1322,6 +1322,49 @@ class TestSyncFold(Env):
             os.environ.pop("THREEV0_REVIEW_LOG", None)
 
 
+class TestContinuityTick(Env):
+    """Stone 17: the own clock also runs the continuity invariant check
+    (report-only, primary-project only). The wrapper is a thin subprocess
+    mirror of ``_drift()``; its decision logic is tested in
+    ``test_continuity.py`` — here we lock the tick's two safety properties:
+    primary-only, and a failure is a status string, never a crash."""
+
+    def test_not_primary_skips(self):
+        os.environ["THREEV0_REVIEW_LOG"] = str(self.review_log)
+        try:
+            mod = _load_driver()
+            setattr(mod, "PRIMARY", False)
+            self.assertEqual(mod._continuity(), "skipped:not-primary")
+        finally:
+            os.environ.pop("THREEV0_REVIEW_LOG", None)
+
+    def test_clean_report_is_ok(self):
+        os.environ["THREEV0_REVIEW_LOG"] = str(self.review_log)
+        try:
+            mod = _load_driver()
+            clean = json.dumps({"total": 5, "drift_count": 0, "invariants": []})
+            with mock.patch.object(
+                mod.subprocess, "run",
+                return_value=mock.Mock(returncode=0, stdout=clean, stderr=""),
+            ):
+                status = mod._continuity()
+            self.assertEqual(status, "continuity-ok")
+        finally:
+            os.environ.pop("THREEV0_REVIEW_LOG", None)
+
+    def test_bad_script_fails_gracefully(self):
+        os.environ["THREEV0_REVIEW_LOG"] = str(self.review_log)
+        try:
+            mod = _load_driver()
+            with mock.patch.object(
+                mod.subprocess, "run", side_effect=OSError("no such script")
+            ):
+                status = mod._continuity()
+            self.assertTrue(status.startswith("continuity-failed"))
+        finally:
+            os.environ.pop("THREEV0_REVIEW_LOG", None)
+
+
 class TestLLMRetry(unittest.TestCase):
     """Stone 12: transient transport errors are retried with backoff inside a
     single review; malformed payloads and empty content are not retried as

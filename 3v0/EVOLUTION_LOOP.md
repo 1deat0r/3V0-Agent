@@ -1196,7 +1196,15 @@ this specific trio.
   a deliberate commit). If fresh per-tick deltas are wanted, split position
   into a gitignored sidecar rather than churning the committed ledger.
 
-## Direction 6 / Stone 17 — continuity meta (DESIGN, to build)
+## Direction 6 / Stone 17 — continuity meta (LIVE, built 2026-08-16)
+
+**Built this session** (see "What Stone 17 built" below): the anchor
+(`3v0/CONTINUITY.md`), the pure invariant model (`core/continuity.py`), the
+reconstruction clock (`scripts/continuity_check.py`), wiring into the wake
+script + the `3v0-review` daemon tick, and 26 tests (23 pure decision-half +
+3 daemon-tick). Live-verified: the clock reports all 5 invariants OK against
+the real body, and the daemon's first post-restart tick logged
+`continuity pass: 0/5 drifting`.
 
 The operator's ask (2026-08-16, after the news-harvest): 3V0 named its own
 **continuity** as weakness #1 (discontinuous memory, context amputation) and
@@ -1246,19 +1254,32 @@ target is **cross-artifact consistency**, not freshness.
    is parseable and reachable from the anchor. A corrupted meta fails **loud**
    and rebuilds from the anchor — it never silently drifts.
 
-### What Stone 17 builds (first cut)
+### What Stone 17 built (this session, tested + live-deployed)
 
-- `core/continuity.py` — the invariant model (pure + unit-testable): a list of
-  invariant specs, each a check function; no git/network I/O in the decision
-  half (mirror Stone 16's `drift.py` split).
-- `scripts/continuity_check.py` — the clock CLI: one-page report, `--json`
-  (daemon), `--heal` (safe auto-heal only: store↔profile sync),
-  `--fail-on-drift` (CI-style gate). Mirror `drift_check.py`.
-- Wire into **both** `handoff_check.sh` (wake) and the `3v0-review` daemon tick
-  (`_continuity()`, report-only primary-only — same posture as `_drift()`).
-- Generate the handoff summary from the ledger output; retire the hand-written
-  kickoff block once the generated form proves trustworthy.
-- Tests `tests/test_continuity.py` (the invariant decision half, pure).
+- `3v0/CONTINUITY.md` — the **anchor**: the fixed point (Prime Directive +
+  identity + a pointer to the continuity model), git-versioned, never
+  regenerated from itself. The clock reads it; it never rewrites it.
+- `core/continuity.py` — the invariant model (pure + unit-testable): five
+  invariants (`anchor`, `self-describing`, `memory-profile`, `skills-store`,
+  `ledger`), each a pure check over a JSON-safe context; no git/network/file
+  I/O in the decision half (mirrors Stone 16's `drift.py` split). Two are
+  marked `healable` (the mechanical store↔profile and store↔SKILL.md syncs);
+  the rest are deliberate-repair flags.
+- `scripts/continuity_check.py` — the reconstruction clock CLI: one-page
+  report, `--json` (daemon), `--heal` (safe mechanical heal only:
+  `sync.py --write` + `sync_skills.py --write`), `--fail-on-drift` (CI gate).
+  Mirrors `drift_check.py`. The collection half reuses the *canonical*
+  reconcilers (`sync_kind` / `sync_skills`) in report mode — no duplicated
+  diffing, no stdout parsing.
+- Wired into **both** `handoff_check.sh` (wake) and the `3v0-review` daemon
+  tick (`_continuity()`, report-only primary-only — same posture as `_drift()`).
+- Tests: `test_continuity.py` (23, the pure decision half) +
+  `TestContinuityTick` in `test_review_session.py` (3, primary-only + never
+  crash). 214 native-core tests green (+26).
+- **Not yet built (honest scope):** the HANDOFF↔GitHub loop invariant and the
+  SOUL non-contradiction check — both need a machine-readable *claim registry*
+  first (HANDOFF's loops are prose today). The generated-handoff step is also
+  deferred until the clock has proven trustworthy across a few wakes.
 
 ### Design decisions (recorded)
 

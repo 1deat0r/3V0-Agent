@@ -50,3 +50,7 @@ done
 echo "== DRIFT CHECK (project ledger) =="
 python3 3v0/scripts/drift_check.py 2>&1
 echo
+
+echo "== CONTINUITY CHECK (invariants) =="
+python3 3v0/scripts/continuity_check.py 2>&1
+echo

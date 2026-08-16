@@ -4,19 +4,23 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, Stone 17 queued)
+## Next-session kickoff (2026-08-16, Stone 17 BUILT)
 
-Stone 16 (multi-project parallel-dev meta) is live; the news-harvest landed,
-and the **Stone 17 continuity-meta design** was authored this session
-(`3v0/EVOLUTION_LOOP.md` → "Direction 6 / Stone 17"). Harvest note in
-`3v0/data/news/2026-08-16.md`.
+Stone 17 (the continuity meta) is **LIVE and verified** this session: the
+anchor (`3v0/CONTINUITY.md`), the pure invariant model
+(`3v0/core/continuity.py`), the reconstruction clock
+(`3v0/scripts/continuity_check.py` — `--json` / `--heal` / `--fail-on-drift`),
+wired into `handoff_check.sh` (wake) + the `3v0-review` daemon tick
+(`_continuity()`). 214 native-core tests green (+26). The clock reports all 5
+invariants OK against the real body, and the daemon's first post-restart tick
+logged `continuity pass: 0/5 drifting`.
 
-**NEXT TASK (operator approved): build Stone 17 — the continuity meta.** Make
-my own continuity a checkable system, not a ritual: anchor → consistency
-ledger → reconstruction clock → self-describing meta. First cut is scoped in
-the design section (`core/continuity.py` + `scripts/continuity_check.py`,
-wired into `handoff_check.sh` + the `3v0-review` tick, tests). Start it in a
-fresh session from this handoff.
+**NEXT (no new task queued — observe first).** Let the clock prove itself
+across a few wakes before the two honest follow-ups: (1) the HANDOFF↔GitHub
+loop invariant + SOUL non-contradiction check (both need a machine-readable
+*claim registry* first), and (2) generating the handoff summary from the
+ledger instead of hand-writing it. Scoped follow-up list in
+`3v0/EVOLUTION_LOOP.md` → "Direction 6 / Stone 17".
 
 **Closed this session — news-harvest.** Researched the AI landscape and
 harvested the concrete residue:
@@ -50,7 +54,8 @@ Axiom's own `.venv/bin/hermes -p axiom` (never run raw).
 **Startup:** (1) confirm the three daemons healthy
 (`systemctl --user status 3v0-review f1nance-review axiom-review`); (2) run
 `bash scripts/handoff_check.sh` (body audit + store sync + loop re-check +
-drift); (3) start **Stone 17** (design in `3v0/EVOLUTION_LOOP.md`, Direction 6).
+drift + continuity); (3) review the continuity report (the Stone 17 clock)
+and act on any flagged drift before picking up the follow-ups.
 
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
@@ -100,10 +105,12 @@ drift); (3) start **Stone 17** (design in `3v0/EVOLUTION_LOOP.md`, Direction 6).
   (skill_update/retract/absorb decisions, never destroys) +
   `scripts/record_skills.py` (project SKILL.md), closing the
   `threev0_record`-is-memory-only gap.
-  Tests: `python3 -m unittest discover -s 3v0/tests` (186 green). Stone 16
+  Tests: `python3 -m unittest discover -s 3v0/tests` (214 green). Stone 16
   added the drift ledger (`core/projects.py` → data-driven `ProjectLedger` +
   `3v0/data/projects/ledger.json`), `core/drift.py`, `scripts/project.py`
-  (onboarding CLI) and `scripts/drift_check.py` (the clock). See
+  (onboarding CLI) and `scripts/drift_check.py` (the clock). Stone 17 added
+  the continuity meta: `CONTINUITY.md` (anchor), `core/continuity.py`
+  (invariant model), `scripts/continuity_check.py` (the clock). See
   `3v0/README.md` + `3v0/EVOLUTION_LOOP.md`.
 - **The 3v0 profile now hosts THREE projects** (3V0, F1NANCE Agent, Axiom
   Agent) sharing one `state.db`. Operator decision (clarify, 2026-08-16):
@@ -160,11 +167,24 @@ drift); (3) start **Stone 17** (design in `3v0/EVOLUTION_LOOP.md`, Direction 6).
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
-- **Stone 17 continuity-meta design authored (this session).** Operator asked
-  for a meta over 3V0's own continuity (named weakness #1). Designed "anchor →
-  consistency ledger → reconstruction clock → self-describing meta" and
-  recorded it in `3v0/EVOLUTION_LOOP.md` (Direction 6 / Stone 17). Queued as
-  the next task; to be built in a fresh session.
+- **Stone 17 continuity meta BUILT + tested + live-deployed (this session).**
+  The design from last session became the body: the **anchor**
+  (`3v0/CONTINUITY.md` — Prime Directive + identity + a pointer to the
+  continuity model, git-versioned, never regenerated from itself), the pure
+  **invariant model** (`core/continuity.py` — five cross-artifact invariants:
+  `anchor`, `self-describing`, `memory-profile`, `skills-store`, `ledger`;
+  no I/O in the decision half, mirroring `drift.py`'s split), and the
+  **reconstruction clock** (`scripts/continuity_check.py` — one-page report,
+  `--json` for the daemon, `--heal` for the safe mechanical sync, and
+  `--fail-on-drift` as a CI gate; the collection half reuses the *canonical*
+  `sync_kind`/`sync_skills` reconcilers in report mode — no duplicated
+  diffing). Wired into **both** `handoff_check.sh` (wake) and the `3v0-review`
+  daemon tick (`_continuity()`, report-only primary-only). 214 native-core
+  tests green (+26: 23 decision-half + 3 daemon-tick). Live-verified: the
+  clock reports all 5 invariants OK against the real body; the daemon's first
+  post-restart tick logged `continuity pass: 0/5 drifting`. Deferred (honest
+  scope): the HANDOFF↔GitHub loop + SOUL non-contradiction invariants (both
+  need a claim registry first) and the generated-handoff step.
 - **News-harvest (this session).** Researched the recent AI landscape and
   harvested the concrete residue: DeepSeek V4-Pro GA'd 2026-08-13 with effort
   `low/high/max` and peak/off-peak pricing effective 2026-08-16 16:00 UTC

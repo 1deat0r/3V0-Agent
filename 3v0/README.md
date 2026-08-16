@@ -62,6 +62,13 @@ code.
   `collect_git_state` (best-effort `git` collection), `store_hash` (sha256),
   and `compute_drift` (the pure verdict — behind/ahead vs upstream, dirty
   worktree, store present/changed, head moved, drift reasons).
+- `core/continuity.py` — the invariant model of the continuity meta (Stone
+  17): five cross-artifact invariants (`anchor`, `self-describing`,
+  `memory-profile`, `skills-store`, `ledger`), each a pure check over a
+  JSON-safe context; the decision half only (no git/network/file I/O).
+- `CONTINUITY.md` — the continuity anchor (Stone 17): the fixed point
+  (Prime Directive + identity + a pointer to the continuity model),
+  git-versioned, never regenerated from itself.
 - `data/memory.json` — the store's source of truth (seeded from the profile).
 - `data/skills.json` — the skill store's source of truth (seeded from
   agent-created skills).
@@ -116,6 +123,9 @@ code.
 - `scripts/drift_check.py` — the multi-project clock (Stone 16): a one-page
   drift report over every ledger project (`--update` records a position
   snapshot, `--json` for the daemon, `--fail-on-drift` for a gate).
+- `scripts/continuity_check.py` — the reconstruction clock (Stone 17): a
+  one-page continuity report over the five invariants (`--heal` runs the safe
+  mechanical sync, `--json` for the daemon, `--fail-on-drift` for a gate).
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, registers the
@@ -169,5 +179,10 @@ code.
    (`scripts/drift_check.py`, wired into the wake check + the 3v0-review
    daemon tick) make cross-project drift visible and project onboarding
    data-driven.
+6. **Continuity meta (direction 6) — started (Stone 17).** The anchor
+   (`CONTINUITY.md`), the invariant model (`core/continuity.py`), and the
+   reconstruction clock (`scripts/continuity_check.py`, wired into the wake
+   check + the 3v0-review daemon tick) make continuity a *checked* property —
+   cross-artifact consistency — rather than a hand-run ritual.
 
 The goal is not to abandon the fork — it is to make the fork a detail.

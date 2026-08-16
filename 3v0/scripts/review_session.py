@@ -41,7 +41,10 @@ of the hook: three mutually-exclusive modes —
   seconds, default 600), surviving transient failures — 3V0's first
   Hermes-independent autonomous process. Stone 14 folded the wake-time
   reconcilers into the tick, so the daemon is now a full maintenance clock:
-  it heals drift between sessions, not just at wake.
+  it heals drift between sessions, not just at wake. Stone 16 added the
+  multi-project drift check (``_drift()``); Stone 17 added the continuity
+  invariant check (``_continuity()``) — both report-only, primary-project
+  only.
 
 Env knobs (tests / explicit tuning — defaults are the live profile):
   THREEV0_PROFILE_HOME    profile home (state.db, .env, default review log)
@@ -102,6 +105,7 @@ RECORD_SKILLS_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "record_skills.py"
 SYNC_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "sync.py"
 SYNC_SKILLS_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "sync_skills.py"
 DRIFT_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "drift_check.py"
+CONTINUITY_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "continuity_check.py"
 
 # Project-scoped paths/state — resolved from THREEV0_PROJECT (default:
 # threev0) and rebound by _resolve_project() (also called when --project is
@@ -1079,6 +1083,45 @@ def _drift() -> str:
     return "drift-ok"
 
 
+def _continuity() -> str:
+    """Run the continuity invariant check (Stone 17's clock) and log a summary.
+
+    Report-only: it never heals and never writes any artifact — mechanical
+    heal is a deliberate ``--heal`` (or wake) act, and semantic drift is a
+    deliberate-repair flag. Same posture as ``_drift()``: primary-project
+    only, best-effort, a failure is a log line, never a crash.
+    """
+    if not PRIMARY:
+        return "skipped:not-primary"
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(CONTINUITY_SCRIPT), "--json"],
+            capture_output=True, text=True, timeout=120,
+        )
+    except (subprocess.TimeoutExpired, OSError) as e:
+        _log_run(f"continuity check failed: {e}")
+        return f"continuity-failed:{e}"
+    if proc.returncode != 0:
+        tail = (proc.stderr or "").strip().replace("\n", " ")[:200]
+        _log_run(f"continuity check returned {proc.returncode}: {tail}")
+        return "continuity-failed"
+    try:
+        result = json.loads(proc.stdout) if proc.stdout.strip() else {}
+    except json.JSONDecodeError:
+        _log_run("continuity check output unparseable")
+        return "continuity-failed"
+    total = result.get("total", 0)
+    drifting = result.get("drift_count", 0)
+    names = [
+        r.get("name", "?")
+        for r in result.get("invariants", [])
+        if isinstance(r, dict) and r.get("drift")
+    ]
+    suffix = f" ({', '.join(names)})" if names else ""
+    _log_run(f"continuity pass: {drifting}/{total} drifting{suffix}")
+    return "continuity-ok"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="3V0-owned session review driver")
     group = ap.add_mutually_exclusive_group(required=True)
@@ -1129,6 +1172,7 @@ def main() -> int:
                 _sync()
                 _drain()
                 _drift()
+                _continuity()
             except Exception as e:  # noqa: BLE001 - a daemon must not die on a tick error
                 _log_run(f"daemon tick error: {e}")
             time.sleep(args.interval)
