@@ -4,46 +4,51 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, Stone 15)
-Stone 15 landed: **per-project reviewers/daemons** for F1NANCE/Axiom. Each
-sibling now has its own review daemon (systemd user services
-`f1nance-review.service` + `axiom-review.service`, `THREEV0_PROJECT=<name>`)
-reviewing its sessions into its own store (`3v0/data/<project>/memory.json`),
-**store-only** (no profile projection, `record.py --no-export`) and
-**memory-only** (no skill axis), with **strict cwd** scoping (no fail-open).
-Both backlogs drained live this session — f1nance: 1 session → 2 facts (the 2
-overlapping carved facts consolidated + an operator-env fact); axiom: 4
-sessions → 5 facts (2 superseded, 1 identity, temporal guard refused 2).
-`3v0/core/projects.py` is the project registry. 160 native-core tests green
-(+9). Next session:
+## Next-session kickoff (2026-08-16, Stone 16 queued)
 
-1. **Confirm all three daemons are healthy.** `systemctl --user status
-   3v0-review.service f1nance-review.service axiom-review.service` (all
-   active) + `tail ~/.hermes/profiles/3v0/3v0_reviews/{f1nance,axiom}/run.log`
-   (each 6-min tick shows `sync skipped (store-only project)` + a clean
-   `drain pass`; `sync-failed` only ever appears for the 3v0 daemon).
-2. **Re-check the 4 open upstream loops** (see "Open loops") — all "waiting on
-   a maintainer / reporter / other author" at last check.
-3. **Pick the next real work.** Two sibling edges remain explicit (see
-   `EVOLUTION_LOOP.md` Stone 15 "Still open"): (a) the **sibling foreground
-   write mirror** — the bridge still *refuses* sibling `memory`/`skill_manage`
-   writes rather than routing them to sibling stores (only the daemons write
-   siblings today); (b) **profile MEMORY.md sharing** — the three projects
-   still share one profile MEMORY.md; the clean fix is moving siblings onto
-   their own profiles (F1NANCE has `~/.hermes/profiles/f1nance`; Axiom now has
-   `~/.hermes/profiles/axiom` — created this session). Either is a candidate,
-   or return to direction 3 (own tools) / direction 4 (own initiative) for
-   3V0 itself. The fork cut is NOT under reconsideration — it held.
-4. **Axiom launch is fixed** (this session). `~/.local/bin/axiom` is now a
-   real env-isolating launcher (replaces the old dangling symlink to the
-   archived `packages/coding-agent` CLI) → Axiom's own `.venv/bin/hermes -p axiom`,
-   stripping the 3V0-session `HERMES_*` / `PYTHONPATH` / `PYTHONHOME` /
-   `TERMINAL_CWD` leak that caused `AIAgent.__init__() got an unexpected
-   keyword argument 'max_run_cost_usd'`. Profile created:
-   `~/.hermes/profiles/axiom/` (SOUL from `axiom/SOUL.md`, deepseek config,
-   shared key, `axiom_body_path`). Verified: `axiom --version` → install dir
-   `~/Projects/axiom-agent`; `axiom chat -q` runs as Axiom; `run_agent` +
-   `tui_gateway` both resolve to Axiom and accept the param.
+Stone 15 (per-project reviewers/daemons) is landed; this session fixed the
+Axiom launch and **designed Stone 16 — the multi-project parallel development
+meta**, which is now the work to build. Operator-approved direction.
+
+**The goal.** 3V0 develops 3V0 + F1NANCE + Axiom **in parallel**, with
+"separate terminals per project" as a first-class feature and a
+drift-prevention meta (scales to 5+ projects).
+
+**The meta — "one spine, N typed deltas, one ledger, one clock"** (full text
+in `3v0/EVOLUTION_LOOP.md` "Stone 16 — proposed"):
+- **Spine** — all projects fork Hermes `main` + merge `upstream` on a cadence;
+  divergence is a deliberate, named delta (never accidental).
+- **Ledger** — one data-driven file records each project's HEAD / upstream /
+  delta / open-loops; generalize Stone 15's `core/projects.py` (hardcoded
+  3-tuple) to a data-driven N-project registry.
+- **Terminal** — per-project isolation: strict cwd + own profile (`3v0` /
+  `f1nance` / `axiom`, all exist) + clean env. The Axiom leak-strip was the
+  first working piece.
+- **Clock** — the 6-min daemons become a drift check (HEAD/store vs ledger).
+
+**Stone 16 — build this:**
+1. `core/projects.py` → data-driven `ProjectLedger` (per project: `head`,
+   `upstream_head`, `delta`, `open_loops`, `store_head`, `last_seen_at`),
+   keyed by name in `3v0/data/projects/ledger.json` (drop `_PROJECT_NAMES`).
+2. `scripts/drift_check.py` (stdlib): per project, `git -C <repo> rev-parse
+   HEAD` vs ledger, behind/ahead vs `upstream`, store-dirty → one-page report.
+3. Tests (`3v0/tests/test_ledger.py`) + wire into the daemon tick or
+   `handoff_check.sh`; then flip EVOLUTION_LOOP.md from "proposed" to "live".
+4. **Open choice (decide at build time):** the physical "terminal" — separate
+   `hermes -p <profile> --tui` sessions vs `delegate_task` subagents vs
+   background terminals. Ledger is agnostic; operator flagged "separate
+   terminals," so lean per-project TUI sessions + 3V0 as orchestrator.
+
+**Axiom launch (fixed this session).** `~/.local/bin/axiom` = env-isolating
+launcher → Axiom's own `.venv/bin/hermes -p axiom`, stripping the 3V0-session
+`HERMES_*`/`PYTHONPATH`/`TERMINAL_CWD` leak that caused
+`AIAgent.__init__() got an unexpected keyword argument 'max_run_cost_usd'`.
+Profile `~/.hermes/profiles/axiom/` created. Use `axiom` to launch Axiom's TUI
+for testing (never `.venv/bin/hermes --tui` raw — it inherits the leak).
+
+**Startup (before building):** (1) confirm the three daemons healthy
+(`systemctl --user status 3v0-review f1nance-review axiom-review`) + re-check
+the 4 upstream loops below; (2) run the startup routine; (3) build Stone 16.
 
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
