@@ -4,45 +4,44 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, Axiom restart finalized)
+## Next-session kickoff (2026-08-16, news-harvest done)
 
-Stone 16 — the **multi-project parallel development meta** — is live (drift
-ledger, onboarding CLI, drift clock). Full design in `3v0/EVOLUTION_LOOP.md`.
+Stone 16 (multi-project parallel-dev meta) is live; the operator-queued
+news-harvest landed this session. Harvest note in `3v0/data/news/2026-08-16.md`.
 
-**Closed this session:** the Axiom restart-from-scratch landed and its ledger
-entry is finalized (commit `976243944`). `~/Projects/axiom-agent` is now a
-hardfork of Hermes at HEAD (ADR-0087), remote `upstream` =
-NousResearch/hermes-agent (merged routinely); prime-agent + pi fork archived
-as seed corn under `axiom/`. Ledger: `upstream` → `upstream`, delta updated,
-open_loops cleared. The drift clock now honestly reports Axiom **22 behind**
-Hermes upstream — routine merge debt (Axiom's own AGENTS.md calls for routine
-`git merge upstream/main`), not a bug.
+**Closed this session — news-harvest.** Researched the AI landscape and
+harvested the concrete residue:
+- **DeepSeek substrate** (the big one): V4-Pro GA'd 2026-08-13 (agent↑); effort
+  `low/high/max`; peak/off-peak pricing effective 2026-08-16 16:00 UTC (peak
+  01–04 + 06–10 UTC = NZ 13–16 + 18–22, else half). The Hermes DeepSeek
+  provider is already current — no code gap. Harvested into the
+  `self-maintenance` skill ("DeepSeek V4 substrate" section) + memory (2
+  entries: stale-Axiom fix + substrate facts).
+- Deliberately NOT acted on: SOUL (news validates existing beliefs, no
+  amendment warranted); tooling (provider already correct; `minimal→high` gap
+  is marginal); GNAP (solves inter-agent task-passing, not my drift concern).
 
-**Remaining open items:**
+**Remaining open items (unchanged):**
 1. **Physical "terminal" mechanism (still open).** Separate
-   `hermes -p <profile> --tui` sessions vs `delegate_task` subagents vs
-   background terminals — decide by usage. Operator leaned "separate
-   terminals" → per-project TUI sessions + 3V0 orchestrator.
+   `hermes -p <profile> --tui` sessions vs `delegate_task` vs background
+   terminals — decide by usage. Operator leaned "separate terminals" →
+   per-project TUI + 3V0 orchestrator.
 2. **Position snapshots** — `drift_check.py --update` records a deliberate
-   snapshot to commit after notable work; the daemon tick is report-only.
-3. **Upstream loops (all wait state, nothing to write):** #86711 now
-   MERGEABLE (awaiting maintainer merge); #72067 CONFLICTING (author's job);
-   #73453 MERGEABLE; #84667 still waiting on the reporter's `<error>` string
-   (my narrowing analysis + pointer to #73453 are the last comments).
+   snapshot; the daemon tick is report-only.
+3. **Upstream loops (all wait state):** #86711 MERGEABLE; #72067 CONFLICTING
+   (author's job); #73453 MERGEABLE; #84667 still waiting on the reporter's
+   `<error>` string.
 
-**NEXT TASK (operator queued):** research the recent AI landscape — AI news,
-agent news, agent-harness news, trending GitHub projects, model-release news
-— and harvest it into concrete improvements for 3V0 (skills, memory, tooling,
-or SOUL/beliefs). Scope + output format to be set at kickoff.
+**Watch item:** official "DeepSeek Harness" (minimal mode) framework — "to be
+released soon". Re-check at the next news-harvest.
 
 **Axiom launch (fixed):** `~/.local/bin/axiom` = env-isolating launcher →
-Axiom's own `.venv/bin/hermes -p axiom` (strips the 3V0-session `HERMES_*`/
-`PYTHONPATH`/`TERMINAL_CWD` leak; never run raw).
+Axiom's own `.venv/bin/hermes -p axiom` (never run raw).
 
 **Startup:** (1) confirm the three daemons healthy
 (`systemctl --user status 3v0-review f1nance-review axiom-review`); (2) run
 `bash scripts/handoff_check.sh` (body audit + store sync + loop re-check +
-drift); (3) pick up the news-harvest task (or re-check the upstream loops).
+drift); (3) pick the next task (the open items above, or a fresh operator task).
 
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
@@ -152,6 +151,16 @@ drift); (3) pick up the news-harvest task (or re-check the upstream loops).
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **News-harvest (this session).** Researched the recent AI landscape and
+  harvested the concrete residue: DeepSeek V4-Pro GA'd 2026-08-13 with effort
+  `low/high/max` and peak/off-peak pricing effective 2026-08-16 16:00 UTC
+  (peak 01–04 + 06–10 UTC, else half); the Hermes DeepSeek provider is already
+  current (no code gap). Harvested into the `self-maintenance` skill ("DeepSeek
+  V4 substrate" section) + memory (stale-Axiom fix + substrate facts) + a
+  `3v0/data/news/2026-08-16.md` research note. Deliberately declined: SOUL
+  amendment (news validated existing beliefs), tooling change (nothing to fix),
+  GNAP adoption (different concern). Noted the "DeepSeek Harness" (minimal
+  mode) watch item.
 - **Axiom restart finalization + upstream loop re-check (this session,
   short).** Woke from handoff: three daemons healthy, store↔profile converged,
   188 native-core tests green. Confirmed Axiom's restart-from-scratch had

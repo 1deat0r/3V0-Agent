@@ -736,6 +736,28 @@
       "source": "profile-import",
       "created_at": "2026-08-16T02:02:26Z",
       "supersedes": [],
+      "superseded_by": "cf2118e5a605",
+      "note": ""
+    },
+    {
+      "id": "cf2118e5a605",
+      "content": "Fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent separate checkout. Axiom = Hermes-at-HEAD hardfork (upstream remote, merge routinely); ~/.local/bin/axiom launcher strips 3V0-session HERMES_*/PYTHONPATH/TERMINAL_CWD leak.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T02:59:24Z",
+      "supersedes": [
+        "0ce97adb7ab7"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "3aa6f3c5afcd",
+      "content": "DeepSeek V4-Pro GA'd 08-13 (agent↑); effort low/high/max (default high; provider maps xhigh/max/ultra→max). Peak/off-peak pricing since 08-16: peak 01-04+06-10 UTC, else half.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T02:59:24Z",
+      "supersedes": [],
       "superseded_by": "",
       "note": ""
     }
