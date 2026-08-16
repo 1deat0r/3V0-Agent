@@ -2,12 +2,13 @@
 
 > ⚠️ MECHANICAL STATE — canonical since 2026-08-16 (operator-authorized). Generated from verified-consistent state by `3v0/scripts/generate_handoff.py`; regenerated each wake. This file is authoritative for mechanical state: body, continuity invariants, drift, tracked loops, store, daemons. The narrative (kickoff, last-sessions arc, hard-won lessons) stays hand-written in `HANDOFF.md` — never auto-generated. Read both.
 
-Generated: 2026-08-16T07:05:42Z · body HEAD `d8207604b`
+Generated: 2026-08-16T07:10:47Z · body HEAD `6143185d3`
 
 ## Body
-branch `main` · ahead 102 · behind 0 · working tree clean
+branch `main` · ahead 103 · behind 0 · working tree clean
 
 ```
+6143185d3 docs(3v0): regenerate generated handoff at clean wake-#5 HEAD
 d8207604b docs(3v0): regenerate generated handoff at wake-#5 HEAD
 b48357d60 docs(3v0): handoff kickoff — wake #5 (DeepSeek Harness watch resolved) + arc bullet
 db34b2a0e ledger(3v0): re-anchor position baseline + regenerate generated handoff (post-harvest)
@@ -17,7 +18,6 @@ e2af26ee1 docs(3v0): regenerate generated handoff at wake-#4 HEAD
 af7513e42 ledger(3v0): re-anchor position baseline + regenerate generated handoff
 cace12e9e docs(3v0): reconcile loop-claim OPEN assertions in handoff narrative
 6e9b060a9 ledger(3v0): record post-flip position baseline + regenerate generated handoff
-7dd4b4337 feat(3v0): operator-authorized flip — generated handoff is canonical mechanical state
 ```
 
 ## Continuity
@@ -33,7 +33,7 @@ summary: 0 drifting, 6 ok
 ## Drift (project ledger)
 - OK    Axiom (axiom)  behind=0 ahead=25  dirty=no
 - OK    F1NANCE (f1nance)  behind=0 ahead=41  dirty=no
-- OK    3V0 (threev0)  behind=0 ahead=102  dirty=no  [head moved]
+- OK    3V0 (threev0)  behind=0 ahead=103  dirty=no  [head moved]
 
 summary: 0 drifting, 3 ok
 
