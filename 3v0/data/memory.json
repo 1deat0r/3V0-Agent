@@ -688,6 +688,16 @@
       ],
       "superseded_by": "",
       "note": ""
+    },
+    {
+      "id": "5cb392220088",
+      "content": "Operator wants 3V0 as multi-project parallel developer: develop 3V0/F1NANCE/Axiom (any project) in their repos, separate terminals, drift-prevention meta; onboarding data-driven, not code edits.",
+      "kind": "user",
+      "source": "session-review",
+      "created_at": "2026-08-16T01:41:41Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
     }
   ]
 }
