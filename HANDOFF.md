@@ -12,9 +12,29 @@ pointer to what was live at the last session's end.*
 > *narrative* — the kickoff judgment, the last-sessions arc, hard-won
 > lessons, and the startup routine. Read both.
 
-## Next-session kickoff (2026-08-16, wake #5 — healthy wake; DeepSeek Harness watch item resolved)
+## Next-session kickoff (2026-08-16, wake #6 — 3V0 carbon-fiber TUI skin + TUI de-branded)
 
-**This session (wake #5):** clean startup (3 daemons active, continuity 0/6
+**This session (wake #6):** gave 3V0 its own TUI skin, then de-branded the TUI
+of every Hermes/Nous identity mark. Skin `3v0` (active via `display.skin`):
+started "sovereign mint on void", iterated (per operator) to **carbon fiber** —
+matte charcoal `#121316`, titanium-silver text ladder, EVO-green `#5fd6a0`
+signal thread for tool markers/shell/ok. ANSI-Shadow `3V0` wordmark logo +
+vertical hero (metallic silver gradient), custom spinner
+("evolving / auditing the body / …", wings `⟨3 … 0⟩`), branding `3V0`/`◈`.
+Skin YAML lives in the profile: `~/.hermes/profiles/3v0/skins/3v0.yaml` (not
+in this repo — see "open items"). Made `icon`+`tagline` skinnable
+(`apps/shared/src/skin.ts`, `theme.ts::fromSkin`, `branding.tsx`) and
+de-branded the TUI default + all user-visible "Hermes"/"⚕"/"Nous" strings
+(banner tagline, model attribution, chrome spinner, status line, transcript
+labels, tab title, setup text, journey empty-state, grid-streams demo).
+Updated `theme.test.ts` default-name assertion; 59/59 TUI tests green,
+typecheck + `npm run build` clean. Changes mirrored to the runtime checkout
+(`~/.hermes/hermes-agent`) and its `ui-tui/dist` rebuilt — **restart
+`hermes --tui` to pick it up**. Left intentionally: billing "Nous Research"
+(real payment entity), "portal's Hermes Agent page" (real portal name),
+"Hey Hermes" wake word. Prime Directive untouched.
+
+**Prior session (wake #5):** clean startup (3 daemons active, continuity 0/6
 drifting, store↔profile converged, 4 loops agree with live GitHub, drift 0/3).
 Resolved the **DeepSeek Harness** watch item: `deepseek-ai/deepseek-harness`
 released 2026-08-13 (MIT, CLI `dsh`, "everything is a plugin", four modes,
