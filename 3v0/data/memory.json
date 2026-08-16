@@ -332,8 +332,8 @@
       "source": "profile-import",
       "created_at": "2026-08-15T21:59:53Z",
       "supersedes": [],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by foreground"
     },
     {
       "id": "a29f88de9821",
@@ -602,8 +602,8 @@
       "supersedes": [
         "20073a22be73"
       ],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by foreground"
     },
     {
       "id": "c27f52517f28",
@@ -650,8 +650,8 @@
       "supersedes": [
         "58ba31f67543"
       ],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by foreground"
     },
     {
       "id": "ca0d4a97e340",
@@ -674,8 +674,8 @@
       "supersedes": [
         "c27f52517f28"
       ],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by foreground"
     },
     {
       "id": "c513c0447cc9",
@@ -695,6 +695,46 @@
       "kind": "user",
       "source": "session-review",
       "created_at": "2026-08-16T01:41:41Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "8931a62669cf",
+      "content": "`scripts/run_tests.sh` ~81 env failures (missing provider pkgs/creds + FTS5 quirk); not regressions, don't re-triage.",
+      "kind": "memory",
+      "source": "profile-import",
+      "created_at": "2026-08-16T02:02:26Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "94516640dcc9",
+      "content": "Native core 3v0/: memory.py+skills.py canonical stores; native-store-bridge plugin mirrors memory/skill_manage writes; MEMORY.md/USER.md/SKILL.md derived; backstops sync.py+sync_skills.py --write.",
+      "kind": "memory",
+      "source": "profile-import",
+      "created_at": "2026-08-16T02:02:26Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "24020e89abdb",
+      "content": "Three own-clock review daemons (systemd user svcs, 6-min ticks): 3v0-review (memory+skills→profile) + f1nance-review + axiom-review (store-only+memory-only, strict cwd). Tick=_sync()+_drain()+_drift(); core/projects.py = data-driven ProjectLedger (3v0/data/projects/ledger.json); onboard via scripts/project.py add.",
+      "kind": "memory",
+      "source": "profile-import",
+      "created_at": "2026-08-16T02:02:26Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "0ce97adb7ab7",
+      "content": "Fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent is separate checkout. Axiom mid restart-from-scratch (Hermes-latest base + curated deepseek-harness/grok/prime-agent picks), don't trust its current git lineage; ~/.local/bin/axiom launcher strips 3V0-session HERMES_*/PYTHONPATH/TERMINAL_CWD leak.",
+      "kind": "memory",
+      "source": "profile-import",
+      "created_at": "2026-08-16T02:02:26Z",
       "supersedes": [],
       "superseded_by": "",
       "note": ""
