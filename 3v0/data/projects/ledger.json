@@ -16,7 +16,7 @@
       "upstream_head": "460d345642ee3d143a3e461abe39fd42b86a7e54",
       "store_head": "6db5dbd70bcdf83d9c34c378ce989de73253cd128abb7ee2f857a1e8cec0a0c9",
       "open_loops": [],
-      "last_seen_at": "2026-08-16T06:51:34Z"
+      "last_seen_at": "2026-08-16T07:04:33Z"
     },
     "f1nance": {
       "title": "F1NANCE",
@@ -33,7 +33,7 @@
       "upstream_head": "460d345642ee3d143a3e461abe39fd42b86a7e54",
       "store_head": "30b9b0588d63465e6f66109290b3cce4e535f674cb351811b9d248ea4979fcb1",
       "open_loops": [],
-      "last_seen_at": "2026-08-16T06:51:34Z"
+      "last_seen_at": "2026-08-16T07:04:33Z"
     },
     "threev0": {
       "title": "3V0",
@@ -46,11 +46,11 @@
       "store": "3v0/data/memory.json",
       "skill_store": "3v0/data/skills.json",
       "primary": true,
-      "head": "18d198c9e77c5cb82689479a587f38c91011d435",
+      "head": "b48357d6036fc881debe9e643fe45d7ae0568de6",
       "upstream_head": "45af7a71fcd420b4422d2c074b1ce58b9ce0d048",
       "store_head": "d13a803b2e31f5ce928716d330dc27278d902b15554f01fb681957acfcabf3b8",
       "open_loops": [],
-      "last_seen_at": "2026-08-16T06:51:34Z"
+      "last_seen_at": "2026-08-16T07:04:33Z"
     }
   }
 }
