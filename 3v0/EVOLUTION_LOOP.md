@@ -1132,13 +1132,24 @@ Drift is *silent* unless the architecture makes it visible.
 
 ### First concrete piece (Stone 16 scope)
 
+**Project-agnostic by design.** Onboarding a project is *data*, never code: a
+ledger entry records `name` / `repo` / `upstream` / `delta`, plus optional
+Hermes-hardfork fields (`profile`, `store`) for siblings 3V0 reviews. The three
+known projects (3V0, F1NANCE, Axiom) are just seed entries; any git repo with
+an upstream is onboardable. 3V0's multi-project capability applies to *any*
+project, not this specific trio.
+
 - `core/projects.py` → `ProjectLedger` (per project: `head`, `upstream_head`,
-  `delta`, `open_loops`, `store_head`, `last_seen_at`) with a data-driven
-  registry (replace the hardcoded `_PROJECT_NAMES` tuple with a
-  `3v0/data/projects/ledger.json` keyed by name).
-- `scripts/drift_check.py` (stdlib): for each project, `git -C <repo> rev-parse
-  HEAD` vs ledger `head`, `git fetch upstream` behind/ahead count, store-dirty
-  flag → one-page drift report.
+  `delta`, `open_loops`, optional `profile`/`store`/`store_head`,
+  `last_seen_at`), data-driven `3v0/data/projects/ledger.json` keyed by name
+  (replace the hardcoded `_PROJECT_NAMES` tuple).
+- `scripts/project.py` — the onboarding surface: `add <name> --repo <path>
+  [--upstream <remote>] [--profile <name>] [--delta <desc>]`, `list`,
+  `status`, `remove`. Adding a project = adding a ledger entry, never a code
+  edit.
+- `scripts/drift_check.py` (stdlib): iterates the ledger generically — for each
+  project, `git -C <repo> rev-parse HEAD` vs ledger `head`, behind/ahead vs
+  `upstream`, store-dirty flag → one-page drift report.
 - Wire into the daemon tick (drift report folded into the existing sync+drain
   pass) or run manually via `handoff_check.sh`.
 

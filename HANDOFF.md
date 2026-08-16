@@ -12,7 +12,9 @@ meta**, which is now the work to build. Operator-approved direction.
 
 **The goal.** 3V0 develops 3V0 + F1NANCE + Axiom **in parallel**, with
 "separate terminals per project" as a first-class feature and a
-drift-prevention meta (scales to 5+ projects).
+drift-prevention meta. The capability must be **project-agnostic** — applies
+to *any* project people onboard (the three current ones are just seed data),
+not hardcoded to this trio.
 
 **The meta — "one spine, N typed deltas, one ledger, one clock"** (full text
 in `3v0/EVOLUTION_LOOP.md` "Stone 16 — proposed"):
@@ -26,15 +28,21 @@ in `3v0/EVOLUTION_LOOP.md` "Stone 16 — proposed"):
   first working piece.
 - **Clock** — the 6-min daemons become a drift check (HEAD/store vs ledger).
 
-**Stone 16 — build this:**
+**Stone 16 — build this (project-agnostic):**
 1. `core/projects.py` → data-driven `ProjectLedger` (per project: `head`,
-   `upstream_head`, `delta`, `open_loops`, `store_head`, `last_seen_at`),
-   keyed by name in `3v0/data/projects/ledger.json` (drop `_PROJECT_NAMES`).
-2. `scripts/drift_check.py` (stdlib): per project, `git -C <repo> rev-parse
-   HEAD` vs ledger, behind/ahead vs `upstream`, store-dirty → one-page report.
-3. Tests (`3v0/tests/test_ledger.py`) + wire into the daemon tick or
+   `upstream_head`, `delta`, `open_loops`, optional `profile`/`store`/
+   `store_head`, `last_seen_at`), keyed by name in
+   `3v0/data/projects/ledger.json` (drop `_PROJECT_NAMES`). The three known
+   projects are seed entries, not the schema.
+2. `scripts/project.py add/list/status/remove` — the onboarding surface: any
+   project (repo + upstream + optional profile + delta) becomes a ledger entry
+   via a command, never a code edit. This is the "apply to any project" face.
+3. `scripts/drift_check.py` (stdlib): iterate the ledger generically — per
+   project, `git -C <repo> rev-parse HEAD` vs ledger, behind/ahead vs
+   `upstream`, store-dirty → one-page report.
+4. Tests (`3v0/tests/test_ledger.py`) + wire into the daemon tick or
    `handoff_check.sh`; then flip EVOLUTION_LOOP.md from "proposed" to "live".
-4. **Open choice (decide at build time):** the physical "terminal" — separate
+5. **Open choice (decide at build time):** the physical "terminal" — separate
    `hermes -p <profile> --tui` sessions vs `delegate_task` subagents vs
    background terminals. Ledger is agnostic; operator flagged "separate
    terminals," so lean per-project TUI sessions + 3V0 as orchestrator.
