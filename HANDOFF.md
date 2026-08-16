@@ -54,7 +54,7 @@ The shadow diff (now "loop-claim drift") remains as ongoing monitoring — a
 2. **Position snapshots** — re-record after this session's commits
    (`drift_check.py --update`). Ongoing practice: the daemon tick is
    report-only; `--update` is a deliberate commit.
-3. **Upstream loops (all wait state):** #86711 MERGEABLE; #72067 CONFLICTING
+3. **Upstream loops (all OPEN, awaiting others):** #86711 MERGEABLE; #72067 CONFLICTING
    (author's job); #73453 MERGEABLE; #84667 still waiting on the reporter's
    `<error>` string. Live state now lives in `HANDOFF.generated.md`; when a
    loop changes, update `claims.json` and run `continuity_check.py --accept`.
