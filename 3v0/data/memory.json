@@ -790,6 +790,28 @@
       "supersedes": [
         "24020e89abdb"
       ],
+      "superseded_by": "61bf3b9fbb89",
+      "note": ""
+    },
+    {
+      "id": "61bf3b9fbb89",
+      "content": "Own-clock review daemons tick now runs continuity check BEFORE sync/heal (fixes self-fulfilling healable invariants); 3v0-review memory+skills→profile, f1nance/axiom store-only; ledger data-driven; onboard scripts/project.py add.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-16T04:25:27Z",
+      "supersedes": [
+        "fe2bc53015fe"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "e1770b2d01bc",
+      "content": "Continuity clock trust is established by fault injection (inject drift classes), not passive observation; generated-handoff deferral resolved via research, 2026-08-16.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-16T04:25:27Z",
+      "supersedes": [],
       "superseded_by": "",
       "note": ""
     }
