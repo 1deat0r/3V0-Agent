@@ -2,12 +2,14 @@
 
 > ⚠️ MECHANICAL STATE — canonical since 2026-08-16 (operator-authorized). Generated from verified-consistent state by `3v0/scripts/generate_handoff.py`; regenerated each wake. This file is authoritative for mechanical state: body, continuity invariants, drift, tracked loops, store, daemons. The narrative (kickoff, last-sessions arc, hard-won lessons) stays hand-written in `HANDOFF.md` — never auto-generated. Read both.
 
-Generated: 2026-08-16T05:04:11Z · body HEAD `0fc19db12`
+Generated: 2026-08-16T06:51:36Z · body HEAD `18d198c9e`
 
 ## Body
-branch `main` · ahead 97 · behind 0 · working tree clean
+branch `main` · ahead 99 · behind 0 · working tree dirty
 
 ```
+18d198c9e docs(3v0): resolve DeepSeek Harness watch item — released 2026-08-13 (MIT, dsh)
+e2af26ee1 docs(3v0): regenerate generated handoff at wake-#4 HEAD
 0fc19db12 docs(3v0): handoff kickoff — wake #4 reconciliation + arc bullet
 af7513e42 ledger(3v0): re-anchor position baseline + regenerate generated handoff
 cace12e9e docs(3v0): reconcile loop-claim OPEN assertions in handoff narrative
@@ -16,8 +18,6 @@ cace12e9e docs(3v0): reconcile loop-claim OPEN assertions in handoff narrative
 5b3643eb2 docs(3v0): fix test count (18→19) + regenerate generated handoff
 505710039 docs(3v0): regenerate HANDOFF.generated.md at post-Stone-18 HEAD
 84d4e4181 ledger(3v0): record post-Stone-18 position baseline (drift_check --update)
-21684b941 memory(3v0): daemon captured grill-session facts (fault-injection acceptance + continuity-before-heal)
-8603d265a feat(3v0): Stone 18 — shadow generated handoff (render + loop-claim diff + CLI)
 ```
 
 ## Continuity
@@ -33,9 +33,9 @@ summary: 0 drifting, 6 ok
 ## Drift (project ledger)
 - OK    Axiom (axiom)  behind=0 ahead=25  dirty=no
 - OK    F1NANCE (f1nance)  behind=0 ahead=41  dirty=no
-- OK    3V0 (threev0)  behind=0 ahead=97  dirty=no  [head moved]
+- DRIFT 3V0 (threev0)  behind=0 ahead=99  dirty=yes
 
-summary: 0 drifting, 3 ok
+summary: 1 drifting, 3 ok
 
 ## Open loops
 - #72067 (pr) · claim OPEN · live OPEN (mergeable CONFLICTING, updated 2026-08-05) · agree — fix(memory): recover null/omitted action instead of dead-ending in 'Un… [canonical memory null-action recovery; CONFLICTING, author's job]
@@ -44,7 +44,7 @@ summary: 0 drifting, 3 ok
 - #86711 (pr) · claim OPEN · live OPEN (mergeable MERGEABLE, updated 2026-08-15) · agree — fix(approval): collapse whitespace before matching approvals.deny glob… [approval-deny whitespace fix; awaiting maintainer merge]
 
 ## Store
-facts by kind: directive=1, identity=1, memory=13, user=8 · 76 fact versions · 7 active skills · 56 skill versions
+facts by kind: directive=1, identity=1, memory=13, user=8 · 76 fact versions · 7 active skills · 57 skill versions
 
 ## Daemons
 - 3v0-review: active
