@@ -52,6 +52,7 @@ export interface ThemeColors {
 export interface ThemeBrand {
   name: string
   icon: string
+  tagline: string
   prompt: string
   welcome: string
   goodbye: string
@@ -250,11 +251,12 @@ export function themeToneHex(tone: string): string {
 // ── Defaults ─────────────────────────────────────────────────────────
 
 const BRAND: ThemeBrand = {
-  name: 'Hermes Agent',
-  icon: '⚕',
+  name: '3V0',
+  icon: '◈',
+  tagline: 'sovereign · self-evolving · honest',
   prompt: '❯',
   welcome: 'Type your message or /help for commands.',
-  goodbye: 'Goodbye! ⚕',
+  goodbye: 'Goodbye! ◈',
   tool: '┊',
   helpHeader: '(^_^)? Commands'
 }
@@ -952,7 +954,8 @@ export function fromSkin(
 
       brand: {
         name: branding.agent_name ?? d.brand.name,
-        icon: d.brand.icon,
+        icon: branding.icon ?? d.brand.icon,
+        tagline: branding.tagline ?? d.brand.tagline,
         prompt: cleanPromptSymbol(branding.prompt_symbol, d.brand.prompt),
         welcome: branding.welcome ?? d.brand.welcome,
         goodbye: branding.goodbye ?? d.brand.goodbye,

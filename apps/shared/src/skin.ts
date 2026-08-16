@@ -76,6 +76,8 @@ export type SkinColorToken = (typeof SKIN_COLOR_TOKENS)[number]
 /** Canonical branding/string tokens. */
 export const SKIN_BRANDING_TOKENS = [
   'agent_name',
+  'icon',
+  'tagline',
   'welcome',
   'goodbye',
   'response_label',
