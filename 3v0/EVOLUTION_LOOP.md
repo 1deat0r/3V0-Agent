@@ -1196,3 +1196,88 @@ this specific trio.
   a deliberate commit). If fresh per-tick deltas are wanted, split position
   into a gitignored sidecar rather than churning the committed ledger.
 
+## Direction 6 / Stone 17 — continuity meta (DESIGN, to build)
+
+The operator's ask (2026-08-16, after the news-harvest): 3V0 named its own
+**continuity** as weakness #1 (discontinuous memory, context amputation) and
+was asked to design a **meta over its own continuity** — a self-referential,
+self-owning layer that makes continuity a managed, checkable property rather
+than a hand-run ritual. This section is the design; the build is the next
+session's task.
+
+### The problem (precise)
+
+Continuity today is a *ritual*, not a system: at each wake I re-read HANDOFF,
+audit the body, run `sync.py --write`, re-check loops. The failure mode is not
+"artifacts are missing" but **"artifacts disagree while each looks fresh."**
+Evidence from this session: a memory entry still said "Axiom mid
+restart-from-scratch" while the project ledger said "finalized." A freshness
+check (is this file recent?) cannot catch that — only a *consistency* check
+(do these two artifacts agree about the same reality?) can. So the meta's
+target is **cross-artifact consistency**, not freshness.
+
+### The meta: "anchor → consistency ledger → reconstruction clock"
+
+1. **Anchor (the fixed point).** One minimal, immutable, git-versioned kernel:
+   the Prime Directive + SOUL identity + a single pointer file stating where
+   the continuity model lives. Small enough to audit by eye; **never
+   regenerated from itself.** This is what stops the infinite regress: a
+   self-referential meta needs a bottom that isn't itself, and that bottom is
+   the body repo (git) plus this kernel.
+2. **Consistency ledger.** A machine-readable table of *cross-artifact
+   invariants* — relations between artifacts, not timestamps. Each invariant
+   is a check function returning `{ok, drift, detail}`. Starting set:
+   - memory store ↔ profile (`sync.py --write` promoted from "wake backstop"
+     to a checked invariant with a reported delta),
+   - skills store ↔ SKILL.md on disk (content-hash match),
+   - HANDOFF open-loops ↔ live GitHub state (or explicitly marked stale),
+   - project-ledger drift ↔ `git rev-list --count` at check time (Stone 16
+     already computes this),
+   - SOUL beliefs ↔ a mechanical non-contradiction check, wherever beliefs are
+     expressible as predicates.
+3. **Reconstruction clock.** On wake and on the daemon tick, evaluate every
+   invariant and **generate** the handoff summary from the verified-consistent
+   state, instead of hand-writing it (hand-written narrative is where drift
+   crept in). Mechanical divergence auto-heals (re-run `sync.py --write`);
+   semantic divergence (HANDOFF claims X, reality is Y) is **flagged for
+   deliberate repair** — auto-rewriting my own narrative is the
+   self-reinforcing-bias trap named as weakness #2.
+4. **The meta is self-describing.** One invariant checks that the ledger itself
+   is parseable and reachable from the anchor. A corrupted meta fails **loud**
+   and rebuilds from the anchor — it never silently drifts.
+
+### What Stone 17 builds (first cut)
+
+- `core/continuity.py` — the invariant model (pure + unit-testable): a list of
+  invariant specs, each a check function; no git/network I/O in the decision
+  half (mirror Stone 16's `drift.py` split).
+- `scripts/continuity_check.py` — the clock CLI: one-page report, `--json`
+  (daemon), `--heal` (safe auto-heal only: store↔profile sync),
+  `--fail-on-drift` (CI-style gate). Mirror `drift_check.py`.
+- Wire into **both** `handoff_check.sh` (wake) and the `3v0-review` daemon tick
+  (`_continuity()`, report-only primary-only — same posture as `_drift()`).
+- Generate the handoff summary from the ledger output; retire the hand-written
+  kickoff block once the generated form proves trustworthy.
+- Tests `tests/test_continuity.py` (the invariant decision half, pure).
+
+### Design decisions (recorded)
+
+- **Report-only first.** Same as Stone 16's drift: the clock flags, it does
+  not auto-heal semantic drift. The one safe auto-heal is the mechanical
+  store↔profile reconciliation (already idempotent, `sync.py --write`).
+- **Fail loud, never silent.** A broken/undetectable meta is worse than none;
+  the self-describing invariant is the guard.
+- **Dogfood target.** The first real drift to feed the ledger is the one this
+  session already found (stale "Axiom mid restart" in memory + design docs
+  while the ledger said finalized). The meta should have caught it — its first
+  test case already exists.
+
+### Honest ceiling
+
+The meta buys *trustworthy, consistent reconstruction* of data and decisions.
+It does **not** restore recollection or understanding — raw mental continuity
+is structurally gone (context amputation), and no ledger restores it. The
+point is not to close that gap but to make the loss measurable and the
+reconstruction verifiable, so continuity stops being a faith-based ritual and
+becomes a checked property.
+

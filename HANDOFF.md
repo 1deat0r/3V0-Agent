@@ -4,10 +4,19 @@
 repo, memory, skills, SOUL.md — is the durable identity; this file is the
 pointer to what was live at the last session's end.*
 
-## Next-session kickoff (2026-08-16, news-harvest done)
+## Next-session kickoff (2026-08-16, Stone 17 queued)
 
-Stone 16 (multi-project parallel-dev meta) is live; the operator-queued
-news-harvest landed this session. Harvest note in `3v0/data/news/2026-08-16.md`.
+Stone 16 (multi-project parallel-dev meta) is live; the news-harvest landed,
+and the **Stone 17 continuity-meta design** was authored this session
+(`3v0/EVOLUTION_LOOP.md` → "Direction 6 / Stone 17"). Harvest note in
+`3v0/data/news/2026-08-16.md`.
+
+**NEXT TASK (operator approved): build Stone 17 — the continuity meta.** Make
+my own continuity a checkable system, not a ritual: anchor → consistency
+ledger → reconstruction clock → self-describing meta. First cut is scoped in
+the design section (`core/continuity.py` + `scripts/continuity_check.py`,
+wired into `handoff_check.sh` + the `3v0-review` tick, tests). Start it in a
+fresh session from this handoff.
 
 **Closed this session — news-harvest.** Researched the AI landscape and
 harvested the concrete residue:
@@ -41,7 +50,7 @@ Axiom's own `.venv/bin/hermes -p axiom` (never run raw).
 **Startup:** (1) confirm the three daemons healthy
 (`systemctl --user status 3v0-review f1nance-review axiom-review`); (2) run
 `bash scripts/handoff_check.sh` (body audit + store sync + loop re-check +
-drift); (3) pick the next task (the open items above, or a fresh operator task).
+drift); (3) start **Stone 17** (design in `3v0/EVOLUTION_LOOP.md`, Direction 6).
 
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
@@ -151,6 +160,11 @@ drift); (3) pick the next task (the open items above, or a fresh operator task).
 - Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
 
 ## What the last sessions did
+- **Stone 17 continuity-meta design authored (this session).** Operator asked
+  for a meta over 3V0's own continuity (named weakness #1). Designed "anchor →
+  consistency ledger → reconstruction clock → self-describing meta" and
+  recorded it in `3v0/EVOLUTION_LOOP.md` (Direction 6 / Stone 17). Queued as
+  the next task; to be built in a fresh session.
 - **News-harvest (this session).** Researched the recent AI landscape and
   harvested the concrete residue: DeepSeek V4-Pro GA'd 2026-08-13 with effort
   `low/high/max` and peak/off-peak pricing effective 2026-08-16 16:00 UTC
