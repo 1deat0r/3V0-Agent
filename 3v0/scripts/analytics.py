@@ -3,8 +3,7 @@
 
 Reads Hermes's state.db (sessions, messages, session_model_usage) and turns
 it into a self-owned analytics report: per-tool frequency / latency / success,
-per-model tokens / cost, per-task × per-model aux routing, per-day burn, and
-body-health signals.
+per-model tokens / cost, per-day burn, and body-health signals.
 
 Local and self-owned: reads only the local profile DB, writes only to
 3v0/data/analytics/. No outbound telemetry, nothing phones home.
@@ -20,14 +19,15 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sqlite3
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
-from core.analytics import classify_tool_result, summarize  # noqa: E402
+from core.analytics import summarize  # noqa: E402
+from core.analytics_collect import build_events, load_sessions, load_usage  # noqa: E402
 
 DEFAULT_DB = Path(os.environ.get(
     "THREEV0_STATE_DB",
@@ -36,95 +36,27 @@ DEFAULT_DB = Path(os.environ.get(
 DEFAULT_REPORT = REPO_ROOT / "3v0" / "data" / "analytics" / "report.json"
 
 
-def _rows(db, sql):
-    conn = sqlite3.connect(db)
-    conn.row_factory = sqlite3.Row
-    try:
-        return [dict(r) for r in conn.execute(sql)]
-    finally:
-        conn.close()
-
-
-def load_sessions(db):
-    return _rows(db, """
-        SELECT started_at, ended_at, end_reason, message_count, tool_call_count,
-               api_call_count, input_tokens, output_tokens, cache_read_tokens,
-               reasoning_tokens, estimated_cost_usd, rewind_count,
-               compression_failure_error, compression_ineffective_count,
-               compression_fallback_streak
-        FROM sessions
-    """)
-
-
-def load_usage(db):
-    return _rows(db, """
-        SELECT session_id, model, task, api_call_count, input_tokens,
-               output_tokens, cache_read_tokens, reasoning_tokens,
-               estimated_cost_usd
-        FROM session_model_usage
-    """)
-
-
-def build_events(db):
-    """Match tool results to their issuing call for latency; classify success."""
-    rows = _rows(db, """
-        SELECT role, tool_name, tool_call_id, tool_calls, content, timestamp
-        FROM messages
-        WHERE role IN ('tool', 'assistant')
-    """)
-    call_time = {}
-    for m in rows:
-        if m["role"] == "assistant" and m.get("tool_calls"):
-            try:
-                calls = json.loads(m["tool_calls"])
-            except (ValueError, TypeError):
-                continue
-            for c in calls:
-                cid = c.get("id") or c.get("call_id")
-                if cid:
-                    call_time[cid] = m.get("timestamp")
-    events = []
-    for m in rows:
-        if m["role"] != "tool":
-            continue
-        lat = None
-        t0 = call_time.get(m.get("tool_call_id"))
-        if t0 is not None and m.get("timestamp") is not None:
-            lat = (m["timestamp"] - t0) * 1000.0
-            if lat < 0:
-                lat = None
-        events.append({
-            "name": m.get("tool_name") or "unknown",
-            "latency_ms": lat,
-            "status": classify_tool_result(m.get("content")),
-        })
-    return events
-
-
-def _pct(v):
-    return f"{v * 100:.1f}%" if v is not None else "   ?"
-
-
 def render(report, top=10):
     t = report["totals"]
+    ch = f"{t['cache_hit_ratio']*100:.1f}%" if t.get("cache_hit_ratio") is not None else "n/a"
+    os_ = f"{t['output_token_share']*100:.1f}%" if t.get("output_token_share") is not None else "n/a"
     lines = [
         f"3V0 self-analytics — {t['sessions']} sessions, {t['active_days']} active days",
         f"tokens: in={t['input_tokens']:,} out={t['output_tokens']:,} "
         f"cache_read={t['cache_read_tokens']:,} reasoning={t['reasoning_tokens']:,}",
-        f"cache-hit {_pct(t.get('cache_hit_ratio'))} | output share {_pct(t.get('output_token_share'))} "
-        f"(levers per TOKEN_EFFICIENCY.md)",
+        f"cache-hit {ch} | output share {os_} (levers per TOKEN_EFFICIENCY.md)",
         f"cost (est): ${t['estimated_cost_usd']:.2f} | api calls {t['api_calls']:,} | tool calls {t['tool_calls']:,}",
         "",
         "models:",
     ]
     for m in report["models"]:
-        mch = f" ch={_pct(m.get('cache_hit_ratio'))}" if m.get("cache_hit_ratio") is not None else ""
+        mch = f" ch={m['cache_hit_ratio']*100:.1f}%" if m.get("cache_hit_ratio") is not None else ""
         lines.append(f"  {m['model']:<22} ${m['estimated_cost_usd']:>9.2f}  "
                      f"in={m['input_tokens']:,} out={m['output_tokens']:,}{mch}")
     lines += ["", "tasks (task × model — aux should be flash):"]
     for tsk in report["tasks"]:
         lines.append(f"  {tsk['task']:<12} {tsk['model']:<22} ${tsk['estimated_cost_usd']:>9.2f}  "
-                     f"in={tsk['input_tokens']:,} out={tsk['output_tokens']:,}")
+                     f"in={tsk['input_tokens']:,}")
     lines += ["", f"tools (top {top} by count):",
               f"  {'tool':<20} {'n':>5} {'succ%':>6} {'p50ms':>8} {'p95ms':>8}"]
     for tool in report["tools"][:top]:
@@ -160,6 +92,7 @@ def main():
 
     report = summarize(load_sessions(args.db), load_usage(args.db),
                        build_events(args.db), last_n=args.days)
+    report["generated_at"] = datetime.now(timezone.utc).isoformat()
     print(render(report, top=args.top))
 
     if args.out:

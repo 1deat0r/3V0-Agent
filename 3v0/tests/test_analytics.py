@@ -202,7 +202,7 @@ class TestHealth(unittest.TestCase):
 class TestSummarize(unittest.TestCase):
     def test_shape(self):
         report = summarize([], [], [])
-        for key in ("generated_at", "totals", "models", "tasks", "tools", "daily", "health", "notes"):
+        for key in ("totals", "models", "tasks", "tools", "daily", "health", "notes"):
             self.assertIn(key, report)
 
 

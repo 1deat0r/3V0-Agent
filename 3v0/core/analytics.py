@@ -140,6 +140,34 @@ def _cache_hit_ratio(cache_read, fresh_input):
     return round(cache_read / total, 4) if total else None
 
 
+def _accumulate_usage(usage, key_fn, with_sessions=False):
+    """Sum the canonical usage-row field set into per-key accumulators.
+
+    The ONE place the token/cost field list is encoded for
+    `session_model_usage` rows. Callers (model_mix, task_mix) project their
+    own output shape and sort order. `reasoning_tokens` is always summed
+    (harmless — a caller that doesn't emit it simply omits the field).
+    """
+    agg = {}
+    for r in usage:
+        rec = agg.setdefault(key_fn(r), {
+            "api_calls": 0, "input_tokens": 0, "output_tokens": 0,
+            "cache_read_tokens": 0, "reasoning_tokens": 0,
+            "estimated_cost_usd": 0.0,
+        })
+        if with_sessions:
+            rec.setdefault("session_ids", set())
+            if r.get("session_id"):
+                rec["session_ids"].add(r["session_id"])
+        rec["api_calls"] += r.get("api_call_count") or 0
+        rec["input_tokens"] += r.get("input_tokens") or 0
+        rec["output_tokens"] += r.get("output_tokens") or 0
+        rec["cache_read_tokens"] += r.get("cache_read_tokens") or 0
+        rec["reasoning_tokens"] += r.get("reasoning_tokens") or 0
+        rec["estimated_cost_usd"] += r.get("estimated_cost_usd") or 0.0
+    return agg
+
+
 def session_totals(sessions):
     """Totals across all sessions (tokens, cost, counts, active days).
 
@@ -175,21 +203,9 @@ def model_mix(usage):
     `sessions` counts distinct session_ids (the usage table has a `task`
     dimension, so one session can contribute several rows per model).
     """
-    agg = {}
-    for r in usage:
-        key = r.get("model") or "unknown"
-        rec = agg.setdefault(key, {
-            "session_ids": set(), "api_calls": 0, "input_tokens": 0,
-            "output_tokens": 0, "cache_read_tokens": 0,
-            "estimated_cost_usd": 0.0,
-        })
-        if r.get("session_id"):
-            rec["session_ids"].add(r["session_id"])
-        rec["api_calls"] += r.get("api_call_count") or 0
-        rec["input_tokens"] += r.get("input_tokens") or 0
-        rec["output_tokens"] += r.get("output_tokens") or 0
-        rec["cache_read_tokens"] += r.get("cache_read_tokens") or 0
-        rec["estimated_cost_usd"] += r.get("estimated_cost_usd") or 0.0
+    agg = _accumulate_usage(
+        usage, key_fn=lambda r: r.get("model") or "unknown", with_sessions=True,
+    )
     out = []
     for model, rec in agg.items():
         out.append({
@@ -213,26 +229,21 @@ def task_mix(usage):
     requires aux tasks to route to deepseek-v4-flash; this view makes any
     primary-model aux spend visible instead of silently dropped.
     """
-    agg = {}
-    for r in usage:
-        task = r.get("task") or "main"
-        model = r.get("model") or "unknown"
-        key = (task, model)
-        rec = agg.setdefault(key, {
-            "task": task, "model": model, "api_calls": 0,
-            "input_tokens": 0, "output_tokens": 0, "cache_read_tokens": 0,
-            "reasoning_tokens": 0, "estimated_cost_usd": 0.0,
-        })
-        rec["api_calls"] += r.get("api_call_count") or 0
-        rec["input_tokens"] += r.get("input_tokens") or 0
-        rec["output_tokens"] += r.get("output_tokens") or 0
-        rec["cache_read_tokens"] += r.get("cache_read_tokens") or 0
-        rec["reasoning_tokens"] += r.get("reasoning_tokens") or 0
-        rec["estimated_cost_usd"] += r.get("estimated_cost_usd") or 0.0
+    agg = _accumulate_usage(
+        usage, key_fn=lambda r: (r.get("task") or "main", r.get("model") or "unknown"),
+    )
     out = []
-    for rec in agg.values():
-        rec["estimated_cost_usd"] = round(rec["estimated_cost_usd"], 4)
-        out.append(rec)
+    for (task, model), rec in agg.items():
+        out.append({
+            "task": task,
+            "model": model,
+            "api_calls": rec["api_calls"],
+            "input_tokens": rec["input_tokens"],
+            "output_tokens": rec["output_tokens"],
+            "cache_read_tokens": rec["cache_read_tokens"],
+            "reasoning_tokens": rec["reasoning_tokens"],
+            "estimated_cost_usd": round(rec["estimated_cost_usd"], 4),
+        })
     out.sort(key=lambda r: r["estimated_cost_usd"], reverse=True)
     return out
 
@@ -293,9 +304,12 @@ def health(sessions):
 # --------------------------------------------------------------------------
 
 def summarize(sessions, usage, events, last_n=30):
-    """The full analytics report."""
+    """The full analytics report (no `generated_at` — the caller stamps it).
+
+    `generated_at` is a collection-time concern, so it lives in the script
+    (mirrors scripts/insights.py), keeping this core module pure/deterministic.
+    """
     return {
-        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "totals": session_totals(sessions),
         "models": model_mix(usage),
         "tasks": task_mix(usage),

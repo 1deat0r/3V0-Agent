@@ -98,7 +98,11 @@ code.
   totals (incl. cache-hit ratio and output-token share — the two levers named
   in `TOKEN_EFFICIENCY.md`), a per-task × per-model mix that surfaces aux
   routing, and body-health signals — all pure functions over row dicts. No
-  I/O — the DB reads live in `scripts/analytics.py`.
+  I/O — the DB reads live in `core/analytics_collect.py`.
+- `core/analytics_collect.py` — the collection half of self-analytics (Stone
+  22 architecture pass): reads the state DB and builds the tool events
+  (result → issuing-call latency match + success classification). Takes the
+  DB path as a parameter, mirroring `session_db.py` / `gitstate.py`.
 - `core/insights.py` — the pure detection half of self-analytics (Stone 20):
   turns the analytics report into ranked, evidence-backed findings (tool
   reliability/latency, cache health, aux routing, memory health, compression,

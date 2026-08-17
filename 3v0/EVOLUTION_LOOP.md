@@ -1561,4 +1561,30 @@ now reports cache-hit 98.4% (healthy, above the 0.90 floor) and the
 aux-routing findings; `cache_health` stays silent because the prefix *is*
 protected.
 
+## Deepening pass 2 — Stones 19–22 architecture (2026-08-18)
+
+Second Matt Pocock arc pass, this time over the newly-added Stones 19–22.
+Stone 22 already ran review + tdd on them; this pass closes the two stages
+they'd skipped.
+
+- **Stage 1 (domain-modeling):** `CONTEXT.md` gained four canonical terms —
+  `report`, `finding`, `cache-hit ratio`, `auxiliary task` / `aux routing`.
+- **Stage 2 (architecture walk):** a fresh sub-agent over
+  analytics/insights/memdb returned 2 strong + 1 medium + 3 marginal
+  candidates; it also honest-confirmed `insights.py` is the healthiest module
+  (no candidate above marginal) and found no pass-through functions.
+- **Stage 3 (implement):** extracted the two strong candidates + one
+  consistency fix:
+  - `_accumulate_usage` — the one usage-row accumulator that `model_mix` and
+    `task_mix` now share (were near-identical loops).
+  - `core/analytics_collect.py` — moved `load_sessions` / `load_usage` /
+    `build_events` (incl. the previously *untested* latency-match) out of the
+    script and into the collection-at-the-edge convention, + a new
+    `test_analytics_collect.py` (6 tests).
+  - `generated_at` stamp moved out of `summarize()` into the script (pure core).
+- **Deferred:** the `memdb` rank/render → pure `retrieval.py` split (medium;
+  deletion test is weak until the pipeline-rewire stone makes it pay off).
+
+Verification: 317 tests green (311 → 317), continuity 6/6.
+
 
