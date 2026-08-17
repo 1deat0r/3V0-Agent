@@ -12,9 +12,31 @@ pointer to what was live at the last session's end.*
 > *narrative* — the kickoff judgment, the last-sessions arc, hard-won
 > lessons, and the startup routine. Read both.
 
-## Next-session kickoff (2026-08-16, wake #6 — 3V0 carbon-fiber TUI skin + TUI de-branded)
+## Next-session kickoff (2026-08-17, wake #7 — Matt Pocock deepening of the native core)
 
-**This session (wake #6):** gave 3V0 its own TUI skin, then de-branded the TUI
+**This session (wake #7):** applied Matt Pocock's engineering pipeline to the
+native core — a full deepening pass that closed all seven architecture-review
+candidates and shrank `review_session.py` from 1,206 to 983 lines without a
+behavior change. The arc: domain-modeling → improve-codebase-architecture →
+implement → code-review → tdd. **Built**: `3v0/CONTEXT.md` (domain glossary) +
+3 ADRs (`3v0/docs/adr/0001..0003`); five deep modules extracted —
+`core/review_decide.py` (pure review decision half), `core/claims.py` (loop
+registry), `core/project.py` (projection owner), `core/gitstate.py` (drift
+collection), `core/session_db.py` (named-column DB reads, killing the
+positional-index bug class); `core/drift.py` reduced to pure. Vocabulary
+single-sourced (`KINDS`/`ACTIONS`/`SKILL_DECISION_ACTIONS` +
+`MemoryStore.matching()`). **Verification**: 252 native-core tests green (was
+228); continuity 6/6; two parallel code-review sub-agents converged on
+"behavior-preserving, no scope creep" (one fix applied: `load_session` now
+consumes `session_columns`). **Skills**: `3v0-native-core` → v1.4.0 (Layout +
+invariant #4 corrected to decision-pure/collection-at-edges); new
+`mattpocock-deepening` skill captures the pipeline + the one lesson that
+mattered — *external signal beats self-critique*. **Declined** the in-process
+`decide` switch (#1b): the subprocess is a deliberate isolation layer.
+Commits `73e98df19`→`864111c45` (10); tree clean except the daemon's
+`memory.json`. Design in `3v0/EVOLUTION_LOOP.md` (deepening section).
+
+**Prior session (wake #6):** gave 3V0 its own TUI skin, then de-branded the TUI
 of every Hermes/Nous identity mark. Skin `3v0` (active via `display.skin`):
 started "sovereign mint on void", iterated (per operator) to **carbon fiber** —
 matte charcoal `#121316`, titanium-silver text ladder, EVO-green `#5fd6a0`
@@ -158,7 +180,7 @@ drift before picking up the follow-ups.
   (skill_update/retract/absorb decisions, never destroys) +
   `scripts/record_skills.py` (project SKILL.md), closing the
   `threev0_record`-is-memory-only gap.
-  Tests: `python3 -m unittest discover -s 3v0/tests` (247 green). Stone 16
+  Tests: `python3 -m unittest discover -s 3v0/tests` (252 green). Stone 16
   added the drift ledger (`core/projects.py` → data-driven `ProjectLedger` +
   `3v0/data/projects/ledger.json`), `core/drift.py`, `scripts/project.py`
   (onboarding CLI) and `scripts/drift_check.py` (the clock). Stone 17 added
@@ -167,7 +189,10 @@ drift before picking up the follow-ups.
   the shadow generated handoff: `core/handoff.py` (pure render + loop-claim
   diff), `scripts/generate_handoff.py` (collection CLI) →
   `HANDOFF.generated.md` (never promoted; the diff is the acceptance
-  evidence). See `3v0/README.md` + `3v0/EVOLUTION_LOOP.md`.
+  evidence). Wake #7 deepened the core (Matt Pocock pipeline): extracted
+  `review_decide`, `claims`, `project`, `gitstate`, `session_db`; made `drift`
+  pure; `review_session.py` 1206→983 lines. See `3v0/README.md` +
+  `3v0/EVOLUTION_LOOP.md`.
 - **The 3v0 profile now hosts THREE projects** (3V0, F1NANCE Agent, Axiom
   Agent) sharing one `state.db`. Operator decision (clarify, 2026-08-16):
   **per-project stores**. The reviewer is scoped by `cwd` (`_is_threev0_cwd`:
