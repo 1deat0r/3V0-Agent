@@ -1494,4 +1494,28 @@ Verification: 287 tests green (271 → 287), continuity 6/6. First live pass
 surfaced a real, actionable finding: memory writes succeed only 66% because
 the store is at its char budget.
 
+## Stone 21 — memory rework, foundation (SQLite temporal-fact store)
+
+The profile's 2KB injected view can't grow; the flat JSON store can't be
+queried; session history is keyword-only. Stone 21 lays the foundation for a
+sustainable long-term memory: `core/memdb.py` is a SQLite triple-store
+(subject/predicate/object) with temporal validity (valid_from/valid_to),
+provenance, confidence, a sub-memory `domain` tag, and retrieval feedback
+(access_count/last_accessed). The profile MEMORY.md becomes a derived,
+retrieval-chosen view of it — not the source of truth.
+
+Decisions:
+- **SQLite, not a graph DB.** Triples + temporal validity in SQLite *is* a
+  temporal knowledge graph; 90% of the value, none of the graph-DB tax. (The
+  real bottleneck is retrieval + injection, not storage.)
+- **Reinforce and forget, not append-only.** access_count/last_accessed give
+  retrieval a signal; valid_to + supersedes give forgetting a mechanism.
+- **Sub-memory = a `domain` tag**, not a separate file per domain. Scoped
+  retrieval (`valid_facts(domain=...)`) with one schema, one query path.
+- **Test caught a temporal-semantics bug** (`valid_to >= now` → `> now`): a
+  fact superseded at T must be invalid *at* T, not one instant later.
+
+Verification: 296 tests green (287 → 296). Next stones: rewire the pipeline
+(record/sync/bridge → memdb), retrieval-chosen injection, feedback/forgetting.
+
 

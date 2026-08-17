@@ -16,6 +16,11 @@ code.
   are flagged, never silently overwritten. Also `retract()` (remove with no
   successor — tombstone sentinel) and `mutate()` (cross-process `flock` so
   concurrent writers serialize).
+- `core/memdb.py` — the SQLite temporal-fact store (Stone 21, memory rework):
+  triples (subject/predicate/object) with temporal validity, provenance,
+  confidence, a sub-memory `domain` tag, and retrieval feedback
+  (access_count/last_accessed) — the foundation for retrieval-chosen
+  injection replacing the static profile view.
 - `core/profile_io.py` — single owner of the '§' wire format shared by
   seed/export/sync.
 - `core/sync.py` — store↔profile reconciliation. The store is canonical, the
