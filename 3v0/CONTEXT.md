@@ -137,6 +137,32 @@ A recorded state of a tracked upstream loop (a GitHub PR/issue) as of a time.
 **Loop**:
 A tracked upstream PR/issue whose state 3V0 is waiting on.
 
+## Self-analytics (measurement axis)
+
+**Report**:
+The self-metrics snapshot — aggregated totals (sessions, tokens, cost,
+per-model/per-task/per-day) that insights detect over. Local and self-owned,
+never outbound.
+_Avoid_: dashboard, metrics log, telemetry.
+
+**Finding**:
+The unit of detection over a report — a ranked result carrying a category,
+severity, message, evidence, and a suggested action. Insights *propose*
+findings; the dispose side acts.
+_Avoid_: alert, warning, issue.
+
+**Cache-hit ratio**:
+The fraction of input tokens served from the prompt cache (cached ÷ all
+input). The #1 token-cost lever — a broken prefix drops it and cost rises.
+_Avoid_: cache rate, cache efficiency.
+
+**Auxiliary task / aux routing**:
+A side-task LLM call (compression, approval, curator, vision, title) and the
+discipline of pinning each to a model — the cheap model for summarization,
+the primary for the approval guard. Unpinned `auto` resolves to the *main*
+model, not the cheap one.
+_Avoid_: sub-model, background model, secondary model.
+
 ## Projects and the loop
 
 **Project ledger**:
