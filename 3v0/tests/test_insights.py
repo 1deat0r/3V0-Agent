@@ -95,6 +95,12 @@ class TestAuxRouting(unittest.TestCase):
                              "estimated_cost_usd": 0.0}]}
         self.assertEqual(aux_routing(report), [])
 
+    def test_approval_on_primary_not_flagged(self):
+        # approval is deliberately pinned to pro (security guard) — not a violation
+        report = {"tasks": [{"task": "approval", "model": "deepseek-v4-pro",
+                             "estimated_cost_usd": 0.05}]}
+        self.assertEqual(aux_routing(report), [])
+
 
 class TestBurnOutliers(unittest.TestCase):
     def test_over_cap_flagged(self):

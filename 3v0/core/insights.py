@@ -24,7 +24,10 @@ PRIMARY_MODEL = "deepseek-v4-pro"
 AUX_MODEL = "deepseek-v4-flash"   # policy-mandated target for aux/background LLM work
 INTENDED_MODELS = {PRIMARY_MODEL, AUX_MODEL}
 CACHE_HIT_MIN = 0.90              # TOKEN_EFFICIENCY.md's #1 lever; below this the prefix is breaking
-AUX_TASKS = {"compression", "approval"}
+# Cheap-aux tasks the policy pins to flash. ``approval`` is DELIBERATELY
+# absent: the smart-approval security guard stays on the primary model
+# (TOKEN_EFFICIENCY.md) — flagging it would be a false positive.
+AUX_TASKS = {"compression"}
 MEMORY_SUCCESS_MIN = 0.80
 COMPRESSION_FAILURES_MAX = 0
 RELIABILITY_EXCLUDE = {"memory"}  # memory has its own dedicated detector
@@ -90,7 +93,10 @@ def cache_health(report):
 
 
 def aux_routing(report):
-    """Flag aux tasks (compression/approval) running on a non-flash model.
+    """Flag cheap-aux tasks (compression) running on a non-flash model.
+
+    ``approval`` is deliberately exempt: the smart-approval security guard
+    stays on the primary model by design (TOKEN_EFFICIENCY.md).
 
     TOKEN_EFFICIENCY.md routes background/aux LLM work to deepseek-v4-flash;
     any primary-model aux spend is a policy violation, however small.
