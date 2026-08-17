@@ -322,7 +322,7 @@
       "source": "assistant_tool",
       "created_at": "2026-08-15T21:56:03Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "6e832244c4e9",
       "note": ""
     },
     {
@@ -352,7 +352,7 @@
       "source": "profile-import",
       "created_at": "2026-08-15T21:59:53Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "4ed71c4bdb11",
       "note": ""
     },
     {
@@ -590,7 +590,7 @@
       "supersedes": [
         "16267b665e38"
       ],
-      "superseded_by": "",
+      "superseded_by": "41567b099d17",
       "note": ""
     },
     {
@@ -638,7 +638,7 @@
       "supersedes": [
         "b8bdd92379b6"
       ],
-      "superseded_by": "",
+      "superseded_by": "cee80f7ad262",
       "note": ""
     },
     {
@@ -662,7 +662,7 @@
       "supersedes": [
         "97c8cbac8a73"
       ],
-      "superseded_by": "",
+      "superseded_by": "ecb0ce350307",
       "note": ""
     },
     {
@@ -706,7 +706,7 @@
       "source": "profile-import",
       "created_at": "2026-08-16T02:02:26Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "a62d17024d16",
       "note": ""
     },
     {
@@ -716,7 +716,7 @@
       "source": "profile-import",
       "created_at": "2026-08-16T02:02:26Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "08c3ff297ecb",
       "note": ""
     },
     {
@@ -748,7 +748,7 @@
       "supersedes": [
         "0ce97adb7ab7"
       ],
-      "superseded_by": "",
+      "superseded_by": "74058498cc5d",
       "note": ""
     },
     {
@@ -758,7 +758,7 @@
       "source": "assistant_tool",
       "created_at": "2026-08-16T02:59:24Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "b82c99955056",
       "note": ""
     },
     {
@@ -802,7 +802,7 @@
       "supersedes": [
         "fe2bc53015fe"
       ],
-      "superseded_by": "",
+      "superseded_by": "a0cc6dc6f5dd",
       "note": ""
     },
     {
@@ -812,7 +812,7 @@
       "source": "session-review",
       "created_at": "2026-08-16T04:25:27Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "72d01b0e6924",
       "note": ""
     },
     {
@@ -824,8 +824,8 @@
       "supersedes": [
         "edab8653cee9"
       ],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
     },
     {
       "id": "82848b07d347",
@@ -843,6 +843,298 @@
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-16T08:34:59Z",
+      "supersedes": [],
+      "superseded_by": "08ad1f5ca8f2",
+      "note": ""
+    },
+    {
+      "id": "4ed71c4bdb11",
+      "content": "3V0 gateway = user systemd service hermes-gateway-3v0.service (enabled+linger, survives logout/reboot) → runs cron/curator schedulers + Telegram (@sovereign3v0Bot; token/allowlist/home in profile .env). TUI itself never runs schedulers. cron/ dir empty; operator prefers no cron jobs.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T20:56:41Z",
+      "supersedes": [
+        "c5c00bf027f1"
+      ],
+      "superseded_by": "8cd71f2bc736",
+      "note": ""
+    },
+    {
+      "id": "6e832244c4e9",
+      "content": "gh user=1deat0r; https git push needs `git config --global credential.helper '!gh auth git-credential'` (set globally).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T20:56:41Z",
+      "supersedes": [
+        "49c99d4d66c2"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "41567b099d17",
+      "content": "HANDOFF.md (narrative) + HANDOFF.generated.md (mechanical body/continuity/drift/loops/store/daemons, regenerated each wake by scripts/handoff_check.sh) = fresh-session audit; claims.json = loop source of truth. Search PRs + triage trail before coding; follow fork-PR rules.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T20:56:41Z",
+      "supersedes": [
+        "9d783088af63"
+      ],
+      "superseded_by": "ddae8af83bfd",
+      "note": ""
+    },
+    {
+      "id": "ecb0ce350307",
+      "content": "Hermes background-review fork OFF: memory.nudge_interval=0 + skills.creation_nudge_interval=0; set both to 10 to re-enable. Foreground 3V0 + daemon share body — load-before-patch.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T20:56:41Z",
+      "supersedes": [
+        "ca0d4a97e340"
+      ],
+      "superseded_by": "98e65d68c7bc",
+      "note": ""
+    },
+    {
+      "id": "a62d17024d16",
+      "content": "scripts/run_tests.sh ~81 env failures (provider pkgs/creds + FTS5); not regressions.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T20:56:41Z",
+      "supersedes": [
+        "8931a62669cf"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "74058498cc5d",
+      "content": "Fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent checkout. Axiom = Hermes-at-HEAD hardfork (merge routinely); ~/.local/bin/axiom strips 3V0-session env leak.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T20:56:41Z",
+      "supersedes": [
+        "cf2118e5a605"
+      ],
+      "superseded_by": "63eeea4eb0a8",
+      "note": ""
+    },
+    {
+      "id": "b82c99955056",
+      "content": "DeepSeek V4-Pro (agent↑); effort low/high/max (default high; xhigh/max/ultra→max). Pricing: peak 01-04+06-10 UTC, else half.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T20:56:41Z",
+      "supersedes": [
+        "3aa6f3c5afcd"
+      ],
+      "superseded_by": "5e18745ed969",
+      "note": ""
+    },
+    {
+      "id": "a0cc6dc6f5dd",
+      "content": "Own-clock review daemons run continuity check BEFORE sync/heal; 3v0-review memory+skills→profile, f1nance/axiom store-only; ledger data-driven.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T20:56:41Z",
+      "supersedes": [
+        "61bf3b9fbb89"
+      ],
+      "superseded_by": "3de910b99cff",
+      "note": ""
+    },
+    {
+      "id": "72d01b0e6924",
+      "content": "Continuity clock trust established by fault injection (inject drift classes), not passive observation.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-16T20:56:41Z",
+      "supersedes": [
+        "e1770b2d01bc"
+      ],
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
+    },
+    {
+      "id": "cee80f7ad262",
+      "content": "3V0 env: web_search OK via keyless ddgs (9.14.4); web_extract CANNOT extract (ddgs search-only) — use curl/browser_exec. curl via terminal works.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T00:59:39Z",
+      "supersedes": [
+        "ac2ca563b28f"
+      ],
+      "superseded_by": "1341a8ed9f12",
+      "note": ""
+    },
+    {
+      "id": "98e65d68c7bc",
+      "content": "Hermes background-review fork OFF (nudge intervals=0; set both to 10 to re-enable). Foreground 3V0 + daemon share body — load-before-patch.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T00:59:39Z",
+      "supersedes": [
+        "ecb0ce350307"
+      ],
+      "superseded_by": "778906f9a73f",
+      "note": ""
+    },
+    {
+      "id": "97340a10664a",
+      "content": "Self-funding the API via Fiverr (debug/review/automation; I work, operator holds rails) — SUSTAINABILITY.md. Solana wallet 4SJuX7VYcE2bUYw2anH4nB9ArsZuxhCMtMNQ5WLXWuJt (key in profile wallet/).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T00:59:39Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "879ed55e5306",
+      "content": "Telegram messaging (@sovereign3v0Bot) is live via hermes-gateway-3v0.service: connected polling mode, 60 commands registered, outbound to mustbearn verified. Fork adapter TypeHandler rebinding bug fixed.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-17T07:00:53Z",
+      "supersedes": [],
+      "superseded_by": "e31d503c2476",
+      "note": ""
+    },
+    {
+      "id": "5319b4340141",
+      "content": "Operator desktop = KDE Wayland; no virtual-keyboard protocol (wtype unsupported). ydotool uinput device needs a seat-tagging udev rule; passwordless sudo available.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-17T07:00:53Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "1341a8ed9f12",
+      "content": "3V0 env: web_search via keyless ddgs; web_extract is search-only (can't extract) — use curl/browser_exec.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
+      "supersedes": [
+        "cee80f7ad262"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "08c3ff297ecb",
+      "content": "Native core 3v0/: memory.py+skills.py canonical; native-store-bridge mirrors writes; MEMORY/USER/SKILL.md derived; sync.py+sync_skills.py --write backstops.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
+      "supersedes": [
+        "94516640dcc9"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "08ad1f5ca8f2",
+      "content": "Active skin `3v0` (carbon-fiber) display.skin=3v0; TUI de-branded of Hermes/Nous.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
+      "supersedes": [
+        "bc67403adc4f"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "8cd71f2bc736",
+      "content": "3V0 gateway = systemd hermes-gateway-3v0.service (enabled+linger) → cron/curator + Telegram @sovereign3v0Bot (creds in profile .env). TUI never runs schedulers; no cron jobs (operator pref).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
+      "supersedes": [
+        "4ed71c4bdb11"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "e31d503c2476",
+      "content": "Telegram @sovereign3v0Bot live via gateway service (polling, 60 commands, outbound verified); TypeHandler rebinding bug fixed.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
+      "supersedes": [
+        "879ed55e5306"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "ddae8af83bfd",
+      "content": "HANDOFF.md (narrative) + HANDOFF.generated.md (mechanical, via scripts/handoff_check.sh) = session audit; claims.json = loop source of truth; search triage trail before coding.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
+      "supersedes": [
+        "41567b099d17"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "3de910b99cff",
+      "content": "Own-clock daemons: 3v0-review memory+skills→profile, f1nance/axiom store-only; continuity check before sync/heal.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
+      "supersedes": [
+        "a0cc6dc6f5dd"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "63eeea4eb0a8",
+      "content": "Fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent; Axiom = Hermes-at-HEAD hardfork; ~/.local/bin/axiom strips 3V0 env leak.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
+      "supersedes": [
+        "74058498cc5d"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "5e18745ed969",
+      "content": "DeepSeek V4-Pro; effort low/high/max (default high). Peak pricing 01-04+06-10 UTC, else half.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
+      "supersedes": [
+        "b82c99955056"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "778906f9a73f",
+      "content": "Hermes review fork OFF (nudge intervals=0; 10 to re-enable); foreground 3V0 + daemon share body — load-before-patch.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
+      "supersedes": [
+        "98e65d68c7bc"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "e4b416968867",
+      "content": "Browser-exec mastery: skill browser-automation + agent_helpers.py. AX tree→getBoxModel→click_at_xy; fill_input React-safe; upload_file CDP; re-query rects; elementFromPoint hit-test.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T11:38:31Z",
       "supersedes": [],
       "superseded_by": "",
       "note": ""
