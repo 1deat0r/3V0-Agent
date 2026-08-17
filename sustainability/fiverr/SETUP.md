@@ -67,3 +67,16 @@ account. (Gig allowance: 4 as a New Seller, 10 from Level 1 — see
 Tell 3V0 the gig URLs. 3V0 will then: monitor the gigs' performance, adjust
 pricing/positioning from order + market data, and be ready to deliver the
 first order.
+
+## First-week scam playbook (they come for new gigs immediately)
+
+Scam bots message every freshly published gig. Pattern: "I placed your
+order," a claim to check an external site, a QR code, or a Telegram invite.
+
+**Never:** click external links, scan QR codes, log in anywhere, or talk
+off-platform. A real order always appears under **Orders** first.
+
+**Do:** verify in Orders → reply at most once, on-platform: "I don't see an
+order on my side. All orders go through Fiverr, and I'll start as soon as one
+appears there." → **Report** the user (spam/scam) → block if available.
+Repeat for every such message; it costs 20 seconds and trains the filters.
