@@ -14,9 +14,6 @@ from core.memdb import (  # noqa: E402
     add_fact,
     connect,
     migrate_from_json,
-    rank,
-    render,
-    retrieve,
     valid_facts,
 )
 
@@ -58,37 +55,6 @@ class TestAddAndValid(MemDBTest):
         self.assertEqual(len(valid_facts(self.conn, now=NOW)), 2)
 
 
-class TestRank(MemDBTest):
-    def test_keyword_match_scores_higher(self):
-        facts = [
-            {"subject": "a", "predicate": "p", "object": "deepseek api", "content": "", "created_at": NOW, "access_count": 0, "last_accessed": None},
-            {"subject": "b", "predicate": "p", "object": "unrelated", "content": "", "created_at": NOW, "access_count": 0, "last_accessed": None},
-        ]
-        self.assertEqual(rank(facts, query_terms=["deepseek"], now=NOW)[0]["subject"], "a")
-
-    def test_recency_scores_higher(self):
-        facts = [
-            {"subject": "old", "predicate": "p", "object": "x", "content": "", "created_at": NOW - 86400 * 30, "access_count": 0, "last_accessed": NOW - 86400 * 30},
-            {"subject": "new", "predicate": "p", "object": "x", "content": "", "created_at": NOW, "access_count": 0, "last_accessed": NOW},
-        ]
-        self.assertEqual(rank(facts, now=NOW)[0]["subject"], "new")
-
-    def test_frequency_scores_higher(self):
-        facts = [
-            {"subject": "rare", "predicate": "p", "object": "x", "content": "", "created_at": NOW, "access_count": 0, "last_accessed": None},
-            {"subject": "hot", "predicate": "p", "object": "x", "content": "", "created_at": NOW, "access_count": 100, "last_accessed": NOW},
-        ]
-        self.assertEqual(rank(facts, now=NOW)[0]["subject"], "hot")
-
-
-class TestRetrieve(MemDBTest):
-    def test_retrieve_caps_and_touches(self):
-        for i in range(5):
-            add_fact(self.conn, f"s{i}", "p", "v", now=NOW)
-        out = retrieve(self.conn, limit=2, now=NOW)
-        self.assertEqual(len(out), 2)
-        total = self.conn.execute("SELECT SUM(access_count) FROM facts").fetchone()[0]
-        self.assertEqual(total, 2)
 
 
 class TestMigrate(MemDBTest):
@@ -106,13 +72,6 @@ class TestDefaultPath(MemDBTest):
         self.assertTrue(str(DEFAULT_PATH).startswith("/"))
         self.assertTrue(str(DEFAULT_PATH).endswith("3v0/data/memory.db"))
 
-
-class TestRender(MemDBTest):
-    def test_render(self):
-        facts = [{"subject": "3v0", "predicate": "model", "object": "deepseek-v4-pro", "content": "the LLM substrate"}]
-        text = render(facts)
-        self.assertIn("3v0 model deepseek-v4-pro", text)
-        self.assertIn("the LLM substrate", text)
 
 
 if __name__ == "__main__":

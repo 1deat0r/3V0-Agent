@@ -1588,3 +1588,46 @@ they'd skipped.
 Verification: 317 tests green (311 → 317), continuity 6/6.
 
 
+
+## Design pass — retrieval seam (codebase-design, 2026-08-18)
+
+The codebase-design stage for the rewire stone: pinned the seam the
+record/sync/bridge → memdb rewire will consume, instead of charging at the
+build. Stage 1 (domain-modeling) recorded the decision as ADR-0004 and added
+the retrieval vocabulary to `CONTEXT.md` (retrieval, working set, injection,
+budget, feedback, forgetting); stage 3 (implement) extracted the seam.
+
+**The seam — `core/retrieval.py`:**
+
+- One entry point: `inject(conn, *, domains=("3v0",), query_terms=None,
+  budget_chars=2000, touch=True, now=None) -> Injection`. Everything else
+  (validity filter, score, rank, domain priority, budget fill, feedback
+  write, render) is hidden implementation. Depth by design: callers state
+  one constraint (the budget) and get the working set + rendered text.
+- `memdb.py` is now storage only (schema, connect, add_fact, valid_facts,
+  migrate_from_json). `rank`/`render` moved to `retrieval.py`; the old
+  limit-based `memdb.retrieve` is **retired**, not moved — the real
+  constraint is the profile view's size cap, not an arbitrary count, and a
+  budget-shaped seam supersedes it (ADR-0004, considered options).
+- Feedback is the module's own write (`touch=True` default; `touch=False`
+  pure preview). Forgetting is the store's mechanism (valid_to) — a lapsed
+  fact is never injected, so a later forgetting policy fixes injection
+  automatically (locality).
+- Budget fill is whole-fact granularity and skip-not-stop: an oversized
+  low-value line doesn't starve later small facts.
+
+**Deletion test:** with the rewire landed, deleting `retrieval.py` would
+spread budgeted selection + feedback + rendering across the profile exporter
+and the `threev0_store` tool — two callers. It earns its keep the moment the
+rewire makes retrieval a real consumer, which is exactly why pass 2 deferred
+it and this stone takes it.
+
+**Wiring deferred, deliberately:** the JSON→SQLite migration of the write
+path (record/sync/bridge → memdb) and the exporter/tool consumers are the
+rewire stone's *execution*, not this pass. The seam is tested and ready;
+nothing existing changed behavior.
+
+Verification: 324 tests green (317 → 324 — four moved to the seam, one
+retired with the limit-based retrieve it replaced, eight inject tests at the
+seam: budget truncation, feedback touch, pure preview, domain priority,
+default-domain scoping, oversized-fact skip, empty store, amnesia).

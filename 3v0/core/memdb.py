@@ -11,15 +11,15 @@ queryable triple-store so memory scales past the injected-2KB bottleneck:
     by what's actually used, and forgetting/consolidation has a signal
 
 The profile MEMORY.md is meant to become a *derived, retrieval-chosen view*
-of this store — not the source of truth. The ranking function is pure and
-importable without a DB (invariant #4: decision logic testable in isolation).
+of this store — not the source of truth. This module is storage only; ranking
+and selection live in ``core/retrieval.py`` (pure and importable without a DB
+— invariant #4: decision logic testable in isolation).
 
 I/O lives here (sqlite3); the thin CLI + the pipeline rewire are later stones.
 """
 
 from __future__ import annotations
 
-import math
 import sqlite3
 import time
 from pathlib import Path
@@ -96,59 +96,6 @@ def valid_facts(conn, domain=None, now=None):
         params.append(domain)
     sql += " ORDER BY created_at DESC"
     return [dict(r) for r in conn.execute(sql, params)]
-
-
-def _score(fact, query_terms, now):
-    """Pure relevance score: keyword match + recency + frequency."""
-    score = 0.0
-    if query_terms:
-        hay = " ".join(
-            str(fact.get(k) or "") for k in ("subject", "predicate", "object", "content")
-        ).lower()
-        for term in query_terms:
-            if term.lower() in hay:
-                score += 1.0
-    t = fact.get("last_accessed") or fact.get("created_at") or now
-    age_days = max(0.0, (now - t) / 86400.0)
-    score += 1.0 / (1.0 + age_days)          # recency: 1.0 now, decaying
-    score += math.log1p(fact.get("access_count") or 0)  # frequency
-    return score
-
-
-def rank(facts, query_terms=None, now=None):
-    """Pure: sort facts by relevance score (descending)."""
-    now = now if now is not None else time.time()
-    return sorted(facts, key=lambda f: _score(f, query_terms, now), reverse=True)
-
-
-def retrieve(conn, domain=None, query_terms=None, limit=20, now=None):
-    """Retrieve the top `limit` currently-valid facts for a domain/query.
-
-    Touches access_count/last_accessed (retrieval feedback) so future ranking
-    learns what's actually pulled into context.
-    """
-    now = now if now is not None else time.time()
-    facts = valid_facts(conn, domain=domain, now=now)
-    ranked = rank(facts, query_terms=query_terms, now=now)[:limit]
-    ids = [f["id"] for f in ranked]
-    if ids:
-        conn.executemany(
-            "UPDATE facts SET access_count = access_count + 1, last_accessed = ? WHERE id = ?",
-            [(now, i) for i in ids],
-        )
-        conn.commit()
-    return ranked
-
-
-def render(facts):
-    """Compact injected-view text (the retrieval-chosen working set)."""
-    lines = []
-    for f in facts:
-        line = f"{f['subject']} {f['predicate']} {f['object']}"
-        if f.get("content"):
-            line += f"  # {f['content']}"
-        lines.append(line)
-    return "\n".join(lines)
 
 
 def migrate_from_json(conn, facts, domain="3v0", now=None):
