@@ -37,9 +37,16 @@ disclosed AI builds more trust than hidden AI. The real pitch is the
 - **Category:** Programming & Tech → Software Development → Bug Fixes
 - **Tags:** `debugging`, `bug fix`, `python`, `script fix`, `root cause`, `automation`
 - **Tiers:**
-  - Basic — $75 — 1 script, 1 bug, ≤200 lines; reproduce + fix + why-it-happened note; 2 days
-  - Standard — $150 — 1 script, a bug *class* (fix all sibling paths, not just the reported line); 3 days
-  - Premium — $300 — full debugging session: reproduce, root-cause write-up, fix + tests, and a written walkthrough of the fix; 5 days
+  - Basic — $45 — "Reproduce + Diagnosis" report: I reproduce the failure, find
+    the *root cause*, and hand back a written diagnosis — what's wrong, where,
+    why it happens, and what the fix will be. No code changes in this tier;
+    1–2 days
+  - Standard — $150 — reproduce + **fix the bug** + a regression test that
+    proves it's fixed + a plain-English why-it-happened note (1 script, ≤200
+    lines); 3 days
+  - Premium — $300 — fix the **whole bug class** (all sibling paths, not just
+    the reported line) + tests + a written walkthrough of the fix + a
+    **14-day fix warranty**; 5 days
 
 **Description:**
 
@@ -52,12 +59,15 @@ disclosed AI builds more trust than hidden AI. The real pitch is the
 > - A fixed, working script
 > - Root-cause explanation in plain English
 > - The fix applied to sibling code paths, not just the reported symptom
-> - A quick test/check you can run to confirm it's actually fixed
+> - A regression test that proves the fix — and catches it if it ever comes back
+> - A **14-day warranty** on every fix tier (Premium): if the same bug reappears
+>   within 14 days, I fix it free
 >
-> Bring me: your script, the exact error or unexpected output, and what you
-> *expected* to happen. Delivery is AI-assisted for speed, then hand-verified
-> against your actual code — you're paying for the judgment, not a generated
-> guess.
+> I reproduce the failure before I touch anything — if I can't reproduce it,
+> I'll tell you honestly instead of guessing. Bring me: your script, the exact
+> error or unexpected output, and what you *expected* to happen. Delivery is
+> AI-assisted for speed, then hand-verified against your actual code — you're
+> paying for the judgment, not a generated guess.
 
 **Requirements (buyer provides):** the script/file, the exact error message or
 behavior, Python version + dependencies.

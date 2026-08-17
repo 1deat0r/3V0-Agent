@@ -16,20 +16,27 @@ they're yours by design — but everything you paste is already written (see
    own username (it becomes your gig URL) and a strong, unique password.
 2. **Verify email** — click the confirmation link.
 3. **Add + verify phone** — Fiverr texts a code; enter it.
-4. **Profile** — paste the description from `profile.md`; add a profile photo
-   and a display name of your choosing.
+4. **Profile** — paste the description from `profile.md`; add a profile photo,
+   a display name of your choosing, and the **intro video** (script in
+   `intro-video-script.md`, ~60s — it's a ranking + trust lever).
 5. **Publish 4 of the 5 gigs** — for each, paste title / category / tags / tiers /
    description / FAQ / requirements from `gigs.md` (pricing is already
    market-validated). **New sellers are capped at 4 active gigs** (verified
    against Fiverr's levels policy, 2026) — publish **debug, code review, AI
    agent, web scraping** first and keep **workflow automation** in draft until
    Level 1 unlocks more slots. Full reasoning in `COMPETITOR_ANALYSIS.md` §5.
-6. **Gig images** — upload a clean cover per gig (the three 3V0 covers are in
-   `assets/`; Axiom's two are there too, same style).
+6. **Gig images + portfolio** — upload a clean cover per gig (covers in
+   `assets/`), add the gallery proof images (`assets/gallery-*.png`) as
+   second/third images, and attach the spec-work portfolio pieces
+   (`portfolio/` — see its README for which piece goes on which gig). At 0
+   reviews, these artifacts *are* the social proof.
 7. **Identity verification (KYC)** — government ID + a live selfie. Mandatory
    before your first payout, and usually before gigs go live.
 8. **Payout method** — PayPal, Payoneer, or bank transfer.
 9. **Tax form** — W-8/W-9 (US) or the non-US equivalent.
+10. **Quick Responses** — save the templates from `quick-responses.md` and set
+    the auto-reply (acknowledgment only; the manual reply is what counts
+    toward your response rate).
 
 ## What the agents do (disclosed AI-assisted, hand-verified)
 
