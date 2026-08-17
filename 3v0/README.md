@@ -57,6 +57,9 @@ code.
   and both temporal guards as pure functions, importable without the driver's
   side-effecting module load. The canonical `KINDS` / `SKILL_DECISION_ACTIONS`
   vocabularies are imported, not re-declared.
+- `core/session_db.py` — named-column reads of the profile's session DB
+  (`load_session` / `session_columns` / `candidate_rows`): the
+  order-independent replacement for the driver's positional-index walks.
 - `core/projects.py` — the project registry + drift ledger (Stone 16): the
   data-driven `ProjectLedger` (N projects, `3v0/data/projects/ledger.json`,
   keyed by name) plus `ProjectSpec` + `resolve_project()` — the review-scoping
@@ -70,10 +73,12 @@ code.
   registry: `load_claims`, one parameterized `gh_loop` wrapper,
   `loop_fields`, and the default repo (continuity_check + generate_handoff
   consume it).
-- `core/drift.py` — drift computation for the multi-project clock:
-  `collect_git_state` (best-effort `git` collection), `store_hash` (sha256),
-  and `compute_drift` (the pure verdict — behind/ahead vs upstream, dirty
-  worktree, store present/changed, head moved, drift reasons).
+- `core/drift.py` — the pure drift verdict (``compute_drift``) + the
+  ``GitState`` type (is this project drifting?). Decision-only, matching
+  continuity/handoff; the git collection lives in ``core/gitstate.py``.
+- `core/gitstate.py` — the collection half of the drift clock:
+  ``collect_git_state`` (best-effort ``git``) and ``store_hash`` (sha256),
+  shared by ``drift_check.py`` and ``project.py``.
 - `core/continuity.py` — the invariant model of the continuity meta (Stone
   17): six cross-artifact invariants (`anchor`, `self-describing`,
   `memory-profile`, `skills-store`, `ledger`, `github-loops`), each a pure
