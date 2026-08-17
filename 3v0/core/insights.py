@@ -13,12 +13,24 @@ from __future__ import annotations
 TOOL_SUCCESS_MIN = 0.80
 TOOL_MIN_CALLS = 20
 TOOL_LATENCY_P95_MAX_MS = 10_000.0
+# Self-imposed daily budget: ~$90/mo, the top of the real $15–100/mo
+# DeepSeek-v4-pro run-rate. NOT derived from per-token prices — the token
+# policy (TOKEN_EFFICIENCY.md) has no dollar budget, only $/1M prices. Kept
+# flat (not peak-adjusted) on purpose: this is an absolute ceiling, not a
+# scheduling hint.
 BURN_DAILY_MAX_USD = 3.0
 MODEL_MIN_COST_USD = 0.50
 PRIMARY_MODEL = "deepseek-v4-pro"
+AUX_MODEL = "deepseek-v4-flash"   # policy-mandated target for aux/background LLM work
+INTENDED_MODELS = {PRIMARY_MODEL, AUX_MODEL}
+CACHE_HIT_MIN = 0.90              # TOKEN_EFFICIENCY.md's #1 lever; below this the prefix is breaking
+AUX_TASKS = {"compression", "approval"}
 MEMORY_SUCCESS_MIN = 0.80
 COMPRESSION_FAILURES_MAX = 0
 RELIABILITY_EXCLUDE = {"memory"}  # memory has its own dedicated detector
+# Inherently long-running tools — their p95 "latency" is wall-clock wait
+# (background process, browser, subagents), not a fixable slowdown.
+LATENCY_EXCLUDE = {"process", "browser_exec", "delegate_task"}
 
 SEVERITY = ("critical", "high", "medium", "low")
 
@@ -51,6 +63,8 @@ def tool_reliability(report):
                  "failure": t.get("failure"), "unknown": t.get("unknown")},
                 f"investigate {t['name']}: inspect failing call sites, then fix or avoid",
             ))
+        if t.get("name") in LATENCY_EXCLUDE:
+            continue  # wall-clock wait semantics; latency isn't a defect here
         p95 = t.get("latency_p95_ms")
         if p95 is not None and p95 > TOOL_LATENCY_P95_MAX_MS:
             out.append(_finding(
@@ -59,6 +73,39 @@ def tool_reliability(report):
                 {"name": t["name"], "count": count, "p95_ms": p95},
                 f"investigate {t['name']}: find slow calls/patterns, then cache or parallelize",
             ))
+    return out
+
+
+def cache_health(report):
+    """Flag a degraded prompt-cache-hit ratio (the policy's #1 cost lever)."""
+    ratio = report.get("totals", {}).get("cache_hit_ratio")
+    if ratio is not None and ratio < CACHE_HIT_MIN:
+        return [_finding(
+            "cache", "high",
+            f"cache-hit ratio {ratio:.2f} below {CACHE_HIT_MIN} — the prompt prefix is being broken",
+            {"cache_hit_ratio": ratio},
+            "protect the prefix (TOKEN_EFFICIENCY.md): avoid mid-conversation system-prompt/toolset edits",
+        )]
+    return []
+
+
+def aux_routing(report):
+    """Flag aux tasks (compression/approval) running on a non-flash model.
+
+    TOKEN_EFFICIENCY.md routes background/aux LLM work to deepseek-v4-flash;
+    any primary-model aux spend is a policy violation, however small.
+    """
+    out = []
+    for tsk in report.get("tasks", []):
+        if tsk.get("task") in AUX_TASKS and tsk.get("model") != AUX_MODEL:
+            cost = tsk.get("estimated_cost_usd", 0.0)
+            if cost > 0:
+                out.append(_finding(
+                    "aux_routing", "low",
+                    f"aux task '{tsk['task']}' ran on {tsk['model']} (${cost:.2f}); policy routes aux → {AUX_MODEL}",
+                    {"task": tsk["task"], "model": tsk["model"], "cost_usd": cost},
+                    "pin aux/background LLM tasks to deepseek-v4-flash (TOKEN_EFFICIENCY.md)",
+                ))
     return out
 
 
@@ -78,31 +125,37 @@ def burn_outliers(report):
 
 
 def model_mix_findings(report):
-    """Flag non-primary models consuming non-trivial cost."""
+    """Flag *unintended* models consuming non-trivial cost.
+
+    deepseek-v4-pro (primary) and deepseek-v4-flash (policy-mandated aux) are
+    intended; anything else spending >= MODEL_MIN_COST_USD is a finding.
+    """
     out = []
     for m in report.get("models", []):
-        if m.get("model") != PRIMARY_MODEL and m.get("estimated_cost_usd", 0.0) >= MODEL_MIN_COST_USD:
+        if m.get("model") in INTENDED_MODELS:
+            continue
+        if m.get("estimated_cost_usd", 0.0) >= MODEL_MIN_COST_USD:
             out.append(_finding(
                 "model_mix", "low",
-                f"{m['model']} consumed ${m['estimated_cost_usd']:.2f} (non-primary)",
+                f"{m['model']} consumed ${m['estimated_cost_usd']:.2f} (unintended model)",
                 {"model": m["model"], "cost_usd": m["estimated_cost_usd"],
                  "api_calls": m.get("api_calls")},
-                "confirm non-primary model usage is intended (e.g. flash for compaction)",
+                "confirm this model is authorized (Prime Directive: DeepSeek-v4-pro only)",
             ))
     return out
 
 
 def memory_health(report):
-    """Flag a low memory-tool success rate (usually means the store is full)."""
+    """Flag a low memory-tool success rate (do NOT assume a single root cause)."""
     for t in report.get("tools", []):
         if t.get("name") == "memory":
             rate = t.get("success_rate")
             if rate is not None and rate < MEMORY_SUCCESS_MIN:
                 return [_finding(
                     "memory_health", "high",
-                    f"memory writes succeed only {rate * 100:.0f}% — likely full",
+                    f"memory writes succeed only {rate * 100:.0f}% — diagnose the cause, don't assume 'full'",
                     {"success_rate": rate, "count": t.get("count")},
-                    "prune stale memory entries to free the char budget",
+                    "memory failures are a mix: char-budget rejection / stale replace-target / malformed call shape. Inspect which, then fix accordingly (prune only if budget-bound).",
                 )]
     return []
 
@@ -124,6 +177,8 @@ def detect(report):
     """Run all detectors and return findings ranked by severity (high → low)."""
     findings = []
     findings += tool_reliability(report)
+    findings += cache_health(report)
+    findings += aux_routing(report)
     findings += memory_health(report)
     findings += compression_health(report)
     findings += burn_outliers(report)

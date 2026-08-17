@@ -22,6 +22,7 @@ from __future__ import annotations
 import math
 import sqlite3
 import time
+from pathlib import Path
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS facts (
@@ -45,13 +46,18 @@ CREATE INDEX IF NOT EXISTS idx_facts_domain ON facts(domain, valid_from);
 CREATE INDEX IF NOT EXISTS idx_facts_subject ON facts(subject);
 """
 
-DEFAULT_PATH = "3v0/data/memory.db"
+# Absolute (repo-relative via __file__), not CWD-relative: a caller that
+# imports memdb from any working directory still lands the DB in 3v0/data/.
+DEFAULT_PATH = str(Path(__file__).resolve().parent.parent / "data" / "memory.db")
 
 
 def connect(path=DEFAULT_PATH):
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
+    # Enforce the supersedes FK — without this, add_fact(..., supersedes=<bad id>)
+    # inserts silently instead of failing.
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 

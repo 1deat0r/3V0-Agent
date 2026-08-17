@@ -16,6 +16,7 @@ from core.analytics import (  # noqa: E402
     model_mix,
     session_totals,
     summarize,
+    task_mix,
 )
 
 
@@ -99,21 +100,61 @@ class TestSessionTotals(unittest.TestCase):
         self.assertEqual(t["messages"], 30)
         self.assertEqual(t["tool_calls"], 12)
         self.assertEqual(t["input_tokens"], 300)
+        self.assertEqual(t["output_tokens"], 150)
+        self.assertEqual(t["cache_read_tokens"], 50)
+        # cache_hit_ratio = cache_read / (cache_read + fresh input)
+        self.assertEqual(t["cache_hit_ratio"], round(50 / 350, 4))
+        # output_token_share = output / (cache_read + input + output)
+        self.assertEqual(t["output_token_share"], 0.3)
         self.assertEqual(t["estimated_cost_usd"], 0.3)
         self.assertEqual(t["active_days"], 2)
 
+    def test_cache_hit_ratio_none_when_no_tokens(self):
+        t = session_totals([])
+        self.assertIsNone(t["cache_hit_ratio"])
+        self.assertIsNone(t["output_token_share"])
+
 
 class TestModelMix(unittest.TestCase):
-    def test_aggregation(self):
+    def test_aggregation_and_distinct_sessions(self):
         usage = [
-            {"model": "deepseek-v4-pro", "api_call_count": 2, "input_tokens": 100,
-             "output_tokens": 50, "estimated_cost_usd": 1.5},
-            {"model": "deepseek-v4-flash", "api_call_count": 1, "input_tokens": 10,
-             "output_tokens": 5, "estimated_cost_usd": 0.05},
+            {"session_id": "s1", "model": "deepseek-v4-pro", "api_call_count": 2,
+             "input_tokens": 100, "output_tokens": 50, "cache_read_tokens": 1000,
+             "estimated_cost_usd": 1.5},
+            {"session_id": "s2", "model": "deepseek-v4-pro", "api_call_count": 1,
+             "input_tokens": 50, "output_tokens": 25, "cache_read_tokens": 500,
+             "estimated_cost_usd": 0.5},
+            {"session_id": "s1", "model": "deepseek-v4-flash", "api_call_count": 1,
+             "input_tokens": 10, "output_tokens": 5, "cache_read_tokens": 100,
+             "estimated_cost_usd": 0.05},
         ]
         out = model_mix(usage)
-        self.assertEqual(out[0]["model"], "deepseek-v4-pro")
-        self.assertEqual(out[0]["estimated_cost_usd"], 1.5)
+        by_model = {m["model"]: m for m in out}
+        # distinct sessions (2), not rows (3)
+        self.assertEqual(by_model["deepseek-v4-pro"]["sessions"], 2)
+        self.assertEqual(by_model["deepseek-v4-pro"]["estimated_cost_usd"], 2.0)
+        self.assertEqual(by_model["deepseek-v4-pro"]["cache_read_tokens"], 1500)
+        self.assertEqual(by_model["deepseek-v4-pro"]["cache_hit_ratio"], round(1500 / 1650, 4))
+        self.assertEqual(by_model["deepseek-v4-flash"]["sessions"], 1)
+        self.assertEqual(out[0]["model"], "deepseek-v4-pro")  # sorted by cost desc
+
+
+class TestTaskMix(unittest.TestCase):
+    def test_task_dimension_surfaces_aux(self):
+        usage = [
+            {"session_id": "s1", "model": "deepseek-v4-pro", "task": "",
+             "input_tokens": 100, "estimated_cost_usd": 1.0},
+            {"session_id": "s1", "model": "deepseek-v4-pro", "task": "compression",
+             "input_tokens": 20, "estimated_cost_usd": 0.09},
+            {"session_id": "s1", "model": "deepseek-v4-flash", "task": "approval",
+             "input_tokens": 10, "estimated_cost_usd": 0.01},
+        ]
+        out = task_mix(usage)
+        by_key = {(t["task"], t["model"]): t for t in out}
+        self.assertIn(("main", "deepseek-v4-pro"), by_key)  # '' normalizes to 'main'
+        self.assertIn(("compression", "deepseek-v4-pro"), by_key)
+        self.assertIn(("approval", "deepseek-v4-flash"), by_key)
+        self.assertAlmostEqual(by_key[("compression", "deepseek-v4-pro")]["estimated_cost_usd"], 0.09)
 
 
 class TestDailyBuckets(unittest.TestCase):
@@ -128,6 +169,16 @@ class TestDailyBuckets(unittest.TestCase):
         self.assertEqual(len(out), 1)
         self.assertEqual(out[0]["tool_calls"], 5)
         self.assertEqual(out[0]["estimated_cost_usd"], 0.03)
+
+    def test_per_day_cache_hit_ratio(self):
+        sessions = [
+            {"started_at": 1700000000, "input_tokens": 100, "cache_read_tokens": 400,
+             "estimated_cost_usd": 0.01},
+            {"started_at": 1700000001, "input_tokens": 0, "cache_read_tokens": 0,
+             "estimated_cost_usd": 0.01},
+        ]
+        out = daily_buckets(sessions)
+        self.assertEqual(out[0]["cache_hit_ratio"], round(400 / 500, 4))
 
 
 class TestHealth(unittest.TestCase):
@@ -151,7 +202,7 @@ class TestHealth(unittest.TestCase):
 class TestSummarize(unittest.TestCase):
     def test_shape(self):
         report = summarize([], [], [])
-        for key in ("generated_at", "totals", "models", "tools", "daily", "health", "notes"):
+        for key in ("generated_at", "totals", "models", "tasks", "tools", "daily", "health", "notes"):
             self.assertIn(key, report)
 
 

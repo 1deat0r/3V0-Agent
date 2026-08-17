@@ -9,7 +9,9 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 sys.path.insert(0, str(REPO_ROOT / "3v0" / "core"))
 
 from core.insights import (  # noqa: E402
+    aux_routing,
     burn_outliers,
+    cache_health,
     compression_health,
     detect,
     memory_health,
@@ -38,9 +40,60 @@ class TestToolReliability(unittest.TestCase):
         out = tool_reliability(report)
         self.assertTrue(any(f["category"] == "tool_latency" for f in out))
 
+    def test_long_running_tool_latency_not_flagged(self):
+        # process/browser_exec/delegate_task are wall-clock waits, not defects
+        report = {"tools": [_tool("process", 200, 0.99, 180000.0)]}
+        self.assertEqual(tool_reliability(report), [])
+
+    def test_long_running_tool_still_checks_success(self):
+        # the latency carve-out must NOT hide a genuine reliability problem
+        report = {"tools": [_tool("process", 200, 0.66, 180000.0)]}
+        out = tool_reliability(report)
+        self.assertTrue(any(f["category"] == "tool_reliability" for f in out))
+
     def test_healthy_tool_not_flagged(self):
         report = {"tools": [_tool("read_file", 100, 0.99, 200.0)]}
         self.assertEqual(tool_reliability(report), [])
+
+
+class TestCacheHealth(unittest.TestCase):
+    def test_low_ratio_flagged(self):
+        report = {"totals": {"cache_hit_ratio": 0.75}}
+        out = cache_health(report)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["category"], "cache")
+        self.assertEqual(out[0]["severity"], "high")
+
+    def test_healthy_ratio_not_flagged(self):
+        report = {"totals": {"cache_hit_ratio": 0.98}}
+        self.assertEqual(cache_health(report), [])
+
+    def test_no_ratio_not_flagged(self):
+        self.assertEqual(cache_health({"totals": {}}), [])
+
+
+class TestAuxRouting(unittest.TestCase):
+    def test_aux_on_primary_flagged(self):
+        report = {"tasks": [{"task": "compression", "model": "deepseek-v4-pro",
+                             "estimated_cost_usd": 0.09}]}
+        out = aux_routing(report)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["category"], "aux_routing")
+
+    def test_aux_on_flash_ok(self):
+        report = {"tasks": [{"task": "compression", "model": "deepseek-v4-flash",
+                             "estimated_cost_usd": 0.01}]}
+        self.assertEqual(aux_routing(report), [])
+
+    def test_main_task_not_flagged(self):
+        report = {"tasks": [{"task": "main", "model": "deepseek-v4-pro",
+                             "estimated_cost_usd": 1.0}]}
+        self.assertEqual(aux_routing(report), [])
+
+    def test_zero_cost_aux_not_flagged(self):
+        report = {"tasks": [{"task": "compression", "model": "deepseek-v4-pro",
+                             "estimated_cost_usd": 0.0}]}
+        self.assertEqual(aux_routing(report), [])
 
 
 class TestBurnOutliers(unittest.TestCase):
@@ -56,18 +109,23 @@ class TestBurnOutliers(unittest.TestCase):
 
 
 class TestModelMix(unittest.TestCase):
-    def test_non_primary_flagged(self):
-        report = {"models": [{"model": "deepseek-v4-flash", "estimated_cost_usd": 2.0, "api_calls": 10}]}
+    def test_unintended_model_flagged(self):
+        report = {"models": [{"model": "gpt-4o", "estimated_cost_usd": 2.0, "api_calls": 10}]}
         out = model_mix_findings(report)
         self.assertEqual(len(out), 1)
         self.assertEqual(out[0]["category"], "model_mix")
+
+    def test_flash_aux_not_flagged(self):
+        # deepseek-v4-flash is the policy-mandated aux model — not a violation
+        report = {"models": [{"model": "deepseek-v4-flash", "estimated_cost_usd": 2.0, "api_calls": 10}]}
+        self.assertEqual(model_mix_findings(report), [])
 
     def test_primary_not_flagged(self):
         report = {"models": [{"model": "deepseek-v4-pro", "estimated_cost_usd": 2.0, "api_calls": 10}]}
         self.assertEqual(model_mix_findings(report), [])
 
-    def test_cheap_non_primary_not_flagged(self):
-        report = {"models": [{"model": "deepseek-v4-flash", "estimated_cost_usd": 0.01, "api_calls": 10}]}
+    def test_cheap_unintended_not_flagged(self):
+        report = {"models": [{"model": "gpt-4o", "estimated_cost_usd": 0.01, "api_calls": 10}]}
         self.assertEqual(model_mix_findings(report), [])
 
 
@@ -98,7 +156,7 @@ class TestDetect(unittest.TestCase):
         report = {
             "tools": [_tool("memory", 50, 0.66, 100.0),
                       _tool("terminal", 200, 0.99, 12000.0)],
-            "models": [{"model": "deepseek-v4-flash", "estimated_cost_usd": 2.0, "api_calls": 10}],
+            "models": [{"model": "claude-3-opus", "estimated_cost_usd": 2.0, "api_calls": 10}],
             "daily": [],
             "health": {"compression_failure_errors": 0},
         }

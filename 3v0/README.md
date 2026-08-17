@@ -95,12 +95,15 @@ code.
   `scripts/generate_handoff.py`.
 - `core/analytics.py` — the pure aggregation half of self-analytics (Stone
   19): tool success/latency aggregation, session/model/daily cost-token
-  totals, and body-health signals as pure functions over row dicts. No I/O —
-  the DB reads live in `scripts/analytics.py`.
+  totals (incl. cache-hit ratio and output-token share — the two levers named
+  in `TOKEN_EFFICIENCY.md`), a per-task × per-model mix that surfaces aux
+  routing, and body-health signals — all pure functions over row dicts. No
+  I/O — the DB reads live in `scripts/analytics.py`.
 - `core/insights.py` — the pure detection half of self-analytics (Stone 20):
   turns the analytics report into ranked, evidence-backed findings (tool
-  reliability/latency, memory health, compression, burn outliers, model mix)
-  against thresholds. Decision-support only — it proposes, the caller disposes.
+  reliability/latency, cache health, aux routing, memory health, compression,
+  burn outliers, model mix) against thresholds. Decision-support only — it
+  proposes, the caller disposes.
 - `CONTINUITY.md` — the continuity anchor (Stone 17): the fixed point
   (Prime Directive + identity + a pointer to the continuity model),
   git-versioned, never regenerated from itself.

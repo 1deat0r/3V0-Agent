@@ -1,95 +1,163 @@
 {
-  "generated_at": "2026-08-17T13:07:17.662739+00:00",
+  "generated_at": "2026-08-17T20:23:10.633750+00:00",
   "totals": {
-    "sessions": 80,
-    "messages": 8608,
-    "tool_calls": 4908,
-    "api_calls": 3964,
-    "input_tokens": 9295361,
-    "output_tokens": 6034432,
-    "cache_read_tokens": 589482240,
-    "reasoning_tokens": 4360810,
-    "estimated_cost_usd": 11.0874,
+    "sessions": 82,
+    "messages": 8560,
+    "tool_calls": 4902,
+    "api_calls": 4041,
+    "input_tokens": 9806639,
+    "output_tokens": 6192444,
+    "cache_read_tokens": 602822656,
+    "reasoning_tokens": 4469760,
+    "cache_hit_ratio": 0.984,
+    "output_token_share": 0.01,
+    "estimated_cost_usd": 11.4956,
     "active_days": 3
   },
   "models": [
     {
-      "sessions": 123,
-      "api_calls": 3842,
-      "input_tokens": 8942593,
-      "output_tokens": 5869739,
-      "estimated_cost_usd": 10.9114,
-      "model": "deepseek-v4-pro"
+      "model": "deepseek-v4-pro",
+      "sessions": 77,
+      "api_calls": 3921,
+      "input_tokens": 9462450,
+      "output_tokens": 6041932,
+      "cache_read_tokens": 542362624,
+      "cache_hit_ratio": 0.9829,
+      "estimated_cost_usd": 11.3358
     },
     {
-      "sessions": 4,
+      "model": "deepseek-v4-flash",
+      "sessions": 2,
       "api_calls": 284,
       "input_tokens": 561417,
       "output_tokens": 247696,
-      "estimated_cost_usd": 0.3173,
-      "model": "deepseek-v4-flash"
+      "cache_read_tokens": 60536832,
+      "cache_hit_ratio": 0.9908,
+      "estimated_cost_usd": 0.3173
+    }
+  ],
+  "tasks": [
+    {
+      "task": "main",
+      "model": "deepseek-v4-pro",
+      "api_calls": 3768,
+      "input_tokens": 9284196,
+      "output_tokens": 5957125,
+      "cache_read_tokens": 542287872,
+      "reasoning_tokens": 4361894,
+      "estimated_cost_usd": 11.1871
+    },
+    {
+      "task": "main",
+      "model": "deepseek-v4-flash",
+      "api_calls": 273,
+      "input_tokens": 522443,
+      "output_tokens": 235319,
+      "cache_read_tokens": 60534784,
+      "reasoning_tokens": 107866,
+      "estimated_cost_usd": 0.3085
+    },
+    {
+      "task": "compression",
+      "model": "deepseek-v4-pro",
+      "api_calls": 4,
+      "input_tokens": 120504,
+      "output_tokens": 47451,
+      "cache_read_tokens": 36096,
+      "reasoning_tokens": 26560,
+      "estimated_cost_usd": 0.0938
+    },
+    {
+      "task": "approval",
+      "model": "deepseek-v4-pro",
+      "api_calls": 149,
+      "input_tokens": 57750,
+      "output_tokens": 37356,
+      "cache_read_tokens": 38656,
+      "reasoning_tokens": 36763,
+      "estimated_cost_usd": 0.0549
+    },
+    {
+      "task": "compression",
+      "model": "deepseek-v4-flash",
+      "api_calls": 1,
+      "input_tokens": 34344,
+      "output_tokens": 10726,
+      "cache_read_tokens": 0,
+      "reasoning_tokens": 4654,
+      "estimated_cost_usd": 0.0078
+    },
+    {
+      "task": "approval",
+      "model": "deepseek-v4-flash",
+      "api_calls": 10,
+      "input_tokens": 4630,
+      "output_tokens": 1651,
+      "cache_read_tokens": 2048,
+      "reasoning_tokens": 1611,
+      "estimated_cost_usd": 0.001
     }
   ],
   "tools": [
     {
       "name": "terminal",
-      "count": 1850,
-      "success": 1769,
-      "failure": 81,
+      "count": 2002,
+      "success": 1918,
+      "failure": 84,
       "unknown": 0,
-      "success_rate": 0.956,
-      "latency_avg_ms": 4882.1,
-      "latency_median_ms": 227.8,
-      "latency_p95_ms": 12399.2
+      "success_rate": 0.958,
+      "latency_avg_ms": 4810.8,
+      "latency_median_ms": 219.6,
+      "latency_p95_ms": 13192.2
     },
     {
       "name": "read_file",
-      "count": 1147,
-      "success": 1136,
+      "count": 1239,
+      "success": 1228,
       "failure": 11,
       "unknown": 0,
-      "success_rate": 0.99,
-      "latency_avg_ms": 158.1,
-      "latency_median_ms": 66.2,
-      "latency_p95_ms": 186.1
+      "success_rate": 0.991,
+      "latency_avg_ms": 155.1,
+      "latency_median_ms": 66.7,
+      "latency_p95_ms": 183.3
     },
     {
       "name": "patch",
-      "count": 921,
-      "success": 915,
+      "count": 990,
+      "success": 984,
       "failure": 6,
       "unknown": 0,
-      "success_rate": 0.993,
-      "latency_avg_ms": 794.4,
-      "latency_median_ms": 221.7,
-      "latency_p95_ms": 2590.6
+      "success_rate": 0.994,
+      "latency_avg_ms": 777.9,
+      "latency_median_ms": 217.1,
+      "latency_p95_ms": 2450.2
     },
     {
       "name": "search_files",
-      "count": 509,
-      "success": 499,
+      "count": 525,
+      "success": 515,
       "failure": 10,
       "unknown": 0,
-      "success_rate": 0.98,
-      "latency_avg_ms": 342.7,
-      "latency_median_ms": 81.0,
+      "success_rate": 0.981,
+      "latency_avg_ms": 340.3,
+      "latency_median_ms": 80.9,
       "latency_p95_ms": 515.7
     },
     {
       "name": "write_file",
-      "count": 396,
-      "success": 395,
+      "count": 450,
+      "success": 449,
       "failure": 1,
       "unknown": 0,
-      "success_rate": 0.997,
-      "latency_avg_ms": 5016.4,
+      "success_rate": 0.998,
+      "latency_avg_ms": 4841.8,
       "latency_median_ms": 378.8,
-      "latency_p95_ms": 6154.5
+      "latency_p95_ms": 6151.0
     },
     {
       "name": "browser_exec",
-      "count": 301,
-      "success": 301,
+      "count": 304,
+      "success": 304,
       "failure": 0,
       "unknown": 0,
       "success_rate": 1.0,
@@ -99,30 +167,30 @@
     },
     {
       "name": "todo",
-      "count": 120,
-      "success": 120,
+      "count": 158,
+      "success": 158,
       "failure": 0,
       "unknown": 0,
       "success_rate": 1.0,
-      "latency_avg_ms": 19.8,
-      "latency_median_ms": 14.1,
+      "latency_avg_ms": 18.8,
+      "latency_median_ms": 13.9,
       "latency_p95_ms": 55.5
     },
     {
       "name": "skill_manage",
-      "count": 91,
-      "success": 86,
+      "count": 118,
+      "success": 113,
       "failure": 5,
       "unknown": 0,
-      "success_rate": 0.945,
-      "latency_avg_ms": 116.7,
-      "latency_median_ms": 89.2,
+      "success_rate": 0.958,
+      "latency_avg_ms": 104.0,
+      "latency_median_ms": 86.0,
       "latency_p95_ms": 314.9
     },
     {
       "name": "web_search",
-      "count": 56,
-      "success": 56,
+      "count": 80,
+      "success": 80,
       "failure": 0,
       "unknown": 0,
       "success_rate": 1.0,
@@ -131,37 +199,48 @@
       "latency_p95_ms": 8491.6
     },
     {
-      "name": "memory",
-      "count": 53,
-      "success": 35,
-      "failure": 18,
-      "unknown": 0,
-      "success_rate": 0.66,
-      "latency_avg_ms": 159.9,
-      "latency_median_ms": 20.2,
-      "latency_p95_ms": 137.8
-    },
-    {
       "name": "skill_view",
-      "count": 52,
-      "success": 52,
+      "count": 62,
+      "success": 62,
       "failure": 0,
       "unknown": 0,
       "success_rate": 1.0,
-      "latency_avg_ms": 115.8,
+      "latency_avg_ms": 160.3,
       "latency_median_ms": 64.7,
-      "latency_p95_ms": 259.7
+      "latency_p95_ms": 694.1
+    },
+    {
+      "name": "memory",
+      "count": 57,
+      "success": 37,
+      "failure": 20,
+      "unknown": 0,
+      "success_rate": 0.649,
+      "latency_avg_ms": 154.1,
+      "latency_median_ms": 19.8,
+      "latency_p95_ms": 137.8
     },
     {
       "name": "execute_code",
-      "count": 33,
-      "success": 29,
+      "count": 34,
+      "success": 30,
       "failure": 4,
       "unknown": 0,
-      "success_rate": 0.879,
-      "latency_avg_ms": 2018.1,
-      "latency_median_ms": 2231.7,
+      "success_rate": 0.882,
+      "latency_avg_ms": 2042.7,
+      "latency_median_ms": 2235.1,
       "latency_p95_ms": 4313.5
+    },
+    {
+      "name": "session_search",
+      "count": 26,
+      "success": 26,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 285.7,
+      "latency_median_ms": 73.4,
+      "latency_p95_ms": 323.6
     },
     {
       "name": "process",
@@ -175,26 +254,26 @@
       "latency_p95_ms": 180012.6
     },
     {
-      "name": "session_search",
-      "count": 20,
-      "success": 20,
-      "failure": 0,
-      "unknown": 0,
-      "success_rate": 1.0,
-      "latency_avg_ms": 285.7,
-      "latency_median_ms": 73.4,
-      "latency_p95_ms": 323.6
-    },
-    {
       "name": "clarify",
-      "count": 14,
-      "success": 14,
+      "count": 17,
+      "success": 17,
       "failure": 0,
       "unknown": 0,
       "success_rate": 1.0,
       "latency_avg_ms": 334082.3,
       "latency_median_ms": 62779.7,
       "latency_p95_ms": 163166.5
+    },
+    {
+      "name": "delegate_task",
+      "count": 16,
+      "success": 16,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 98.8,
+      "latency_median_ms": 63.5,
+      "latency_p95_ms": 279.6
     },
     {
       "name": "web_extract",
@@ -206,17 +285,6 @@
       "latency_avg_ms": 1857.6,
       "latency_median_ms": 725.8,
       "latency_p95_ms": 4180.0
-    },
-    {
-      "name": "delegate_task",
-      "count": 9,
-      "success": 9,
-      "failure": 0,
-      "unknown": 0,
-      "success_rate": 1.0,
-      "latency_avg_ms": 135.8,
-      "latency_median_ms": 67.9,
-      "latency_p95_ms": 279.6
     },
     {
       "name": "tool_search",
@@ -282,25 +350,31 @@
       "tool_calls": 3077,
       "input_tokens": 4970767,
       "output_tokens": 3569501,
+      "cache_read_tokens": 318430848,
+      "cache_hit_ratio": 0.9846,
       "estimated_cost_usd": 6.4221
     },
     {
       "date": "2026-08-16",
       "sessions": 27,
-      "messages": 2672,
-      "tool_calls": 1512,
-      "input_tokens": 3134061,
-      "output_tokens": 2027797,
-      "estimated_cost_usd": 3.8203
+      "messages": 2560,
+      "tool_calls": 1462,
+      "input_tokens": 3525475,
+      "output_tokens": 2162868,
+      "cache_read_tokens": 203861888,
+      "cache_hit_ratio": 0.983,
+      "estimated_cost_usd": 4.1543
     },
     {
       "date": "2026-08-17",
-      "sessions": 7,
-      "messages": 623,
-      "tool_calls": 319,
-      "input_tokens": 1190533,
-      "output_tokens": 437134,
-      "estimated_cost_usd": 0.845
+      "sessions": 9,
+      "messages": 687,
+      "tool_calls": 363,
+      "input_tokens": 1310397,
+      "output_tokens": 460075,
+      "cache_read_tokens": 80529920,
+      "cache_hit_ratio": 0.984,
+      "estimated_cost_usd": 0.9193
     }
   ],
   "health": {
@@ -309,14 +383,15 @@
     "compression_fallback_streak_max": 0,
     "rewinds": 0,
     "end_reasons": {
-      "agent_close": 10,
+      "agent_close": 11,
       "tui_close": 2,
       "tui_shutdown": 60,
-      "unknown": 8
+      "unknown": 9
     }
   },
   "notes": [
     "success_rate = share of results with no explicit error signal (JSON success=false / exit_code!=0 / error field, or leading error text) \u2014 heuristic, not ground truth",
-    "cost figures are 'estimated' (DeepSeek pricing), not invoice-actual"
+    "cost figures are 'estimated' (DeepSeek pricing), not invoice-actual",
+    "cache_hit_ratio = cache_read / (cache_read + fresh input); output_token_share = output / all tokens \u2014 the two levers named in TOKEN_EFFICIENCY.md"
   ]
 }

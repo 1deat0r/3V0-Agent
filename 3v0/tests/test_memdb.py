@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sqlite3
 import sys
 import unittest
 from pathlib import Path
@@ -9,6 +10,7 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 sys.path.insert(0, str(REPO_ROOT / "3v0" / "core"))
 
 from core.memdb import (  # noqa: E402
+    DEFAULT_PATH,
     add_fact,
     connect,
     migrate_from_json,
@@ -42,6 +44,12 @@ class TestAddAndValid(MemDBTest):
         self.assertEqual([f["id"] for f in valid], [b])
         row = self.conn.execute("SELECT valid_to FROM facts WHERE id=?", (a,)).fetchone()
         self.assertIsNotNone(row["valid_to"])
+
+    def test_supersede_bad_fk_rejected(self):
+        # FK must be enforced: a supersedes id that doesn't exist must fail,
+        # not insert silently (regression for the missing PRAGMA foreign_keys).
+        with self.assertRaises(sqlite3.IntegrityError):
+            add_fact(self.conn, "3v0", "version", "2.0", supersedes=999999, now=NOW)
 
     def test_domain_scoping(self):
         add_fact(self.conn, "3v0", "repo", "3V0 Agent", domain="3v0", now=NOW)
@@ -91,6 +99,12 @@ class TestMigrate(MemDBTest):
         ]
         self.assertEqual(migrate_from_json(self.conn, legacy, now=NOW), 2)
         self.assertEqual(len(valid_facts(self.conn, now=NOW)), 2)
+
+
+class TestDefaultPath(MemDBTest):
+    def test_default_path_is_absolute(self):
+        self.assertTrue(str(DEFAULT_PATH).startswith("/"))
+        self.assertTrue(str(DEFAULT_PATH).endswith("3v0/data/memory.db"))
 
 
 class TestRender(MemDBTest):

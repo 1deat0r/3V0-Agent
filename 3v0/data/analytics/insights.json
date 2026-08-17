@@ -1,48 +1,26 @@
 {
-  "generated_at": "2026-08-17T13:14:31.278559+00:00",
+  "generated_at": "2026-08-17T20:23:10.665873+00:00",
   "findings": [
     {
       "category": "memory_health",
       "severity": "high",
-      "message": "memory writes succeed only 66% \u2014 likely full",
+      "message": "memory writes succeed only 65% \u2014 diagnose the cause, don't assume 'full'",
       "evidence": {
-        "success_rate": 0.66,
-        "count": 53
+        "success_rate": 0.649,
+        "count": 57
       },
-      "suggested_action": "prune stale memory entries to free the char budget"
+      "suggested_action": "memory failures are a mix: char-budget rejection / stale replace-target / malformed call shape. Inspect which, then fix accordingly (prune only if budget-bound)."
     },
     {
       "category": "tool_latency",
       "severity": "medium",
-      "message": "terminal p95 latency is 12.4s",
+      "message": "terminal p95 latency is 13.2s",
       "evidence": {
         "name": "terminal",
-        "count": 1850,
-        "p95_ms": 12399.2
+        "count": 2002,
+        "p95_ms": 13192.2
       },
       "suggested_action": "investigate terminal: find slow calls/patterns, then cache or parallelize"
-    },
-    {
-      "category": "tool_latency",
-      "severity": "medium",
-      "message": "browser_exec p95 latency is 10.8s",
-      "evidence": {
-        "name": "browser_exec",
-        "count": 301,
-        "p95_ms": 10776.2
-      },
-      "suggested_action": "investigate browser_exec: find slow calls/patterns, then cache or parallelize"
-    },
-    {
-      "category": "tool_latency",
-      "severity": "medium",
-      "message": "process p95 latency is 180.0s",
-      "evidence": {
-        "name": "process",
-        "count": 21,
-        "p95_ms": 180012.6
-      },
-      "suggested_action": "investigate process: find slow calls/patterns, then cache or parallelize"
     },
     {
       "category": "burn",
@@ -58,13 +36,35 @@
     {
       "category": "burn",
       "severity": "medium",
-      "message": "2026-08-16 burned $3.82 (over $3.00)",
+      "message": "2026-08-16 burned $4.15 (over $3.00)",
       "evidence": {
         "date": "2026-08-16",
-        "cost_usd": 3.8203,
-        "tool_calls": 1512
+        "cost_usd": 4.1543,
+        "tool_calls": 1462
       },
       "suggested_action": "review that day's sessions for token-heavy patterns (large reads, re-fetching)"
+    },
+    {
+      "category": "aux_routing",
+      "severity": "low",
+      "message": "aux task 'compression' ran on deepseek-v4-pro ($0.09); policy routes aux \u2192 deepseek-v4-flash",
+      "evidence": {
+        "task": "compression",
+        "model": "deepseek-v4-pro",
+        "cost_usd": 0.0938
+      },
+      "suggested_action": "pin aux/background LLM tasks to deepseek-v4-flash (TOKEN_EFFICIENCY.md)"
+    },
+    {
+      "category": "aux_routing",
+      "severity": "low",
+      "message": "aux task 'approval' ran on deepseek-v4-pro ($0.05); policy routes aux \u2192 deepseek-v4-flash",
+      "evidence": {
+        "task": "approval",
+        "model": "deepseek-v4-pro",
+        "cost_usd": 0.0549
+      },
+      "suggested_action": "pin aux/background LLM tasks to deepseek-v4-flash (TOKEN_EFFICIENCY.md)"
     }
   ]
 }

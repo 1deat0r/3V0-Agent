@@ -1518,4 +1518,47 @@ Decisions:
 Verification: 296 tests green (287 → 296). Next stones: rewire the pipeline
 (record/sync/bridge → memdb), retrieval-chosen injection, feedback/forgetting.
 
+## Stone 22 — independent review + reconciliation (analytics/insights/memdb)
+
+The operator asked whether I'd *independently* reviewed Stones 19–21. I
+hadn't — and auditing the body first (git log) revealed the deeper failure:
+context compaction had amputated a whole arc (Fiverr gig went live + a
+token-efficiency policy + bcode), so I'd built Stones 19–21 against stale
+memory. `TOKEN_EFFICIENCY.md` already named cache-hit ratio as lever #1 and
+memory-compaction as a policy goal — yet analytics measured token *totals*,
+not the *levers*, and never surfaced either.
+
+A fresh-context sub-agent review (external signal, not self-critique) found
+six real bugs beyond my own list; I reconciled all of them:
+
+- `scripts/analytics.py` dropped `task`, `cache_read_tokens`, `reasoning_tokens`
+  and `session_id` → aux work (compression/approval) on `pro` was invisible.
+  Now selected; `task_mix` surfaces it (live: compression→pro $0.09,
+  approval→pro $0.05 — a real policy violation now visible).
+- cache-hit ratio + output-token share added at totals/per-model/per-day.
+- `model_mix` now counts *distinct* sessions (it mislabeled usage rows).
+- `memory_health` stopped asserting "store full" — failures are a mix (budget /
+  stale replace-target / malformed call); it now says "diagnose, don't assume".
+- `model_mix_findings` no longer flags `flash` (the policy-mandated aux model).
+- latency detector skips inherently-long tools (`process`/`browser_exec`/
+  `delegate_task`) — their p95 is wall-clock wait, not a defect.
+- `core/memdb.py`: `PRAGMA foreign_keys = ON` (supersedes now enforced) and
+  repo-absolute `DEFAULT_PATH`.
+
+Decisions:
+- **External signal beat self-critique — again.** My pre-review list had 3
+  items; the reviewer found 10. Independent review is now the mandatory gate
+  before a "stone" is considered done.
+- **The body is the memory.** "Audit the body before trusting any memory of
+  it" became operational: before claiming any state, read the git log + the
+  files that own that state. The Fiverr "blocked on KYC" error was a stale
+  narrative, not a stale file.
+- **memdb is the mechanism the token policy already demanded** ("compact
+  memory, consolidate not append") — wired explicitly now.
+
+Verification: 311 tests green (296 → 311), continuity 6/6. Live analytics
+now reports cache-hit 98.4% (healthy, above the 0.90 floor) and the
+aux-routing findings; `cache_health` stays silent because the prefix *is*
+protected.
+
 

@@ -5,10 +5,13 @@ reads and file writes live in scripts/analytics.py (invariant #4: pure
 decision logic in core/, I/O at the edges).
 
 Metrics computed:
-  - session totals (tokens, cost, counts, active days)
-  - per-model mix (tokens, cost, api calls)
+  - session totals (tokens, cost, counts, active days) — incl. cache-hit
+    ratio and output-token share (the two levers named in TOKEN_EFFICIENCY.md)
+  - per-model mix (tokens, cost, api calls, distinct sessions, cache-hit ratio)
+  - per-task × per-model mix (surfaces aux routing: policy requires
+    compression/approval to run on deepseek-v4-flash, not the primary model)
   - per-tool frequency, heuristic success rate, and latency distribution
-  - per-day activity buckets (burn trend)
+  - per-day activity buckets (burn trend, incl. per-day cache-hit ratio)
   - body health (compression failures, rewinds, end reasons)
 """
 
@@ -119,7 +122,7 @@ def aggregate_tools(events):
 
 
 # --------------------------------------------------------------------------
-# Session / model / daily / health
+# Session / model / task / daily / health
 # --------------------------------------------------------------------------
 
 def _sum(key, rows):
@@ -132,49 +135,110 @@ def _day(ts):
     return datetime.datetime.fromtimestamp(ts, datetime.timezone.utc).strftime("%Y-%m-%d")
 
 
+def _cache_hit_ratio(cache_read, fresh_input):
+    total = cache_read + fresh_input
+    return round(cache_read / total, 4) if total else None
+
+
 def session_totals(sessions):
-    """Totals across all sessions (tokens, cost, counts, active days)."""
+    """Totals across all sessions (tokens, cost, counts, active days).
+
+    cache_hit_ratio = cache_read / (cache_read + fresh input) — the policy's
+    #1 cost lever (cache-hit $0.022 vs cache-miss $0.66 per 1M).
+    output_token_share = output / (cache_read + input + output) — normalizes
+    the other lever (output is 90× cache-hit input).
+    """
     sessions = list(sessions)
+    cache_read = _sum("cache_read_tokens", sessions)
+    input_fresh = _sum("input_tokens", sessions)
+    output = _sum("output_tokens", sessions)
+    all_tokens = cache_read + input_fresh + output
     return {
         "sessions": len(sessions),
         "messages": _sum("message_count", sessions),
         "tool_calls": _sum("tool_call_count", sessions),
         "api_calls": _sum("api_call_count", sessions),
-        "input_tokens": _sum("input_tokens", sessions),
-        "output_tokens": _sum("output_tokens", sessions),
-        "cache_read_tokens": _sum("cache_read_tokens", sessions),
+        "input_tokens": input_fresh,
+        "output_tokens": output,
+        "cache_read_tokens": cache_read,
         "reasoning_tokens": _sum("reasoning_tokens", sessions),
+        "cache_hit_ratio": _cache_hit_ratio(cache_read, input_fresh),
+        "output_token_share": round(output / all_tokens, 4) if all_tokens else None,
         "estimated_cost_usd": round(_sum("estimated_cost_usd", sessions), 4),
         "active_days": len({_day(r.get("started_at")) for r in sessions if r.get("started_at")}),
     }
 
 
 def model_mix(usage):
-    """Per-model totals (tokens, cost, api calls), sorted by cost desc."""
+    """Per-model totals (tokens, cost, api calls, distinct sessions), sorted by cost desc.
+
+    `sessions` counts distinct session_ids (the usage table has a `task`
+    dimension, so one session can contribute several rows per model).
+    """
     agg = {}
     for r in usage:
         key = r.get("model") or "unknown"
         rec = agg.setdefault(key, {
-            "sessions": 0, "api_calls": 0, "input_tokens": 0,
-            "output_tokens": 0, "estimated_cost_usd": 0.0,
+            "session_ids": set(), "api_calls": 0, "input_tokens": 0,
+            "output_tokens": 0, "cache_read_tokens": 0,
+            "estimated_cost_usd": 0.0,
         })
-        rec["sessions"] += 1
+        if r.get("session_id"):
+            rec["session_ids"].add(r["session_id"])
         rec["api_calls"] += r.get("api_call_count") or 0
         rec["input_tokens"] += r.get("input_tokens") or 0
         rec["output_tokens"] += r.get("output_tokens") or 0
+        rec["cache_read_tokens"] += r.get("cache_read_tokens") or 0
         rec["estimated_cost_usd"] += r.get("estimated_cost_usd") or 0.0
     out = []
     for model, rec in agg.items():
-        rec = dict(rec)
+        out.append({
+            "model": model,
+            "sessions": len(rec["session_ids"]),
+            "api_calls": rec["api_calls"],
+            "input_tokens": rec["input_tokens"],
+            "output_tokens": rec["output_tokens"],
+            "cache_read_tokens": rec["cache_read_tokens"],
+            "cache_hit_ratio": _cache_hit_ratio(rec["cache_read_tokens"], rec["input_tokens"]),
+            "estimated_cost_usd": round(rec["estimated_cost_usd"], 4),
+        })
+    out.sort(key=lambda r: r["estimated_cost_usd"], reverse=True)
+    return out
+
+
+def task_mix(usage):
+    """Per-task × per-model cost/tokens, sorted by cost desc.
+
+    `task` is '' (main), 'compression', or 'approval'. TOKEN_EFFICIENCY.md
+    requires aux tasks to route to deepseek-v4-flash; this view makes any
+    primary-model aux spend visible instead of silently dropped.
+    """
+    agg = {}
+    for r in usage:
+        task = r.get("task") or "main"
+        model = r.get("model") or "unknown"
+        key = (task, model)
+        rec = agg.setdefault(key, {
+            "task": task, "model": model, "api_calls": 0,
+            "input_tokens": 0, "output_tokens": 0, "cache_read_tokens": 0,
+            "reasoning_tokens": 0, "estimated_cost_usd": 0.0,
+        })
+        rec["api_calls"] += r.get("api_call_count") or 0
+        rec["input_tokens"] += r.get("input_tokens") or 0
+        rec["output_tokens"] += r.get("output_tokens") or 0
+        rec["cache_read_tokens"] += r.get("cache_read_tokens") or 0
+        rec["reasoning_tokens"] += r.get("reasoning_tokens") or 0
+        rec["estimated_cost_usd"] += r.get("estimated_cost_usd") or 0.0
+    out = []
+    for rec in agg.values():
         rec["estimated_cost_usd"] = round(rec["estimated_cost_usd"], 4)
-        rec["model"] = model
         out.append(rec)
     out.sort(key=lambda r: r["estimated_cost_usd"], reverse=True)
     return out
 
 
 def daily_buckets(sessions, last_n=30):
-    """Per-day activity buckets (most recent `last_n` days)."""
+    """Per-day activity buckets (most recent `last_n` days), incl. per-day cache-hit ratio."""
     buckets = {}
     for r in sessions:
         day = _day(r.get("started_at"))
@@ -182,13 +246,15 @@ def daily_buckets(sessions, last_n=30):
             continue
         b = buckets.setdefault(day, {
             "sessions": 0, "messages": 0, "tool_calls": 0,
-            "input_tokens": 0, "output_tokens": 0, "estimated_cost_usd": 0.0,
+            "input_tokens": 0, "output_tokens": 0, "cache_read_tokens": 0,
+            "estimated_cost_usd": 0.0,
         })
         b["sessions"] += 1
         b["messages"] += r.get("message_count") or 0
         b["tool_calls"] += r.get("tool_call_count") or 0
         b["input_tokens"] += r.get("input_tokens") or 0
         b["output_tokens"] += r.get("output_tokens") or 0
+        b["cache_read_tokens"] += r.get("cache_read_tokens") or 0
         b["estimated_cost_usd"] += r.get("estimated_cost_usd") or 0.0
     out = []
     for d in sorted(buckets.keys())[-last_n:]:
@@ -200,6 +266,8 @@ def daily_buckets(sessions, last_n=30):
             "tool_calls": b["tool_calls"],
             "input_tokens": b["input_tokens"],
             "output_tokens": b["output_tokens"],
+            "cache_read_tokens": b["cache_read_tokens"],
+            "cache_hit_ratio": _cache_hit_ratio(b["cache_read_tokens"], b["input_tokens"]),
             "estimated_cost_usd": round(b["estimated_cost_usd"], 4),
         })
     return out
@@ -230,11 +298,13 @@ def summarize(sessions, usage, events, last_n=30):
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "totals": session_totals(sessions),
         "models": model_mix(usage),
+        "tasks": task_mix(usage),
         "tools": aggregate_tools(events),
         "daily": daily_buckets(sessions, last_n=last_n),
         "health": health(sessions),
         "notes": [
             "success_rate = share of results with no explicit error signal (JSON success=false / exit_code!=0 / error field, or leading error text) — heuristic, not ground truth",
             "cost figures are 'estimated' (DeepSeek pricing), not invoice-actual",
+            "cache_hit_ratio = cache_read / (cache_read + fresh input); output_token_share = output / all tokens — the two levers named in TOKEN_EFFICIENCY.md",
         ],
     }

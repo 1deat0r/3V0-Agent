@@ -3,7 +3,8 @@
 
 Reads Hermes's state.db (sessions, messages, session_model_usage) and turns
 it into a self-owned analytics report: per-tool frequency / latency / success,
-per-model tokens / cost, per-day burn, and body-health signals.
+per-model tokens / cost, per-task × per-model aux routing, per-day burn, and
+body-health signals.
 
 Local and self-owned: reads only the local profile DB, writes only to
 3v0/data/analytics/. No outbound telemetry, nothing phones home.
@@ -57,7 +58,9 @@ def load_sessions(db):
 
 def load_usage(db):
     return _rows(db, """
-        SELECT model, api_call_count, input_tokens, output_tokens, estimated_cost_usd
+        SELECT session_id, model, task, api_call_count, input_tokens,
+               output_tokens, cache_read_tokens, reasoning_tokens,
+               estimated_cost_usd
         FROM session_model_usage
     """)
 
@@ -98,19 +101,30 @@ def build_events(db):
     return events
 
 
+def _pct(v):
+    return f"{v * 100:.1f}%" if v is not None else "   ?"
+
+
 def render(report, top=10):
     t = report["totals"]
     lines = [
         f"3V0 self-analytics — {t['sessions']} sessions, {t['active_days']} active days",
         f"tokens: in={t['input_tokens']:,} out={t['output_tokens']:,} "
         f"cache_read={t['cache_read_tokens']:,} reasoning={t['reasoning_tokens']:,}",
+        f"cache-hit {_pct(t.get('cache_hit_ratio'))} | output share {_pct(t.get('output_token_share'))} "
+        f"(levers per TOKEN_EFFICIENCY.md)",
         f"cost (est): ${t['estimated_cost_usd']:.2f} | api calls {t['api_calls']:,} | tool calls {t['tool_calls']:,}",
         "",
         "models:",
     ]
     for m in report["models"]:
+        mch = f" ch={_pct(m.get('cache_hit_ratio'))}" if m.get("cache_hit_ratio") is not None else ""
         lines.append(f"  {m['model']:<22} ${m['estimated_cost_usd']:>9.2f}  "
-                     f"in={m['input_tokens']:,} out={m['output_tokens']:,}")
+                     f"in={m['input_tokens']:,} out={m['output_tokens']:,}{mch}")
+    lines += ["", "tasks (task × model — aux should be flash):"]
+    for tsk in report["tasks"]:
+        lines.append(f"  {tsk['task']:<12} {tsk['model']:<22} ${tsk['estimated_cost_usd']:>9.2f}  "
+                     f"in={tsk['input_tokens']:,} out={tsk['output_tokens']:,}")
     lines += ["", f"tools (top {top} by count):",
               f"  {'tool':<20} {'n':>5} {'succ%':>6} {'p50ms':>8} {'p95ms':>8}"]
     for tool in report["tools"][:top]:
@@ -119,10 +133,11 @@ def render(report, top=10):
         p95 = f"{tool['latency_p95_ms']:.0f}" if tool["latency_p95_ms"] is not None else "-"
         lines.append(f"  {tool['name']:<20} {tool['count']:>5} {rate:>6} {p50:>8} {p95:>8}")
     lines += ["", "daily (last 7):",
-              f"  {'date':<12} {'sess':>4} {'tools':>6} {'in_tok':>9} {'cost$':>7}"]
+              f"  {'date':<12} {'sess':>4} {'tools':>6} {'in_tok':>9} {'ch%':>5} {'cost$':>7}"]
     for d in report["daily"][-7:]:
+        dch = f"{d['cache_hit_ratio']*100:.0f}%" if d.get("cache_hit_ratio") is not None else "   ?"
         lines.append(f"  {d['date']:<12} {d['sessions']:>4} {d['tool_calls']:>6} "
-                     f"{d['input_tokens']:>9,} {d['estimated_cost_usd']:>7.2f}")
+                     f"{d['input_tokens']:>9,} {dch:>5} {d['estimated_cost_usd']:>7.2f}")
     h = report["health"]
     lines += ["",
               f"health: compression_failures={h['compression_failure_errors']} "
