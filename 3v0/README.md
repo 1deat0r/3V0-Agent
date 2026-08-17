@@ -84,6 +84,10 @@ code.
   `memory-profile`, `skills-store`, `ledger`, `github-loops`), each a pure
   check over a JSON-safe context; the decision half only (no git/network/file
   I/O).
+- `core/handoff.py` — the pure render + loop-claim diff of the generated
+  handoff (Stone 18): decision half only (no I/O), mirroring the
+  continuity/drift split. The collection half lives in
+  `scripts/generate_handoff.py`.
 - `CONTINUITY.md` — the continuity anchor (Stone 17): the fixed point
   (Prime Directive + identity + a pointer to the continuity model),
   git-versioned, never regenerated from itself.
@@ -148,6 +152,10 @@ code.
   one-page continuity report over the six invariants (`--heal` runs the safe
   mechanical sync, `--accept` re-records loop claims from live GitHub,
   `--json` for the daemon, `--fail-on-drift` for a gate).
+- `scripts/generate_handoff.py` — the collection half of the generated
+  handoff (Stone 18): writes `HANDOFF.generated.md` (the committed shadow
+  draft, regenerated each wake, never promoted) and prints the loop-claim
+  shadow diff.
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, registers the
@@ -206,5 +214,13 @@ code.
    reconstruction clock (`scripts/continuity_check.py`, wired into the wake
    check + the 3v0-review daemon tick) make continuity a *checked* property —
    cross-artifact consistency — rather than a hand-run ritual.
+7. **Generated handoff (direction 7) — started (Stone 18).** The
+   `HANDOFF.generated.md` shadow draft is now the canonical carrier of
+   mechanical state (body git, continuity, drift, loops, store, daemons),
+   regenerated each wake by `scripts/handoff_check.sh` via
+   `scripts/generate_handoff.py` (render: `core/handoff.py`). Operator
+   authorized the flip (2026-08-16): `HANDOFF.md` keeps the *narrative* and
+   no longer re-copies mechanical numbers; the loop-claim shadow diff remains
+   as ongoing drift monitoring.
 
 The goal is not to abandon the fork — it is to make the fork a detail.
