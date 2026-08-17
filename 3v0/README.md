@@ -52,12 +52,24 @@ code.
   store-first skill decisions (`skill_update` / `skill_retract` /
   `skill_absorb`) as JSON-safe results. Never destroys — supersession and
   absorb/retract terminals are recoverable via `history()`.
+- `core/review_decide.py` — the review decision half (extracted from the
+  Stone 7 driver): tolerant JSON, transcript compaction, store/skill blocks,
+  and both temporal guards as pure functions, importable without the driver's
+  side-effecting module load. The canonical `KINDS` / `SKILL_DECISION_ACTIONS`
+  vocabularies are imported, not re-declared.
 - `core/projects.py` — the project registry + drift ledger (Stone 16): the
   data-driven `ProjectLedger` (N projects, `3v0/data/projects/ledger.json`,
   keyed by name) plus `ProjectSpec` + `resolve_project()` — the review-scoping
   view the review driver derives from a ledger entry (store, cwd roots,
   `primary` / `memory_only` / `store_only`, review log). Ledger-driven, with a
   seed fallback when the file is missing.
+- `core/project.py` — the single owner of the store->profile projection:
+  `project_memory(store, profile_dir)` writes MEMORY.md / USER.md as the
+  store's derived view (sync / record / export_to_profile call it).
+- `core/claims.py` — the single owner of the tracked-upstream-loop claim
+  registry: `load_claims`, one parameterized `gh_loop` wrapper,
+  `loop_fields`, and the default repo (continuity_check + generate_handoff
+  consume it).
 - `core/drift.py` — drift computation for the multi-project clock:
   `collect_git_state` (best-effort `git` collection), `store_hash` (sha256),
   and `compute_drift` (the pure verdict — behind/ahead vs upstream, dirty
