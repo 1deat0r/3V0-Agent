@@ -160,7 +160,7 @@ drift before picking up the follow-ups.
 ## Where I am
 - Body repo: `~/Projects/AI Agents/3V0 Agent` (fork of NousResearch/hermes-agent).
 - Runtime executes `~/.hermes/hermes-agent/` — a separate checkout kept behind
-  the body (body synced to upstream 2026-08-15; runtime not yet updated).
+  the body (body synced to upstream 2026-08-17; runtime not yet updated).
   Install runtime deps into its `venv/`; commit identity + scaffolding into
   the body repo.
 - **Native core `3v0/`** — my own substrate, distinct from the fork. The store
