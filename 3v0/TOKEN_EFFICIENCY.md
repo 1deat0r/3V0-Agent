@@ -59,6 +59,10 @@ agent:
 auxiliary:
   curator:
     model: deepseek-v4-flash      # background skill-review on the cheap model
+  compression:
+    model: deepseek-v4-flash      # context compression/summarization on cheap model
+  approval:
+    model: deepseek-v4-pro        # smart-approval security guard stays on primary
 ```
 
 **Deliberately NOT set:**
@@ -81,10 +85,14 @@ auxiliary:
 - **Protect the prefix.** Never edit SOUL.md, AGENTS.md, memory, or switch
   toolsets mid-conversation. Slash commands that mutate system-prompt state
   defer to next session (Hermes cache-awareness) unless `--now` is justified.
-- **Cheap aux.** All `auxiliary.*` tasks resolve `provider: auto` →
-  `default_aux_model=deepseek-v4-flash` automatically (compression, vision,
-  titles). Curator was the exception (`auto` = main model) — now pinned to
-  flash. Keep it that way.
+- **Cheap aux.** `auxiliary.*` tasks resolve `provider: auto` → **the main
+  model** (`deepseek-v4-pro`), NOT flash — verified against
+  `agent/auxiliary_client.py` ("default `auto = main model`"). To route a task
+  to flash you must pin `auxiliary.<task>.model`. Pinned: `curator` +
+  `compression` → flash. `approval` stays on `pro` deliberately — it's the
+  smart-approval security guard (defends against prompt-injected commands) and
+  costs ~$0.05 total, so don't weaken a safety check for a cost that's already
+  negligible.
 - **Compact memory.** Memory + user profile are ~1,300 tokens injected every
   turn. Keep entries high-signal; consolidate instead of appending; never
   store re-discoverable data (paths, addresses, IDs) that a file already
