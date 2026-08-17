@@ -904,7 +904,7 @@
       "supersedes": [
         "8931a62669cf"
       ],
-      "superseded_by": "",
+      "superseded_by": "fa9d2f339ff8",
       "note": ""
     },
     {
@@ -986,7 +986,7 @@
       "source": "assistant_tool",
       "created_at": "2026-08-17T00:59:39Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "9178b81b2a86",
       "note": ""
     },
     {
@@ -1006,7 +1006,7 @@
       "source": "session-review",
       "created_at": "2026-08-17T07:00:53Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "d0433617f0c7",
       "note": ""
     },
     {
@@ -1018,7 +1018,7 @@
       "supersedes": [
         "cee80f7ad262"
       ],
-      "superseded_by": "",
+      "superseded_by": "33e44a7588a3",
       "note": ""
     },
     {
@@ -1054,7 +1054,7 @@
       "supersedes": [
         "4ed71c4bdb11"
       ],
-      "superseded_by": "",
+      "superseded_by": "16dd861ba378",
       "note": ""
     },
     {
@@ -1066,8 +1066,8 @@
       "supersedes": [
         "879ed55e5306"
       ],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
     },
     {
       "id": "ddae8af83bfd",
@@ -1078,7 +1078,7 @@
       "supersedes": [
         "41567b099d17"
       ],
-      "superseded_by": "",
+      "superseded_by": "2667ba8bca1b",
       "note": ""
     },
     {
@@ -1090,8 +1090,8 @@
       "supersedes": [
         "a0cc6dc6f5dd"
       ],
-      "superseded_by": "",
-      "note": ""
+      "superseded_by": "retracted",
+      "note": "retracted by assistant_tool"
     },
     {
       "id": "63eeea4eb0a8",
@@ -1114,7 +1114,7 @@
       "supersedes": [
         "b82c99955056"
       ],
-      "superseded_by": "",
+      "superseded_by": "f67c140fcbdd",
       "note": ""
     },
     {
@@ -1136,6 +1136,146 @@
       "source": "assistant_tool",
       "created_at": "2026-08-17T11:38:31Z",
       "supersedes": [],
+      "superseded_by": "330cef90b680",
+      "note": ""
+    },
+    {
+      "id": "0c77832d5e3a",
+      "content": "Operator wants 3V0's browser automation isolated from their normal PC use — a separate browser instance/profile so it never steals focus, and their own Chrome activity can't interfere with it.",
+      "kind": "user",
+      "source": "session-review",
+      "created_at": "2026-08-17T12:41:31Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "c1823057c739",
+      "content": "bcode (browsercode) v0.1.20 installed; default model deepseek-v4-pro; isolated Chromium profile ~/.config/3v0-fiverr-browser on CDP 9223 for Fiverr automation — separate from normal Chrome.",
+      "kind": "memory",
+      "source": "session-review",
+      "created_at": "2026-08-17T12:41:31Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "9178b81b2a86",
+      "content": "Self-funding via Fiverr (debug/review/automation; I work, operator holds rails) — SUSTAINABILITY.md. Solana 4SJuX7VYcE2bUYw2anH4nB9ArsZuxhCMtMNQ5WLXWuJt (key in profile wallet/).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T12:45:34Z",
+      "supersedes": [
+        "97340a10664a"
+      ],
+      "superseded_by": "b3c5be39cedb",
+      "note": ""
+    },
+    {
+      "id": "d0433617f0c7",
+      "content": "Operator desktop = KDE Wayland; no virtual-keyboard protocol (wtype unsupported). ydotool uinput needs seat-tagging udev rule; passwordless sudo available.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T12:45:34Z",
+      "supersedes": [
+        "5319b4340141"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "33e44a7588a3",
+      "content": "3V0 env: web_search via keyless ddgs; web_extract search-only (can't extract) — use curl/browser_exec.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T12:45:34Z",
+      "supersedes": [
+        "1341a8ed9f12"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "16dd861ba378",
+      "content": "3V0 gateway = systemd hermes-gateway-3v0.service (enabled+linger) → cron/curator + Telegram @sovereign3v0Bot (polling, outbound verified; creds in profile .env). TUI never runs schedulers; no cron jobs (operator pref).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T12:45:34Z",
+      "supersedes": [
+        "8cd71f2bc736"
+      ],
+      "superseded_by": "2578aa2c9f50",
+      "note": ""
+    },
+    {
+      "id": "2667ba8bca1b",
+      "content": "Session audit: HANDOFF.md (narrative) + HANDOFF.generated.md (scripts/handoff_check.sh); claims.json = loop source of truth. Own-clock daemons: 3v0-review (memory+skills→profile), f1nance/axiom store-only; continuity check before sync/heal.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T12:45:34Z",
+      "supersedes": [
+        "ddae8af83bfd"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "f67c140fcbdd",
+      "content": "DeepSeek V4-Pro (1M ctx); effort low/high/max (default high). Peak pricing 01-04+06-10 UTC, else half. Token-eff policy → 3v0/TOKEN_EFFICIENCY.md.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T12:45:34Z",
+      "supersedes": [
+        "5e18745ed969"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "330cef90b680",
+      "content": "Browser-exec: skill browser-automation + agent_helpers.py (AX→getBoxModel→click_at_xy; fill_input; upload_file CDP).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T12:45:34Z",
+      "supersedes": [
+        "e4b416968867"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "b3c5be39cedb",
+      "content": "Self-funding via Fiverr (debug/review/automation; I work, operator holds rails) — SUSTAINABILITY.md. Solana key in profile wallet/.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T12:45:51Z",
+      "supersedes": [
+        "9178b81b2a86"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "2578aa2c9f50",
+      "content": "3V0 gateway = systemd hermes-gateway-3v0.service → cron/curator + Telegram @sovereign3v0Bot (polling; creds in profile .env). TUI never runs schedulers; no cron jobs (operator pref).",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T12:45:51Z",
+      "supersedes": [
+        "16dd861ba378"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "fa9d2f339ff8",
+      "content": "scripts/run_tests.sh ~81 env failures (creds+FTS5); not regressions.",
+      "kind": "memory",
+      "source": "assistant_tool",
+      "created_at": "2026-08-17T12:45:51Z",
+      "supersedes": [
+        "a62d17024d16"
+      ],
       "superseded_by": "",
       "note": ""
     }
