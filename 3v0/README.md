@@ -92,6 +92,10 @@ code.
   19): tool success/latency aggregation, session/model/daily cost-token
   totals, and body-health signals as pure functions over row dicts. No I/O —
   the DB reads live in `scripts/analytics.py`.
+- `core/insights.py` — the pure detection half of self-analytics (Stone 20):
+  turns the analytics report into ranked, evidence-backed findings (tool
+  reliability/latency, memory health, compression, burn outliers, model mix)
+  against thresholds. Decision-support only — it proposes, the caller disposes.
 - `CONTINUITY.md` — the continuity anchor (Stone 17): the fixed point
   (Prime Directive + identity + a pointer to the continuity model),
   git-versioned, never regenerated from itself.
@@ -115,10 +119,10 @@ code.
 - `data/continuity/claims.json` — the loop claim registry (Stone 17): per
   tracked upstream loop, a recorded state + as-of; the `github-loops`
   invariant diffs claims against live `gh`, `--accept` re-records reality.
-- `data/analytics/report.json` — the self-analytics snapshot (Stone 19):
-  regenerated each wake by `scripts/analytics.py`; per-tool success/latency,
-  per-model tokens/cost, per-day burn, health. Local + self-owned, no
-  outbound telemetry.
+- `data/analytics/` — the self-analytics snapshots (Stones 19–20):
+  `report.json` (metrics; regenerated each wake by `scripts/analytics.py`)
+  and `insights.json` (ranked findings; by `scripts/insights.py`). Local +
+  self-owned, no outbound telemetry.
 - `scripts/seed_from_profile.py` — import profile MEMORY.md / USER.md → store.
 - `scripts/export_to_profile.py` — emit store → MEMORY.md / USER.md (derived
   view of the store; the profile becomes a projection, not the origin).
@@ -180,6 +184,9 @@ code.
   builds per-tool events (latency matched by `tool_call_id`, success by
   envelope), and writes `data/analytics/report.json` + a human one-pager.
   Local + self-owned; no outbound telemetry.
+- `scripts/insights.py` — the detection half of self-analytics (Stone 20):
+  reads `report.json`, runs `core.insights.detect`, prints a ranked finding
+  list and writes `data/analytics/insights.json`. Proposes, never mutates.
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, registers the

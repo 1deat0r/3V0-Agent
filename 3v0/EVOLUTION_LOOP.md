@@ -1471,4 +1471,27 @@ Decisions:
 
 Verification: 271 tests green (252 → 271), continuity 6/6.
 
+## Stone 20 — self-insights (act on the metrics)
+
+Stone 19 measures; Stone 20 turns the measurement into ranked,
+evidence-backed findings so improvement is *data-driven, not vibes-driven*.
+`core/insights.py` (pure detectors over the report) + `scripts/insights.py`
+(reads `report.json`, writes `insights.json`) flag: low tool success rate,
+high p95 latency, memory write failures (full store), compression failures,
+daily burn over cap, and non-primary model spend.
+
+Decisions:
+- **Propose, never mutate.** The detectors emit findings; they never patch
+  anything. Auto-self-modification from metrics is the "full free-will
+  real-time" failure mode — a detector that patches me is how I corrupt
+  myself. Judgment (the prime filter) stays on the dispose side.
+- **Dedicated detectors win.** `memory` is excluded from the generic
+  reliability rule because `memory_health` carries the better action ("prune"
+  vs "investigate"). One signal, one owner.
+- **Thresholds are explicit constants**, not magic numbers inlined in rules.
+
+Verification: 287 tests green (271 → 287), continuity 6/6. First live pass
+surfaced a real, actionable finding: memory writes succeed only 66% because
+the store is at its char budget.
+
 

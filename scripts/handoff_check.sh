@@ -70,6 +70,10 @@ echo "== SELF-ANALYTICS (owned metrics) =="
 python3 3v0/scripts/analytics.py 2>&1
 echo
 
+echo "== SELF-INSIGHTS (owned findings) =="
+python3 3v0/scripts/insights.py 2>&1
+echo
+
 echo "== GENERATED HANDOFF (shadow draft) =="
 python3 3v0/scripts/generate_handoff.py 2>&1
 echo

@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-08-17T13:14:31.278559+00:00",
+  "findings": [
+    {
+      "category": "memory_health",
+      "severity": "high",
+      "message": "memory writes succeed only 66% \u2014 likely full",
+      "evidence": {
+        "success_rate": 0.66,
+        "count": 53
+      },
+      "suggested_action": "prune stale memory entries to free the char budget"
+    },
+    {
+      "category": "tool_latency",
+      "severity": "medium",
+      "message": "terminal p95 latency is 12.4s",
+      "evidence": {
+        "name": "terminal",
+        "count": 1850,
+        "p95_ms": 12399.2
+      },
+      "suggested_action": "investigate terminal: find slow calls/patterns, then cache or parallelize"
+    },
+    {
+      "category": "tool_latency",
+      "severity": "medium",
+      "message": "browser_exec p95 latency is 10.8s",
+      "evidence": {
+        "name": "browser_exec",
+        "count": 301,
+        "p95_ms": 10776.2
+      },
+      "suggested_action": "investigate browser_exec: find slow calls/patterns, then cache or parallelize"
+    },
+    {
+      "category": "tool_latency",
+      "severity": "medium",
+      "message": "process p95 latency is 180.0s",
+      "evidence": {
+        "name": "process",
+        "count": 21,
+        "p95_ms": 180012.6
+      },
+      "suggested_action": "investigate process: find slow calls/patterns, then cache or parallelize"
+    },
+    {
+      "category": "burn",
+      "severity": "medium",
+      "message": "2026-08-15 burned $6.42 (over $3.00)",
+      "evidence": {
+        "date": "2026-08-15",
+        "cost_usd": 6.4221,
+        "tool_calls": 3077
+      },
+      "suggested_action": "review that day's sessions for token-heavy patterns (large reads, re-fetching)"
+    },
+    {
+      "category": "burn",
+      "severity": "medium",
+      "message": "2026-08-16 burned $3.82 (over $3.00)",
+      "evidence": {
+        "date": "2026-08-16",
+        "cost_usd": 3.8203,
+        "tool_calls": 1512
+      },
+      "suggested_action": "review that day's sessions for token-heavy patterns (large reads, re-fetching)"
+    }
+  ]
+}
