@@ -19,7 +19,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.memory import MemoryStore  # noqa: E402
-from core.profile_io import join_entries  # noqa: E402
+from core.project import project_memory  # noqa: E402
+from core.sync import profile_text  # noqa: E402
 
 PROFILE_MEM = Path.home() / ".hermes" / "profiles" / "3v0" / "memories"
 STORE_PATH = REPO_ROOT / "3v0" / "data" / "memory.json"
@@ -35,20 +36,16 @@ def main() -> int:
     args = ap.parse_args()
 
     store = MemoryStore(STORE_PATH)
-    mem = join_entries([f.content for f in store.active("memory")])
-    user = join_entries([f.content for f in store.active("user")])
 
     if args.write:
-        PROFILE_MEM.mkdir(parents=True, exist_ok=True)
-        (PROFILE_MEM / "MEMORY.md").write_text(mem, encoding="utf-8")
-        (PROFILE_MEM / "USER.md").write_text(user, encoding="utf-8")
+        project_memory(store, PROFILE_MEM)
         print(f"Wrote {PROFILE_MEM / 'MEMORY.md'} and {PROFILE_MEM / 'USER.md'}")
     else:
         print("=== MEMORY.md (derived) ===")
-        print(mem)
+        print(profile_text(store, "memory"))
         print()
         print("=== USER.md (derived) ===")
-        print(user)
+        print(profile_text(store, "user"))
     return 0
 
 

@@ -40,7 +40,7 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.decide import decide  # noqa: E402
 from core.memory import MemoryStore  # noqa: E402
-from core.sync import profile_text  # noqa: E402
+from core.project import project_memory  # noqa: E402
 
 # Env overrides (tests / explicit): same convention as ingest.py (THREEV0_STORE);
 # THREEV0_PROFILE_MEM redirects the projection target in tests.
@@ -142,14 +142,7 @@ def main() -> int:
         return 1
 
     if args.write and not args.no_export:
-        PROFILE_MEM.mkdir(parents=True, exist_ok=True)
-        (PROFILE_MEM / "MEMORY.md").write_text(
-            profile_text(store, "memory"), encoding="utf-8"
-        )
-        (PROFILE_MEM / "USER.md").write_text(
-            profile_text(store, "user"), encoding="utf-8"
-        )
-        result["projected"] = ["MEMORY.md", "USER.md"]
+        result["projected"] = project_memory(store, PROFILE_MEM)
 
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))

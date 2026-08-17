@@ -39,6 +39,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
+from core.claims import gh_loop, load_claims, repo_of  # noqa: E402
 from core.handoff import diff_loop_claims, render_handoff  # noqa: E402
 from core.memory import MemoryStore  # noqa: E402
 from core.query import summary  # noqa: E402
@@ -120,52 +121,19 @@ def _run_json(script: Path) -> dict:
         return {}
 
 
-def _load_claims() -> dict:
-    """The loop claim registry (single source of truth for tracked loops)."""
-    try:
-        data = json.loads(CLAIMS_PATH.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as e:
-        return {"error": str(e)}
-    if not isinstance(data, dict) or not isinstance(data.get("loops"), dict):
-        return {"error": f"malformed claim registry: {CLAIMS_PATH}"}
-    return data
-
-
-def _gh_loop(kind: str, num: str, repo: str) -> tuple:
-    """Live fields for one loop via ``gh``; (ok, dict, error).
-
-    Fetches the fields the handoff table needs. ``mergeable`` is PR-only, so
-    the field list is kind-aware (an issue query for ``mergeable`` is an error,
-    not a None). ``continuity_check._gh_loop_state`` fetches only ``state`` —
-    same command family, different shape; keep the two in sync if the command
-    changes."""
-    fields = "state,mergeable,updatedAt,title" if kind == "pr" else "state,updatedAt,title"
-    cmd = ["gh", kind, "view", num, "--repo", repo, "--json", fields]
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-    except (subprocess.TimeoutExpired, OSError) as e:
-        return False, None, str(e)
-    if proc.returncode != 0:
-        return False, None, (proc.stderr or "").strip().replace("\n", " ")[:120]
-    try:
-        data = json.loads(proc.stdout or "{}")
-    except json.JSONDecodeError:
-        return False, None, "gh output unparseable"
-    return True, data, None
-
-
 def collect_loops() -> list:
     """Tracked upstream loops: claim registry merged with live GitHub state."""
-    claims = _load_claims()
+    claims = load_claims(CLAIMS_PATH)
     if "error" in claims:
         return []
-    repo = claims.get("repo") or "NousResearch/hermes-agent"
+    repo = repo_of(claims)
     specs = claims.get("loops") or {}
     loops = []
     for num in sorted(specs, key=lambda n: int(n) if str(n).isdigit() else 0):
         spec = specs[num] if isinstance(specs[num], dict) else {}
         kind = (spec.get("kind") or "pr")
-        ok, live, err = _gh_loop(kind, str(num), repo)
+        fields = "state,mergeable,updatedAt,title" if kind == "pr" else "state,updatedAt,title"
+        ok, live, err = gh_loop(kind, str(num), repo, fields)
         loops.append(
             {
                 "num": str(num),

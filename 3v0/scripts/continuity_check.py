@@ -41,6 +41,7 @@ from typing import List
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
+from core.claims import gh_loop, load_claims, repo_of  # noqa: E402
 from core.continuity import DEFAULT_INVARIANTS, evaluate  # noqa: E402
 from core.memory import MemoryStore  # noqa: E402
 from core.projects import ProjectLedger  # noqa: E402
@@ -105,45 +106,22 @@ def _curator_states(skills_dir: Path) -> dict:
     return {n: m.get("state", "active") for n, m in _usage(skills_dir).items()}
 
 
-def _load_claims() -> dict:
-    """Load the loop claim registry; ``{"error": ...}`` when missing/bad."""
-    try:
-        data = json.loads(CLAIMS_PATH.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as e:
-        return {"error": str(e)}
-    if not isinstance(data, dict) or not isinstance(data.get("loops"), dict):
-        return {"error": f"malformed claim registry: {CLAIMS_PATH}"}
-    return data
-
-
-def _gh_loop_state(kind: str, num: str, repo: str) -> tuple:
-    """Live ``state`` for one loop via ``gh``; returns (ok, state, error)."""
-    cmd = ["gh", kind, "view", num, "--repo", repo, "--json", "state", "--jq", ".state"]
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-    except (subprocess.TimeoutExpired, OSError) as e:
-        return False, None, str(e)
-    if proc.returncode != 0:
-        return False, None, (proc.stderr or "").strip().replace("\n", " ")[:120]
-    return True, (proc.stdout or "").strip(), None
-
-
 def _collect_github_loops(ctx: dict) -> None:
     """Collect claim-vs-live for every tracked loop (best-effort)."""
-    claims = _load_claims()
+    claims = load_claims(CLAIMS_PATH)
     if "error" in claims:
         ctx["github_loops_error"] = claims["error"]
         ctx["github_loops"] = {}
         return
-    repo = claims.get("repo") or "NousResearch/hermes-agent"
+    repo = repo_of(claims)
     loops: dict = {}
     for lid, spec in (claims.get("loops") or {}).items():
         kind = (spec.get("kind") or "pr") if isinstance(spec, dict) else "pr"
-        ok, state, err = _gh_loop_state(kind, str(lid), repo)
+        ok, data, err = gh_loop(kind, str(lid), repo, "state")
         loops[str(lid)] = {
             "kind": kind,
             "claimed_state": spec.get("state") if isinstance(spec, dict) else None,
-            "live_state": state,
+            "live_state": (data or {}).get("state"),
             "live_ok": ok,
             "live_error": err,
         }
@@ -157,19 +135,20 @@ def _accept_claims() -> List[str]:
     loop's state changed and the operator confirms the new reality. Rewrites
     the committed ``claims.json``; best-effort, one outcome string per loop.
     """
-    claims = _load_claims()
+    claims = load_claims(CLAIMS_PATH)
     if "error" in claims:
         return [f"claim registry unreadable: {claims['error']}"]
-    repo = claims.get("repo") or "NousResearch/hermes-agent"
+    repo = repo_of(claims)
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     outcomes: List[str] = []
     updated: dict = {}
     for lid, spec in (claims.get("loops") or {}).items():
         kind = (spec.get("kind") or "pr") if isinstance(spec, dict) else "pr"
-        ok, state, err = _gh_loop_state(kind, str(lid), repo)
+        ok, data, err = gh_loop(kind, str(lid), repo, "state")
         if not ok:
             outcomes.append(f"{lid}:unverifiable:{err}")
             continue
+        state = (data or {}).get("state")
         old = spec.get("state") if isinstance(spec, dict) else None
         new_spec = dict(spec) if isinstance(spec, dict) else {"kind": "pr"}
         new_spec["kind"] = kind

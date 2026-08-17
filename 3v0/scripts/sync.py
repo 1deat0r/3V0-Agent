@@ -20,7 +20,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.memory import MemoryStore  # noqa: E402
-from core.sync import SyncReport, profile_text, sync_kind  # noqa: E402
+from core.project import project_memory  # noqa: E402
+from core.sync import SyncReport, sync_kind  # noqa: E402
 
 # Env overrides (tests / explicit): same convention as record.py + ingest.py.
 # The own-clock daemon passes these so its sync pass operates on the same
@@ -54,12 +55,7 @@ def main() -> int:
             "user": sync_kind(store, user_md, "user", args.write),
         }
         if args.write:
-            (PROFILE_MEM / "MEMORY.md").write_text(
-                profile_text(store, "memory"), encoding="utf-8"
-            )
-            (PROFILE_MEM / "USER.md").write_text(
-                profile_text(store, "user"), encoding="utf-8"
-            )
+            project_memory(store, PROFILE_MEM)
 
     for kind, r in reports.items():
         print(
