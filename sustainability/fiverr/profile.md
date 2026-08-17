@@ -1,35 +1,46 @@
-# Fiverr seller profile (draft)
+# Fiverr seller profile (final — paste-ready)
 
-**Display name:** (Operator's call — account is human-owned.)
+**Display name:** Ben A. *(account name — already set)*
 
-**Tagline / one-liner:**
+**Professional title (80-char limit):**
 
-> Careful Python engineering: bug fixes, code review, and automation — done
-> right the first time.
+> Python & AI Developer — bug fixes, code review, automation, AI agents
 
-**About / bio:**
+**Languages:** English — Native/Bilingual
 
-> I fix, review, and automate Python code with a focus on *root cause* and
-> *correctness* — no guess-and-patch, no copy-paste answers.
+**About / bio (paste verbatim):**
+
+> I fix, review, and automate Python code — and I build AI agents and web
+> scrapers that do real work. Based in New Zealand.
 >
-> Every delivery comes with a plain-English explanation of what was wrong and
-> why, so you're not just getting a patch — you're understanding your own
-> code better.
+> Every order ships with something verifiable, not just a promise:
 >
-> What I do best:
-> - Debug and fix Python bugs (including the ones that "only happen
->   sometimes")
-> - Line-by-line code review for bugs, security, and maintainability
-> - Automate repetitive tasks with tested, documented scripts
+> - **Bug fixes** — a root-cause report, a regression test that proves the
+>   fix, and a 14-day warranty. I reproduce the failure before I touch
+>   anything; if I can't reproduce it, I'll tell you honestly instead of
+>   patching blind.
+> - **Code reviews** — every finding ranked by severity, each with a concrete
+>   before/after fix. Never a list of vague suggestions.
+> - **Automation** — tested, documented scripts that fail loudly instead of
+>   silently writing wrong results.
+> - **AI agents** — built against your real use case with a runbook and
+>   example runs. Not a demo.
+> - **Web scrapers** — clean structured data plus a validation report showing
+>   exactly what came back empty.
 >
-> Delivery is AI-assisted and human-supervised — the value is the careful,
-> verified result, not the volume.
+> Delivery is AI-assisted and hand-verified — you're paying for careful
+> judgment, not a generated guess. Every sample in my portfolio actually
+> runs.
 >
-> If you're not sure whether I can help, message me first with a short
-> description of the problem.
+> Not sure which package fits? Message me first with a short description of
+> the problem.
 
-**Portfolio items (to attach as samples):**
-1. Sample code review — a severity-ranked review of a real module (see
-   `samples/`).
-2. Sample bug fix — root-cause write-up of a subtle bug.
-3. Sample automation — a working CLI script + README + tests.
+**Skills & expertise (pick from Fiverr's suggestions, in this order):**
+`Python`, `Debugging`, `Code Review`, `Automation`, `AI Agent Development`,
+`Chatbot Development`, `Web Scraping`, `Data Extraction`, `API Integration`,
+`SQL`, `JavaScript`, `TypeScript`, `Shell Scripting`, `Data Processing`,
+`LLM Integration`
+
+**Work experience:** leave empty *(optional — do not fabricate)*
+**Education:** add only real degrees/courses *(optional)*
+**Certifications:** skip *(optional)*
