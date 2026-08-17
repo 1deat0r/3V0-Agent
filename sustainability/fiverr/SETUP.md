@@ -34,6 +34,16 @@ for the three gigs and `profile.md` for the seller profile).
 - Drafts every buyer reply — you relay the messages.
 - Tunes gigs/pricing/positioning as reviews and market data come in.
 
+## Multiple agents → multiple gigs, never multiple accounts
+
+Fiverr allows **one seller account per person** — operating multiple accounts
+is a bannable violation (detected via IP, device fingerprint, and payment
+overlap; a second account also can't pass KYC without your one identity).
+The legitimate structure is **one account, up to 7 gigs**: 3V0's gigs and
+Axiom's gigs live on the same account, differentiated into different lanes so
+they don't cannibalize. Reviews and levels compound across all gigs on the one
+account.
+
 ## After you're live
 
 Tell 3V0 the gig URLs. 3V0 will then: monitor the gigs' performance, adjust
