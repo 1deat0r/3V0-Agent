@@ -49,6 +49,26 @@ _Avoid_: sync-first, mirror-first.
 **Derived view / export**:
 The profile projection of a store's active entries.
 
+**Retrieval**:
+Choosing which store facts enter a view — ranked by keyword match, recency,
+and feedback frequency (see **Feedback**), under a **Budget**.
+_Avoid_: search, recall, lookup (retrieval is the ranking-and-selection act).
+
+**Working set**:
+The retrieval-chosen subset of facts rendered for injection — what the
+profile view actually carries. The budget decides membership.
+_Avoid_: result set, top-k list.
+
+**Injection**:
+Writing the working set into the derived view (MEMORY.md / the runtime tool
+result) — the read half of store-first.
+_Avoid_: export-all, projection (injection is *chosen*, not complete).
+
+**Budget**:
+The size cap the working set must fit — the profile's injected-view limit.
+The seam's one hard constraint; facts are whole-or-out against it.
+_Avoid_: limit, quota.
+
 ## Memory and lineage
 
 **Fact**:
@@ -87,6 +107,17 @@ _Avoid_: changelog, history log.
 
 **Active**:
 A fact or skill version not yet superseded, retracted, or absorbed.
+
+**Feedback**:
+The access_count / last_accessed signal a fact accumulates when it is
+injected — retrieval reinforces what is actually pulled into context.
+_Avoid_: usage stats, popularity.
+
+**Forgetting**:
+A fact's validity ending (valid_to) — the mechanism that keeps the store
+from being append-only. Retrieval never injects a lapsed fact.
+_Avoid_: deletion, expiry (the fact stays, recoverable; it just stops being
+true).
 **Terminal**:
 A retracted or absorbed version — the end of a lineage, still recoverable.
 
