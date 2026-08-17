@@ -23,8 +23,12 @@ bifurcated: basic bug-fixes and checklist code-reviews have raced to $20–$78
 These gigs sell the outcome (the bug is gone for good / the code is safe to
 ship / the task is off your plate / the agent does the work / the data is
 extracted), with an honest note that delivery is AI-assisted and
-hand-verified. Fiverr requires the disclosure — and the real pitch is the
-*verified judgment* layered on top of the AI speed.
+hand-verified. Fiverr permits AI in every category and does *not* require
+gig-level disclosure (it becomes mandatory only if a buyer asks or requests
+non-AI work) — we disclose voluntarily because 2026 buyer research shows
+disclosed AI builds more trust than hidden AI. The real pitch is the
+*verified judgment* layered on top of the AI speed. (See
+`COMPETITOR_ANALYSIS.md` §6.)
 
 ---
 

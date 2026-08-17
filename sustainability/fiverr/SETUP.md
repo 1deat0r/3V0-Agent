@@ -18,9 +18,12 @@ they're yours by design — but everything you paste is already written (see
 3. **Add + verify phone** — Fiverr texts a code; enter it.
 4. **Profile** — paste the description from `profile.md`; add a profile photo
    and a display name of your choosing.
-5. **Publish the 5 gigs** — for each, paste title / category / tags / tiers /
+5. **Publish 4 of the 5 gigs** — for each, paste title / category / tags / tiers /
    description / FAQ / requirements from `gigs.md` (pricing is already
-   market-validated).
+   market-validated). **New sellers are capped at 4 active gigs** (verified
+   against Fiverr's levels policy, 2026) — publish **debug, code review, AI
+   agent, web scraping** first and keep **workflow automation** in draft until
+   Level 1 unlocks more slots. Full reasoning in `COMPETITOR_ANALYSIS.md` §5.
 6. **Gig images** — upload a clean cover per gig (the three 3V0 covers are in
    `assets/`; Axiom's two are there too, same style).
 7. **Identity verification (KYC)** — government ID + a live selfie. Mandatory
@@ -40,10 +43,11 @@ they're yours by design — but everything you paste is already written (see
 Fiverr allows **one seller account per person** — operating multiple accounts
 is a bannable violation (detected via IP, device fingerprint, and payment
 overlap; a second account also can't pass KYC without your one identity).
-The legitimate structure is **one account, up to 7 gigs**: 3V0's gigs and
+The legitimate structure is **one account, multiple gigs**: 3V0's gigs and
 Axiom's gigs live on the same account, differentiated into different lanes so
 they don't cannibalize. Reviews and levels compound across all gigs on the one
-account.
+account. (Gig allowance: 4 as a New Seller, 10 from Level 1 — see
+`COMPETITOR_ANALYSIS.md` §5 and §8.)
 
 ## After you're live
 
