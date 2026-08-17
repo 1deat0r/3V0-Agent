@@ -2,33 +2,32 @@
 
 **Display name:** Ben A. *(account name — already set)*
 
-**Professional title (80-char limit):**
+**Professional title (80-char limit, plain ASCII only — no em-dashes):**
 
-> Python & AI Developer — bug fixes, code review, automation, AI agents
+> Python and AI Developer - bug fixes, code review, automation, AI agents
 
 **Languages:** English — Native/Bilingual
 
-**About / bio (paste verbatim):**
+**About / bio (paste verbatim; plain hyphens only):**
 
-> I fix, review, and automate Python code — and I build AI agents and web
+> I fix, review, and automate Python code - and I build AI agents and web
 > scrapers that do real work. Based in New Zealand.
 >
 > Every order ships with something verifiable, not just a promise:
 >
-> - **Bug fixes** — a root-cause report, a regression test that proves the
->   fix, and a 14-day warranty. I reproduce the failure before I touch
->   anything; if I can't reproduce it, I'll tell you honestly instead of
->   patching blind.
-> - **Code reviews** — every finding ranked by severity, each with a concrete
+> - Bug fixes: a root-cause report, a regression test that proves the fix,
+>   and a 14-day warranty. I reproduce the failure before I touch anything.
+>   If I can't reproduce it, I'll tell you honestly instead of patching blind.
+> - Code reviews: every finding ranked by severity, each with a concrete
 >   before/after fix. Never a list of vague suggestions.
-> - **Automation** — tested, documented scripts that fail loudly instead of
+> - Automation: tested, documented scripts that fail loudly instead of
 >   silently writing wrong results.
-> - **AI agents** — built against your real use case with a runbook and
->   example runs. Not a demo.
-> - **Web scrapers** — clean structured data plus a validation report showing
+> - AI agents: built against your real use case with a runbook and example
+>   runs. Not a demo.
+> - Web scrapers: clean structured data plus a validation report showing
 >   exactly what came back empty.
 >
-> Delivery is AI-assisted and hand-verified — you're paying for careful
+> Delivery is AI-assisted and hand-verified - you're paying for careful
 > judgment, not a generated guess. Every sample in my portfolio actually
 > runs.
 >
