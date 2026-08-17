@@ -34,7 +34,8 @@ from typing import List, Optional
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
-from core.drift import collect_git_state, compute_drift, store_hash  # noqa: E402
+from core.drift import compute_drift  # noqa: E402
+from core.gitstate import collect_git_state, store_hash  # noqa: E402
 from core.projects import LedgerEntry, ProjectLedger  # noqa: E402
 
 BODY = Path(os.environ.get("THREEV0_BODY") or REPO_ROOT)

@@ -94,6 +94,7 @@ from core.memory import KINDS, MemoryStore  # noqa: E402
 from core.projects import ProjectSpec, resolve_project  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
 from core.decide_skills import SKILL_DECISION_ACTIONS  # noqa: E402
+from core.session_db import candidate_rows, load_session, session_columns  # noqa: E402
 from core.review_decide import (  # noqa: E402
     build_transcript,
     parse_created_ts,
@@ -358,67 +359,10 @@ def _load_api_key() -> Optional[str]:
 def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
     """Read the session row + ordered messages from the profile's state.db.
 
-    Also captures the session's end/last-activity timestamp (``as_of``, a Unix
-    float) when the schema carries it — used by the temporal guard so a review
-    cannot supersede facts recorded *after* the session ended. Column-aware:
-    the minimal test fixture has neither column, so ``as_of`` is None there.
+    The named-column read lives in ``core.session_db.load_session``; this
+    wrapper binds the driver's ``STATE_DB``.
     """
-    if not STATE_DB.exists():
-        return None
-    conn = sqlite3.connect(str(STATE_DB), timeout=5)
-    try:
-        cols = {r[1] for r in conn.execute("PRAGMA table_info(sessions)")}
-        select = ["source", "title"]
-        if "ended_at" in cols:
-            select.append("ended_at")
-        if "last_activity_at" in cols:
-            select.append("last_activity_at")
-        if "cwd" in cols:
-            select.append("cwd")
-        row = conn.execute(
-            f"SELECT {', '.join(select)} FROM sessions WHERE id = ?",
-            (session_id,),
-        ).fetchone()
-        if row is None:
-            return None
-        source, title = row[0] or "", row[1] or ""
-        as_of: Optional[float] = None
-        ended: Optional[bool] = None  # None = no ended_at column (unknown)
-        idx = 2
-        if "ended_at" in cols:
-            ended = row[idx] is not None
-            if isinstance(row[idx], (int, float)):
-                as_of = float(row[idx])
-            idx += 1
-        if "last_activity_at" in cols:
-            if as_of is None and isinstance(row[idx], (int, float)):
-                as_of = float(row[idx])
-            idx += 1  # always advance: the column is always selected, even when
-                      # as_of was already set from ended_at (the cwd mis-scope bug)
-        cwd = ""
-        if "cwd" in cols:
-            cwd = row[idx] or ""
-            idx += 1
-        msgs = conn.execute(
-            "SELECT role, content, tool_name FROM messages "
-            "WHERE session_id = ? AND active = 1 ORDER BY id",
-            (session_id,),
-        ).fetchall()
-    except sqlite3.Error:
-        return None
-    finally:
-        conn.close()
-    return {
-        "source": source,
-        "title": title,
-        "as_of": as_of,
-        "ended": ended,
-        "cwd": cwd,
-        "messages": [
-            {"role": role or "", "content": content or "", "tool_name": tool_name or ""}
-            for role, content, tool_name in msgs
-        ],
-    }
+    return load_session(STATE_DB, session_id)
 
 
 def _load_canned() -> Optional[Dict[str, Any]]:
@@ -667,25 +611,16 @@ def _acquire_session_lock(session_id: str):
 
 def _session_columns() -> Optional[set]:
     """Column names of the sessions table, or None when the schema cannot be
-    inspected (a transient lock / missing DB). Callers MUST treat None as "do
-    not proceed" — never as "no columns", which would silently drop the
-    ended_at filter and let a review touch a still-open session."""
-    if not STATE_DB.exists():
-        return set()
-    try:
-        conn = sqlite3.connect(str(STATE_DB), timeout=5)
-        try:
-            return {r[1] for r in conn.execute("PRAGMA table_info(sessions)")}
-        finally:
-            conn.close()
-    except sqlite3.Error:
-        return None
+    inspected (a transient lock / missing DB). See
+    ``core.session_db.session_columns``; this wrapper binds ``STATE_DB``."""
+    return session_columns(STATE_DB)
 
 
 def _candidate_sessions() -> List[tuple]:
     """Session ``(id, source)`` rows, newest first, that are 3V0's own *ended*
-    top-level sessions worth considering. Column-existence-aware so it works
-    against the real state.db AND the minimal test-fixture schema.
+    top-level sessions worth considering. The DB query lives in
+    ``core.session_db.candidate_rows``; this wrapper owns the fail-safe abort
+    and the project-cwd filter.
 
     FAIL-SAFE: if the schema cannot be inspected (``_session_columns`` returns
     None), return [] — never fall through to an unfiltered query that would
@@ -694,36 +629,11 @@ def _candidate_sessions() -> List[tuple]:
     if cols is None:
         _log_run("candidate scan aborted: sessions schema unreadable")
         return []
-    where = []
-    if "ended_at" in cols:
-        where.append("ended_at IS NOT NULL")      # skip the live session
-    if "parent_session_id" in cols:
-        where.append("parent_session_id IS NULL")  # skip delegated subagents
-    if "hidden" in cols:
-        where.append("hidden = 0")
-    if "archived" in cols:
-        where.append("archived = 0")
-    select = ["id", "source"]
-    if "cwd" in cols:
-        select.append("cwd")
-    sql = f"SELECT {', '.join(select)} FROM sessions"
-    if where:
-        sql += " WHERE " + " AND ".join(where)
-    sql += " ORDER BY id DESC"
-    try:
-        conn = sqlite3.connect(str(STATE_DB), timeout=5)
-        try:
-            rows = conn.execute(sql).fetchall()
-        finally:
-            conn.close()
-    except sqlite3.Error:
-        return []
     out = []
-    for row in rows:
-        sid, source = row[0], row[1] or ""
-        if "cwd" in cols and not _is_project_cwd(row[2]):
+    for r in candidate_rows(STATE_DB, cols):
+        if "cwd" in r and not _is_project_cwd(r["cwd"]):
             continue  # a sibling project's session — not 3V0's own work
-        out.append((sid, source))
+        out.append((r["id"], r["source"] or ""))
     return out
 
 

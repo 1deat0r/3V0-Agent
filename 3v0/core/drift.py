@@ -1,10 +1,10 @@
-"""Drift computation — the pure logic + git collection behind ``drift_check.py``
-and ``project.py status``.
+"""Drift computation — the pure decision half (is this project drifting?).
 
-Split so the *decision* (is this project drifting?) is a pure function over
-collected inputs, unit-testable without a real git repo, while the *collection*
-shells out to ``git`` best-effort: a missing repo / git / upstream degrades to
-an error flag, never a crash.
+``compute_drift`` is a pure function over collected inputs, unit-testable
+without a real git repo. The *collection* half (``collect_git_state`` /
+``store_hash`` and the ``git`` subprocess calls) lives in ``core/gitstate.py``
+— this module only decides, matching ``core/continuity.py`` and
+``core/handoff.py``.
 
 A project **drifts** (needs a decision) when, for a project that tracks its
 upstream, it is behind upstream; when the upstream ref can't be resolved; when
@@ -15,13 +15,10 @@ the last snapshot — is *informational* (reported, not flagged as drift).
 
 from __future__ import annotations
 
-import hashlib
-import subprocess
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-from core.projects import LedgerEntry
+from .projects import LedgerEntry
 
 
 @dataclass(frozen=True)
@@ -38,70 +35,6 @@ class GitState:
     @property
     def ok(self) -> bool:
         return self.error is None
-
-
-def _run(cmd: List[str], cwd: Path, timeout: int = 30) -> Tuple[int, str, str]:
-    """Run a command; return (rc, stdout, stderr). Never raises."""
-    try:
-        proc = subprocess.run(
-            cmd, cwd=str(cwd), capture_output=True, text=True, timeout=timeout
-        )
-        return proc.returncode, (proc.stdout or "").strip(), (proc.stderr or "").strip()
-    except (OSError, subprocess.TimeoutExpired) as e:
-        return 1, "", str(e)
-
-
-def _rev_parse(cwd: Path, ref: str) -> Optional[str]:
-    rc, out, _ = _run(["git", "rev-parse", ref], cwd)
-    return out if rc == 0 and out else None
-
-
-def collect_git_state(entry: LedgerEntry) -> GitState:
-    """Collect live git facts for a ledger entry. Best-effort; errors surface
-    as ``GitState.error``, not exceptions."""
-    repo = entry.repo
-    if not repo.exists():
-        return GitState(error=f"repo missing: {repo}")
-    if not (repo / ".git").exists():
-        return GitState(error=f"not a git repo: {repo}")
-
-    head = _rev_parse(repo, "HEAD")
-    if head is None:
-        return GitState(error="git rev-parse HEAD failed")
-
-    upstream_head = _rev_parse(
-        repo, f"refs/remotes/{entry.upstream}/{entry.upstream_ref}"
-    )
-    if upstream_head is None:
-        # Fall back to the remote's symbolic HEAD (e.g. origin/HEAD -> main).
-        upstream_head = _rev_parse(repo, f"refs/remotes/{entry.upstream}/HEAD")
-
-    behind = ahead = None
-    if upstream_head:
-        rc, out, _ = _run(
-            ["git", "rev-list", "--left-right", "--count", f"{upstream_head}...HEAD"],
-            repo,
-        )
-        if rc == 0:
-            parts = out.split()
-            if len(parts) == 2 and all(p.isdigit() for p in parts):
-                behind, ahead = int(parts[0]), int(parts[1])
-
-    rc, out, _ = _run(["git", "status", "--porcelain"], repo)
-    dirty = rc == 0 and bool(out)
-    return GitState(
-        head=head, upstream_head=upstream_head, behind=behind, ahead=ahead, dirty=dirty
-    )
-
-
-def store_hash(path: Optional[Path]) -> Optional[str]:
-    """SHA-256 of a store's on-disk bytes; None when unconfigured/unreadable."""
-    if path is None:
-        return None
-    try:
-        return hashlib.sha256(path.read_bytes()).hexdigest()
-    except OSError:
-        return None
 
 
 def compute_drift(

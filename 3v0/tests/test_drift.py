@@ -21,7 +21,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 sys.path.insert(0, str(REPO_ROOT / "3v0" / "core"))
 
-from core.drift import GitState, collect_git_state, compute_drift, store_hash  # noqa: E402
+from core.drift import GitState, compute_drift  # noqa: E402
+from core.gitstate import collect_git_state, store_hash  # noqa: E402
 from core.projects import LedgerEntry  # noqa: E402
 
 
