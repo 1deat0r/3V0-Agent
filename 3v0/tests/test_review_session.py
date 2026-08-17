@@ -11,6 +11,7 @@ Direct run:  python3 3v0/tests/test_review_session.py
 
 from __future__ import annotations
 
+import dataclasses
 import importlib.util
 import json
 import os
@@ -39,11 +40,55 @@ def _load_driver():
     spec = importlib.util.spec_from_file_location("review_session", DRIVER)
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
+    # @dataclass resolves cls.__module__ via sys.modules; without this the
+    # driver's ReviewConfig dataclass fails at class creation.
+    sys.modules["review_session"] = mod
     spec.loader.exec_module(mod)
     return mod
 
 
 DRIVER_MOD = _load_driver()
+
+
+class TestReviewConfig(unittest.TestCase):
+    """Ten module-level config globals -> one typed ReviewConfig (the Stone-18
+    deepening that closed architecture candidate #1a)."""
+
+    def test_defaults(self):
+        cfg = DRIVER_MOD.ReviewConfig.from_env({})
+        self.assertEqual(cfg.model, "deepseek-v4-pro")
+        self.assertEqual(cfg.base_url, "https://api.deepseek.com/v1")
+        self.assertEqual(cfg.min_messages, 3)
+        self.assertEqual(cfg.cooldown_s, 300)
+        self.assertEqual(cfg.transcript_cap, 40000)
+        self.assertEqual(cfg.max_tokens, 8000)
+        self.assertEqual(cfg.max_decisions, 3)
+        self.assertEqual(cfg.max_per_pass, 30)
+        self.assertEqual(cfg.network_retries, 3)
+        self.assertEqual(cfg.backoff_seconds, 2.0)
+
+    def test_env_override_and_strip(self):
+        cfg = DRIVER_MOD.ReviewConfig.from_env({
+            "THREEV0_REVIEW_MODEL": "test-model",
+            "THREEV0_REVIEW_BASE_URL": "https://example.com/v1/",
+            "THREEV0_REVIEW_MAX_TOKENS": "1234",
+            "THREEV0_REVIEW_MAX_PER_PASS": "5",
+            "THREEV0_REVIEW_BACKOFF_S": "1.5",
+        })
+        self.assertEqual(cfg.model, "test-model")
+        self.assertEqual(cfg.base_url, "https://example.com/v1")  # trailing / stripped
+        self.assertEqual(cfg.max_tokens, 1234)
+        self.assertEqual(cfg.max_per_pass, 5)
+        self.assertEqual(cfg.backoff_seconds, 1.5)
+
+    def test_empty_env_falls_through_to_default(self):
+        cfg = DRIVER_MOD.ReviewConfig.from_env({"THREEV0_REVIEW_MAX_TOKENS": ""})
+        self.assertEqual(cfg.max_tokens, 8000)
+
+    def test_frozen(self):
+        cfg = DRIVER_MOD.ReviewConfig.from_env({})
+        with self.assertRaises(dataclasses.FrozenInstanceError):
+            cfg.max_tokens = 9999
 
 
 def _seed_store(path: Path) -> dict:
@@ -1456,8 +1501,8 @@ class TestLLMRetry(unittest.TestCase):
                 result = mod._call_llm("prompt")
 
             self.assertIsNone(result)
-            # 2 labels (json_object, plain) x NETWORK_RETRIES each
-            self.assertEqual(len(calls), mod.NETWORK_RETRIES * 2)
+            # 2 labels (json_object, plain) x network_retries each
+            self.assertEqual(len(calls), mod.CONFIG.network_retries * 2)
             run_log = (base / "reviews" / "run.log").read_text(encoding="utf-8")
             self.assertIn("llm call failed after retries", run_log)
         finally:

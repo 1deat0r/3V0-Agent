@@ -36,7 +36,7 @@ of the hook: three mutually-exclusive modes —
 - ``--latest``           own-clock single shot (reconcile store<->profile
   drift, then drain the backlog: review every unreviewed *eligible* session —
   ended, top-level, reviewable source, not in the log — up to
-  ``MAX_PER_PASS``);
+  ``CONFIG.max_per_pass``);
 - ``--daemon [--interval N]``  own-clock loop (reconcile + drain every N
   seconds, default 600), surviving transient failures — 3V0's first
   Hermes-independent autonomous process. Stone 14 folded the wake-time
@@ -84,8 +84,9 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
@@ -108,7 +109,7 @@ from core.review_decide import (  # noqa: E402
 # The review decision functions now live in core/review_decide.py; the
 # underscore aliases keep this driver's own call sites and its tests (which
 # reach into this module's namespace) unchanged. _build_transcript is a thin
-# wrapper so the env-tunable TRANSCRIPT_CAP default is preserved.
+# wrapper so the env-tunable CONFIG.transcript_cap default is preserved.
 _tolerant_json = tolerant_json
 _parse_created_ts = parse_created_ts
 _temporal_refusal = temporal_refusal
@@ -121,7 +122,7 @@ _SKILL_ACTIONS = SKILL_DECISION_ACTIONS
 def _build_transcript(messages: List[Dict[str, str]], cap: Optional[int] = None) -> str:
     """Compact the session into review text (env-tunable default; see
     core.review_decide.build_transcript)."""
-    return build_transcript(messages, cap=TRANSCRIPT_CAP if cap is None else cap)
+    return build_transcript(messages, cap=CONFIG.transcript_cap if cap is None else cap)
 
 PROFILE_HOME = Path(
     os.environ.get("THREEV0_PROFILE_HOME")
@@ -151,18 +152,56 @@ SKILLS_DIR: Path = Path()
 REVIEW_LOG: Path = Path()
 RUN_LOG: Path = Path()
 
-MODEL = os.environ.get("THREEV0_REVIEW_MODEL") or "deepseek-v4-pro"
-BASE_URL = (os.environ.get("THREEV0_REVIEW_BASE_URL") or "https://api.deepseek.com/v1").rstrip("/")
-MIN_MESSAGES = int(os.environ.get("THREEV0_REVIEW_MIN_MESSAGES") or "3")
-COOLDOWN_S = int(os.environ.get("THREEV0_REVIEW_COOLDOWN_S") or "300")
-TRANSCRIPT_CAP = int(os.environ.get("THREEV0_REVIEW_TRANSCRIPT_CAP") or "40000")
-MAX_TOKENS = int(os.environ.get("THREEV0_REVIEW_MAX_TOKENS") or "8000")
-STORE_BLOCK_CAP = 8000
-SKILL_BLOCK_CAP = 4000
-MAX_DECISIONS = 3
-MAX_PER_PASS = int(os.environ.get("THREEV0_REVIEW_MAX_PER_PASS") or "30")
-NETWORK_RETRIES = 3
-BACKOFF_SECONDS = float(os.environ.get("THREEV0_REVIEW_BACKOFF_S") or "2.0")
+@dataclass(frozen=True)
+class ReviewConfig:
+    """The driver's knobs, resolved once from env (see the module docstring).
+
+    One typed home for what were ten module-level globals. Frozen + built via
+    ``from_env`` so a test can parse a custom environ without touching the
+    live process env. The store/skill block caps now live in
+    ``core.review_decide`` as ``DEFAULT_STORE_BLOCK_CAP`` /
+    ``DEFAULT_SKILL_BLOCK_CAP`` (function defaults there) and no longer
+    appear here.
+    """
+
+    model: str = "deepseek-v4-pro"
+    base_url: str = "https://api.deepseek.com/v1"
+    min_messages: int = 3
+    cooldown_s: int = 300
+    transcript_cap: int = 40000
+    max_tokens: int = 8000
+    max_decisions: int = 3
+    max_per_pass: int = 30
+    network_retries: int = 3
+    backoff_seconds: float = 2.0
+
+    @classmethod
+    def from_env(cls, environ: Optional[Mapping[str, str]] = None) -> "ReviewConfig":
+        env = os.environ if environ is None else environ
+
+        def _int(key: str, default: int) -> int:
+            value = env.get(key)
+            return int(value) if value else default
+
+        def _float(key: str, default: float) -> float:
+            value = env.get(key)
+            return float(value) if value else default
+
+        return cls(
+            model=env.get("THREEV0_REVIEW_MODEL") or "deepseek-v4-pro",
+            base_url=(env.get("THREEV0_REVIEW_BASE_URL") or "https://api.deepseek.com/v1").rstrip("/"),
+            min_messages=_int("THREEV0_REVIEW_MIN_MESSAGES", 3),
+            cooldown_s=_int("THREEV0_REVIEW_COOLDOWN_S", 300),
+            transcript_cap=_int("THREEV0_REVIEW_TRANSCRIPT_CAP", 40000),
+            max_tokens=_int("THREEV0_REVIEW_MAX_TOKENS", 8000),
+            max_decisions=3,
+            max_per_pass=_int("THREEV0_REVIEW_MAX_PER_PASS", 30),
+            network_retries=3,
+            backoff_seconds=_float("THREEV0_REVIEW_BACKOFF_S", 2.0),
+        )
+
+
+CONFIG = ReviewConfig.from_env()
 
 # Interactive surfaces whose sessions are worth a session-end review. Sessions
 # from cron/kanban/subagent sources are short-lived harness runs, not 3V0's
@@ -395,13 +434,13 @@ def _call_llm(prompt: str) -> Optional[Dict[str, Any]]:
         return None
 
     body: Dict[str, Any] = {
-        "model": MODEL,
+        "model": CONFIG.model,
         "messages": [
             {"role": "system", "content": CHARTER},
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.2,
-        "max_tokens": MAX_TOKENS,
+        "max_tokens": CONFIG.max_tokens,
     }
     attempts = [
         ("json_object", dict(body, response_format={"type": "json_object"})),
@@ -409,9 +448,9 @@ def _call_llm(prompt: str) -> Optional[Dict[str, Any]]:
     ]
     last_reason = "unknown"
     for label, attempt in attempts:
-        for retry in range(NETWORK_RETRIES):
+        for retry in range(CONFIG.network_retries):
             req = urllib.request.Request(
-                f"{BASE_URL}/chat/completions",
+                f"{CONFIG.base_url}/chat/completions",
                 data=json.dumps(attempt).encode("utf-8"),
                 headers={
                     "Content-Type": "application/json",
@@ -426,9 +465,9 @@ def _call_llm(prompt: str) -> Optional[Dict[str, Any]]:
             except (urllib.error.URLError, TimeoutError) as e:
                 # Transient transport failure — back off and retry this label.
                 last_reason = repr(e)
-                if retry < NETWORK_RETRIES - 1:
+                if retry < CONFIG.network_retries - 1:
                     _log_run(f"llm {label} transport error, retry {retry + 1}: {e}")
-                    time.sleep(BACKOFF_SECONDS * retry)
+                    time.sleep(CONFIG.backoff_seconds * retry)
                     continue
                 break  # retries exhausted for this label -> try the next
             except (KeyError, IndexError, json.JSONDecodeError) as e:
@@ -530,7 +569,7 @@ def _apply_decisions(
     if not MEMORY_ONLY:
         env.setdefault("THREEV0_SKILL_STORE", str(SKILL_STORE_PATH))
         env.setdefault("THREEV0_SKILLS_DIR", str(SKILLS_DIR))
-    for decision in decisions[:MAX_DECISIONS]:
+    for decision in decisions[:CONFIG.max_decisions]:
         action = str(decision.get("action") or "").strip()
         if action in _SKILL_ACTIONS and skill_store is None:
             refused.append(
@@ -665,7 +704,7 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
                 return "skipped:dedupe"
             if respect_cooldown:
                 at = entry.get("at")
-                if isinstance(at, (int, float)) and (now - at) < COOLDOWN_S:
+                if isinstance(at, (int, float)) and (now - at) < CONFIG.cooldown_s:
                     return "skipped:cooldown"
 
         session = _load_session(session_id)
@@ -683,7 +722,7 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
         if not _is_project_cwd(session.get("cwd")):
             return "skipped:project"
         n_user = sum(1 for m in session["messages"] if m["role"] == "user")
-        if n_user < MIN_MESSAGES:
+        if n_user < CONFIG.min_messages:
             return "skipped:min_messages"
 
         transcript = _build_transcript(session["messages"])
@@ -719,7 +758,7 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
             "session_id": session_id,
             "at": now,
             "source": session["source"],
-            "model": MODEL,
+            "model": CONFIG.model,
             "summary": str(answer.get("summary", ""))[:300] if isinstance(answer, dict) else "",
             "decisions_requested": len(decisions),
             "applied": len(result["applied"]),
@@ -788,7 +827,7 @@ def _sync() -> str:
 
 def _drain() -> int:
     """Drain the unreviewed backlog: review every eligible unreviewed session
-    (newest first) in one pass, up to ``MAX_PER_PASS`` LLM attempts.
+    (newest first) in one pass, up to ``CONFIG.max_per_pass`` LLM attempts.
 
     Back-to-back by design — the 300s cooldown belongs to the per-turn hook
     path, not the own clock; the per-session flock + dedupe still prevent
@@ -813,7 +852,7 @@ def _drain() -> int:
             attempted += 1
         else:  # skipped:dedupe / lock / missing / source / min_messages / project
             skipped += 1
-        if attempted >= MAX_PER_PASS:
+        if attempted >= CONFIG.max_per_pass:
             break
     if reviewed or failed or skipped:
         _log_run(f"drain pass: reviewed={reviewed} failed={failed} skipped={skipped}")
