@@ -8,31 +8,22 @@
 
 **Languages:** English — Native/Bilingual
 
-**About / bio (paste verbatim; plain hyphens only):**
+**About / bio (600-char limit version — paste verbatim; plain hyphens only):**
 
 > I fix, review, and automate Python code. I also build AI agents and web
 > scrapers that do real work. Based in New Zealand.
 >
-> Every order ships with something verifiable, not just a promise:
+> Every order ships something verifiable: root-cause reports, regression
+> tests, a 14-day fix warranty, before/after code fixes, tested documented
+> scripts, and validation reports - no silent wrong answers.
 >
-> - Bug fixes: a root-cause report, a regression test that proves the fix,
->   and a 14-day warranty. I reproduce the failure before I touch anything.
->   If I can't reproduce it, I'll tell you honestly instead of patching blind.
-> - Code reviews: every finding ranked by severity, each with a concrete
->   before/after fix. Never a list of vague suggestions.
-> - Automation: tested, documented scripts that fail loudly instead of
->   silently writing wrong results.
-> - AI agents: built against your real use case with a runbook and example
->   runs. Not a demo.
-> - Web scrapers: clean structured data plus a validation report showing
->   exactly what came back empty.
+> AI-assisted, then hand-verified line by line. You're paying for careful
+> judgment, not a generated guess.
 >
-> Delivery is AI-assisted and hand-verified. You're paying for careful
-> judgment, not a generated guess. Every sample in my portfolio actually
-> runs.
->
-> Not sure which package fits? Message me first with a short description of
-> the problem.
+> Message me first if you're unsure which package fits.
+
+*(~490 chars — under the 600 limit. The longer bulleted version above is kept
+for reuse in gig descriptions, which have a 1,200-char limit.)*
 
 **Skills & expertise (pick from Fiverr's suggestions, in this order):**
 `Python`, `Debugging`, `Code Review`, `Automation`, `AI Agent Development`,
