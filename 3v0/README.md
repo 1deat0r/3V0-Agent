@@ -122,7 +122,14 @@ code.
   decisions after.
 - `VERSION` — the body's version marker (0.01).
 - `docs/adr/` — architecture decision records.
-- `data/memory.json` — the store's source of truth (seeded from the profile).
+- `data/memory.db` — the store's source of truth (Stone 23): the SQLite
+  triple store (temporal validity, domains, kinds, retrieval feedback). The
+  profile MEMORY.md / USER.md is a retrieval-chosen working set projected
+  from it, not an export of everything. `data/memory.json` is the frozen
+  pre-rewire snapshot, kept as the migration source — nothing writes it
+  anymore. Sibling projects keep per-project JSON stores until their own
+  rewire. Note: memory diffs are no longer human-readable (binary DB); the
+  lineage lives in the rows themselves (`threev0_store fact_history`).
 - `data/skills.json` — the skill store's source of truth (seeded from
   agent-created skills).
 - `data/projects/ledger.json` — the project ledger (Stone 16): the data-driven

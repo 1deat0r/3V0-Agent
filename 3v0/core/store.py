@@ -111,6 +111,14 @@ class SQLStore:
             row = self._row(sid)
             if row is not None and row["valid_to"] is None:
                 targets.append(int(sid))
+        if len(targets) > 1:
+            # The schema's single supersedes FK cannot link a fact to several
+            # predecessors; the JSON store can, so silently collapsing would
+            # mislabel the extras as retracted. No caller produces this
+            # (record/bridge enforce exactly-one) — fail loudly instead.
+            raise ValueError(
+                f"supersedes may list at most one active fact id, "
+                f"got {[str(t) for t in targets]}")
         row_id = memdb.add_fact(
             conn, "3v0", "note", content,
             kind=kind, source=source, content=content, note=note,
@@ -167,18 +175,18 @@ class SQLStore:
         self._live.clear()
 
     def matching(self, kind: str | None, substring: str) -> list[Fact]:
+        """Active facts whose content contains ``substring``.
+
+        Case-sensitive literal containment, like the JSON store's — NOT SQL
+        LIKE (which is case-insensitive and treats %/_ as wildcards). This is
+        the single substring-resolution algorithm behind record/bridge, so a
+        parity drift here silently changes supersede/retract targeting.
+        """
         if self._conn is None:
             return []
-        rows = self._conn.execute(
-            """SELECT * FROM facts
-               WHERE (valid_to IS NULL OR valid_to > ?) AND valid_from <= ?
-                 AND COALESCE(content, object) LIKE ?""",
-            (time.time(), time.time(), f"%{substring}%"),
-        ).fetchall()
-        out = [self._fact(r) for r in rows]
-        if kind is not None:
-            out = [f for f in out if f.kind == kind]
-        return out
+        rows = memdb.valid_facts(self._conn, kind=kind, now=time.time())
+        return [self._fact(r) for r in rows if substring in
+                (r["content"] if r["content"] is not None else r["object"])]
 
     def get(self, fact_id: str) -> Fact | None:
         row = self._row(fact_id)

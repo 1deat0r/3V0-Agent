@@ -198,7 +198,7 @@ class ProjectLedger:
             primary = name == "threev0"
             if primary:
                 repo = body_root
-                store: Optional[Path] = data_dir / "memory.json"
+                store: Optional[Path] = data_dir / "memory.db"
                 skill_store: Optional[Path] = data_dir / "skills.json"
                 profile = "3v0"
             else:

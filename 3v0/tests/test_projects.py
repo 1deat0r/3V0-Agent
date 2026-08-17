@@ -25,7 +25,7 @@ class TestResolveProject(unittest.TestCase):
     def test_threev0_is_primary_full_axis(self):
         spec = resolve_project("threev0", BODY, PROFILE, home=HOME)
         self.assertEqual(spec.title, "3V0")
-        self.assertEqual(spec.store, BODY / "3v0" / "data" / "memory.json")
+        self.assertEqual(spec.store, BODY / "3v0" / "data" / "memory.db")
         self.assertEqual(spec.skill_store, BODY / "3v0" / "data" / "skills.json")
         self.assertEqual(spec.profile_mem, PROFILE / "memories")
         self.assertEqual(spec.review_log, PROFILE / "3v0_reviews" / "reviews.jsonl")

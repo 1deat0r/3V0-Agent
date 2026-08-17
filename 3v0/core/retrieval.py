@@ -131,6 +131,9 @@ def inject(conn, *, domains=("3v0",), kind=None, query_terms=None,
     ``sep="\n§\n"``; the default newline serves the runtime retrieve
     action). With ``touch=True`` the chosen facts' feedback counters are
     updated and committed; ``touch=False`` writes nothing (pure preview).
+    Note: ``touch=True`` commits the caller's connection, so any pending
+    ``persist=False`` writes on the same connection flush with the feedback
+    update — dry-runs and touched retrievals must not share a connection.
     """
     now = now if now is not None else time.time()
     ranked = _ranked_valid(conn, domains, kind, query_terms, now)

@@ -1689,3 +1689,19 @@ and any embedding-based retrieval (the content column is the hook).
 Verification: 349 tests green (341 -> 349), continuity clock runs clean
 through the rewired store (only the pre-existing github-loops gh-CLI drift),
 and the daemon's next tick converges the live profile to the working set.
+
+**Review gate (fresh sub-agent, external signal) — verdict HOLD(marginal), all
+findings reconciled:** (1) `matching()` now filters in Python — case-sensitive
+literal containment, NOT SQL LIKE (whose case-insensitivity + %/_ wildcards
+would have silently changed supersede/retract targeting); (2) multi-supersedes
+fails loudly (`ValueError`) instead of mislabeling extras as retracted;
+(3) the `threev0_store` schema no longer claims retrieve is read-only;
+(4) `ProjectLedger.seed()` primary defaults to memory.db (no split-brain on
+reseed); (5) README/profile_io/memory docstrings now name the DB as canonical
+and memory.json as the frozen migration source; (6) `--kind` wired into
+retrieve; (7) the touch-commits-pending-writes contract documented on the
+seam; (8) new E2E test drives the review driver's full record/supersede/
+retract + projection through a temp .db store; (10) supersedes column
+indexed; (12) migration trust direction documented. Verified-correct by the
+reviewer with no action: sep-counted budget, in-place Fact parity, tombstone
+validity, touch=False export, ledger-driven resolution.

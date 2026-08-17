@@ -31,7 +31,7 @@ class TestSeed(unittest.TestCase):
         self.assertEqual(ledger.names(), ["axiom", "f1nance", "threev0"])
         threev0 = ledger["threev0"]
         self.assertTrue(threev0.primary)
-        self.assertEqual(threev0.store, BODY / "3v0" / "data" / "memory.json")
+        self.assertEqual(threev0.store, BODY / "3v0" / "data" / "memory.db")
         self.assertEqual(threev0.skill_store, BODY / "3v0" / "data" / "skills.json")
         self.assertFalse(threev0.memory_only)
         self.assertFalse(threev0.store_only)

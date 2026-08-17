@@ -97,6 +97,8 @@ def main() -> int:
             return 2
         terms = (args.query_terms or "").split() or None
         kwargs = {"query_terms": terms, "touch": True}
+        if args.kind is not None:
+            kwargs["kind"] = args.kind
         if args.budget is not None:
             kwargs["budget_chars"] = args.budget
         inj = inject(mem.conn, **kwargs)

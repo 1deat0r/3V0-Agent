@@ -11,7 +11,9 @@ Design:
   inactive (still queryable via history()) and linked to its successor.
   Nothing is ever destroyed — the audit trail is the point.
 - Plain JSON on disk (stdlib only) so the source of truth is auditable in the
-  body repo, not hidden in a host profile.
+  body repo, not hidden in a host profile. (Stone 23: the primary project's
+  canonical store is now `data/memory.db` via `core.store.SQLStore`; this
+  JSON store remains the substrate for sibling projects until their rewire.)
 
 Deliberately small. This is the seed of 3V0's own memory — not a
 reimplementation of Hermes's MEMORY.md mechanism, but the first piece of the

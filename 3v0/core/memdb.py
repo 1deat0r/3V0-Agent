@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS facts (
 );
 CREATE INDEX IF NOT EXISTS idx_facts_domain ON facts(domain, valid_from);
 CREATE INDEX IF NOT EXISTS idx_facts_subject ON facts(subject);
+CREATE INDEX IF NOT EXISTS idx_facts_supersedes ON facts(supersedes);
 """
 
 # Absolute (repo-relative via __file__), not CWD-relative: a caller that
@@ -159,7 +160,14 @@ def migrate_from_json(conn, facts, domain="3v0", now=None):
 
 
 def _migrate_shaped(conn, facts, domain, now):
-    """Fact-shaped migration: hex ids remapped, lineage + validity preserved."""
+    """Fact-shaped migration: hex ids remapped, lineage + validity preserved.
+
+    Trusts the successor side only: each fact's own ``supersedes`` list closes
+    its predecessors' validity, and the ``retracted`` sentinel closes its own.
+    A hand-edited JSON whose ``superseded_by`` is not mirrored by the
+    successor's ``supersedes`` list is treated as active — the live store is
+    verified mirror-consistent, but the trust direction is one-way by design.
+    """
     hex_to_row: dict[str, int] = {}
     pending = []  # (row_id, supersedes hex ids, superseded_by, created_at)
     for f in facts:

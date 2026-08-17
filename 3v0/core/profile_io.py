@@ -5,9 +5,9 @@ so seed/export/sync never disagree on how the profile is parsed or written.
 
 The '§' separator is Hermes-owned — it is how the host's own memory tool reads
 and writes the profile, so 3V0 cannot swap it unilaterally. The store
-(data/memory.json) is JSON and can hold anything; the profile is a *projection*
-of the store, and a fact containing a literal '§' (or leading/trailing
-whitespace) cannot round-trip through it. The guard lives here, at the
+(data/memory.db) can hold anything; the profile is a *projection* of the
+store, and a fact containing a literal '§' (or leading/trailing whitespace)
+cannot round-trip through it. The guard lives here, at the
 boundary: join_entries refuses to emit an un-parseable wire, and the record
 path refuses such content before it enters the store.
 """

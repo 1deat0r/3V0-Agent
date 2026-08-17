@@ -1607,3 +1607,75 @@ class TestLoadSessionFullSchema(Env):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSQLStoreResolution(Env):
+    """The production resolution chain (ledger -> memory.db -> SQLStore)
+    exercised end-to-end: the driver's record/supersede/retract + profile
+    projection runs against a temp SQLite store, not the JSON fixture."""
+
+    def setUp(self):
+        super().setUp()
+        self.store_path = Path(self.tmp.name) / "memory.db"
+        self.env["THREEV0_STORE"] = str(self.store_path)
+        from core.store import SQLStore
+
+        store = SQLStore(self.store_path)
+        stale = store.add("Operator prefers verbose reports.",
+                          kind="memory", source="test").id
+        doomed = store.add(
+            "The moon is made of cheese (wrong, superseded later).",
+            kind="memory", source="test").id
+        keeper = store.add("Operator works from ~/work.",
+                           kind="user", source="test").id
+        if store.conn is not None:
+            store.conn.close()
+        self.ids = {"stale": stale, "doomed": doomed, "keeper": keeper}
+
+    def test_record_supersede_retract_through_sql_store(self):
+        sid = _seed_session_db(self.db_path, source="tui", user_messages=4)
+        self.decisions_file.write_text(
+            json.dumps({
+                "summary": "corrections from the session",
+                "decisions": [
+                    {"action": "record", "kind": "user",
+                     "content": "Operator prefers terse, bulleted reports.",
+                     "supersedes_id": self.ids["stale"]},
+                    {"action": "retract", "fact_id": self.ids["doomed"]},
+                    {"action": "record", "kind": "memory",
+                     "content": "A new durable environment fact."},
+                ],
+            }), encoding="utf-8")
+        _run_driver(sid, self.env)
+
+        from core.store import SQLStore
+
+        store = SQLStore(self.store_path)
+        try:
+            active = {f.content: f for f in store.active()}
+            self.assertNotIn("Operator prefers verbose reports.", active)
+            self.assertNotIn(
+                "The moon is made of cheese (wrong, superseded later).", active)
+            self.assertIn("Operator prefers terse, bulleted reports.", active)
+            self.assertIn("A new durable environment fact.", active)
+            self.assertIn("Operator works from ~/work.", active)
+            stale = next(f for f in store.facts if f.id == self.ids["stale"])
+            self.assertTrue(stale.superseded_by)
+            new_fact = active["Operator prefers terse, bulleted reports."]
+            self.assertEqual(new_fact.source, "session-review")
+        finally:
+            if store.conn is not None:
+                store.conn.close()
+
+        # profile projection: the retrieval-chosen working set, not export-all
+        mem_md = (self.profile_mem / "MEMORY.md").read_text(encoding="utf-8")
+        self.assertIn("A new durable environment fact.", mem_md)
+        self.assertNotIn("verbose reports", mem_md)
+        user_md = (self.profile_mem / "USER.md").read_text(encoding="utf-8")
+        self.assertIn("terse, bulleted reports", user_md)
+
+        entries = self.log_entries()
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["session_id"], sid)
+        self.assertEqual(entries[0]["applied"], 3)
+        self.assertEqual(entries[0]["refused"], 0)

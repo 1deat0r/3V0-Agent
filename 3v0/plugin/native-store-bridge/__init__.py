@@ -430,7 +430,8 @@ _THREEV0_STORE_SCHEMA = {
         "version lineage + curator active/stale/archived state). "
         "action='retrieve' returns the retrieval-chosen working set for the "
         "given query under the budget (the same seam that projects the "
-        "profile view). Read-only."
+        "profile view). Read-only except action='retrieve', which updates "
+        "the chosen facts' retrieval-feedback counters."
     ),
     "parameters": {
         "type": "object",
