@@ -14,9 +14,12 @@ they're yours by design — but everything you paste is already written (see
 
 1. **Use your EXISTING account (@mustbearn)** — do NOT create a second one
    (one account per person, ever — a second account is a bannable violation).
-   On fiverr.com: your profile → **Become a Seller** (or "Switch to Selling").
-   The client profile you already have stays; selling mode is added to the
-   same account.
+   Switch it to selling mode: click your **avatar (top right) → "Switch to
+   Selling" / "Become a Seller"**; if that's missing, open
+   **fiverr.com/start_selling** directly while logged in. NOTE: the footer
+   "Become a Fiverr Freelancer" link can bounce you back to the buyer home —
+   the onboarding screen you want says **"Create your freelancer profile."**
+   The client profile stays; selling mode is added to the same account.
 2. **Verify email** — click the confirmation link.
 3. **Add + verify phone** — Fiverr texts a code; enter it.
 4. **Profile** — paste the description from `profile.md`; add a profile photo,
