@@ -177,28 +177,29 @@ class ReviewConfig:
 
     @classmethod
     def from_env(cls, environ: Optional[Mapping[str, str]] = None) -> "ReviewConfig":
+        """Build a config from env, overriding field defaults only where set.
+
+        The dataclass field defaults are the single source of truth; this only
+        layers env-provided values on top, so a default edited in one place
+        can't silently disagree with a literal here.
+        """
         env = os.environ if environ is None else environ
+        overrides: Dict[str, Any] = {}
 
-        def _int(key: str, default: int) -> int:
+        def put(key: str, field: str, cast) -> None:
             value = env.get(key)
-            return int(value) if value else default
+            if value:  # non-empty only; "" falls through to the field default
+                overrides[field] = cast(value)
 
-        def _float(key: str, default: float) -> float:
-            value = env.get(key)
-            return float(value) if value else default
-
-        return cls(
-            model=env.get("THREEV0_REVIEW_MODEL") or "deepseek-v4-pro",
-            base_url=(env.get("THREEV0_REVIEW_BASE_URL") or "https://api.deepseek.com/v1").rstrip("/"),
-            min_messages=_int("THREEV0_REVIEW_MIN_MESSAGES", 3),
-            cooldown_s=_int("THREEV0_REVIEW_COOLDOWN_S", 300),
-            transcript_cap=_int("THREEV0_REVIEW_TRANSCRIPT_CAP", 40000),
-            max_tokens=_int("THREEV0_REVIEW_MAX_TOKENS", 8000),
-            max_decisions=3,
-            max_per_pass=_int("THREEV0_REVIEW_MAX_PER_PASS", 30),
-            network_retries=3,
-            backoff_seconds=_float("THREEV0_REVIEW_BACKOFF_S", 2.0),
-        )
+        put("THREEV0_REVIEW_MODEL", "model", str)
+        put("THREEV0_REVIEW_BASE_URL", "base_url", lambda v: v.rstrip("/"))
+        put("THREEV0_REVIEW_MIN_MESSAGES", "min_messages", int)
+        put("THREEV0_REVIEW_COOLDOWN_S", "cooldown_s", int)
+        put("THREEV0_REVIEW_TRANSCRIPT_CAP", "transcript_cap", int)
+        put("THREEV0_REVIEW_MAX_TOKENS", "max_tokens", int)
+        put("THREEV0_REVIEW_MAX_PER_PASS", "max_per_pass", int)
+        put("THREEV0_REVIEW_BACKOFF_S", "backoff_seconds", float)
+        return cls(**overrides)
 
 
 CONFIG = ReviewConfig.from_env()
