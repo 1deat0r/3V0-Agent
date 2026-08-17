@@ -19,7 +19,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
-from core.memory import MemoryStore  # noqa: E402
+from core.store import open_store  # noqa: E402
 from core.project import project_memory  # noqa: E402
 from core.sync import SyncReport, sync_kind  # noqa: E402
 
@@ -27,7 +27,7 @@ from core.sync import SyncReport, sync_kind  # noqa: E402
 # The own-clock daemon passes these so its sync pass operates on the same
 # resolved paths it reviews (and E2E tests can redirect off the real profile).
 STORE_PATH = Path(
-    os.environ.get("THREEV0_STORE") or (REPO_ROOT / "3v0" / "data" / "memory.json")
+    os.environ.get("THREEV0_STORE") or (REPO_ROOT / "3v0" / "data" / "memory.db")
 )
 PROFILE_MEM = Path(
     os.environ.get("THREEV0_PROFILE_MEM")
@@ -44,7 +44,7 @@ def main() -> int:
     )
     args = ap.parse_args()
 
-    store = MemoryStore(STORE_PATH)
+    store = open_store(STORE_PATH)
     mem_md = (PROFILE_MEM / "MEMORY.md").read_text(encoding="utf-8")
     user_md = (PROFILE_MEM / "USER.md").read_text(encoding="utf-8")
 

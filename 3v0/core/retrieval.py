@@ -14,6 +14,9 @@ callers. Design contract (ADR-0004):
 - **Selection is deterministic** given (store state, query, budget, now): the
   score is keyword match + recency + feedback frequency; the budget is the
   profile view's size cap, so ``text`` never exceeds ``budget_chars``.
+- **The text is the profile wire** — one line per chosen fact, the fact's
+  ``content`` (the natural-language form Hermes parses), not the internal
+  triple form. ``render()`` remains the triple renderer for store inspection.
 - **Feedback is the module's own write.** With ``touch=True`` the chosen
   facts' ``access_count``/``last_accessed`` are updated, so future ranking
   reinforces what is actually pulled into context. ``touch=False`` is a pure
@@ -44,7 +47,7 @@ class Injection:
 
     facts: list[dict]        # chosen facts, ranked (domain priority, then score)
     ids: list[int]           # their store ids (empty when nothing was chosen)
-    text: str                # rendered view; len(text) <= budget_chars
+    text: str                # content lines (profile wire); len(text) <= budget_chars
     truncated: bool          # True when valid facts were left out of the view
     budget_chars: int        # the cap that was applied
     budget_used: int         # len(text)
@@ -84,19 +87,21 @@ def render(facts):
     return "\n".join(lines)
 
 
-def _ranked_valid(conn, domains, query_terms, now):
+def _ranked_valid(conn, domains, kind, query_terms, now):
     """Valid facts in domain-priority order, each domain ranked by score.
 
     ``domains`` is a priority-ordered sequence: facts from the first domain
     rank ahead of the second, and so on. ``None`` means all domains, ranked
-    by score alone.
+    by score alone. ``kind`` (memory/user/identity/directive) restricts to
+    one fact kind when given.
     """
     if domains is None:
-        return rank(valid_facts(conn, now=now), query_terms=query_terms, now=now)
+        return rank(valid_facts(conn, kind=kind, now=now),
+                    query_terms=query_terms, now=now)
     out = []
     for domain in dict.fromkeys(domains):
         out.extend(
-            rank(valid_facts(conn, domain=domain, now=now),
+            rank(valid_facts(conn, domain=domain, kind=kind, now=now),
                  query_terms=query_terms, now=now)
         )
     return out
@@ -113,26 +118,30 @@ def _touch(conn, ids, now):
     conn.commit()
 
 
-def inject(conn, *, domains=("3v0",), query_terms=None,
-           budget_chars=DEFAULT_BUDGET_CHARS, touch=True, now=None):
+def inject(conn, *, domains=("3v0",), kind=None, query_terms=None,
+           budget_chars=DEFAULT_BUDGET_CHARS, touch=True, now=None,
+           sep="\n"):
     """The retrieval seam: choose and render the working set under a budget.
 
-    Facts are taken in ranked order and rendered one line at a time; a fact
-    whose line would exceed the budget is skipped (whole-fact granularity —
-    later, smaller facts still get their chance), and ``truncated`` reports
-    whether any valid fact was left out. With ``touch=True`` the chosen facts'
-    feedback counters are updated and committed; ``touch=False`` writes
-    nothing (pure preview).
+    Facts are taken in ranked order and rendered one content line at a time
+    (the profile wire); a fact whose line would exceed the budget is skipped
+    (whole-fact granularity — later, smaller facts still get their chance),
+    and ``truncated`` reports whether any valid fact was left out. ``sep`` is
+    the join between lines, counted against the budget (the profile wire is
+    ``sep="\n§\n"``; the default newline serves the runtime retrieve
+    action). With ``touch=True`` the chosen facts' feedback counters are
+    updated and committed; ``touch=False`` writes nothing (pure preview).
     """
     now = now if now is not None else time.time()
-    ranked = _ranked_valid(conn, domains, query_terms, now)
+    ranked = _ranked_valid(conn, domains, kind, query_terms, now)
 
     chosen: list[dict] = []
     lines: list[str] = []
     used = 0
     for fact in ranked:
-        line = render([fact])
-        candidate = used + (1 if lines else 0) + len(line)
+        line = fact["content"] or fact["object"] or ""
+        gap = len(sep) if lines else 0
+        candidate = used + gap + len(line)
         if candidate > budget_chars:
             continue
         chosen.append(fact)
@@ -145,7 +154,7 @@ def inject(conn, *, domains=("3v0",), query_terms=None,
     return Injection(
         facts=chosen,
         ids=ids,
-        text="\n".join(lines),
+        text=sep.join(lines),
         truncated=len(chosen) < len(ranked),
         budget_chars=budget_chars,
         budget_used=used,

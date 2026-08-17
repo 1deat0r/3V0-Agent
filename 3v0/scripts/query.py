@@ -24,7 +24,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
-from core.memory import MemoryStore  # noqa: E402
+import os  # noqa: E402
+
+from core.retrieval import inject  # noqa: E402
+from core.store import SQLStore, open_store  # noqa: E402
 from core.query import (  # noqa: E402
     fact_history,
     facts,
@@ -34,7 +37,10 @@ from core.query import (  # noqa: E402
 )
 from core.skills import SkillStore  # noqa: E402
 
-MEM_PATH = REPO_ROOT / "3v0" / "data" / "memory.json"
+# Env override (tests / explicit): same convention as record.py + ingest.py.
+MEM_PATH = Path(
+    os.environ.get("THREEV0_STORE") or (REPO_ROOT / "3v0" / "data" / "memory.db")
+)
 SKILLS_PATH = REPO_ROOT / "3v0" / "data" / "skills.json"
 
 
@@ -43,14 +49,19 @@ def main() -> int:
     ap.add_argument(
         "--action",
         required=True,
-        choices=["summary", "facts", "fact_history", "skills", "skill_history"],
+        choices=["summary", "facts", "fact_history", "skills", "skill_history",
+                 "retrieve"],
     )
     ap.add_argument("--kind", choices=["memory", "user", "identity", "directive"])
     ap.add_argument("--fact-id")
     ap.add_argument("--name")
+    ap.add_argument("--query", dest="query_terms",
+                    help="space-separated terms for action=retrieve")
+    ap.add_argument("--budget", type=int, default=None,
+                    help="budget cap for action=retrieve")
     args = ap.parse_args()
 
-    mem = MemoryStore(MEM_PATH)
+    mem = open_store(MEM_PATH)
     skl = SkillStore(SKILLS_PATH)
 
     if args.action == "summary":
@@ -75,6 +86,26 @@ def main() -> int:
             )
             return 2
         result = {"name": args.name, "history": skill_history(skl, args.name)}
+    elif args.action == "retrieve":
+        if not isinstance(mem, SQLStore):
+            print(
+                json.dumps({
+                    "error": "retrieve requires the SQLite store (memory.db); "
+                             "this project's store has not been rewired yet"}),
+                file=sys.stderr,
+            )
+            return 2
+        terms = (args.query_terms or "").split() or None
+        kwargs = {"query_terms": terms, "touch": True}
+        if args.budget is not None:
+            kwargs["budget_chars"] = args.budget
+        inj = inject(mem.conn, **kwargs)
+        result = {
+            "facts": inj.facts,
+            "text": inj.text,
+            "truncated": inj.truncated,
+            "budget_chars": inj.budget_chars,
+        }
     else:  # pragma: no cover - argparse choices already constrain this
         print(json.dumps({"error": f"unknown action {args.action!r}"}), file=sys.stderr)
         return 2

@@ -39,13 +39,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.decide import decide  # noqa: E402
-from core.memory import MemoryStore  # noqa: E402
+from core.store import open_store  # noqa: E402
 from core.project import project_memory  # noqa: E402
 
 # Env overrides (tests / explicit): same convention as ingest.py (THREEV0_STORE);
 # THREEV0_PROFILE_MEM redirects the projection target in tests.
 STORE_PATH = Path(
-    os.environ.get("THREEV0_STORE") or (REPO_ROOT / "3v0" / "data" / "memory.json")
+    os.environ.get("THREEV0_STORE") or (REPO_ROOT / "3v0" / "data" / "memory.db")
 )
 PROFILE_MEM = Path(
     os.environ.get("THREEV0_PROFILE_MEM")
@@ -130,7 +130,7 @@ def main() -> int:
         if args.supersedes_contains:
             decision["supersedes"] = args.supersedes_contains
 
-    store = MemoryStore(STORE_PATH)
+    store = open_store(STORE_PATH)
     with store.mutate():
         result = decide(store, decision, persist=args.write)
 

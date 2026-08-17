@@ -41,13 +41,13 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.claims import gh_loop, load_claims, loop_fields, repo_of  # noqa: E402
 from core.handoff import diff_loop_claims, render_handoff  # noqa: E402
-from core.memory import MemoryStore  # noqa: E402
+from core.store import open_store  # noqa: E402
 from core.query import summary  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
 
 BODY = Path(os.environ.get("THREEV0_BODY") or REPO_ROOT)
 STORE_PATH = Path(
-    os.environ.get("THREEV0_STORE") or (BODY / "3v0" / "data" / "memory.json")
+    os.environ.get("THREEV0_STORE") or (BODY / "3v0" / "data" / "memory.db")
 )
 SKILL_STORE_PATH = Path(
     os.environ.get("THREEV0_SKILL_STORE") or (BODY / "3v0" / "data" / "skills.json")
@@ -154,7 +154,7 @@ def collect_loops() -> list:
 def collect_store() -> dict:
     """Store counts (active facts by kind + skill/version counts), best-effort."""
     try:
-        mem = MemoryStore(STORE_PATH)
+        mem = open_store(STORE_PATH)
         skl = SkillStore(SKILL_STORE_PATH)
         return summary(mem, skl)
     except (OSError, ValueError) as e:

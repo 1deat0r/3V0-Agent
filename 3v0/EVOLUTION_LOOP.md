@@ -1631,3 +1631,61 @@ Verification: 324 tests green (317 → 324 — four moved to the seam, one
 retired with the limit-based retrieve it replaced, eight inject tests at the
 seam: budget truncation, feedback touch, pure preview, domain priority,
 default-domain scoping, oversized-fact skip, empty store, amnesia).
+
+## Stone 23 — pipeline rewire: memdb canonical, retrieval-chosen injection (2026-08-18)
+
+The rewire stone. TDD, vertical slices at the pre-agreed seams (the write
+path, the exporter, the runtime consumer), then a fresh-sub-agent review gate
+— external signal, per the loop's mandatory gate.
+
+**Slice 1 — the facade (`core/store.py`).** `SQLStore` presents the exact
+interface the pipeline already speaks (add/retract/active/matching/get/
+history/export/mutate, `Fact`-shaped results) over the memdb triple
+substrate, so record/bridge/sync/decide/review logic went untouched. Parity
+details earned by failing tests: held `Fact` references mutate in place on
+supersession/retraction (a live-object registry), `persist=False` leaves the
+change uncommitted (dry-run), a missing store reads as empty and the first
+write creates it (JSON `_save` parity), `history()` walks superseded_by
+forward then supersedes backward. memdb gained `kind`/`note` columns and
+`add_fact`/`valid_facts` gained `kind`/`note`/`persist` parameters.
+
+**Slice 2 — migration.** `migrate_from_json` now handles the real
+Fact-shaped payload: hex id -> row id remap in two passes, supersession
+closes `valid_to` at the successor's created_at, FK links point at the
+remapped predecessor, retracted tombstones close at their own created_at
+(the JSON sentinel has no timestamp — the approximation is documented), kinds
+survive. Loose-dict tolerance kept. Live run: 117 facts migrated, active set
+identical (27/27, no missing, no extra), 66 links, 90 closed rows.
+
+**Slice 3 — the swap.** All ten consumers (ingest/record/sync/
+export_to_profile/query/continuity_check/generate_handoff/review_session/
+seed_from_profile/project) construct via `open_store()` and default to
+`3v0/data/memory.db`; the ledger's primary entry points at the DB. Sibling
+projects keep JSON stores until their own rewire — `open_store` routes by
+suffix, so the review daemon's f1nance/axiom paths are untouched. E2E catch
+via the continuity-fault suite: `SQLStore` now degrades to empty on a
+missing store instead of crashing the clock on a bare body.
+
+**Slice 4 — retrieval-chosen export.** The profile view is the working set:
+`profile_text` projects `inject(conn, kind=..., touch=False, sep="\n§\n")`
+and `project_memory`/`export_to_profile` follow. The seam gained `kind` and
+`sep` — the separator is counted against the budget, so the projected §-wire
+respects the 2KB cap exactly (live: MEMORY.md 1944 chars / 14 of 27 active,
+USER.md 1506 / all 10). Export never touches feedback (a wake sync is not
+evidence of use; touch would rich-get-richer the view into permanence).
+`sync_kind`'s `exported` is now working-set-not-in-profile, not every active
+fact — the old export-all contract is retired for the primary project.
+
+**Slice 5 — the runtime adapter.** `threev0_store action='retrieve'`
+(query.py `--action retrieve`, plugin schema + argv) calls the same
+`inject()` with `touch=True` — a mid-turn retrieval *is* evidence the facts
+were pulled into context. The seam now has its two adapters, so the
+deletion test finally pays off.
+
+**Deliberately deferred, still:** a forgetting *policy* (valid_to is the
+mechanism; a policy is a decision, not a build), sibling-project rewires,
+and any embedding-based retrieval (the content column is the hook).
+
+Verification: 349 tests green (341 -> 349), continuity clock runs clean
+through the rewired store (only the pre-existing github-loops gh-CLI drift),
+and the daemon's next tick converges the live profile to the working set.

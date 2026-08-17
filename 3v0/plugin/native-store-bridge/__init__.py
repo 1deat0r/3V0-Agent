@@ -427,14 +427,18 @@ _THREEV0_STORE_SCHEMA = {
         "3V0's own memory and skill evolution, not the derived profile "
         "projection. Use it to see what was superseded and what replaced it "
         "(memory facts carry provenance + supersession history; skills carry "
-        "version lineage + curator active/stale/archived state). Read-only."
+        "version lineage + curator active/stale/archived state). "
+        "action='retrieve' returns the retrieval-chosen working set for the "
+        "given query under the budget (the same seam that projects the "
+        "profile view). Read-only."
     ),
     "parameters": {
         "type": "object",
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["summary", "facts", "fact_history", "skills", "skill_history"],
+                "enum": ["summary", "facts", "fact_history", "skills",
+                         "skill_history", "retrieve"],
                 "description": (
                     "summary: overview of both stores. facts: active facts "
                     "(optionally filter by kind). fact_history: full "
@@ -458,6 +462,20 @@ _THREEV0_STORE_SCHEMA = {
                 "description": (
                     "With action='skill_history' (required) or 'skills' "
                     "(optional filter): the skill name."
+                ),
+            },
+            "query": {
+                "type": "string",
+                "description": (
+                    "With action='retrieve': space-separated terms that score "
+                    "facts higher when matched."
+                ),
+            },
+            "budget": {
+                "type": "integer",
+                "description": (
+                    "With action='retrieve': the working-set size cap in "
+                    "characters (default 2000)."
                 ),
             },
         },
@@ -496,6 +514,10 @@ def _handle_store_query(args=None, **_) -> str:
         argv += ["--fact-id", str(a["fact_id"])]
     if a.get("name"):
         argv += ["--name", str(a["name"])]
+    if a.get("query"):
+        argv += ["--query", str(a["query"])]
+    if a.get("budget"):
+        argv += ["--budget", str(a["budget"])]
 
     try:
         proc = subprocess.run(argv, capture_output=True, text=True, timeout=30)

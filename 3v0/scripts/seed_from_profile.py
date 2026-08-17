@@ -19,11 +19,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
-from core.memory import MemoryStore  # noqa: E402
+from core.store import open_store  # noqa: E402
 from core.profile_io import split_entries  # noqa: E402
 
 PROFILE = Path.home() / ".hermes" / "profiles" / "3v0"
-STORE_PATH = REPO_ROOT / "3v0" / "data" / "memory.json"
+STORE_PATH = REPO_ROOT / "3v0" / "data" / "memory.db"
 
 
 def main() -> int:
@@ -31,7 +31,7 @@ def main() -> int:
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
 
-    store = MemoryStore(STORE_PATH)
+    store = open_store(STORE_PATH)
     if store.facts and not args.force:
         print(
             f"Store already has {len(store.facts)} facts; pass --force to re-seed.",
@@ -40,7 +40,7 @@ def main() -> int:
         return 1
 
     if args.force:
-        store.facts = []
+        store.clear()
 
     n = 0
     mem = (PROFILE / "memories" / "MEMORY.md").read_text(encoding="utf-8")

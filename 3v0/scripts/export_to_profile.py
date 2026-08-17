@@ -18,12 +18,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
-from core.memory import MemoryStore  # noqa: E402
+from core.store import open_store  # noqa: E402
 from core.project import project_memory  # noqa: E402
 from core.sync import profile_text  # noqa: E402
 
 PROFILE_MEM = Path.home() / ".hermes" / "profiles" / "3v0" / "memories"
-STORE_PATH = REPO_ROOT / "3v0" / "data" / "memory.json"
+STORE_PATH = REPO_ROOT / "3v0" / "data" / "memory.db"
 
 
 def main() -> int:
@@ -35,7 +35,7 @@ def main() -> int:
     )
     args = ap.parse_args()
 
-    store = MemoryStore(STORE_PATH)
+    store = open_store(STORE_PATH)
 
     if args.write:
         project_memory(store, PROFILE_MEM)

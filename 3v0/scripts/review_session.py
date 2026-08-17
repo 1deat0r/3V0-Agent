@@ -91,7 +91,8 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
-from core.memory import KINDS, MemoryStore  # noqa: E402
+from core.memory import KINDS  # noqa: E402
+from core.store import open_store  # noqa: E402
 from core.projects import ProjectSpec, resolve_project  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
 from core.decide_skills import SKILL_DECISION_ACTIONS  # noqa: E402
@@ -727,7 +728,7 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
             return "skipped:min_messages"
 
         transcript = _build_transcript(session["messages"])
-        store = MemoryStore(STORE_PATH)
+        store = open_store(STORE_PATH)
         skill_store = SkillStore(SKILL_STORE_PATH) if SKILL_STORE_PATH else None
         skills_part = (
             _skills_block(skill_store)

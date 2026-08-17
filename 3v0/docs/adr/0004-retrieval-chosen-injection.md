@@ -4,7 +4,7 @@ The rewire stone (record/sync/bridge → memdb) makes the SQLite triple store
 the canonical store, and the derived profile view stops being an export of
 *all* active facts. It becomes **retrieval-chosen**: a budgeted **working
 set** selected by one module, `core/retrieval.py`, whose single entry point
-is `inject(conn, *, domains, query_terms, budget_chars, touch, now)`. The
+is `inject(conn, *, domains, kind, query_terms, budget_chars, touch, now)`. The
 old `memdb.retrieve` (limit-based) is retired — the real constraint is the
 profile view's size cap, not an arbitrary count, so the seam is budget-shaped.
 

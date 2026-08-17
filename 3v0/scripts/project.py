@@ -83,7 +83,7 @@ def cmd_add(args) -> int:
     if args.store:
         store = _user_path(args.store)
     elif args.primary:
-        store = BODY / "3v0" / "data" / "memory.json"
+        store = BODY / "3v0" / "data" / "memory.db"
     elif args.profile:
         store = BODY / "3v0" / "data" / name / "memory.json"
     if args.skill_store:

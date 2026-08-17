@@ -43,7 +43,7 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.claims import gh_loop, load_claims, repo_of  # noqa: E402
 from core.continuity import DEFAULT_INVARIANTS, evaluate  # noqa: E402
-from core.memory import MemoryStore  # noqa: E402
+from core.store import open_store  # noqa: E402
 from core.projects import ProjectLedger  # noqa: E402
 from core.skill_io import profile_skills_dir  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
@@ -53,7 +53,7 @@ from core.sync_skills import sync_skills  # noqa: E402
 BODY = Path(os.environ.get("THREEV0_BODY") or REPO_ROOT)
 ANCHOR_PATH = Path(os.environ.get("THREEV0_ANCHOR") or (BODY / "3v0" / "CONTINUITY.md"))
 STORE_PATH = Path(
-    os.environ.get("THREEV0_STORE") or (BODY / "3v0" / "data" / "memory.json")
+    os.environ.get("THREEV0_STORE") or (BODY / "3v0" / "data" / "memory.db")
 )
 PROFILE_MEM = Path(
     os.environ.get("THREEV0_PROFILE_MEM")
@@ -182,7 +182,7 @@ def _collect() -> dict:
     mem_md = _read(PROFILE_MEM / "MEMORY.md")
     user_md = _read(PROFILE_MEM / "USER.md")
     try:
-        store = MemoryStore(STORE_PATH)
+        store = open_store(STORE_PATH)
         with store.mutate():
             mem_r = sync_kind(store, mem_md, "memory", write=False)
             user_r = sync_kind(store, user_md, "user", write=False)

@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 
 from .memory import MemoryStore
 from .profile_io import join_entries, split_entries
+from .retrieval import inject
 
 
 @dataclass
@@ -35,16 +36,21 @@ class SyncReport:
 
 
 def sync_kind(store: MemoryStore, profile_md: str, kind: str, write: bool) -> SyncReport:
-    """Diff store vs profile for one kind; with write=True, converge them."""
+    """Diff store vs profile for one kind; with write=True, converge them.
+
+    The store -> profile direction is the retrieval-chosen working set
+    (ADR-0004): ``exported`` is the view entries absent from the profile, not
+    every active fact. The profile -> store direction is unchanged
+    (import-only entries, drop superseded entries).
+    """
     profile_entries = split_entries(profile_md)
     active = {f.content for f in store.active(kind=kind)}
     inactive = {f.content for f in store.facts if f.kind == kind and not f.active}
 
     imported = [e for e in profile_entries if e not in active and e not in inactive]
     dropped = [e for e in profile_entries if e in inactive]
-    exported = [
-        f.content for f in store.active(kind=kind) if f.content not in set(profile_entries)
-    ]
+    view = split_entries(profile_text(store, kind))
+    exported = [c for c in view if c not in set(profile_entries)]
 
     if write:
         for entry in imported:
@@ -53,5 +59,16 @@ def sync_kind(store: MemoryStore, profile_md: str, kind: str, write: bool) -> Sy
 
 
 def profile_text(store: MemoryStore, kind: str) -> str:
-    """The derived view of the store for one kind, as profile .md text."""
+    """The derived view of the store for one kind, as profile .md text.
+
+    A conn-backed store (SQLStore, the rewire's canonical store) projects the
+    retrieval-chosen working set under the budget — touch=False, because a
+    wake export is mechanical sync, not evidence the facts were used. The
+    legacy JSON store keeps export-all (sibling projects, pre-rewire).
+    """
+    conn = getattr(store, "conn", None)
+    if conn is not None:
+        # The profile wire is '\n§\n'-joined; the seam counts the separator
+        # against the budget, so the projected view respects the cap exactly.
+        return inject(conn, kind=kind, touch=False, sep="\n§\n").text
     return join_entries([f.content for f in store.active(kind=kind)])

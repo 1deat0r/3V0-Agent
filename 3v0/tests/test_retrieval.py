@@ -53,18 +53,20 @@ class TestRender(RetrievalTest):
 
 class TestInject(RetrievalTest):
     def test_caps_by_budget_and_reports_truncation(self):
-        for i in range(5):
-            add_fact(self.conn, f"s{i}", "p", "v", now=NOW)
-        inj = inject(self.conn, budget_chars=14, touch=False, now=NOW)
-        self.assertEqual(len(inj.facts), 2)  # two "sX p v" lines fit in 14 chars
+        for content in ("aaaa", "bbbb", "cccc", "dddd", "eeee"):
+            add_fact(self.conn, "s", "p", content, content=content, now=NOW)
+        inj = inject(self.conn, budget_chars=11, touch=False, now=NOW)
+        # two lines fit in 11 chars; ties rank newest-first (created_at DESC,
+        # id DESC), so the two newest facts are chosen
+        self.assertEqual(inj.text, "eeee\ndddd")
         self.assertTrue(inj.truncated)
-        self.assertLessEqual(len(inj.text), 14)
+        self.assertLessEqual(len(inj.text), 11)
         self.assertEqual(inj.ids, [f["id"] for f in inj.facts])
 
     def test_touch_writes_feedback_only_for_chosen(self):
-        for i in range(3):
-            add_fact(self.conn, f"s{i}", "p", "v", now=NOW)
-        inj = inject(self.conn, budget_chars=14, touch=True, now=NOW)
+        for content in ("aaaa", "bbbb", "cccc"):
+            add_fact(self.conn, "s", "p", content, content=content, now=NOW)
+        inj = inject(self.conn, budget_chars=11, touch=True, now=NOW)
         self.assertEqual(len(inj.ids), 2)
         total = self.conn.execute("SELECT SUM(access_count) FROM facts").fetchone()[0]
         self.assertEqual(total, 2)
@@ -95,8 +97,8 @@ class TestInject(RetrievalTest):
     def test_oversized_fact_is_skipped_not_blocking(self):
         # A huge low-value line must not starve later small facts: budget fill
         # skips it and keeps going (whole-fact granularity).
-        add_fact(self.conn, "huge", "p", "v" * 500, now=NOW - 10)      # older -> ranks last
-        add_fact(self.conn, "small", "p", "v", now=NOW)                # newest -> ranks first
+        add_fact(self.conn, "huge", "p", "v", content="v" * 500, now=NOW - 10)
+        add_fact(self.conn, "small", "p", "v", content="small content", now=NOW)
         inj = inject(self.conn, budget_chars=50, touch=False, now=NOW)
         self.assertEqual([f["subject"] for f in inj.facts], ["small"])
         self.assertTrue(inj.truncated)

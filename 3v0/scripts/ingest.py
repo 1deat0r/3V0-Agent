@@ -36,11 +36,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.bridge import apply_ops  # noqa: E402
-from core.memory import MemoryStore  # noqa: E402
+from core.store import open_store  # noqa: E402
 
 # Override for tests: point at a scratch store instead of the real one.
 STORE_PATH = Path(
-    os.environ.get("THREEV0_STORE") or (REPO_ROOT / "3v0" / "data" / "memory.json")
+    os.environ.get("THREEV0_STORE") or (REPO_ROOT / "3v0" / "data" / "memory.db")
 )
 
 
@@ -64,7 +64,7 @@ def main() -> int:
         print("ingest: 'ops' must be a list", file=sys.stderr)
         return 2
 
-    store = MemoryStore(STORE_PATH)
+    store = open_store(STORE_PATH)
     try:
         with store.mutate():
             applied = apply_ops(store, target, ops, source)
