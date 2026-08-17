@@ -149,6 +149,9 @@ def _accept_claims() -> List[str]:
             outcomes.append(f"{lid}:unverifiable:{err}")
             continue
         state = (data or {}).get("state")
+        if state is None:
+            outcomes.append(f"{lid}:unverifiable:no state field")
+            continue
         old = spec.get("state") if isinstance(spec, dict) else None
         new_spec = dict(spec) if isinstance(spec, dict) else {"kind": "pr"}
         new_spec["kind"] = kind

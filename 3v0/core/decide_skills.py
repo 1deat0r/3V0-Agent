@@ -26,7 +26,6 @@ from .query import version_dict
 from .skills import SkillStore
 
 SKILL_DECISION_ACTIONS = ("skill_update", "skill_retract", "skill_absorb")  # canonical store-first skill decisions
-_VALID_ACTIONS = SKILL_DECISION_ACTIONS  # backward-compat alias
 
 
 def _update(store: SkillStore, d: dict, source: str, persist: bool) -> dict:
@@ -121,6 +120,6 @@ def decide_skill(store: SkillStore, decision: dict, persist: bool = True) -> dic
         return _absorb(store, decision, source, persist)
     return {
         "error": (
-            f"unknown action {action!r} (expected one of {list(_VALID_ACTIONS)})"
+            f"unknown action {action!r} (expected one of {list(SKILL_DECISION_ACTIONS)})"
         )
     }

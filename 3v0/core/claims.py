@@ -57,3 +57,12 @@ def gh_loop(
     except json.JSONDecodeError:
         return False, None, "gh output unparseable"
     return True, data, None
+
+
+def loop_fields(kind: str) -> str:
+    """The ``gh --json`` field list for a loop of ``kind``.
+
+    ``mergeable`` is PR-only — an issue query for it is an error, not a None.
+    Lives here so the kind-aware field shape sits beside the command it names.
+    """
+    return "state,mergeable,updatedAt,title" if kind == "pr" else "state,updatedAt,title"

@@ -143,9 +143,8 @@ def temporal_refusal(
             target = store.get(supersedes_id)
         elif decision.get("supersedes"):
             sub = str(decision["supersedes"]).strip()
-            target = next(
-                (f for f in store.active() if sub and sub in f.content), None
-            )
+            matches = store.matching(None, sub) if sub else []
+            target = matches[0] if matches else None
         else:
             return None
     else:

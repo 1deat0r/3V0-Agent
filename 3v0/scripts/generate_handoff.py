@@ -39,7 +39,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
-from core.claims import gh_loop, load_claims, repo_of  # noqa: E402
+from core.claims import gh_loop, load_claims, loop_fields, repo_of  # noqa: E402
 from core.handoff import diff_loop_claims, render_handoff  # noqa: E402
 from core.memory import MemoryStore  # noqa: E402
 from core.query import summary  # noqa: E402
@@ -132,8 +132,7 @@ def collect_loops() -> list:
     for num in sorted(specs, key=lambda n: int(n) if str(n).isdigit() else 0):
         spec = specs[num] if isinstance(specs[num], dict) else {}
         kind = (spec.get("kind") or "pr")
-        fields = "state,mergeable,updatedAt,title" if kind == "pr" else "state,updatedAt,title"
-        ok, live, err = gh_loop(kind, str(num), repo, fields)
+        ok, live, err = gh_loop(kind, str(num), repo, loop_fields(kind))
         loops.append(
             {
                 "num": str(num),
