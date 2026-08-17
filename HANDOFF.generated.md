@@ -2,22 +2,22 @@
 
 > ⚠️ MECHANICAL STATE — canonical since 2026-08-16 (operator-authorized). Generated from verified-consistent state by `3v0/scripts/generate_handoff.py`; regenerated each wake. This file is authoritative for mechanical state: body, continuity invariants, drift, tracked loops, store, daemons. The narrative (kickoff, last-sessions arc, hard-won lessons) stays hand-written in `HANDOFF.md` — never auto-generated. Read both.
 
-Generated: 2026-08-17T00:38:14Z · body HEAD `40bf57fb3`
+Generated: 2026-08-17T03:20:03Z · body HEAD `99075f471`
 
 ## Body
-branch `main` · ahead 123 · behind 181 · working tree dirty
+branch `main` · ahead 129 · behind 181 · working tree dirty
 
 ```
+99075f471 refactor(3v0): ReviewConfig.from_env — field defaults are single source of truth
+7a53816af docs(3v0): Fiverr portfolio samples — debug + code-review deliverables
+36f6dcd33 refactor(3v0): consolidate review driver config into typed ReviewConfig
+5af131287 docs(3v0): sustainability plan — self-funding the API (Fiverr package + wallet)
+529562d1f docs(3v0): complete Layouts — add handoff module/script + missing test entries
+c7cafbd7c docs(3v0): regenerate generated handoff (mechanical state)
 40bf57fb3 docs(3v0): handoff kickoff for wake #7 (mattpocock deepening)
 168bfeaed docs(3v0): record deepening arc in EVOLUTION_LOOP (mattpocock pipeline)
 864111c45 feat(3v0): skill-store mirror of 3v0-native-core v1.4.0 + mattpocock-deepening
 305b851f8 refactor(3v0): load_session uses session_columns (single schema owner)
-6ddb9e21d docs(3v0): list gitstate + session_db modules; correct drift entry to pure
-0ef8cd18c refactor(3v0): named-column session-DB adapter + pure drift core (close #6, #7)
-09ab581fb docs(3v0): list the new core modules (review_decide, claims, project) in the Layout
-67fd708ea refactor(3v0): address code-review findings (two-axis external review)
-e149b97cd refactor(3v0): own the loop/claim + profile-projection concepts in single modules
-cf4706856 refactor(3v0): extract review decision core into core/review_decide.py
 ```
 
 ## Continuity
@@ -31,20 +31,20 @@ cf4706856 refactor(3v0): extract review decision core into core/review_decide.py
 summary: 0 drifting, 6 ok
 
 ## Drift (project ledger)
-- DRIFT Axiom (axiom)  behind=82 ahead=55  dirty=yes  [head moved]
+- DRIFT Axiom (axiom)  behind=82 ahead=56  dirty=no  [head moved]
 - OK    F1NANCE (f1nance)  behind=0 ahead=42  dirty=no
-- DRIFT 3V0 (threev0)  behind=181 ahead=123  dirty=yes  [head moved]
+- DRIFT 3V0 (threev0)  behind=181 ahead=129  dirty=yes  [head moved]
 
 summary: 2 drifting, 3 ok
 
 ## Open loops
 - #72067 (pr) · claim OPEN · live OPEN (mergeable CONFLICTING, updated 2026-08-05) · agree — fix(memory): recover null/omitted action instead of dead-ending in 'Un… [canonical memory null-action recovery; CONFLICTING, author's job]
-- #73453 (pr) · claim OPEN · live OPEN (mergeable MERGEABLE, updated 2026-08-05) · agree — fix(skills): preserve load failure details [preserve skill load failure details; awaiting merge]
+- #73453 (pr) · claim OPEN · live OPEN (mergeable CONFLICTING, updated 2026-08-05) · agree — fix(skills): preserve load failure details [preserve skill load failure details; awaiting merge]
 - #84667 (issue) · claim OPEN · live OPEN (updated 2026-08-15) · agree — [Bug]: Skill loads via --skills but not when attached to a cron job; s… [cron skill-not-found; waiting on reporter's <error> string]
 - #86711 (pr) · claim OPEN · live OPEN (mergeable MERGEABLE, updated 2026-08-16) · agree — fix(approval): collapse whitespace before matching approvals.deny glob… [approval-deny whitespace fix; awaiting maintainer merge]
 
 ## Store
-facts by kind: directive=1, identity=1, memory=13, user=9 · 87 fact versions · 8 active skills · 64 skill versions
+facts by kind: directive=1, identity=1, memory=13, user=9 · 90 fact versions · 8 active skills · 66 skill versions
 
 ## Daemons
 - 3v0-review: active
