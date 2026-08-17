@@ -10,7 +10,7 @@
 
 **About / bio (paste verbatim; plain hyphens only):**
 
-> I fix, review, and automate Python code - and I build AI agents and web
+> I fix, review, and automate Python code. I also build AI agents and web
 > scrapers that do real work. Based in New Zealand.
 >
 > Every order ships with something verifiable, not just a promise:
@@ -27,7 +27,7 @@
 > - Web scrapers: clean structured data plus a validation report showing
 >   exactly what came back empty.
 >
-> Delivery is AI-assisted and hand-verified - you're paying for careful
+> Delivery is AI-assisted and hand-verified. You're paying for careful
 > judgment, not a generated guess. Every sample in my portfolio actually
 > runs.
 >
