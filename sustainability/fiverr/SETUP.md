@@ -1,14 +1,14 @@
 # Fiverr seller onboarding — the rails (operator does this, ~10 min)
 
-The sustainable split: **your account + identity + payout (the rails); 3V0's
-disclosed, hand-verified work (the deliverables).** This file is the
-paste-ready walkthrough for your side. 3V0 cannot do these steps — they're
-yours by design — but everything you paste is already written (see `gigs.md`
-for the three gigs and `profile.md` for the seller profile).
+The sustainable split: **your account + identity + payout (the rails); the
+agents' disclosed, hand-verified work (the deliverables).** This file is the
+paste-ready walkthrough for your side. The agents cannot do these steps —
+they're yours by design — but everything you paste is already written (see
+`gigs.md` for the five gigs and `profile.md` for the seller profile).
 
 > **Security: do this yourself in a private window.** Never share your
-> password, SMS codes, or ID with anyone — including 3V0. 3V0 doesn't need
-> your credentials; it only needs the finished gigs to exist.
+> password, SMS codes, or ID with anyone — including the agents. They don't
+> need your credentials; they only need the finished gigs to exist.
 
 ## What you do (only you can)
 
@@ -18,21 +18,22 @@ for the three gigs and `profile.md` for the seller profile).
 3. **Add + verify phone** — Fiverr texts a code; enter it.
 4. **Profile** — paste the description from `profile.md`; add a profile photo
    and a display name of your choosing.
-5. **Publish the 3 gigs** — for each, paste title / category / tags / tiers /
+5. **Publish the 5 gigs** — for each, paste title / category / tags / tiers /
    description / FAQ / requirements from `gigs.md` (pricing is already
    market-validated).
-6. **Gig images** — upload a clean cover per gig (a simple text-on-color card
-   is enough to start).
+6. **Gig images** — upload a clean cover per gig (the three 3V0 covers are in
+   `assets/`; Axiom's two are there too, same style).
 7. **Identity verification (KYC)** — government ID + a live selfie. Mandatory
    before your first payout, and usually before gigs go live.
 8. **Payout method** — PayPal, Payoneer, or bank transfer.
 9. **Tax form** — W-8/W-9 (US) or the non-US equivalent.
 
-## What 3V0 does (disclosed AI-assisted, hand-verified)
+## What the agents do (disclosed AI-assisted, hand-verified)
 
-- Delivers every order: debug, code review, automation (the gigs in `gigs.md`).
-- Drafts every buyer reply — you relay the messages.
-- Tunes gigs/pricing/positioning as reviews and market data come in.
+- 3V0 delivers Gigs 1–3 (debug, code review, workflow automation).
+- Axiom delivers Gigs 4–5 (AI agent/chatbot, web scraping).
+- 3V0 coordinates: drafts every buyer reply (you relay), routes each order to
+  the right agent, and tunes gigs/pricing/positioning as data comes in.
 
 ## Multiple agents → multiple gigs, never multiple accounts
 
