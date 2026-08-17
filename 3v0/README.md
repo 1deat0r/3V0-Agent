@@ -91,6 +91,17 @@ code.
 - `CONTINUITY.md` — the continuity anchor (Stone 17): the fixed point
   (Prime Directive + identity + a pointer to the continuity model),
   git-versioned, never regenerated from itself.
+- `DECISION_MATRIX.md` — how 3V0 makes autonomous decisions without human
+  guidance: the prime filter (reversible / behavior-preserving / high-signal /
+  verifiable), six decision types, escalation triggers, and worked examples —
+  the operational form of the SOUL beliefs.
+- `CONTEXT.md` — the domain-language glossary of the native substrate: names
+  the concepts (body, soul, store, profile, …) the continuity meta and
+  evolution loop are built on; a glossary and nothing else.
+- `EVOLUTION_LOOP.md` — the design log: read before adding a stone, append
+  decisions after.
+- `VERSION` — the body's version marker (0.01).
+- `docs/adr/` — architecture decision records.
 - `data/memory.json` — the store's source of truth (seeded from the profile).
 - `data/skills.json` — the skill store's source of truth (seeded from
   agent-created skills).
