@@ -1387,4 +1387,63 @@ evidence for a future flip" — the flip already happened.
   narrative (kickoff, last-sessions arc, hard-won lessons) is 3V0's own
   account and stays hand-written — auto-generating it is the bias trap.
 
+---
+
+## Deepening the core — Matt Pocock pipeline (2026-08-17)
+
+Not a new stone; a deepening pass across Stones 15–18 using Matt Pocock's
+engineering pipeline (now captured in the `mattpocock-deepening` skill). The
+arc: domain-modeling → improve-codebase-architecture → implement →
+code-review → tdd.
+
+### What was built
+
+- `3v0/CONTEXT.md` — the domain glossary (~30 canonical terms, each with an
+  `_Avoid_` for rejected synonyms: *body* not "project", *supersession* not
+  "overwrite", *drift* as cross-artifact disagreement).
+- `3v0/docs/adr/0001..0003` — store-first memory, check-before-heal, and the
+  operator-gated generated-handoff flip (each passed the three-criteria gate).
+- Five deep modules extracted from the 1,206-line `review_session.py` and the
+  clocks, closing all seven architecture-review candidates:
+  - `core/review_decide.py` — pure decision half of the review driver
+    (tolerant JSON, transcript compaction, store/skill blocks, temporal guard).
+  - `core/claims.py` — tracked-upstream-loop claim registry
+    (`load_claims`/`gh_loop`/`loop_fields`).
+  - `core/project.py` — store→profile projection owner (`project_memory`).
+  - `core/gitstate.py` — drift *collection* (`collect_git_state`/`store_hash`).
+  - `core/session_db.py` — named-column session-DB adapter (`load_session`/
+    `session_columns`/`candidate_rows`).
+- `core/drift.py` reduced to the pure decision half (`GitState` +
+  `compute_drift`); collection moved to `gitstate.py`.
+- Vocabulary single-sourced: `KINDS`/`PROFILE_KINDS`/`ACTIONS`/
+  `SKILL_DECISION_ACTIONS` exported from their owners; `MemoryStore.matching()`
+  is now the ONE substring-resolution algorithm.
+
+### Design decisions (recorded)
+
+- **Decision-pure / collection-at-edges.** Invariant #4 sharpened: core
+  *decision* modules are pure; *collection* lives in clearly-named modules
+  (`gitstate`/`session_db`/`claims`) that take their target paths as
+  parameters. This replaced the old "pure logic in core, profile I/O in
+  scripts", which the git-collection extraction violated.
+- **Named-column DB reads, never positional.** `session_db` returns rows keyed
+  by column name, eliminating the hand-advanced positional index that already
+  produced one off-by-one bug (the `cwd` mis-scope bug). `session_columns` is
+  the single schema owner; `load_session` and `candidate_rows` both consume it.
+- **External signal beats self-critique.** Both code-review passes caught what
+  re-reading my own code missed (the heal-before-check self-fulfilling
+  invariant; the substring re-declaration that broke a "single source" claim)
+  — always route verification through a fresh sub-agent.
+- **Declined #1(b)** (in-process `decide` instead of subprocess): the
+  subprocess is a deliberate, documented isolation layer; the review driver and
+  the `threev0_record` tool share one backend. Marginal gain, behavior-changing.
+
+### Verification
+
+- 252 tests green (228 → 247 → 252 across the arc).
+- `continuity_check.py` 6/6 (0 drifting).
+- `review_session.py` 1206 → 983 lines; no behavior changed (spec review
+  confirmed `as_of`/`ended`/`cwd` semantics, `drift.py` purity, and the
+  `temporal_refusal` empty-sub edge are all equivalent).
+
 
