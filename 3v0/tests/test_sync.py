@@ -17,7 +17,7 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.memory import MemoryStore  # noqa: E402
 from core.profile_io import join_entries, split_entries  # noqa: E402
-from core.sync import profile_text, sync_kind  # noqa: E402
+from core.sync import diff_kind, profile_text, sync_kind  # noqa: E402
 
 
 class TestSync(unittest.TestCase):
@@ -61,6 +61,19 @@ class TestSync(unittest.TestCase):
             split_entries(profile_text(self.store, "memory")),
             ["store only fact", "profile only fact"],
         )
+
+
+class TestDiffKind(unittest.TestCase):
+    def test_classifies_import_drop_export(self):
+        imported, dropped, exported = diff_kind(
+            profile_entries=["a", "b", "c"],
+            active_contents=["a"],
+            inactive_contents=["b"],
+            view_contents=["a", "d"],
+        )
+        self.assertEqual(imported, ["c"])     # in profile, not in store
+        self.assertEqual(dropped, ["b"])      # in profile, superseded in store
+        self.assertEqual(exported, ["d"])     # in store view, not in profile
 
 
 if __name__ == "__main__":

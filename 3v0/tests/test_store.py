@@ -30,8 +30,7 @@ class SQLStoreTest(unittest.TestCase):
         self.dir = tempfile.mkdtemp()
         self.path = os.path.join(self.dir, "mem.db")
         self.store = SQLStore(self.path)
-        self.addCleanup(
-            lambda: self.store.conn.close() if self.store.conn is not None else None)
+        self.addCleanup(self.store.close)
 
 
 class TestAddAndActive(SQLStoreTest):
@@ -52,7 +51,7 @@ class TestAddAndActive(SQLStoreTest):
         try:
             self.assertEqual([f.content for f in s2.active()], ["persisted"])
         finally:
-            s2.conn.close()
+            s2.close()
 
     def test_dry_run_does_not_persist(self):
         self.store.add("not persisted", "memory", "test", persist=False)
@@ -60,7 +59,7 @@ class TestAddAndActive(SQLStoreTest):
         try:
             self.assertNotIn("not persisted", {f.content for f in s2.active("memory")})
         finally:
-            s2.conn.close()
+            s2.close()
 
 
 class TestSupersession(SQLStoreTest):
@@ -76,7 +75,7 @@ class TestSupersession(SQLStoreTest):
         self.assertEqual([f.content for f in chain],
                          ["gh account is mustbearnold", "gh account is 1deat0r"])
         # temporal validity is the supersession mechanism
-        row = self.store.conn.execute(
+        row = self.store._conn.execute(
             "SELECT valid_to FROM facts WHERE id=?", (int(old.id),)).fetchone()
         self.assertIsNotNone(row["valid_to"])
 
@@ -135,8 +134,7 @@ class TestExportAndFacade(SQLStoreTest):
         try:
             self.assertIsInstance(db, SQLStore)
         finally:
-            if db.conn is not None:
-                db.conn.close()
+            db.close()
         js = open_store(os.path.join(self.dir, "s.json"))
         self.assertIsInstance(js, MemoryStore)
 
@@ -144,6 +142,38 @@ class TestExportAndFacade(SQLStoreTest):
         with self.store.mutate() as s:
             self.assertIs(s, self.store)
             s.add("under mutate", "memory", "test")
+
+
+class TestInactiveAndRetrieve(SQLStoreTest):
+    def test_inactive_returns_superseded_and_retracted(self):
+        old = self.store.add("old", "memory", "test")
+        self.store.add("new", "memory", "test", supersedes=[old.id])
+        doomed = self.store.add("doomed", "memory", "test")
+        self.store.retract(doomed.id)
+        inactive = {f.content for f in self.store.inactive("memory")}
+        self.assertEqual(inactive, {"old", "doomed"})
+        self.assertNotIn("new", inactive)
+
+    def test_inactive_scopes_by_kind(self):
+        old_m = self.store.add("m", "memory", "test")
+        old_u = self.store.add("u", "user", "test")
+        self.store.add("m2", "memory", "test", supersedes=[old_m.id])
+        self.store.add("u2", "user", "test", supersedes=[old_u.id])
+        self.assertEqual({f.content for f in self.store.inactive("memory")}, {"m"})
+        self.assertEqual({f.content for f in self.store.inactive("user")}, {"u"})
+
+    def test_retrieve_delegates_to_seam(self):
+        self.store.add("alpha fact", "memory", "test")
+        self.store.add("beta fact", "memory", "test")
+        inj = self.store.retrieve(kind="memory", touch=False, budget_chars=1000)
+        self.assertIn("alpha fact", inj.text)
+        self.assertIn("beta fact", inj.text)
+
+    def test_retrieve_empty_store(self):
+        inj = self.store.retrieve(touch=False)
+        self.assertEqual(inj.text, "")
+        self.assertEqual(inj.facts, [])
+        self.assertFalse(inj.truncated)
 
 
 if __name__ == "__main__":

@@ -26,7 +26,6 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 import os  # noqa: E402
 
-from core.retrieval import inject  # noqa: E402
 from core.store import SQLStore, open_store  # noqa: E402
 from core.query import (  # noqa: E402
     fact_history,
@@ -101,7 +100,7 @@ def main() -> int:
             kwargs["kind"] = args.kind
         if args.budget is not None:
             kwargs["budget_chars"] = args.budget
-        inj = inject(mem.conn, **kwargs)
+        inj = mem.retrieve(**kwargs)
         result = {
             "facts": inj.facts,
             "text": inj.text,

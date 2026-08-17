@@ -1628,8 +1628,7 @@ class TestSQLStoreResolution(Env):
             kind="memory", source="test").id
         keeper = store.add("Operator works from ~/work.",
                            kind="user", source="test").id
-        if store.conn is not None:
-            store.conn.close()
+        store.close()
         self.ids = {"stale": stale, "doomed": doomed, "keeper": keeper}
 
     def test_record_supersede_retract_through_sql_store(self):
@@ -1664,8 +1663,7 @@ class TestSQLStoreResolution(Env):
             new_fact = active["Operator prefers terse, bulleted reports."]
             self.assertEqual(new_fact.source, "session-review")
         finally:
-            if store.conn is not None:
-                store.conn.close()
+            store.close()
 
         # profile projection: the retrieval-chosen working set, not export-all
         mem_md = (self.profile_mem / "MEMORY.md").read_text(encoding="utf-8")

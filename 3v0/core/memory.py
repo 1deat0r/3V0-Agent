@@ -18,6 +18,10 @@ Design:
 Deliberately small. This is the seed of 3V0's own memory — not a
 reimplementation of Hermes's MEMORY.md mechanism, but the first piece of the
 substrate that will eventually host identity, memory, and evolution.
+
+Lineage semantics (kind validity, retraction tagging, the supersession walk,
+the export grouping) live in ``core.lineage`` — the single owner shared with
+``SQLStore`` so the two backends cannot drift on meaning.
 """
 
 from __future__ import annotations
@@ -29,6 +33,17 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
+from .lineage import (
+    KINDS,
+    RETRACTED,
+    _VALID_KINDS,
+    export_shape,
+    history_chain,
+    iso_time,
+    retraction_note,
+    validate_kind,
+)
+
 # fcntl is Unix-only; on Windows there is no equivalent advisory lock exposed
 # by the stdlib, so locking degrades to a no-op there (the store is single-host
 # by design — see EVOLUTION_LOOP.md).
@@ -37,14 +52,7 @@ try:
 except ImportError:  # pragma: no cover - Windows
     fcntl = None
 
-KINDS = ("memory", "user", "identity", "directive")  # canonical fact kinds
 PROFILE_KINDS = ("memory", "user")  # the kinds that project to the Hermes profile
-_VALID_KINDS = set(KINDS)  # set for O(1) membership + sorted() in the error message
-
-# ``superseded_by`` sentinel for a fact that was REMOVED (no successor exists).
-# Distinct from a real fact id, so ``history()`` terminates the chain at the
-# retracted fact, and ``active()``/``export()`` exclude it.
-RETRACTED = "retracted"
 
 
 @contextmanager
@@ -123,14 +131,13 @@ class MemoryStore:
         note: str = "",
         persist: bool = True,
     ) -> Fact:
-        if kind not in _VALID_KINDS:
-            raise ValueError(f"kind must be one of {sorted(_VALID_KINDS)}, got {kind!r}")
+        validate_kind(kind)
         fact = Fact(
             id=uuid.uuid4().hex[:12],
             content=content,
             kind=kind,
             source=source,
-            created_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            created_at=iso_time(time.time()),
             supersedes=list(supersedes or []),
             note=note,
         )
@@ -157,9 +164,7 @@ class MemoryStore:
         if f is None or not f.active:
             return None
         f.superseded_by = RETRACTED
-        if source:
-            tag = f"retracted by {source}"
-            f.note = f"{f.note} {tag}".strip() if f.note else tag
+        f.note = retraction_note(f.note, source)
         if persist:
             self._save()
         return f
@@ -198,6 +203,13 @@ class MemoryStore:
             out = [f for f in out if f.kind == kind]
         return out
 
+    def inactive(self, kind: str | None = None) -> list[Fact]:
+        """Superseded/retracted facts (still recoverable, excluded from views)."""
+        out = [f for f in self.facts if not f.active]
+        if kind is not None:
+            out = [f for f in out if f.kind == kind]
+        return out
+
     def matching(self, kind: str | None, substring: str) -> list[Fact]:
         """Active facts whose content contains ``substring``.
 
@@ -214,38 +226,11 @@ class MemoryStore:
         return None
 
     def history(self, fact_id: str) -> list[Fact]:
-        """Reconstruct a fact's full chain, oldest -> newest.
-
-        Walks superseded_by forward to the newest link, then supersedes
-        backward to the oldest, so an audit of any fact recovers the whole
-        thread of what it replaced and what replaced it.
-        """
+        """Reconstruct a fact's full chain, oldest -> newest (see lineage)."""
         by_id = {f.id: f for f in self.facts}
-        cur = by_id.get(fact_id)
-        if cur is None:
-            return []
-        while cur.superseded_by and cur.superseded_by in by_id:
-            cur = by_id[cur.superseded_by]
-        chain: list[Fact] = []
-        seen: set[str] = set()
-        while cur is not None and cur.id not in seen:
-            chain.append(cur)
-            seen.add(cur.id)
-            prev = None
-            for fid in cur.supersedes:
-                if fid in by_id:
-                    prev = by_id[fid]
-                    break
-            cur = prev
-        chain.reverse()
-        return chain
+        return history_chain(by_id.get, fact_id)
 
     # -- export ------------------------------------------------------------
     def export(self) -> dict[str, list[str]]:
         """Active facts grouped by kind, as plain text lines (derived view)."""
-        out: dict[str, list[str]] = {}
-        for kind in sorted(_VALID_KINDS):
-            lines = [f.content for f in self.active(kind=kind)]
-            if lines:
-                out[kind] = lines
-        return out
+        return export_shape(_VALID_KINDS, self.active)

@@ -16,7 +16,7 @@ callers. Design contract (ADR-0004):
   profile view's size cap, so ``text`` never exceeds ``budget_chars``.
 - **The text is the profile wire** — one line per chosen fact, the fact's
   ``content`` (the natural-language form Hermes parses), not the internal
-  triple form. ``render()`` remains the triple renderer for store inspection.
+  triple form.
 - **Feedback is the module's own write.** With ``touch=True`` the chosen
   facts' ``access_count``/``last_accessed`` are updated, so future ranking
   reinforces what is actually pulled into context. ``touch=False`` is a pure
@@ -74,17 +74,6 @@ def rank(facts, query_terms=None, now=None):
     """Pure: sort facts by relevance score (descending)."""
     now = now if now is not None else time.time()
     return sorted(facts, key=lambda f: _score(f, query_terms, now), reverse=True)
-
-
-def render(facts):
-    """Compact one-line-per-fact text (the working set's wire format)."""
-    lines = []
-    for f in facts:
-        line = f"{f['subject']} {f['predicate']} {f['object']}"
-        if f.get("content"):
-            line += f"  # {f['content']}"
-        lines.append(line)
-    return "\n".join(lines)
 
 
 def _ranked_valid(conn, domains, kind, query_terms, now):

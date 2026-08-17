@@ -21,8 +21,21 @@ code.
   confidence, a sub-memory `domain` tag, and retrieval feedback
   (access_count/last_accessed) — the foundation for retrieval-chosen
   injection replacing the static profile view.
-- `core/profile_io.py` — single owner of the '§' wire format shared by
-  seed/export/sync.
+- `core/store.py` — `SQLStore`, the canonical store facade over the memdb
+  substrate (Stone 23): the pipeline's one interface (add/retract/active/
+  matching/get/history/export/mutate) over SQLite, plus `retrieve()` (the
+  retrieval seam, owned by the store so callers never reach into the raw
+  connection), `inactive()`, and `close()`. The sibling JSON `MemoryStore`
+  lives in `core/memory.py`; `open_store()` routes by suffix.
+- `core/lineage.py` — the shared pure lineage semantics, single owner of fact
+  *meaning*: kind validation, retraction tagging, the supersession walk
+  (parameterized by a get-by-id lookup), and the export grouping — so the
+  JSON and SQLite stores delegate rather than drift.
+- `core/retrieval.py` — retrieval-chosen injection, the read seam (Stone 23,
+  ADR-0004): ranks valid facts (keyword + recency + feedback), fills a budget,
+  and renders the profile wire, with `touch` feedback.
+- `core/profile_io.py` — single owner of the '§' wire format (separator + the
+  `ENTRY_JOIN` wire join) shared by seed/export/sync.
 - `core/sync.py` — store↔profile reconciliation. The store is canonical, the
   profile a derived view; sync imports profile-only entries, drops superseded
   ones from the profile, and exports store-only facts — never deleting store

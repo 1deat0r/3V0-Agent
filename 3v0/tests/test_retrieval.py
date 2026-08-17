@@ -9,7 +9,7 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 sys.path.insert(0, str(REPO_ROOT / "3v0" / "core"))
 
 from core.memdb import add_fact, connect  # noqa: E402
-from core.retrieval import inject, rank, render  # noqa: E402
+from core.retrieval import inject, rank  # noqa: E402
 
 NOW = 1_800_000_000.0
 
@@ -41,14 +41,6 @@ class TestRank(RetrievalTest):
             {"subject": "hot", "predicate": "p", "object": "x", "content": "", "created_at": NOW, "access_count": 100, "last_accessed": NOW},
         ]
         self.assertEqual(rank(facts, now=NOW)[0]["subject"], "hot")
-
-
-class TestRender(RetrievalTest):
-    def test_render(self):
-        facts = [{"subject": "3v0", "predicate": "model", "object": "deepseek-v4-pro", "content": "the LLM substrate"}]
-        text = render(facts)
-        self.assertIn("3v0 model deepseek-v4-pro", text)
-        self.assertIn("the LLM substrate", text)
 
 
 class TestInject(RetrievalTest):

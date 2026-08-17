@@ -1705,3 +1705,38 @@ retract + projection through a temp .db store; (10) supersedes column
 indexed; (12) migration trust direction documented. Verified-correct by the
 reviewer with no action: sep-counted budget, in-place Fact parity, tombstone
 validity, touch=False export, ledger-driven resolution.
+
+## Architecture-deepening pass — Stone 23 rewire (2026-08-18)
+
+The rewire had a bug-review but no depth/consolidation pass. A fresh-sub-agent
+architecture walk (read-only, Matt Pocock vocabulary + deletion test) ranked
+six candidates; the behavior-preserving ones landed here, the one
+behavior-changing item deferred.
+
+**`core/lineage.py` (new)** — single owner of fact *meaning*, extracted from
+the decision logic duplicated verbatim across `MemoryStore` and `SQLStore`:
+`validate_kind`, `iso_time`, `retraction_note`, `history_chain` (parameterized
+by a get-by-id lookup so both backends share the exact walk — now also
+cycle-guarded), `export_shape`. The stores shrank to collection adapters plus
+their one backend-specific concern (file+flock vs SQLite).
+
+**`profile_io.ENTRY_JOIN` (new)** — the § wire join is sourced from the single
+owner; `sync.py` and `inject(sep=...)` no longer re-type the literal, closing
+the budget-accounting drift channel.
+
+**`SQLStore.retrieve()` / `close()` / `inactive()` (new), `conn` property
+retired** — production callers (sync, query) reached through `store.conn` into
+the raw sqlite connection to call `inject()`; the store now owns projection.
+`inactive(kind)` removes the materialize-all-then-filter N+1 in sync.
+
+**`sync.diff_kind` (new pure fn)** — `sync_kind` is now collection + write
+around the pure import/drop/export classification.
+
+**`retrieval.render()` pruned** — dead (no production caller).
+
+**`_live` registry** — mutable-view contract documented (dry-run /
+cross-process sharp edges); removal is behavior-changing and deferred to the
+forgetting/snapshot stone with a caller-audit ADR.
+
+Verification: 367 tests green (350 -> 367); continuity 6/6; sync converged;
+`query retrieve` exercises the new `store.retrieve()` seam against the live DB.

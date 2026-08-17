@@ -20,6 +20,12 @@ Facade mapping:
   uncommitted — visible to this connection only, the dry-run contract.
 - Missing store = empty store, JSON parity: reads degrade to empty, the first
   write creates the file (like ``MemoryStore._save``'s mkdir).
+
+Lineage semantics (kind validity, retraction tagging, the supersession walk,
+the export grouping) are owned by ``core.lineage`` — the single source shared
+with ``MemoryStore`` so the two backends cannot drift on meaning. The sqlite
+connection is an implementation detail: production callers project through
+``retrieve()``, never ``_conn``.
 """
 
 from __future__ import annotations
@@ -29,13 +35,18 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from . import memdb
-from .memory import KINDS, RETRACTED, Fact, MemoryStore
-
-_VALID_KINDS = set(KINDS)
-
-
-def _iso(t: float) -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(t))
+from .lineage import (
+    KINDS,
+    RETRACTED,
+    _VALID_KINDS,
+    export_shape,
+    history_chain,
+    iso_time,
+    retraction_note,
+    validate_kind,
+)
+from .memory import Fact, MemoryStore
+from .retrieval import Injection, inject
 
 
 class SQLStore:
@@ -48,11 +59,26 @@ class SQLStore:
         # Live Fact registry: like the JSON store, Fact objects are mutated in
         # place when superseded/retracted, so a caller's held reference flips
         # active -> inactive the moment a later write closes it.
+        #
+        # CONTRACT (mutable views): a Fact returned by any query is a live
+        # view refreshed in place. Three sharp edges callers must not lean on:
+        #   1. dry-run writes (persist=False) still refresh held refs even
+        #      though the committed DB is unchanged until a later re-read;
+        #   2. the registry is never evicted (bounded only by ``clear()``) —
+        #      fine for the short-lived, per-session stores the daemon uses;
+        #   3. a held ref does NOT refresh when *another* process supersedes
+        #      its row (no cross-connection invalidation) until the id passes
+        #      through ``_fact`` again.
+        # Nothing in production relies on held-reference mutation; if a caller
+        # ever does, the deeper fix is to return fresh snapshots and delete the
+        # registry (a behavior change, deferred — see EVOLUTION_LOOP Stone 24).
         self._live: dict[int, Fact] = {}
 
-    @property
-    def conn(self):
-        return self._conn
+    def close(self) -> None:
+        """Close the underlying connection (idempotent)."""
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
 
     def _ensure(self):
         """Create the store file on first write (read paths never create)."""
@@ -89,12 +115,12 @@ class SQLStore:
         f = self._live.get(row["id"])
         if f is None:
             f = Fact(id=str(row["id"]), content="", kind="memory", source="",
-                     created_at=_iso(row["created_at"]))
+                     created_at=iso_time(row["created_at"]))
             self._live[row["id"]] = f
         f.content = row["content"] if row["content"] is not None else row["object"]
         f.kind = row["kind"] or "memory"
         f.source = row["source"] or ""
-        f.created_at = _iso(row["created_at"])
+        f.created_at = iso_time(row["created_at"])
         f.supersedes = [str(s) for s in self._supersedes(row["id"])]
         f.superseded_by = superseded_by
         f.note = row["note"] or ""
@@ -102,8 +128,7 @@ class SQLStore:
 
     # -- mutations -----------------------------------------------------------
     def add(self, content, kind, source, supersedes=None, note="", persist=True) -> Fact:
-        if kind not in _VALID_KINDS:
-            raise ValueError(f"kind must be one of {sorted(_VALID_KINDS)}, got {kind!r}")
+        validate_kind(kind)
         conn = self._ensure()
         now = time.time()
         targets = []
@@ -142,10 +167,7 @@ class SQLStore:
         if row is None or row["valid_to"] is not None:
             return None
         now = time.time()
-        note = row["note"] or ""
-        if source:
-            tag = f"retracted by {source}"
-            note = f"{note} {tag}".strip() if note else tag
+        note = retraction_note(row["note"] or "", source)
         self._conn.execute(
             "UPDATE facts SET valid_to=?, note=? WHERE id=?",
             (now, note, row["id"]))
@@ -159,6 +181,18 @@ class SQLStore:
             return []
         rows = memdb.valid_facts(self._conn, kind=kind, now=time.time())
         return [self._fact(r) for r in rows]
+
+    def inactive(self, kind: str | None = None) -> list[Fact]:
+        """Superseded/retracted facts (closed validity), still recoverable."""
+        if self._conn is None:
+            return []
+        sql = "SELECT * FROM facts WHERE valid_to IS NOT NULL"
+        params = []
+        if kind is not None:
+            sql += " AND kind = ?"
+            params.append(kind)
+        sql += " ORDER BY created_at, id"
+        return [self._fact(r) for r in self._conn.execute(sql, params)]
 
     @property
     def facts(self) -> list[Fact]:
@@ -193,41 +227,26 @@ class SQLStore:
         return self._fact(row) if row is not None else None
 
     def history(self, fact_id: str) -> list[Fact]:
-        """The full supersession chain, oldest -> newest (like the JSON store).
+        """The full supersession chain, oldest -> newest (see lineage)."""
+        return history_chain(self.get, fact_id)
 
-        Walks ``superseded_by`` forward to the newest link, then ``supersedes``
-        backward to the oldest, so an audit of any fact recovers the whole
-        thread of what it replaced and what replaced it.
+    def retrieve(self, *, kind=None, query_terms=None, budget_chars=2000,
+                 touch=True, now=None, sep="\n") -> Injection:
+        """The retrieval seam, owned by the store (hides the sqlite connection).
+
+        Projects the retrieval-chosen working set under a budget; the store
+        fronting an as-yet-absent file projects the empty view. ``touch`` and
+        ``sep`` mirror ``core.retrieval.inject``.
         """
-        cur = self.get(fact_id)
-        if cur is None:
-            return []
-        seen: set[str] = set()
-        while cur.superseded_by and cur.superseded_by != RETRACTED \
-                and cur.id not in seen:
-            seen.add(cur.id)
-            nxt = self.get(cur.superseded_by)
-            if nxt is None:
-                break
-            cur = nxt
-        out: list[Fact] = []
-        seen = set()
-        while cur is not None and cur.id not in seen:
-            seen.add(cur.id)
-            out.append(cur)
-            pred = self.get(cur.supersedes[0]) if cur.supersedes else None
-            cur = pred
-        out.reverse()
-        return out
+        if self._conn is None:
+            return Injection(facts=[], ids=[], text="", truncated=False,
+                             budget_chars=budget_chars, budget_used=0)
+        return inject(self._conn, kind=kind, query_terms=query_terms,
+                      budget_chars=budget_chars, touch=touch, now=now, sep=sep)
 
     # -- export --------------------------------------------------------------
     def export(self) -> dict[str, list[str]]:
-        out: dict[str, list[str]] = {}
-        for kind in sorted(_VALID_KINDS):
-            lines = [f.content for f in self.active(kind=kind)]
-            if lines:
-                out[kind] = lines
-        return out
+        return export_shape(_VALID_KINDS, self.active)
 
     # -- lock / dry-run parity ------------------------------------------------
     @contextmanager

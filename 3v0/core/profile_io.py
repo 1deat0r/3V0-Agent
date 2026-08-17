@@ -16,6 +16,12 @@ from __future__ import annotations
 
 SEPARATOR = "§"
 
+# The wire join between entries: a separator flanked by newlines. Single source
+# of truth for how entries are joined on the profile wire — shared by
+# join_entries() below and retrieval's inject(sep=...) budget accounting, so a
+# re-typed literal cannot drift from the emitted wire.
+ENTRY_JOIN = f"\n{SEPARATOR}\n"
+
 
 def contains_separator(content: str) -> bool:
     """True if content contains the profile entry separator (cannot round-trip)."""
@@ -39,4 +45,4 @@ def join_entries(entries: list[str]) -> str:
                 f"entry contains the '{SEPARATOR}' separator and cannot be "
                 f"projected to the profile: {entry[:40]!r}"
             )
-    return f"\n{SEPARATOR}\n".join(entries)
+    return ENTRY_JOIN.join(entries)

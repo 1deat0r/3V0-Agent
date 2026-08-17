@@ -32,8 +32,7 @@ class ExportInjectionTest(unittest.TestCase):
         self.dir = tempfile.mkdtemp()
         self.store = SQLStore(os.path.join(self.dir, "mem.db"))
         self.profile_dir = Path(self.dir) / "profile"
-        self.addCleanup(
-            lambda: self.store.conn.close() if self.store.conn is not None else None)
+        self.addCleanup(self.store.close)
 
     def test_profile_text_is_working_set_not_export_all(self):
         for i in range(200):
@@ -70,7 +69,7 @@ class ExportInjectionTest(unittest.TestCase):
         # into permanence (rich-get-richer).
         self.store.add("f", "memory", "test")
         project_memory(self.store, self.profile_dir)
-        total = self.store.conn.execute(
+        total = self.store._conn.execute(
             "SELECT SUM(access_count) FROM facts").fetchone()[0]
         self.assertEqual(total, 0)
 
