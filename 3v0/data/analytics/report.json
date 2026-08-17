@@ -1,28 +1,28 @@
 {
   "totals": {
     "sessions": 83,
-    "messages": 8667,
-    "tool_calls": 4963,
-    "api_calls": 4082,
-    "input_tokens": 10013818,
-    "output_tokens": 6269352,
-    "cache_read_tokens": 608535808,
-    "reasoning_tokens": 4526345,
-    "cache_hit_ratio": 0.9838,
+    "messages": 8741,
+    "tool_calls": 5005,
+    "api_calls": 4113,
+    "input_tokens": 10401920,
+    "output_tokens": 6336451,
+    "cache_read_tokens": 615738240,
+    "reasoning_tokens": 4584238,
+    "cache_hit_ratio": 0.9834,
     "output_token_share": 0.01,
-    "estimated_cost_usd": 11.6734,
+    "estimated_cost_usd": 11.9267,
     "active_days": 3
   },
   "models": [
     {
       "model": "deepseek-v4-pro",
       "sessions": 78,
-      "api_calls": 3962,
-      "input_tokens": 9669629,
-      "output_tokens": 6118840,
-      "cache_read_tokens": 548075776,
-      "cache_hit_ratio": 0.9827,
-      "estimated_cost_usd": 11.5136
+      "api_calls": 3994,
+      "input_tokens": 10057955,
+      "output_tokens": 6186245,
+      "cache_read_tokens": 555278464,
+      "cache_hit_ratio": 0.9822,
+      "estimated_cost_usd": 11.7672
     },
     {
       "model": "deepseek-v4-flash",
@@ -39,12 +39,12 @@
     {
       "task": "main",
       "model": "deepseek-v4-pro",
-      "api_calls": 3809,
-      "input_tokens": 9491375,
-      "output_tokens": 6034033,
-      "cache_read_tokens": 548001024,
-      "reasoning_tokens": 4418479,
-      "estimated_cost_usd": 11.3649
+      "api_calls": 3840,
+      "input_tokens": 9879477,
+      "output_tokens": 6101132,
+      "cache_read_tokens": 555203456,
+      "reasoning_tokens": 4476372,
+      "estimated_cost_usd": 11.6182
     },
     {
       "task": "main",
@@ -69,12 +69,12 @@
     {
       "task": "approval",
       "model": "deepseek-v4-pro",
-      "api_calls": 149,
-      "input_tokens": 57750,
-      "output_tokens": 37356,
-      "cache_read_tokens": 38656,
-      "reasoning_tokens": 36763,
-      "estimated_cost_usd": 0.0549
+      "api_calls": 150,
+      "input_tokens": 57974,
+      "output_tokens": 37662,
+      "cache_read_tokens": 38912,
+      "reasoning_tokens": 37065,
+      "estimated_cost_usd": 0.0552
     },
     {
       "task": "compression",
@@ -100,57 +100,57 @@
   "tools": [
     {
       "name": "terminal",
-      "count": 2038,
-      "success": 1954,
-      "failure": 84,
+      "count": 2144,
+      "success": 2057,
+      "failure": 87,
       "unknown": 0,
       "success_rate": 0.959,
-      "latency_avg_ms": 4763.9,
-      "latency_median_ms": 217.2,
-      "latency_p95_ms": 13126.0
+      "latency_avg_ms": 4731.8,
+      "latency_median_ms": 215.2,
+      "latency_p95_ms": 14426.5
     },
     {
       "name": "read_file",
-      "count": 1298,
-      "success": 1287,
+      "count": 1394,
+      "success": 1383,
       "failure": 11,
       "unknown": 0,
       "success_rate": 0.992,
-      "latency_avg_ms": 152.8,
-      "latency_median_ms": 66.2,
-      "latency_p95_ms": 182.2
+      "latency_avg_ms": 198.0,
+      "latency_median_ms": 65.9,
+      "latency_p95_ms": 186.1
     },
     {
       "name": "patch",
-      "count": 1002,
-      "success": 996,
+      "count": 1032,
+      "success": 1026,
       "failure": 6,
       "unknown": 0,
       "success_rate": 0.994,
-      "latency_avg_ms": 773.4,
+      "latency_avg_ms": 770.6,
       "latency_median_ms": 215.2,
-      "latency_p95_ms": 2450.2
+      "latency_p95_ms": 2442.2
     },
     {
       "name": "search_files",
-      "count": 542,
-      "success": 532,
+      "count": 571,
+      "success": 561,
       "failure": 10,
       "unknown": 0,
       "success_rate": 0.982,
-      "latency_avg_ms": 336.0,
+      "latency_avg_ms": 335.1,
       "latency_median_ms": 80.8,
       "latency_p95_ms": 515.7
     },
     {
       "name": "write_file",
-      "count": 468,
-      "success": 467,
+      "count": 501,
+      "success": 500,
       "failure": 1,
       "unknown": 0,
       "success_rate": 0.998,
-      "latency_avg_ms": 4823.0,
-      "latency_median_ms": 360.9,
+      "latency_avg_ms": 4811.6,
+      "latency_median_ms": 350.6,
       "latency_p95_ms": 6151.0
     },
     {
@@ -166,12 +166,12 @@
     },
     {
       "name": "todo",
-      "count": 164,
-      "success": 164,
+      "count": 177,
+      "success": 177,
       "failure": 0,
       "unknown": 0,
       "success_rate": 1.0,
-      "latency_avg_ms": 18.5,
+      "latency_avg_ms": 18.2,
       "latency_median_ms": 13.9,
       "latency_p95_ms": 55.5
     },
@@ -187,6 +187,17 @@
       "latency_p95_ms": 314.9
     },
     {
+      "name": "skill_view",
+      "count": 85,
+      "success": 85,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 148.4,
+      "latency_median_ms": 64.6,
+      "latency_p95_ms": 694.1
+    },
+    {
       "name": "web_search",
       "count": 80,
       "success": 80,
@@ -198,26 +209,26 @@
       "latency_p95_ms": 8491.6
     },
     {
-      "name": "skill_view",
-      "count": 73,
-      "success": 73,
+      "name": "memory",
+      "count": 72,
+      "success": 47,
+      "failure": 25,
+      "unknown": 0,
+      "success_rate": 0.653,
+      "latency_avg_ms": 151.4,
+      "latency_median_ms": 19.4,
+      "latency_p95_ms": 137.8
+    },
+    {
+      "name": "delegate_task",
+      "count": 37,
+      "success": 37,
       "failure": 0,
       "unknown": 0,
       "success_rate": 1.0,
-      "latency_avg_ms": 143.5,
-      "latency_median_ms": 62.2,
-      "latency_p95_ms": 428.4
-    },
-    {
-      "name": "memory",
-      "count": 63,
-      "success": 41,
-      "failure": 22,
-      "unknown": 0,
-      "success_rate": 0.651,
-      "latency_avg_ms": 155.4,
-      "latency_median_ms": 20.2,
-      "latency_p95_ms": 190.6
+      "latency_avg_ms": 79.7,
+      "latency_median_ms": 14.7,
+      "latency_p95_ms": 279.6
     },
     {
       "name": "execute_code",
@@ -242,26 +253,15 @@
       "latency_p95_ms": 323.6
     },
     {
-      "name": "delegate_task",
-      "count": 23,
-      "success": 23,
-      "failure": 0,
-      "unknown": 0,
-      "success_rate": 1.0,
-      "latency_avg_ms": 96.2,
-      "latency_median_ms": 64.7,
-      "latency_p95_ms": 279.6
-    },
-    {
       "name": "process",
-      "count": 21,
-      "success": 20,
+      "count": 23,
+      "success": 22,
       "failure": 1,
       "unknown": 0,
-      "success_rate": 0.952,
-      "latency_avg_ms": 31567.7,
-      "latency_median_ms": 37.3,
-      "latency_p95_ms": 180012.6
+      "success_rate": 0.957,
+      "latency_avg_ms": 28825.1,
+      "latency_median_ms": 27.6,
+      "latency_p95_ms": 108026.6
     },
     {
       "name": "clarify",
@@ -356,13 +356,13 @@
     {
       "date": "2026-08-16",
       "sessions": 27,
-      "messages": 2652,
-      "tool_calls": 1512,
-      "input_tokens": 3689450,
-      "output_tokens": 2231210,
-      "cache_read_tokens": 209518976,
-      "cache_hit_ratio": 0.9827,
-      "estimated_cost_usd": 4.3056
+      "messages": 2726,
+      "tool_calls": 1554,
+      "input_tokens": 4077552,
+      "output_tokens": 2298309,
+      "cache_read_tokens": 216721408,
+      "cache_hit_ratio": 0.9815,
+      "estimated_cost_usd": 4.5589
     },
     {
       "date": "2026-08-17",
@@ -393,5 +393,5 @@
     "cost figures are 'estimated' (DeepSeek pricing), not invoice-actual",
     "cache_hit_ratio = cache_read / (cache_read + fresh input); output_token_share = output / all tokens \u2014 the two levers named in TOKEN_EFFICIENCY.md"
   ],
-  "generated_at": "2026-08-17T20:39:30.147065+00:00"
+  "generated_at": "2026-08-17T21:52:59.287524+00:00"
 }

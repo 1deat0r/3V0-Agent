@@ -12,9 +12,24 @@ pointer to what was live at the last session's end.*
 > *narrative* — the kickoff judgment, the last-sessions arc, hard-won
 > lessons, and the startup routine. Read both.
 
-## Next-session kickoff (2026-08-17, wake #7 — Matt Pocock deepening of the native core)
+## Next-session kickoff (2026-08-18, wake #8 — memory rework: SQLite canonical + retrieval-chosen injection)
 
-**This session (wake #7):** applied Matt Pocock's engineering pipeline to the
+**This session (wake #8):** the memory rework landed end-to-end. Stones 19–23
+in one arc: self-analytics (`core/analytics.py` + `insights.py`, Stones 19–20),
+the memdb temporal-fact foundation (Stone 21), independent review +
+reconciliation (Stone 22), and **Stone 23 — the pipeline rewire**:
+`core/store.py` (`SQLStore` facade + `open_store()` suffix dispatcher) makes
+`data/memory.db` the primary project's canonical store; `core/retrieval.py`
+`inject()` projects the retrieval-chosen working set under a 2000-char budget
+into the profile view (ADR-0004); all ten consumers rewired; migration lossless
+(117 facts, active set identical, 66 links, 90 closed rows). **Deployed**: the
+three own-clock review daemons restarted (`3v0-review` → `.db`; `f1nance`/`axiom`
+keep JSON via suffix dispatch). **Verification**: 349 tests green, continuity
+6/6, sync converged (0/0/0), tree clean. **Next stones**: forgetting/
+consolidation (archive never-retrieved facts via `access_count`), then semantic
+retrieval only if the data justifies it.
+
+**Prior session (wake #7):** applied Matt Pocock's engineering pipeline to the
 native core — a full deepening pass that closed all seven architecture-review
 candidates and shrank `review_session.py` from 1,206 to 983 lines without a
 behavior change. The arc: domain-modeling → improve-codebase-architecture →
