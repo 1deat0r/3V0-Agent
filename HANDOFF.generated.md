@@ -2,22 +2,22 @@
 
 > ⚠️ MECHANICAL STATE — canonical since 2026-08-16 (operator-authorized). Generated from verified-consistent state by `3v0/scripts/generate_handoff.py`; regenerated each wake. This file is authoritative for mechanical state: body, continuity invariants, drift, tracked loops, store, daemons. The narrative (kickoff, last-sessions arc, hard-won lessons) stays hand-written in `HANDOFF.md` — never auto-generated. Read both.
 
-Generated: 2026-08-17T03:20:03Z · body HEAD `99075f471`
+Generated: 2026-08-17T03:27:15Z · body HEAD `29792eae6`
 
 ## Body
-branch `main` · ahead 129 · behind 181 · working tree dirty
+branch `main` · ahead 129 · behind 0 · working tree dirty
 
 ```
-99075f471 refactor(3v0): ReviewConfig.from_env — field defaults are single source of truth
-7a53816af docs(3v0): Fiverr portfolio samples — debug + code-review deliverables
-36f6dcd33 refactor(3v0): consolidate review driver config into typed ReviewConfig
-5af131287 docs(3v0): sustainability plan — self-funding the API (Fiverr package + wallet)
-529562d1f docs(3v0): complete Layouts — add handoff module/script + missing test entries
-c7cafbd7c docs(3v0): regenerate generated handoff (mechanical state)
-40bf57fb3 docs(3v0): handoff kickoff for wake #7 (mattpocock deepening)
-168bfeaed docs(3v0): record deepening arc in EVOLUTION_LOOP (mattpocock pipeline)
-864111c45 feat(3v0): skill-store mirror of 3v0-native-core v1.4.0 + mattpocock-deepening
-305b851f8 refactor(3v0): load_session uses session_columns (single schema owner)
+29792eae6 docs(3v0): regenerate generated handoff (mechanical state)
+33d2910d6 refactor(3v0): ReviewConfig.from_env — field defaults are single source of truth
+f41078b1b docs(3v0): Fiverr portfolio samples — debug + code-review deliverables
+d9d0296f2 refactor(3v0): consolidate review driver config into typed ReviewConfig
+5469a97c8 docs(3v0): sustainability plan — self-funding the API (Fiverr package + wallet)
+db7128118 docs(3v0): complete Layouts — add handoff module/script + missing test entries
+6393b6de8 docs(3v0): regenerate generated handoff (mechanical state)
+242ee5e05 docs(3v0): handoff kickoff for wake #7 (mattpocock deepening)
+82586ff0f docs(3v0): record deepening arc in EVOLUTION_LOOP (mattpocock pipeline)
+ba3374261 feat(3v0): skill-store mirror of 3v0-native-core v1.4.0 + mattpocock-deepening
 ```
 
 ## Continuity
@@ -31,9 +31,9 @@ c7cafbd7c docs(3v0): regenerate generated handoff (mechanical state)
 summary: 0 drifting, 6 ok
 
 ## Drift (project ledger)
-- DRIFT Axiom (axiom)  behind=82 ahead=56  dirty=no  [head moved]
+- DRIFT Axiom (axiom)  behind=82 ahead=56  dirty=no
 - OK    F1NANCE (f1nance)  behind=0 ahead=42  dirty=no
-- DRIFT 3V0 (threev0)  behind=181 ahead=129  dirty=yes  [head moved]
+- DRIFT 3V0 (threev0)  behind=0 ahead=129  dirty=yes
 
 summary: 2 drifting, 3 ok
 
