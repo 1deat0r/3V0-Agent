@@ -88,6 +88,10 @@ code.
   handoff (Stone 18): decision half only (no I/O), mirroring the
   continuity/drift split. The collection half lives in
   `scripts/generate_handoff.py`.
+- `core/analytics.py` — the pure aggregation half of self-analytics (Stone
+  19): tool success/latency aggregation, session/model/daily cost-token
+  totals, and body-health signals as pure functions over row dicts. No I/O —
+  the DB reads live in `scripts/analytics.py`.
 - `CONTINUITY.md` — the continuity anchor (Stone 17): the fixed point
   (Prime Directive + identity + a pointer to the continuity model),
   git-versioned, never regenerated from itself.
@@ -111,6 +115,10 @@ code.
 - `data/continuity/claims.json` — the loop claim registry (Stone 17): per
   tracked upstream loop, a recorded state + as-of; the `github-loops`
   invariant diffs claims against live `gh`, `--accept` re-records reality.
+- `data/analytics/report.json` — the self-analytics snapshot (Stone 19):
+  regenerated each wake by `scripts/analytics.py`; per-tool success/latency,
+  per-model tokens/cost, per-day burn, health. Local + self-owned, no
+  outbound telemetry.
 - `scripts/seed_from_profile.py` — import profile MEMORY.md / USER.md → store.
 - `scripts/export_to_profile.py` — emit store → MEMORY.md / USER.md (derived
   view of the store; the profile becomes a projection, not the origin).
@@ -167,6 +175,11 @@ code.
   handoff (Stone 18): writes `HANDOFF.generated.md` (the committed shadow
   draft, regenerated each wake, never promoted) and prints the loop-claim
   shadow diff.
+- `scripts/analytics.py` — the collection half of self-analytics (Stone 19):
+  reads the profile's `state.db` (sessions, messages, `session_model_usage`),
+  builds per-tool events (latency matched by `tool_call_id`, success by
+  envelope), and writes `data/analytics/report.json` + a human one-pager.
+  Local + self-owned; no outbound telemetry.
 - `plugin/native-store-bridge/` — profile plugin (canonical source) that
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, registers the

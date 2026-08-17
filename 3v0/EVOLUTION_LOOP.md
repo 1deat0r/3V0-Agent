@@ -1446,4 +1446,29 @@ code-review → tdd.
   confirmed `as_of`/`ended`/`cwd` semantics, `drift.py` purity, and the
   `temporal_refusal` empty-sub edge are all equivalent).
 
+## Stone 19 — self-analytics (own metrics)
+
+Direction 4 deepens: *measure before you improve*. Hermes already logs the raw
+data (sessions, messages, `session_model_usage`), but nothing aggregates it
+into owned insight — so 3V0 was flying blind on cost, tool reliability, and
+burn. `core/analytics.py` (pure) + `scripts/analytics.py` (reads `state.db`,
+writes `3v0/data/analytics/report.json`) turn it into a self-owned one-pager:
+per-tool frequency/latency/success, per-model tokens/cost, per-day burn, and
+body-health (compression/rewinds/end-reasons).
+
+Decisions:
+- **Reuse, don't rebuild.** Hermes already logs tokens/cost and per-message
+  tool metadata; the stone is *aggregation*, not new logging.
+- **Classify by envelope, not content.** Tool success reads the JSON result
+  envelope (`success` / `exit_code` / `error` / leading-error text), never
+  scans embedded content — a `read_file` of error-handling code must not read
+  as a failure. (Caught live: first pass showed `read_file` at 0% because the
+  substring matcher hit the word "error" inside file text.)
+- **Local and self-owned.** No outbound telemetry — reads only the profile DB,
+  writes only to `3v0/data/analytics/`. The opposite of what AGENTS.md rejects.
+- **Wired into the wake** (`handoff_check.sh`) so the snapshot refreshes each
+  wake and the burn/success signal is always current.
+
+Verification: 271 tests green (252 → 271), continuity 6/6.
+
 

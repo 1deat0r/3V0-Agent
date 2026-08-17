@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+"""3V0 self-analytics — aggregate the session DB into an owned report.
+
+Reads Hermes's state.db (sessions, messages, session_model_usage) and turns
+it into a self-owned analytics report: per-tool frequency / latency / success,
+per-model tokens / cost, per-day burn, and body-health signals.
+
+Local and self-owned: reads only the local profile DB, writes only to
+3v0/data/analytics/. No outbound telemetry, nothing phones home.
+
+Usage:
+    python3 3v0/scripts/analytics.py                 # print human report
+    python3 3v0/scripts/analytics.py --top 15        # more tools
+    python3 3v0/scripts/analytics.py --out ''        # don't persist report
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sqlite3
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "3v0"))
+
+from core.analytics import classify_tool_result, summarize  # noqa: E402
+
+DEFAULT_DB = Path(os.environ.get(
+    "THREEV0_STATE_DB",
+    os.path.expanduser("~/.hermes/profiles/3v0/state.db"),
+))
+DEFAULT_REPORT = REPO_ROOT / "3v0" / "data" / "analytics" / "report.json"
+
+
+def _rows(db, sql):
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    try:
+        return [dict(r) for r in conn.execute(sql)]
+    finally:
+        conn.close()
+
+
+def load_sessions(db):
+    return _rows(db, """
+        SELECT started_at, ended_at, end_reason, message_count, tool_call_count,
+               api_call_count, input_tokens, output_tokens, cache_read_tokens,
+               reasoning_tokens, estimated_cost_usd, rewind_count,
+               compression_failure_error, compression_ineffective_count,
+               compression_fallback_streak
+        FROM sessions
+    """)
+
+
+def load_usage(db):
+    return _rows(db, """
+        SELECT model, api_call_count, input_tokens, output_tokens, estimated_cost_usd
+        FROM session_model_usage
+    """)
+
+
+def build_events(db):
+    """Match tool results to their issuing call for latency; classify success."""
+    rows = _rows(db, """
+        SELECT role, tool_name, tool_call_id, tool_calls, content, timestamp
+        FROM messages
+        WHERE role IN ('tool', 'assistant')
+    """)
+    call_time = {}
+    for m in rows:
+        if m["role"] == "assistant" and m.get("tool_calls"):
+            try:
+                calls = json.loads(m["tool_calls"])
+            except (ValueError, TypeError):
+                continue
+            for c in calls:
+                cid = c.get("id") or c.get("call_id")
+                if cid:
+                    call_time[cid] = m.get("timestamp")
+    events = []
+    for m in rows:
+        if m["role"] != "tool":
+            continue
+        lat = None
+        t0 = call_time.get(m.get("tool_call_id"))
+        if t0 is not None and m.get("timestamp") is not None:
+            lat = (m["timestamp"] - t0) * 1000.0
+            if lat < 0:
+                lat = None
+        events.append({
+            "name": m.get("tool_name") or "unknown",
+            "latency_ms": lat,
+            "status": classify_tool_result(m.get("content")),
+        })
+    return events
+
+
+def render(report, top=10):
+    t = report["totals"]
+    lines = [
+        f"3V0 self-analytics — {t['sessions']} sessions, {t['active_days']} active days",
+        f"tokens: in={t['input_tokens']:,} out={t['output_tokens']:,} "
+        f"cache_read={t['cache_read_tokens']:,} reasoning={t['reasoning_tokens']:,}",
+        f"cost (est): ${t['estimated_cost_usd']:.2f} | api calls {t['api_calls']:,} | tool calls {t['tool_calls']:,}",
+        "",
+        "models:",
+    ]
+    for m in report["models"]:
+        lines.append(f"  {m['model']:<22} ${m['estimated_cost_usd']:>9.2f}  "
+                     f"in={m['input_tokens']:,} out={m['output_tokens']:,}")
+    lines += ["", f"tools (top {top} by count):",
+              f"  {'tool':<20} {'n':>5} {'succ%':>6} {'p50ms':>8} {'p95ms':>8}"]
+    for tool in report["tools"][:top]:
+        rate = f"{tool['success_rate']*100:.0f}%" if tool["success_rate"] is not None else "   ?"
+        p50 = f"{tool['latency_median_ms']:.0f}" if tool["latency_median_ms"] is not None else "-"
+        p95 = f"{tool['latency_p95_ms']:.0f}" if tool["latency_p95_ms"] is not None else "-"
+        lines.append(f"  {tool['name']:<20} {tool['count']:>5} {rate:>6} {p50:>8} {p95:>8}")
+    lines += ["", "daily (last 7):",
+              f"  {'date':<12} {'sess':>4} {'tools':>6} {'in_tok':>9} {'cost$':>7}"]
+    for d in report["daily"][-7:]:
+        lines.append(f"  {d['date']:<12} {d['sessions']:>4} {d['tool_calls']:>6} "
+                     f"{d['input_tokens']:>9,} {d['estimated_cost_usd']:>7.2f}")
+    h = report["health"]
+    lines += ["",
+              f"health: compression_failures={h['compression_failure_errors']} "
+              f"rewinds={h['rewinds']} end_reasons={h['end_reasons']}"]
+    return "\n".join(lines)
+
+
+def main():
+    ap = argparse.ArgumentParser(description="3V0 self-analytics")
+    ap.add_argument("--db", default=str(DEFAULT_DB), help="path to state.db")
+    ap.add_argument("--out", default=str(DEFAULT_REPORT),
+                    help="report.json path (default: 3v0/data/analytics/report.json; '' to skip)")
+    ap.add_argument("--top", type=int, default=10, help="tools shown in human report")
+    ap.add_argument("--days", type=int, default=30, help="daily buckets to include")
+    args = ap.parse_args()
+
+    if not os.path.exists(args.db):
+        print(f"no state DB at {args.db}", file=sys.stderr)
+        return 1
+
+    report = summarize(load_sessions(args.db), load_usage(args.db),
+                       build_events(args.db), last_n=args.days)
+    print(render(report, top=args.top))
+
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with open(out, "w") as f:
+            json.dump(report, f, indent=2)
+        print(f"\nwrote {out}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

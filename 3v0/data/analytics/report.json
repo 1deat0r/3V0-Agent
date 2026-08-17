@@ -1,0 +1,322 @@
+{
+  "generated_at": "2026-08-17T13:07:17.662739+00:00",
+  "totals": {
+    "sessions": 80,
+    "messages": 8608,
+    "tool_calls": 4908,
+    "api_calls": 3964,
+    "input_tokens": 9295361,
+    "output_tokens": 6034432,
+    "cache_read_tokens": 589482240,
+    "reasoning_tokens": 4360810,
+    "estimated_cost_usd": 11.0874,
+    "active_days": 3
+  },
+  "models": [
+    {
+      "sessions": 123,
+      "api_calls": 3842,
+      "input_tokens": 8942593,
+      "output_tokens": 5869739,
+      "estimated_cost_usd": 10.9114,
+      "model": "deepseek-v4-pro"
+    },
+    {
+      "sessions": 4,
+      "api_calls": 284,
+      "input_tokens": 561417,
+      "output_tokens": 247696,
+      "estimated_cost_usd": 0.3173,
+      "model": "deepseek-v4-flash"
+    }
+  ],
+  "tools": [
+    {
+      "name": "terminal",
+      "count": 1850,
+      "success": 1769,
+      "failure": 81,
+      "unknown": 0,
+      "success_rate": 0.956,
+      "latency_avg_ms": 4882.1,
+      "latency_median_ms": 227.8,
+      "latency_p95_ms": 12399.2
+    },
+    {
+      "name": "read_file",
+      "count": 1147,
+      "success": 1136,
+      "failure": 11,
+      "unknown": 0,
+      "success_rate": 0.99,
+      "latency_avg_ms": 158.1,
+      "latency_median_ms": 66.2,
+      "latency_p95_ms": 186.1
+    },
+    {
+      "name": "patch",
+      "count": 921,
+      "success": 915,
+      "failure": 6,
+      "unknown": 0,
+      "success_rate": 0.993,
+      "latency_avg_ms": 794.4,
+      "latency_median_ms": 221.7,
+      "latency_p95_ms": 2590.6
+    },
+    {
+      "name": "search_files",
+      "count": 509,
+      "success": 499,
+      "failure": 10,
+      "unknown": 0,
+      "success_rate": 0.98,
+      "latency_avg_ms": 342.7,
+      "latency_median_ms": 81.0,
+      "latency_p95_ms": 515.7
+    },
+    {
+      "name": "write_file",
+      "count": 396,
+      "success": 395,
+      "failure": 1,
+      "unknown": 0,
+      "success_rate": 0.997,
+      "latency_avg_ms": 5016.4,
+      "latency_median_ms": 378.8,
+      "latency_p95_ms": 6154.5
+    },
+    {
+      "name": "browser_exec",
+      "count": 301,
+      "success": 301,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 3269.0,
+      "latency_median_ms": 1713.1,
+      "latency_p95_ms": 10776.2
+    },
+    {
+      "name": "todo",
+      "count": 120,
+      "success": 120,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 19.8,
+      "latency_median_ms": 14.1,
+      "latency_p95_ms": 55.5
+    },
+    {
+      "name": "skill_manage",
+      "count": 91,
+      "success": 86,
+      "failure": 5,
+      "unknown": 0,
+      "success_rate": 0.945,
+      "latency_avg_ms": 116.7,
+      "latency_median_ms": 89.2,
+      "latency_p95_ms": 314.9
+    },
+    {
+      "name": "web_search",
+      "count": 56,
+      "success": 56,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 4455.8,
+      "latency_median_ms": 3945.8,
+      "latency_p95_ms": 8491.6
+    },
+    {
+      "name": "memory",
+      "count": 53,
+      "success": 35,
+      "failure": 18,
+      "unknown": 0,
+      "success_rate": 0.66,
+      "latency_avg_ms": 159.9,
+      "latency_median_ms": 20.2,
+      "latency_p95_ms": 137.8
+    },
+    {
+      "name": "skill_view",
+      "count": 52,
+      "success": 52,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 115.8,
+      "latency_median_ms": 64.7,
+      "latency_p95_ms": 259.7
+    },
+    {
+      "name": "execute_code",
+      "count": 33,
+      "success": 29,
+      "failure": 4,
+      "unknown": 0,
+      "success_rate": 0.879,
+      "latency_avg_ms": 2018.1,
+      "latency_median_ms": 2231.7,
+      "latency_p95_ms": 4313.5
+    },
+    {
+      "name": "process",
+      "count": 21,
+      "success": 20,
+      "failure": 1,
+      "unknown": 0,
+      "success_rate": 0.952,
+      "latency_avg_ms": 31567.7,
+      "latency_median_ms": 37.3,
+      "latency_p95_ms": 180012.6
+    },
+    {
+      "name": "session_search",
+      "count": 20,
+      "success": 20,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 285.7,
+      "latency_median_ms": 73.4,
+      "latency_p95_ms": 323.6
+    },
+    {
+      "name": "clarify",
+      "count": 14,
+      "success": 14,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 334082.3,
+      "latency_median_ms": 62779.7,
+      "latency_p95_ms": 163166.5
+    },
+    {
+      "name": "web_extract",
+      "count": 10,
+      "success": 10,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 1857.6,
+      "latency_median_ms": 725.8,
+      "latency_p95_ms": 4180.0
+    },
+    {
+      "name": "delegate_task",
+      "count": 9,
+      "success": 9,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 135.8,
+      "latency_median_ms": 67.9,
+      "latency_p95_ms": 279.6
+    },
+    {
+      "name": "tool_search",
+      "count": 6,
+      "success": 6,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 62.0,
+      "latency_median_ms": 29.7,
+      "latency_p95_ms": 89.9
+    },
+    {
+      "name": "tool_describe",
+      "count": 5,
+      "success": 5,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 78.8,
+      "latency_median_ms": 26.1,
+      "latency_p95_ms": 35.9
+    },
+    {
+      "name": "threev0_record",
+      "count": 4,
+      "success": 4,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 102.7,
+      "latency_median_ms": 110.2,
+      "latency_p95_ms": 123.8
+    },
+    {
+      "name": "skills_list",
+      "count": 3,
+      "success": 3,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 136.0,
+      "latency_median_ms": 44.7,
+      "latency_p95_ms": 44.7
+    },
+    {
+      "name": "threev0_store",
+      "count": 3,
+      "success": 3,
+      "failure": 0,
+      "unknown": 0,
+      "success_rate": 1.0,
+      "latency_avg_ms": 51.0,
+      "latency_median_ms": 52.5,
+      "latency_p95_ms": 52.5
+    }
+  ],
+  "daily": [
+    {
+      "date": "2026-08-15",
+      "sessions": 46,
+      "messages": 5313,
+      "tool_calls": 3077,
+      "input_tokens": 4970767,
+      "output_tokens": 3569501,
+      "estimated_cost_usd": 6.4221
+    },
+    {
+      "date": "2026-08-16",
+      "sessions": 27,
+      "messages": 2672,
+      "tool_calls": 1512,
+      "input_tokens": 3134061,
+      "output_tokens": 2027797,
+      "estimated_cost_usd": 3.8203
+    },
+    {
+      "date": "2026-08-17",
+      "sessions": 7,
+      "messages": 623,
+      "tool_calls": 319,
+      "input_tokens": 1190533,
+      "output_tokens": 437134,
+      "estimated_cost_usd": 0.845
+    }
+  ],
+  "health": {
+    "compression_failure_errors": 0,
+    "compression_ineffective_count": 0,
+    "compression_fallback_streak_max": 0,
+    "rewinds": 0,
+    "end_reasons": {
+      "agent_close": 10,
+      "tui_close": 2,
+      "tui_shutdown": 60,
+      "unknown": 8
+    }
+  },
+  "notes": [
+    "success_rate = share of results with no explicit error signal (JSON success=false / exit_code!=0 / error field, or leading error text) \u2014 heuristic, not ground truth",
+    "cost figures are 'estimated' (DeepSeek pricing), not invoice-actual"
+  ]
+}
