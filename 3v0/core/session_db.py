@@ -45,9 +45,11 @@ def load_session(state_db: Path, session_id: str) -> Optional[Dict[str, Any]]:
     """
     if not state_db.exists():
         return None
+    cols = session_columns(state_db)
+    if cols is None:
+        return None
     conn = sqlite3.connect(str(state_db), timeout=5)
     try:
-        cols = {r[1] for r in conn.execute("PRAGMA table_info(sessions)")}
         select = ["source", "title"]
         for c in ("ended_at", "last_activity_at", "cwd"):
             if c in cols:
