@@ -35,6 +35,7 @@ import time
 from dataclasses import dataclass
 
 from .memdb import valid_facts
+from . import retrieval_fts
 
 # The profile's injected-view cap (Stone 21): MEMORY.md is a derived view and
 # its runtime size is bounded, so the working set must fit a budget.
@@ -126,6 +127,20 @@ def inject(conn, *, domains=("3v0",), kind=None, query_terms=None,
     """
     now = now if now is not None else time.time()
     ranked = _ranked_valid(conn, domains, kind, query_terms, now)
+
+    # Stone 1: query-aware scheduling via an FTS5/BM25 index. Term-matched facts
+    # are scheduled FIRST so the budget is spent on the most relevant; the rest
+    # fill leftover. Real word-relevance + no O(N) substring scan per fact.
+    search_terms = [t for t in (query_terms or ()) if isinstance(t, str)]
+    if search_terms:
+        try:
+            retrieval_fts.ensure_index(conn, ranked)
+            matched = retrieval_fts.candidate_ids(conn, search_terms)
+            if matched:
+                first = [f for f in ranked if f.get("id") in matched]
+                ranked = first + [f for f in ranked if f not in first]
+        except Exception:
+            pass  # FTS unavailable -> fall back to the score-only order
 
     chosen: list[dict] = []
     lines: list[str] = []
