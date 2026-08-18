@@ -239,3 +239,6 @@ HANDOFF.generated.md
 3v0/data/probe_attempts/run3/proj/build1/
 3v0/data/probe_attempts/run3/proj/build2/
 3v0/data/probe_attempts/run3/bench/__pycache__/
+
+# Benchmark artifacts + secrets (TencentDB-Agent-Memory data/key) — do NOT version
+3v0/data/benchmark/
