@@ -1846,3 +1846,16 @@ PROVED live: `python3 -m native.gateway` -> getMe returned the real bot identity
 SAFETY GUARD: never start a SECOND poller on the live bot while the Hermes
 gateway is active (two getUpdates consumers steal each update). N5 wires the
 full native loop to this gateway and tests end-to-end WITHOUT disturbing Hermes.
+## Stone N5 — Native engine (3v0/native/engine.py) — the full stack composed
+```
+engine.py = one handler: message -> allowed-user gate -> context(SOUL+memory)
+            -> agent.respond(own LLM) -> reply; plus deterministic & safe
+            "tools" (list) and "exec <script> [args]" (via tools registry).
+server() = gateway.run_forever(handler) — the cutover entry point, NOT started.
+```
+PROVED live (one-shot, captured not posted, zero Hermes): real model answered
+"Who are you?" with correct identity + home-channel target. End-to-end message
+-> context -> LLM -> reply, WITHOUT starting a second getUpdates poll or posting.
+SAFETY: a second live poller would steal the Hermes gateway's updates — that is
+why the proof captures instead of posting, and server() only runs at cutover.
+Full test count: 432 green.
