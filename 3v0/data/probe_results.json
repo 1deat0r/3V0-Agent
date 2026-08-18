@@ -1,0 +1,40 @@
+{
+  "runs": [
+    {
+      "run_id": "run-001-calibration-seed",
+      "kind": "calibration-seed",
+      "bank": "probe_bank_v1.json",
+      "bank_commit": "460698e46",
+      "grader": {
+        "mode": "certified-subagent",
+        "cert": "grader_cert_v1.json accepted 6/6",
+        "temperature": 0.0,
+        "seed": 0,
+        "blind": true
+      },
+      "attempts_dir": "3v0/data/probe_attempts/run1",
+      "note": "first genuine independently-graded probe run; machine-checkable band only (3 tasks); K-repeat noise floor pending multi-session campaign",
+      "recorded": "2026-08-18",
+      "verdicts": [
+        {
+          "task": "probe001",
+          "band": "easy",
+          "verdict": "PASS",
+          "reason": "fizzbuzz: 20 lines exact, missing-arg usage+exit(1), n=3 -> 1/2/Fizz; graded blind by certified grader (cold)"
+        },
+        {
+          "task": "probe003",
+          "band": "easy",
+          "verdict": "PASS",
+          "reason": "dedup_preserve order-preserving, input-not-mutated, all assertions pass; graded blind by certified grader"
+        },
+        {
+          "task": "probe007",
+          "band": "medium",
+          "verdict": "PASS",
+          "reason": "unhashable-list bug fixed via str(sorted(w)); all assertions pass, no exception; graded blind by certified grader"
+        }
+      ]
+    }
+  ]
+}
