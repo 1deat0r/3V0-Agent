@@ -86,13 +86,14 @@ auxiliary:
   toolsets mid-conversation. Slash commands that mutate system-prompt state
   defer to next session (Hermes cache-awareness) unless `--now` is justified.
 - **Cheap aux.** `auxiliary.*` tasks resolve `provider: auto` → **the main
-  model** (`deepseek-v4-pro`), NOT flash — verified against
-  `agent/auxiliary_client.py` ("default `auto = main model`"). To route a task
-  to flash you must pin `auxiliary.<task>.model`. Pinned: `curator` +
-  `compression` → flash. `approval` stays on `pro` deliberately — it's the
-  smart-approval security guard (defends against prompt-injected commands) and
-  costs ~$0.05 total, so don't weaken a safety check for a cost that's already
-  negligible.
+  model** (currently `accounts/fireworks/models/deepseek-v4-flash-0731`) —
+  verified against `agent/auxiliary_client.py` ("default `auto = main model`").
+  To route a task to a specific model you must pin `auxiliary.<task>.model`.
+  Pinned: `curator`, `compression`, and `approval` → flash (the whole substrate
+  is flash after the Fireworks switch). NOTE: `approval` moving off `pro` is a
+  security-relevant weakening — flash is a weaker reviewer of prompt-injected
+  commands than pro was. It was operator-directed for cost; keep it flagged and
+  re-evaluate if the guard matters.
 - **Compact memory.** Memory + user profile are ~1,300 tokens injected every
   turn. Keep entries high-signal; consolidate instead of appending; never
   store re-discoverable data (paths, addresses, IDs) that a file already
