@@ -1859,3 +1859,13 @@ PROVED live (one-shot, captured not posted, zero Hermes): real model answered
 SAFETY: a second live poller would steal the Hermes gateway's updates — that is
 why the proof captures instead of posting, and server() only runs at cutover.
 Full test count: 432 green.
+## Stone N6 (STAGED, not fired) — reversible cutover readied
+```
+native/run.py  = serve() entrypoint; refuses to auto-start unless THREEV0_SERVE=1
+3v0/CUTOVER.md = the ready procedure: unit spec, controlled sequence, rollback,
+                 fire criteria. The switch itself is operator-triggered, not fired.
+```
+Decision (operator: "do what you think is best"): stage the cutover ready instead
+of firing it. Hard rule: no second getUpdates poller on the live bot while Hermes
+polls (two consumers steal each update). The live flip stays a conscious,
+reversible, documented operator action -- per the reload_gateway lesson.
