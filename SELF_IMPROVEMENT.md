@@ -101,6 +101,11 @@ only binds near the frontier — most failures are waste, not frontier.
    preemptively.
 5. **Verify quality the same way** — smoke test, read-back, continuity, clean
    commit — but in tighter steps.
+6. **Propagate source-of-truth changes fully.** When you edit a canonical text
+   (SOUL.md, a config, a doc), grep the whole body for stale references and
+   update them in the SAME PASS — never ship a source change and find the
+   stale copies later via review. (Learned 2026-08-18: the amended Prime
+   Directive shipped without updating AGENTS/CONTEXT/TOKEN_EFFICIENCY.)
 
 ## Sources
 
