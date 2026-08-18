@@ -121,7 +121,18 @@ true).
 **Terminal**:
 A retracted or absorbed version — the end of a lineage, still recoverable.
 
-## Skills (curator axis)
+## Skills
+
+**SkillVersion**:
+The unit of skill lineage — one recorded `skill_manage` event (create, patch,
+edit, write_file, remove_file, delete) with its content, provenance, and
+supersession links. The skill analogue of **Fact**.
+_Avoid_: revision, commit.
+
+**Decommission**:
+The terminal act on a skill — **retract** (no successor) or **absorb** (folded
+into an umbrella). Both recoverable; the umbrella term over the two terminals.
+_Avoid_: remove, uninstall.
 
 **Curator state**:
 A skill's operational state — `active`, `stale`, or `archived` — orthogonal
