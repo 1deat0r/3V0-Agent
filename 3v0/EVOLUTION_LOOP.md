@@ -1791,12 +1791,13 @@ and the note-tag contract. Now imported; `retraction_note` gained a `what`
 param so the skill axis can say "absorbed into X by Y", and `validate_enum` is
 the single owner of the refusal message (kind/action/state).
 
-**Deferred (documented in skills.py):** `SkillVersion.content` is overloaded
-(full SKILL.md for create/edit, but the supporting *file* content for
-write_file) — a write_file/remove_file head misreads in sync_skills as the
-skill body. Behavior-changing fix (a discriminator + sync special-casing)
-deferred to its own stone.
+**Fixed:** `SkillVersion.content` is overloaded (full SKILL.md for create/edit,
+but the supporting *file* content for write_file) — a write_file/remove_file
+head misreads in sync_skills as the skill body. Fixed via
+`SkillStore.latest_content_head`, which sync now uses to look past
+supporting-file heads to the latest create/edit/patch. Latent — the live store
+had no write_file head, so no data was corrupt; the fix hardens ahead of it.
 
-Verification: 391 tests green (378 -> 391); continuity 6/6. The walk also
+Verification: 393 tests green (378 -> 393); continuity 6/6. The walk also
 confirmed what NOT to extract (history_chain/export_shape/content_matches have
 no skill analogue — the skill axis matches by name + content equality).

@@ -159,6 +159,31 @@ class TestSyncSkills(unittest.TestCase):
         self.assertEqual(r.imported, [])
         self.assertEqual(self.store.state("foo"), "archived")
 
+    def test_write_file_head_does_not_corrupt_sync(self):
+        # A write_file head carries the supporting FILE's content, not SKILL.md.
+        # Sync must look past it to the latest create/edit, not misread the file
+        # content as a divergent body (which would import a spurious edit).
+        md = "---\nname: foo\nbody\n"
+        _mk_skill(self.skills_dir, "foo", md)
+        self.store.add("foo", "create", "assistant_tool", content=md)
+        self.store.add("foo", "write_file", "assistant_tool",
+                       content="# helper function\n", file_path="references/helper.md")
+        r = sync_skills(self.store, self.skills_dir, {"foo"}, write=False)
+        self.assertNotIn("foo", r.edited)
+        self.assertTrue(r.clean)
+
+    def test_write_file_head_exports_skill_md_not_file(self):
+        # Profile lost: re-materialize the skill BODY (create/edit head), not
+        # the supporting-file content the write_file head carries.
+        md = "---\nname: foo\nbody\n"
+        self.store.add("foo", "create", "assistant_tool", content=md)
+        self.store.add("foo", "write_file", "assistant_tool",
+                       content="# helper\n", file_path="references/helper.md")
+        r = sync_skills(self.store, self.skills_dir, {"foo"}, write=True)
+        self.assertIn("foo", r.exported)
+        written = (self.skills_dir / "foo" / "SKILL.md").read_text()
+        self.assertEqual(written, md)
+
 
 class TestDiffSkills(unittest.TestCase):
     def _d(self, **kw):

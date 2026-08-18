@@ -127,7 +127,7 @@ def sync_skills(
     for name in sorted(domain):
         curator_state = curator_states.get(name, "active")
         old_state = store.state(name)
-        head = store.latest_active(name)
+        head = store.latest_content_head(name)
         profile = live_skills.get(name)
 
         action, state_changed = diff_skills(

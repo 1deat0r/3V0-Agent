@@ -67,11 +67,11 @@ class SkillVersion:
     id: str
     name: str
     action: str                 # create | patch | edit | write_file | remove_file | delete
-    # OVERLOAD (deferred fix): `content` is the full SKILL.md for create/edit
-    # but the supporting *file* content for write_file. A write_file/remove_file
-    # head therefore misreads in sync_skills as the skill body (spurious edit
-    # import, or file content written out as SKILL.md). Fix = a discriminator
-    # or a separate supporting-file field, plus sync special-casing.
+    # OVERLOAD (mitigated): `content` is the full SKILL.md for create/edit but
+    # the supporting *file* content for write_file. Sync special-cases this via
+    # SkillStore.latest_content_head, which looks past write_file/remove_file to
+    # the latest create/edit/patch — a supporting-file head can no longer
+    # masquerade as a body edit.
     content: str                # full SKILL.md (create/edit), file content (write_file), else ""
     category: str = ""          # skills/<category> subdirectory, when known
     file_path: str = ""         # for write_file / remove_file
@@ -138,6 +138,22 @@ class SkillStore:
             if s.active:
                 return s
         return None
+
+    def latest_content_head(self, name: str) -> SkillVersion | None:
+        """The skill-body head for reconciliation (see ``sync_skills``).
+
+        A ``write_file``/``remove_file`` version carries a *supporting file's*
+        content, not SKILL.md — and it supersedes the preceding ``create``/``edit``
+        — so the body head is the latest ``create``/``edit``/``patch``, looking
+        past supporting-file ops. Returns None when the skill has no active
+        version (decommissioned or never seen).
+        """
+        if self.latest_active(name) is None:
+            return None
+        for s in reversed(self.versions(name)):
+            if s.action in ("create", "edit", "patch"):
+                return s
+        return None  # unreachable: an active head implies an earlier create
 
     def active(self) -> list[SkillVersion]:
         """One active version per currently-live skill (chain heads)."""
