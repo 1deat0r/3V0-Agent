@@ -16,5 +16,11 @@
     "date": "2026-08-18",
     "cause": "amended SOUL.md without propagating to AGENTS/CONTEXT/TOKEN_EFFICIENCY",
     "guard": "consistency.sh + discipline #6 propagate source-of-truth same pass"
+  },
+  {
+    "id": 4,
+    "date": "2026-08-18",
+    "cause": "tool_search returned no match for a live core tool (text_to_speech) \u2014 active set must be checked before deferred catalog",
+    "guard": "skill_discovery rule 1b: check active toolset before tool_search"
   }
 ]
