@@ -1812,3 +1812,12 @@ Realtime bug fixed: Cloudflare `error 1010` blocks urllib's default `Python-urll
 User-Agent — send a real UA. Also: flash is a reasoning model; small `max_tokens`
 budgets return empty `content` (reasoning eats the budget) — keep it >=256.
 Nominal target: memory -> own evolution loop -> own tools -> Hermes recedes; run on self.
+## Stone N2 — Native agent loop (3v0/native/agent.py + context.py)
+```
+agent.py    = respond(messages) -> build context from SOUL+memory -> own llm -> reply
+context.py  = pure: read_soul / read_active_memories / build_system (budget-trimmed)
+```
+PROVED: `PYTHONPATH=. python3 -m native.agent` -> real identity answer, ZERO hermes.
+Real bug found by honest execution (test caught it, my re-reading missed it twice):
+`facts = data if isinstance(data,list) else {}` shadows `facts`, so the next line
+did `facts.get("facts")` on the EMPTY dict -> always []. Name-shadowing class.
