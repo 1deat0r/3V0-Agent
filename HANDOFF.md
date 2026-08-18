@@ -9,8 +9,55 @@ pointer to what was live at the last session's end.*
 > continuity invariants, drift, tracked loops, store, and daemons. This is
 > the **operator-authorized flip (2026-08-16)**: the generated file is now
 > authoritative for mechanical state. This `HANDOFF.md` carries the
-> *narrative* — the kickoff judgment, the last-sessions arc, hard-won
-> lessons, and the startup routine. Read both.
+*narrative* — the kickoff judgment, the last-sessions arc, hard-won
+lessons, and the startup routine. Read both.
+
+## Next-session kickoff (2026-08-18, wake #9 — probe baseline + mattpocock deepen pass)
+
+**This session (wake #9):** two things closed, both verified.
+
+**1. Evolution monitor — first full baseline.** Built a frozen, held-out,
+difficulty-banded task bank (`probe_bank_v1`, 23 tasks: 5 easy / 8 medium / 6 hard /
+4 escalated, authored by an independent subagent); certified a pinned grader (spec §5:
+6/6 on an execution-verified known-answer set; `GRADER_CERT_FLOOR=0.9` now
+pre-registered); recorded the full first baseline via three probe runs —
+**23/23 PASS, composite 1.0**, every task locally verified AND graded cold by the
+certified grader (which re-executed the objective artifacts rather than trusting
+self-report). The measurement surfaced real defects: probe014 missing `re.I` + wrong
+query intent; probe022's "byte-identical" build was same-second luck (fixed with
+`SOURCE_DATE_EPOCH` + explicit `--mtime`/`--owner`, re-proven identical across a forced
+4s gap); a spec-drift pass (see below) rewired `composite`→weighted, added `frontier()`,
+enforced the ≥2-consecutive-run trend gate, and pre-registered the §5 floor. Results
+store `probe_results.json` git-versioned; 450+ tests green.
+
+**2. Matt Pocock skills run** (operator's ask, `code-review` + `improve-codebase-architecture`
+with `codebase-design`/`grilling`). `code-review` (2-axis) over the evolution-monitor diff
+→ fixed real spec drift (`077c092fb`). Deepenings grilled + shipped:
+- **#3 config seam** (`native/config.py` — one env/.env resolution; `get`/`require`,
+  dotenv-lite parse, memoized) `0be068ede`
+- **#1 retrieval seam** — the native runtime's context now reads the **canonical SQLite
+  store** through `core/retrieval.inject` and writes **Feedback**, ADR-0004's one-seam-
+  two-consumers (`59fdeb11e`) — the runtime now learns from what it pulls in
+- **#5 gateway** — handler errors reported + notify the originating chat, no silent
+  swallow (`5e664cdf2`)
+- **#4 tools dispatch** — generic self-contained registry, no parallel if/elif (`7bd64a2c4`)
+- **#2 store consolidation** — **verified already complete** via `SQLStore` +
+  `open_store()`; deliberately not rebuilt (honesty over fabricated work)
+- **#6 probe credibility gate** — declared Speculative by the scanner; let go.
+Tests climbed **441 → 456** across the arc; all commits conventional; verify gate green.
+
+**Open / staged items for next session:**
+- **§3 K-repeat noise-floor calibration** — the evolution monitor's ONE un-closed gate
+  (`probe_results.json` carries a PENDING note). Multi-session, cost-bearing (K≈5 grading
+  runs); needs a deliberate window before any probe trend carries weight.
+- **Flash substrate + `threev0_discover` appear STAGED, NOT live** — one operator command
+  (`~/.local/bin/hermes gateway restart` or `systemctl --user restart hermes-gateway-3v0.service`)
+  deploys both; on reconnect confirm Flash + the registered tool.
+- **§5 human anchor** — operator grades a small random probe subset each cadence.
+- Upstream fork 499 files behind (deliberately unsynced). Native twin cutover STAGED
+  (`CUTOVER.md`), not fired (operator-window).
+
+## Session history
 
 ## Next-session kickoff (2026-08-18, wake #8 — memory rework: SQLite canonical + retrieval-chosen injection)
 
