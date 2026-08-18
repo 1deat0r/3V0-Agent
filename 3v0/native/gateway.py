@@ -64,17 +64,50 @@ def send_message(chat_id: int | str, text: str, timeout: int = 30) -> dict:
     return _api("sendMessage", {"chat_id": chat_id, "text": text, "disable_web_page_preview": True}, timeout=timeout)
 
 
-def run_forever(handler, long_poll: int = 25, idle: float = 1.0) -> None:
+def _deliver(handler, up, chat_id, send, on_error=None) -> bool:
+    """Run handler(up, send) for one update; on error, REPORT — never mask.
+
+    Returns True when the handler completed, False when it raised. On a raise,
+    the error is surfaced to ``on_error`` (falling back to a traceback so the
+    failure is not silent) and the originating chat is best-effort told an
+    error occurred. A failed error-notice must not itself crash the loop.
+    """
+    try:
+        handler(up, send)
+        return True
+    except Exception as e:  # noqa: BLE001 - a handler crash must never kill the loop
+        if on_error is None:
+            import traceback
+            traceback.print_exc()
+        else:
+            on_error(e, up)
+        if chat_id:
+            try:
+                send_message(chat_id, f"⚠️ (3V0) error handling your message: {type(e).__name__}")
+            except Exception:
+                pass  # a failed error-notice is logged only; the loop must continue
+        return False
+
+
+def run_forever(handler, *, long_poll: int = 25, idle: float = 1.0,
+                on_error=None) -> None:
     """Long-poll the bot and feed each message to handler(update, send).
 
     handler(update, send) -> may call send(chat_id, text). Returns nothing.
-    Blocking. Catches transient errors and keeps polling.
+    Blocking. Catches transient transport errors and keeps polling; a handler
+    crash is reported + notified (see _deliver), never silently dropped.
+    Transport failures are logged occasionally, not swallowed invisibly.
     """
     offset: int | None = None
+    transport_failures = 0
     while True:
         try:
             updates = get_updates(offset, long_poll)
-        except Exception:
+            transport_failures = 0
+        except Exception as e:  # noqa: BLE001 - keep polling through transient errors
+            transport_failures += 1
+            if transport_failures % 20 == 1 or transport_failures < 4:
+                print(f"[gateway] getUpdates failed ({type(e).__name__}); retrying")
             time.sleep(idle)
             continue
         for up in updates:
@@ -85,10 +118,9 @@ def run_forever(handler, long_poll: int = 25, idle: float = 1.0) -> None:
             if not msg:
                 continue
             chat_id = msg.get("chat", {}).get("id")
-            try:
-                handler(up, lambda cid, txt: send_message(cid or chat_id, txt))
-            except Exception:
-                continue
+            _deliver(handler, up, chat_id,
+                     lambda cid, txt: send_message(cid or chat_id, txt),
+                     on_error=on_error)
         time.sleep(idle)  # pace the poll loop; keeps a hot-loop impossible
 
 

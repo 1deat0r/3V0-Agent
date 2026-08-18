@@ -126,6 +126,58 @@ class RunForeverTest(unittest.TestCase):
         self.assertEqual(seen["handler"][0]["update_id"], 5)
         self.assertEqual(seen["sent"], [(999, "reply here")])
 
+    def test_handler_error_is_reported_and_notifies_chat(self):
+        batches = [[{"update_id": 9, "message": {"message_id": 2, "chat": {"id": 55}, "text": "boom"}}]]
+        errors, sent = [], []
+
+        def fake_updates(offset=None, long_poll=25):
+            return batches.pop(0) if batches else [999]
+
+        def fake_send(cid, txt):
+            sent.append((cid, txt))
+
+        def on_error(e, up):
+            errors.append((type(e).__name__, up.get("update_id")))
+
+        def handler(up, send):
+            raise RuntimeError("kaboom")
+
+        with mock.patch.object(gw, "get_updates", side_effect=fake_updates), mock.patch.object(
+            gw, "send_message", side_effect=fake_send
+        ), mock.patch.object(gw.time, "sleep", side_effect=StopIteration):
+            with self.assertRaises(StopIteration):
+                gw.run_forever(handler, on_error=on_error)
+
+        self.assertEqual(errors, [("RuntimeError", 9)])  # reported, not masked
+        self.assertTrue(any(cid == 55 and txt.startswith("⚠️") for cid, txt in sent),
+                        "error notice should reach the originating chat")
+
+    def test_handler_error_without_chat_does_not_send(self):
+        batches = [[{"update_id": 11, "message": {"message_id": 3}}]]  # no chat
+        errors, sent = [], []
+        seen_handler = []
+
+        def fake_updates(offset=None, long_poll=25):
+            return batches.pop(0) if batches else [999]
+
+        def fake_send(cid, txt):
+            sent.append((cid, txt))
+
+        def handler(up, send):
+            seen_handler.append(up)
+            raise ValueError("no chat")
+
+        with mock.patch.object(gw, "get_updates", side_effect=fake_updates), mock.patch.object(
+            gw, "send_message", side_effect=fake_send
+        ), mock.patch.object(gw.time, "sleep", side_effect=StopIteration):
+            with self.assertRaises(StopIteration):
+                gw.run_forever(handler)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(len(seen_handler), 1)  # handler was reached, then raised
+        self.assertEqual(seen_handler[0], {"update_id": 11, "message": {"message_id": 3}})
+        self.assertEqual(sent, [])  # no chat to notify -> nothing attempted
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
