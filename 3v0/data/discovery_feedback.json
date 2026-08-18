@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1,
+    "date": "2026-08-18",
+    "query": "generate speech from text tts audio voice",
+    "chosen": "tool_search (deferred catalog) - no match",
+    "corrected": "text_to_speech (active core tool)",
+    "reason": "tool_search covers only the deferred catalog; a live core tool in the active set returns no hit. Check active toolset before searching."
+  }
+]
