@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "date": "2026-08-18",
+    "cause": "unquoted $H broke config set (space in path)",
+    "guard": "discipline #2 quote every path; audit.sh sanity"
+  },
+  {
+    "id": 2,
+    "date": "2026-08-18",
+    "cause": "two-dot git diff misattributed upstream changes as mine (660 vs 162)",
+    "guard": "consistency.sh + discipline #3 verify ancestry before diff"
+  },
+  {
+    "id": 3,
+    "date": "2026-08-18",
+    "cause": "amended SOUL.md without propagating to AGENTS/CONTEXT/TOKEN_EFFICIENCY",
+    "guard": "consistency.sh + discipline #6 propagate source-of-truth same pass"
+  }
+]
