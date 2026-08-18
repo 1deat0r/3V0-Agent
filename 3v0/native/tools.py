@@ -112,10 +112,26 @@ def run_terminal(command: str, timeout: int = 60) -> dict:
 
 
 _REGISTRY = {
-    "read_file": {"description": "Read a UTF-8 text file inside the repo or profile (secrets denied). Args: {path}", "handler": read_file},
-    "write_file": {"description": "Write a UTF-8 text file inside the repo or profile (secrets denied). Args: {path, content}", "handler": write_file},
-    "run_script": {"description": "Run a native script by name from 3v0/scripts/. Args: {name, args:[...]}", "handler": run_script},
-    "run_terminal": {"description": "Run one shell command (denylisted: gateway lifecycle, self-kill, rm -rf /). Args: {command}", "handler": run_terminal},
+    "read_file": {
+        "description": "Read a UTF-8 text file inside the repo or profile (secrets denied). Args: {path}",
+        "handler": read_file,
+        "bind": lambda a: (a.get("path", ""),),
+    },
+    "write_file": {
+        "description": "Write a UTF-8 text file inside the repo or profile (secrets denied). Args: {path, content}",
+        "handler": write_file,
+        "bind": lambda a: (a.get("path", ""), a.get("content", "")),
+    },
+    "run_script": {
+        "description": "Run a native script by name from 3v0/scripts/. Args: {name, args:[...]}",
+        "handler": run_script,
+        "bind": lambda a: (a.get("name", ""), *a.get("args", [])),
+    },
+    "run_terminal": {
+        "description": "Run one shell command (denylisted: gateway lifecycle, self-kill, rm -rf /). Args: {command}",
+        "handler": run_terminal,
+        "bind": lambda a: (a.get("command", ""), a.get("timeout", 60)),
+    },
 }
 
 
@@ -124,21 +140,19 @@ def list_tools() -> dict:
 
 
 def execute(name: str, args: dict | None = None) -> dict:
+    """Generic dispatch: {name,args} -> handler result.
+
+    Each registered tool declares its own ``bind`` (args dict -> handler
+    positional args), so adding a tool is ONE registry entry — handler,
+    description, and arg-binding live together, and there is no parallel
+    if/elif mapping to keep in sync.
+    """
     spec = _REGISTRY.get(name)
     if spec is None:
         return {"error": f"unknown tool: {name!r}"}
-    a = args or {}
     try:
-        if name == "read_file":
-            return spec["handler"](a.get("path", ""))
-        if name == "write_file":
-            return spec["handler"](a.get("path", ""), a.get("content", ""))
-        if name == "run_script":
-            return spec["handler"](a.get("name", ""), *a.get("args", []))
-        if name == "run_terminal":
-            return spec["handler"](a.get("command", ""), a.get("timeout", 60))
-        return {"error": f"no arg-mapping for {name!r}"}
-    except Exception as e:
+        return spec["handler"](*spec["bind"](args or {}))
+    except Exception as e:  # noqa: BLE001 - a tool failure is a result, not a crash
         return {"error": f"tool failed: {e}"}
 
 
