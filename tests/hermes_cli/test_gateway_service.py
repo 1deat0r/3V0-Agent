@@ -2147,3 +2147,30 @@ class TestRetryLaunchctlBootstrapUntilRegistered:
         )
         assert ok is False
         assert list_calls["n"] >= 1
+
+
+class TestServiceNameOverrides:
+    """3V0 native-runtime migration: profile 3v0 owns a 3v0-gateway unit."""
+
+    def test_3v0_profile_uses_native_unit_name(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes" / "profiles" / "3v0"))
+        assert gateway_cli.get_service_name() == "3v0-gateway"
+
+    def test_regular_profile_keeps_hermes_unit_name(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes" / "profiles" / "coder"))
+        assert gateway_cli.get_service_name() == "hermes-gateway-coder"
+
+
+class TestSystemdUnitPathQuoting:
+    """ExecStart must survive a source-checkout venv whose path has spaces."""
+
+    def test_whitespace_python_path_is_double_quoted(self, monkeypatch):
+        monkeypatch.setattr(gateway_cli, "get_python_path", lambda: "/tmp/Some Dir/.venv/bin/python")
+        unit = gateway_cli.generate_systemd_unit()
+        assert 'ExecStart="/tmp/Some Dir/.venv/bin/python" -m hermes_cli.main' in unit
+        assert 'ExecStopPost=-"/tmp/Some Dir/.venv/bin/python" -m gateway.cgroup_cleanup' in unit
+
+    def test_plain_python_path_stays_unquoted(self, monkeypatch):
+        monkeypatch.setattr(gateway_cli, "get_python_path", lambda: "/usr/bin/python")
+        unit = gateway_cli.generate_systemd_unit()
+        assert "ExecStart=/usr/bin/python -m hermes_cli.main" in unit

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# reload_gateway.sh — 3V0's sanctioned, safe self-reload of hermes-gateway-3v0.
+# reload_gateway.sh — 3V0's sanctioned, safe self-reload of 3v0-gateway (native runtime).
 #
 # WHY A SCRIPT (and why this is the ONLY self-restart path 3V0 is permitted):
-# a DIRECT `systemctl --user restart hermes-gateway-3v0` from inside the gateway
+# a DIRECT `systemctl --user restart 3v0-gateway` from inside the gateway
 # kills this very subprocess before it completes (systemd's KillMode=mixed sweeps
 # the service cgroup, SIGTERM→SIGKILL on children), so the gateway may never come
 # back. The safe pattern is to hand the restart to a DETACHED transient systemd
@@ -20,7 +20,7 @@
 # Usage:  reload_gateway.sh [delay_seconds]   (default 6; >=2 so the message sends)
 set -euo pipefail
 
-SVC="hermes-gateway-3v0.service"
+SVC="3v0-gateway.service"
 DELAY="${1:-6}"
 case "$DELAY" in
   *[!0-9]*|'') DELAY=6 ;;

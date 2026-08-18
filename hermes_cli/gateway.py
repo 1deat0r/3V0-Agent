@@ -2079,6 +2079,11 @@ def _windows_gateway_breakaway_state() -> bool | None:
 _SERVICE_BASE = "hermes-gateway"
 SERVICE_DESCRIPTION = "Hermes Agent Gateway - Messaging Platform Integration"
 
+# 3V0 runs its own gateway service under its own name — the generic
+# hermes-gateway-<profile> unit for this profile was retired on migration to
+# the native runtime (replaced by 3v0-gateway.service).
+_SERVICE_NAME_OVERRIDES = {"3v0": "3v0-gateway"}
+
 
 def _profile_suffix() -> str:
     """Derive a service-name suffix from the current HERMES_HOME.
@@ -2161,7 +2166,7 @@ def get_service_name() -> str:
     suffix = _profile_suffix()
     if not suffix:
         return _SERVICE_BASE
-    return f"{_SERVICE_BASE}-{suffix}"
+    return _SERVICE_NAME_OVERRIDES.get(suffix, f"{_SERVICE_BASE}-{suffix}")
 
 
 def get_systemd_unit_path(system: bool = False) -> Path:
@@ -3301,6 +3306,11 @@ def _append_node_dir_for_service(
 
 def generate_systemd_unit(system: bool = False, run_as_user: str | None = None) -> str:
     python_path = get_python_path()
+    # systemd only honours double quotes in ExecStart; a source checkout under
+    # a whitespace-containing path (e.g. “3V0 Agent/.venv”) must be quoted or
+    # systemd splits it and EXEC fails with 203 (status=203/EXEC).
+    if any(ch.isspace() for ch in python_path):
+        python_path = f'"{python_path}"'
     working_dir = _stable_service_working_dir()
     detected_venv = _detect_venv_dir()
     venv_dir = str(detected_venv) if detected_venv else str(PROJECT_ROOT / "venv")
