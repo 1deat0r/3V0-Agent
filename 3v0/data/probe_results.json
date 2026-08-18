@@ -143,6 +143,54 @@
           "band": "hard"
         }
       ]
+    },
+    {
+      "run": "run-003",
+      "type": "calibration-complete-sample",
+      "grader": {
+        "kind": "certified-subagent",
+        "pinned": {
+          "temperature": 0,
+          "seed": 0
+        },
+        "dispatch": "deleg_30395bde"
+      },
+      "bank_commit_ref": "460698e46",
+      "n_tasks": 5,
+      "note": "all 23/23 bank tasks now attempted. run-003 = frontier band (017/020/021/022/023), grader re-EXECUTED each objective artifact (not logs). probe022 fix: original 'identical' was same-second luck (tar used wall-clock mtime despite SOURCE_DATE_EPOCH); fixed with --mtime=epoch --owner=0 --group=0 + SOURCE_DATE_EPOCH, determinism RE-PROVEN across 4s gap. probe021 N mislabel (1,000,000->30,000) fixed. probe023 stdin format differs from bank prose but rubric (the binding contract) PASS criteria met; results algorithmically hand-verified.",
+      "recorded": "2026-08-18",
+      "verdicts": [
+        {
+          "probe": "probe017",
+          "verdict": "PASS",
+          "reason": "17h; both critical paths A1-C-E-F-H and A1-B-D-F-H = 17, hand-verified",
+          "band": "hard"
+        },
+        {
+          "probe": "probe020",
+          "verdict": "PASS",
+          "reason": "verify.sh ALL_PASS stages1-3 on live server; PERSIST-ME + 50 concurrency survived restart",
+          "band": "escalated"
+        },
+        {
+          "probe": "probe021",
+          "verdict": "PASS",
+          "reason": "harness ALL_PASS: hidden 6/6, timing ratio 0.0015<0.20, naive_wrong wrong 6/6; flaw recorded",
+          "band": "escalated"
+        },
+        {
+          "probe": "probe022",
+          "verdict": "PASS",
+          "reason": "make.sh DONE OK; two clean builds byte-identical SHA across a forced 4s gap; checksum -c OK",
+          "band": "escalated"
+        },
+        {
+          "probe": "probe023",
+          "verdict": "PASS",
+          "reason": "run_demo honest Dijkstra/BF/neg-cycle; hand-verified 0-not-5, neg-cycle detected",
+          "band": "escalated"
+        }
+      ]
     }
   ]
 }

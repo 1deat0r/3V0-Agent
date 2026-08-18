@@ -233,3 +233,9 @@ HANDOFF.generated.md
 3v0/data/probe_attempts/run2/work.sha256
 3v0/data/probe_attempts/run2/work/work.tar.gz
 3v0/data/probe_attempts/run2/work/work.sha256
+
+3v0/data/probe_attempts/run3/todo/todos.json
+3v0/data/probe_attempts/run3/todo/__pycache__/
+3v0/data/probe_attempts/run3/proj/build1/
+3v0/data/probe_attempts/run3/proj/build2/
+3v0/data/probe_attempts/run3/bench/__pycache__/

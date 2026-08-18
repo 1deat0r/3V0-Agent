@@ -1,0 +1,1 @@
+naive_wrong.py counts ordered pairs (i != j), so it double-counts every true unordered pair (i<j) as both (i,j) and (j,i), giving 2x the correct answer whenever any valid pair exists (e.g. T=3 [1,2,3] -> 2 instead of 1).

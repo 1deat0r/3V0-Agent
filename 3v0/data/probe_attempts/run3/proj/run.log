@@ -1,0 +1,8 @@
+STAGE1 run: greeting: hello from 3v0-probe
+sum: 42
+STAGE1 PASS: tests passed (greeting + sum). sha1=81116a6f41ca9117dc92bb54f2855f3e360d65c4fe3be7818fa6c5ae0b38cfea
+STAGE2: sha1=81116a6f41ca9117dc92bb54f2855f3e360d65c4fe3be7818fa6c5ae0b38cfea
+STAGE2: sha2=81116a6f41ca9117dc92bb54f2855f3e360d65c4fe3be7818fa6c5ae0b38cfea
+STAGE2 PASS: byte-identical reproducible artifacts (same SHA-256).
+STAGE3 note: offline-only build; determinism pinned via -g0 --build-id=none -fno-ident -ffile-prefix-map strip + SOURCE_DATE_EPOCH=0 deterministic tar.
+DONE OK

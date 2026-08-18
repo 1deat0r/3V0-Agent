@@ -1,0 +1,19 @@
+[22:30:53] STAGE1: hidden deterministic cases...
+tests_hidden: 6 deterministic cases PASS
+[22:30:53] STAGE2: timing ref vs naive on largest input (N=30,000)...
+ref.py time:   0.0274s
+naive.py time: 17.2855s
+ratio(ref/naive) = 0.001586  (need < 0.20)
+ref==naive answer: True (count=2296)
+tests_timing: PASS (ref < 20% of naive on largest input)
+[22:31:28] STAGE3: proving naive_wrong.py is objectively wrong vs correct ref.py...
+  WRONG input='3 3': ref='1' naive_wrong='2'
+  WRONG input='5 4': ref='2' naive_wrong='4'
+  WRONG input='4 4': ref='6' naive_wrong='12'
+  WRONG input='0 5': ref='4' naive_wrong='8'
+  WRONG input='10 5': ref='4' naive_wrong='8'
+  WRONG input='6 3': ref='3' naive_wrong='6'
+cases compared: 6; naive_wrong FAILS (differs from correct ref.py): 6; passes: 0
+flaw recorded in flaw.txt
+tests_wrong: PASS (naive_wrong objectively wrong on >=2 cases; ref correct)
+[22:31:28] ALL_PASS  (wall: 35s)
