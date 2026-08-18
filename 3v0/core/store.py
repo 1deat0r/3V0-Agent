@@ -253,6 +253,23 @@ class SQLStore:
                       query_terms=query_terms, budget_chars=budget_chars,
                       touch=touch, now=now, sep=sep)
 
+    def stamp_projected(self, ids: list[int], now: float | None = None) -> None:
+        """Record that these facts were projected to the profile view.
+
+        A *non-ranking* usage signal (ADR-0005): distinct from ``retrieve``'s
+        feedback touch, so the forgetting policy can tell "projected to the
+        profile" from "never used" without inflating ``access_count`` (which
+        would rich-get-richer the view into permanence).
+        """
+        if not ids or self._conn is None:
+            return
+        now = now if now is not None else time.time()
+        self._conn.executemany(
+            "UPDATE facts SET last_projected = ? WHERE id = ?",
+            [(now, i) for i in ids],
+        )
+        self._conn.commit()
+
     # -- export --------------------------------------------------------------
     def export(self) -> dict[str, list[str]]:
         return export_shape(_VALID_KINDS, self.active)

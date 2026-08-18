@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS facts (
     content       TEXT,              -- natural-language form (for retrieval/embedding later)
     access_count  INTEGER NOT NULL DEFAULT 0,
     last_accessed REAL,
+    last_projected REAL,             -- set when projected to the profile (ADR-0005)
     created_at    REAL NOT NULL,
     FOREIGN KEY (supersedes) REFERENCES facts(id)
 );
@@ -58,10 +59,25 @@ def connect(path=DEFAULT_PATH):
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
+    _ensure_columns(conn)
     # Enforce the supersedes FK — without this, add_fact(..., supersedes=<bad id>)
     # inserts silently instead of failing.
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
+
+
+def _ensure_columns(conn):
+    """Idempotently add columns introduced after the first schema version.
+
+    ``CREATE TABLE IF NOT EXISTS`` won't alter an existing table, so a
+    pre-existing DB is migrated here: each column added after the rewire's
+    first schema gets a guarded ALTER (NULL default — correct for a "never
+    happened yet" signal).
+    """
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(facts)")}
+    if "last_projected" not in cols:
+        conn.execute("ALTER TABLE facts ADD COLUMN last_projected REAL")
+        conn.commit()
 
 
 def add_fact(conn, subject, predicate, object_, domain="3v0", valid_from=None,

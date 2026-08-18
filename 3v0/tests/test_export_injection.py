@@ -73,6 +73,16 @@ class ExportInjectionTest(unittest.TestCase):
             "SELECT SUM(access_count) FROM facts").fetchone()[0]
         self.assertEqual(total, 0)
 
+    def test_projection_stamps_last_projected(self):
+        # Projection is a distinct, non-ranking usage signal (ADR-0005): the
+        # export records which facts were projected, so forgetting can tell
+        # "projected" from "never used" — without touching access_count.
+        self.store.add("f", "memory", "test")
+        project_memory(self.store, self.profile_dir)
+        last_proj = self.store._conn.execute(
+            "SELECT last_projected FROM facts").fetchone()[0]
+        self.assertIsNotNone(last_proj)
+
     def test_sync_exported_is_working_set_not_in_profile(self):
         for i in range(200):
             self.store.add(f"sync fact {i:03d}", "memory", "test")

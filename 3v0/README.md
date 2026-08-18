@@ -19,8 +19,8 @@ code.
 - `core/memdb.py` — the SQLite temporal-fact store (Stone 21, memory rework):
   triples (subject/predicate/object) with temporal validity, provenance,
   confidence, a sub-memory `domain` tag, and retrieval feedback
-  (access_count/last_accessed) — the foundation for retrieval-chosen
-  injection replacing the static profile view.
+  (access_count/last_accessed) and a projection signal (last_projected) — the
+  foundation for retrieval-chosen injection and forgetting (ADR-0005).
 - `core/store.py` — `SQLStore`, the canonical store facade over the memdb
   substrate (Stone 23): the pipeline's one interface (add/retract/active/
   matching/get/history/export/mutate) over SQLite, plus `retrieve()` (the
@@ -34,6 +34,9 @@ code.
 - `core/retrieval.py` — retrieval-chosen injection, the read seam (Stone 23,
   ADR-0004): ranks valid facts (keyword + recency + feedback), fills a budget,
   and renders the profile wire, with `touch` feedback.
+- `core/forget.py` — forgetting (Stone 24, ADR-0005): archives facts that
+  never earned their keep (never retrieved AND never projected) after a grace
+  period; `memory`/`user` only, recoverable via `fact_history`.
 - `core/profile_io.py` — single owner of the '§' wire format (separator + the
   `ENTRY_JOIN` wire join) shared by seed/export/sync.
 - `core/sync.py` — store↔profile reconciliation. The store is canonical, the

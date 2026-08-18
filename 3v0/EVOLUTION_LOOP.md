@@ -1740,3 +1740,32 @@ forgetting/snapshot stone with a caller-audit ADR.
 
 Verification: 367 tests green (350 -> 367); continuity 6/6; sync converged;
 `query retrieve` exercises the new `store.retrieve()` seam against the live DB.
+
+## Stone 24 — forgetting/consolidation (2026-08-18)
+
+The retrieval seam caps the *view*; forgetting caps the *store*. ADR-0005
+resolved the one subtlety that would have made it wrong: the profile export
+projects with `touch=False` (a mechanical sync is not retrieval), so a naive
+"never retrieved" rule would archive the facts that are live in context every
+wake. The fix is a distinct, non-ranking usage signal.
+
+**`last_projected` column** — the profile exporter (`project_memory`, via
+`SQLStore.stamp_projected`) records which facts were projected, WITHOUT
+touching `access_count` (the rich-get-richer guard holds). "In use" =
+retrieved OR projected; only never-used facts are eligible. The column is
+added idempotently by `memdb._ensure_columns` (guarded ALTER, NULL default).
+
+**`core/forget.py`** — the pure rule `is_stale` (forgettable kind + never
+retrieved + never projected + older than threshold), `stale_ids` (collection),
+`forget` (archive: `valid_to = now` + a "forgotten" note tag — recoverable via
+`fact_history`, never delete). Forgettable kinds: memory, user; identity +
+directive are permanent (core identity + Prime Directive).
+
+**Threshold: 30 days.** The store is ~3 days old, so nothing archives yet —
+the mechanism is exercised under short thresholds in tests and will start
+pruning stale facts organically.
+
+Verification: 378 tests green (368 -> 378); continuity 6/6; the live
+memory.db migrated in place (last_projected column present, 117 facts
+intact). Deferred: sibling-project rewires (JSON stores have no forgetting),
+semantic retrieval (only if the data justifies it).
