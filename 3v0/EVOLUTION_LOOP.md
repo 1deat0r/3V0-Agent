@@ -1879,3 +1879,15 @@ NOT deployable as proof. Accepted and fixed in v0.2:
   5) Goodharting acknowledged as undefeatable; bank lifetime + regeneration.
 PLUS the SE review caught a real defect: audit.sh + consistency.sh hardcoded absolute
 path (only baseline/verify/discover/redo self-anchored). FIXED -- both now self-anchor.
+## Probe core built (3v0/native/probe.py) — deterministic half of v0.2
+```
+probe.py = stdlib measurement core: validate_bank (bands/held-out/date-free),
+           band_stats/composite, calibrate (noise floor over K repeats),
+           thresholds (mean +- sigma*sd), apply_trend (advisory, regress/growth/
+           within-noise, min_repeats), record_run (append to git-versioned
+           probe_results.json with pinned grader identity in run_meta).
+```
+Grading (pinned fresh-context subagent -> PASS/FAIL/INCONCLUSIVE) is dispatched
+by the agent at cadence; the core is what computes the numbers. Advisory only,
+low-power; never gates revert/continue. Bank v1 validated ok by probe core.
+441 tests green.
