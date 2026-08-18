@@ -19,6 +19,7 @@ sys.path.insert(0, str(REPO_ROOT / "3v0" / "core"))
 from core.lineage import (  # noqa: E402
     KINDS,
     RETRACTED,
+    content_matches,
     export_shape,
     history_chain,
     iso_time,
@@ -106,6 +107,14 @@ class TestExportShape(unittest.TestCase):
         def active(kind):
             return [_fact("a"), _fact("b")] if kind == "memory" else []
         self.assertEqual(export_shape(KINDS, active), {"memory": ["fact a", "fact b"]})
+
+
+class TestContentMatches(unittest.TestCase):
+    def test_case_sensitive_literal_containment(self):
+        self.assertTrue(content_matches("the gh account", "gh"))
+        self.assertFalse(content_matches("the gh account", "GH"))  # case-sensitive
+        self.assertFalse(content_matches("apple", "applesauce"))   # substring, not superstring
+        self.assertTrue(content_matches("", ""))                   # empty in empty
 
 
 if __name__ == "__main__":

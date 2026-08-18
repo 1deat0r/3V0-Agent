@@ -48,6 +48,16 @@ def retraction_note(note: str, source: str) -> str:
     return f"{note} {tag}".strip() if note else tag
 
 
+def content_matches(content: str, substring: str) -> bool:
+    """Case-sensitive literal containment — the single matching semantics.
+
+    Both stores match by ``substring in content``, NOT SQL LIKE (which is
+    case-insensitive and treats ``%``/``_`` as wildcards). One owner, so a
+    drift here cannot silently change supersede/retract targeting.
+    """
+    return substring in content
+
+
 def history_chain(get_by_id, start_id):
     """Reconstruct a fact's full supersession chain, oldest -> newest.
 

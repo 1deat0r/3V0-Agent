@@ -69,6 +69,11 @@ def add_fact(conn, subject, predicate, object_, domain="3v0", valid_from=None,
              content=None, kind="memory", note="", now=None, persist=True):
     """Insert a fact; if it supersedes another, close the old one's validity.
 
+    INVARIANT (relied on by ``SQLStore.inactive``): a fact is inactive iff its
+    ``valid_to`` is set — every supersede link closes the predecessor's
+    ``valid_to`` here, so "has a successor" and "was retracted" both collapse
+    to ``valid_to IS NOT NULL``. Keep the close unconditional on this path.
+
     ``persist=False`` leaves the insert (and the supersession close)
     uncommitted — visible to this connection only, so a dry-run caller can
     report the result without writing disk.

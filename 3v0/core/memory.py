@@ -37,6 +37,7 @@ from .lineage import (
     KINDS,
     RETRACTED,
     _VALID_KINDS,
+    content_matches,
     export_shape,
     history_chain,
     iso_time,
@@ -217,7 +218,7 @@ class MemoryStore:
         0/1/many policy: ``record`` refuses ambiguity; the bridge skips or
         plain-adds. One place to change match semantics.
         """
-        return [f for f in self.active(kind=kind) if substring in f.content]
+        return [f for f in self.active(kind=kind) if content_matches(f.content, substring)]
 
     def get(self, fact_id: str) -> Fact | None:
         for f in self.facts:

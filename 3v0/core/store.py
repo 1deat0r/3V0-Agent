@@ -39,6 +39,7 @@ from .lineage import (
     KINDS,
     RETRACTED,
     _VALID_KINDS,
+    content_matches,
     export_shape,
     history_chain,
     iso_time,
@@ -183,7 +184,13 @@ class SQLStore:
         return [self._fact(r) for r in rows]
 
     def inactive(self, kind: str | None = None) -> list[Fact]:
-        """Superseded/retracted facts (closed validity), still recoverable."""
+        """Superseded/retracted facts (closed validity), still recoverable.
+
+        ``valid_to IS NOT NULL`` is exactly "inactive" because every supersede
+        link also closes the predecessor's ``valid_to`` (the invariant
+        maintained by ``memdb.add_fact`` and the migration) — so a fact is
+        inactive iff it has a successor or was retracted.
+        """
         if self._conn is None:
             return []
         sql = "SELECT * FROM facts WHERE valid_to IS NOT NULL"
@@ -219,8 +226,9 @@ class SQLStore:
         if self._conn is None:
             return []
         rows = memdb.valid_facts(self._conn, kind=kind, now=time.time())
-        return [self._fact(r) for r in rows if substring in
-                (r["content"] if r["content"] is not None else r["object"])]
+        return [self._fact(r) for r in rows
+                if content_matches(r["content"] if r["content"] is not None
+                                   else r["object"], substring)]
 
     def get(self, fact_id: str) -> Fact | None:
         row = self._row(fact_id)
@@ -230,19 +238,20 @@ class SQLStore:
         """The full supersession chain, oldest -> newest (see lineage)."""
         return history_chain(self.get, fact_id)
 
-    def retrieve(self, *, kind=None, query_terms=None, budget_chars=2000,
-                 touch=True, now=None, sep="\n") -> Injection:
+    def retrieve(self, *, domains=("3v0",), kind=None, query_terms=None,
+                 budget_chars=2000, touch=True, now=None, sep="\n") -> Injection:
         """The retrieval seam, owned by the store (hides the sqlite connection).
 
         Projects the retrieval-chosen working set under a budget; the store
-        fronting an as-yet-absent file projects the empty view. ``touch`` and
-        ``sep`` mirror ``core.retrieval.inject``.
+        fronting an as-yet-absent file projects the empty view. ``domains``,
+        ``touch`` and ``sep`` mirror ``core.retrieval.inject``.
         """
         if self._conn is None:
             return Injection(facts=[], ids=[], text="", truncated=False,
                              budget_chars=budget_chars, budget_used=0)
-        return inject(self._conn, kind=kind, query_terms=query_terms,
-                      budget_chars=budget_chars, touch=touch, now=now, sep=sep)
+        return inject(self._conn, domains=domains, kind=kind,
+                      query_terms=query_terms, budget_chars=budget_chars,
+                      touch=touch, now=now, sep=sep)
 
     # -- export --------------------------------------------------------------
     def export(self) -> dict[str, list[str]]:
