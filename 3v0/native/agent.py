@@ -9,16 +9,16 @@ import os
 from pathlib import Path
 
 from . import llm
-from .context import build_system, read_active_memories, read_soul
+from .context import build_system_from_store, read_soul
 
 _REPO = Path(__file__).resolve().parent.parent.parent  # repo root
 _PROFILE = Path(os.environ.get("HERMES_HOME") or "~/.hermes/profiles/3v0").expanduser()
-_SOUL = _PROFILE / "SOUL.md"                       # the injected soul (canonical)
-_MEM = _REPO / "3v0" / "data" / "memory.json"      # native memory store (canonical)
+_SOUL = _PROFILE / "SOUL.md"                # the injected soul (canonical)
+_MEM_DB = _REPO / "3v0" / "data" / "memory.db"  # canonical store (SQLite, ADR-0001/0004)
 
 
 def default_context() -> str:
-    return build_system(read_soul(_SOUL), read_active_memories(_MEM))
+    return build_system_from_store(read_soul(_SOUL))
 
 
 def respond(messages, *, system: str | None = None, **kw) -> str:
