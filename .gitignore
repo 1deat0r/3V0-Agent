@@ -218,3 +218,11 @@ log.txt
 sqlite_leak_fix.png
 HANDOFF.generated.md
 3v0/data/analytics/report.json
+# Live/derived stores — untracked. They change every session (redo_log, feedback)
+# or are regenerable projections of the skill source (skills.json), so committing
+# them churns history and makes verify.sh's clean-tree gate fail on the body's OWN
+# intended writes. Kept after the `!3v0/data/` re-include so these specific files
+# are re-ignored.
+3v0/data/redo_log.json
+3v0/data/discovery_feedback.json
+3v0/data/skills.json
