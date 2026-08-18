@@ -22,7 +22,8 @@ def verdicts(spec):
 class ValidateTest(unittest.TestCase):
     def test_real_frozen_bank_passes(self):
         repo = Path(__file__).resolve().parent.parent.parent
-        bank = json.load(open(repo / "3v0" / "data" / "probe_bank_v1.json"))
+        with open(repo / "3v0" / "data" / "probe_bank_v1.json") as f:
+            bank = json.load(f)
         r = probe.validate_bank(bank)
         self.assertTrue(r["ok"])
 
@@ -49,9 +50,21 @@ class StatsTest(unittest.TestCase):
         self.assertEqual(s["hard"]["n"], 2)
         self.assertEqual(s["hard"]["rate"], 0.5)
 
-    def test_composite(self):
-        vs = verdicts({"a": ["PASS", "FAIL"]})
-        self.assertEqual(probe.composite(vs), 0.5)
+    def test_composite_weighted_per_band(self):
+        # two bands, each 1.0 -> composite 1.0 (not silenced by per-task counts)
+        vs = verdicts({"easy": ["PASS", "PASS", "PASS"], "hard": ["PASS"]})
+        self.assertEqual(probe.composite(vs), 1.0)
+        # single band 50% -> 0.5
+        self.assertEqual(probe.composite(verdicts({"a": ["PASS", "FAIL"]})), 0.5)
+        # unequal band sizes weight by band, not by task
+        vs2 = verdicts({"easy": ["PASS", "PASS", "PASS", "FAIL"], "hard": ["PASS"]})
+        self.assertAlmostEqual(probe.composite(vs2), (0.75 + 1.0) / 2)
+
+    def test_frontier_highest_band_passed(self):
+        self.assertEqual(probe.frontier(verdicts({"easy": ["PASS"], "hard": ["FAIL"]})), "easy")
+        self.assertEqual(probe.frontier(verdicts({"easy": ["FAIL"], "hard": ["PASS"]})), "hard")
+        self.assertEqual(probe.frontier(verdicts({"escalated": ["PASS"]})), "escalated")
+        self.assertIsNone(probe.frontier(verdicts({"easy": ["FAIL"]})))
 
     def test_calibrate_and_thresholds(self):
         # repeat1: all PASS, repeat2: 1 fail per 4 easy, 2 fail per 4 hard
@@ -66,21 +79,29 @@ class StatsTest(unittest.TestCase):
 
 
 class TrendTest(unittest.TestCase):
-    def test_trend_flags_regression_and_growth(self):
-        cur = {"easy": {"rate": 0.1}, "hard": {"rate": 1.0}, "medium": {"rate": 0.5}}
-        th = {"easy": {"lo": 0.5, "hi": 1.0}, "hard": {"lo": 0.0, "hi": 0.6},
-              "medium": {"lo": 0.0, "hi": 1.0}}
-        tr = probe.apply_trend(cur, {}, th)
+    TH = {"easy": {"lo": 0.5, "hi": 1.0}, "hard": {"lo": 0.0, "hi": 0.6},
+          "medium": {"lo": 0.0, "hi": 1.0}}
+
+    def test_single_run_excursion_not_flagged(self):
+        # §3 gate: one out-of-band run is NOT reproducible -> no signal claimed
+        one = [{"easy": {"rate": 0.1}, "hard": {"rate": 1.0}, "medium": {"rate": 0.5}}]
+        tr = probe.apply_trend(one, self.TH, min_repeats=2)
+        self.assertEqual(tr["flagged"], [])
+        self.assertEqual(tr["per_band"]["easy"]["signal"], "within-noise")
+
+    def test_two_consecutive_runs_flag(self):
+        run = {"easy": {"rate": 0.1}, "hard": {"rate": 1.0}, "medium": {"rate": 0.5}}
+        tr = probe.apply_trend([run, run], self.TH, min_repeats=2)
         self.assertIn("easy", tr["flagged"])
         self.assertIn("hard", tr["flagged"])
         self.assertNotIn("medium", tr["flagged"])
         self.assertEqual(tr["per_band"]["easy"]["signal"], "regression-suspect")
         self.assertEqual(tr["per_band"]["hard"]["signal"], "growth-hint")
+        self.assertEqual(tr["per_band"]["easy"]["consecutive"], 2)
 
     def test_trend_within_noise(self):
-        cur = {"easy": {"rate": 0.8}, "hard": {"rate": 0.5}}
-        th = {"easy": {"lo": 0.6, "hi": 1.0}, "hard": {"lo": 0.0, "hi": 1.0}}
-        tr = probe.apply_trend(cur, {}, th)
+        run = {"easy": {"rate": 0.8}, "hard": {"rate": 0.5}}
+        tr = probe.apply_trend([run, run], self.TH, min_repeats=2)
         self.assertEqual(tr["flagged"], [])
 
 

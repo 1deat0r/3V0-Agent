@@ -10,7 +10,9 @@
         "cert": "grader_cert_v1.json accepted 6/6",
         "temperature": 0.0,
         "seed": 0,
-        "blind": true
+        "blind": true,
+        "model": "accounts/fireworks/models/deepseek-v4-flash-0731",
+        "version": "deepseek-v4-flash-0731"
       },
       "attempts_dir": "3v0/data/probe_attempts/run1",
       "note": "first genuine independently-graded probe run; machine-checkable band only (3 tasks); K-repeat noise floor pending multi-session campaign",
@@ -35,7 +37,9 @@
           "probe": "probe007"
         }
       ],
-      "run": "run-001"
+      "run": "run-001",
+      "composite": 1.0,
+      "frontier": "medium"
     },
     {
       "run": "run-002",
@@ -45,7 +49,9 @@
         "pinned": {
           "temperature": 0,
           "seed": 0
-        }
+        },
+        "model": "accounts/fireworks/models/deepseek-v4-flash-0731",
+        "version": "deepseek-v4-flash-0731"
       },
       "bank_commit_ref": "460698e46",
       "n_tasks": 15,
@@ -142,7 +148,9 @@
           "reason": "TOTAL_UNIQUE=4 artifacts valid idempotent",
           "band": "hard"
         }
-      ]
+      ],
+      "composite": 1.0,
+      "frontier": "hard"
     },
     {
       "run": "run-003",
@@ -153,7 +161,9 @@
           "temperature": 0,
           "seed": 0
         },
-        "dispatch": "deleg_30395bde"
+        "dispatch": "deleg_30395bde",
+        "model": "accounts/fireworks/models/deepseek-v4-flash-0731",
+        "version": "deepseek-v4-flash-0731"
       },
       "bank_commit_ref": "460698e46",
       "n_tasks": 5,
@@ -190,7 +200,12 @@
           "reason": "run_demo honest Dijkstra/BF/neg-cycle; hand-verified 0-not-5, neg-cycle detected",
           "band": "escalated"
         }
-      ]
+      ],
+      "composite": 1.0,
+      "frontier": "escalated"
     }
+  ],
+  "_notes": [
+    "2026-08-18: mattpocock code-review found spec drift (weighted composite, frontier, grader model identity, >=2-run trend gate, pre-registered \u00a75 floor all missing). Fixed in probe.py; rows backfilled with composite/frontier/grader-model (verdicts unchanged). GRADER_CERT_FLOOR=0.9 pre-registered pre-registered (grader_cert_v1 6/6=1.0 clears it). \u00a73 K-repeat noise-floor calibration STILL PENDING (multi-session) \u2014 numbers not yet advisory."
   ]
 }

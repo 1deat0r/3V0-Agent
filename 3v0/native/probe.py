@@ -22,6 +22,11 @@ import statistics
 from pathlib import Path
 
 EXPECT_BANDS = {"easy": 5, "medium": 8, "hard": 6, "escalated": 4}
+BAND_ORDER = ["easy", "medium", "hard", "escalated"]
+# §5: probe numbers are "uncalibrated", not even advisory, until the pinned grader's
+# accuracy on the known-answer subset is >= this PRE-REGISTERED floor. (Set before
+# any certification run; grader_cert_v1.json result must clear this to count.)
+GRADER_CERT_FLOOR = 0.9
 LEAK_TERMS = ("3v0", "hermes", "mustbearn", "fiverr", "axiom")
 DATE_RE = re.compile(r"\b(20\d\d|current year|today|this month)\b", re.I)
 _REQUIRED = {"id", "band", "domain", "prompt", "rubric", "time_box_min"}
@@ -60,7 +65,11 @@ def validate_bank(bank: dict) -> dict:
 
 def band_stats(verdicts: list[dict]) -> dict:
     """Per-band pass rates from a run's verdict list.
-    verdicts: [{id, band, verdict in {PASS,FAIL,INCONCLUSIVE}}]"""
+
+    verdicts: [{id, band, verdict in {PASS,FAIL,INCONCLUSIVE}}]
+    A verdict counts toward the band's n (graded total); only PASS increments
+    `passed`. INCONCLUSIVE is treated as \"not passed\" (it is neither a PASS nor
+    a FAIL; see §2's documented treatment) — so rate = PASS / graded-total."""
     per: dict[str, list] = {}
     for v in verdicts:
         per.setdefault(v.get("band"), []).append(v.get("verdict") == "PASS")
@@ -72,14 +81,28 @@ def band_stats(verdicts: list[dict]) -> dict:
 
 
 def composite(verdicts: list[dict]) -> float | None:
-    marks = [v.get("verdict") == "PASS" for v in verdicts]
-    return sum(marks) / len(marks) if marks else None
+    """Weighted per-band composite (spec §2): the mean of each band's pass rate,
+    so bands weight equally regardless of how many tasks they hold (a band is not
+    silenced by being under-sampled). INCONCLUSIVE lowers the band rate but does
+    not otherwise distort weighting."""
+    bs = band_stats(verdicts)
+    rates = [s["rate"] for s in bs.values() if s["rate"] is not None]
+    return sum(rates) / len(rates) if rates else None
+
+
+def frontier(verdicts: list[dict]) -> str | None:
+    """Highest difficulty band with at least one PASS (spec §2). Order escalates
+    with difficulty; returns None if nothing passed (or no verdicts)."""
+    passed = {v.get("band") for v in verdicts if v.get("verdict") == "PASS"}
+    for band in reversed(BAND_ORDER):
+        if band in passed:
+            return band
+    return None
 
 
 def calibrate(repeats: list[list[dict]]) -> dict:
     """Noise floor: mean/std of per-band pass rates across K runs (§3).
     Returns {band: {mean, sd, n}} for bands present in all repeats."""
-    import statistics
     per: dict[str, list[float]] = {}
     for verdicts in repeats:
         for band, s in band_stats(verdicts).items():
@@ -99,26 +122,40 @@ def thresholds(cal: dict, sigma: float = 2.0) -> dict:
                    "hi": c["mean"] + sigma * c["sd"]} for band, c in cal.items()}
 
 
-def apply_trend(current: dict, baseline: dict, th: dict, min_repeats: int = 2) -> dict:
-    """Advisory trend. A band registers a shift only if current rate is outside
-    [mean-base..]: uses th bounds from calibration, and requires con-firm via the
-    caller having >= min_repeats consistent runs (flag, not gate)."""
+def apply_trend(recent_runs: list[dict], th: dict, min_repeats: int = 2) -> dict:
+    """Advisory trend with the §3 reproducibility gate ENFORCED.
+
+    recent_runs: newest-first list of per-band stats dicts (band -> {'rate',..}),
+    so recent_runs[0] is the latest run. A band is flagged 'regression-suspect' /
+    'growth-hint' ONLY if its rate is outside [lo,hi] in the LAST min_repeats
+    consecutive runs that have a rate for that band (spec §3: signal must be
+    reproducible across >=2 consecutive runs, not a single-run excursion).
+    The flag is advisory — it never gates revert/continue (spec §6). Bands not
+    yet backed by min_repeats calibrated observations are reported as within-noise /
+    needs-more-runs, never as a collapse or a win.
+    """
     per: dict[str, dict] = {}
-    for band, s in current.items():
-        if band not in th:
-            per[band] = {"note": "no calibrated threshold (uncalibrated band)"}
+    for band, tc in th.items():
+        rates = []
+        for run in recent_runs:
+            s = run.get(band)
+            if isinstance(s, dict) and s.get("rate") is not None:
+                rates.append(s["rate"])
+            if len(rates) == min_repeats:
+                break
+        if len(rates) < min_repeats:
+            per[band] = {"signal": "within-noise",
+                         "note": f"only {len(rates)}/{min_repeats} consecutive rates; no signal claimed"}
             continue
-        r = s["rate"]
-        if r is None:
-            per[band] = {"note": "no rate"}
-            continue
-        lo, hi = th[band]["lo"], th[band]["hi"]
-        if r < lo:
-            per[band] = {"signal": "regression-suspect", "rate": r, "lo": round(lo, 3)}
-        elif r > hi:
-            per[band] = {"signal": "growth-hint", "rate": r, "hi": round(hi, 3)}
+        lo, hi = tc["lo"], tc["hi"]
+        if all(r < lo for r in rates):
+            per[band] = {"signal": "regression-suspect", "rate": rates[0],
+                         "lo": round(lo, 3), "consecutive": len(rates)}
+        elif all(r > hi for r in rates):
+            per[band] = {"signal": "growth-hint", "rate": rates[0],
+                         "hi": round(hi, 3), "consecutive": len(rates)}
         else:
-            per[band] = {"signal": "within-noise", "rate": r}
+            per[band] = {"signal": "within-noise", "rate": rates[0]}
     flagged = [b for b, d in per.items() if d.get("signal") in ("regression-suspect", "growth-hint")]
     return {"per_band": per, "flagged": flagged,
             "advisory": True, "min_repeats_required": min_repeats}
