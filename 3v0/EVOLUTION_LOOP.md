@@ -1891,3 +1891,11 @@ Grading (pinned fresh-context subagent -> PASS/FAIL/INCONCLUSIVE) is dispatched
 by the agent at cadence; the core is what computes the numbers. Advisory only,
 low-power; never gates revert/continue. Bank v1 validated ok by probe core.
 441 tests green.
+## Probe §5 — grader CERTIFICATION PASSED (2026-08-18)
+Pinned grader (flash, fresh-context subagent) graded a 6-item known-answer cert set
+(3 correct / 3 wrong; ground truth VERIFIED by execution, not assumed). Blind to
+ground truth, applying ONLY the pre-registered rubrics -> 6/6 exact match (100%
+accuracy, 0 errors). Objective-surrogate grading is TRUSTED on these tasks.
+Next gate: §3 calibration (run bank K times under no-change to measure noise floor)
+before any trend is read. Certification set is small -> operator-anchored subset
+(subset of bank graded by a human) remains the calibration anchor per design.
