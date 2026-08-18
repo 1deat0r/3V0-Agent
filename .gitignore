@@ -226,3 +226,10 @@ HANDOFF.generated.md
 3v0/data/redo_log.json
 3v0/data/discovery_feedback.json
 3v0/data/skills.json
+3v0/data/probe_attempts/run2/out.tar.gz
+3v0/data/probe_attempts/run2/manifest.txt
+3v0/data/probe_attempts/run2/numbered.txt
+3v0/data/probe_attempts/run2/work.tar.gz
+3v0/data/probe_attempts/run2/work.sha256
+3v0/data/probe_attempts/run2/work/work.tar.gz
+3v0/data/probe_attempts/run2/work/work.sha256

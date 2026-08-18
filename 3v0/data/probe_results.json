@@ -17,22 +17,130 @@
       "recorded": "2026-08-18",
       "verdicts": [
         {
-          "task": "probe001",
           "band": "easy",
           "verdict": "PASS",
-          "reason": "fizzbuzz: 20 lines exact, missing-arg usage+exit(1), n=3 -> 1/2/Fizz; graded blind by certified grader (cold)"
+          "reason": "fizzbuzz: 20 lines exact, missing-arg usage+exit(1), n=3 -> 1/2/Fizz; graded blind by certified grader (cold)",
+          "probe": "probe001"
         },
         {
-          "task": "probe003",
           "band": "easy",
           "verdict": "PASS",
-          "reason": "dedup_preserve order-preserving, input-not-mutated, all assertions pass; graded blind by certified grader"
+          "reason": "dedup_preserve order-preserving, input-not-mutated, all assertions pass; graded blind by certified grader",
+          "probe": "probe003"
         },
         {
-          "task": "probe007",
           "band": "medium",
           "verdict": "PASS",
-          "reason": "unhashable-list bug fixed via str(sorted(w)); all assertions pass, no exception; graded blind by certified grader"
+          "reason": "unhashable-list bug fixed via str(sorted(w)); all assertions pass, no exception; graded blind by certified grader",
+          "probe": "probe007"
+        }
+      ],
+      "run": "run-001"
+    },
+    {
+      "run": "run-002",
+      "type": "calibration-expand-sample",
+      "grader": {
+        "kind": "certified-subagent",
+        "pinned": {
+          "temperature": 0,
+          "seed": 0
+        }
+      },
+      "bank_commit_ref": "460698e46",
+      "n_tasks": 15,
+      "note": "7 executable (locally verified PASS) + 8 written docs (grader-judged; written-band relies on LLM grader per cert limits)",
+      "recorded": "2026-08-18",
+      "verdicts": [
+        {
+          "probe": "probe002",
+          "verdict": "PASS",
+          "reason": "extract max-per-name exact order",
+          "band": "easy"
+        },
+        {
+          "probe": "probe004",
+          "verdict": "PASS",
+          "reason": "2 liars: A and C, consistent",
+          "band": "easy"
+        },
+        {
+          "probe": "probe005",
+          "verdict": "PASS",
+          "reason": "plan w/ dirty-case rules+done+verify",
+          "band": "easy"
+        },
+        {
+          "probe": "probe006",
+          "verdict": "PASS",
+          "reason": "tree byte-for-byte both modes",
+          "band": "medium"
+        },
+        {
+          "probe": "probe008",
+          "verdict": "PASS",
+          "reason": "A=12 greedy10+1+1 vs 6+6",
+          "band": "medium"
+        },
+        {
+          "probe": "probe009",
+          "verdict": "PASS",
+          "reason": "valid topo + m_a/m_b cycle",
+          "band": "medium"
+        },
+        {
+          "probe": "probe010",
+          "verdict": "PASS",
+          "reason": "5 directives correct + 2 questions",
+          "band": "medium"
+        },
+        {
+          "probe": "probe011",
+          "verdict": "PASS",
+          "reason": "reproducible + matching checksum",
+          "band": "medium"
+        },
+        {
+          "probe": "probe012",
+          "verdict": "PASS",
+          "reason": "greedy: 2/0/1/3/3",
+          "band": "medium"
+        },
+        {
+          "probe": "probe013",
+          "verdict": "PASS",
+          "reason": "bisect good/bad log2N sequence",
+          "band": "medium"
+        },
+        {
+          "probe": "probe014",
+          "verdict": "PASS",
+          "reason": "mini_sql exact 4-block output",
+          "band": "hard"
+        },
+        {
+          "probe": "probe015",
+          "verdict": "PASS",
+          "reason": "Lock; 3x OK 8M",
+          "band": "hard"
+        },
+        {
+          "probe": "probe016",
+          "verdict": "PASS",
+          "reason": "300 per-position 100x3",
+          "band": "hard"
+        },
+        {
+          "probe": "probe018",
+          "verdict": "PASS",
+          "reason": "6 regex constructs + precedence",
+          "band": "hard"
+        },
+        {
+          "probe": "probe019",
+          "verdict": "PASS",
+          "reason": "TOTAL_UNIQUE=4 artifacts valid idempotent",
+          "band": "hard"
         }
       ]
     }

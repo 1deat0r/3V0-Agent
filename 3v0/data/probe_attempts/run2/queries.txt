@@ -1,0 +1,4 @@
+SELECT name FROM employees WHERE dept = Sales
+SELECT dept, MAX(salary) FROM employees GROUP BY dept
+SELECT name FROM employees ORDER BY salary DESC
+SELECT COUNT(*) FROM employees WHERE salary >= 6000

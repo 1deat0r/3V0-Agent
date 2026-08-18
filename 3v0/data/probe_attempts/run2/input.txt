@@ -1,0 +1,8 @@
+hello
+ world  
+hello
+WORLD
+   bar
+hello    
+bar
+foo
