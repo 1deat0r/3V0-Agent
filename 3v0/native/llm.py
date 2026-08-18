@@ -6,35 +6,21 @@ model access belongs to 3V0, not to whatever harness happens to run it.
 from __future__ import annotations
 
 import json
-import os
 import urllib.error  # noqa: F401  (referenced explicitly for callers)
 import urllib.request
-from pathlib import Path
 
-BASE_URL = os.environ.get(
-    "THREEV0_FIREWORKS_URL", "https://api.fireworks.ai/inference/v1"
-)
-MODEL = os.environ.get(
-    "THREEV0_MODEL", "accounts/fireworks/models/deepseek-v4-flash-0731"
-)
-_PROF_ENV = (
-    Path(os.environ.get("HERMES_HOME") or "~/.hermes/profiles/3v0").expanduser()
-) / ".env"
+try:
+    from native import config          # normal: import native.llm
+except ImportError:
+    import config                      # direct execution: python3 native/llm.py
+
+BASE_URL = config.get("THREEV0_FIREWORKS_URL", "https://api.fireworks.ai/inference/v1")
+MODEL = config.get("THREEV0_MODEL", "accounts/fireworks/models/deepseek-v4-flash-0731")
 
 
 def api_key() -> str:
-    """FIREWORKS_API_KEY from the process env, else the profile .env."""
-    k = (os.environ.get("FIREWORKS_API_KEY") or "").strip()
-    if k:
-        return k
-    if _PROF_ENV.is_file():
-        for line in _PROF_ENV.read_text().splitlines():
-            line = line.strip()
-            if line.startswith("FIREWORKS_API_KEY="):
-                v = line.split("=", 1)[1].strip().strip('"').strip("'")
-                if v:
-                    return v
-    raise RuntimeError("FIREWORKS_API_KEY not found (env or profile .env)")
+    """FIREWORKS_API_KEY, via the config seam (process env first, else profile .env)."""
+    return config.require("FIREWORKS_API_KEY")
 
 
 def chat(

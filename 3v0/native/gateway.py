@@ -11,34 +11,21 @@ uses getMe (identity; consumes nothing).
 from __future__ import annotations
 
 import json
-import os
 import time
 import urllib.request
 import urllib.error
-from pathlib import Path
 
-API = "https://api.telegram.org"
-_PROF = Path(os.environ.get("HERMES_HOME") or "~/.hermes/profiles/3v0").expanduser()
+try:
+    from native import config          # normal: import native.gateway
+except ImportError:
+    import config                      # direct execution: python3 native/gateway.py
+
+API = config.get("TELEGRAM_API", "https://api.telegram.org")
 _UA = "3V0-native-gateway/0.1.0"
 
 
-def _read_prof_env(name: str) -> str | None:
-    p = _PROF / ".env"
-    if not p.is_file():
-        return None
-    for line in p.read_text().splitlines():
-        line = line.strip()
-        if line.startswith(name + "="):
-            v = line.split("=", 1)[1].strip().strip('"').strip("'")
-            return v or None
-    return None
-
-
 def token() -> str:
-    k = os.environ.get("TELEGRAM_BOT_TOKEN") or _read_prof_env("TELEGRAM_BOT_TOKEN")
-    if not k:
-        raise RuntimeError("TELEGRAM_BOT_TOKEN not found (env or profile .env)")
-    return k
+    return config.require("TELEGRAM_BOT_TOKEN")
 
 
 def _api(method: str, params: dict | None = None, timeout: int = 30) -> dict:

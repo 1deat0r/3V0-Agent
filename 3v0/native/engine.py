@@ -18,12 +18,13 @@ Telegram POST, no polling).
 from __future__ import annotations
 
 from . import agent, gateway, tools
+from . import config
 
 _MAX_REPLY = 512
 
 
 def allowed_user_ids() -> list[int]:
-    raw = gateway._read_prof_env("TELEGRAM_ALLOWED_USERS") or ""
+    raw = config.get("TELEGRAM_ALLOWED_USERS") or ""
     return [int(p) for p in (x.strip() for x in raw.split(",")) if p.strip().isdigit()]
 
 
@@ -80,7 +81,7 @@ def server(long_poll: int = 25, idle: float = 1.0) -> None:
 if __name__ == "__main__":
     # one-shot end-to-end proof: real LLM + context + tools, captured reply.
     # No Telegram POST, no polling -- safe alongside the live Hermes gateway.
-    home = gateway._read_prof_env("TELEGRAM_HOME_CHANNEL")
+    home = config.get("TELEGRAM_HOME_CHANNEL")
     chat_id = int(home) if home and home.strip().isdigit() else 0
     captured = []
     fake = {
