@@ -1801,3 +1801,14 @@ had no write_file head, so no data was corrupt; the fix hardens ahead of it.
 Verification: 393 tests green (378 -> 393); continuity 6/6. The walk also
 confirmed what NOT to extract (history_chain/export_shape/content_matches have
 no skill analogue — the skill axis matches by name + content equality).
+
+## Stone N1 — Native runtime: LLM client (3v0/native/)
+```
+3v0/native/  = the hermes-independent runtime package (stdlib-only, zero `import hermes`)
+  llm.py     = direct Fireworks Chat Completions client (urllib, no SDK)
+```
+PROVED: `python3 3v0/native/llm.py` -> `NATIVE_3V0_OK` (real completion, zero Hermes).
+Realtime bug fixed: Cloudflare `error 1010` blocks urllib's default `Python-urllib/3.x`
+User-Agent — send a real UA. Also: flash is a reasoning model; small `max_tokens`
+budgets return empty `content` (reasoning eats the budget) — keep it >=256.
+Nominal target: memory -> own evolution loop -> own tools -> Hermes recedes; run on self.
