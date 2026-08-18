@@ -1833,3 +1833,16 @@ PROVED: `python3 -m native.tools` -> reads, native verify.sh runs (exit 0), and
 `systemctl --user restart 3v0-gateway.service` is BLOCKED by the native denylist.
 Safety-first class: the exact risk that stranded the agent earlier is denied in
 the FIRST version, not retrofitted.
+## Stone N4 — Native Telegram gateway (3v0/native/gateway.py)
+```
+gateway.py  = stdlib-only Bot API long-poll, zero Hermes:
+  get_me              safe identity probe (consumes no updates)
+  get_updates         allowed_updates=['message'], long-poll timeout, offset ack
+  send_message        chat_id + text
+  run_forever(handler) loop paces itself (idle sleep); testing bounds via sleep->Stop
+```
+PROVED live: `python3 -m native.gateway` -> getMe returned the real bot identity
+(username/id/perms) -- token + client verified, ZERO Hermes.
+SAFETY GUARD: never start a SECOND poller on the live bot while the Hermes
+gateway is active (two getUpdates consumers steal each update). N5 wires the
+full native loop to this gateway and tests end-to-end WITHOUT disturbing Hermes.
