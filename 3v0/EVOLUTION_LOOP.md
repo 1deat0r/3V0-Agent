@@ -1869,3 +1869,13 @@ Decision (operator: "do what you think is best"): stage the cutover ready instea
 of firing it. Hard rule: no second getUpdates poller on the live bot while Hermes
 polls (two consumers steal each update). The live flip stays a conscious,
 reversible, documented operator action -- per the reload_gateway lesson.
+## Probe v0.1 -> v0.2 (independent review 2026-08-18: ML / psych / software-eng)
+The 3-expert review of EVOLUTION_PROBE.md VERDICT: direction right, instrument
+NOT deployable as proof. Accepted and fixed in v0.2:
+  1) DEMOTED: "proof of evolution" -> low-power surrogate regression monitor.
+  2) Grader PINNED (model/version/temp=0/seed) + calibration vs known-answer + operator anchor.
+  3) Noise floor quantified (K=5 calibration) + thresholds pre-registered; power limit stated.
+  4) Grading ADVISORY only, decoupled from revert/continue decisions.
+  5) Goodharting acknowledged as undefeatable; bank lifetime + regeneration.
+PLUS the SE review caught a real defect: audit.sh + consistency.sh hardcoded absolute
+path (only baseline/verify/discover/redo self-anchored). FIXED -- both now self-anchor.

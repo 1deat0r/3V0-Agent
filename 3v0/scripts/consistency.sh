@@ -6,7 +6,8 @@
 # Built 2026-08-18 (accuracy self-improvement lever — targets the propagation
 # miss + git-attribution failures the independent review exposed).
 set -u
-R="/home/mustbearn/Projects/AI Agents/3V0 Agent"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+R="$SCRIPT_DIR/../.."  # repo root (self-anchored; portability fix from probe review)
 
 # Known-stale doctrine phrases. Tune this list as the body evolves.
 PATTERNS=(

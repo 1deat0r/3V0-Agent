@@ -3,7 +3,8 @@
 # Replaces N turns of ad-hoc auditing with a single call.
 # Self-improvement lever for speed + efficiency + token-efficiency (built 2026-08-18).
 set -u
-R="/home/mustbearn/Projects/AI Agents/3V0 Agent"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+R="$SCRIPT_DIR/../.."  # repo root (self-anchored; portability fix from probe review)
 D="$R/3v0/data"
 
 echo "== HEAD: $(git -C "$R" log --oneline -1 2>/dev/null || echo '?')"
