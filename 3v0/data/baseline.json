@@ -1,0 +1,1 @@
+{"commit": "9b6a9f101", "native_modules": ["native.agent", "native.context", "native.engine", "native.gateway", "native.llm", "native.run", "native.tools"], "native_scripts": ["audit.sh", "baseline.sh", "consistency.sh", "discovery_consult.sh", "redo_tracker.sh", "reload_gateway.sh", "verify.sh"], "memory_facts": "124"}
