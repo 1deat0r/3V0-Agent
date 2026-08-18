@@ -41,6 +41,7 @@ from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from .lineage import RETRACTED, iso_time, retraction_note, validate_enum
 from .memory import locked
 
 ACTIONS = ("create", "patch", "edit", "write_file", "remove_file", "delete")  # canonical skill_manage actions
@@ -54,10 +55,10 @@ STATE_STALE = "stale"
 STATE_ARCHIVED = "archived"
 _VALID_STATES = {STATE_ACTIVE, STATE_STALE, STATE_ARCHIVED}
 
-# ``superseded_by`` sentinels for terminal (decommissioned) skills, distinct
-# from a real version id, so ``active()`` excludes them and ``history()`` can
-# still surface them as the end of a lineage.
-RETRACTED = "retracted"   # deleted with no successor (pure prune)
+# Terminal (decommissioned) sentinels, distinct from a real version id, so
+# ``active()`` excludes them and ``history()`` can still surface them as the
+# end of a lineage. RETRACTED is shared with the memory axis (core.lineage);
+# ABSORBED is skill-specific (no memory analogue).
 ABSORBED = "absorbed"     # deleted with absorbed_into=<umbrella> (consolidation)
 
 
@@ -66,6 +67,11 @@ class SkillVersion:
     id: str
     name: str
     action: str                 # create | patch | edit | write_file | remove_file | delete
+    # OVERLOAD (deferred fix): `content` is the full SKILL.md for create/edit
+    # but the supporting *file* content for write_file. A write_file/remove_file
+    # head therefore misreads in sync_skills as the skill body (spurious edit
+    # import, or file content written out as SKILL.md). Fix = a discriminator
+    # or a separate supporting-file field, plus sync special-casing.
     content: str                # full SKILL.md (create/edit), file content (write_file), else ""
     category: str = ""          # skills/<category> subdirectory, when known
     file_path: str = ""         # for write_file / remove_file
@@ -185,10 +191,7 @@ class SkillStore:
         unless the caller supplies it explicitly (the bridge may want to link a
         non-head predecessor, but that is rare).
         """
-        if action not in _VALID_ACTIONS:
-            raise ValueError(
-                f"action must be one of {sorted(_VALID_ACTIONS)}, got {action!r}"
-            )
+        validate_enum(action, _VALID_ACTIONS, "action")
         if action == "delete":
             raise ValueError("delete is terminal; use retract()/absorb() instead")
 
@@ -200,7 +203,7 @@ class SkillStore:
             category=category,
             file_path=file_path,
             source=source,
-            created_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            created_at=iso_time(time.time()),
             supersedes=list(supersedes) if supersedes else [],
             note=note,
         )
@@ -235,9 +238,8 @@ class SkillStore:
         if absorbed_into:
             head.absorbed_into = absorbed_into
         if source:
-            verb = "absorbed into " + absorbed_into if absorbed_into else "retracted"
-            tag = f"{verb} by {source}"
-            head.note = f"{head.note} {tag}".strip() if head.note else tag
+            what = "absorbed into " + absorbed_into if absorbed_into else "retracted"
+            head.note = retraction_note(head.note, source, what=what)
         if persist:
             self._save()
         return head
@@ -288,10 +290,7 @@ class SkillStore:
         the recorded event (``{"from", "state", "at", "source"}``) or None when
         no change occurred.
         """
-        if new_state not in _VALID_STATES:
-            raise ValueError(
-                f"state must be one of {sorted(_VALID_STATES)}, got {new_state!r}"
-            )
+        validate_enum(new_state, _VALID_STATES, "state")
         old = self.state(name)
         if new_state == old:
             return None
@@ -300,7 +299,7 @@ class SkillStore:
         event = {
             "from": old,
             "state": new_state,
-            "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "at": iso_time(time.time()),
             "source": source,
         }
         history.append(event)

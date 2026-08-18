@@ -24,6 +24,7 @@ from core.lineage import (  # noqa: E402
     history_chain,
     iso_time,
     retraction_note,
+    validate_enum,
     validate_kind,
 )
 from core.memory import Fact  # noqa: E402
@@ -57,6 +58,13 @@ class TestRetractionNote(unittest.TestCase):
         self.assertEqual(retraction_note("", "bg_review"), "retracted by bg_review")
         self.assertEqual(retraction_note("existing", "bg_review"),
                          "existing retracted by bg_review")
+
+    def test_custom_terminal_verb(self):
+        # The skill axis passes a different terminal description (absorb).
+        self.assertEqual(retraction_note("", "curator", what="absorbed into umbrella"),
+                         "absorbed into umbrella by curator")
+        self.assertEqual(retraction_note("note", "curator", what="absorbed into umbrella"),
+                         "note absorbed into umbrella by curator")
 
 
 class TestHistoryChain(unittest.TestCase):
@@ -115,6 +123,19 @@ class TestContentMatches(unittest.TestCase):
         self.assertFalse(content_matches("the gh account", "GH"))  # case-sensitive
         self.assertFalse(content_matches("apple", "applesauce"))   # substring, not superstring
         self.assertTrue(content_matches("", ""))                   # empty in empty
+
+
+class TestValidateEnum(unittest.TestCase):
+    def test_accepts_valid_and_rejects_invalid(self):
+        self.assertEqual(validate_enum("a", {"a", "b"}, "kind"), "a")
+        with self.assertRaises(ValueError):
+            validate_enum("z", {"a", "b"}, "kind")
+
+    def test_refusal_message_is_shared(self):
+        # Single-owner message contract: kind/action/state all read the same way.
+        with self.assertRaises(ValueError) as cm:
+            validate_enum("z", {"a", "b"}, "kind")
+        self.assertEqual(str(cm.exception), "kind must be one of ['a', 'b'], got 'z'")
 
 
 if __name__ == "__main__":

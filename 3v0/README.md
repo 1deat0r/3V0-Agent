@@ -61,8 +61,9 @@ code.
   seed/ingest/sync_skills.
 - `core/sync_skills.py` — reconcile the skill store with the profile's SKILL.md
   files and fold the curator's operational state (active/stale/archived) into
-  the store. Store canonical over its tracked namespace; profile authoritative
-  for content the store lacks.
+  the store. The pure `diff_skills` classifier is the decision layer; the
+  loop applies mutation + projection. Store canonical over its tracked
+  namespace; profile authoritative for content the store lacks.
 - `core/query.py` — read-only views over both stores (fact lineage, skill
   lineage + curator state) as JSON-safe dicts; the core half of the
   `threev0_store` tool.

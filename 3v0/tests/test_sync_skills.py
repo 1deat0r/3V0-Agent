@@ -17,7 +17,16 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
 from core.skill_io import find_skill_md  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
-from core.sync_skills import sync_skills  # noqa: E402
+from core.sync_skills import (  # noqa: E402
+    DROP,
+    EDIT,
+    EXPORT,
+    IMPORT,
+    NOOP,
+    UNRESOLVED,
+    diff_skills,
+    sync_skills,
+)
 
 
 def _mk_skill(skills_dir: Path, name: str, content: str, category: str = "") -> None:
@@ -149,6 +158,47 @@ class TestSyncSkills(unittest.TestCase):
         self.assertEqual(r.exported, [])
         self.assertEqual(r.imported, [])
         self.assertEqual(self.store.state("foo"), "archived")
+
+
+class TestDiffSkills(unittest.TestCase):
+    def _d(self, **kw):
+        base = dict(head_content="body", has_terminals=False,
+                    profile_content="body", in_agent_created=True,
+                    curator_state="active", old_state="active")
+        base.update(kw)
+        return diff_skills(**base)
+
+    def test_no_drift(self):
+        self.assertEqual(self._d(), (NOOP, False))
+
+    def test_import_unseen_agent_skill(self):
+        self.assertEqual(self._d(head_content=None), (IMPORT, False))
+
+    def test_ignore_non_agent_skill(self):
+        self.assertEqual(self._d(head_content=None, in_agent_created=False), (NOOP, False))
+
+    def test_heal_bridge_missed_edit(self):
+        self.assertEqual(self._d(head_content="old", profile_content="new"), (EDIT, False))
+
+    def test_drop_decommissioned_present(self):
+        self.assertEqual(self._d(head_content=None, has_terminals=True), (DROP, False))
+
+    def test_decommissioned_absent_is_noop(self):
+        self.assertEqual(self._d(head_content=None, has_terminals=True,
+                                 profile_content=None), (NOOP, False))
+
+    def test_export_store_only(self):
+        self.assertEqual(self._d(profile_content=None), (EXPORT, False))
+
+    def test_unresolved_contentless_head(self):
+        self.assertEqual(self._d(head_content="", profile_content="live"), (UNRESOLVED, False))
+
+    def test_archived_not_exported(self):
+        self.assertEqual(self._d(profile_content=None, curator_state="archived"),
+                         (NOOP, True))
+
+    def test_state_change_reported(self):
+        self.assertEqual(self._d(curator_state="stale"), (NOOP, True))
 
 
 if __name__ == "__main__":

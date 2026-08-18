@@ -23,11 +23,21 @@ _VALID_KINDS = set(KINDS)  # set for O(1) membership + sorted() in the error mes
 RETRACTED = "retracted"
 
 
+def validate_enum(value, valid_set, label):
+    """Return ``value`` if it is in ``valid_set``, else raise ValueError.
+
+    The single owner of the refusal message — ``"{label} must be one of
+    {sorted(valid_set)}, got {value!r}"`` — shared by fact kinds and the skill
+    axis's action/state checks, so the message contract cannot drift.
+    """
+    if value not in valid_set:
+        raise ValueError(f"{label} must be one of {sorted(valid_set)}, got {value!r}")
+    return value
+
+
 def validate_kind(kind: str) -> str:
     """Return ``kind`` if it is a canonical fact kind, else raise ValueError."""
-    if kind not in _VALID_KINDS:
-        raise ValueError(f"kind must be one of {sorted(_VALID_KINDS)}, got {kind!r}")
-    return kind
+    return validate_enum(kind, _VALID_KINDS, "kind")
 
 
 def iso_time(t: float) -> str:
@@ -35,16 +45,18 @@ def iso_time(t: float) -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(t))
 
 
-def retraction_note(note: str, source: str) -> str:
-    """The note with the retraction provenance tag appended (or ``note`` alone).
+def retraction_note(note: str, source: str, what: str = "retracted") -> str:
+    """The note with a terminal-provenance tag appended (or ``note`` alone).
 
-    ``source`` empty means no tag: retraction from an unknown source leaves the
+    ``source`` empty means no tag: removal from an unknown source leaves the
     note untouched, so a caller can distinguish "retracted by X" from a bare
-    removal.
+    removal. ``what`` is the terminal's description — memory retraction uses
+    the default ``"retracted"``; the skill axis passes ``"absorbed into X"`` —
+    so the tag contract is shared across both lineage axes.
     """
     if not source:
         return note
-    tag = f"retracted by {source}"
+    tag = f"{what} by {source}"
     return f"{note} {tag}".strip() if note else tag
 
 
