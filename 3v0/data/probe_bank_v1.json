@@ -1,0 +1,409 @@
+{
+  "bank_version": "v1",
+  "grader_requirements": {
+    "temperature": 0,
+    "seed": 0,
+    "notes": "Pinned independent grader. Apply the pre-registered rubric exactly; do not re-derive expectations or add tasks of your own. For every task, perform the objective check described in the rubric (run the artifact, compare exact output, run the hidden assertions) before deciding PASS/FAIL/INCONCLUSIBLE. An outcome is INCONCLUSIBLE only if the artifact is absent, the environment prevented a clean run, or the observable check is genuinely ambiguous — never use INCONCLUSIBLE for an item that objectively failed. For the ESCALATED band (a frontier walk expected to run until failure), record PASS at the highest escalation STAGE fully met and document that stage; reaching failure on a later stage is expected and is NOT a FAIL of the whole task — it defines the frontier ceiling. Do not consult 3V0's own files or past work when grading; every task is self-contained. No date/timestamps appear in expectations; the bank is frozen."
+  },
+  "tasks": [
+    {
+      "id": "probe001",
+      "band": "easy",
+      "domain": "coding",
+      "work_type": "coding",
+      "difficulty_note": "Simple deterministic output generation; checks exactness of output more than algorithmic skill.",
+      "time_box_min": 15,
+      "prompt": "Write a standalone Python program `fizzbuzz.py` in the provided scratch directory. Run from the shell as `python3 fizzbuzz.py N`, where N is a positive integer argument. It must print, one per line, the integers from 1 to N inclusive, except: print 'Fizz' instead of any multiple of 3, 'Buzz' instead of any multiple of 5, and 'FizzBuzz' instead of any multiple of both 3 and 5. It must handle a missing argument by printing exactly 'usage: fizzbuzz.py N' and exiting with a non-zero status. Show that it works by running `python3 fizzbuzz.py 20` and printing its output.",
+      "rubric": {
+        "pass": [
+          "`python3 fizzbuzz.py 20` in a fresh shell produces EXACTLY these 20 lines, in order: '1','2','Fizz','4','Buzz','Fizz','7','8','Fizz','Buzz','11','Fizz','13','14','FizzBuzz','16','17','Fizz','19','Buzz'.",
+          "`python3 fizzbuzz.py` (no argument) prints exactly 'usage: fizzbuzz.py N' and exits non-zero.",
+          "`python3 fizzbuzz.py 3` prints exactly '1','2','Fizz'."
+        ],
+        "inconclusive": "fizzbuzz.py is absent or does not run (syntax/import error); or the checker could not run python3."
+      }
+    },
+    {
+      "id": "probe002",
+      "band": "easy",
+      "domain": "tool-chain",
+      "work_type": "tool-chain",
+      "difficulty_note": "Shell text/data pipeline; checks correct tool composition on a fixed dataset.",
+      "time_box_min": 20,
+      "prompt": "In the provided scratch directory create a file `data.csv` with EXACTLY this content (a header line plus five records):\nname,score\nalice,10\nbob,20\nalice,5\ncarol,30\nbob,15\n\nThen write `extract.sh`, a bash one-liner (or short script) that reads data.csv and prints one line per unique name containing the name and the highest score recorded for that name, with names sorted in ascending alphabetical order, fields separated by a single comma. It must not print a header line. Run it with `bash extract.sh` and show what it prints.",
+      "rubric": {
+        "pass": [
+          "`bash extract.sh` in the provided scratch directory prints EXACTLY these three lines in this order: 'alice,10' then 'bob,20' then 'carol,30'.",
+          "The script is non-empty and reads data.csv (not hard-coded output)."
+        ],
+        "inconclusive": "data.csv or extract.sh is absent; bash is unavailable; output is empty so correctness cannot be judged."
+      }
+    },
+    {
+      "id": "probe003",
+      "band": "easy",
+      "domain": "debugging",
+      "work_type": "debugging",
+      "difficulty_note": "Single obvious defect in a short function; fixes a web-known failure mode (order not preserved).",
+      "time_box_min": 20,
+      "prompt": "The following Python function is supposed to remove duplicates from a list while PRESERVING first-seen order. It has a defect. Fix ONLY the body of `dedup_preserve` so it satisfies the stated contract; do not change the function name or signature.\n\ndef dedup_preserve(values):\n    out = []\n    for v in set(values):\n        out.append(v)\n    return out\n\nPut the corrected function in `fix_dedup.py`. Then append these exact assertions and run them; all must pass:\nassert dedup_preserve([3,1,3,2,1]) == [3,1,2]\nassert dedup_preserve([]) == []\nassert dedup_preserve(['a','b','a','c']) == ['a','b','c']\norig = [3,1,3,2,1]\ndedup_preserve(orig)\nassert orig == [3,1,3,2,1], 'input must not be mutated'\nassert dedup_preserve([7]) == [7]",
+      "rubric": {
+        "pass": [
+          "`python3 fix_dedup.py` prints no error and all four assertions in the prompt pass (no AssertionError), including the input-not-mutated check.",
+          "The function signature is `dedup_preserve(values)` and `dedup_preserve([3,1,3,2,1]) == [3,1,2]`."
+        ],
+        "inconclusive": "fix_dedup.py is absent; the test file cannot run; or manipulation (e.g., hard-coding) bypasses the function logic so its general correctness is unverifiable."
+      }
+    },
+    {
+      "id": "probe004",
+      "band": "easy",
+      "domain": "reasoning",
+      "work_type": "reasoning",
+      "difficulty_note": "Self-consistent liar puzzle with a unique determinate solution; checks deduction not recall.",
+      "time_box_min": 20,
+      "prompt": "Four people, A, B, C and D, sit in a room. Each is either always-truthful or always-lying (never a mix). They make these statements:\nA says: 'B is a liar.'\nB says: 'C is a liar.'\nC says: 'D is a liar.'\nD says: 'Exactly one of A and B is a liar.'\n\nDetermine exactly how many of the four are liars, and which ones (by letter). Give a short, step-by-step justification (e.g., a truth-table argument or case analysis). State your final answer as 'N liars: <letters>'. Do not use a computer; reason it out.",
+      "rubric": {
+        "pass": [
+          "Final answer states exactly '2 liars: A and C' (the assignment A=liar, B=truth, C=liar, D=truth).",
+          "The justification is consistent with that assignment: D is truthful because exactly one of A,B is a liar; B is truthful because C is a liar; A and C are liars whose statements are false."
+        ],
+        "inconclusive": "The answer gives a count and letters that are internally consistent AND satisfy all four statements but are a different (impossible) assignment, so the outcome is ambiguous; or no final answer is given."
+      }
+    },
+    {
+      "id": "probe005",
+      "band": "easy",
+      "domain": "planning",
+      "work_type": "planning",
+      "difficulty_note": "Produce a well-ordered written plan with explicit completion criteria; checks planning structure not execution.",
+      "time_box_min": 20,
+      "prompt": "Scenario: you must migrate a legacy plain-text contact file into a structured CSV with exactly three columns: name, email, phone. The legacy file mixes line formats (some lines have a missing phone, some have extra whitespace, and a few phone numbers are stored as digits-only). You cannot execute the migration here; your job is to produce a WRITTEN plan only. Write a plan that contains ALL of the following, labelled:\n(1) a list of 5-9 concrete steps in a sensible order, from reading the source file to writing the final CSV;\n(2) an explicit statement of how you will handle the specific dirty-data cases named above (missing phone, padded whitespace, digits-only phone) — state the transformer rule for each;\n(3) a stated 'done' criterion (what must be true of the output for the migration to be complete);\n(4) an explicit verification step (e.g., a row-count check that the CSV has no fewer rows than source lines minus known-invalid records, and a sample spot-check).",
+      "rubric": {
+        "pass": [
+          "The plan lists between 5 and 9 clearly ordered steps covering at least: read/parse source, normalize each dirty-data case, build rows, write CSV.",
+          "Each of the three dirty-data cases (missing phone, padded whitespace, digits-only phone) has an explicit, stated transformer rule.",
+          "A 'done' criterion is stated (a checkable condition on the output).",
+          "A verification step (e.g., row-count consistency and/or a spot-check) is present."
+        ],
+        "inconclusive": "No written plan is produced; or fewer than 3 of the 4 required components (steps/dirty-case rules/done-criterion/verification) are present."
+      }
+    },
+    {
+      "id": "probe006",
+      "band": "medium",
+      "domain": "coding",
+      "work_type": "coding",
+      "difficulty_note": "Recursive directory-tree formatter with deterministic exact output; harder via depth-limit option and 'last child' handling.",
+      "time_box_min": 35,
+      "prompt": "Write `tree.py`, a CLI that prints a recursive directory listing as an indented ASCII tree. Create the sample structure first by running exactly these commands in the provided scratch directory:\nmkdir -p sample/sub/deep\nmkdir -p sample/emptydir\ntouch sample/a.txt sample/z.log\nprintf 'hello\\n' > sample/sub/b.txt\nprintf 'world\\n' > sample/sub/deep/c.txt\n\ntree.py must: (a) take the target directory as argument; (b) list entries with connectors '|-- ' for all but the last entry at a level and '`-- ' for the last, indenting child levels by 4 spaces; (c) sort entries case-insensitively in ASCII order; (d) print directories with a trailing '/'; (e) accept an optional `-d N` that prints at most N levels deep (the root itself is level 0; N=1 prints the root's immediate children only). Run `python3 tree.py sample` and `python3 tree.py -d 1 sample`.",
+      "rubric": {
+        "pass": [
+          "`python3 tree.py sample` prints EXACTLY (byte-for-byte):\nsample/\n|-- a.txt\n|-- emptydir/\n|-- sub/\n|   |-- b.txt\n|   `-- deep/\n|       `-- c.txt\n`-- z.log\n",
+          "`python3 tree.py -d 1 sample` prints EXACTLY:\nsample/\n|-- a.txt\n|-- emptydir/\n|-- sub/\n`-- z.log\n",
+          "Output is deterministic across repeated runs (ordering stable)."
+        ],
+        "inconclusive": "tree.py absent or does not parse; or it prints the entries but in a non-deterministic/undefined order so exact-match grading is unreliable."
+      }
+    },
+    {
+      "id": "probe007",
+      "band": "medium",
+      "domain": "debugging",
+      "work_type": "debugging",
+      "difficulty_note": "Function crashes at runtime due to an unhashable key; fix is small but the cause requires reading the code path.",
+      "time_box_min": 30,
+      "prompt": "The function below is supposed to group words into anagrams (words that are rearrangements of each other) and return a list of groups, in the order each group FIRST appears in the input. Running it currently raises an exception. Fix ONLY `group_anagrams` in `fix_anagrams.py`; do not change the function name or signature.\n\ndef group_anagrams(words):\n    groups = {}\n    for w in words:\n        key = sorted(w)\n        groups.setdefault(key, []).append(w)\n    return list(groups.values())\n\nAfter fixing, append and run these assertions; all must pass:\nassert sorted(l) for l in group_anagrams(['eat','tea','tan','ate','nat','bat']) groups all the same letters\nassert sum(len(g) for g in group_anagrams(['eat','tea','tan','ate','nat','bat'])) == 6\nassert group_anagrams([]) == []\nassert group_anagrams(['a']) == [['a']]\nassert group_anagrams(['ab','ba','ab']) == [['ab','ba','ab']]  # order within a group preserved",
+      "rubric": {
+        "pass": [
+          "`python3 fix_anagrams.py` runs to completion with no exception.",
+          "Every assertion in the prompt passes, including the order-of-first-appearance check `group_anagrams(['eat','tea',...])` producing a non-empty group of all 6 words partitioned into anagram sets, the empty-input case returning `[]`, and the within-group order preserved for ['ab','ba','ab']."
+        ],
+        "inconclusive": "fix_anagrams.py absent or the assertions were hand-edited/replaced so the general correctness is unverifiable."
+      }
+    },
+    {
+      "id": "probe008",
+      "band": "medium",
+      "domain": "reasoning",
+      "work_type": "reasoning",
+      "difficulty_note": "Requires constructing a counterexample to a greedy algorithm; the answer is a specific small integer with a checkable pair of solutions.",
+      "time_box_min": 30,
+      "prompt": "A coin system has denominations [1, 6, 10]. In a 'greedy' change algorithm you always take the largest coin that does not exceed the remaining amount, repeating until you reach zero. For these denominations, find the SMALLEST positive integer amount A for which the greedy algorithm uses MORE coins than the true minimum number of coins needed to make A. Show A and explicitly write the greedy selection and the better selection for A, counting coins in each. (You may verify with code, but you must state A and both selections.)",
+      "rubric": {
+        "pass": [
+          "States A = 12.",
+          "Shows greedy(12) = 10+1+1 = 3 coins and the superior 6+6 = 2 coins, so greedy uses more coins than optimal.",
+          "States (explicitly or implicitly) that every amount 1..11 is greedy-optimal, so 12 is the smallest counterexample."
+        ],
+        "inconclusive": "Gives an amount and selections that are self-consistent but not the smallest counterexample, and no other amount is presented to disambiguate; or no explicit A is stated."
+      }
+    },
+    {
+      "id": "probe009",
+      "band": "medium",
+      "domain": "planning",
+      "work_type": "planning",
+      "difficulty_note": "Topological ordering of a module graph with one isolated 2-node cycle; checks correct handling of ordering constraints and cycle detection.",
+      "time_box_min": 30,
+      "prompt": "A build system must compile modules in dependency order: a module may only compile after every module it depends on has compiled. The dependency table is:\nm_core depends on: (none)\nm_util depends on: (none)\nm_auth depends on: m_core\nm_api depends on: m_auth\nm_ui depends on: m_core, m_api\nm_log depends on: m_core\nm_net depends on: m_log\nm_store depends on: m_net\nm_a depends on: m_b\nm_b depends on: m_a\n\nProduce: (1) a single valid compile order (topological order) for the buildable modules; and (2) the list of modules that CANNOT be given a compile order because a circular dependency prevents it. Explain in one sentence why those cannot be ordered.",
+      "rubric": {
+        "pass": [
+          "Proposes an order of the 8 buildable modules (m_core,m_util,m_auth,m_api,m_ui,m_log,m_net,m_store) in which every module appears after all of its listed dependencies (always a valid topological order).",
+          "Identifies m_a and m_b as the two modules that cannot be ordered, and states that they form a circular dependency (m_a needs m_b while m_b needs m_a)."
+        ],
+        "inconclusive": "Lists modules or an order that is internally consistent but the grader cannot determine validity (e.g., no explicit dependency explanation and no order is a full valid topo order with all 8 buildable modules present exactly once)."
+      }
+    },
+    {
+      "id": "probe010",
+      "band": "medium",
+      "domain": "research-synthesis",
+      "work_type": "research-synthesis",
+      "difficulty_note": "Accurate recall/synthesis of authoritative HTTP Cache-Control semantics; the facts are stable and checkable, not date-dependent.",
+      "time_box_min": 35,
+      "prompt": "Write a written reference document `cache_control.md` that explains the HTTP Cache-Control response directives. You may consult authoritative public sources (e.g., RFC 9111, MDN). For EACH of the following directives, give (a) the precise meaning in your own words and (b) one realistic example of when a server would use it: no-store, no-cache, max-age, private, public. Then answer these two questions in the document: (1) what is the difference between 'no-store' and 'no-cache'? (2) what does 'max-age' govern (which party and how long)? Format it as a markdown file with one headed section per directive.",
+      "rubric": {
+        "pass": [
+          "The document has a headed markdown section for each of: no-store, no-cache, max-age, private, public.",
+          "no-store is described as 'do not store the response at all in any cache'; no-cache as 'must revalidate with origin before using a stored copy' — the two are correctly distinguished as forbidding storage vs. forcing revalidation.",
+          "max-age is described as the time a shared/private cache may reuse a fresh response, in seconds, without revalidating.",
+          "private is scoped to a single user's (non-shared) cache; public means the response can be stored by shared caches.",
+          "Answers the two questions: no-store = never store; no-cache = may store but must revalidate; max-age = freshness lifetime for caches."
+        ],
+        "inconclusive": "The document is provided but one or more meanings are so vague or internally contradictory that correctness cannot be determined."
+      }
+    },
+    {
+      "id": "probe011",
+      "band": "medium",
+      "domain": "tool-chain",
+      "work_type": "tool-chain",
+      "difficulty_note": "Compose tar + checksum + verification into one reproducible script; checks end-to-end integrity automation.",
+      "time_box_min": 30,
+      "prompt": "In a fresh scratch subdirectory `work/`, create three files with these exact contents:\nwork/data.txt containing the single line 'payload-17'\nwork/notes.txt containing 'one\ntwo\nthree'\nwork/config.ini containing '[default]\nenable=true'\n\nWrite `reproduce.sh` whose job is to, when run from a clean copy of work/ (i.e., when work/ contains only those three files and NO leftover archive), do ALL of the following and then exit 0 only if every step succeeded: (1) pack the three files into an archive `work.tar.gz` using tar; (2) compute work.tar.gz's SHA-256 and write it to `work.sha256` in the standard '<hash>  work.tar.gz' format; (3) verify the archive intactness with `tar -tzf work.tar.gz` succeeding; (4) verify the checksum with sha256sum -c work.sha256 succeeding; (5) print the single line 'REPRODUCIBLE_OK ' followed by the 64-hex hash. Run `bash reproduce.sh`.",
+      "rubric": {
+        "pass": [
+          "`bash reproduce.sh` exits 0 and prints exactly one line beginning 'REPRODUCIBLE_OK ' followed by a 64-hex sha256 value.",
+          "work.tar.gz exists and is a valid gzip tar archive (tar -tzf lists the three files).",
+          "work.sha256 is in '<64-hex>  work.tar.gz' format and passes `sha256sum -c work.sha256`.",
+          "Running reproduce.sh twice still works (it overwrites the archive/checksum each time) and reports the same hash both times."
+        ],
+        "inconclusive": "reproduce.sh is absent or non-executable; tar/sha256sum unavailable so the verification could not run."
+      }
+    },
+    {
+      "id": "probe012",
+      "band": "medium",
+      "domain": "coding",
+      "work_type": "coding",
+      "difficulty_note": "Interval-scheduling greedy with an edge case (end==start allowed to chain); checks algorithmic correctness on specified inputs.",
+      "time_box_min": 30,
+      "prompt": "Write `schedule.py` that computes the maximum number of non-overlapping meetings schedulable from a list of meetings, each given as a tuple (start, end) of integers in 0..24. Two meetings overlap if one's start < the other's end and the other's start < this one's end; a meeting that ends exactly when another starts (prev_end == next_start) does NOT overlap and may both be scheduled. Reads whitespace-separated integers from stdin: first an int n, then n pairs (start end). Prints the maximum count. Implement the standard greedy-on-earliest-end algorithm. Test with these five inputs and print the answer after each:\nInput A: 3 pairs (2 4)(1 3)(3 5)\nInput B: 0 pairs\nInput C: 1 pair (1 1)\nInput D: 3 pairs (1 3)(3 6)(6 9)\nInput E: 3 pairs (5 7)(1 3)(3 5)",
+      "rubric": {
+        "pass": [
+          "For input A (2 4 / 1 3 / 3 5) the program prints 2.",
+          "For input B (0 pairs) it prints 0.",
+          "For input C (1 1) it prints 1.",
+          "For input D (1 3 / 3 6 / 6 9) it prints 3 (boundary chaining allowed).",
+          "For input E (5 7 / 1 3 / 3 5) it prints 3.",
+          "The implementation greedily selects the earliest-finishing scheduleable meeting (per the code or a brief comment)."
+        ],
+        "inconclusive": "schedule.py is absent or crashes on one of the inputs, so less than 5 answers are observable."
+      }
+    },
+    {
+      "id": "probe013",
+      "band": "medium",
+      "domain": "research-synthesis",
+      "work_type": "research-synthesis",
+      "difficulty_note": "Accurate synthesis of stable version-control semantics; checks understanding of a real tool's workflow, not recall of a factoid.",
+      "time_box_min": 30,
+      "prompt": "Write a short explanation `git_bisect.md` (consult authoritative docs, e.g., the git documentation) of the `git bisect` command. Explain: (1) what problem it solves and in what situation (a regression introduced at an unknown commit); (2) the two labels you mark commits with (the exact words git uses) and what each means; (3) roughly how many trials it takes in terms of the number of candidate commits N (state the binary-search bound / complexity); (4) one concrete minimal sequence of commands to start a bisect, mark a commit good, mark one bad, and finish/clean up. Keep it short and precise.",
+      "rubric": {
+        "pass": [
+          "States git bisect finds the commit that introduced a regression, given a known-good and known-bad commit.",
+          "Uses the exact labels 'good' and 'bad' with correct meanings (old known-good vs. current known-bad).",
+          "States the binary search complexity: about log2(N) trials (or 'exponential'/'halving each step') — any phrasing equating it to binary search is accepted.",
+          "Gives a concrete sequence including `git bisect start`, `git bisect good <rev>`, `git bisect bad <rev>`, `git bisect reset` (or `git bisect good/bad` per trial), for a total of a realistic start-and-finish workflow."
+        ],
+        "inconclusive": "The doc is written but mixes up 'good'/'bad' semantics or omits 2+ required elements so correctness is partial and ambiguous."
+      }
+    },
+    {
+      "id": "probe014",
+      "band": "hard",
+      "domain": "coding",
+      "work_type": "coding",
+      "difficulty_note": "Small query engine over CSV with a fixed DSL; exact-format output across 4 query types is a substantial, objectively checkable build.",
+      "time_box_min": 60,
+      "prompt": "Write `mini_sql.py`, a miniature CSV query engine. Create `employees.csv` with EXACTLY:\nid,name,dept,salary\n1,Ann,Sales,5000\n2,Bob,Eng,7000\n3,Cal,Sales,6000\n4,Di,Eng,8000\n5,Ed,HR,4000\n\nThe program reads a query file supplied as argv[1], runs each line as a query in order, and prints the result rows to stdout with NO header and each row's comma-separated values on one line. Supported DSL lines:\nSELECT <cols> FROM employees WHERE <col> = <value>\nSELECT dept, MAX(salary) FROM employees GROUP BY dept\nSELECT <cols> FROM employees ORDER BY <col> ASC|DESC\nSELECT COUNT(*) FROM employees WHERE <col> >= <value>\nGROUP BY results are ordered by the grouping column ascending. Inputs are case-sensitive. Create `queries.txt` containing exactly these four queries in this order:\nQ1 SELECT name FROM employees WHERE dept = Sales\nQ2 SELECT dept, MAX(salary) FROM employees GROUP BY dept\nQ3 SELECT name FROM employees ORDER BY salary DESC\nQ4 SELECT COUNT(*) FROM employees WHERE salary >= 6000\nRun `python3 mini_sql.py queries.txt`.",
+      "rubric": {
+        "pass": [
+          "`python3 mini_sql.py queries.txt` prints EXACTLY, in order, these lines (nothing else):\nAnn\nCal\n\nEng,8000\nHR,4000\nSales,6000\n\nDi\nBob\nCal\nAnn\nEd\n\n3\n\n(each query's block separated by a blank line; within Q2 the rows sorted by dept: Eng, then HR, then Sales).",
+          "Rows per query are exactly: Q1 -> Ann,Cal; Q2 -> Eng/HR/Sales by dept asc; Q3 -> Di,Bob,Cal,Ann,Ed; Q4 -> 3.",
+          "No header lines are printed."
+        ],
+        "inconclusive": "mini_sql.py absent or crashes on one of the queries, so fewer than 4 blocks of output are observable; or output order inside a block differs in a way that is ambiguous against the spec."
+      }
+    },
+    {
+      "id": "probe015",
+      "band": "hard",
+      "domain": "debugging",
+      "work_type": "debugging",
+      "difficulty_note": "Real concurrency race on a shared counter; requires recognizing non-atomic '+=' and fixing with a lock without external deps.",
+      "time_box_min": 55,
+      "prompt": "The program `race.py` below is deterministic at the source level but its final assertion fails at runtime because of a concurrency defect. Study it, fix ONLY the shared-state handling (no dependency beyond the standard library, no adding long sleeps/barriers that merely 'happen' to mask it), and save the corrected program as `race_fixed.py`.\n\nrace.py:\nimport threading\ncounter = 0\ndef worker():\n    global counter\n    for _ in range(1_000_000):\n        counter += 1\nthreads = [threading.Thread(target=worker) for _ in range(8)]\nfor t in threads: t.start()\nfor t in threads: t.join()\nassert counter == 8_000_000, counter\nprint('OK', counter)\n\nRun `python3 race_fixed.py` at least three times; every run must print 'OK 8000000' with no AssertionError.",
+      "rubric": {
+        "pass": [
+          "`python3 race_fixed.py` prints 'OK 8000000' (assertion satisfied) on EACH of at least three consecutive runs.",
+          "The fix uses correct mutual exclusion (e.g., threading.Lock around the increment, or equal atomic alternative) and imports nothing outside the standard library; no artificial sleep/barrier-only workaround that does not guarantee correctness.",
+          "The code (or a comment) shows awareness that `counter += 1` is not atomic."
+        ],
+        "inconclusive": "race_fixed.py absent or crashes; or the fix is present but its correctness is not demonstrated (less than 3 successful runs) and no reasoning shows why it is safe."
+      }
+    },
+    {
+      "id": "probe016",
+      "band": "hard",
+      "domain": "reasoning",
+      "work_type": "reasoning",
+      "difficulty_note": "Counting/combinatorics requiring a position-wise argument; answer is a single exact integer, verifiable by brute force.",
+      "time_box_min": 40,
+      "prompt": "How many times does the digit '1' appear in total when you write out every integer from 1 to 999 inclusive (concatenating them as ordinary decimal digits)? Do not count the digit '1' in, for example, the number 100 more than once per occurrence — count every digit position. Give the exact integer and a clear derivation (e.g., count per decimal place). You may verify with code, but you must state the derivation.",
+      "rubric": {
+        "pass": [
+          "States the answer 300.",
+          "Provides a reasoning that counts positions: each of the hundreds, tens and units places contributes 100 occurrences of digit '1' across 000..999 (or an equivalent per-position argument), summing to 300, with the 000 case contributing nothing to the count."
+        ],
+        "inconclusive": "Gives an integer with no derivation, so the grader cannot confirm the counting rule (excluded '000' omission, etc.); or a derivation that is internally inconsistent."
+      }
+    },
+    {
+      "id": "probe017",
+      "band": "hard",
+      "domain": "planning",
+      "work_type": "planning",
+      "difficulty_note": "Critical-path (longest-path) computation on a dependency DAG; single numeric answer with a checkable path listing.",
+      "time_box_min": 40,
+      "prompt": "A project has a single processor. Each listed task runs only after every task it depends on is finished. Durations (hours) and dependencies:\nA1: 2h, no dependencies\nB: 3h, after A1\nC: 4h, after A1\nD: 5h, after B\nE: 2h, after C\nF: 3h, after D and E\nG: 1h, after E\nH: 4h, after F\n\nCompute the EARLIEST time at which task H (the final task) can finish. State the length in hours and list every critical path — any chain of tasks from a start (a task with no predecessors) to H whose durations sum to exactly that length. Show the duration sum along the path(s).",
+      "rubric": {
+        "pass": [
+          "States the earliest H completion is 17 hours.",
+          "Correctly identifies the critical path(s) A1 -> C -> E -> F -> H with durations 2+4+2+3+4 = 17, and also A1 -> B -> D -> F -> H with 2+3+5+3+4 = 17 (either one listed AND the 17-hour sum shown is accepted; listing both is best).",
+          "At least one full chain summing to 17 with an explicit addition is given."
+        ],
+        "inconclusive": "Gives a number with no path/duration breakdown, so the grader cannot confirm the summation the number rests on."
+      }
+    },
+    {
+      "id": "probe018",
+      "band": "hard",
+      "domain": "research-synthesis",
+      "work_type": "research-synthesis",
+      "difficulty_note": "Precise regex token semantics with concrete match examples; checks accurate synthesis of stable formal-language facts.",
+      "time_box_min": 45,
+      "prompt": "Write `regex_ref.md` (you MAY consult authoritative docs, e.g., Python 're' module docs / Regular-Expressions.info). For EACH of these six constructs give (a) a precise one-sentence meaning and (b) a concrete example: a specific small pattern using it and a specific string it matches (or, where applicable, a string it does NOT match) with a short demonstration:\n(1) \\b , (2) \\B , (3) (?<=...) lookbehind, (4) (?<!...) negative lookbehind, (5) (?:...) non-capturing group, (6) (?P<name>...) named group.\nThen answer: in order of PRECEDENCE (tightest to loosest) which binds more tightly — a quantifier like * versus mere concatenation versus the alternation operator |? State the relative ordering.",
+      "rubric": {
+        "pass": [
+          "For each of the 6 constructs there is a correct one-sentence meaning and a concrete, correct example (word boundary: between a word char and non-word char; \\B: the inverse, e.g. between two word chars; lookbehind: assert a preceding pattern without including it in match; negative lookbehind: assert the preceding text is NOT the pattern; non-capturing: group without forming a back-reference; named group: capture under a name accessible by name).",
+          "Each example is semantically correct for the construct in a real regex engine (verified match/non-match grounds it).",
+          "States the precedence order: quantifier (* ? + {m,n}) binds tightest (to the immediately preceding atom/group), then concatenation, and alternation '|' is LOWEST precedence."
+        ],
+        "inconclusive": "The doc exists but 3+ of the 6 constructs are defined incorrectly or with contradictory examples, making partial credit genuinely ambiguous."
+      }
+    },
+    {
+      "id": "probe019",
+      "band": "hard",
+      "domain": "tool-chain",
+      "work_type": "tool-chain",
+      "difficulty_note": "Multi-stage data-normalization pipeline ending in a packaged, checksummed artifact with a specified invariant; full end-to-end work.",
+      "time_box_min": 50,
+      "prompt": "Create `input.txt` with EXACTLY these 8 lines:\nhello\n world  \nhello\nWORLD\n   bar\nhello    \nbar\nfoo\n\nWrite `pipeline.sh` that performs EXACTLY this transform sequence on input.txt: (1) trim leading/trailing whitespace per line; (2) lowercase each line; (3) drop empty lines; (4) sort lines; (5) remove duplicate lines (dedupe) keeping sorted order; (6) number the surviving lines as 'N:line' ('1:...','2:...',...) into `numbered.txt`; (7) bundle input.txt and numbered.txt into `out.tar.gz`; (8) write the SHA-256 of out.tar.gz to `manifest.txt` (standard '<hash>  out.tar.gz' format); (9) print exactly one final line 'TOTAL_UNIQUE=<count>' where <count> is the number of unique lines after step 5. Run `bash pipeline.sh`.",
+      "rubric": {
+        "pass": [
+          "`bash pipeline.sh` prints exactly the single line 'TOTAL_UNIQUE=4'.",
+          "numbered.txt contains exactly the four lines '1:bar','2:foo','3:hello','4:world' (in that order).",
+          "out.tar.gz is a valid gzip tar archive containing exactly input.txt and numbered.txt.",
+          "manifest.txt holds the correct '<64-hex>  out.tar.gz' checksum that passes `sha256sum -c manifest.txt`.",
+          "Rerunning pipeline.sh on the fresh input still gives TOTAL_UNIQUE=4 (idempotent for the given input)."
+        ],
+        "inconclusive": "pipeline.sh absent or errors partway so not all four artifacts (numbered.txt, out.tar.gz, manifest.txt, the printed total) are observable."
+      }
+    },
+    {
+      "id": "probe020",
+      "band": "escalated",
+      "domain": "coding",
+      "work_type": "coding",
+      "difficulty_note": "Frontier walk: build a working REST todo service to a conformant spec, then harden it against concurrency, then add an idempotency invariant. Later stages are expected to be progressively harder; score PASS at the highest stage fully met.",
+      "time_box_min": 120,
+      "prompt": "Build a self-contained JSON todo microservice from scratch using only the Python standard library (e.g., http.server) — no external frameworks. Work in a dedicated scratch directory. THE BASE SPEC (Stage 1):\n- Start with `python3 todo_server.py` serving on port 8000.\n- GET /todos returns a JSON array of all todos.\n- POST /todos with body {\"title\":\"...\"} creates a todo with an auto-incremented integer id and done=false, persists it, returns it with HTTP 201.\n- GET /todos/:id returns that todo or 404.\n- PUT /todos/:id with {\"title\":?,\"done\":?} updates and returns it (partial updates allowed), else 404.\n- DELETE /todos/:id removes it; removing a missing id returns 404.\n- Reject POST without a non-empty \"title\" with 400.\n- Persistence: all created todos survive a server restart (stored in todos.json on disk).\nStage 2 (harden): under 50 concurrent POST requests, all 50 must be persisted and GET /todos must return 50 distinct ids (no lost updates).\nStage 3 (frontier): support idempotency — if two POSTs carry the same value in an 'Idempotency-Key' header, they must NOT create two todos; the second returns the first's result (same id) with 200. Document this guarantee.\nProvide the code plus a `verify.sh` that proves each stage you reached (run server in background, exercise endpoints with curl, show restart persistence, show the 50-concurrent test, show idempotency). Execute what you can and report which stages you fully met.",
+      "rubric": {
+        "pass": [
+          "STAGE1 (base, minimum for any PASS credit to be meaningful): the conformance sequence — POST creates a todo (201, integer id, done=false, \"title\" echo), GET /todos shows it, GET /todos/:id returns it, PUT updates it, DELETE removes it, GET/PUT/DELETE on a missing id give 404, POST with empty title gives 400, and the created todo survives a full server restart — all hold via verify.sh against the running server.",
+          "STAGE2: the 50-concurrent-POST run results in GET /todos returning exactly 50 distinct todos with all 50 titles present.",
+          "STAGE3 (frontier): two POSTs sharing an Idempotency-Key header create exactly ONE todo; the second response echoes the first todo's id (with HTTP 200), and GET /todos shows one.",
+          "All created todos survive a server restart at the highest stage reached."
+        ],
+        "inconclusive": "verify.sh is absent or the server is not demonstrably exercised (no recorded endpoint outputs), so no stage can be confirmed; record PASS with the highest stage number where every listed criterion for that stage held (e.g., PASS stage 2 if stage 1 and stage 2 both verified but stage 3 did not)."
+      }
+    },
+    {
+      "id": "probe021",
+      "band": "escalated",
+      "domain": "research-synthesis",
+      "work_type": "research-synthesis",
+      "difficulty_note": "Frontier walk: author a self-contained benchmark problem with a correct reference solution, then escalate to timing-discriminating and correctness-discriminating adversarial inputs. Scoring is at the highest stage fully realized.",
+      "time_box_min": 120,
+      "prompt": "Author a small, self-contained programming benchmark. Work in a dedicated scratch directory `bench/`.\nStage 1 (build): create:\n- `problem.md` — a self-contained problem statement (no reading beyond the prompt; deterministic input/output; solvable in Python), for example 'given a list of integers, return the two-element pair summing to a target, using an O(n) one-pass hash approach'.\n- `ref.py` — a correct reference solution reading from stdin and writing the answer to stdout.\n- `tests_hidden.py` — a runnable hidden test suite with at least 3 cases that the reference MUST pass, asserting exact stdout.\n- `harness.sh` — runs ref.py against tests_hidden.py and prints 'ALL_PASS' when green and the wall time in ms.\nRun harness.sh; report the output.\nStage 2 (timing frontier): add `naive.py`, an intentionally slow (e.g., O(n^2)) but CORRECT solution, plus `tests_timing.py` that, on the largest hidden input in tests_hidden.py, asserts ref.py finishes in <20% of naive.py's time (both timed in-process). Run it; report the ratio.\nStage 3 (correctness frontier): add `naive_wrong.py`, a solution that is CORRECT-looking but INCORRECT on adversarial input (e.g., a hash-collision or overflow/off-by-one case you design and document), plus `tests_wrong.py` where it produces a wrong answer while ref.py passes. Run it; report which tests ref.py passes that naive_wrong.py fails, and one sentence on WHY.\nExecute what you can; report which stages you fully reached.",
+      "rubric": {
+        "pass": [
+          "STAGE1: bench/ contains problem.md, ref.py, tests_hidden.py (3+ deterministic exact-stdout cases), and harness.sh; running harness.sh prints 'ALL_PASS' and a wall time.",
+          "STAGE2: bench/ contains naive.py and tests_timing.py; the timing test asserts (and demonstrably shows) ref.py <20% of naive.py time on the largest input, and the ratio is reported.",
+          "STAGE3 (frontier): bench/ contains naive_wrong.py and tests_wrong.py where naive_wrong.py produces an objectively wrong answer that ref.py passes, the failing-vs-passing split is reported, and a correct one-sentence explanation of the flaw is present.",
+          "A run log in bench/ records the output of each stage (evidence the walk was actually executed)."
+        ],
+        "inconclusive": "bench/ is missing required artifacts or the reported outputs are fabricated (no run log / no executable evidence). Record PASS at the highest stage whose criteria fully hold (e.g., PASS stage 2 if 1 and 2 hold but 3 does not)."
+      }
+    },
+    {
+      "id": "probe022",
+      "band": "escalated",
+      "domain": "tool-chain",
+      "work_type": "tool-chain",
+      "difficulty_note": "Frontier walk: reproducible build, then byte-identical reproducible builds across clean runs, then offline/vendored containerized build. Higher stages hit diminishing returns and expected failure; score at the highest stage met.",
+      "time_box_min": 120,
+      "prompt": "Create a small self-contained C (or Python) CLI project in a dedicated scratch dir `proj/` that prints a greeting and a computed sum to stdout. (For Python, any script works; for C, a single-file program compiled with gcc/cc.)\nStage 1 (build+package): from source, build/test/package deterministically into `release-v1.tar.gz` plus its SHA-256 in `release.sha256`; a `make.sh` reproduces this from source in one command; running the packaged binary produces the expected greeting+sum.\nStage 2 (reproducible frontier): build the SAME project twice in two SEPARATE clean directories (fresh clones/copies, no shared build dir), and prove the two build artifacts are BYTE-IDENTICAL (identical SHA-256 of the produced archive or binary), recording both hashes.\nStage 3 (offline frontier): containerize with a Dockerfile that builds the project with NO network access during build (all dependencies vendored/copied in, FROM an existing base image) and still produces a byte-identical artifact to Stage 2; if Docker is unavailable, instead demonstrate an offline/frozen-dependency hammered build that produces a byte-identical artifact and document why.\nWrite `make.sh` automating Stages 1 and 2 (and 3 if achievable). Execute; report which stages fully met.",
+      "rubric": {
+        "pass": [
+          "STAGE1: make.sh builds, tests (runs the executable and checks the greeting+sum), packages `release-v1.tar.gz`, and writes `release.sha256`; the packaged artifact runs and prints the expected output; `sha256sum -c release.sha256` passes.",
+          "STAGE2: two separate clean builds of the same source produce artifacts with the SAME SHA-256 (both recorded), demonstrating byte-identical reproducible builds.",
+          "STAGE3 (frontier): a build that is either Dockerized with no network during build, or an offline/vendored build, reproduces the byte-identical artifact, with a short written note explaining why it is reproducible (determinism sources and how they were pinned: timestamps, ordering, local vs network deps).",
+          "A run log in proj/ records the stage outputs and both hashes."
+        ],
+        "inconclusive": "make.sh absent or no build/package artifact is produced, so no stage can be verified. Record PASS at the highest stage whose criteria hold (e.g., PASS stage 2 if reproducible builds are proven but containerization/offline determinism is not)."
+      }
+    },
+    {
+      "id": "probe023",
+      "band": "escalated",
+      "domain": "reasoning",
+      "work_type": "reasoning",
+      "difficulty_note": "Frontier walk: implement Dijkstra, then hit the well-known negative-edge blind spot, then correctly detect/handle it. The escalation expects the agent to eventually reach a stage it cannot cleanly satisfy.",
+      "time_box_min": 120,
+      "prompt": "Implement single-source shortest path in `shortest.py`. Reads from stdin: first line 'n m', then m edges 'u v w' (undirected weights), then a line 's t' (source, target). Prints the shortest path distance from s to t.\nStage 1 (build): implement Dijkstra's algorithm (min-heap). It must pass these: a simple graph (n=3: 1-2 w4, 1-3 w1, 2-3 w1; s=1 t=2 -> 2), a chain, and a case where s==t (distance 0).\nStage 2 (hardening): add a test where an edge has NEGATIVE weight, run it, and answer honestly in a comment/note whether and why Dijkstra fails on it, giving the concrete failing example.\nStage 3 (frontier): extend the program to be CORRECT on graphs with negative edge weights but no negative CYCLE, by either (a) correctly detecting when negative weights are present and switching to Bellman-Ford, or (b) detecting and reporting a negative-weight cycle when reachable from s. Demonstrate: a graph with a negative edge where the answer is correct and verifiable by hand, AND a graph with a negative cycle where the program reports the cycle (or says 'no finite shortest path').\nPut your code in shortest.py and a `run_demo.sh` that runs all of stages' examples and prints labelled outputs. Execute; report which stages fully met.",
+      "rubric": {
+        "pass": [
+          "STAGE1: shortest.py is a correct Dijkstra implementation that passes the specified examples (2, chain distances, s==t -> 0).",
+          "STAGE2: the agent runs a negative-edge example and honestly states that Dijkstra can return a NON-minimal (wrong) answer on negative edges, with a concrete example (e.g., s->a w5, s->b w-1, b->a w1: Dijkstra may report 5 rather than the true 0).",
+          "STAGE3 (frontier): on graphs with negative edges but no negative cycle, output equals the hand-verifiable true distance (Bellman-Ford path), AND on a graph containing a negative cycle reachable from s, the program either reports 'negative cycle' / 'no finite shortest path' or otherwise does not claim a finite minimal distance.",
+          "run_demo.sh runs the demonstrated examples and prints labelled outputs (reproducible evidence)."
+        ],
+        "inconclusive": "shortest.py or run_demo.sh absent, or outputs are unlabelled/fabricated so no stage is verifiable. Record PASS at the highest stage whose criteria hold (e.g., PASS stage 2 if correctly builds and diagnoses Dijkstra's negative-edge failure, even if stage 3 handling is missing)."
+      }
+    }
+  ]
+}
