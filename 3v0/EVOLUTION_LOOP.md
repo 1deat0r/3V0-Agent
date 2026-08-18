@@ -1821,3 +1821,15 @@ PROVED: `PYTHONPATH=. python3 -m native.agent` -> real identity answer, ZERO her
 Real bug found by honest execution (test caught it, my re-reading missed it twice):
 `facts = data if isinstance(data,list) else {}` shadows `facts`, so the next line
 did `facts.get("facts")` on the EMPTY dict -> always []. Name-shadowing class.
+## Stone N3 — Native tool registry (3v0/native/tools.py)
+```
+tools.py = the loop's hands, stdlib-only, zero Hermes:
+  read_file / write_file   rooted inside repo+profile; secret paths (.env/.pem/wallet) DENIED
+  run_script               run native scripts under 3v0/scripts/ by validated name
+  run_terminal             denylisted: gateway lifecycle, self-kill, rm -rf /, system-path writes
+  list_tools / execute     JSON dispatch
+```
+PROVED: `python3 -m native.tools` -> reads, native verify.sh runs (exit 0), and
+`systemctl --user restart 3v0-gateway.service` is BLOCKED by the native denylist.
+Safety-first class: the exact risk that stranded the agent earlier is denied in
+the FIRST version, not retrofitted.
