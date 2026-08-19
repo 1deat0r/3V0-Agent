@@ -1,0 +1,16 @@
+# tests/ + tests-js/ + evals/ — the test suites — `tests/integration/`
+
+Auto-rendered from `wiki/manifest.tsv`.
+Columns: path · kind · purpose · why · related
+
+| path | kind | purpose | why | related |
+|------|------|---------|-----|---------|
+| `tests/integration/__init__.py` | test | Python module `__init__.py` | Test module — asserts the repo contract; run via scripts/run_tests.sh | tests/integration/test_batch_runner.py; tests/integration/test_checkpoint_resumption.py; tests/integration/test_daytona_terminal.py; tests/integration/test_ha_integration.py |
+| `tests/integration/test_batch_runner.py` | test | Test script for batch runner | Test module — asserts the repo contract; run via scripts/run_tests.sh | tests/integration/__init__.py; tests/integration/test_checkpoint_resumption.py; tests/integration/test_daytona_terminal.py; tests/integration/test_ha_integration.py |
+| `tests/integration/test_checkpoint_resumption.py` | test | Test script to verify checkpoint behavior in batch_runner.py | Test module — asserts the repo contract; run via scripts/run_tests.sh | tests/integration/__init__.py; tests/integration/test_batch_runner.py; tests/integration/test_daytona_terminal.py; tests/integration/test_ha_integration.py; tests/integration/test_modal_terminal.py |
+| `tests/integration/test_daytona_terminal.py` | test | Integration tests for the Daytona terminal backend. | Test module — asserts the repo contract; run via scripts/run_tests.sh | tests/integration/__init__.py; tests/integration/test_batch_runner.py; tests/integration/test_checkpoint_resumption.py; tests/integration/test_ha_integration.py |
+| `tests/integration/test_ha_integration.py` | test | Integration tests for Home Assistant (tool + gateway). | Test module — asserts the repo contract; run via scripts/run_tests.sh | tests/integration/__init__.py; tests/integration/test_batch_runner.py; tests/integration/test_checkpoint_resumption.py; tests/integration/test_daytona_terminal.py |
+| `tests/integration/test_modal_terminal.py` | test | Test Modal Terminal Tool | Test module — asserts the repo contract; run via scripts/run_tests.sh | tests/integration/__init__.py; tests/integration/test_batch_runner.py; tests/integration/test_checkpoint_resumption.py; tests/integration/test_daytona_terminal.py |
+| `tests/integration/test_vision_docker_resolve.py` | test | Docker integration tests for the vision image-source resolver. | Test module — asserts the repo contract; run via scripts/run_tests.sh | tests/integration/__init__.py; tests/integration/test_batch_runner.py; tests/integration/test_checkpoint_resumption.py; tests/integration/test_daytona_terminal.py |
+| `tests/integration/test_voice_channel_flow.py` | test | Integration tests for Discord voice channel audio flow. | Test module — asserts the repo contract; run via scripts/run_tests.sh | tests/integration/__init__.py; tests/integration/test_batch_runner.py; tests/integration/test_checkpoint_resumption.py; tests/integration/test_daytona_terminal.py |
+| `tests/integration/test_web_tools.py` | test | Comprehensive Test Suite for Web Tools Module | Test module — asserts the repo contract; run via scripts/run_tests.sh | tests/integration/__init__.py; tests/integration/test_batch_runner.py; tests/integration/test_checkpoint_resumption.py; tests/integration/test_daytona_terminal.py |

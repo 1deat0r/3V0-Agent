@@ -103,6 +103,77 @@ def clean(s: str, cap: int) -> str:
     return s[:cap]
 
 
+def sibling_files(path: str, fileset: set[str]) -> list[str]:
+    parent = path.rsplit("/", 1)[0] if "/" in path else "."
+    prefix = parent + "/" if parent != "." else ""
+    return sorted(s for s in fileset
+                  if s.startswith(prefix) and s != path)
+
+
+def walkup_files(path: str, fileset: set[str]) -> list[str]:
+    """Nearest files at any ancestor directory (for singleton files)."""
+    parts = path.split("/")
+    for depth in range(len(parts) - 1, 0, -1):
+        anc = "/".join(parts[:depth])
+        prefix = anc + "/"
+        sibs = sorted(s for s in fileset
+                      if s.startswith(prefix) and "/" not in s[len(prefix):])
+        if sibs:
+            return sibs
+    return []
+
+
+def relations(path: str, fileset: set[str]) -> str:
+    """Auto-derive related entries so every row has a non-empty relationship
+    column (the operator's 100% relationships invariant), even on auto rows.
+    Test files point at the module(s) they exercise; other files point at
+    same-directory siblings; singletons walk up to the nearest populated
+    directory; last resort is the containing directory itself."""
+    budget: list[str] = []
+
+    def add(others: list[str]):
+        for x in others:
+            if x == path or x in budget:
+                continue
+            if len("; ".join(budget + [x])) > 200:
+                break
+            budget.append(x)
+
+    name = path.rsplit("/", 1)[-1]
+    is_test = name.startswith("test_") or name.endswith("_test.py") \
+        or "/tests/" in path or path.startswith("tests/") \
+        or path.startswith("3v0/tests/")
+    if is_test:
+        cands: list[str] = []
+        core = path
+        for prefix in ("3v0/tests/", "tests/"):
+            if core.startswith(prefix):
+                core = core[len(prefix):]
+                break
+        stem = core[:-3] if core.endswith(".py") else core
+        if stem.startswith("test_"):
+            stem = stem[5:]
+        if stem.endswith("_test"):
+            stem = stem[:-5]
+        cands.append(stem + ".py")
+        if core.count("/") >= 1:
+            cands.append(core.replace("test_", "", 1))
+        if path.startswith("3v0/tests/"):
+            cands.append("3v0/core/" + stem + ".py")
+            cands.append("3v0/scripts/" + stem + ".py")
+        cands.append(core.split("/", 1)[0] + ".py")
+        hits = [c for c in cands if c in fileset and c != path]
+        add(hits)
+        add(sibling_files(path, fileset))
+    else:
+        add(sibling_files(path, fileset))
+    if not budget:
+        add(walkup_files(path, fileset))
+    if not budget:
+        budget.append(path.rsplit("/", 1)[0] + "/")
+    return "; ".join(budget)
+
+
 def classify(path: str) -> tuple[str, str, str]:
     p = Path(path)
     name = p.name
@@ -271,7 +342,7 @@ def rebuild():
         else:
             kind, purpose, why = classify(path)
             rec = {"path": path, "kind": kind, "curated": "auto",
-                   "purpose": purpose, "why": why, "related": ""}
+                   "purpose": purpose, "why": why, "related": relations(path, set(files))}
         for f in FIELDS:
             rec.setdefault(f, "")
         rows[path] = rec
@@ -287,12 +358,37 @@ def deficiencies(rows: dict[str, dict]) -> tuple[int, int, int]:
     for path, rec in rows.items():
         if path not in files:
             continue
-        if not rec.get("purpose", "").strip() or not rec.get("why", "").strip():
+        if not rec.get("purpose", "").strip() or not rec.get("why", "").strip() \
+                or not rec.get("related", "").strip():
             empty += 1
         for f in ("purpose", "why", "related"):
             if len(rec.get(f, "")) > MAXLEN[f]:
                 overlength += 1
     return missing, empty, overlength
+
+
+PAGE_ROW_LIMIT = 300
+
+
+def render_table(recs: list[dict]) -> list[str]:
+    lines = ["| path | kind | purpose | why | related |",
+             "|------|------|---------|-----|---------|"]
+    for r in recs:
+        cells = [f"`{r['path']}`".replace("|", "\\|"), r.get("kind", ""),
+                 (r.get("purpose") or "").replace("|", "\\|"),
+                 (r.get("why") or "").replace("|", "\\|"),
+                 (r.get("related") or "").replace("|", "\\|")]
+        lines.append("| " + " | ".join(cells) + " |")
+    return lines
+
+
+def group_key(path: str) -> str:
+    parts = path.split("/")
+    if len(parts) == 1:
+        return "(root)"
+    if len(parts) == 2:
+        return parts[0] + "/"  # loose files at the area root bucket together
+    return parts[0] + "/" + parts[1]
 
 
 def render_areas(rows: dict[str, dict]):
@@ -306,20 +402,37 @@ def render_areas(rows: dict[str, dict]):
         head = intro.read_text(encoding="utf-8") if intro.exists() else ""
         lines = [f"# {AREA_TITLE.get(area, area)}", ""]
         if head:
-            lines.append(head.rstrip() + "")
+            lines.append(head.rstrip())
             lines.append("---")
-        lines.append("Auto-rendered from `wiki/manifest.tsv` — "
-                     "`python3 scripts/build_wiki.py --rebuild` regenerates.")
-        lines.append("Columns: path · kind · purpose · why · related")
-        lines.append("")
-        lines.append("| path | kind | purpose | why | related |")
-        lines.append("|------|------|---------|-----|---------|")
+        if len(recs) <= PAGE_ROW_LIMIT:
+            lines.append("Auto-rendered from `wiki/manifest.tsv` — "
+                         "`python3 scripts/build_wiki.py --rebuild` regenerates.")
+            lines.append("Columns: path · kind · purpose · why · related")
+            lines.append("")
+            lines.extend(render_table(recs))
+            (AREAS_DIR / f"{area}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+            continue
+        # Large area: split into per-directory sub-pages so a budget-constrained
+        # model can read any page in one pass. The area page becomes a map.
+        groups: dict[str, list[dict]] = {}
         for r in recs:
-            cells = [f"`{r['path']}`".replace("|", "\\|"), r.get("kind", ""),
-                     (r.get("purpose") or "").replace("|", "\\|"),
-                     (r.get("why") or "").replace("|", "\\|"),
-                     (r.get("related") or "").replace("|", "\\|")]
-            lines.append("| " + " | ".join(cells) + " |")
+            groups.setdefault(group_key(r["path"]), []).append(r)
+        lines.append("This area is large — split into per-directory pages so a "
+                     "budget-constrained model can read each in one pass.")
+        lines.append("Auto-rendered overview; sub-pages are regenerated by `--rebuild`.")
+        lines.append("")
+        lines.append("| group | files | page |")
+        lines.append("|-------|-------|------|")
+        for g in sorted(groups):
+            g_recs = sorted(groups[g], key=lambda r: r["path"])
+            safe = g.replace("/", ".").replace(" ", "_") or "root"
+            lines.append(f"| `{g}/` | {len(g_recs)} | [`{area}.{safe}.md`]({area}.{safe}.md) |")
+            sub = render_table(g_recs)
+            sname = AREAS_DIR / f"{area}.{safe}.md"
+            shead = f"# {AREA_TITLE.get(area, area)} — `{g}/`\n\n"
+            sbody = "\n".join(["Auto-rendered from `wiki/manifest.tsv`.",
+                                "Columns: path · kind · purpose · why · related", ""] + sub)
+            sname.write_text(shead + sbody + "\n", encoding="utf-8")
         (AREAS_DIR / f"{area}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -369,12 +482,14 @@ def main(argv: list[str]) -> int:
             for p in sorted(files - set(rows))[:15]:
                 print(f"    {p}")
         if empty:
-            print("  ROWS WITH EMPTY PURPOSE/WHY:")
+            print("  ROWS WITH EMPTY PURPOSE/WHY/RELATED:")
+            files = set(tracked_files(ROOT))
             for path, rec in sorted(rows.items()):
-                if not rec.get("purpose", "").strip() or not rec.get("why", "").strip():
+                if path not in files:
+                    continue
+                if not rec.get("purpose", "").strip() or not rec.get("why", "").strip() \
+                        or not rec.get("related", "").strip():
                     print(f"    {path}")
-                    if path not in set(tracked_files(ROOT)):
-                        continue
         if missing or empty or overlength:
             return 1
         print("  PASS — every tracked path has a complete index entry.")

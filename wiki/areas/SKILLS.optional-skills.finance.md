@@ -1,0 +1,26 @@
+# skills/ + optional-skills/ — the skill libraries — `optional-skills/finance/`
+
+Auto-rendered from `wiki/manifest.tsv`.
+Columns: path · kind · purpose · why · related
+
+| path | kind | purpose | why | related |
+|------|------|---------|-----|---------|
+| `optional-skills/finance/3-statement-model/SKILL.md` | skill-doc | Skill definition for `3-statement-model` | The instruction contract a model loads when the skill's trigger matches | optional-skills/finance/3-statement-model/references/formatting.md; optional-skills/finance/3-statement-model/references/formulas.md |
+| `optional-skills/finance/3-statement-model/references/formatting.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | optional-skills/finance/3-statement-model/references/formulas.md; optional-skills/finance/3-statement-model/references/sec-filings.md |
+| `optional-skills/finance/3-statement-model/references/formulas.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | optional-skills/finance/3-statement-model/references/formatting.md; optional-skills/finance/3-statement-model/references/sec-filings.md |
+| `optional-skills/finance/3-statement-model/references/sec-filings.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | optional-skills/finance/3-statement-model/references/formatting.md; optional-skills/finance/3-statement-model/references/formulas.md |
+| `optional-skills/finance/comps-analysis/SKILL.md` | skill-doc | Skill definition for `comps-analysis` | The instruction contract a model loads when the skill's trigger matches | optional-skills/finance/comps-analysis/ |
+| `optional-skills/finance/dcf-model/SKILL.md` | skill-doc | Skill definition for `dcf-model` | The instruction contract a model loads when the skill's trigger matches | optional-skills/finance/dcf-model/TROUBLESHOOTING.md; optional-skills/finance/dcf-model/requirements.txt; optional-skills/finance/dcf-model/scripts/validate_dcf.py |
+| `optional-skills/finance/dcf-model/TROUBLESHOOTING.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | optional-skills/finance/dcf-model/SKILL.md; optional-skills/finance/dcf-model/requirements.txt; optional-skills/finance/dcf-model/scripts/validate_dcf.py |
+| `optional-skills/finance/dcf-model/requirements.txt` | asset | File `requirements.txt` | Repository content; see related files / area page for the enclosing subsystem | optional-skills/finance/dcf-model/SKILL.md; optional-skills/finance/dcf-model/TROUBLESHOOTING.md; optional-skills/finance/dcf-model/scripts/validate_dcf.py |
+| `optional-skills/finance/dcf-model/scripts/validate_dcf.py` | source | DCF Model Validation Script | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/finance/dcf-model/scripts/ |
+| `optional-skills/finance/excel-author/SKILL.md` | skill-doc | Skill definition for `excel-author` | The instruction contract a model loads when the skill's trigger matches | optional-skills/finance/excel-author/scripts/recalc.py |
+| `optional-skills/finance/excel-author/scripts/recalc.py` | source | Recalculate an .xlsx file's formulas using LibreOffice headless. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/finance/excel-author/scripts/ |
+| `optional-skills/finance/lbo-model/SKILL.md` | skill-doc | Skill definition for `lbo-model` | The instruction contract a model loads when the skill's trigger matches | optional-skills/finance/lbo-model/ |
+| `optional-skills/finance/merger-model/SKILL.md` | skill-doc | Skill definition for `merger-model` | The instruction contract a model loads when the skill's trigger matches | optional-skills/finance/merger-model/ |
+| `optional-skills/finance/polymarket/SKILL.md` | skill-doc | Skill definition for `polymarket` | The instruction contract a model loads when the skill's trigger matches | optional-skills/finance/polymarket/references/api-endpoints.md; optional-skills/finance/polymarket/scripts/polymarket.py |
+| `optional-skills/finance/polymarket/references/api-endpoints.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | optional-skills/finance/polymarket/references/ |
+| `optional-skills/finance/polymarket/scripts/polymarket.py` | source | Polymarket CLI helper — query prediction market data. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/finance/polymarket/scripts/ |
+| `optional-skills/finance/pptx-author/SKILL.md` | skill-doc | Skill definition for `pptx-author` | The instruction contract a model loads when the skill's trigger matches | optional-skills/finance/pptx-author/ |
+| `optional-skills/finance/stocks/SKILL.md` | skill-doc | Skill definition for `stocks` | The instruction contract a model loads when the skill's trigger matches | optional-skills/finance/stocks/scripts/stocks_client.py |
+| `optional-skills/finance/stocks/scripts/stocks_client.py` | source | stocks_client.py - Stock market data CLI tool for the Hermes Agent project. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/finance/stocks/scripts/ |

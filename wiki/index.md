@@ -67,6 +67,7 @@ Reading these gives you ~90% of the architecture in ~15 files:
 
 ## Generated vs maintained
 
-- `manifest.tsv` + `areas/*.md` tables — **generated** by `scripts/build_wiki.py --rebuild` (auto rows from docstrings + rules).
+- `manifest.tsv` + `areas/*.md` — **generated** by `scripts/build_wiki.py --rebuild` (auto rows from docstrings + rules + sibling relations).
 - `wiki/curated.tsv` + `wiki/areas/_intro_*.md` + `index.md`, `SCHEMA.md`, `README.md`, `log.md` — **hand-maintained**; rebuild preserves them.
+- Large areas (TESTS, APPS, SKILLS, WEBSITE, UITUI, MISC) render as a **directory map** with one sub-page per group (`TESTS.tests.agent.md`, `APPS.desktop.md`, …) so any page fits a flash-model pass.
 - Check the gate: `python3 scripts/build_wiki.py --check` (also wired into `.githooks/pre-commit`).

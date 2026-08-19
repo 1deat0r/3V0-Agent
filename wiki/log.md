@@ -1,5 +1,20 @@
 # wiki/log.md — Append-only change log
 
+## 2026-08-22 — v2: relationships at 100% + large-area sub-pages
+
+- Generator now auto-fills `related` for EVERY row (previously empty on all
+auto rows): same-directory siblings; test files additionally resolve to the
+module(s) they exercise (incl. `3v0/tests/` -> `3v0/core|scripts`);
+singletons walk up to the nearest populated directory, last resort is the
+containing dir. Budget-capped at ~200 chars so no cell overflows.
+- `--check` now enforces `related` non-empty too (purpose/why/related all
+covered) — 233 previously-unenforced gaps closed, 0 empties today.
+- Large areas (TESTS 3,147 / APPS 1,826 / SKILLS 1,035 / WEBSITE 781 /
+MISC 762 / UITUI 469 rows) now render as a directory map (`areas/<AREA>.md`)
+plus one sub-page per group (`TESTS.tests.agent.md`, `MISC.locales.md`, ...)
+so every page stays within a flash-model one-pass read; loose area-root
+files bucket together under their directory.
+
 ## 2026-08-22 — initial build: 100% coverage achieved and gated
 
 - `scripts/build_wiki.py` (v1): tracked-file manifest generator + area renderer

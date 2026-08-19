@@ -9,7 +9,8 @@ where to look and why a file exists.
 ## 1. The invariant (hard gate)
 
 > **Every tracked git path has exactly one `wiki/manifest.tsv` row with
-> non-empty `purpose` and `why`.**
+> non-empty `purpose`, `why`, and `related` (description + rationale +
+> relationships — the operator's 100% coverage ask covers all three).**
 
 This is enforced mechanically:
 
@@ -26,7 +27,7 @@ fails until the manifest is regenerated.
 | Path | Kind | Maintained by |
 |------|------|---------------|
 | `wiki/manifest.tsv` | raw catalog, 6 TSV cols: `path kind curated purpose why related` | `--rebuild` (generator) |
-| `wiki/areas/<AREA>.md` | per-area tables, regenerated verbatim | `--rebuild` |
+| `wiki/areas/<AREA>.md` | per-area tables, regenerated verbatim; large areas render as a directory map with sub-pages per group | `--rebuild` |
 | `wiki/areas/_intro_<AREA>.md` | hand-written area narrative, prepended by `--rebuild` | human/agent, never clobbered |
 | `wiki/curated.tsv` | hand-curated overlay (manual rows), same 6 columns | human/agent, must keep 6 cols/row |
 | `wiki/index.md` | master catalog + reading order | human/agent |
@@ -65,6 +66,10 @@ fails until the manifest is regenerated.
 5. Tests/docs/config rows may stay `auto` when the docstring is already the
    best description; curation effort goes to the load-bearing spine
    (root, core, agent, tools, gateway, cli, cron, plugins, skills, apps).
+6. **Auto rows get `related` for free**: the generator fills same-directory
+   siblings (test files additionally point at the module(s) they exercise;
+   singletons walk up to the nearest populated dir, last resort the
+   containing dir). A curated row's `related` overrides the derivation.
 
 ## 5. Wiring
 
@@ -78,9 +83,11 @@ fails until the manifest is regenerated.
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | `--check` fails "missing" | tracked file added/renamed, manifest not rebuilt | `--rebuild`, commit |
-| `--check` fails "empty" | a row lost purpose/why (bad curated.tsv edit) | fix the row or `--rebuild` |
+| `--check` fails "empty" | a row lost purpose/why/related (bad curated.tsv edit) | fix the row or `--rebuild` |
+| `--check` fails "overlength" | a derived related list or hand cell exceeds caps | shrink the cell / rebuild |
 | manual count dropped in `--report` | curated.tsv overwritten/no longer parsed (bad TSV) | check 6 columns/row, tabs only |
 | area page missing a table | area key added without `--rebuild` | `--rebuild` |
+| sub-page missing from a large area | `--rebuild` not run after adding files there | `--rebuild` |
 
 Version note: schema changes to this contract itself are recorded in
 `wiki/log.md`, append-only.

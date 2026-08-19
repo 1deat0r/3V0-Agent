@@ -1,0 +1,15 @@
+# skills/ + optional-skills/ — the skill libraries — `optional-skills/web-development/`
+
+Auto-rendered from `wiki/manifest.tsv`.
+Columns: path · kind · purpose · why · related
+
+| path | kind | purpose | why | related |
+|------|------|---------|-----|---------|
+| `optional-skills/web-development/DESCRIPTION.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | optional-skills/web-development/cloudflare-temporary-deploy/SKILL.md; optional-skills/web-development/cloudflare-temporary-deploy/scripts/parse_deploy_output.py |
+| `optional-skills/web-development/cloudflare-temporary-deploy/SKILL.md` | skill-doc | Skill definition for `cloudflare-temporary-deploy` | The instruction contract a model loads when the skill's trigger matches | optional-skills/web-development/cloudflare-temporary-deploy/scripts/parse_deploy_output.py |
+| `optional-skills/web-development/cloudflare-temporary-deploy/scripts/parse_deploy_output.py` | source | Parse `wrangler deploy --temporary` output into structured JSON. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/web-development/cloudflare-temporary-deploy/scripts/ |
+| `optional-skills/web-development/har-derived-api-client/SKILL.md` | skill-doc | Skill definition for `har-derived-api-client` | The instruction contract a model loads when the skill's trigger matches | optional-skills/web-development/har-derived-api-client/scripts/har_capture.py; optional-skills/web-development/har-derived-api-client/scripts/har_capture_cdp.py |
+| `optional-skills/web-development/har-derived-api-client/scripts/har_capture.py` | source | Record a HAR file while driving a website with Playwright. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/web-development/har-derived-api-client/scripts/har_capture_cdp.py; optional-skills/web-development/har-derived-api-client/scripts/har_to_client.py |
+| `optional-skills/web-development/har-derived-api-client/scripts/har_capture_cdp.py` | source | Capture a HAR from a browser you connect to over CDP (not one you launch). | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/web-development/har-derived-api-client/scripts/har_capture.py; optional-skills/web-development/har-derived-api-client/scripts/har_to_client.py |
+| `optional-skills/web-development/har-derived-api-client/scripts/har_to_client.py` | source | Distill a HAR file into an API summary an agent can turn into a client. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/web-development/har-derived-api-client/scripts/har_capture.py; optional-skills/web-development/har-derived-api-client/scripts/har_capture_cdp.py |
+| `optional-skills/web-development/page-agent/SKILL.md` | skill-doc | Skill definition for `page-agent` | The instruction contract a model loads when the skill's trigger matches | optional-skills/web-development/page-agent/ |

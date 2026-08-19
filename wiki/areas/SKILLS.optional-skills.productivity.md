@@ -1,0 +1,24 @@
+# skills/ + optional-skills/ — the skill libraries — `optional-skills/productivity/`
+
+Auto-rendered from `wiki/manifest.tsv`.
+Columns: path · kind · purpose · why · related
+
+| path | kind | purpose | why | related |
+|------|------|---------|-----|---------|
+| `optional-skills/productivity/canvas/SKILL.md` | skill-doc | Skill definition for `canvas` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/canvas/scripts/canvas_api.py |
+| `optional-skills/productivity/canvas/scripts/canvas_api.py` | source | Canvas LMS API CLI for Hermes Agent. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/productivity/canvas/scripts/ |
+| `optional-skills/productivity/here-now/SKILL.md` | skill-doc | Skill definition for `here-now` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/here-now/scripts/drive.sh; optional-skills/productivity/here-now/scripts/publish.sh |
+| `optional-skills/productivity/here-now/scripts/drive.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks | optional-skills/productivity/here-now/scripts/publish.sh |
+| `optional-skills/productivity/here-now/scripts/publish.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks | optional-skills/productivity/here-now/scripts/drive.sh |
+| `optional-skills/productivity/memento-flashcards/SKILL.md` | skill-doc | Skill definition for `memento-flashcards` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/memento-flashcards/scripts/memento_cards.py; optional-skills/productivity/memento-flashcards/scripts/youtube_quiz.py |
+| `optional-skills/productivity/memento-flashcards/scripts/memento_cards.py` | source | Memento card storage, spaced-repetition engine, and CSV I/O. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/productivity/memento-flashcards/scripts/youtube_quiz.py |
+| `optional-skills/productivity/memento-flashcards/scripts/youtube_quiz.py` | source | Fetch YouTube transcripts for Memento quiz generation. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/productivity/memento-flashcards/scripts/memento_cards.py |
+| `optional-skills/productivity/shop/SKILL.md` | skill-doc | Skill definition for `shop` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/shop/references/catalog-mcp.md; optional-skills/productivity/shop/references/direct-api.md; optional-skills/productivity/shop/references/legal.md |
+| `optional-skills/productivity/shop/references/catalog-mcp.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | optional-skills/productivity/shop/references/direct-api.md; optional-skills/productivity/shop/references/legal.md; optional-skills/productivity/shop/references/safety.md |
+| `optional-skills/productivity/shop/references/direct-api.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | optional-skills/productivity/shop/references/catalog-mcp.md; optional-skills/productivity/shop/references/legal.md; optional-skills/productivity/shop/references/safety.md |
+| `optional-skills/productivity/shop/references/legal.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | optional-skills/productivity/shop/references/catalog-mcp.md; optional-skills/productivity/shop/references/direct-api.md; optional-skills/productivity/shop/references/safety.md |
+| `optional-skills/productivity/shop/references/safety.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | optional-skills/productivity/shop/references/catalog-mcp.md; optional-skills/productivity/shop/references/direct-api.md; optional-skills/productivity/shop/references/legal.md |
+| `optional-skills/productivity/shopify/SKILL.md` | skill-doc | Skill definition for `shopify` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/shopify/ |
+| `optional-skills/productivity/siyuan/SKILL.md` | skill-doc | Skill definition for `siyuan` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/siyuan/ |
+| `optional-skills/productivity/telephony/SKILL.md` | skill-doc | Skill definition for `telephony` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/telephony/scripts/telephony.py |
+| `optional-skills/productivity/telephony/scripts/telephony.py` | source | Telephony helper for the Hermes optional telephony skill. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/productivity/telephony/scripts/ |

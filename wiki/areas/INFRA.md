@@ -7,88 +7,88 @@ Columns: path · kind · purpose · why · related
 
 | path | kind | purpose | why | related |
 |------|------|---------|-----|---------|
-| `.github/ISSUE_TEMPLATE/bug_report.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/ISSUE_TEMPLATE/config.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/ISSUE_TEMPLATE/feature_request.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/ISSUE_TEMPLATE/setup_help.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/PULL_REQUEST_TEMPLATE.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
-| `.github/actions/detect-changes/action.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/actions/get-app-token/action.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/actions/nix-setup/action.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/actions/retry/action.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/dependabot.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/ci-review-comment.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/ci.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/contributor-check.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/deploy-site.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/docker-lint.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/docker.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/docs-site-checks.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/e2e-desktop.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/history-check.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/infographic-check.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/install-e2e-run.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/install-e2e.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/installer-tests.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/js-autofix.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/js-tests.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/label-rerun.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/lint.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/lockfile-diff.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/osv-scanner.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/publish-e2e-evidence.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/review-labels.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/skills-index-freshness.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/skills-index.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/supply-chain-audit.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/tests-os.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/tests.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
-| `.github/workflows/uv-lockfile-check.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
+| `.github/ISSUE_TEMPLATE/bug_report.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/ISSUE_TEMPLATE/config.yml; .github/ISSUE_TEMPLATE/feature_request.yml; .github/ISSUE_TEMPLATE/setup_help.yml |
+| `.github/ISSUE_TEMPLATE/config.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/ISSUE_TEMPLATE/bug_report.yml; .github/ISSUE_TEMPLATE/feature_request.yml; .github/ISSUE_TEMPLATE/setup_help.yml |
+| `.github/ISSUE_TEMPLATE/feature_request.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/ISSUE_TEMPLATE/bug_report.yml; .github/ISSUE_TEMPLATE/config.yml; .github/ISSUE_TEMPLATE/setup_help.yml |
+| `.github/ISSUE_TEMPLATE/setup_help.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/ISSUE_TEMPLATE/bug_report.yml; .github/ISSUE_TEMPLATE/config.yml; .github/ISSUE_TEMPLATE/feature_request.yml |
+| `.github/PULL_REQUEST_TEMPLATE.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | .github/ISSUE_TEMPLATE/bug_report.yml; .github/ISSUE_TEMPLATE/config.yml; .github/ISSUE_TEMPLATE/feature_request.yml; .github/ISSUE_TEMPLATE/setup_help.yml; .github/actions/detect-changes/action.yml |
+| `.github/actions/detect-changes/action.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/actions/detect-changes/ |
+| `.github/actions/get-app-token/action.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/actions/get-app-token/ |
+| `.github/actions/nix-setup/action.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/actions/nix-setup/ |
+| `.github/actions/retry/action.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/actions/retry/ |
+| `.github/dependabot.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/ISSUE_TEMPLATE/bug_report.yml; .github/ISSUE_TEMPLATE/config.yml; .github/ISSUE_TEMPLATE/feature_request.yml; .github/ISSUE_TEMPLATE/setup_help.yml; .github/PULL_REQUEST_TEMPLATE.md |
+| `.github/workflows/ci-review-comment.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml; .github/workflows/docker.yml |
+| `.github/workflows/ci.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml; .github/workflows/docker.yml |
+| `.github/workflows/contributor-check.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml; .github/workflows/docker.yml |
+| `.github/workflows/deploy-site.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/docker-lint.yml; .github/workflows/docker.yml |
+| `.github/workflows/docker-lint.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker.yml |
+| `.github/workflows/docker.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/docs-site-checks.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/e2e-desktop.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/history-check.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/infographic-check.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/install-e2e-run.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/install-e2e.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/installer-tests.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/js-autofix.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/js-tests.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/label-rerun.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/lint.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/lockfile-diff.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/osv-scanner.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/publish-e2e-evidence.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/review-labels.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/skills-index-freshness.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/skills-index.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/supply-chain-audit.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/tests-os.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/tests.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
+| `.github/workflows/uv-lockfile-check.yml` | config | YAML configuration | Declarative config for deployment/CI/tooling | .github/workflows/ci-review-comment.yml; .github/workflows/ci.yml; .github/workflows/contributor-check.yml; .github/workflows/deploy-site.yml; .github/workflows/docker-lint.yml |
 | `3v0-cli` | script | Launcher script for the 3v0 CLI | Thin exec shim so `3v0 --tui` etc. work from PATH | ev0_cli/main.py;run_agent.py |
 | `Dockerfile` | build | Container image definition (+ multi-stage build) | Dockerized deployment for the gateway/CLI | docker/;docker-compose.yml |
-| `constraints-termux.txt` | asset | File `constraints-termux.txt` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/SOUL.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
-| `docker/cont-init.d/015-supervise-perms` | asset | File `015-supervise-perms` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/cont-init.d/02-reconcile-profiles` | asset | File `02-reconcile-profiles` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/entrypoint-dispatch.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
-| `docker/entrypoint.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
-| `docker/hermes-exec-shim.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
-| `docker/main-wrapper.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
-| `docker/s6-rc.d/dashboard/dependencies.d/base` | asset | File `base` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/s6-rc.d/dashboard/finish` | asset | File `finish` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/s6-rc.d/dashboard/run` | asset | File `run` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/s6-rc.d/dashboard/type` | asset | File `type` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/s6-rc.d/main-3v0/dependencies.d/base` | asset | File `base` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/s6-rc.d/main-3v0/run` | asset | File `run` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/s6-rc.d/main-3v0/type` | asset | File `type` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/s6-rc.d/user/contents.d/dashboard` | asset | File `dashboard` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/s6-rc.d/user/contents.d/main-3v0` | asset | File `main-3v0` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `docker/stage2-hook.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
-| `docker/tini-shim.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
-| `flake.lock` | lockfile | Nix flake lock | Pins nix derivation inputs; regenerated by nix flake lock |  |
+| `constraints-termux.txt` | asset | File `constraints-termux.txt` | Repository content; see related files / area page for the enclosing subsystem | .coderabbit.yaml; .dockerignore; .env.example; .envrc; .gitattributes; .githooks/pre-commit; .github/ISSUE_TEMPLATE/bug_report.yml; .github/ISSUE_TEMPLATE/config.yml |
+| `docker/SOUL.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | docker/cont-init.d/015-supervise-perms; docker/cont-init.d/02-reconcile-profiles; docker/entrypoint-dispatch.sh; docker/entrypoint.sh; docker/hermes-exec-shim.sh; docker/main-wrapper.sh |
+| `docker/cont-init.d/015-supervise-perms` | asset | File `015-supervise-perms` | Repository content; see related files / area page for the enclosing subsystem | docker/cont-init.d/02-reconcile-profiles |
+| `docker/cont-init.d/02-reconcile-profiles` | asset | File `02-reconcile-profiles` | Repository content; see related files / area page for the enclosing subsystem | docker/cont-init.d/015-supervise-perms |
+| `docker/entrypoint-dispatch.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks | docker/SOUL.md; docker/cont-init.d/015-supervise-perms; docker/cont-init.d/02-reconcile-profiles; docker/entrypoint.sh; docker/hermes-exec-shim.sh; docker/main-wrapper.sh |
+| `docker/entrypoint.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks | docker/SOUL.md; docker/cont-init.d/015-supervise-perms; docker/cont-init.d/02-reconcile-profiles; docker/entrypoint-dispatch.sh; docker/hermes-exec-shim.sh; docker/main-wrapper.sh |
+| `docker/hermes-exec-shim.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks | docker/SOUL.md; docker/cont-init.d/015-supervise-perms; docker/cont-init.d/02-reconcile-profiles; docker/entrypoint-dispatch.sh; docker/entrypoint.sh; docker/main-wrapper.sh |
+| `docker/main-wrapper.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks | docker/SOUL.md; docker/cont-init.d/015-supervise-perms; docker/cont-init.d/02-reconcile-profiles; docker/entrypoint-dispatch.sh; docker/entrypoint.sh; docker/hermes-exec-shim.sh |
+| `docker/s6-rc.d/dashboard/dependencies.d/base` | asset | File `base` | Repository content; see related files / area page for the enclosing subsystem | docker/s6-rc.d/dashboard/dependencies.d/ |
+| `docker/s6-rc.d/dashboard/finish` | asset | File `finish` | Repository content; see related files / area page for the enclosing subsystem | docker/s6-rc.d/dashboard/dependencies.d/base; docker/s6-rc.d/dashboard/run; docker/s6-rc.d/dashboard/type |
+| `docker/s6-rc.d/dashboard/run` | asset | File `run` | Repository content; see related files / area page for the enclosing subsystem | docker/s6-rc.d/dashboard/dependencies.d/base; docker/s6-rc.d/dashboard/finish; docker/s6-rc.d/dashboard/type |
+| `docker/s6-rc.d/dashboard/type` | asset | File `type` | Repository content; see related files / area page for the enclosing subsystem | docker/s6-rc.d/dashboard/dependencies.d/base; docker/s6-rc.d/dashboard/finish; docker/s6-rc.d/dashboard/run |
+| `docker/s6-rc.d/main-3v0/dependencies.d/base` | asset | File `base` | Repository content; see related files / area page for the enclosing subsystem | docker/s6-rc.d/main-3v0/dependencies.d/ |
+| `docker/s6-rc.d/main-3v0/run` | asset | File `run` | Repository content; see related files / area page for the enclosing subsystem | docker/s6-rc.d/main-3v0/dependencies.d/base; docker/s6-rc.d/main-3v0/type |
+| `docker/s6-rc.d/main-3v0/type` | asset | File `type` | Repository content; see related files / area page for the enclosing subsystem | docker/s6-rc.d/main-3v0/dependencies.d/base; docker/s6-rc.d/main-3v0/run |
+| `docker/s6-rc.d/user/contents.d/dashboard` | asset | File `dashboard` | Repository content; see related files / area page for the enclosing subsystem | docker/s6-rc.d/user/contents.d/main-3v0 |
+| `docker/s6-rc.d/user/contents.d/main-3v0` | asset | File `main-3v0` | Repository content; see related files / area page for the enclosing subsystem | docker/s6-rc.d/user/contents.d/dashboard |
+| `docker/stage2-hook.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks | docker/SOUL.md; docker/cont-init.d/015-supervise-perms; docker/cont-init.d/02-reconcile-profiles; docker/entrypoint-dispatch.sh; docker/entrypoint.sh; docker/hermes-exec-shim.sh |
+| `docker/tini-shim.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks | docker/SOUL.md; docker/cont-init.d/015-supervise-perms; docker/cont-init.d/02-reconcile-profiles; docker/entrypoint-dispatch.sh; docker/entrypoint.sh; docker/hermes-exec-shim.sh |
+| `flake.lock` | lockfile | Nix flake lock | Pins nix derivation inputs; regenerated by nix flake lock | .coderabbit.yaml; .dockerignore; .env.example; .envrc; .gitattributes; .githooks/pre-commit; .github/ISSUE_TEMPLATE/bug_report.yml; .github/ISSUE_TEMPLATE/config.yml |
 | `flake.nix` | build | Nix flake declaration | for nix-based dev environments | nix/;flake.lock |
 | `mcp_serve.py` | source | MCP server mode — expose the agent as an MCP host/server | Lets external MCP clients drive the agent; catalog + client bridging lives in tools/mcp_tool.py | tools/mcp_tool.py;tools/setup_mcp_tool.py |
 | `mini_swe_runner.py` | source | Minimal SWE-bench-style evaluator harness for the agent | Runs model patch-turns against task instances for offline evals | evals/;scripts/run_tests.sh |
-| `nix/3v0-agent.nix` | asset | File `3v0-agent.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/checks.nix` | asset | File `checks.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/configMergeScript.nix` | asset | File `configMergeScript.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/desktop.nix` | asset | File `desktop.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/devShell.nix` | asset | File `devShell.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/lib.nix` | asset | File `lib.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/nixosModules.nix` | asset | File `nixosModules.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/node-gyp-11-4-0-package-lock.json` | config | Structured data/config file | Persistent state or declarative config read by tooling |  |
-| `nix/node-gyp-11-4-0.nix` | asset | File `node-gyp-11-4-0.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/npm-12-0-2.nix` | asset | File `npm-12-0-2.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/overlays.nix` | asset | File `overlays.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/packages.nix` | asset | File `packages.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/python.nix` | asset | File `python.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/sandbox.nix` | asset | File `sandbox.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/tui.nix` | asset | File `tui.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `nix/web.nix` | asset | File `web.nix` | Repository content; see related files / area page for the enclosing subsystem |  |
-| `package-lock.json` | lockfile | Generated dependency lockfile | Pins every transitive dep with hashes (supply-chain invariant); regenerated by uv/npm |  |
+| `nix/3v0-agent.nix` | asset | File `3v0-agent.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix; nix/npm-12-0-2.nix |
+| `nix/checks.nix` | asset | File `checks.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix; nix/npm-12-0-2.nix |
+| `nix/configMergeScript.nix` | asset | File `configMergeScript.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix; nix/npm-12-0-2.nix |
+| `nix/desktop.nix` | asset | File `desktop.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix; nix/npm-12-0-2.nix |
+| `nix/devShell.nix` | asset | File `devShell.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix; nix/npm-12-0-2.nix |
+| `nix/lib.nix` | asset | File `lib.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix |
+| `nix/nixosModules.nix` | asset | File `nixosModules.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix; nix/npm-12-0-2.nix |
+| `nix/node-gyp-11-4-0-package-lock.json` | config | Structured data/config file | Persistent state or declarative config read by tooling | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0.nix; nix/npm-12-0-2.nix; nix/overlays.nix |
+| `nix/node-gyp-11-4-0.nix` | asset | File `node-gyp-11-4-0.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/npm-12-0-2.nix |
+| `nix/npm-12-0-2.nix` | asset | File `npm-12-0-2.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix |
+| `nix/overlays.nix` | asset | File `overlays.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix |
+| `nix/packages.nix` | asset | File `packages.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix |
+| `nix/python.nix` | asset | File `python.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix |
+| `nix/sandbox.nix` | asset | File `sandbox.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix |
+| `nix/tui.nix` | asset | File `tui.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix |
+| `nix/web.nix` | asset | File `web.nix` | Repository content; see related files / area page for the enclosing subsystem | nix/3v0-agent.nix; nix/checks.nix; nix/configMergeScript.nix; nix/desktop.nix; nix/devShell.nix; nix/lib.nix; nix/nixosModules.nix; nix/node-gyp-11-4-0-package-lock.json; nix/node-gyp-11-4-0.nix |
+| `package-lock.json` | lockfile | Generated dependency lockfile | Pins every transitive dep with hashes (supply-chain invariant); regenerated by uv/npm | .coderabbit.yaml; .dockerignore; .env.example; .envrc; .gitattributes; .githooks/pre-commit; .github/ISSUE_TEMPLATE/bug_report.yml; .github/ISSUE_TEMPLATE/config.yml |
 | `package.json` | build | Root npm workspace manifest | Orchestrates the JS side (ui-tui, web, apps, website) | package-lock.json;ui-tui/package.json |
 | `pyproject.toml` | build | Python packaging + dependency declaration with upper-bound pins | Defines the package and the supply-chain pinning policy | uv.lock;setup.py |
 | `registration_lifecycle.py` | source | Lifecycle hooks for registration/licensing flows | Registration/activation side of the product surface | ev0_cli/auth*.py |
-| `setup-3v0.sh` | script | Environment bootstrap shell | Provision a working 3V0 run/dev environment |  |
-| `setup.py` | build | Legacy setup shim | Compatibility entrypoint delegating to pyproject |  |
+| `setup-3v0.sh` | script | Environment bootstrap shell | Provision a working 3V0 run/dev environment | .coderabbit.yaml; .dockerignore; .env.example; .envrc; .gitattributes; .githooks/pre-commit; .github/ISSUE_TEMPLATE/bug_report.yml; .github/ISSUE_TEMPLATE/config.yml |
+| `setup.py` | build | Legacy setup shim | Compatibility entrypoint delegating to pyproject | .coderabbit.yaml; .dockerignore; .env.example; .envrc; .gitattributes; .githooks/pre-commit; .github/ISSUE_TEMPLATE/bug_report.yml; .github/ISSUE_TEMPLATE/config.yml |
 | `uv.lock` | lockfile | uv lockfile with hashes | Reproducible installs; regenerate via uv lock | pyproject.toml |

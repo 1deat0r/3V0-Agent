@@ -321,7 +321,11 @@ drift before picking up the follow-ups.
   Enforcement wired in: `.githooks/pre-commit` step 4 runs `--check`,
   `3v0/scripts/verify.sh` gained a wiki step, `AGENTS.md` now points agents at
   `wiki/SCHEMA.md`. Consumer target: the `deepseek-v4-flash-0731` aux agent
-  (budget-capped cells, whole pages readable in one pass). Also closed the
+  (budget-capped cells, whole pages readable in one pass). **v2 (same
+  session):** `related` now auto-filled on every auto row (siblings /
+  test→source / singleton walk-up) and enforced by the gate; large areas
+  (TESTS/APPS/SKILLS/WEBSITE/MISC/UITUI) split into per-directory sub-pages
+  so every page fits a flash-model pass. Also closed the
   store-consolidation defect (chain-anchor identity, commits `e029b682c`,
   `5e4ceb1d1`) — see kickoff. 536/536 tests green; verify.sh + ritual clean.
 - **Wake #5 — clean wake + DeepSeek Harness watch resolved (this session).**
