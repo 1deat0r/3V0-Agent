@@ -110,7 +110,7 @@ def _touch(conn, ids, now):
 
 def inject(conn, *, domains=("3v0",), kind=None, query_terms=None,
            budget_chars=DEFAULT_BUDGET_CHARS, touch=True, now=None,
-           sep="\n"):
+           sep="\n", semantic=None, query=None):
     """The retrieval seam: choose and render the working set under a budget.
 
     Facts are taken in ranked order and rendered one content line at a time
@@ -155,6 +155,17 @@ def inject(conn, *, domains=("3v0",), kind=None, query_terms=None,
                 ranked = first + [f for f in ranked if f not in first]
         except Exception:
             pass  # FTS unavailable -> fall back to the score-only order
+
+    # Semantic tier (opt-in): hybrid cosine+lexical rerank lifts paraphrase &
+    # under-specified queries lexical matching cannot. Fail-open: any error or
+    # unavailable provider keeps the lexical/fuzzy order — retrieval never
+    # blocks on the network.
+    if semantic is not None:
+        try:
+            qtext = query if query else " ".join(effective or ())
+            ranked = semantic.rerank(ranked, qtext)
+        except Exception:
+            pass
 
     chosen: list[dict] = []
     lines: list[str] = []

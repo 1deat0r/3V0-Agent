@@ -49,6 +49,13 @@ code.
   corrects unknown query terms to a known content token within edit-distance 1
   (incl. transpositions) so a misspelled query ("foverr"→fiverr) still surfaces
   and scores its true fact — embedding-free, deterministic.
+- `core/backoff.py` — bounded exponential-backoff retry for external provider
+  calls (throttle/transient 403-429/5xx self-heal with increasing waits; hard
+  4xx raise immediately). Used by the LLM + embedding clients.
+- `core/semantic.py` — OPT-IN semantic retrieval tier (bitdeer BAAI/bge-m3
+  embeddings): hybrid cosine+lexical rerank that lifts paraphrase / under-
+  specified queries lexical matching cannot. Fail-open (network errors keep
+  the lexical result); not enabled by default pending cost/benefit.
 - `core/safe_evolve.py` — the misevolution safety gate (arXiv 2608.12851):
   deterministic classify + reuse gate so an unsafe-but-successful procedure
   can't become reusable policy (blocking vs caution vs clean).
