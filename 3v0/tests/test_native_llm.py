@@ -52,7 +52,7 @@ class NativeLlmTest(unittest.TestCase):
             return _FakeResp()
 
         with mock.patch.object(self.llm.urllib.request, "urlopen", side_effect=fake_urlopen):
-            with mock.patch.object(self.llm, "api_key", return_value="k" * 30):
+            with mock.patch.object(self.llm.providers.Provider, "api_key", return_value="k" * 30):
                 out = self.llm.chat([{"role": "user", "content": "hi"}])
 
         req = captured["request"]
