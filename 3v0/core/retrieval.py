@@ -156,14 +156,17 @@ def inject(conn, *, domains=("3v0",), kind=None, query_terms=None,
         except Exception:
             pass  # FTS unavailable -> fall back to the score-only order
 
-    # Semantic tier (opt-in): hybrid cosine+lexical rerank lifts paraphrase &
-    # under-specified queries lexical matching cannot. Fail-open: any error or
-    # unavailable provider keeps the lexical/fuzzy order — retrieval never
-    # blocks on the network.
+    # Semantic tier (opt-in): cosine-based rerank (lexical-gated) lifts
+    # paraphrase & under-specified queries lexical matching cannot. The query is
+    # embedded/lex-scored using the fuzzy-CORRECTED terms (effective), so a
+    # misspelled keyword (foverr->fiverr) keeps full lexical credit and its
+    # embedding sees the corrected form — else the gate would regress the typo
+    # class. Fail-open: any error / unavailable provider keeps the lexical order.
     if semantic is not None:
         try:
-            qtext = query if query else " ".join(effective or ())
-            ranked = semantic.rerank(ranked, qtext)
+            tokens = [t for t in (effective or ()) if isinstance(t, str)]
+            qtext = " ".join(tokens) if tokens else (query or "")
+            ranked = semantic.rerank(ranked, qtext, lex_terms=tokens)
         except Exception:
             pass
 

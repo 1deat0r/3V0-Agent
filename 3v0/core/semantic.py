@@ -140,61 +140,74 @@ class SemanticStore:
 
 
 class SemanticRanker:
-    """Hybrid reranker: RRF fusion of cosine + lexical ranks, not a weighted
-    average. A weighted blend lets a competitor that shares any token with the
-    query grab a lexical bonus that swamps the true paraphrase fact's high
-    cosine (measured: alpha=0.6 blend = 0.19 recall@1 paraphrase vs 0.81 for
-    pure cosine). Reciprocal rank fusion instead fuses *positions* with a
-    constant k, so neither signal's absolute scale can dominate the other.
+    """Lexical-gated cosine reranker.
+
+    Merge lesson (measured): a weighted blend (alpha=0.6) scored 0.19 and RRF
+    fusion 0.56 on the 16-pair paraphrase bench, but *pure cosine scores 0.81*
+    — the lexical signal is pure noise for paraphrase and only drags the true
+    fact down. Opposite extreme, pure cosine under-weights rich keyword matches
+    (kw/nl/typo). So: gate how much to trust cosine on the query's lexical
+    *discriminative power* across the candidate set:
+
+        maxlex (max token-overlap with any fact)  ->  cosine weight g
+            0   (no overlap: clear paraphrase)       -> 1.00
+            1   (weak signal)                        -> 0.85
+            2   (ambiguous keyword)                  -> 0.70
+          >=3   (rich keyword match)                 -> 0.55
+
+    ``cosn``/``lexn`` are each range-normalised over the candidate set so the
+    blend is scale-consistent. ``lex_terms`` should be the *fuzzy-corrected*
+    query terms (typo tier rewrote foverr->fiverr), so a misspelled keyword
+    still gets full lexical credit and its embedding sees the corrected form —
+    otherwise the gate would regress the typo class.
     """
 
-    def __init__(self, store: SemanticStore, *, k: int = 60):
+    def __init__(self, store: SemanticStore, *, cosine_weights: dict[int, float] | None = None):
         self.store = store
-        self.k = k
+        # maxlex -> cosine weight g (lexical weight = 1-g). Sorted asc.
+        self._g = dict(cosine_weights or {0: 1.00, 1: 0.85, 2: 0.70, 3: 0.55})
 
-    def rerank(self, facts: list[dict], query: str) -> list[dict]:
+    def _g_for(self, maxlex: int) -> float:
+        best = self._g.get(maxlex)
+        if best is not None:
+            return best
+        # above the largest explicit bucket -> smallest g (0.55); below 0 -> 1.0
+        keys = sorted(self._g)
+        if maxlex <= keys[0]:
+            return self._g[keys[0]]
+        return self._g[keys[-1]]
+
+    def rerank(self, facts: list[dict], query: str, *, lex_terms: list[str] | None = None) -> list[dict]:
         self.store.ensure(facts)  # embed + cache any uncached facts (persisted)
         qv = self.store.embed_fn([query])[0]
         vecs = self.store.vectors()
-        qterms = [t for t in re.findall(r"[a-z0-9]+", query.lower())]
+        terms = lex_terms if lex_terms else [t for t in re.findall(r"[a-z0-9]+", query.lower())]
         if not facts:
             return facts
 
-        # Per-fact: cosine similarity and lexical (token-overlap) count.
         scores = []
         for f in facts:
             hay = " ".join(str(f.get(k) or "") for k in
                            ("subject", "predicate", "object", "content")).lower()
-            lex = sum(1 for t in qterms if t in hay)
+            lex = sum(1 for t in terms if t in hay)
             v = vecs.get(f["id"])
             cos = _cos(qv, v) if v is not None else 0.0
             scores.append((f["id"], cos, lex))
-        if not qterms:  # no terms to fuse -> pure cosine order
-            order = sorted(scores, key=lambda x: x[1], reverse=True)
+        if not terms:  # nothing lexical to rely on -> pure cosine order
             by_id = {f["id"]: f for f in facts}
-            return [by_id[i] for i, _, _ in order]
+            return [by_id[i] for i, c, _ in sorted(scores, key=lambda x: x[1], reverse=True)]
 
-        # Reciprocal rank fusion over the two orderings.
-        def _ranks(key_idx: int, reverse: bool) -> dict:
-            seq = sorted(scores, key=lambda x: x[key_idx], reverse=reverse)
-            # stable ranks (ties share the min position)
-            out, prev, r = {}, None, 0
-            pos = 0
-            while pos < len(seq):
-                if seq[pos][key_idx] != prev:
-                    r = pos + 1
-                    prev = seq[pos][key_idx]
-                out[seq[pos][0]] = r
-                pos += 1
-            return out
+        maxlex = max((s[2] for s in scores), default=0)
+        cos_vals = [s[1] for s in scores]
+        cmin, cmax = min(cos_vals), max(cos_vals)
+        crange = max(cmax - cmin, 1e-12)
+        g = self._g_for(maxlex)
 
-        rcos = _ranks(1, True)
-        rlex = _ranks(2, True)
-        fused = {}
-        cos_by_id = {}
-        for i, c, _ in scores:
-            fused[i] = (1.0 / (self.k + rcos[i]) + 1.0 / (self.k + rlex[i]))
-            cos_by_id[i] = c
-        return sorted(facts,
-                      key=lambda f: (fused[f["id"]], cos_by_id[f["id"]]),
-                      reverse=True)
+        scored = []
+        for i, c, lex in scores:
+            cosn = (c - cmin) / crange
+            lexn = (lex / maxlex) if maxlex else 0.0
+            scored.append((g * cosn + (1 - g) * lexn, c, i))
+        scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+        by_id = {f["id"]: f for f in facts}
+        return [by_id[i] for _, _, i in scored]
