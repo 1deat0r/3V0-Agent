@@ -9,6 +9,7 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -155,6 +156,82 @@ class SemanticRankerTest(unittest.TestCase):
                                budget_chars=2000, touch=False, semantic=Poison())
         # lexical path still works; no exception
         self.assertTrue(inj.facts)
+
+
+class RetrievalGateTest(unittest.TestCase):
+    """Cost-aware semantic gate (production enablement): embeddings engage ONLY
+    on multi-term low-coverage queries, so confident keyword matches don't pay
+    the ~0.7s round-trip."""
+
+    class _Sent:
+        def __init__(self):
+            self.calls = 0
+
+        def rerank(self, facts, q, *, lex_terms=None):
+            self.calls += 1
+            return facts
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.conn = memdb.connect(f"{self._tmp.name}/m.db")
+
+    def _seed(self, contents):
+        for c in contents:
+            memdb.add_fact(self.conn, "c", "d", "o", domain="benchmark", content=c)
+
+    def test_confident_keyword_skips_semantic(self):
+        self._seed(["alpha bravo charlie delta MEMK",
+                    "alpha bravo epsilon MEMK2"])
+        sent = self._Sent()
+        retrieval.inject(self.conn, domains=("benchmark",),
+                         query_terms=["alpha", "bravo", "charlie"],
+                         budget_chars=2000, touch=False, semantic=sent)
+        self.assertEqual(sent.calls, 0)  # 3/3 covered -> lexical already wins
+
+    def test_low_coverage_engages_semantic(self):
+        self._seed(["the keeper turns the page gently MEMP",
+                    "cash registers page loudly MEMC"])
+        sent = self._Sent()
+        retrieval.inject(self.conn, domains=("benchmark",),
+                         query_terms=["xylophone", "quasar", "nebulous"],
+                         budget_chars=2000, touch=False, semantic=sent)
+        self.assertEqual(sent.calls, 1)  # ~0 coverage -> paraphrase -> engage
+
+    def test_single_term_skips_semantic(self):
+        self._seed(["amber gig MEM1", "amber service MEM2", "amber provider MEM3"])
+        sent = self._Sent()
+        retrieval.inject(self.conn, domains=("benchmark",),
+                         query_terms=["amber"], budget_chars=2000, touch=False,
+                         semantic=sent)
+        self.assertEqual(sent.calls, 0)  # under-determined (partial) -> skip
+
+    def test_semantic_true_builds_default_ranker(self):
+        self._seed(["the keeper turns the page gently MEMP",
+                    "cash registers page loudly MEMC"])
+        built = []
+
+        class Fake:
+            def rerank(self, facts, q, *, lex_terms=None):
+                return facts
+
+        def make(conn):
+            built.append(conn)
+            return Fake()
+
+        with mock.patch.object(retrieval, "_default_ranker", side_effect=make):
+            inj = retrieval.inject(self.conn, domains=("benchmark",),
+                                   query_terms=["xylophone", "quasar", "nebulous"],
+                                   budget_chars=2000, touch=False, semantic=True)
+        self.assertEqual(len(built), 1)  # gate engaged AND default ranker built
+        self.assertTrue(inj.facts)
+
+    def test_semantic_true_fail_open_when_ranker_none(self):
+        self._seed(["amber gig MEM1", "amber service MEM2"])
+        with mock.patch.object(retrieval, "_default_ranker", return_value=None):
+            inj = retrieval.inject(self.conn, domains=("benchmark",),
+                                   query_terms=["flips", "loudly"],
+                                   budget_chars=2000, touch=False, semantic=True)
+        self.assertTrue(inj.facts)  # lexical path survives; no exception
 
 
 if __name__ == "__main__":

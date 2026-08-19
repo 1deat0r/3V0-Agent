@@ -108,6 +108,45 @@ def _touch(conn, ids, now):
     conn.commit()
 
 
+# Cost-aware semantic gate. Embeddings cost ~0.7s/query; engage them ONLY when
+# the lexical/fuzzy path is not already decisive, so accuracy climbs without
+# taxing `speed` on every inject.
+SEMANTIC_MIN_TERMS = 2        # single-term queries are under-determined (partial
+                              # class): near-identical fact embeddings can't
+                              # disambiguate them, so skip to save the call.
+SEMANTIC_SKIP_FRACTION = 0.66  # a fact covering >= 66% of query terms = a confident
+                              # keyword match -> lexical already wins, skip semantic.
+
+
+def _lex_best_fraction(ranked, terms) -> float:
+    """Highest fraction of query terms any candidate fact shares (0..1)."""
+    best = 0
+    for f in ranked:
+        hay = " ".join(str(f.get(k) or "") for k in
+                       ("subject", "predicate", "object", "content")).lower()
+        best = max(best, sum(1 for t in terms if t in hay))
+    if best == 0:
+        return 0.0
+    return best / len(terms)
+
+
+def _needs_semantic(ranked, terms) -> bool:
+    if not terms or len(terms) < SEMANTIC_MIN_TERMS:
+        return False
+    return _lex_best_fraction(ranked, terms) < SEMANTIC_SKIP_FRACTION
+
+
+def _default_ranker(conn):
+    """Lazy default semantic ranker from the configured embed provider.
+    Fail-open: any setup error -> None (retrieval keeps the lexical path)."""
+    try:
+        from core import semantic as _sem
+        store = _sem.SemanticStore(conn, embed_fn=_sem.embed_texts)
+        return _sem.SemanticRanker(store)
+    except Exception:
+        return None
+
+
 def inject(conn, *, domains=("3v0",), kind=None, query_terms=None,
            budget_chars=DEFAULT_BUDGET_CHARS, touch=True, now=None,
            sep="\n", semantic=None, query=None):
@@ -156,17 +195,24 @@ def inject(conn, *, domains=("3v0",), kind=None, query_terms=None,
         except Exception:
             pass  # FTS unavailable -> fall back to the score-only order
 
-    # Semantic tier (opt-in): cosine-based rerank (lexical-gated) lifts
-    # paraphrase & under-specified queries lexical matching cannot. The query is
+    # Semantic tier (opt-in; enabled in production via semantic=True): a
+    # coverage-fraction-gated cosine rerank lifts paraphrase & under-specified
+    # queries lexical matching cannot. Engaged only when the lexical path is NOT
+    # already decisive (multi-term low-coverage query) — the cost gate — so we
+    # don't pay ~0.7s/query embeddings on confident keyword matches. The query is
     # embedded/lex-scored using the fuzzy-CORRECTED terms (effective), so a
-    # misspelled keyword (foverr->fiverr) keeps full lexical credit and its
-    # embedding sees the corrected form — else the gate would regress the typo
-    # class. Fail-open: any error / unavailable provider keeps the lexical order.
+    # misspelled keyword keeps full lexical credit and its embedding sees the
+    # corrected form (else the gate would regress typo). Fail-open: any error or
+    # unavailable provider keeps the lexical/fuzzy order — retrieval never blocks
+    # on the network.
     if semantic is not None:
         try:
             tokens = [t for t in (effective or ()) if isinstance(t, str)]
-            qtext = " ".join(tokens) if tokens else (query or "")
-            ranked = semantic.rerank(ranked, qtext, lex_terms=tokens)
+            if _needs_semantic(ranked, tokens):
+                ranker = semantic if semantic is not True else _default_ranker(conn)
+                if ranker is not None:
+                    qtext = " ".join(tokens) if tokens else (query or "")
+                    ranked = ranker.rerank(ranked, qtext, lex_terms=tokens)
         except Exception:
             pass
 

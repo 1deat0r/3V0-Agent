@@ -56,9 +56,10 @@ code.
   embeddings): a coverage-fraction-gated cosine rerank (corrected-term aware)
   that lifts paraphrase / under-specified queries lexical matching cannot
   (paraphrase recall@1 0.12->0.81, the pure-cosine ceiling; typo held 1.00).
-  Embedding provider/model resolve via the native provider registry and the
-  vector cache is keyed by model. Fail-open (network errors keep the lexical
-  result); not enabled by default pending cost/benefit.
+  ENABLED in production cost-aware (core.retrieval gate): embeddings engage
+  only on multi-term low-coverage queries — a confident keyword match skips the
+  ~0.7s round-trip. Embedding provider/model resolve via the native provider
+  registry; the vector cache is keyed by model. Fail-open always.
 - `core/safe_evolve.py` — the misevolution safety gate (arXiv 2608.12851):
   deterministic classify + reuse gate so an unsafe-but-successful procedure
   can't become reusable policy (blocking vs caution vs clean).

@@ -55,12 +55,16 @@ def _import_retrieval():
 def build_system_from_store(soul_text: str, conn=None, *,
                             domains=("3v0",), kind=None, budget_chars: int = 6000,
                             touch: bool = True, query_terms: tuple = (),
-                            sep: str = "\n§\n") -> str:
+                            sep: str = "\n§\n", semantic: bool = True) -> str:
     """Compose a system prompt from the soul + a RETRIEVAL-CHOSEN working set
     (ADR-0004). Opens the canonical memory.db when no conn is given; ranks the
     working set by keyword+recency+feedback and, when touch=True, writes the
     feedback counters so future injection reinforces what is actually pulled in.
-    Returns the rendered prompt; len of the memory block <= budget_chars.
+    ``semantic=True`` engages the cost-gated embedding rerank (core.retrieval):
+    only low-coverage multi-term queries pay the ~0.7s embed round-trip — a
+    confident keyword match skips it. Fail-open: any provider error keeps the
+    lexical path. Returns the rendered prompt; len of the memory block <=
+    budget_chars.
     """
     retrieval = _import_retrieval()
     own = conn is None
@@ -71,6 +75,7 @@ def build_system_from_store(soul_text: str, conn=None, *,
         inj = retrieval.inject(
             conn, domains=domains, kind=kind, query_terms=query_terms,
             budget_chars=budget_chars, touch=touch, sep=sep,
+            semantic=True if semantic else None,
         )
     finally:
         if own:
