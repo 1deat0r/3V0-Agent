@@ -19,6 +19,7 @@ import os
 import re
 import urllib.error
 import urllib.request
+from collections.abc import Mapping
 from pathlib import Path
 
 from . import backoff
@@ -140,42 +141,50 @@ class SemanticStore:
 
 
 class SemanticRanker:
-    """Lexical-gated cosine reranker.
+    """Coverage-fraction-gated cosine reranker.
 
-    Merge lesson (measured): a weighted blend (alpha=0.6) scored 0.19 and RRF
-    fusion 0.56 on the 16-pair paraphrase bench, but *pure cosine scores 0.81*
-    — the lexical signal is pure noise for paraphrase and only drags the true
-    fact down. Opposite extreme, pure cosine under-weights rich keyword matches
-    (kw/nl/typo). So: gate how much to trust cosine on the query's lexical
-    *discriminative power* across the candidate set:
+    Merge lesson (measured on the honest 200-corpus + 16-pair paraphrase):
+    a weighted blend (alpha) = 0.19, RRF = 0.56, raw-maxlex gate = 0.38, but
+    pure cosine = 0.81 on paraphrase — the lexical signal is mostly noise for
+    paraphrase and drags the true fact down. Yet pure cosine risks the kw/nl/
+    typo classes (keyword templates need lexical). The misclassification in a
+    raw ``maxlex`` gate: paraphrase queries still share *function words* with
+    facts (the/3v0/model), so ``maxlex`` is usually >= 1 and the gate leans
+    lexical into noise.
 
-        maxlex (max token-overlap with any fact)  ->  cosine weight g
-            0   (no overlap: clear paraphrase)       -> 1.00
-            1   (weak signal)                        -> 0.85
-            2   (ambiguous keyword)                  -> 0.70
-          >=3   (rich keyword match)                 -> 0.55
+    Fix: gate on *coverage fraction* = maxlex / len(terms). A keyword query
+    has a fact covering essentially ALL its terms -> fraction 1.0 -> lean
+    lexical. A paraphrase covers only a slice -> low fraction -> lean cosine:
 
-    ``cosn``/``lexn`` are each range-normalised over the candidate set so the
-    blend is scale-consistent. ``lex_terms`` should be the *fuzzy-corrected*
-    query terms (typo tier rewrote foverr->fiverr), so a misspelled keyword
-    still gets full lexical credit and its embedding sees the corrected form —
-    otherwise the gate would regress the typo class.
+        fraction  coverage of best fact   cosine weight g
+          == 0    no overlap (clear pg)      1.00
+         > 0,<.5  loose paraphrase           0.90
+         .5 - <1  mixed                       0.70
+          >= 1    full keyword match          0.50
+
+    ``lex_terms`` must be the fuzzy-CORRECTED terms (typo tier rewrote
+    foverr->fiverr) and the embedded ``query`` must be that corrected form; a
+    misspelled keyword then keeps full lexical credit AND its embedding sees
+    the true token — this recovered typo 0.74 -> 1.00. cosn/lexn each range
+    normalized over the candidate set so the blend is scale-consistent.
     """
 
-    def __init__(self, store: SemanticStore, *, cosine_weights: dict[int, float] | None = None):
+    def __init__(self, store: SemanticStore, *, cosine_weights: Mapping | None = None):
         self.store = store
-        # maxlex -> cosine weight g (lexical weight = 1-g). Sorted asc.
-        self._g = dict(cosine_weights or {0: 1.00, 1: 0.85, 2: 0.70, 3: 0.55})
+        # fraction thresholds (inclusive-ish) -> cosine weight g.
+        self._g = dict(cosine_weights or {0.0: 1.00, 0.5: 0.90, 0.7: 0.70, 1.0: 0.50})
 
-    def _g_for(self, maxlex: int) -> float:
-        best = self._g.get(maxlex)
-        if best is not None:
-            return best
-        # above the largest explicit bucket -> smallest g (0.55); below 0 -> 1.0
+    def _g_for_fraction(self, frac: float) -> float:
+        # pick the threshold bucket: highest key <= frac (frac >= 1.0 -> 0.50;
+        # frac == 0 -> 1.00). If frac exceeds all keys, use the smallest g.
         keys = sorted(self._g)
-        if maxlex <= keys[0]:
+        chosen = None
+        for k in keys:
+            if frac >= k:
+                chosen = k
+        if chosen is None:
             return self._g[keys[0]]
-        return self._g[keys[-1]]
+        return self._g[chosen]
 
     def rerank(self, facts: list[dict], query: str, *, lex_terms: list[str] | None = None) -> list[dict]:
         self.store.ensure(facts)  # embed + cache any uncached facts (persisted)
@@ -198,10 +207,11 @@ class SemanticRanker:
             return [by_id[i] for i, c, _ in sorted(scores, key=lambda x: x[1], reverse=True)]
 
         maxlex = max((s[2] for s in scores), default=0)
+        frac = maxlex / len(terms)
         cos_vals = [s[1] for s in scores]
         cmin, cmax = min(cos_vals), max(cos_vals)
         crange = max(cmax - cmin, 1e-12)
-        g = self._g_for(maxlex)
+        g = self._g_for_fraction(frac)
 
         scored = []
         for i, c, lex in scores:
