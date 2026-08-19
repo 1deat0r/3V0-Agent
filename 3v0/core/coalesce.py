@@ -5,13 +5,18 @@ mark means the process fires only when ``now - last >= interval``, so it is
 idempotent across repeated 3V0 wake ticks yet still happens regularly.
 
 Work done on each fire:
-  1. conflict reconciliation — collapse conflicting (subject,predicate) facts to
-     one current truth (consolidate.py), reversible via valid_to.
-  2. near-duplicate merge — within a (subject,predicate) group, supersede sibling
-     content that is token-overlap >= threshold (conservative), so the store
-     stops growing duplicate truth.
+  1. conflict reconciliation — collapse every chain holding more than one
+     valid member to one current truth (consolidate.py), reversible via
+     valid_to. Conflict identity is the chain anchor (the supersedes lineage),
+     never the container (subject,predicate) key — distinct notes under one
+     key are left untouched.
+  2. near-duplicate merge — within a (subject,predicate) group, supersede
+     sibling content that is token-overlap >= threshold (conservative), so the
+     store stops growing duplicate truth.
 
 All supersessions are auditable + reversible (valid_to close, never delete).
+``pending_remaining`` is the post-pass pending count; a fired pass reaches
+fixed point (100% coverage) when it is zero.
 """
 from __future__ import annotations
 
@@ -45,6 +50,7 @@ class CoalesceReport:
     reconciled: int = 0
     merged: int = 0
     superseded_ids: list = field(default_factory=list)
+    pending_remaining: int = 0    # fixed point (100% coverage) == 0 after a fire
     next_due: float = 0.0
 
 
@@ -102,13 +108,14 @@ def run(conn, *, now=None, interval_s: float = DEFAULT_INTERVAL_S,
                               next_due=last + interval_s)
     rep = CoalesceReport(fired=True)
     for ks in consolidate.pending_consolidations(conn):
-        r = consolidate.reconcile(conn, ks.subject, ks.predicate, keep="newest", now=now)
+        r = consolidate.reconcile(conn, ks.root_id, keep="newest", now=now)
         if r.reconciled:
             rep.reconciled += 1
             rep.superseded_ids += r.closed
     merged, closed = _merge_near_duplicates(conn, threshold=threshold)
     rep.merged = merged
     rep.superseded_ids += closed
+    rep.pending_remaining = len(consolidate.pending_consolidations(conn))
     save_watermark(now, watermark)
     rep.next_due = now + interval_s
     return rep

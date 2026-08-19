@@ -29,8 +29,10 @@ def main() -> int:
         conn = memdb.connect(memdb.DEFAULT_PATH)
         r = coalesce.run(conn)
         if r.fired:
+            cov = "100%" if r.pending_remaining == 0 else f"{r.pending_remaining} REMAINING"
             print(f"  coalesce: fired  reconciled={r.reconciled} "
-                  f"merged={r.merged} superseded={len(r.superseded_ids)}")
+                  f"merged={r.merged} superseded={len(r.superseded_ids)} "
+                  f"pending={r.pending_remaining} ({cov} coverage)")
         else:
             print(f"  coalesce: not-due ({r.reason})")
     except Exception as e:  # noqa: BLE001

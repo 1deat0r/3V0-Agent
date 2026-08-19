@@ -2,17 +2,29 @@
 
 MindMemOS's consolidation ("dreaming") phase merges redundant records and
 resolves conflicts so the store holds one coherent current truth. This module
-implements the deterministic reconciliation half on the existing memdb seam:
+implements the deterministic reconciliation half on the existing memdb seam.
 
-- ``conflicting_valid(conn, subject, predicate)`` — valid facts under one key
-  whose content disagrees (the same topic asserted more than one way).
-- ``reconcile(conn, subject, predicate, *, keep="newest", now=None)`` — resolve
-  a conflicting key by closing (valid_to = now) every valid duplicate except the
-  keeper, so exactly one current truth survives. Reuses the memdb convention
+Conflict identity is the **chain anchor** — not the (subject, predicate) key.
+The canonical pipeline writes every fact under the container key
+(('3v0', 'note'), see ``SQLStore.add``), so a (subject, predicate) pair never
+identifies "the same assertion": 31 distinct notes under one container key
+would read as one 31-way conflict and reconciliation would destroy 30 of them.
+The schema's only honest same-assertion signal is the ``supersedes`` link — a
+correction points at the fact it replaces, and distinct notes never link. A
+fact's chain anchor is the root of its ``supersedes`` lineage; unlinked facts
+anchor to themselves.
+
+- ``chain_anchor(conn, fact_id)`` — the lineage root of a fact (walk
+  ``supersedes`` to the oldest ancestor; unlinked facts anchor to themselves).
+- ``pending_consolidations(conn)`` — every chain currently holding **more than
+  one valid member** (the supersession invariant breach), for reporting /
+  scheduling a dreaming pass. Distinct unlinked notes are singleton chains and
+  are never reported.
+- ``reconcile(conn, root_id, *, keep="newest", now=None)`` — repair one broken
+  chain by closing (valid_to = now) every valid member except the keeper, so
+  exactly one current truth survives per chain. Reuses the memdb convention
   "inactive iff valid_to IS NOT NULL", so reconciled-away facts can never be
   injected (governance fail-close holds automatically).
-- ``pending_consolidations(conn)`` — all conflicting keys, for reporting /
-  scheduling a dreaming pass.
 
 Consolidation is *correctness-preserving only when the newer assertion is the
 true one*; keep="newest" is an explicit policy parameter, not a hidden default
@@ -29,9 +41,10 @@ from . import memdb
 
 @dataclass
 class KeyState:
-    subject: str
-    predicate: str
-    facts: list[dict]      # valid facts under this key, created_at DESC
+    root_id: int          # the chain anchor (lineage root) of these facts
+    subject: str          # the anchor's subject (reporting; container-key-aware)
+    predicate: str        # the anchor's predicate (reporting)
+    facts: list[dict]     # VALID members of the chain, id DESC
     distinct_contents: int
 
     @property
@@ -39,29 +52,67 @@ class KeyState:
         return self.distinct_contents > 1
 
 
-def _key(row: dict) -> tuple[str, str]:
-    return (str(row.get("subject") or ""), str(row.get("predicate") or ""))
+def chain_anchor(conn, fact_id) -> int:
+    """The lineage root of ``fact_id``: walk ``supersedes`` to the oldest
+    ancestor; an unlinked fact anchors to itself. Cycle-bounded (a hand-edited
+    cycle terminates at a member, never hangs)."""
+    seen = set()
+    cur = fact_id
+    while cur is not None and cur not in seen:
+        row = conn.execute(
+            "SELECT supersedes FROM facts WHERE id=?", (cur,)).fetchone()
+        if row is None or row["supersedes"] is None:
+            return cur
+        seen.add(cur)
+        cur = row["supersedes"]
+    return cur
 
 
-def conflicting_valid(conn, subject: str, predicate: str, *, now=None):
-    """Valid facts with this (subject, predicate) that disagree in content."""
-    facts = [f for f in memdb.valid_facts(conn, now=now)
-             if _key(f) == (subject, predicate)]
-    distinct = {f.get("content") for f in facts}
-    return [f for f in facts] if len(distinct) > 1 else []
+def _chain_members(conn, root_id) -> list[dict]:
+    """The full lineage of a chain: ``root_id`` plus every descendant via
+    ``supersedes`` (bounded; the store is small, so an in-memory pass is fine)."""
+    rows = [dict(r) for r in conn.execute("SELECT * FROM facts").fetchall()]
+    parents = {r["id"]: r for r in rows}
+    children: dict[int, list[dict]] = {}
+    for r in rows:
+        if r["supersedes"] is not None:
+            children.setdefault(r["supersedes"], []).append(r)
+    members: list[dict] = []
+    seen = set()
+    stack = [root_id]
+    while stack:
+        fid = stack.pop()
+        if fid in seen:
+            continue
+        seen.add(fid)
+        parent = parents.get(fid)
+        if parent is not None:
+            members.append(parent)
+            stack.extend(r["id"] for r in children.get(fid, []))
+    return members
 
 
 def pending_consolidations(conn, *, now=None) -> list[KeyState]:
-    """All (subject, predicate) keys currently holding conflicting truths."""
-    seen: dict[tuple[str, str], list[dict]] = {}
+    """All chains currently holding more than one valid member — the
+    supersession-invariant breach consolidation repairs. Distinct unlinked
+    notes anchor to themselves and are never reported."""
+    groups: dict[int, list[dict]] = {}
     for f in memdb.valid_facts(conn, now=now):
-        seen.setdefault(_key(f), []).append(f)
+        groups.setdefault(chain_anchor(conn, f["id"]), []).append(f)
     out = []
-    for key, facts in seen.items():
-        distinct = {f.get("content") for f in facts}
-        if len(distinct) > 1:
-            facts = sorted(facts, key=lambda r: r.get("id") or 0, reverse=True)
-            out.append(KeyState(key[0], key[1], facts, len(distinct)))
+    for anchor, facts in sorted(groups.items()):
+        facts = sorted(facts, key=lambda r: r.get("id") or 0, reverse=True)
+        if len(facts) > 1:
+            row = conn.execute(
+                "SELECT subject, predicate FROM facts WHERE id=?",
+                (anchor,)).fetchone()
+            out.append(KeyState(
+                root_id=anchor,
+                subject=str(row["subject"]) if row else "",
+                predicate=str(row["predicate"]) if row else "",
+                facts=facts,
+                distinct_contents=len({f.get("content") for f in facts}),
+            ))
     return out
 
 
@@ -78,28 +129,41 @@ class ReconcileResult:
         return bool(self.closed)
 
 
-def reconcile(conn, subject: str, predicate: str, *, keep: str = "newest",
+def reconcile(conn, root_id, *, keep: str = "newest",
               now=None) -> ReconcileResult:
-    """Resolve a conflicting key: close every valid duplicate but the keeper.
+    """Repair one chain: close every VALID member except the keeper.
 
-    ``keep``: "newest" → keep the highest-id valid fact (latest assertion).
-    Returns the closed ids; a no-op when the key is not conflict...lconflicting.
+    ``root_id`` is the chain anchor returned by ``pending_consolidations``.
+    ``keep``: "newest" → keep the highest-id valid member (latest assertion).
+    Returns the closed ids; a no-op when the chain already holds one truth.
     Commits the writes (mirrors memdb.add_fact's persist=True default).
     """
     now = now if now is not None else time.time()
-    candidates = [f for f in memdb.valid_facts(conn, now=now)
-                  if _key(f) == (subject, predicate)]
-    distinct = {f.get("content") for f in candidates}
-    if len(distinct) <= 1:
-        return ReconcileResult(subject, predicate, None, [], None)
+    members = _chain_members(conn, root_id)
+    valid = [m for m in members if m.get("valid_to") is None]
+    root_row = next((m for m in members if m.get("id") == root_id), None)
+    if len(valid) <= 1:
+        keeper = valid[0] if valid else None
+        return ReconcileResult(
+            subject=str(root_row.get("subject") or "") if root_row else "",
+            predicate=str(root_row.get("predicate") or "") if root_row else "",
+            keeper_id=keeper.get("id") if keeper else None,
+            closed=[],
+            kept_content=keeper.get("content") if keeper else None,
+        )
 
-    ordered = sorted(candidates, key=lambda r: r.get("id") or 0, reverse=True)
+    ordered = sorted(valid, key=lambda r: r.get("id") or 0, reverse=True)
     keeper = ordered[0]
-    close_ids = [f["id"] for f in ordered[1:] if f.get("id") != keeper.get("id")]
+    close_ids = [m["id"] for m in ordered[1:] if m.get("id") != keeper.get("id")]
     if close_ids:
         conn.executemany(
             "UPDATE facts SET valid_to = ? WHERE id = ? AND valid_to IS NULL",
             [(now, cid) for cid in close_ids])
         conn.commit()
-    return ReconcileResult(subject, predicate, keeper.get("id"), close_ids,
-                           keeper.get("content"))
+    return ReconcileResult(
+        subject=str(root_row.get("subject") or "") if root_row else "",
+        predicate=str(root_row.get("predicate") or "") if root_row else "",
+        keeper_id=keeper.get("id"),
+        closed=close_ids,
+        kept_content=keeper.get("content"),
+    )
