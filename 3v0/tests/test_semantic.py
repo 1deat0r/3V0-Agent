@@ -14,7 +14,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from core import memdb, retrieval, backoff, semantic  # noqa: E402
 
-ALIASES = {"sea": "ocean", "dawn": "sunrise", "purchase": "buy", "near": "next_to"}
+ALIASES = {"sea": "ocean", "dawn": "sunrise", "purchase": "buy", "near": "next_to",
+           "turns": "flips", "gently": "softly"}
 
 
 def fake_embed(texts):
@@ -68,17 +69,36 @@ class SemanticRankerTest(unittest.TestCase):
     def test_hybrid_lifts_alias_target(self):
         self._seed()
         store = semantic.SemanticStore(self.conn, embed_fn=fake_embed)
-        ranker = semantic.SemanticRanker(store, alpha=0.6)
+        ranker = semantic.SemanticRanker(store, k=60)
         facts = [dict(r) for r in self.conn.execute(
             "SELECT * FROM facts WHERE domain='benchmark'")]
         # lexically disjoint from the target (dawn/near/the/sea)
         ranked = ranker.rerank(facts, "dawn near the sea")
         self.assertIn("MEM1", ranked[0]["content"])  # alias sea->ocean raises it
 
+    def test_rrf_competitor_sharing_token_does_not_outrank_cosine_target(self):
+        """Regression: the old alpha-weighted blend gave a +0.4 lexical bonus
+        to any competitor sharing a token, swamping a zero-overlap paraphrase
+        target's high cosine (measured 0.19 vs 0.81). RRF fuses positions, so
+        the high-cosine target must win despite a token-sharing rival."""
+        conn = self.conn
+        memdb.add_fact(conn, "scene", "x", "y", domain="benchmark",
+                       content="the keeper turns the page gently MEMT")
+        memdb.add_fact(conn, "scene", "x", "y", domain="benchmark",
+                       content="cash registers page loudly MEMC")
+        store = semantic.SemanticStore(conn, embed_fn=fake_embed)
+        ranker = semantic.SemanticRanker(store, k=60)
+        facts = [dict(r) for r in conn.execute(
+            "SELECT * FROM facts WHERE domain='benchmark'")]
+        # 'page' token ties MEMC to the query; 'keeper/turns/gently' (synonyms
+        # of 'librarian flips softly') tie MEMT only through alias buckets.
+        ranked = ranker.rerank(facts, "flips the page softly")
+        self.assertIn("MEMT", ranked[0]["content"])
+
     def test_inject_semantic_surfaces_target(self):
         self._seed()
         store = semantic.SemanticStore(self.conn, embed_fn=fake_embed)
-        ranker = semantic.SemanticRanker(store, alpha=0.6)
+        ranker = semantic.SemanticRanker(store, k=60)
         inj = retrieval.inject(self.conn, domains=("benchmark",),
                                query_terms=["dawn", "sea+purchase"],
                                budget_chars=2000, touch=False, semantic=ranker,

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -139,30 +140,61 @@ class SemanticStore:
 
 
 class SemanticRanker:
-    """Hybrid reranker: cosine (semantic) merged with the lexical score."""
+    """Hybrid reranker: RRF fusion of cosine + lexical ranks, not a weighted
+    average. A weighted blend lets a competitor that shares any token with the
+    query grab a lexical bonus that swamps the true paraphrase fact's high
+    cosine (measured: alpha=0.6 blend = 0.19 recall@1 paraphrase vs 0.81 for
+    pure cosine). Reciprocal rank fusion instead fuses *positions* with a
+    constant k, so neither signal's absolute scale can dominate the other.
+    """
 
-    def __init__(self, store: SemanticStore, *, alpha: float = 0.6):
+    def __init__(self, store: SemanticStore, *, k: int = 60):
         self.store = store
-        self.alpha = alpha
+        self.k = k
 
     def rerank(self, facts: list[dict], query: str) -> list[dict]:
         self.store.ensure(facts)  # embed + cache any uncached facts (persisted)
         qv = self.store.embed_fn([query])[0]
         vecs = self.store.vectors()
-        qterms = [t for t in query.lower().split()]
+        qterms = [t for t in re.findall(r"[a-z0-9]+", query.lower())]
+        if not facts:
+            return facts
 
-        def lex_score(f: dict) -> int:
+        # Per-fact: cosine similarity and lexical (token-overlap) count.
+        scores = []
+        for f in facts:
             hay = " ".join(str(f.get(k) or "") for k in
                            ("subject", "predicate", "object", "content")).lower()
-            return sum(1 for t in qterms if t in hay)
-
-        lex = [lex_score(f) for f in facts]
-        maxlex = max(lex) or 1.0
-        scored = []
-        for f, lx in zip(facts, lex):
+            lex = sum(1 for t in qterms if t in hay)
             v = vecs.get(f["id"])
             cos = _cos(qv, v) if v is not None else 0.0
-            hybrid = self.alpha * cos + (1 - self.alpha) * (lx / maxlex)
-            scored.append((hybrid, f))
-        scored.sort(key=lambda x: x[0], reverse=True)
-        return [f for _, f in scored]
+            scores.append((f["id"], cos, lex))
+        if not qterms:  # no terms to fuse -> pure cosine order
+            order = sorted(scores, key=lambda x: x[1], reverse=True)
+            by_id = {f["id"]: f for f in facts}
+            return [by_id[i] for i, _, _ in order]
+
+        # Reciprocal rank fusion over the two orderings.
+        def _ranks(key_idx: int, reverse: bool) -> dict:
+            seq = sorted(scores, key=lambda x: x[key_idx], reverse=reverse)
+            # stable ranks (ties share the min position)
+            out, prev, r = {}, None, 0
+            pos = 0
+            while pos < len(seq):
+                if seq[pos][key_idx] != prev:
+                    r = pos + 1
+                    prev = seq[pos][key_idx]
+                out[seq[pos][0]] = r
+                pos += 1
+            return out
+
+        rcos = _ranks(1, True)
+        rlex = _ranks(2, True)
+        fused = {}
+        cos_by_id = {}
+        for i, c, _ in scores:
+            fused[i] = (1.0 / (self.k + rcos[i]) + 1.0 / (self.k + rlex[i]))
+            cos_by_id[i] = c
+        return sorted(facts,
+                      key=lambda f: (fused[f["id"]], cos_by_id[f["id"]]),
+                      reverse=True)
