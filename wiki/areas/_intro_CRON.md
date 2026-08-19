@@ -1,0 +1,1 @@
+Scheduled jobs: store (`jobs.py`), scheduler tick (lock-guarded, hard 3-min interrupt), provider backends, execution ledger, suggestions, blueprint catalog. Agent schedules via the `cronjob` tool; users via `hermes cron` or `/cron`.

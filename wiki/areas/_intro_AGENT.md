@@ -1,0 +1,1 @@
+AIAgent internals that power the loop: provider adapters (anthropic/gemini/vertex/bedrock/codex), memory manager + provider ABC, prompt caching (sacred, cache-breaking banned), compression, iteration budget, credential pool, aux client (deepseek-v4-flash et al.), curator, relay, audio registries.

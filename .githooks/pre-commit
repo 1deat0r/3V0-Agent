@@ -31,4 +31,13 @@ if [ -n "$DIRTY" ]; then
   echo "WARN: unstaged tracked changes left uncommitted:"
   echo "$DIRTY" | sed 's/^/  /'
 fi
+# 4) wiki coverage gate — every tracked path must be indexed (100%).
+#    Runs against the working tree; a stale wiki blocks the commit.
+if ! "$PY" "$ROOT/scripts/build_wiki.py" --check >/tmp/3v0_wiki.txt 2>&1; then
+  echo "PRE-COMMIT BLOCKED: wiki not at 100% coverage — fix and re-stage:"
+  echo "  python3 scripts/build_wiki.py --rebuild"
+  tail -20 /tmp/3v0_wiki.txt
+  exit 1
+fi
+
 exit 0

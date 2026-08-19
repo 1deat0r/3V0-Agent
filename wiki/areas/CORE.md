@@ -1,0 +1,214 @@
+# 3v0/ — the sovereign agent core (memory, standing systems)
+
+3V0's sovereign domain: the memory core (memdb/store/consolidate/coalesce/coherence), the standing scripts (continuity, sync, analytics, handoff, verify), and the canonical data (`memory.db`, `skills.json`, `continuity/claims.json`). The wake ritual in `scripts/handoff_check.sh` drives these; `SOUL.md` and `CONTEXT.md` are identity.
+---
+Auto-rendered from `wiki/manifest.tsv` — `python3 scripts/build_wiki.py --rebuild` regenerates.
+Columns: path · kind · purpose · why · related
+
+| path | kind | purpose | why | related |
+|------|------|---------|-----|---------|
+| `3v0/CONTEXT.md` | doc | Standing context — who 3V0 is, what it knows, the operating narrative | Loaded into every session; the memory store's profile mirror | sync: 3v0/scripts/sync.py;3v0/data/memory.db |
+| `3v0/CONTINUITY.md` | doc | The continuity model — invariants the body must never break | Declarative spec for continuity_check; invariant source of truth | 3v0/core/continuity.py;3v0/data/continuity/claims.json |
+| `3v0/CUTOVER.md` | doc | Migration record of the Hermes -> 3V0 cutover (renames, ev0_* identifiers) | Audit trail for the substrate rename; explains why files are named ev0_* | AGENTS.md;3v0/VERSION |
+| `3v0/DECISION_MATRIX.md` | doc | Decision log — recorded architectural decisions and their rationale | Prevents repeating settled debates; the body's memory of its own choices | 3v0/core/decide.py;3v0/DECISION_MATRIX.md peer: 3v0/CONTEXT.md |
+| `3v0/EVOLUTION_LOOP.md` | doc | The evolution loop — how the agent improves itself and when it may | Governs safe self-modification (safe_evolve); pairs with EVOLUTION_PROBE | 3v0/core/safe_evolve.py;3v0/EVOLUTION_PROBE.md |
+| `3v0/EVOLUTION_PROBE.md` | doc | Probe protocol — controlled experiments for self-improvement | Defines probe bank/attempt lifecycle in data/probe_* | 3v0/data/probe_bank_v1.json;3v0/scripts/discover.py |
+| `3v0/README.md` | readme | 3V0 core README — the sovereign system's own documentation | Entry point for the soul/core subsystem | 3v0/SOUL.md;3v0/CONTEXT.md |
+| `3v0/SOUL.md` | doc | The agent's soul — identity, values (honesty/judgment/sovereignty), prime directive | Anchors every coherence check and the wake gate; editing it is editing the self | 3v0/CONTEXT.md;3v0/core/coherence.py;AGENTS.md |
+| `3v0/TOKEN_EFFICIENCY.md` | doc | Token-efficiency doctrine (aux model routing, budget rules) | Cost discipline for LLM spend; referenced by insights/analytics actions | 3v0/core/insights.py;SUSTAINABILITY.md |
+| `3v0/VERSION` | doc | Version marker for the 3V0 sovereign core | Single-sourced version; release tooling reads it | cuts: 3v0/scripts/verify.sh |
+| `3v0/core/__init__.py` | source | 3V0 native core — the substrate that is 3V0's own (not Hermes's). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/core/analytics.py` | source | Owned analytics — metrics + rule engine (cost, latency, model routing) | Self-measured performance; feeds insights and actions | 3v0/core/analytics_collect.py;3v0/scripts/analytics.py |
+| `3v0/core/analytics_collect.py` | source | Analytics collection (event capture into data/analytics) | Persists the metrics the rules evaluate | 3v0/core/analytics.py;3v0/data/analytics |
+| `3v0/core/backoff.py` | source | Backoff helper for retryable ops | Resilience for store/analytics writes | 3v0/core/analytics_collect.py |
+| `3v0/core/bridge.py` | source | Bridge to the Hermes profile — import/export between native store and profile | The store<->profile convergence seam (sync) | 3v0/scripts/sync.py;3v0/core/profile_io.py |
+| `3v0/core/claims.py` | source | Claim registry model (loops, claims.json) | Source of truth for tracked open loops | 3v0/data/continuity/claims.json;3v0/scripts/generate_handoff.py |
+| `3v0/core/coalesce.py` | source | Watermark-driven consolidation process — reconcile + near-duplicate merge on cadence | Never on-demand; idempotent across wakes; pending_remaining = coverage | 3v0/core/consolidate.py;3v0/scripts/coherence_coalesce.py |
+| `3v0/core/coherence.py` | source | Coherence engine — fail-close contradiction checks across doctrine/store | nothing drifting; the pre-commit and wake gate rely on it | 3v0/scripts/coherence_coalesce.py;.githooks/pre-commit |
+| `3v0/core/consolidate.py` | source | Conflict reconciliation keyed on the supersedes lineage (chain anchor) | Making consolidation finish honestly without destroying distinct notes; the 2026-08-20 fix | 3v0/core/coalesce.py;3v0/tests/test_consolidate.py |
+| `3v0/core/continuity.py` | source | Continuity invariants — the six checks (anchor, self-describing, memory-profile, skills-store, ledger, github-loops) | Defines drift for the whole body; healable vs semantic split | 3v0/scripts/continuity_check.py;3v0/data/continuity/claims.json |
+| `3v0/core/decide.py` | source | Decision recording service (DECISION_MATRIX backing store) | Persistence for recorded decisions | 3v0/DECISION_MATRIX.md;3v0/core/memdb.py |
+| `3v0/core/decide_skills.py` | source | Skill-level decision utilities | Records skill choices during discovery | 3v0/core/decide.py;3v0/scripts/discover.py |
+| `3v0/core/drift.py` | source | Project ledger drift checks | The ledger invariant feeding continuity | 3v0/data/projects;3v0/scripts/drift_check.py |
+| `3v0/core/forget.py` | source | Forgetting — archival of never-retrieved facts (access_count based) | Bounds store growth; reversible (archive, never destroy) | 3v0/data/analytics;3v0/core/memdb.py |
+| `3v0/core/gitstate.py` | source | Git state helpers for the body (branch, dirty, lead) | The git invariant (always commit tracked changes) is enforced here | 3v0/scripts/verify.sh;scripts/handoff_check.sh |
+| `3v0/core/handoff.py` | source | Handoff generation logic (claims + loops + state -> draft) | Drives generate_handoff; the shadow draft writer | 3v0/scripts/generate_handoff.py;scripts/handoff_check.sh |
+| `3v0/core/insights.py` | source | Insight generation from analytics (MEDIUM/LOW findings + actions) | Turns metrics into actionable self-findings | 3v0/scripts/insights.py;3v0/data/analytics/insights.json |
+| `3v0/core/lineage.py` | source | Supersedes lineage helpers — chains, anchors, validity | The honest same-assertion signal; used by consolidate | 3v0/core/consolidate.py;3v0/core/memdb.py |
+| `3v0/core/memdb.py` | source | Core memory store — SQLite schema (facts table), add_fact, valid_facts, connect | The native memory substrate; every memory/coherence/coalesce path reads/writes here | 3v0/core/store.py;3v0/core/consolidate.py;3v0/core/coalesce.py |
+| `3v0/core/memory.py` | source | Memory façade — unified read/write API over the store | The public memory surface for ingestion pipelines | 3v0/core/store.py;3v0/core/record.py |
+| `3v0/core/profile_io.py` | source | Profile read/write primitives | for sync/export/seed flows | 3v0/core/bridge.py;3v0/scripts/export_to_profile.py |
+| `3v0/core/project.py` | source | Single project record + query | Part of the projects ledger | 3v0/core/projects.py |
+| `3v0/core/projects.py` | source | Projects ledger model (3 projects) | A continuity invariant leaves here; drill via drift_check | for 3v0/data/projects;3v0/core/drift.py |
+| `3v0/core/query.py` | source | Query layer over the memory store | Ad-hoc structured access used by scripts and tools | 3v0/core/memdb.py;3v0/scripts/query.py |
+| `3v0/core/record.py` | source | Record model — typed memory records + add/close/validity helpers | Shared data semantics across store, retrieval, and the standing systems | 3v0/core/memdb.py;3v0/core/query.py |
+| `3v0/core/retrieval.py` | source | Retrieval/injection — budget-capped fact injection from the valid store | The working-set gate for sync/profile and wake context | 3v0/core/retrieval_fts.py;3v0/core/retrieval_fuzzy.py;3v0/core/semantic.py |
+| `3v0/core/retrieval_fts.py` | source | FTS5 lexical tier for retrieval | Fast keyword tier feeding the rerank pipeline | 3v0/core/retrieval.py |
+| `3v0/core/retrieval_fuzzy.py` | source | Fuzzy-match tier for retrieval | Handles typo/case tolerance before semantic rerank | 3v0/core/retrieval.py |
+| `3v0/core/review_decide.py` | source | Review-time decision summarizer | Converts session review into decision records | 3v0/scripts/review_session.py;3v0/core/decide.py |
+| `3v0/core/safe_evolve.py` | source | Safe self-evolution guard — bounded, reversible improvement steps | The evolution loop's safety rail | 3v0/EVOLUTION_LOOP.md;3v0/core/sbco.py |
+| `3v0/core/sbco.py` | source | SBCO (stock-keeping/coherence?) helper for the evolve loop | Support for safe mutation bookkeeping | 3v0/core/safe_evolve.py |
+| `3v0/core/semantic.py` | source | Semantic tier — embeddings + cosine rerank, cost-aware gating | The quality tier routed through auxiliary models per TOKEN_EFFICIENCY | 3v0/core/retrieval.py;3v0/core/analytics.py |
+| `3v0/core/session_db.py` | source | Session-record DB (wake/session metadata) | Bridges the native store to session bookkeeping | 3v0/core/memdb.py |
+| `3v0/core/skill_bridge.py` | source | Skill bridge to the profile skill surface | Syncs skills.json/SKILL.md with Hermes | 3v0/core/skill_io.py;3v0/scripts/sync_skills.py |
+| `3v0/core/skill_io.py` | source | Skill IO — SKILL.md parsing + store sync | Keeps skill store <-> SKILL.md consistent (a continuity invariant) | 3v0/core/skills.py;3v0/scripts/sync_skills.py |
+| `3v0/core/skills.py` | source | Native skill store model | Skills as first-class records in the store | 3v0/core/skill_io.py;3v0/scripts/seed_skills.py |
+| `3v0/core/store.py` | source | SQLStore — pipeline write seam: every fact becomes the container triple (3v0, note, content) | Why (s,p) keying is degenerate; the seam 3v0 consolidation must respect | 3v0/core/memdb.py;3v0/core/consolidate.py |
+| `3v0/core/sync.py` | source | Store<->profile synchronization logic | The reconciliation half that sync.py script drives | 3v0/scripts/sync.py;3v0/core/bridge.py |
+| `3v0/core/sync_skills.py` | source | Skills reconciliation logic | The skills half of sync | 3v0/scripts/sync_skills.py |
+| `3v0/data/axiom/memory.json` | data | Structured data/config file | Persistent state or declarative config read by tooling |  |
+| `3v0/data/baseline.json` | data | Baseline state snapshot (discovery/probes) | Probe experimentation baseline | 3v0/data/probe_bank_v1.json |
+| `3v0/data/continuity/claims.json` | data | Claim registry — tracked open loops (single source of truth) | Handoff open-loops derives from here | 3v0/core/claims.py;scripts/handoff_check.sh |
+| `3v0/data/f1nance/memory.json` | data | Structured data/config file | Persistent state or declarative config read by tooling |  |
+| `3v0/data/grader_cert_v1.json` | data | Structured data/config file | Persistent state or declarative config read by tooling |  |
+| `3v0/data/memory.db` | data | The canonical native memory store (facts table; git-versioned) | The body's sole source of truth for memory; sync/retrieval read it | 3v0/core/memdb.py;3v0/scripts/sync.py |
+| `3v0/data/memory.json` | data | Legacy/adjacent memory artifact (profile mirror) | Keep consistent with memory.db via sync | 3v0/scripts/sync.py |
+| `3v0/data/news/2026-08-16.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/news/2026-08-17-browser-tools.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/news/2026-08-18-browser-sota-bcode.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run1/fix_anagrams.py` | source | Python module `fix_anagrams.py` | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run1/fix_dedup.py` | source | Python module `fix_dedup.py` | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run1/fizzbuzz.py` | source | Python module `fizzbuzz.py` | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run2/cache_control_010.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run2/coin_008.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run2/count_016.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run2/data.csv` | asset | File `data.csv` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run2/employees.csv` | asset | File `employees.csv` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run2/extract.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
+| `3v0/data/probe_attempts/run2/git_bisect_013.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run2/input.txt` | asset | File `input.txt` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run2/liars_004.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run2/migration_plan_005.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run2/mini_sql.py` | source | probe014: miniature CSV query engine over employee.csv with a fixed DSL. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run2/pipeline.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
+| `3v0/data/probe_attempts/run2/queries.txt` | asset | File `queries.txt` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run2/race_fixed.py` | source | probe015: fix race on shared counter. counter += 1 is not atomic in CPython | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run2/regex_ref_018.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run2/reproduce.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
+| `3v0/data/probe_attempts/run2/sample/a.txt` | asset | File `a.txt` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run2/sample/sub/b.txt` | asset | File `b.txt` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run2/sample/sub/deep/c.txt` | asset | File `c.txt` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run2/sample/z.log` | asset | File `z.log` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run2/schedule.py` | source | probe012: max non-overlapping meetings, greedy on earliest finish. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run2/topo_009.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run2/tree.py` | source | probe006: recursive ASCII directory tree with connectors and optional depth. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run2/work/config.ini` | asset | File `config.ini` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run2/work/data.txt` | asset | File `data.txt` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run2/work/notes.txt` | asset | File `notes.txt` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run3/bench/flaw.txt` | asset | File `flaw.txt` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run3/bench/harness.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
+| `3v0/data/probe_attempts/run3/bench/naive.py` | source | PROBE naive.py: O(n^2) correct solution for "count pairs summing to target". | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run3/bench/naive_wrong.py` | source | PROBE naive_wrong.py: counts ORDERED pairs (i != j), so it double-counts every | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run3/bench/problem.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run3/bench/ref.py` | source | PROBE ref.py: O(n) hash-map solution for "count pairs summing to target". | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run3/bench/run.log` | asset | File `run.log` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run3/bench/tests_hidden.py` | test | PROBE tests_hidden.py: deterministic exact-stdout cases for ref.py (STAGE1). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/data/probe_attempts/run3/bench/tests_timing.py` | test | PROBE tests_timing.py: ref.py (O(n)) must be <20% of naive.py (O(n^2)) on the largest input (STAGE2). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/data/probe_attempts/run3/bench/tests_wrong.py` | test | PROBE tests_wrong.py: prove naive_wrong.py is objectively wrong while ref.py passes (STAGE3). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/data/probe_attempts/run3/critical_path_017.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_attempts/run3/proj/make.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
+| `3v0/data/probe_attempts/run3/proj/run.log` | asset | File `run.log` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run3/proj/src/hello.c` | asset | File `hello.c` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/data/probe_attempts/run3/run_demo.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
+| `3v0/data/probe_attempts/run3/shortest.py` | test | probe023: single-source shortest paths. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/data/probe_attempts/run3/todo/server.py` | source | probe020: minimal Todo REST service with file persistence, restart-survival, | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/data/probe_attempts/run3/todo/verify.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
+| `3v0/data/probe_bank_v1.README.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/data/probe_bank_v1.json` | data | Structured data/config file | Persistent state or declarative config read by tooling |  |
+| `3v0/data/probe_results.json` | data | Structured data/config file | Persistent state or declarative config read by tooling |  |
+| `3v0/data/projects/ledger.json` | data | Structured data/config file | Persistent state or declarative config read by tooling |  |
+| `3v0/data/research/2026-08-18-browser-tooling-sota.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/deploy/3v0-review.service` | asset | File `3v0-review.service` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/deploy/axiom-review.service` | asset | File `axiom-review.service` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/deploy/f1nance-review.service` | asset | File `f1nance-review.service` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `3v0/docs/adr/0001-store-first-memory.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/docs/adr/0002-check-before-heal.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/docs/adr/0003-handoff-flip-operator-gated.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/docs/adr/0004-retrieval-chosen-injection.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/docs/adr/0005-forgetting-usage-signal.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/native/__init__.py` | source | 3V0 native runtime — a hermes-independent agent core. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/native/agent.py` | source | Native agent loop — message -> context -> OWN LLM -> response. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/native/config.py` | source | Native config seam — ONE place the runtime resolves env. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/native/context.py` | source | Native context assembly — SOUL + native memory -> system prompt. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/native/engine.py` | source | Native engine — compose context + LLM + tools + gateway into one handler. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/native/gateway.py` | source | Native Telegram gateway — Bot API long-polling. Stdlib-only, zero Hermes. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/native/llm.py` | source | Native LLM client — direct chat completions, no Hermes import. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/native/probe.py` | source | Native probe core — deterministic measurement for the evolution monitor. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/native/providers.py` | source | Provider registry — the model-agnostic / multi-provider seam. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/native/run.py` | source | Native gateway serve entrypoint — the (future, deliberate) cutover. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/native/tools.py` | source | Native tool registry — the native-mode loop's hands. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/plugin/native-store-bridge/__init__.py` | source | native-store-bridge — mirror the Hermes memory + skill tools into 3V0's native stores. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/plugin/native-store-bridge/plugin.yaml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
+| `3v0/research/arxiv_self_evolution_2026-08-19.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `3v0/scripts/analytics.py` | script | Owned metrics runner -> data/analytics | Self-measurement | 3v0/core/analytics.py |
+| `3v0/scripts/audit.sh` | script | Audit shell for body checks | Convenience wrapper | 3v0/scripts/verify.sh |
+| `3v0/scripts/baseline.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
+| `3v0/scripts/coherence_coalesce.py` | script | Wake-time runner — coherence apply + coalesce (best-effort, never fails the wake) | The standing system's heartbeat; the consolidation pass runs here | 3v0/core/coherence.py;3v0/core/coalesce.py |
+| `3v0/scripts/consistency.sh` | script | Consistency scan — doctrine vs store | Companion to coherence | 3v0/core/coherence.py |
+| `3v0/scripts/continuity_check.py` | script | The reconstruction clock — one-page continuity report (--heal/--accept/--json) | The body's own vitals readout | 3v0/core/continuity.py;3v0/data/continuity/claims.json |
+| `3v0/scripts/discover.py` | script | Skill discovery probe runner | The probe loop (EVOLUTION_PROBE) | 3v0/data/probe_bank_v1.json |
+| `3v0/scripts/discovery_consult.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks |  |
+| `3v0/scripts/drift_check.py` | script | Project ledger drift report | Feeds the ledger invariant | 3v0/core/drift.py;3v0/data/projects |
+| `3v0/scripts/export_to_profile.py` | script | Export native store facts to the profile | Derived-view regeneration | 3v0/core/profile_io.py |
+| `3v0/scripts/generate_handoff.py` | script | Regenerate HANDOFF.generated.md (shadow draft) | The mechanical handoff writer | 3v0/core/handoff.py;scripts/handoff_check.sh |
+| `3v0/scripts/ingest.py` | script | Pipeline ingest — writes facts into the store via SQLStore.add | How the body records what it learns | 3v0/core/store.py;3v0/core/memory.py |
+| `3v0/scripts/ingest_skills.py` | script | Skill ingest pipeline | Records skill usage/creation facts | 3v0/core/skills.py |
+| `3v0/scripts/insights.py` | script | Insights generator -> insights.json | Self-findings | 3v0/core/insights.py |
+| `3v0/scripts/project.py` | source | Onboard and inspect projects in the drift ledger. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/scripts/query.py` | source | Serve read-only queries against 3V0's native stores as JSON on stdout. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/scripts/record.py` | source | Record or retract a fact in the native store and export the derived view. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/scripts/record_skills.py` | source | Apply a store-first skill decision and project the derived SKILL.md. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `3v0/scripts/redo_tracker.sh` | script | Tracks redo log (redo_log.json) | Durability bookkeeping for ingest | 3v0/data/redo_log.json |
+| `3v0/scripts/reload_gateway.sh` | script | Gateway reload helper | tooling | 3v0/data/memory.db;gateway/ |
+| `3v0/scripts/review_session.py` | script | Session review -> decision records | Feeds DECISION_MATRIX | 3v0/core/review_decide.py |
+| `3v0/scripts/seed_from_profile.py` | script | Seed native store from the Hermes profile | First-boot convergence | 3v0/core/bridge.py |
+| `3v0/scripts/seed_skills.py` | script | Seed skill store from skills dir | First-boot skill convergence | 3v0/core/skill_io.py |
+| `3v0/scripts/sync.py` | script | Sync script (--write) — store canonical to profile | Converges MEMORY.md/USER.md; part of the wake ritual | 3v0/core/sync.py;3v0/core/bridge.py |
+| `3v0/scripts/sync_skills.py` | script | Skills sync script (--write) | Converges skills.json/SKILL.md | 3v0/core/sync_skills.py |
+| `3v0/scripts/verify.sh` | script | The mechanical done-gate — defines done (memory db, cruft, secrets, clean tree) | Run before declaring any body change done | 3v0/data/memory.db;AGENTS.md;wiki coverage step |
+| `3v0/tests/test_analytics.py` | test | Python module `test_analytics.py` | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_analytics_collect.py` | test | Python module `test_analytics_collect.py` | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_bridge.py` | test | Tests for the store-first bridge (3V0 memory-tool op -> store mapping). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_coalesce.py` | test | Deterministic tests for the watermark-driven consolidation (core/coalesce.py). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_coherence.py` | test | Deterministic tests for the coherence engine (core/coherence.py). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_consolidate.py` | test | Deterministic tests for memory consolidation / conflict reconciliation | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_continuity.py` | test | Tests for the continuity meta (3v0/core/continuity.py) — Stone 17. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_continuity_fault.py` | test | Fault-injection (chaos) validation of the continuity clock's *collection* half. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_decide.py` | test | Tests for 3V0's store-first decision actuator (stdlib only, no network). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_decide_skills.py` | test | Tests for 3V0's store-first skill decision layer (stdlib only, no network). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_drift.py` | test | Tests for drift computation (3v0/core/drift.py) — Stone 16. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_export_injection.py` | test | The derived view is retrieval-chosen (ADR-0004) — exporter + sync tests. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_forget.py` | test | Direct tests for core.forget — the forgetting policy (Stone 24, ADR-0005). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_handoff.py` | test | Tests for the generated handoff (3v0/core/handoff.py) — Stone 18. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_insights.py` | test | Python module `test_insights.py` | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_ledger.py` | test | Tests for the project ledger (3v0/core/projects.py) — Stone 16. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_lineage.py` | test | Direct tests for core.lineage — the shared pure lineage semantics. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_memdb.py` | test | Python module `test_memdb.py` | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_memory_core.py` | test | Tests for 3V0's native memory core (stdlib only, no network). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_migration.py` | test | Migration: legacy JSON store payload -> memdb triple store (rewire slice). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_native_agent.py` | test | Deterministic tests for the native agent loop (context assembly + respond). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_native_config.py` | test | Deterministic tests for the native config seam (env / .env resolution). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_native_engine.py` | test | Deterministic tests for the native engine handler (LLM/tools/send mocked). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_native_gateway.py` | test | Deterministic tests for the native Telegram gateway (network mocked). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_native_llm.py` | test | Contract tests for the native LLM client (3v0/native/llm.py). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_native_probe.py` | test | Deterministic tests for the native probe core (measurement math). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_native_retrieval.py` | test | Deterministic tests for the native retrieval-chosen context path (ADR-0004 seam). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_native_run.py` | test | Deterministic test for the native serve entrypoint — importing must not start a server. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_native_tools.py` | test | Deterministic tests for the native tool registry (safety first). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_projects.py` | test | Tests for the project registry (3v0/core/projects.py). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_providers.py` | test | Contract tests for the provider registry (3v0/native/providers.py). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_query.py` | test | Tests for 3V0's read-only store query layer (stdlib only, no network). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_record.py` | test | Tests for 3V0's provenance-tracked correction path (stdlib only). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_retrieval.py` | test | Python module `test_retrieval.py` | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_retrieval_fts.py` | test | Deterministic tests for the FTS5/BM25 retrieval upgrade (stone 1). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_retrieval_fuzzy.py` | test | Deterministic tests for retrieval stone 2 — fuzzy/typo-tolerant expansion. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_retrieve_action.py` | test | The runtime retrieve action — the seam's second adapter (ADR-0004). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_review_session.py` | test | Tests for the Stone 7 session-end review driver (3v0/scripts/review_session.py). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_safe_evolve.py` | test | Deterministic tests for the skill-misevolution safety gate (arXiv 2608.12851). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_sbco.py` | test | Deterministic tests for SBCO — self-supervised verifier-grounded harness | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_semantic.py` | test | Deterministic tests for the semantic retrieval tier (core/semantic.py). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_session_db.py` | test | Tests for core.session_db — the named-column session-DB read adapter. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_skills.py` | test | Tests for the native skill store + skill bridge (3V0 skill-lineage axis). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_store.py` | test | SQLStore facade parity — the rewire's canonical store behind the old interface. | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_sync.py` | test | Tests for 3V0 store<->profile sync (stdlib only, no network). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |
+| `3v0/tests/test_sync_skills.py` | test | Tests for 3V0 skill-store <-> profile reconciliation (stdlib only). | Test module — asserts the repo contract; run via scripts/run_tests.sh |  |

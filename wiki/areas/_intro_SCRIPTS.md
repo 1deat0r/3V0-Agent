@@ -1,0 +1,1 @@
+Dev/test/ops tooling: `run_tests.sh` (the only sanctioned test runner), `run_tests_parallel.py`, `handoff_check.sh` (the whole-body wake ritual), `build_wiki.py` (this wiki's generator+gate), CI jobs, release, sandbox, observability helpers.

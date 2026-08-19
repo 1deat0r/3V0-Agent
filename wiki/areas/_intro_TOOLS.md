@@ -1,0 +1,1 @@
+Every model tool. `tools/registry.py` is the hub (register/check_fn/schema collection); tools distribute via `toolsets.py`. Terminal+environments, file ops, browser, web, MCP, delegation, todo, skills tooling, security guardrails. The footprint ladder: prefer extending here over new core tools.

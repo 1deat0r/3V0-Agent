@@ -1,0 +1,1 @@
+The messaging layer: `run.py` orchestrates; `session.py` isolates chats; `platforms/` has one adapter per transport; `authz_mixin` is the fail-closed allowlist seam; streaming, drain/shutdown, delivery ledger, profile routing. `tui_gateway/` is the JSON-RPC backend for TUI+desktop.

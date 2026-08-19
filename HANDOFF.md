@@ -311,6 +311,19 @@ drift before picking up the follow-ups.
   immutable; substrate is 3V0's to choose — currently bitdeer DeepSeek-V4-Flash.
 
 ## What the last sessions did
+- **Wiki (LLM index) — built + gated at 100% coverage (this session).**
+  Built the Karpathy-style LLM wiki over the whole repo: `scripts/build_wiki.py`
+  (tracked-file manifest generator + area renderer + `--check` hard gate),
+  `wiki/manifest.tsv` (9,722 rows = 100.0% of tracked paths), 414-row
+  hand-curated overlay `wiki/curated.tsv` (load-bearing spine: root, 3v0/core,
+  agent, tools, gateway, ev0_cli, cron, plugins, skills, apps, infra), 20
+  area pages + intros, `wiki/index.md` / `SCHEMA.md` / `README.md` / `log.md`.
+  Enforcement wired in: `.githooks/pre-commit` step 4 runs `--check`,
+  `3v0/scripts/verify.sh` gained a wiki step, `AGENTS.md` now points agents at
+  `wiki/SCHEMA.md`. Consumer target: the `deepseek-v4-flash-0731` aux agent
+  (budget-capped cells, whole pages readable in one pass). Also closed the
+  store-consolidation defect (chain-anchor identity, commits `e029b682c`,
+  `5e4ceb1d1`) — see kickoff. 536/536 tests green; verify.sh + ritual clean.
 - **Wake #5 — clean wake + DeepSeek Harness watch resolved (this session).**
   Startup clean (3 daemons, continuity 0/6, store↔profile converged, 4 loops
   agree, drift 0/3). Resolved the queued watch item: DeepSeek Harness released

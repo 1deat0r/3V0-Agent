@@ -1,0 +1,157 @@
+# tools/ + toolsets.py + model_tools.py — model tool orchestration
+
+Every model tool. `tools/registry.py` is the hub (register/check_fn/schema collection); tools distribute via `toolsets.py`. Terminal+environments, file ops, browser, web, MCP, delegation, todo, skills tooling, security guardrails. The footprint ladder: prefer extending here over new core tools.
+---
+Auto-rendered from `wiki/manifest.tsv` — `python3 scripts/build_wiki.py --rebuild` regenerates.
+Columns: path · kind · purpose · why · related
+
+| path | kind | purpose | why | related |
+|------|------|---------|-----|---------|
+| `model_tools.py` | source | Tool orchestration hub — discover_builtin_tools, get_tool_definitions, handle_function_call, toolset assembly | Every model tool ships through here per API call; the footprint-ladder choke point | tools/registry.py;toolsets.py;run_agent.py |
+| `tools/__init__.py` | source | Tools package namespace. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/ansi_strip.py` | source | Strip ANSI escape sequences from subprocess output. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/approval.py` | source | Approval primitives (request/respond) | Safe-action consent flow | tools/clarify_tool.py;tools/write_approval.py |
+| `tools/async_delegation.py` | source | Async delegation completion queue | Background delegation results re-enter the conversation | tools/delegate_tool.py |
+| `tools/audio_container.py` | source | Shared magic-byte audio/AV container detection. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/binary_extensions.py` | source | Binary file extensions to skip for text-based operations. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/blueprints.py` | source | Blueprints: shareable plain-language automations layered on skills + cron. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/bot_mode_probe.py` | source | Bot Mode roster probe — canonical Bot Chat system prompt section. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/browser_camofox.py` | source | Camoufox/stealth browser profile manager | Anti-detection browsing | tools/browser_camofox_state.py |
+| `tools/browser_camofox_state.py` | source | Hermes-managed Camofox state helpers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/browser_cdp_tool.py` | source | CDP-backed browser driver | The real browser control channel | tools/browser_tool.py |
+| `tools/browser_dialog_tool.py` | source | Agent-facing tool: respond to a native JS dialog captured by the CDP supervisor. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/browser_supervisor.py` | source | Browser session supervisor (lifecycle, leak control) | Bounded browsing sessions | tools/browser_tool.py |
+| `tools/browser_tool.py` | source | Browser tool — navigate/snapshot/click via CDP | Core web capability | tools/browser_cdp_tool.py;tools/browser_camofox.py |
+| `tools/browser_use_cli.py` | source | Use the Browser Use CLI 3.0 (https://browser-use.com) for browser automation | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/budget_config.py` | source | Configurable budget constants for tool result persistence. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/checkpoint_manager.py` | source | Checkpoint manager for long sessions | Resume-after-crash | agent/conversation_loop.py;ev0_cli/checkpoints.py |
+| `tools/clarify_gateway.py` | source | Gateway-side clarify primitive (blocking event-based queue). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/clarify_tool.py` | source | Clarify tool — ask the user mid-turn | Human-in-the-loop | gates: tools/clarify_gateway.py |
+| `tools/close_terminal_tool.py` | source | Close a read-only agent terminal tab in the Hermes desktop GUI. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/code_execution_tool.py` | source | execute_code — sandboxed python execution | Programmatic tool calling | tools/computer_use/ |
+| `tools/computer_use/__init__.py` | source | Computer use toolset — universal (any-model) macOS desktop control. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/computer_use/backend.py` | source | Abstract backend interface for computer use. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/computer_use/browser_route.py` | source | Session-scoped typed-browser routing for cua-driver. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/computer_use/cua_backend.py` | source | Cua-driver backend (macOS, Windows, Linux). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/computer_use/doctor.py` | source | `hermes computer-use doctor` — thin client for cua-driver's `health_report` MCP tool. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/computer_use/permissions.py` | source | Cross-platform Computer Use readiness + macOS permission helpers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/computer_use/schema.py` | source | Schema for the generic `computer_use` tool. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/computer_use/tool.py` | source | Entry point for the `computer_use` tool. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/computer_use/vision_routing.py` | source | Vision-routing decisions for ``computer_use`` capture results. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/computer_use_tool.py` | source | Shim for tool discovery. Registers `computer_use` with tools.registry. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/credential_files.py` | source | File passthrough registry for remote terminal backends. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/cronjob_tools.py` | source | Cron tool for the agent | Agent-schedulable jobs | cron/jobs.py |
+| `tools/daemon_pool.py` | source | Daemon process pool for tool backends | Long-lived helpers | tools/process_registry.py |
+| `tools/debug_helpers.py` | source | Shared debug session infrastructure for Hermes tools. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/delegate_tool.py` | source | delegate_task — subagent spawn (single/batch, orchestrator roles) | Delegation with parent-wait or background re-entry | tools/async_delegation.py;agent/subagent_lifecycle.py |
+| `tools/delegation_live_log.py` | source | Live, tail-able transcripts for delegated subagents. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/delegation_output_schema.py` | source | Structured-output schema helpers for delegate_task (T1-24). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/desktop_ui.py` | source | Bridge desktop-only tools to Hermes-desktop renderer events. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/discord_tool.py` | source | Discord server introspection and management tool. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/env_passthrough.py` | source | Environment variable passthrough registry. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/env_probe.py` | source | Local-environment toolchain probe for the system prompt. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/__init__.py` | source | Hermes execution environment backends. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/base.py` | source | Base class for all Hermes execution environment backends. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/daytona.py` | source | Daytona cloud execution environment. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/docker.py` | source | Docker execution environment for sandboxed command execution. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/file_sync.py` | source | Shared file sync manager for remote execution backends. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/local.py` | source | Local execution environment — spawn-per-call with session snapshot. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/managed_modal.py` | source | Managed Modal environment backed by tool-gateway. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/modal.py` | source | Modal cloud execution environment using the native Modal SDK directly. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/modal_utils.py` | source | Shared Hermes-side execution flow for Modal transports. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/singularity.py` | source | Singularity/Apptainer persistent container environment. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/ssh.py` | source | SSH remote execution environment with ControlMaster connection persistence. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/environments/vercel_sandbox.py` | source | Vercel Sandbox execution environment. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/fal_common.py` | source | Shared FAL.ai SDK plumbing. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/feishu_doc_tool.py` | source | Feishu document tool | Docs automation | feishu_drive_tool.py;plugins/platforms/ |
+| `tools/feishu_drive_tool.py` | source | Feishu Drive Tools -- document comment operations via Feishu/Lark API. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/file_operations.py` | source | File read/write/patch primitives (atomic, metadata-preserving) | Core file implementation; feeds file_tools | tools/file_tools.py;tools/working_diff.py |
+| `tools/file_state.py` | source | Cross-agent file state coordination. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/file_tools.py` | source | File model tools (read_file, write_file, patch) | Core file surface | model_tools.py;tools/file_operations.py |
+| `tools/flux3_video_tool.py` | source | Native BFL FLUX 3 video generation tools, backed by the Nous tool gateway. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/focus_pane_tool.py` | source | Reveal/focus a pane in the Hermes desktop GUI. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/fuzzy_match.py` | source | Fuzzy Matching Module for File Operations | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/homeassistant_tool.py` | source | Home Assistant integration (service-gated on token) | Smart-home automation | tools/registry.py (check_fn example) |
+| `tools/hook_output_spill.py` | source | Spill oversized hook-injected context to disk with a preview placeholder. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/image_generation_tool.py` | source | Image generation tool (providers) | Creative capability | plugins/image_gen/;gen: bailian-gen skill |
+| `tools/image_source.py` | source | Single resolver for every media source -> bytes + mime. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/interrupt.py` | source | Tool-call interrupt support | Stop mid-tool | tools/terminal_tool.py |
+| `tools/kanban_tools.py` | source | Kanban worker tools (kanban_show/complete/... ) | Zero schema footprint outside kanban tasks | plugins/kanban/;ev0_cli/kanban.py |
+| `tools/lazy_deps.py` | source | Lazy dependency installer for opt-in Hermes Agent backends. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/managed_tool_gateway.py` | source | Generic managed-tool gateway helpers for Nous-hosted vendor passthroughs. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/mcp_dashboard_oauth.py` | source | Dashboard-mediated callback bridge for MCP OAuth. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/mcp_oauth.py` | source | MCP OAuth 2.1 Client Support | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/mcp_oauth_manager.py` | source | OAuth flows for MCP servers | Authenticated MCP connections | tools/mcp_oauth.py |
+| `tools/mcp_schema_cache.py` | source | Persistent MCP tool-schema cache for lazy server startup. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/mcp_stdio_watchdog.py` | source | Parent-death watchdog supervisor for stdio MCP subprocesses. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/mcp_tool.py` | source | MCP client tool — connect to external MCP servers | The built-in MCP client; catalog here | mcp_serve.py;tools/setup_mcp_tool.py |
+| `tools/memory_tool.py` | source | Memory tool — record/recall through memory providers | The memory model-tool surface | agent/memory_manager.py |
+| `tools/microsoft_graph_auth.py` | source | Microsoft Graph app-only authentication helpers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/microsoft_graph_client.py` | source | Reusable Microsoft Graph REST client helpers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/neutts_samples/jo.txt` | asset | File `jo.txt` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `tools/neutts_samples/jo.wav` | asset | Audio asset | Audio sample used by tests or TTS validation |  |
+| `tools/neutts_synth.py` | source | Standalone NeuTTS synthesis helper. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/open_preview_tool.py` | source | Open a URL, dev server, or file in the Hermes desktop GUI's preview pane. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/openrouter_client.py` | source | Shared OpenRouter API client for Hermes tools. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/osv_check.py` | source | OSV malware check for MCP extension packages. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/patch_parser.py` | source | Unified patch (search/replace) parser + hunk application | The patch tool's engine | for-parse: tools/working_diff.py |
+| `tools/path_security.py` | source | Path allow/deny boundaries for file tools | Sandboxing the file surface | tools/file_operations.py;agent/file_safety.py |
+| `tools/process_registry.py` | source | Process registry / lifecycle for spawned children | Cleanup and tracking | tools/terminal_tool.py;tools/daemon_pool.py |
+| `tools/project_tools.py` | source | Project tools — the agent's INTENTIONAL handle on first-class Projects. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/react_to_message_tool.py` | source | Let the agent react to a message with an emoji in the Hermes desktop app. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/read_extract.py` | source | Web page extraction to markdown | Feeds web_extract | tools/web_tools.py |
+| `tools/read_preview_tool.py` | source | Read the in-app browser / preview pane in the Hermes desktop GUI. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/read_terminal_tool.py` | source | Read the in-app terminal pane in the Hermes desktop GUI. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/read_window_tool.py` | source | Read which OS window sits directly underneath the Hermes desktop window. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/registry.py` | source | Tool registry — register(), schema collection, dispatch, check_fn gating, error wrapping | Every tool file registers here at import; the zero-dependency hub | model_tools.py;toolsets.py |
+| `tools/schema_sanitizer.py` | source | Tool schema sanitization (drop unsafe params) | Hardens generated schemas | tools/registry.py |
+| `tools/self_repo_guard.py` | source | Detect Git operations that can rewrite the checkout backing this process. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/send_message_tool.py` | source | Message-send tool (gateway platforms) | Agent-initiated platform sends | gateway/platforms/;plugins/platforms/ |
+| `tools/session_search_tool.py` | source | Session search tool over SessionDB | Search across past sessions | ev0_state_search.py |
+| `tools/setup_mcp_tool.py` | source | MCP server setup/install helper | One-command MCP provisioning | tools/mcp_tool.py |
+| `tools/shell_heredoc.py` | source | Conservative heredoc masking for shell-command scanners. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/skill_linter.py` | source | Skill linter (frontmatter/standard checks) | Skill authoring standards enforcement | tests/skills/;tools/skill_provenance.py |
+| `tools/skill_manager_tool.py` | source | Skill install/update/remove tooling | Skill lifecycle for the agent | tools/skill_usage.py;ev0_cli/bundles.py |
+| `tools/skill_provenance.py` | source | Skill provenance tracking (author/credit) | Contributor-credit rule | tools/skill_linter.py |
+| `tools/skill_usage.py` | source | Skill usage sidecar (use/view/patch counts) | Feeds curator activity signals | agent/curator.py |
+| `tools/skills_ast_audit.py` | source | AST-level deep audit for skill Python files — opt-in diagnostic, not a security gate. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/skills_guard.py` | source | Skills guardrails (safe execution posture) | Security for skill-supplied instructions | tools/threat_patterns.py |
+| `tools/skills_hub.py` | source | OptionalSkillSource — install from the official catalog | hermes skills install official/... | optional-skills/;tools/skills_sync.py |
+| `tools/skills_sync.py` | source | Skill sync (hub -> local refresh) | Keeps installed skills current | tools/skills_sync_client.py |
+| `tools/skills_sync_client.py` | source | Skill Sync client -- the low-level sync layer. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/skills_tool.py` | source | Skills tool — load/list skills | Skill activation surface | agent/skill_commands.py;tools/skill_manager_tool.py |
+| `tools/slash_confirm.py` | source | Generic slash-command confirmation primitive (gateway-side). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/spill_safety.py` | source | Symlink-safe creation helpers for spill/cache files. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/subagent_worktree.py` | source | Opt-in git worktree isolation for delegated subagents. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/terminal_hints.py` | source | Output-pattern failure hints for the terminal tool. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/terminal_tool.py` | source | Terminal tool — shell command execution | Core model tool; runs through environments/ backends | tools/environments/;tools/process_registry.py |
+| `tools/thread_context.py` | source | Thread-scoped context for tool calls | Multi-thread safety | misc: agent/thread_scoped_output.py |
+| `tools/threat_patterns.py` | source | Threat pattern definitions for injection guardrails | Injection defense vocabulary | tools/tirith_security.py;agent/tool_guardrails.py |
+| `tools/tirith_security.py` | source | Tirith security evaluator integration | Policy engine | tools/threat_patterns.py |
+| `tools/todo_tool.py` | source | Todo/task tracking tool (agent-level, intercepted by run_agent) | Lets the run loop manage its own plan | run_agent.py |
+| `tools/tool_backend_helpers.py` | source | Shared helpers for tool backend selection. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/tool_output_limits.py` | source | Tool output truncation policy | Keeps context bounded | tools/tool_result_storage.py |
+| `tools/tool_result_storage.py` | source | Oversized tool result spill to disk | Drops big tool outputs out of context | tools/tool_output_limits.py |
+| `tools/tool_search.py` | source | Tool search for the agent (find the right tool) | Schema navigation aid | tools/registry.py |
+| `tools/transcription_tools.py` | source | Audio transcription tools | Voice input | agent/transcription_registry.py |
+| `tools/tts_streaming.py` | source | Provider-agnostic streaming TTS: sentence text → int16 PCM chunk iterator. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/tts_text_normalize.py` | source | Utilities for preparing assistant text for speech synthesis. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/tts_tool.py` | source | TTS tool + streaming | Voice output | tools/tts_streaming.py;agent/tts_registry.py |
+| `tools/url_safety.py` | source | URL safety checks — blocks requests to private/internal network addresses. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/video_generation_tool.py` | source | Video generation tool | Creative capability | tools/flux3_video_tool.py |
+| `tools/vision_tools.py` | source | Vision model tools (image describe/analyze) | Aux vision routing | agent/vision? agent/auxiliary_client.py |
+| `tools/voice_mode.py` | source | Voice Mode -- Push-to-talk audio recording and playback for the CLI. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/wake_word.py` | source | Wake-word ("Hey Hermes") detection — hands-free session trigger. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/wakewords/README.md` | readme | README (en) | Project introduction & quickstart for humans/new agents |  |
+| `tools/wakewords/hey_3v0.onnx` | asset | File `hey_3v0.onnx` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `tools/wakewords/hey_3v0.tflite` | asset | File `hey_3v0.tflite` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `tools/web_tools.py` | source | Web tools — search/extract (web_search, web_extract) | Core web capability | tools/read_extract.py |
+| `tools/website_policy.py` | source | Website access policy helpers for URL-capable tools. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/working_diff.py` | source | Working-tree diff helpers for efficient patch planning | Patch tool planning aid | tools/patch_parser.py |
+| `tools/write_approval.py` | source | Write-approval interceptor for file mutations | File-safety consent | tools/approval.py;tools/path_security.py |
+| `tools/x_search_tool.py` | source | X Search tool backed by xAI's built-in ``x_search`` Responses API tool. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/xai_http.py` | source | Shared helpers for direct xAI HTTP integrations. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/xai_video_tools.py` | source | xAI-specific Imagine video edit and extend tools. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tools/yuanbao_tools.py` | source | yuanbao_tools.py - 元宝平台工具集 | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `toolset_distributions.py` | source | Per-platform toolset enablement matrix + distribution rules | Maps platform -> base toolset with config-gated additions | platforms use: toolsets.py;gateway/platform_registry.py |
+| `toolsets.py` | source | TOOLSETS dict — named tool bundles + _HERMES_CORE_TOOLS default | Defines which tools each platform/base exposes; the schema-gating wedge | model_tools.py;tools/registry.py |

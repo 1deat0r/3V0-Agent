@@ -1,0 +1,129 @@
+# gateway/ + tui_gateway/ — platform adapters + TUI backend
+
+The messaging layer: `run.py` orchestrates; `session.py` isolates chats; `platforms/` has one adapter per transport; `authz_mixin` is the fail-closed allowlist seam; streaming, drain/shutdown, delivery ledger, profile routing. `tui_gateway/` is the JSON-RPC backend for TUI+desktop.
+---
+Auto-rendered from `wiki/manifest.tsv` — `python3 scripts/build_wiki.py --rebuild` regenerates.
+Columns: path · kind · purpose · why · related
+
+| path | kind | purpose | why | related |
+|------|------|---------|-----|---------|
+| `gateway/__init__.py` | source | Hermes Gateway - Multi-platform messaging integration. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/agent_cache_pressure.py` | source | Memory-pressure bounds for the gateway's per-session AIAgent cache. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/assets/status_phrases.yaml` | config | YAML configuration | Declarative config for deployment/CI/tooling |  |
+| `gateway/assets/telegram-botfather-threads-settings.jpg` | asset | Image asset | Static media referenced by docs or frontend |  |
+| `gateway/authz_mixin.py` | source | Authorization mixin — allowlists, allow-all gates, group policy (fail-closed per profile) | Sharpest edge: leak here silently rejects or fail-opens routing | agent/secret_scope.py;plugins/platforms/feishu/adapter.py |
+| `gateway/builtin_hooks/__init__.py` | source | Built-in gateway hooks that are always registered. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/cgroup_cleanup.py` | source | cgroup cleanup for containers | Leak control | gated: gateway/memory_monitor.py |
+| `gateway/channel_directory.py` | source | Channel directory -- cached map of reachable channels/contacts per platform. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/code_skew.py` | source | Code-version skew detection between processes | Mixed-version fleet safety | gateway/build_info.py |
+| `gateway/config.py` | source | Gateway config loader + platform settings | Dedicated raw-yaml loader for the gateway runtime | gateway/run.py;ev0_cli/config.py |
+| `gateway/cwd_placeholder.py` | source | CWD placeholder resolution | terminal.cwd bridging | ev0_cli/config.py |
+| `gateway/dead_targets.py` | source | Persistent registry of delivery targets that are confirmed unreachable. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/delivery.py` | source | Message delivery ledger (idempotent delivery) | Guarantees under retries | gateway/delivery_ledger.py;gateway/lifecycle_ledger.py |
+| `gateway/delivery_ledger.py` | source | Durable delivery-obligation ledger for gateway final responses. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/disk_status.py` | source | Disk usage reporting | Capacity alerting | gateway/memory_status.py |
+| `gateway/display_config.py` | source | Per-platform display/verbosity configuration resolver. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/drain_control.py` | source | Shutdown drain (finish in-flight turns) | Orderly shutdown | gateway/shutdown_flush.py;gateway/shutdown_watchdog.py |
+| `gateway/hooks.py` | source | Gateway hook emission (pre/post event hooks) | Extension seam for gateway lifecycle | gateway/builtin_hooks/ |
+| `gateway/kanban_watchers.py` | source | Kanban board watcher methods for GatewayRunner. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/lifecycle_ledger.py` | source | Gateway lifecycle ledger — durable termination-reason evidence (NS-608). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/memory_monitor.py` | source | Memory pressure monitoring | OOM avoidance | gateway/agent_cache_pressure.py;gateway/cgroup_cleanup.py |
+| `gateway/memory_status.py` | source | Memory status rollup for ``/api/status`` (NS-656). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/message_timestamps.py` | source | Helpers for rendering gateway message timestamps exactly once. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/mirror.py` | source | Dialogue mirroring between sessions | Cross-session message mirroring | gateway/delivery.py |
+| `gateway/pairing.py` | source | Device/session pairing flows | Secure connect UX | gateway/delivery_ledger.py |
+| `gateway/platform_registry.py` | source | Platform adapter registry and discovery | Finds adapters across gateway/platforms and plugins/platforms | gateway/run.py |
+| `gateway/platforms/ADDING_A_PLATFORM.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer |  |
+| `gateway/platforms/__init__.py` | source | Platform adapters for messaging integrations. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/_http_client_limits.py` | source | Shared HTTP client factory for long-lived platform adapters. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/api_server.py` | source | OpenAI-compatible API server platform adapter. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/base.py` | source | Base platform adapter interface. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/bluebubbles.py` | source | BlueBubbles iMessage platform adapter. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/helpers.py` | source | Shared helper classes for gateway platform adapters. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/media_cache.py` | source | Shared mime↔extension dispatch for inbound (downloaded) platform media. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/msgraph_webhook.py` | source | Microsoft Graph webhook adapter for change-notification ingress. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/qqbot/__init__.py` | source | QQBot platform package. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/qqbot/adapter.py` | source | QQ Bot platform adapter using the Official QQ Bot API (v2). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/qqbot/chunked_upload.py` | source | QQ Bot chunked upload flow. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/qqbot/constants.py` | source | QQBot package-level constants shared across adapter, onboard, and other modules. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/qqbot/crypto.py` | source | AES-256-GCM utilities for QQBot scan-to-configure credential decryption. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/qqbot/keyboards.py` | source | QQ Bot inline keyboards + approval / update-prompt senders. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/qqbot/onboard.py` | source | QQBot scan-to-configure (QR code onboard) module. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/qqbot/utils.py` | source | QQBot shared utilities — User-Agent, HTTP helpers, config coercion. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/signal.py` | source | Signal messenger platform adapter. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/signal_format.py` | source | Shared Signal formatting helpers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/signal_rate_limit.py` | source | Signal attachment rate-limit scheduler. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/webhook.py` | source | Generic webhook platform adapter. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/webhook_filters.py` | source | Route-local filters and script transforms for the webhook adapter. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/weixin.py` | source | Weixin platform adapter. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/whatsapp_cloud.py` | source | WhatsApp Cloud API adapter — official Meta WhatsApp Business Platform. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/whatsapp_common.py` | source | Transport-agnostic WhatsApp behavior shared by the Baileys bridge adapter | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/yuanbao.py` | source | Yuanbao platform adapter. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/yuanbao_media.py` | source | yuanbao_media.py — 元宝平台媒体处理模块 | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/yuanbao_proto.py` | source | yuanbao_proto.py - Yuanbao WebSocket 协议编解码（纯 Python 实现） | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/platforms/yuanbao_sticker.py` | source | Yuanbao sticker (TIMFaceElem) support. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/profile_routing.py` | source | Multiplex-profile routing (which profile serves which chat) | Multi-instance messaging | agent/secret_scope.py |
+| `gateway/readiness.py` | source | Bounded, non-destructive readiness probes for authenticated health surfaces. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/relay/__init__.py` | source | Relay/connector support package for the Hermes gateway. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/relay/adapter.py` | source | RelayAdapter — one generic gateway adapter fronted by the connector. EXPERIMENTAL. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/relay/auth.py` | source | Gateway-side relay authentication primitives. EXPERIMENTAL. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/relay/command_manifest.py` | source | Gateway-declared slash-command manifest for the relay lane (Phase 4). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/relay/descriptor.py` | source | CapabilityDescriptor — the relay handshake payload. EXPERIMENTAL. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/relay/media.py` | source | Relay media client — gateway↔connector media plane (Phase 2). EXPERIMENTAL. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/relay/transport.py` | source | Relay transport protocol — the gateway<->connector wire contract. EXPERIMENTAL. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/relay/ws_transport.py` | source | Production WebSocket RelayTransport — the gateway's live link to the connector. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/response_filters.py` | source | Per-platform response filtering | Adapter-specific formatting | tools/ansi_strip.py |
+| `gateway/restart.py` | source | Graceful restart management | Zero-downtime config reload | gateway/restart_loop_guard.py |
+| `gateway/restart_loop_guard.py` | source | Restart loop protection | Crash-loop braking | gateway/restart.py |
+| `gateway/rich_sent_store.py` | source | Rich sent-message store | Message edit/delete hooks | gateway/delivery.py |
+| `gateway/run.py` | source | GatewayRunner — the messaging gateway orchestrator (session lifecycle, message dispatch, hooks) | The always-on surface for Telegram/Discord/etc.; slash commands resolve here in messaging | gateway/session.py;gateway/platforms/;ev0_cli/commands.py |
+| `gateway/runtime_footer.py` | source | Runtime footer for session prompts | Session identity footer | gateway/session.py |
+| `gateway/scale_to_zero.py` | source | Scale-to-zero for idle instances | Cost control | gateway/readiness.py;gateway/systemd_notify.py |
+| `gateway/session.py` | source | Session manager for messaging (per-chat agents, resume, /new) | Isolates each chat's conversation | gateway/run.py;gateway/session_context.py |
+| `gateway/session_context.py` | source | Session-scoped context variables for the Hermes gateway. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/session_stall.py` | source | Stall detection for stuck agent turns | Hung-turn recovery | gateway/session.py;gateway/agent_cache_pressure.py |
+| `gateway/session_state.py` | source | Session state persistence | for messaging resumption | gateway/session.py |
+| `gateway/shutdown_flush.py` | source | Flush pending messages and agent transcripts to disk before shutdown to prevent data loss. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/shutdown_forensics.py` | source | Shutdown forensics (why did it die) | Crash reporting | gateway/shutdown_watchdog.py |
+| `gateway/shutdown_watchdog.py` | source | Shutdown watchdog | Force-exit after grace | gateway/drain_control.py |
+| `gateway/slash_access.py` | source | Per-platform slash command access control. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/slash_commands.py` | source | Gateway slash-command dispatch | Messaging-side command handling | ev0_cli/commands.py;gateway/run.py |
+| `gateway/status.py` | source | Gateway status surfaces (health, locks) | token-scoped locks: acquire_scoped_lock for unique credentials | gateway/readiness.py;gateway/memory_status.py |
+| `gateway/status_phrases.py` | source | Human-friendly generic gateway status phrases. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/sticker_cache.py` | source | Sticker description cache for Telegram. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/stream_consumer.py` | source | Stream consumer state | tracks per-session streaming | gateway/stream_dispatch.py |
+| `gateway/stream_dispatch.py` | source | Stream routing to per-platform consumers | Streaming fan-out | gateway/stream_events.py;gateway/stream_consumer.py |
+| `gateway/stream_events.py` | source | Stream event model | Async stream lifecycle | gateway/stream_dispatch.py |
+| `gateway/streaming_tts_consumer.py` | source | Gateway streaming-TTS consumer — LLM deltas to adapter PCM audio sink. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/systemd_notify.py` | source | systemd notify (sd_notify) | Service-managed deployments | gateway/readiness.py |
+| `gateway/turn_context.py` | source | Per-turn context shared between ``GatewayRunner._run_agent_inner`` and the | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `gateway/turn_lease.py` | source | Per-session turn lease (serialization) | Prevents concurrent turns on one chat | gateway/session.py |
+| `gateway/wake.py` | source | Wake orchestration (the gateway has its own wake ritual, parallel to the body.s) | Boot-time standing pass; the parallel to scripts/handoff_check.sh | scripts/handoff_check.sh |
+| `gateway/whatsapp_identity.py` | source | Shared helpers for canonicalising WhatsApp sender identity. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/__init__.py` | source | Python module `__init__.py` | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/_stdin_recovery.py` | source | Shared spurious stdin-EOF recovery for the TUI gateway entry point and slash worker. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/compute_host.py` | source | Persistent dashboard compute-host process. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/entry.py` | source | Python module `entry.py` | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/event_publisher.py` | source | Best-effort WebSocket publisher transport for the PTY-side gateway. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/git_probe.py` | source | Git working-tree probing for the gateway: run git, resolve repo roots, fold | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/host_supervisor.py` | source | Supervisor for the dashboard compute-host child process. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/loop_noise.py` | source | Suppress benign event-loop teardown noise on the gateway serving loop. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/mcp_oauth_sessions.py` | source | Session-backed MCP OAuth flows for the gateway (mcp.servers.oauth.*). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/mcp_rpc_helpers.py` | source | Shared helpers for the per-profile MCP lifecycle RPCs (mcp.servers.*). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/method_ctx.py` | source | Seam for the server.py @method handler split (mechanical move). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/methods_complete.py` | source | Completion / model-key / paste JSON-RPC handlers (moved verbatim from server.py). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/methods_config.py` | source | Config / projects / setup JSON-RPC handlers (moved verbatim from server.py). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/methods_images.py` | source | Image-generation JSON-RPC handler (ws twin of the image_generate tool). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/methods_profiles.py` | source | Profile JSON-RPC handlers — the ws twin of the dashboard's /api/profiles. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/methods_prompt.py` | source | Prompt / attachment / respond JSON-RPC handlers (moved verbatim from server.py). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/methods_session.py` | source | Session / delegation / spawn-tree / billing / pet JSON-RPC handlers (moved verbatim from server.py). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/methods_tools.py` | source | Tools & system / slash.exec / insights / rollback / browser-plugins-cron-skills JSON-RPC handlers (moved verbatim from server.py). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/project_tree.py` | source | Authoritative project -> repo -> lane -> session tree builder. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/render.py` | source | Rendering bridge — routes TUI content through Python-side renderers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/server.py` | source | Python module `server.py` | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/slash_fuzzy.py` | source | Description-aware fuzzy scoring for slash-menu completions. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/slash_worker.py` | source | Persistent slash-command worker — one HermesCLI per TUI session. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/synthetic_turn.py` | source | Synthetic GIL-heavy turn driver for the AC-4 isolation certify harness. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/transport.py` | source | Transport abstraction for the tui_gateway JSON-RPC server. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/turn_marker.py` | source | Durable interrupted-turn markers for the desktop/TUI auto-continue path. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `tui_gateway/ws.py` | source | WebSocket transport for the tui_gateway JSON-RPC server. | Python module executed or imported by the runtime; check git intent before deleting |  |

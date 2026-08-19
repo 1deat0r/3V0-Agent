@@ -1,0 +1,1 @@
+3V0's sovereign domain: the memory core (memdb/store/consolidate/coalesce/coherence), the standing scripts (continuity, sync, analytics, handoff, verify), and the canonical data (`memory.db`, `skills.json`, `continuity/claims.json`). The wake ritual in `scripts/handoff_check.sh` drives these; `SOUL.md` and `CONTEXT.md` are identity.

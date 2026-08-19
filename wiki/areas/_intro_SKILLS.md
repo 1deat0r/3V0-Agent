@@ -1,0 +1,1 @@
+The skill libraries: `skills/` (built-in, active by default, by category) and `optional-skills/` (heavier/niche, installed via `hermes skills install official/...`). SKILL.md frontmatter is load-bearing for the loader. Authoring standards are hardline.

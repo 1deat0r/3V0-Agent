@@ -37,6 +37,15 @@ DIRTY=$(cd "$R" && git status --porcelain 2>/dev/null | grep -v '^??' | grep -v 
 [ "$DIRTY" -eq 0 ] || fail "uncommitted changes beyond memory.db: $(cd "$R" && git status --porcelain | grep -v '^??' | grep -v 'memory.db' | head -3 | tr '\n' ' ')"
 echo "ok: tree clean (beyond memory.db)"
 
+# 6. wiki index 100% coverage gate (the LLM-readable library index must not
+#    silently drift behind the tree). Rebuild: python3 scripts/build_wiki.py --rebuild
+if ! python3 "$R/scripts/build_wiki.py" --check >/tmp/3v0_wiki_check.txt 2>&1; then
+  fail "wiki not at 100% coverage (run: python3 scripts/build_wiki.py --rebuild)"
+  tail -4 /tmp/3v0_wiki_check.txt >&2
+else
+  echo "ok: wiki 100% coverage"
+fi
+
 if [ "$FAIL" -eq 0 ]; then
   echo "PASS — body is in a done/healthy state."
 else

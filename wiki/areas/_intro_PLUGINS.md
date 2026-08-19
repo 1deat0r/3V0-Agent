@@ -1,0 +1,1 @@
+The plugin ecosystem. `plugins/memory/` (closed in-tree provider set), `plugins/model-providers/` (lazy discovery, user overrides), `plugins/platforms/` (fewer adapters via plugins), context_engine, kanban, observability, achievements, disk-cleanup, spotify. In-tree third-party-product plugins are closed by policy.

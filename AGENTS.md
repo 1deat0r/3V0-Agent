@@ -285,6 +285,13 @@ File counts shift constantly — don't treat the tree below as exhaustive.
 The canonical source is the filesystem. The notes call out the load-bearing
 entry points you'll actually edit.
 
+> **An always-up-to-date file-by-file index lives in `wiki/`** (master
+> catalog `wiki/index.md`, per-area tables `wiki/areas/`, raw manifest
+> `wiki/manifest.tsv`). Every tracked path is indexed — 100% coverage is a
+> hard gate (.githooks/pre-commit + verify.sh). Maintenance contract:
+> `wiki/SCHEMA.md`; regenerate with `python3 scripts/build_wiki.py --rebuild`
+> after any structural change (it preserves hand-curated rows).
+
 ```
 hermes-agent/
 ├── run_agent.py          # AIAgent class — core conversation loop (~12k LOC)

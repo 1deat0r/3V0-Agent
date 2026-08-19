@@ -1,0 +1,190 @@
+# web/ — dashboard frontend
+
+The dashboard frontend (React + Vite + xterm.js). It mounts `hermes --tui` in a terminal pane via `/api/pty` WebSocket; structured widgets around the TUI are allowed, a second chat surface is not.
+---
+Auto-rendered from `wiki/manifest.tsv` — `python3 scripts/build_wiki.py --rebuild` regenerates.
+Columns: path · kind · purpose · why · related
+
+| path | kind | purpose | why | related |
+|------|------|---------|-----|---------|
+| `web/README.md` | readme | README (en) | Project introduction & quickstart for humans/new agents |  |
+| `web/eslint.config.js` | asset | File `eslint.config.js` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/index.html` | asset | File `index.html` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/package.json` | build | Node package manifest | Declares JS workspace deps + scripts |  |
+| `web/public/favicon.ico` | asset | Image asset | Static media referenced by docs or frontend |  |
+| `web/public/fonts-terminal/JetBrainsMono-Bold.woff2` | asset | File `JetBrainsMono-Bold.woff2` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/public/fonts-terminal/JetBrainsMono-Italic.woff2` | asset | File `JetBrainsMono-Italic.woff2` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/public/fonts-terminal/JetBrainsMono-Regular.woff2` | asset | File `JetBrainsMono-Regular.woff2` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/public/fonts/Collapse-Bold.woff2` | asset | File `Collapse-Bold.woff2` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/public/fonts/Collapse-Regular.woff2` | asset | File `Collapse-Regular.woff2` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/public/fonts/Mondwest-Regular.woff2` | asset | File `Mondwest-Regular.woff2` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/public/fonts/RulesCompressed-Medium.woff2` | asset | File `RulesCompressed-Medium.woff2` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/public/fonts/RulesCompressed-Regular.woff2` | asset | File `RulesCompressed-Regular.woff2` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/public/fonts/RulesExpanded-Bold.woff2` | asset | File `RulesExpanded-Bold.woff2` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/public/fonts/RulesExpanded-Regular.woff2` | asset | File `RulesExpanded-Regular.woff2` | Repository content; see related files / area page for the enclosing subsystem |  |
+| `web/src/App.tsx` | frontend-tsx | React component `App.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/AuthWidget.tsx` | frontend-tsx | React component `AuthWidget.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/AutoField.tsx` | frontend-tsx | React component `AutoField.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/AutomationBlueprints.tsx` | frontend-tsx | React component `AutomationBlueprints.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ChatSessionList.tsx` | frontend-tsx | React component `ChatSessionList.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ChatSidebar.test.tsx` | frontend-tsx | React component `ChatSidebar.test.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ChatSidebar.tsx` | frontend-tsx | React component `ChatSidebar.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ConfirmDialog.tsx` | frontend-tsx | React component `ConfirmDialog.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/DeleteConfirmDialog.tsx` | frontend-tsx | React component `DeleteConfirmDialog.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/HermesConsoleModal.tsx` | frontend-tsx | React component `HermesConsoleModal.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/LanguageSwitcher.tsx` | frontend-tsx | React component `LanguageSwitcher.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/Markdown.tsx` | frontend-tsx | React component `Markdown.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/MemoryPressureBanner.test.tsx` | frontend-tsx | React component `MemoryPressureBanner.test.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/MemoryPressureBanner.tsx` | frontend-tsx | React component `MemoryPressureBanner.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ModelInfoCard.tsx` | frontend-tsx | React component `ModelInfoCard.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ModelPickerDialog.tsx` | frontend-tsx | React component `ModelPickerDialog.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ModelReloadConfirm.tsx` | frontend-tsx | React component `ModelReloadConfirm.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/OAuthLoginModal.tsx` | frontend-tsx | React component `OAuthLoginModal.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/OAuthProvidersCard.tsx` | frontend-tsx | React component `OAuthProvidersCard.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/PlatformsCard.tsx` | frontend-tsx | React component `PlatformsCard.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ProfileScopeBanner.tsx` | frontend-tsx | React component `ProfileScopeBanner.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ProfileSwitcher.tsx` | frontend-tsx | React component `ProfileSwitcher.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ReasoningPicker.tsx` | frontend-tsx | React component `ReasoningPicker.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ScheduleBuilder.tsx` | frontend-tsx | React component `ScheduleBuilder.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/SidebarFooter.tsx` | frontend-tsx | React component `SidebarFooter.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/SidebarStatusStrip.tsx` | frontend-tsx | React component `SidebarStatusStrip.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/SkillEditorDialog.tsx` | frontend-tsx | React component `SkillEditorDialog.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/SlashPopover.tsx` | frontend-tsx | React component `SlashPopover.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ThemeSwitcher.tsx` | frontend-tsx | React component `ThemeSwitcher.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/components/ToolsetConfigDrawer.tsx` | frontend-tsx | React component `ToolsetConfigDrawer.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/contexts/PageHeaderProvider.tsx` | frontend-tsx | React component `PageHeaderProvider.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/contexts/ProfileProvider.tsx` | frontend-tsx | React component `ProfileProvider.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/contexts/SystemActions.tsx` | frontend-tsx | React component `SystemActions.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/contexts/page-header-context.ts` | frontend-ts | TypeScript module `page-header-context.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/contexts/profile-context.ts` | frontend-ts | TypeScript module `profile-context.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/contexts/system-actions-context.ts` | frontend-ts | TypeScript module `system-actions-context.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/contexts/usePageHeader.ts` | frontend-ts | TypeScript module `usePageHeader.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/contexts/useProfileScope.ts` | frontend-ts | TypeScript module `useProfileScope.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/contexts/useSystemActions.ts` | frontend-ts | TypeScript module `useSystemActions.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/hooks/useModalBehavior.ts` | frontend-ts | TypeScript module `useModalBehavior.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/hooks/useSidebarStatus.ts` | frontend-ts | TypeScript module `useSidebarStatus.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/af.ts` | frontend-ts | TypeScript module `af.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/ar.ts` | frontend-ts | TypeScript module `ar.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/context.tsx` | frontend-tsx | React component `context.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/i18n/de.ts` | frontend-ts | TypeScript module `de.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/define-locale.ts` | frontend-ts | TypeScript module `define-locale.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/en.ts` | frontend-ts | TypeScript module `en.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/es.ts` | frontend-ts | TypeScript module `es.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/fr.ts` | frontend-ts | TypeScript module `fr.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/ga.ts` | frontend-ts | TypeScript module `ga.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/hu.ts` | frontend-ts | TypeScript module `hu.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/index.ts` | frontend-ts | TypeScript module `index.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/it.ts` | frontend-ts | TypeScript module `it.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/ja.ts` | frontend-ts | TypeScript module `ja.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/ko.ts` | frontend-ts | TypeScript module `ko.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/pt.ts` | frontend-ts | TypeScript module `pt.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/ru.ts` | frontend-ts | TypeScript module `ru.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/tr.ts` | frontend-ts | TypeScript module `tr.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/types.ts` | frontend-ts | TypeScript module `types.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/uk.ts` | frontend-ts | TypeScript module `uk.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/zh-hant.ts` | frontend-ts | TypeScript module `zh-hant.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/i18n/zh.ts` | frontend-ts | TypeScript module `zh.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/index.css` | asset | Stylesheet | Styling for a frontend surface |  |
+| `web/src/lib/api.test.ts` | frontend-ts | TypeScript module `api.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/api.ts` | frontend-ts | TypeScript module `api.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/chat-activation.test.ts` | frontend-ts | TypeScript module `chat-activation.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/chat-activation.ts` | frontend-ts | TypeScript module `chat-activation.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/chat-sidebar-session-params.test.ts` | frontend-ts | TypeScript module `chat-sidebar-session-params.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/chat-title.test.ts` | frontend-ts | TypeScript module `chat-title.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/chat-title.ts` | frontend-ts | TypeScript module `chat-title.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/chatImagePaste.test.ts` | frontend-ts | TypeScript module `chatImagePaste.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/chatImagePaste.ts` | frontend-ts | TypeScript module `chatImagePaste.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/clipboard.test.ts` | frontend-ts | TypeScript module `clipboard.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/clipboard.ts` | frontend-ts | TypeScript module `clipboard.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/cron-job.test.ts` | frontend-ts | TypeScript module `cron-job.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/cron-job.ts` | frontend-ts | TypeScript module `cron-job.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/cron-trigger-controller.test.ts` | frontend-ts | TypeScript module `cron-trigger-controller.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/dashboard-auth-reload.test.ts` | frontend-ts | TypeScript module `dashboard-auth-reload.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/dashboard-auth-reload.ts` | frontend-ts | TypeScript module `dashboard-auth-reload.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/dashboard-flags.ts` | frontend-ts | TypeScript module `dashboard-flags.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/dashboard-modal-shell.test.ts` | frontend-ts | TypeScript module `dashboard-modal-shell.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/dashboard-modal-shell.ts` | frontend-ts | TypeScript module `dashboard-modal-shell.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/events-reconnect.test.ts` | frontend-ts | TypeScript module `events-reconnect.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/events-reconnect.ts` | frontend-ts | TypeScript module `events-reconnect.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/format.ts` | frontend-ts | TypeScript module `format.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/fuzzy.ts` | frontend-ts | TypeScript module `fuzzy.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/gatewayClient.test.ts` | frontend-ts | TypeScript module `gatewayClient.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/gatewayClient.ts` | frontend-ts | TypeScript module `gatewayClient.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/log-classify.test.ts` | frontend-ts | TypeScript module `log-classify.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/log-classify.ts` | frontend-ts | TypeScript module `log-classify.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/mcp-dashboard-oauth.test.ts` | frontend-ts | TypeScript module `mcp-dashboard-oauth.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/mcp-dashboard-oauth.ts` | frontend-ts | TypeScript module `mcp-dashboard-oauth.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/mcp-server-create.test.ts` | frontend-ts | TypeScript module `mcp-server-create.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/mcp-server-create.ts` | frontend-ts | TypeScript module `mcp-server-create.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/model-picker-filter.test.ts` | frontend-ts | TypeScript module `model-picker-filter.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/model-picker-filter.ts` | frontend-ts | TypeScript module `model-picker-filter.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/model-search-text.ts` | frontend-ts | TypeScript module `model-search-text.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/nested.ts` | frontend-ts | TypeScript module `nested.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-composition.test.ts` | frontend-ts | TypeScript module `pty-composition.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-composition.ts` | frontend-ts | TypeScript module `pty-composition.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-keyboard-shortcuts.test.ts` | frontend-ts | TypeScript module `pty-keyboard-shortcuts.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-keyboard-shortcuts.ts` | frontend-ts | TypeScript module `pty-keyboard-shortcuts.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-mobile-input.test.ts` | frontend-ts | TypeScript module `pty-mobile-input.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-mobile-input.ts` | frontend-ts | TypeScript module `pty-mobile-input.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-reconnect.test.ts` | frontend-ts | TypeScript module `pty-reconnect.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-reconnect.ts` | frontend-ts | TypeScript module `pty-reconnect.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-resume-loading.test.ts` | frontend-ts | TypeScript module `pty-resume-loading.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-resume-loading.ts` | frontend-ts | TypeScript module `pty-resume-loading.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-resume-sanitizer.test.ts` | frontend-ts | TypeScript module `pty-resume-sanitizer.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-resume-sanitizer.ts` | frontend-ts | TypeScript module `pty-resume-sanitizer.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-scroll.test.ts` | frontend-ts | TypeScript module `pty-scroll.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/pty-scroll.ts` | frontend-ts | TypeScript module `pty-scroll.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/reasoning-effort.test.ts` | frontend-ts | TypeScript module `reasoning-effort.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/reasoning-effort.ts` | frontend-ts | TypeScript module `reasoning-effort.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/resolve-page-title.test.ts` | frontend-ts | TypeScript module `resolve-page-title.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/resolve-page-title.ts` | frontend-ts | TypeScript module `resolve-page-title.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/schedule.test.ts` | frontend-ts | TypeScript module `schedule.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/schedule.ts` | frontend-ts | TypeScript module `schedule.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/session-import.test.ts` | frontend-ts | TypeScript module `session-import.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/session-import.ts` | frontend-ts | TypeScript module `session-import.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/session-prune.test.ts` | frontend-ts | TypeScript module `session-prune.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/session-prune.ts` | frontend-ts | TypeScript module `session-prune.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/session-refresh.test.ts` | frontend-ts | TypeScript module `session-refresh.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/session-refresh.ts` | frontend-ts | TypeScript module `session-refresh.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/slashExec.ts` | frontend-ts | TypeScript module `slashExec.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/lib/utils.ts` | frontend-ts | TypeScript module `utils.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/main.tsx` | frontend-tsx | React component `main.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/AnalyticsPage.tsx` | frontend-tsx | React component `AnalyticsPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/ChannelsPage.tsx` | frontend-tsx | React component `ChannelsPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/ChatPage.test.tsx` | frontend-tsx | React component `ChatPage.test.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/ChatPage.tsx` | frontend-tsx | React component `ChatPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/ConfigPage.tsx` | frontend-tsx | React component `ConfigPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/CronPage.tsx` | frontend-tsx | React component `CronPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/DocsPage.tsx` | frontend-tsx | React component `DocsPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/EnvPage.tsx` | frontend-tsx | React component `EnvPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/FilesPage.tsx` | frontend-tsx | React component `FilesPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/LogsPage.tsx` | frontend-tsx | React component `LogsPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/McpPage.tsx` | frontend-tsx | React component `McpPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/ModelsPage.tsx` | frontend-tsx | React component `ModelsPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/PairingPage.tsx` | frontend-tsx | React component `PairingPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/PluginsPage.tsx` | frontend-tsx | React component `PluginsPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/ProfileBuilderPage.tsx` | frontend-tsx | React component `ProfileBuilderPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/ProfilesPage.tsx` | frontend-tsx | React component `ProfilesPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/SessionsPage.tsx` | frontend-tsx | React component `SessionsPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/SkillsPage.tsx` | frontend-tsx | React component `SkillsPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/SystemPage.tsx` | frontend-tsx | React component `SystemPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/pages/WebhooksPage.tsx` | frontend-tsx | React component `WebhooksPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/plugins/PluginPage.tsx` | frontend-tsx | React component `PluginPage.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/plugins/index.ts` | frontend-ts | TypeScript module `index.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/plugins/registry.test.ts` | frontend-ts | TypeScript module `registry.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/plugins/registry.ts` | frontend-ts | TypeScript module `registry.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/plugins/sdk.d.ts` | frontend-ts | TypeScript module `sdk.d.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/plugins/slots.ts` | frontend-ts | TypeScript module `slots.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/plugins/types.ts` | frontend-ts | TypeScript module `types.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/plugins/usePlugins.test.ts` | frontend-ts | TypeScript module `usePlugins.test.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/plugins/usePlugins.ts` | frontend-ts | TypeScript module `usePlugins.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/themes/context.tsx` | frontend-tsx | React component `context.tsx` | Renders part of a frontend surface; bundled by the TS build |  |
+| `web/src/themes/fonts.ts` | frontend-ts | TypeScript module `fonts.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/themes/index.ts` | frontend-ts | TypeScript module `index.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/themes/presets.ts` | frontend-ts | TypeScript module `presets.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/src/themes/types.ts` | frontend-ts | TypeScript module `types.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/tsconfig.app.json` | config | Structured data/config file | Persistent state or declarative config read by tooling |  |
+| `web/tsconfig.json` | config | Structured data/config file | Persistent state or declarative config read by tooling |  |
+| `web/tsconfig.node.json` | config | Structured data/config file | Persistent state or declarative config read by tooling |  |
+| `web/vite.config.ts` | frontend-ts | TypeScript module `vite.config.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |
+| `web/vitest.config.ts` | frontend-ts | TypeScript module `vitest.config.ts` | Frontend/shared TS source consumed by the tsc/vite build |  |

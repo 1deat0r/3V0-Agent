@@ -1,0 +1,1 @@
+The test suites — `tests/` (Python, ~17k tests; per-file subprocess isolation via run_tests_parallel), `evals/`, conformance/integration/stress. `3v0/tests/` covers the sovereign core. Run only via `scripts/run_tests.sh`.

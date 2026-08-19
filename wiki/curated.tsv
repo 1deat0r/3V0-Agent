@@ -1,0 +1,448 @@
+run_agent.py	source	manual	AIAgent class — the core synchronous conversation loop (model calls, tool dispatch, budget, interrupts)	Everything talks to a model through this loop; the narrow waist of the whole system	model_tools.py;cli.py;agent/conversation_loop.py;agent/prompt_builder.py
+cli.py	source	manual	HermesCLI — interactive CLI orchestrator (prompt_toolkit + Rich), slash commands, session management	The primary human-facing surface; hosts command dispatch and config loading	for shell_commands: ev0_cli/commands.py;ev0_cli/config.py;ev0_cli/main.py;run_agent.py
+batch_runner.py	source	manual	Parallel batch task runner driving many AIAgent sessions	Runs offline jobs/campaigns against the same core loop without a live TTY	run_agent.py;tests/run_agent
+trajectory_compressor.py	source	manual	Context compression / trajectory compaction service for long conversations	Prevents prompt-cache breakage and context overflow on long sessions; the one allowed mid-conversation context mutation	agent/context_compressor.py;agent/native_compaction.py;agent/conversation_compression.py
+utils.py	source	manual	Shared utilities (paths, JSON, file atomics, misc helpers)	Common helpers used repo-wide; keep dependency-free	ev0_constants.py;ev0_logging.py
+ev0_bootstrap.py	source	manual	Early-boot module that applies profile override and seeds environment before other imports	Runs before everything so HERMES_HOME / profile routing is correct at import time	ev0_constants.py;ev0_cli/main.py
+model_tools.py	source	manual	Tool orchestration hub — discover_builtin_tools, get_tool_definitions, handle_function_call, toolset assembly	Every model tool ships through here per API call; the footprint-ladder choke point	tools/registry.py;toolsets.py;run_agent.py
+toolsets.py	source	manual	TOOLSETS dict — named tool bundles + _HERMES_CORE_TOOLS default	Defines which tools each platform/base exposes; the schema-gating wedge	model_tools.py;tools/registry.py
+toolset_distributions.py	source	manual	Per-platform toolset enablement matrix + distribution rules	Maps platform -> base toolset with config-gated additions	platforms use: toolsets.py;gateway/platform_registry.py
+ev0_state.py	source	manual	SessionDB — the SQLite session store (FTS5 search, project/session records)	Canonical session persistence backing resume/search/desktop; god-file, split across ev0_state_* siblings	ev0_state_schema.py;ev0_state_search.py;ev0_state_common.py;ev0_state_portability.py
+ev0_state_schema.py	source	manual	SQLite schema definitions + migrations for the session store	Keeps the DB schema versioned and migratable	ev0_state.py
+ev0_state_search.py	source	manual	FTS5 search layer over the session store	Powers /search and session picker; SQLite-side, no external indexer	ev0_state.py
+ev0_state_common.py	source	manual	Shared helpers for the session store family (types, paths, common queries)	Avoids circular imports between ev0_state and its satellites	ev0_state.py;ev0_state_portability.py
+ev0_state_portability.py	source	manual	Portability/backup layer for session stores (export, import, relocation)	Lets sessions survive profile moves and installs	moves: ev0_state.py;ev0_constants.py
+ev0_constants.py	source	manual	get_hermes_home() / display_hermes_home() — profile-aware path resolution	Every state path in the body resolves through here; hardcoding ~/.hermes elsewhere is a known-bug class	ev0_logging.py;ev0_bootstrap.py;tests/ev0_cli/test_profiles.py
+ev0_logging.py	source	manual	setup_logging() — agent.log / errors.log / gateway.log (profile-aware)	All logs land per-profile via HERMES_HOME; browse with hermes logs	ev0_constants.py;gateway/run.py
+ev0_time.py	source	manual	Time helpers (UTC stamps, duration parsing)	Consistent time handling across scheduler/cron/session code	cron/scheduler.py;ev0_constants.py
+mcp_serve.py	source	manual	MCP server mode — expose the agent as an MCP host/server	Lets external MCP clients drive the agent; catalog + client bridging lives in tools/mcp_tool.py	tools/mcp_tool.py;tools/setup_mcp_tool.py
+mini_swe_runner.py	source	manual	Minimal SWE-bench-style evaluator harness for the agent	Runs model patch-turns against task instances for offline evals	evals/;scripts/run_tests.sh
+registration_lifecycle.py	source	manual	Lifecycle hooks for registration/licensing flows	Registration/activation side of the product surface	ev0_cli/auth*.py
+3v0-cli	script	manual	Launcher script for the 3v0 CLI	Thin exec shim so `3v0 --tui` etc. work from PATH	ev0_cli/main.py;run_agent.py
+AGENTS.md	doc	manual	The body's governance + contribution contract (3V0 sovereignty, footprint ladder, testing policy)	Constitutional doc; every AI assistant working here is bound by it	wiki/SCHEMA.md;3v0/SOUL.md;3v0/CONTEXT.md
+README.md	readme	manual	Project README (English)	for humans/new agents	README.es.md;README.zh-CN.md;README.ur-pk.md;CONTRIBUTING.md
+README.es.md	readme	manual	Spanish project README	Spanish community surface	README.md;locales/es.yaml
+SECURITY.md	policy-doc	manual	Security policy + reporting	Public security contract	SECURITY.es.md;.coderabbit.yaml
+CONTRIBUTING.md	policy-doc	manual	Contribution guide (full engineering standards)	Merging law for the repo	AGENTS.md;CONTRIBUTING.es.md
+LICENSE	doc	manual	License text	Legal basis for distribution	README.md
+SUSTAINABILITY.md	policy-doc	manual	Cost-efficiency doctrine for LLM spend	Guides token-efficiency; pairs with 3v0/TOKEN_EFFICIENCY.md	3v0/TOKEN_EFFICIENCY.md;sustainability/
+SELF_IMPROVEMENT.md	policy-doc	manual	Self-improvement doctrine (quality loops, verify.sh culture)	Policies the body's own evolution	3v0/EVOLUTION_LOOP.md;3v0/scripts/verify.sh
+HANDOFF.md	doc	manual	Manual session handoff — the operator's narrative continuity document	Tracked continuity artifact; regenerated draft lives in HANDOFF.generated.md (gitignored)	3v0/data/continuity/claims.json;3v0/scripts/generate_handoff.py
+pyproject.toml	build	manual	Python packaging + dependency declaration with upper-bound pins	Defines the package and the supply-chain pinning policy	uv.lock;setup.py
+uv.lock	lockfile	manual	uv lockfile with hashes	Reproducible installs; regenerate via uv lock	pyproject.toml
+package.json	build	manual	Root npm workspace manifest	Orchestrates the JS side (ui-tui, web, apps, website)	package-lock.json;ui-tui/package.json
+Dockerfile	build	manual	Container image definition (+ multi-stage build)	Dockerized deployment for the gateway/CLI	docker/;docker-compose.yml
+docker-compose.yml	config	manual	Single-node compose stack	Docker deployment entry	Dockerfile;docker-compose.windows.yml
+flake.nix	build	manual	Nix flake declaration	for nix-based dev environments	nix/;flake.lock
+.githooks/pre-commit	script	manual	Pre-commit coherence guard — stale-doctrine scan + coherence fail-close + dirty-warn	Makes stale doctrine and coherence contradictions impossible to merge	3v0/core/coherence.py;3v0/scripts/verify.sh;wiki refresh steps
+.env.example	config	manual	Example secrets file (.env is for secrets ONLY)	Documentation of every credential the body can use; non-secrets belong in config.yaml	ev0_cli/config.py
+3v0/SOUL.md	doc	manual	The agent's soul — identity, values (honesty/judgment/sovereignty), prime directive	Anchors every coherence check and the wake gate; editing it is editing the self	3v0/CONTEXT.md;3v0/core/coherence.py;AGENTS.md
+3v0/CONTEXT.md	doc	manual	Standing context — who 3V0 is, what it knows, the operating narrative	Loaded into every session; the memory store's profile mirror	sync: 3v0/scripts/sync.py;3v0/data/memory.db
+3v0/CUTOVER.md	doc	manual	Migration record of the Hermes -> 3V0 cutover (renames, ev0_* identifiers)	Audit trail for the substrate rename; explains why files are named ev0_*	AGENTS.md;3v0/VERSION
+3v0/CONTINUITY.md	doc	manual	The continuity model — invariants the body must never break	Declarative spec for continuity_check; invariant source of truth	3v0/core/continuity.py;3v0/data/continuity/claims.json
+3v0/DECISION_MATRIX.md	doc	manual	Decision log — recorded architectural decisions and their rationale	Prevents repeating settled debates; the body's memory of its own choices	3v0/core/decide.py;3v0/DECISION_MATRIX.md peer: 3v0/CONTEXT.md
+3v0/EVOLUTION_LOOP.md	doc	manual	The evolution loop — how the agent improves itself and when it may	Governs safe self-modification (safe_evolve); pairs with EVOLUTION_PROBE	3v0/core/safe_evolve.py;3v0/EVOLUTION_PROBE.md
+3v0/EVOLUTION_PROBE.md	doc	manual	Probe protocol — controlled experiments for self-improvement	Defines probe bank/attempt lifecycle in data/probe_*	3v0/data/probe_bank_v1.json;3v0/scripts/discover.py
+3v0/TOKEN_EFFICIENCY.md	doc	manual	Token-efficiency doctrine (aux model routing, budget rules)	Cost discipline for LLM spend; referenced by insights/analytics actions	3v0/core/insights.py;SUSTAINABILITY.md
+3v0/VERSION	doc	manual	Version marker for the 3V0 sovereign core	Single-sourced version; release tooling reads it	cuts: 3v0/scripts/verify.sh
+3v0/README.md	readme	manual	3V0 core README — the sovereign system's own documentation	Entry point for the soul/core subsystem	3v0/SOUL.md;3v0/CONTEXT.md
+3v0/core/memdb.py	source	manual	Core memory store — SQLite schema (facts table), add_fact, valid_facts, connect	The native memory substrate; every memory/coherence/coalesce path reads/writes here	3v0/core/store.py;3v0/core/consolidate.py;3v0/core/coalesce.py
+3v0/core/store.py	source	manual	SQLStore — pipeline write seam: every fact becomes the container triple (3v0, note, content)	Why (s,p) keying is degenerate; the seam 3v0 consolidation must respect	3v0/core/memdb.py;3v0/core/consolidate.py
+3v0/core/record.py	source	manual	Record model — typed memory records + add/close/validity helpers	Shared data semantics across store, retrieval, and the standing systems	3v0/core/memdb.py;3v0/core/query.py
+3v0/core/consolidate.py	source	manual	Conflict reconciliation keyed on the supersedes lineage (chain anchor)	Making consolidation finish honestly without destroying distinct notes; the 2026-08-20 fix	3v0/core/coalesce.py;3v0/tests/test_consolidate.py
+3v0/core/coalesce.py	source	manual	Watermark-driven consolidation process — reconcile + near-duplicate merge on cadence	Never on-demand; idempotent across wakes; pending_remaining = coverage	3v0/core/consolidate.py;3v0/scripts/coherence_coalesce.py
+3v0/core/coherence.py	source	manual	Coherence engine — fail-close contradiction checks across doctrine/store	nothing drifting; the pre-commit and wake gate rely on it	3v0/scripts/coherence_coalesce.py;.githooks/pre-commit
+3v0/core/continuity.py	source	manual	Continuity invariants — the six checks (anchor, self-describing, memory-profile, skills-store, ledger, github-loops)	Defines drift for the whole body; healable vs semantic split	3v0/scripts/continuity_check.py;3v0/data/continuity/claims.json
+3v0/core/retrieval.py	source	manual	Retrieval/injection — budget-capped fact injection from the valid store	The working-set gate for sync/profile and wake context	3v0/core/retrieval_fts.py;3v0/core/retrieval_fuzzy.py;3v0/core/semantic.py
+3v0/core/retrieval_fts.py	source	manual	FTS5 lexical tier for retrieval	Fast keyword tier feeding the rerank pipeline	3v0/core/retrieval.py
+3v0/core/retrieval_fuzzy.py	source	manual	Fuzzy-match tier for retrieval	Handles typo/case tolerance before semantic rerank	3v0/core/retrieval.py
+3v0/core/semantic.py	source	manual	Semantic tier — embeddings + cosine rerank, cost-aware gating	The quality tier routed through auxiliary models per TOKEN_EFFICIENCY	3v0/core/retrieval.py;3v0/core/analytics.py
+3v0/core/query.py	source	manual	Query layer over the memory store	Ad-hoc structured access used by scripts and tools	3v0/core/memdb.py;3v0/scripts/query.py
+3v0/core/memory.py	source	manual	Memory façade — unified read/write API over the store	The public memory surface for ingestion pipelines	3v0/core/store.py;3v0/core/record.py
+3v0/core/lineage.py	source	manual	Supersedes lineage helpers — chains, anchors, validity	The honest same-assertion signal; used by consolidate	3v0/core/consolidate.py;3v0/core/memdb.py
+3v0/core/forget.py	source	manual	Forgetting — archival of never-retrieved facts (access_count based)	Bounds store growth; reversible (archive, never destroy)	3v0/data/analytics;3v0/core/memdb.py
+3v0/core/drift.py	source	manual	Project ledger drift checks	The ledger invariant feeding continuity	3v0/data/projects;3v0/scripts/drift_check.py
+3v0/core/decide.py	source	manual	Decision recording service (DECISION_MATRIX backing store)	Persistence for recorded decisions	3v0/DECISION_MATRIX.md;3v0/core/memdb.py
+3v0/core/decide_skills.py	source	manual	Skill-level decision utilities	Records skill choices during discovery	3v0/core/decide.py;3v0/scripts/discover.py
+3v0/core/safe_evolve.py	source	manual	Safe self-evolution guard — bounded, reversible improvement steps	The evolution loop's safety rail	3v0/EVOLUTION_LOOP.md;3v0/core/sbco.py
+3v0/core/sbco.py	source	manual	SBCO (stock-keeping/coherence?) helper for the evolve loop	Support for safe mutation bookkeeping	3v0/core/safe_evolve.py
+3v0/core/review_decide.py	source	manual	Review-time decision summarizer	Converts session review into decision records	3v0/scripts/review_session.py;3v0/core/decide.py
+3v0/core/session_db.py	source	manual	Session-record DB (wake/session metadata)	Bridges the native store to session bookkeeping	3v0/core/memdb.py
+3v0/core/backoff.py	source	manual	Backoff helper for retryable ops	Resilience for store/analytics writes	3v0/core/analytics_collect.py
+3v0/core/claims.py	source	manual	Claim registry model (loops, claims.json)	Source of truth for tracked open loops	3v0/data/continuity/claims.json;3v0/scripts/generate_handoff.py
+3v0/core/analytics.py	source	manual	Owned analytics — metrics + rule engine (cost, latency, model routing)	Self-measured performance; feeds insights and actions	3v0/core/analytics_collect.py;3v0/scripts/analytics.py
+3v0/core/analytics_collect.py	source	manual	Analytics collection (event capture into data/analytics)	Persists the metrics the rules evaluate	3v0/core/analytics.py;3v0/data/analytics
+3v0/core/insights.py	source	manual	Insight generation from analytics (MEDIUM/LOW findings + actions)	Turns metrics into actionable self-findings	3v0/scripts/insights.py;3v0/data/analytics/insights.json
+3v0/core/gitstate.py	source	manual	Git state helpers for the body (branch, dirty, lead)	The git invariant (always commit tracked changes) is enforced here	3v0/scripts/verify.sh;scripts/handoff_check.sh
+3v0/core/bridge.py	source	manual	Bridge to the Hermes profile — import/export between native store and profile	The store<->profile convergence seam (sync)	3v0/scripts/sync.py;3v0/core/profile_io.py
+3v0/core/profile_io.py	source	manual	Profile read/write primitives	for sync/export/seed flows	3v0/core/bridge.py;3v0/scripts/export_to_profile.py
+3v0/core/skills.py	source	manual	Native skill store model	Skills as first-class records in the store	3v0/core/skill_io.py;3v0/scripts/seed_skills.py
+3v0/core/skill_io.py	source	manual	Skill IO — SKILL.md parsing + store sync	Keeps skill store <-> SKILL.md consistent (a continuity invariant)	3v0/core/skills.py;3v0/scripts/sync_skills.py
+3v0/core/skill_bridge.py	source	manual	Skill bridge to the profile skill surface	Syncs skills.json/SKILL.md with Hermes	3v0/core/skill_io.py;3v0/scripts/sync_skills.py
+3v0/core/sync.py	source	manual	Store<->profile synchronization logic	The reconciliation half that sync.py script drives	3v0/scripts/sync.py;3v0/core/bridge.py
+3v0/core/sync_skills.py	source	manual	Skills reconciliation logic	The skills half of sync	3v0/scripts/sync_skills.py
+3v0/core/projects.py	source	manual	Projects ledger model (3 projects)	A continuity invariant leaves here; drill via drift_check	for 3v0/data/projects;3v0/core/drift.py
+3v0/core/project.py	source	manual	Single project record + query	Part of the projects ledger	3v0/core/projects.py
+3v0/core/handoff.py	source	manual	Handoff generation logic (claims + loops + state -> draft)	Drives generate_handoff; the shadow draft writer	3v0/scripts/generate_handoff.py;scripts/handoff_check.sh
+3v0/scripts/coherence_coalesce.py	script	manual	Wake-time runner — coherence apply + coalesce (best-effort, never fails the wake)	The standing system's heartbeat; the consolidation pass runs here	3v0/core/coherence.py;3v0/core/coalesce.py
+3v0/scripts/continuity_check.py	script	manual	The reconstruction clock — one-page continuity report (--heal/--accept/--json)	The body's own vitals readout	3v0/core/continuity.py;3v0/data/continuity/claims.json
+3v0/scripts/sync.py	script	manual	Sync script (--write) — store canonical to profile	Converges MEMORY.md/USER.md; part of the wake ritual	3v0/core/sync.py;3v0/core/bridge.py
+3v0/scripts/sync_skills.py	script	manual	Skills sync script (--write)	Converges skills.json/SKILL.md	3v0/core/sync_skills.py
+3v0/scripts/drift_check.py	script	manual	Project ledger drift report	Feeds the ledger invariant	3v0/core/drift.py;3v0/data/projects
+3v0/scripts/analytics.py	script	manual	Owned metrics runner -> data/analytics	Self-measurement	3v0/core/analytics.py
+3v0/scripts/insights.py	script	manual	Insights generator -> insights.json	Self-findings	3v0/core/insights.py
+3v0/scripts/discover.py	script	manual	Skill discovery probe runner	The probe loop (EVOLUTION_PROBE)	3v0/data/probe_bank_v1.json
+3v0/scripts/ingest.py	script	manual	Pipeline ingest — writes facts into the store via SQLStore.add	How the body records what it learns	3v0/core/store.py;3v0/core/memory.py
+3v0/scripts/ingest_skills.py	script	manual	Skill ingest pipeline	Records skill usage/creation facts	3v0/core/skills.py
+3v0/scripts/seed_from_profile.py	script	manual	Seed native store from the Hermes profile	First-boot convergence	3v0/core/bridge.py
+3v0/scripts/seed_skills.py	script	manual	Seed skill store from skills dir	First-boot skill convergence	3v0/core/skill_io.py
+3v0/scripts/export_to_profile.py	script	manual	Export native store facts to the profile	Derived-view regeneration	3v0/core/profile_io.py
+3v0/scripts/generate_handoff.py	script	manual	Regenerate HANDOFF.generated.md (shadow draft)	The mechanical handoff writer	3v0/core/handoff.py;scripts/handoff_check.sh
+3v0/scripts/review_session.py	script	manual	Session review -> decision records	Feeds DECISION_MATRIX	3v0/core/review_decide.py
+3v0/scripts/verify.sh	script	manual	The mechanical done-gate — defines done (memory db, cruft, secrets, clean tree)	Run before declaring any body change done	3v0/data/memory.db;AGENTS.md;wiki coverage step
+3v0/scripts/audit.sh	script	manual	Audit shell for body checks	Convenience wrapper	3v0/scripts/verify.sh
+3v0/scripts/consistency.sh	script	manual	Consistency scan — doctrine vs store	Companion to coherence	3v0/core/coherence.py
+3v0/scripts/reload_gateway.sh	script	manual	Gateway reload helper	tooling	3v0/data/memory.db;gateway/
+3v0/scripts/redo_tracker.sh	script	manual	Tracks redo log (redo_log.json)	Durability bookkeeping for ingest	3v0/data/redo_log.json
+3v0/data/memory.db	data	manual	The canonical native memory store (facts table; git-versioned)	The body's sole source of truth for memory; sync/retrieval read it	3v0/core/memdb.py;3v0/scripts/sync.py
+3v0/data/memory.json	data	manual	Legacy/adjacent memory artifact (profile mirror)	Keep consistent with memory.db via sync	3v0/scripts/sync.py
+3v0/data/skills.json	data	manual	Skill store artifact mirrored to SKILL.md	Skills continuity invariant	3v0/scripts/sync_skills.py
+3v0/data/baseline.json	data	manual	Baseline state snapshot (discovery/probes)	Probe experimentation baseline	3v0/data/probe_bank_v1.json
+3v0/data/continuity/claims.json	data	manual	Claim registry — tracked open loops (single source of truth)	Handoff open-loops derives from here	3v0/core/claims.py;scripts/handoff_check.sh
+3v0/data/analytics/insights.json	data	manual	Persisted insights output	For the daemon/wake readout	3v0/core/insights.py
+3v0/data/redo_log.json	data	manual	Redo log for ingest durability	Lets interrupted ingest resume	3v0/scripts/redo_tracker.sh
+agent/conversation_loop.py	source	manual	The agent conversation loop — extracted from run_agent.AIAgent	Shared run loop used by CLI/gateway/desktop through AIAgent	run_agent.py;agent/prompt_builder.py
+agent/prompt_builder.py	source	manual	System prompt assembly — identity, platform hints, skills index, context files	Byte-stable per conversation (prompt caching is sacred)	run_agent.py;agent/prompt_cache_boundary.py
+agent/system_prompt.py	source	manual	System prompt content pieces	Prompt fragments assembled by prompt_builder	agent/prompt_builder.py
+agent/anthropic_adapter.py	source	manual	Anthropic API adapter (chat completions + reasoning)	One of the provider seam implementations	agent/chat_completion_helpers.py;providers/base.py
+agent/gemini_native_adapter.py	source	manual	Google Gemini native adapter	same-provider failover partner in the credential pool	agent/gemini_schema.py;agent/credential_pool.py
+agent/gemini_schema.py	source	manual	Gemini schema translation helpers	schemas for the native adapter	agent/gemini_native_adapter.py
+agent/vertex_adapter.py	source	manual	Google Vertex AI adapter	Enterprise Gemini path	agent/gemini_native_adapter.py
+agent/bedrock_adapter.py	source	manual	AWS Bedrock adapter	AWS-hosted models seam	agent/azure_identity_adapter.py
+agent/azure_identity_adapter.py	source	manual	Azure identity/credentials adapter	Azure-hosted deployments	agent/credential_sources.py
+agent/codex_responses_adapter.py	source	manual	OpenAI codex/responses API mode adapter	api_mode='codex_responses' path	agent/codex_runtime.py
+agent/codex_runtime.py	source	manual	Codex runtime — remote sandbox execution glue	Codex-mode tooling	agent/codex_responses_adapter.py
+agent/lmstudio_reasoning.py	source	manual	LM Studio reasoning extraction	Local reasoning-model support	agent/reasoning_summaries.py
+agent/moonshot_schema.py	source	manual	Moonshot vendor schema quirks	Vendor-specific translation	agent/gemini_schema.py
+agent/credential_pool.py	source	manual	Persistent multi-credential pool for same-provider failover	Rotation without manual API key churn	agent/credential_sources.py;agent/credential_persistence.py
+agent/credential_sources.py	source	manual	Credential enumeration sources (env, files, keyring)	Feeds the pool	agent/credential_pool.py
+agent/credential_persistence.py	source	manual	Encrypted credential persistence	Secrets at rest	agent/credential_pool.py
+agent/secret_scope.py	source	manual	Secret scoping — multiplex-profile env isolation (fail-closed)	Never leaks another profile's .env; canonical wrapper contract	agent/credential_pool.py;gateway/authz_mixin.py
+agent/memory_manager.py	source	manual	Memory orchestration — sync_turn, prefetch, shutdown across providers	The memory-provider seam the plugins implement	agent/memory_provider.py;plugins/memory/
+agent/memory_provider.py	source	manual	MemoryProvider ABC — the plugin contract for memory backends	New backends implement this (closed in-tree set per policy)	plugins/memory/;agent/memory_manager.py
+agent/prompt_caching.py	source	manual	Prompt caching utilities (prefix reuse, cache control)	The sacred invariant; cache-breaking changes are banned	agent/prompt_cache_boundary.py;agent/prompt_cache_scope.py
+agent/prompt_cache_boundary.py	source	manual	Cache-safety boundary enforcement (what may/may not mutate)	Declares the cache-safe mutation sets	agent/prompt_caching.py
+agent/prompt_cache_scope.py	source	manual	Cache scope resolution per provider	Per-backend cache semantics	agent/prompt_caching.py
+agent/context_compressor.py	source	manual	Context compression service (the one allowed mid-conversation mutation)	Long-session survival without cache destruction	agent/native_compaction.py;trajectory_compressor.py
+agent/conversation_compression.py	source	manual	Conversation compression (summarize-then-drop)	Sibling of context compressor for messaging	safe_evolve: agent/native_compaction.py
+agent/native_compaction.py	source	manual	Native token-aware compaction	Efficient compaction without re-embedding	agent/context_compressor.py
+agent/context_engine.py	source	manual	Context engine orchestrator — provider plugins inject external context	The context_engine plugin seam (plugins/context_engine)	plugins/context_engine/
+agent/coding_context.py	source	manual	Coding context lens for software sessions	Loads repo/AGENTS context	agent/context_references.py
+agent/context_references.py	source	manual	Reference resolution for @path mentions	Deep-linking context	agent/context_breakdown.py
+agent/context_breakdown.py	source	manual	Context budget breakdown per section	Budget accounting	agent/prompt_builder.py
+agent/delegation_context.py	source	manual	Subagent context packing for delegate_task	Context handoff to children	agent/subagent_lifecycle.py
+agent/subagent_lifecycle.py	source	manual	Subagent spawn/terminate lifecycle	Parent-child turn management	agent/delegation_context.py
+agent/iteration_budget.py	source	manual	Iteration budget tracker	Loop termination law	agent/deadline.py
+agent/deadline.py	source	manual	Deadline enforcement for long tasks	Hard stop rails	agent/estop.py;agent/iteration_budget.py
+agent/estop.py	source	manual	Emergency stop — interrupt propagation	Kill-switch semantics	agent/interrupt_compat.py
+agent/nous_rate_guard.py	source	manual	Nous-provider rate limiting (breaker semantics)	Protects confirmed-empty buckets from re-probe	agent/rate_limit_tracker.py
+agent/rate_limit_tracker.py	source	manual	Per-endpoint rate limit tracking	Backoff bookkeeping	agent/nous_rate_guard.py
+agent/auxiliary_client.py	source	manual	Aux task client — side-LLM work (curator, vision, embeddings, titles) with per-task resolution	Aux routing per TOKEN_EFFICIENCY; deepseek-v4-flash is the typical aux model	agent/aux_accounting.py;3v0/TOKEN_EFFICIENCY.md
+agent/aux_accounting.py	source	manual	Aux cost accounting per task/model	Cents-level attribution	agent/auxiliary_client.py
+agent/curator.py	source	manual	Skill curator — background skill lifecycle (active/stale/archived)	Curator invariants: only agent-created skills, never delete, pinned exempt	agent/curator_backup.py;tools/skill_usage.py
+agent/curator_backup.py	source	manual	Pre-run tar.gz snapshots for curator	Restore safety	agent/curator.py
+agent/display.py	source	manual	KawaiiSpinner + activity feed rendering	CLI presentation	ev0_cli/skin_engine.py;cli.py
+agent/onboarding.py	source	manual	First-run onboarding flow	Setup UX	ev0_cli/config.py
+agent/oneshot.py	source	manual	One-shot prompt execution	Non-interactive single turns	run_agent.py
+agent/title_generator.py	source	manual	Session title generation (aux)	Session niceness	agent/auxiliary_client.py
+agent/turn_context.py	source	manual	Per-turn context object	Loop plumbing	agent/conversation_loop.py
+agent/turn_finalizer.py	source	manual	End-of-turn finalization (trajectory, memory sync, summary)	Loop completion	agent/turn_summary.py
+agent/turn_summary.py	source	manual	Turn summary writer	Feed for memory + titles	agent/turn_finalizer.py
+agent/background_review.py	source	manual	Background session review worker	Deferred review queues	agent/review_queue... tools: tools/async_delegation.py
+agent/learning_graph.py	source	manual	Learning graph — structured knowledge recall	Experiment surface for retrieval	agent/learning_mutations.py;agent/learn_prompt.py
+agent/moa_loop.py	source	manual	Mixture-of-agents loop	Multi-model consensus mode	agent/moa_trace.py
+agent/moa_trace.py	source	manual	MoA trace instrumentation	Debuggability	agent/moa_loop.py
+agent/relay_llm.py	source	manual	Relay LLM client — the shared relay protocol (nemo relay)	Multi-process/remote LLM transport	agent/relay_runtime.py;agent/relay_tools.py
+agent/skill_commands.py	source	manual	Skill slash-command injection (as USER message to preserve caching)	Skills live in commands without touching the system prompt	ev0_cli/commands.py;tools/skills_tool.py
+agent/tool_executor.py	source	manual	Tool executor — runs handler with guards	Dispatch plumbing	model_tools.py;tools/registry.py
+agent/tool_guardrails.py	source	manual	Tool-call guardrails (threat patterns, safety)	Safety layer	tools/threat_patterns.py;tools/tirith_security.py
+agent/monitoring	source	manual	Monitoring mixins (metrics/traces)	for the gateway/agents	plugins/observability/
+agent/battery.py	source	manual	Battery/usage tracking (billing-adjacent telemetry)	Product usage telemetry	agent/billing_usage.py
+agent/billing_view.py	source	manual	Billing view model (account dashboard)	Account UX	agent/subscription_view.py;agent/credits_tracker.py
+agent/subscription_view.py	source	manual	Subscription view model	Account UX	agent/billing_view.py
+agent/secret_sources	source	manual	Secret source providers (env, keyring, files)	Feeds secret_scope	agent/secret_scope.py
+agent/transports	source	manual	Transport adapters for the relay layer	Transport seam for remote/process LLM transports	agent/relay_llm.py
+tools/registry.py	source	manual	Tool registry — register(), schema collection, dispatch, check_fn gating, error wrapping	Every tool file registers here at import; the zero-dependency hub	model_tools.py;toolsets.py
+tools/terminal_tool.py	source	manual	Terminal tool — shell command execution	Core model tool; runs through environments/ backends	tools/environments/;tools/process_registry.py
+tools/environments	source	manual	Terminal backends — local, docker, ssh, modal, daytona, singularity	The terminal executor seam	tools/terminal_tool.py
+tools/file_operations.py	source	manual	File read/write/patch primitives (atomic, metadata-preserving)	Core file implementation; feeds file_tools	tools/file_tools.py;tools/working_diff.py
+tools/file_tools.py	source	manual	File model tools (read_file, write_file, patch)	Core file surface	model_tools.py;tools/file_operations.py
+tools/patch_parser.py	source	manual	Unified patch (search/replace) parser + hunk application	The patch tool's engine	for-parse: tools/working_diff.py
+tools/working_diff.py	source	manual	Working-tree diff helpers for efficient patch planning	Patch tool planning aid	tools/patch_parser.py
+tools/delegate_tool.py	source	manual	delegate_task — subagent spawn (single/batch, orchestrator roles)	Delegation with parent-wait or background re-entry	tools/async_delegation.py;agent/subagent_lifecycle.py
+tools/async_delegation.py	source	manual	Async delegation completion queue	Background delegation results re-enter the conversation	tools/delegate_tool.py
+tools/todo_tool.py	source	manual	Todo/task tracking tool (agent-level, intercepted by run_agent)	Lets the run loop manage its own plan	run_agent.py
+tools/memory_tool.py	source	manual	Memory tool — record/recall through memory providers	The memory model-tool surface	agent/memory_manager.py
+tools/skills_tool.py	source	manual	Skills tool — load/list skills	Skill activation surface	agent/skill_commands.py;tools/skill_manager_tool.py
+tools/skill_manager_tool.py	source	manual	Skill install/update/remove tooling	Skill lifecycle for the agent	tools/skill_usage.py;ev0_cli/bundles.py
+tools/skills_hub.py	source	manual	OptionalSkillSource — install from the official catalog	hermes skills install official/...	optional-skills/;tools/skills_sync.py
+tools/skills_sync.py	source	manual	Skill sync (hub -> local refresh)	Keeps installed skills current	tools/skills_sync_client.py
+tools/skill_linter.py	source	manual	Skill linter (frontmatter/standard checks)	Skill authoring standards enforcement	tests/skills/;tools/skill_provenance.py
+tools/skill_provenance.py	source	manual	Skill provenance tracking (author/credit)	Contributor-credit rule	tools/skill_linter.py
+tools/skills_guard.py	source	manual	Skills guardrails (safe execution posture)	Security for skill-supplied instructions	tools/threat_patterns.py
+tools/skill_usage.py	source	manual	Skill usage sidecar (use/view/patch counts)	Feeds curator activity signals	agent/curator.py
+tools/browser_tool.py	source	manual	Browser tool — navigate/snapshot/click via CDP	Core web capability	tools/browser_cdp_tool.py;tools/browser_camofox.py
+tools/browser_cdp_tool.py	source	manual	CDP-backed browser driver	The real browser control channel	tools/browser_tool.py
+tools/browser_camofox.py	source	manual	Camoufox/stealth browser profile manager	Anti-detection browsing	tools/browser_camofox_state.py
+tools/browser_supervisor.py	source	manual	Browser session supervisor (lifecycle, leak control)	Bounded browsing sessions	tools/browser_tool.py
+tools/web_tools.py	source	manual	Web tools — search/extract (web_search, web_extract)	Core web capability	tools/read_extract.py
+tools/read_extract.py	source	manual	Web page extraction to markdown	Feeds web_extract	tools/web_tools.py
+tools/code_execution_tool.py	source	manual	execute_code — sandboxed python execution	Programmatic tool calling	tools/computer_use/
+tools/session_search_tool.py	source	manual	Session search tool over SessionDB	Search across past sessions	ev0_state_search.py
+tools/approval.py	source	manual	Approval primitives (request/respond)	Safe-action consent flow	tools/clarify_tool.py;tools/write_approval.py
+tools/clarify_tool.py	source	manual	Clarify tool — ask the user mid-turn	Human-in-the-loop	gates: tools/clarify_gateway.py
+tools/write_approval.py	source	manual	Write-approval interceptor for file mutations	File-safety consent	tools/approval.py;tools/path_security.py
+tools/path_security.py	source	manual	Path allow/deny boundaries for file tools	Sandboxing the file surface	tools/file_operations.py;agent/file_safety.py
+tools/threat_patterns.py	source	manual	Threat pattern definitions for injection guardrails	Injection defense vocabulary	tools/tirith_security.py;agent/tool_guardrails.py
+tools/tirith_security.py	source	manual	Tirith security evaluator integration	Policy engine	tools/threat_patterns.py
+tools/mcp_tool.py	source	manual	MCP client tool — connect to external MCP servers	The built-in MCP client; catalog here	mcp_serve.py;tools/setup_mcp_tool.py
+tools/setup_mcp_tool.py	source	manual	MCP server setup/install helper	One-command MCP provisioning	tools/mcp_tool.py
+tools/mcp_oauth_manager.py	source	manual	OAuth flows for MCP servers	Authenticated MCP connections	tools/mcp_oauth.py
+tools/cronjob_tools.py	source	manual	Cron tool for the agent	Agent-schedulable jobs	cron/jobs.py
+tools/send_message_tool.py	source	manual	Message-send tool (gateway platforms)	Agent-initiated platform sends	gateway/platforms/;plugins/platforms/
+tools/schema_sanitizer.py	source	manual	Tool schema sanitization (drop unsafe params)	Hardens generated schemas	tools/registry.py
+tools/checkpoint_manager.py	source	manual	Checkpoint manager for long sessions	Resume-after-crash	agent/conversation_loop.py;ev0_cli/checkpoints.py
+tools/daemon_pool.py	source	manual	Daemon process pool for tool backends	Long-lived helpers	tools/process_registry.py
+tools/process_registry.py	source	manual	Process registry / lifecycle for spawned children	Cleanup and tracking	tools/terminal_tool.py;tools/daemon_pool.py
+tools/interrupt.py	source	manual	Tool-call interrupt support	Stop mid-tool	tools/terminal_tool.py
+tools/tool_search.py	source	manual	Tool search for the agent (find the right tool)	Schema navigation aid	tools/registry.py
+tools/tool_result_storage.py	source	manual	Oversized tool result spill to disk	Drops big tool outputs out of context	tools/tool_output_limits.py
+tools/tool_output_limits.py	source	manual	Tool output truncation policy	Keeps context bounded	tools/tool_result_storage.py
+tools/thread_context.py	source	manual	Thread-scoped context for tool calls	Multi-thread safety	misc: agent/thread_scoped_output.py
+tools/homeassistant_tool.py	source	manual	Home Assistant integration (service-gated on token)	Smart-home automation	tools/registry.py (check_fn example)
+tools/feishu_doc_tool.py	source	manual	Feishu document tool	Docs automation	feishu_drive_tool.py;plugins/platforms/
+tools/vision_tools.py	source	manual	Vision model tools (image describe/analyze)	Aux vision routing	agent/vision? agent/auxiliary_client.py
+tools/tts_tool.py	source	manual	TTS tool + streaming	Voice output	tools/tts_streaming.py;agent/tts_registry.py
+tools/transcription_tools.py	source	manual	Audio transcription tools	Voice input	agent/transcription_registry.py
+tools/image_generation_tool.py	source	manual	Image generation tool (providers)	Creative capability	plugins/image_gen/;gen: bailian-gen skill
+tools/video_generation_tool.py	source	manual	Video generation tool	Creative capability	tools/flux3_video_tool.py
+tools/kanban_tools.py	source	manual	Kanban worker tools (kanban_show/complete/... )	Zero schema footprint outside kanban tasks	plugins/kanban/;ev0_cli/kanban.py
+gateway/run.py	source	manual	GatewayRunner — the messaging gateway orchestrator (session lifecycle, message dispatch, hooks)	The always-on surface for Telegram/Discord/etc.; where slash commands resolve in messaging	gateway/session.py;gateway/platforms/;ev0_cli/commands.py
+gateway/session.py	source	manual	Session manager for messaging (per-chat agents, resume, /new)	Isolates each chat's conversation	gateway/run.py;gateway/session_context.py
+gateway/config.py	source	manual	Gateway config loader + platform settings	Dedicated loader for the raw-yaml gateway path	gateway/run.py;ev0_cli/config.py
+gateway/platforms	source	manual	Per-platform adapters (telegram, discord, slack, whatsapp, signal, matrix, mattermost, email, sms, homeassistant, ...)	The breadth surface; each adapter implements one transport	gateway/platform_registry.py;plugins/platforms/
+gateway/run.py	source	manual	GatewayRunner — the messaging gateway orchestrator (session lifecycle, message dispatch, hooks)	The always-on surface for Telegram/Discord/etc.; slash commands resolve here in messaging	gateway/session.py;gateway/platforms/;ev0_cli/commands.py
+gateway/session.py	source	manual	Session manager for messaging (per-chat agents, resume, /new)	Isolates each chat's conversation	gateway/run.py;gateway/session_context.py
+gateway/config.py	source	manual	Gateway config loader + platform settings	Dedicated raw-yaml loader for the gateway runtime	gateway/run.py;ev0_cli/config.py
+gateway/platforms	source	manual	Per-platform adapters (telegram, discord, slack, whatsapp, signal, matrix, mattermost, email, sms, homeassistant, ...)	The breadth surface; one adapter per transport	gateway/platform_registry.py;plugins/platforms/
+gateway/platform_registry.py	source	manual	Platform adapter registry and discovery	Finds adapters across gateway/platforms and plugins/platforms	gateway/run.py
+gateway/authz_mixin.py	source	manual	Authorization mixin — allowlists, allow-all gates, group policy (fail-closed per profile)	Sharpest edge: leak here silently rejects or fail-opens routing	agent/secret_scope.py;plugins/platforms/feishu/adapter.py
+gateway/status.py	source	manual	Gateway status surfaces (health, locks)	token-scoped locks: acquire_scoped_lock for unique credentials	gateway/readiness.py;gateway/memory_status.py
+gateway/wake.py	source	manual	Wake orchestration (the gateway has its own wake ritual, parallel to the body.s)	Boot-time standing pass; the parallel to scripts/handoff_check.sh	scripts/handoff_check.sh
+gateway/slash_commands.py	source	manual	Gateway slash-command dispatch	Messaging-side command handling	ev0_cli/commands.py;gateway/run.py
+gateway/hooks.py	source	manual	Gateway hook emission (pre/post event hooks)	Extension seam for gateway lifecycle	gateway/builtin_hooks/
+gateway/builtin_hooks	source	manual	Always-registered gateway hooks (none shipped by default)	The intentional empty extension point	gateway/hooks.py
+gateway/delivery.py	source	manual	Message delivery ledger (idempotent delivery)	Guarantees under retries	gateway/delivery_ledger.py;gateway/lifecycle_ledger.py
+gateway/mirror.py	source	manual	Dialogue mirroring between sessions	Cross-session message mirroring	gateway/delivery.py
+gateway/pairing.py	source	manual	Device/session pairing flows	Secure connect UX	gateway/delivery_ledger.py
+gateway/restart.py	source	manual	Graceful restart management	Zero-downtime config reload	gateway/restart_loop_guard.py
+gateway/restart_loop_guard.py	source	manual	Restart loop protection	Crash-loop braking	gateway/restart.py
+gateway/drain_control.py	source	manual	Shutdown drain (finish in-flight turns)	Orderly shutdown	gateway/shutdown_flush.py;gateway/shutdown_watchdog.py
+gateway/shutdown_watchdog.py	source	manual	Shutdown watchdog	Force-exit after grace	gateway/drain_control.py
+gateway/shutdown_forensics.py	source	manual	Shutdown forensics (why did it die)	Crash reporting	gateway/shutdown_watchdog.py
+gateway/stream_dispatch.py	source	manual	Stream routing to per-platform consumers	Streaming fan-out	gateway/stream_events.py;gateway/stream_consumer.py
+gateway/stream_consumer.py	source	manual	Stream consumer state	tracks per-session streaming	gateway/stream_dispatch.py
+gateway/stream_events.py	source	manual	Stream event model	Async stream lifecycle	gateway/stream_dispatch.py
+gateway/response_filters.py	source	manual	Per-platform response filtering	Adapter-specific formatting	tools/ansi_strip.py
+gateway/session_state.py	source	manual	Session state persistence	for messaging resumption	gateway/session.py
+gateway/session_stall.py	source	manual	Stall detection for stuck agent turns	Hung-turn recovery	gateway/session.py;gateway/agent_cache_pressure.py
+gateway/turn_lease.py	source	manual	Per-session turn lease (serialization)	Prevents concurrent turns on one chat	gateway/session.py
+gateway/profile_routing.py	source	manual	Multiplex-profile routing (which profile serves which chat)	Multi-instance messaging	agent/secret_scope.py
+gateway/scale_to_zero.py	source	manual	Scale-to-zero for idle instances	Cost control	gateway/readiness.py;gateway/systemd_notify.py
+gateway/systemd_notify.py	source	manual	systemd notify (sd_notify)	Service-managed deployments	gateway/readiness.py
+gateway/memory_monitor.py	source	manual	Memory pressure monitoring	OOM avoidance	gateway/agent_cache_pressure.py;gateway/cgroup_cleanup.py
+gateway/cgroup_cleanup.py	source	manual	cgroup cleanup for containers	Leak control	gated: gateway/memory_monitor.py
+gateway/disk_status.py	source	manual	Disk usage reporting	Capacity alerting	gateway/memory_status.py
+gateway/code_skew.py	source	manual	Code-version skew detection between processes	Mixed-version fleet safety	gateway/build_info.py
+gateway/rich_sent_store.py	source	manual	Rich sent-message store	Message edit/delete hooks	gateway/delivery.py
+gateway/runtime_footer.py	source	manual	Runtime footer for session prompts	Session identity footer	gateway/session.py
+gateway/cwd_placeholder.py	source	manual	CWD placeholder resolution	terminal.cwd bridging	ev0_cli/config.py
+ev0_cli/main.py	source	manual	CLI entrypoint — argparse tree, profile override bootstrap, subcommand wiring	The hermes command itself; where _apply_profile_override runs before any import	ev0_bootstrap.py;ev0_cli/config.py
+ev0_cli/main.py	source	manual	CLI entrypoint — argparse tree, profile override bootstrap, subcommand wiring	The hermes command; _apply_profile_override must run before any import	ev0_bootstrap.py;ev0_cli/config.py
+ev0_cli/config_defaults.py	source	manual	Default config values	Deep-merged under user YAML	ev0_cli/config.py
+ev0_cli/config_migrations.py	source	manual	Config version migrations	Bumps _config_version only when transform needed	ev0_cli/config.py
+ev0_cli/commands.py	source	manual	COMMAND_REGISTRY — canonical slash commands (CommandDef)	Single source: CLI, gateway, Telegram menu, Slack map, autocomplete	cli.py;gateway/run.py;gateway/slash_commands.py
+ev0_cli/config.py	source	manual	DEFAULT_CONFIG schema + loaders (load_config, migrations, OPTIONAL_ENV_VARS)	The config.yaml contract; non-secret settings live here, not .env	ev0_cli/config_defaults.py;ev0_cli/config_migrations.py
+ev0_cli/config_defaults.py	source	manual	Default config values	Deep-merged under user YAML	ev0_cli/config.py
+ev0_cli/config_migrations.py	source	manual	Config version migrations	Bumps _config_version only when a transform is needed	ev0_cli/config.py
+ev0_cli/commands.py	source	manual	COMMAND_REGISTRY — canonical slash commands (CommandDef)	Single source: CLI, gateway, Telegram menu, Slack map, autocomplete	cli.py;gateway/run.py;gateway/slash_commands.py
+ev0_cli/skin_engine.py	source	manual	Skin system — built-in + user YAML skins, data-driven CLI theming	Skins are pure data; no code per skin	ev0_cli/colors.py;agent/display.py
+ev0_cli/plugins.py	source	manual	PluginManager — discovery of ~/.hermes/plugins, repo plugins, pip entry points	Ships register(ctx) hooks + register_tool + register_cli_command	plugins/;tools/registry.py
+ev0_cli/web_server.py	source	manual	Dashboard web server + /api/pty WebSocket endpoint (embedded hermes --tui)	Serves 3v0 dashboard; the PTY tunnel is the chat surface bridge	ev0_cli/pty_bridge.py;web/;ui-tui/
+ev0_cli/pty_bridge.py	source	manual	PTY bridge — spawns hermes --tui for the dashboard terminal pane	AUTH via ephemeral _SESSION_TOKEN; POSIX PTY only	ev0_cli/web_server.py;ui-tui/
+ev0_cli/tools_config.py	source	manual	hermes tools curses UI	The toolset enable/disable picker (curses, per project law)	ev0_cli/curses_ui.py;toolsets.py
+ev0_cli/curses_ui.py	source	manual	Shared curses menu machinery	Every interactive menu must be built here	ev0_cli/tools_config.py
+ev0_cli/banner.py	source	manual	Startup banner rendering	Branding + build info	ev0_cli/skin_engine.py;assets/banner.png
+ev0_cli/completion.py	source	manual	Slash command + path autocomplete	CLI input UX	ev0_cli/commands.py
+ev0_cli/checkpoints.py	source	manual	CLI-side checkpoint integration	Resume-after-crash in the CLI	tools/checkpoint_manager.py
+ev0_cli/cron.py	source	manual	hermes cron subcommand	CLI surface for cron/jobs.py	cron/jobs.py;ev0_cli/commands.py
+ev0_cli/auth.py	source	manual	Auth flows (login/logout, providers)	Account surface	ev0_cli/auth_commands.py
+ev0_cli/claw.py	source	manual	Claw — capture/alt-input mode	Advanced input modes	cli.py
+ev0_cli/console_engine.py	source	manual	Console abstraction layer	Portable output	ev0_cli/cli_output.py
+ev0_cli/clipboard.py	source	manual	Clipboard integration	Paste UX	cli.py
+ev0_cli/bundles.py	source	manual	Bundle management (skill/skin bundles)	Install surface	tools/skills_hub.py
+ev0_cli/backup.py	source	manual	hermes backup subcommand	State export	safety: ev0_state_portability.py
+cron/jobs.py	source	manual	Job store — SQLite-backed cron jobs (schedules, skills, context_from, workdir)	The agent's own scheduler; 3-minute hard interrupt invariant	ev0_cli/cron.py;tools/cronjob_tools.py
+cron/scheduler.py	source	manual	Scheduler tick loop (lock-guarded)	Runs inside the gateway process; .tick.lock prevents duplicates	cron/jobs.py
+cron/scheduler_provider.py	source	manual	Pluggable scheduler backends (system/provider cron)	Alternative runtimes: system cron, managed providers	cron/scheduler.py;plugins/cron_providers/
+cron/executions.py	source	manual	Execution ledger for cron runs	Audit of what fired	run: cron/monitor.py
+cron/suggestions.py	source	manual	Cron job suggestions (natural-language->schedule)	UX helper	for: cron/suggestion_catalog.py
+cron/blueprint_catalog.py	source	manual	Blueprint jobs catalog (well-known scheduled tasks)	One-shot canonical jobs	4: cron/scheduler.py;cron/jobs.py
+cron/lifecycle_guard.py	source	manual	Cron job lifecycle guards (pause/resume rules)	Policy enforcement	: cron/jobs.py;ev0_cli/cron.py
+cron/monitor.py	source	manual	Cron monitoring surfaces	Observability for jobs	cron/executions.py
+cron/notepad.py	source	manual	Cron notepad — per-job notes	Context persistence	for jobs: cron/jobs.py
+plugins/__init__.py	source	manual	Plugin package marker	Discovery root	ev0_cli/plugins.py
+plugins/memory	source	manual	Memory-provider plugins (honcho, mem0, supermemory, byterover, hindsight, holographic, openviking, retaindb)	Closed in-tree set; new backends ship as standalone repos	agent/memory_provider.py;agent/memory_manager.py
+plugins/memory/honcho	source	manual	Honcho memory backend	Memory provider	plugins/memory/mem0;agent/memory_provider.py
+plugins/memory/mem0	source	manual	Mem0 memory backend	Memory provider	agent/memory_provider.py
+plugins/model-providers	source	manual	Inference backend plugins (openrouter, anthropic, gmi, deepseek, nvidia, ...)	Lazy discovery via providers.register_provider; user plugins override bundled	plugins/model-providers/openrouter;providers/__init__.py
+plugins/platforms	source	manual	Optional platform adapters that ship as plugins (irc, teams, ...)	Plugin-based adapters use the same ABCs as gateway/platforms	gateway/platform_registry.py;plugins/platforms/feishu/adapter.py
+plugins/kanban	source	manual	Kanban board plugin (dashboard web UI + systemd dispatcher unit)	Multi-agent work queue; board is the hard isolation boundary	ev0_cli/kanban.py;tools/kanban_tools.py
+plugins/observability	source	manual	Metrics/traces/logs plugin	Standalone observability surface	agent/monitoring
+plugins/context_engine	source	manual	Context-engine provider plugins	Plug into agent/context_engine.py	agent/context_engine.py
+plugins/image_gen	source	manual	Image-generation provider plugins	Plug into agent/image_gen_provider.py	tools/image_generation_tool.py
+plugins/disk-cleanup	source	manual	Disk cleanup plugin (installer hub)	Maintenance automation	plugins/platforms;plugins/observability
+plugins/spotify	source	manual	Spotify control plugin	Media automation	tools/web_tools.py? no: plugins/spotify
+plugins/teams_pipeline	source	manual	Teams pipeline plugin (MS Teams messaging pipeline)	Teams platform support via plugin ABCs	plugins/platforms;gateway/platform_registry.py
+skills/github	source	manual	Built-in GitHub skill category	Shipped skills, loadable by default	skills/mlops;optional-skills/
+skills/mlops	source	manual	Built-in MLOps skill category	Shipped skills, loadable by default	skills/github;skills/research
+skills/research	source	manual	Built-in research skill category	Shipped skills	skills/note-taking;optional-skills/research
+skills/software-development	source	manual	Built-in software-development skill category	Shipped skills	skills/creative;skills/productivity
+skills/autonomous-ai-agents	source	manual	Built-in autonomous-agents skill category	Agent-self skills	3v0/EVOLUTION_LOOP.md;optional-skills/autonomous-ai-agents
+skills/devops	source	manual	Built-in devops skill category	Shipped skills	skills/email;optional-skills/devops
+skills/creative	source	manual	Built-in creative skill category	Shipped skills	skills/media;skills/social-media
+skills/email	source	manual	Built-in email skill category	Shipped skills	optional-skills/email
+skills/productivity	source	manual	Built-in productivity skill category	Shipped skills	skills/note-taking
+skills/note-taking	source	manual	Built-in note-taking skill category	Shipped skills	skills/research
+skills/media	source	manual	Built-in media skill category	Shipped skills	skills/creative
+skills/smart-home	source	manual	Built-in smart-home skill category	Smart home automation	optional-skills/health
+skills/apple	source	manual	Built-in Apple/macOS skill category	Shipped skills	for macos: skills/smart-home
+skills/social-media	source	manual	Built-in social-media skill category	Shipped skills	skills/creative
+optional-skills/autonomous-ai-agents	source	manual	Heavy/niche autonomous-agent skills (not default-active)	Installed explicitly via hermes skills install	skills/autonomous-ai-agents
+optional-skills/blockchain	source	manual	Blockchain skill pack (not default-active)	Optionally installed	optional-skills/security
+optional-skills/communication	source	manual	Communication skill pack	Optionally installed	optional-skills/productivity
+optional-skills/creative	source	manual	Creative skill pack	Optionally installed	skills/creative
+optional-skills/devops	source	manual	Devops skill pack	Optionally installed	skills/devops
+optional-skills/email	source	manual	Email skill pack	Optionally installed	skills/email
+optional-skills/finance	source	manual	Finance skill pack	Optionally installed	optional-skills/payments
+optional-skills/health	source	manual	Health skill pack	Optionally installed	skills/smart-home
+optional-skills/mlops	source	manual	MLOps skill pack	Optionally installed	skills/mlops
+optional-skills/mcp	source	manual	MCP skill pack	Optionally installed	tools/mcp_tool.py
+optional-skills/migration	source	manual	Migration skill pack	Optionally installed	optional-skills/devops
+optional-skills/research	source	manual	Research skill pack	Optionally installed	skills/research
+optional-skills/security	source	manual	Security skill pack	Optionally installed	optional-skills/blockchain
+optional-skills/web-development	source	manual	Web-development skill pack	Optionally installed	skills/software-development
+optional-skills/data-science	source	manual	Data-science skill pack	Optionally installed	skills/mlops
+optional-skills/payments	source	manual	Payments skill pack	Optionally installed	optional-skills/finance
+optional-skills/gaming	source	manual	Gaming skill pack	Optionally installed	skills/creative
+optional-skills/dogfood	source	manual	Dogfooding skills	Internal testing	optional-skills/software-development
+optional-skills/software-development	source	manual	Software-development skill pack	Optionally installed	skills/software-development
+providers/base.py	source	manual	Provider ABC — base contract for model-provider plugins	The seam implemented by every provider plugin	plugins/model-providers/;providers/__init__.py
+providers/__init__.py	source	manual	Provider registry + lazy discovery (bundled, user, legacy)	Lazy separate discovery; user plugins override bundled (last-writer-wins)	plugins/model-providers/
+native/fts5_cjk	source	manual	SQLite FTS5 CJK tokenizer native module	Asian-language tokenization for FTS5 search	ev0_state_search.py;3v0/core/retrieval_fts.py
+locales	source	manual	i18n YAML locales (af..zh)	for multilingual messaging surfaces	agent/i18n.py
+assets/banner.png	data	manual	Banner artwork for CLI startup	Branding	ev0_cli/banner.py
+contributors	source	manual	Contributor records (emails/ + README)	Attribution and contributor credit	tools/skill_provenance.py;scripts/add_contributor.py
+sustainability/fiverr	source	manual	Fiverr-related sustainability records	Cost governance lore	SUSTAINABILITY.md;3v0/TOKEN_EFFICIENCY.md
+sustainability/wallet.md	doc	manual	Sustainability wallet ledger	Spend governance	SUSTAINABILITY.md
+datagen-config-examples	source	manual	Data-generation config examples	Eval tooling inputs	for evals/
+mcp-research-data	source	manual	Research data for MCP experiments	MCP research artifacts	optional-mcps/
+apps/desktop	source	manual	Electron desktop chat app — separate surface from CLI/TUI/dashboard	Own composer/transcript/slash pipeline; talks to tui_gateway backend over JSON-RPC	apps/shared;tui_gateway/;apps/desktop/AGENTS.md
+apps/desktop/AGENTS.md	doc	manual	Desktop app architecture contract (state, resolver, transport, testing rules)	The scoped governance doc for the desktop app	apps/desktop;AGENTS.md
+apps/shared	source	manual	Framework-agnostic shared package (@hermes/shared) — JsonRpcGatewayClient + WS helpers	Shared transport consumed by desktop + web dashboard	apps/desktop;web/
+apps/bootstrap-installer	source	manual	Bootstrap/installer assets for the desktop app	Distribution	apps/desktop
+ui-tui	source	manual	Ink (React) terminal UI — hermes --tui; Node frontend of the TUI process model	The full TUI replacement for classic CLI; TS owns the screen, Python owns sessions	ui-tui/src;tui_gateway/;apps/desktop
+ui-tui/src	source	manual	TUI source (entry.tsx, app.tsx, gatewayClient.ts + components/hooks/lib)	The screen-side implementation	ui-tui/packages;tui_gateway/server.py
+ui-tui/packages	source	manual	Shared JS packages for the TUI (hermes-ink etc.)	Reusable UI kit	tui_gateway/
+ui-tui/scripts	source	manual	TUI build/dev scripts	Tooling for the Ink app	tui_gateway/
+tui_gateway	source	manual	Python JSON-RPC backend for the TUI + desktop (server.py catalog: methods/events)	The other half of the process model; slash catalog + completions live here	ui-tui/src;apps/shared
+web	source	manual	Dashboard frontend (React + Vite) — embedding the real hermes --tui via /api/pty	Complements, never re-implements, the chat surface	ev0_cli/web_server.py;apps/shared;ui-tui/
+website	source	manual	Docusaurus docs site	Public documentation	website/docs;docs/
+website/docs	source	manual	Docusaurus documentation content (user guides, developer guides)	The canonical human docs	tooling: docs/
+website/docusaurus.config.ts	source	manual	Docusaurus config	Site build config	website/sidebars.ts;website/static
+website/sidebars.ts	source	manual	Docs sidebar structure	Navigation	website/docs
+website/i18n	source	manual	i18n overlays for the docs site	Multilingual docs	locales/
+website/scripts	source	manual	Docs-site build scripts	Tooling	website/package.json
+runtime	source	manual	Runtime packaging layer (standalone runtimes)	Distribution	pypi: pyproject.toml
+docs/ADR.md	doc	manual	Architecture Decision Records index	Design rationale ledger	docs/rfcs;docs/design
+docs/rfcs	source	manual	RFC documents	Design proposals	docs/ADR.md
+docs/design	source	manual	Design notes	Design rationale	docs/ADR.md
+docs/security	source	manual	Security docs	Security design	SECURITY.md
+docs/observability	source	manual	Observability docs	Monitoring/telemetry design	plugins/observability
+docs/middleware	source	manual	Middleware docs	Pipeline design	docs/ADR.md
+docs/kanban	source	manual	Kanban doc set	Feature docs	plugins/kanban
+docs/relay-connector-contract.md	doc	manual	Relay connector contract	Cross-process relay spec	agent/relay_llm.py
+docs/profile-routing.md	doc	manual	Profile routing design	Multi-instance routing	gateway/profile_routing.py;agent/secret_scope.py
+docs/chronos-managed-cron-contract.md	doc	manual	Managed cron contract	Scheduled tasks spec	cron/scheduler_provider.py
+docs/session-lifecycle.md	doc	manual	Session lifecycle doc	Messaging sessions	gateway/session.py
+docs/billing-lifecycle.md	doc	manual	Billing lifecycle doc	Account/billing	agent/billing_view.py
+docs/streaming-tts.md	doc	manual	Streaming TTS doc	Voice streaming	tools/tts_streaming.py
+docs/micro-compaction.md	doc	manual	Micro-compaction design	Context compaction rationale	scripts/micro_compaction_report.py
+docs/rca-ssl-cacert-post-git-pull.md	doc	manual	RCA: SSL CA certs after git pull	Postmortem lesson	tests/gateway/
+docs/3v0-kanban-v1-spec.pdf	doc	manual	3V0 kanban shared spec (PDF)	Kanban contract artifact	plugins/kanban
+acp_adapter	source	manual	ACP server (VS Code / Zed / JetBrains integration)	Editor integration surface	ui-tui/;ev0_cli/auth.py? no: tools/active: registry
+tests/conformance	source	manual	Conformance test suite (protocol conformance)	Contract tests for wire behaviors	conformance vectors: scripts/generate_conformance_vectors.py
+tests/e2e	source	manual	End-to-end test suite (real runtime)	Full-path validation	tests/integration
+tests/integration	source	manual	Integration tests	Cross-module paths	tests/e2e
+tests/stress	source	manual	Stress tests	Load/hang detection	tests/gateway
+tests/manual	source	manual	Manually-run test scripts	Human-run diagnostics	tests/stress
+tests/fakes	source	manual	Fake objects for tests	Isolated test doubles	conftest: tests/fixtures
+tests/fixtures	source	manual	Shared fixtures (incl. profile/isolated HERMES_HOME)	Test scaffolding	tests/conftest.py
+scripts/run_tests.sh	source	manual	The ONLY sanctioned test runner (CI-parity env, file retries, subprocess isolation)	Direct pytest diverges from CI; use this always	tests/;scripts/run_tests_parallel.py
+scripts/run_tests_parallel.py	source	manual	Per-file subprocess test isolation runner	No cross-file state leakage	scripts/run_tests.sh
+scripts/ci	source	manual	CI jobs + classifiers (change classifier, OS-marked test lanes)	Decides which CI jobs run per change	tests/
+scripts/handoff_check.sh	script	manual	The whole-body wake ritual — continuity, sync, drift, analytics, insights, coherence+coalesce, handoff	The standing loop the 3V0 wake gate runs	3v0/scripts/continuity_check.py;3v0/scripts/coherence_coalesce.py
+scripts/build_wiki.py	script	manual	The wiki generator — tracked-file manifest, area pages, --check gate	Keeps the wiki at 100% coverage; run --rebuild on change, --check in CI	wiki/;.githooks/pre-commit
+scripts/release.py	source	manual	Release automation	Versioning/tagging	pypi: pyproject.toml
+scripts/build_model_catalog.py	source	manual	Model catalog builder	Catalog maintenance	agent/model_metadata.py
+scripts/sample_and_compress.py	source	manual	Sample & compress tooling	for dataset/context experiments	agent/context_compressor.py
+scripts/sandbox	source	manual	Sandbox scripts	Isolated experiments	misc: scripts/dev-sandbox.sh
+scripts/observability	source	manual	Observability helper scripts	Metrics tooling	plugins/observability
+scripts/3v0-gateway	source	manual	Gateway launcher scripts for 3V0	Body gateway deployment	3v0/scripts/reload_gateway.sh
+scripts/lib	source	manual	Shared script library	Common helpers for repo scripts	in: scripts/
+docker	source	manual	Dockerfiles and container configs	Containerized deployment	Dockerfile
+nix	source	manual	Nix expressions	macOS/Linux dev shells	flake.nix
+evals	source	manual	Evaluation harness dirs (compaction, readtool)	Offline eval campaigns	for scripts/benchmark_browser_eval.py
+optional-mcps	source	manual	Optional MCP server definitions	Expands the MCP catalog	tools/mcp_tool.py;mcp-research-data
+tests/agent	source	manual	Agent-level test suites (loop, memory, adapters)	Task coverage	agent/
+tests/gateway	source	manual	Gateway test suites (runner, platforms, authz)	Messaging coverage	gateway/
+tests/cli	source	manual	CLI test suites	CLI coverage	cli.py
+tests/ev0_cli	source	manual	ev0_cli test suites (config, commands, profiles)	Config/command coverage	ev0_cli/
+tests/run_agent	source	manual	run_agent/AIAgent test suites	Loop coverage	run_agent.py
+tests/skills	source	manual	Skill test suites (SKILL standards)	Skill authoring enforcement	tools/skill_linter.py
+tests/plugins	source	manual	Plugin test suites	Plugin surfaces	plugins/
+tests/providers	source	manual	Provider test suites	Model-provider coverage	plugins/model-providers/
+tests/state	source	manual	Session-state test suites	ev0_state coverage	ev0_state.py
+tests/cron	source	manual	Cron test suites	Scheduler coverage	cron/
+tests/computer_use	source	manual	Computer-use test suites	Desktop automation coverage	tools/computer_use/
+tests/dashboard	source	manual	Dashboard test suites	Web dashboard coverage	ev0_cli/web_server.py
+tests/acp	source	manual	ACP adapter test suites	Editor integration coverage	acp_adapter/
+tests/acp_adapter	source	manual	ACP adapter tests (second tree)	Editor integration coverage	acp_adapter/
+tests/docker	source	manual	Docker-specific tests	Containerized paths	docker/
+tests/install	source	manual	Installer tests	Install paths	scripts/install.sh
+tests/secret_sources	source	manual	Secret-source tests	Secrets coverage	agent/secret_sources
+tests/monitoring	source	manual	Monitoring/observability tests	Observability coverage	plugins/observability
+tests/honcho_plugin	source	manual	Honcho memory-plugin tests	Provider coverage	plugins/memory/honcho
+tests/openviking_plugin	source	manual	Open-viking memory-plugin tests	Provider coverage	plugins/memory/openviking
+3v0/docs	source	manual	3V0 core documentation	The sovereign docs	3v0/README.md;3v0/CONTEXT.md
+3v0/deploy	source	manual	3V0 deployment notes	Deploy lore	for 3v0/scripts/reload_gateway.sh
+3v0/plugin	source	manual	3V0 plugin surface	Plugin glue for the core	plugins/
+3v0/research	source	manual	3V0 research artifacts	Research notes	3v0/data/research
+3v0/native	source	manual	3V0 native helpers	Core-adjacent tooling	3v0/core/memdb.py
+wiki/manifest.tsv	data	manual	Raw 100%-coverage catalog — 6-col TSV rows for every tracked path	The generated artifact --check verifies; commit it	scripts/build_wiki.py;wiki/index.md
+wiki/curated.tsv	data	manual	Hand-curated overlay — manual rows merged on --rebuild	Where hand-written entries live (never clobbered); 6 cols/row	scripts/build_wiki.py;wiki/manifest.tsv
+wiki/index.md	doc	manual	Master catalog + reading order for the LLM wiki	The first file an agent reads to map the repo	wiki/SCHEMA.md;wiki/areas/
+wiki/SCHEMA.md	doc	manual	The wiki maintenance contract — invariant, artifacts, workflow, failure modes	Defines what must stay true for the index to be trusted	scripts/build_wiki.py;.githooks/pre-commit
+wiki/log.md	doc	manual	Append-only change log for the wiki itself	Audit trail of wiki schema/coverage changes	wiki/SCHEMA.md
+wiki/README.md	doc	manual	One-paragraph orientation to the wiki	Fast entry for humans	wiki/index.md
+wiki/areas/_intro_CORE.md	doc	manual	Hand-written CORE area narrative, prepended to areas/CORE.md	Human-owned narrative survives regenerated tables	scripts/build_wiki.py

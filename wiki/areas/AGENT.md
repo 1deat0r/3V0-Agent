@@ -1,0 +1,203 @@
+# agent/ — AIAgent internals (providers, memory, caching, audio)
+
+AIAgent internals that power the loop: provider adapters (anthropic/gemini/vertex/bedrock/codex), memory manager + provider ABC, prompt caching (sacred, cache-breaking banned), compression, iteration budget, credential pool, aux client (deepseek-v4-flash et al.), curator, relay, audio registries.
+---
+Auto-rendered from `wiki/manifest.tsv` — `python3 scripts/build_wiki.py --rebuild` regenerates.
+Columns: path · kind · purpose · why · related
+
+| path | kind | purpose | why | related |
+|------|------|---------|-----|---------|
+| `agent/__init__.py` | source | Agent internals -- extracted modules from run_agent.py. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/account_usage.py` | source | Python module `account_usage.py` | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/agent_init.py` | source | Implementation of :meth:`AIAgent.__init__` — extracted as a module function. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/agent_runtime_helpers.py` | source | Assorted AIAgent runtime helpers — moved out of run_agent.py for clarity. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/anthropic_adapter.py` | source | Anthropic API adapter (chat completions + reasoning) | One of the provider seam implementations | agent/chat_completion_helpers.py;providers/base.py |
+| `agent/async_utils.py` | source | Async/sync bridging helpers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/aux_accounting.py` | source | Aux cost accounting per task/model | Cents-level attribution | agent/auxiliary_client.py |
+| `agent/auxiliary_client.py` | source | Aux task client — side-LLM work (curator, vision, embeddings, titles) with per-task resolution | Aux routing per TOKEN_EFFICIENCY; deepseek-v4-flash is the typical aux model | agent/aux_accounting.py;3v0/TOKEN_EFFICIENCY.md |
+| `agent/azure_identity_adapter.py` | source | Azure identity/credentials adapter | Azure-hosted deployments | agent/credential_sources.py |
+| `agent/backend_identity.py` | source | Single owner for backend identity and failure-scoped skip decisions. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/background_review.py` | source | Background session review worker | Deferred review queues | agent/review_queue... tools: tools/async_delegation.py |
+| `agent/battery.py` | source | Battery/usage tracking (billing-adjacent telemetry) | Product usage telemetry | agent/billing_usage.py |
+| `agent/bedrock_adapter.py` | source | AWS Bedrock adapter | AWS-hosted models seam | agent/azure_identity_adapter.py |
+| `agent/billing_links.py` | source | Provider-agnostic billing/credit recovery links. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/billing_usage.py` | source | Shared dollar-denominated usage model for the billing/subscription surfaces. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/billing_view.py` | source | Billing view model (account dashboard) | Account UX | agent/subscription_view.py;agent/credits_tracker.py |
+| `agent/bounded_response.py` | source | Bounded reads of HTTP error response bodies. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/browser_provider.py` | source | Browser Provider ABC | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/browser_registry.py` | source | Browser Provider Registry | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/chat_completion_helpers.py` | source | Helper functions for the chat-completions code path. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/codex_responses_adapter.py` | source | OpenAI codex/responses API mode adapter | api_mode='codex_responses' path | agent/codex_runtime.py |
+| `agent/codex_runtime.py` | source | Codex runtime — remote sandbox execution glue | Codex-mode tooling | agent/codex_responses_adapter.py |
+| `agent/coding_context.py` | source | Coding context lens for software sessions | Loads repo/AGENTS context | agent/context_references.py |
+| `agent/command_token_source.py` | source | Mint a provider API key by running a command (``key_cmd``). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/context_breakdown.py` | source | Context budget breakdown per section | Budget accounting | agent/prompt_builder.py |
+| `agent/context_compressor.py` | source | Context compression service (the one allowed mid-conversation mutation) | Long-session survival without cache destruction | agent/native_compaction.py;trajectory_compressor.py |
+| `agent/context_engine.py` | source | Context engine orchestrator — provider plugins inject external context | The context_engine plugin seam (plugins/context_engine) | plugins/context_engine/ |
+| `agent/context_references.py` | source | Reference resolution for @path mentions | Deep-linking context | agent/context_breakdown.py |
+| `agent/conversation_compression.py` | source | Conversation compression (summarize-then-drop) | Sibling of context compressor for messaging | safe_evolve: agent/native_compaction.py |
+| `agent/conversation_loop.py` | source | The agent conversation loop — extracted from run_agent.AIAgent | Shared run loop used by CLI/gateway/desktop through AIAgent | run_agent.py;agent/prompt_builder.py |
+| `agent/copilot_acp_client.py` | source | OpenAI-compatible shim that forwards Hermes requests to `copilot --acp`. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/credential_persistence.py` | source | Encrypted credential persistence | Secrets at rest | agent/credential_pool.py |
+| `agent/credential_pool.py` | source | Persistent multi-credential pool for same-provider failover | Rotation without manual API key churn | agent/credential_sources.py;agent/credential_persistence.py |
+| `agent/credential_sources.py` | source | Credential enumeration sources (env, files, keyring) | Feeds the pool | agent/credential_pool.py |
+| `agent/credits_tracker.py` | source | Credits tracking for Nous inference API responses. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/curator.py` | source | Skill curator — background skill lifecycle (active/stale/archived) | Curator invariants: only agent-created skills, never delete, pinned exempt | agent/curator_backup.py;tools/skill_usage.py |
+| `agent/curator_backup.py` | source | Pre-run tar.gz snapshots for curator | Restore safety | agent/curator.py |
+| `agent/deadline.py` | source | Deadline enforcement for long tasks | Hard stop rails | agent/estop.py;agent/iteration_budget.py |
+| `agent/delegation_context.py` | source | Subagent context packing for delegate_task | Context handoff to children | agent/subagent_lifecycle.py |
+| `agent/display.py` | source | KawaiiSpinner + activity feed rendering | CLI presentation | ev0_cli/skin_engine.py;cli.py |
+| `agent/error_classifier.py` | source | API error classification for smart failover and recovery. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/errors.py` | source | Python module `errors.py` | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/estop.py` | source | Emergency stop — interrupt propagation | Kill-switch semantics | agent/interrupt_compat.py |
+| `agent/file_safety.py` | source | Shared file safety rules used by both tools and ACP shims. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/gemini_native_adapter.py` | source | Google Gemini native adapter | same-provider failover partner in the credential pool | agent/gemini_schema.py;agent/credential_pool.py |
+| `agent/gemini_schema.py` | source | Gemini schema translation helpers | schemas for the native adapter | agent/gemini_native_adapter.py |
+| `agent/i18n.py` | source | Lightweight internationalization (i18n) for Hermes static user-facing messages. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/image_gen_provider.py` | source | Image Generation Provider ABC | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/image_gen_registry.py` | source | Image Generation Provider Registry | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/image_routing.py` | source | Routing helpers for inbound user-attached images. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/insights.py` | source | Session Insights Engine for Hermes Agent. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/interrupt_compat.py` | source | Compatibility helper for explicit agent stop producers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/iteration_budget.py` | source | Iteration budget tracker | Loop termination law | agent/deadline.py |
+| `agent/jiter_preload.py` | source | Best-effort early import for the OpenAI SDK's native streaming parser. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/kanban_stop.py` | source | Turn-end guard for kanban workers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/learn_prompt.py` | source | ``/learn`` — build the standards-guided prompt that turns whatever the user | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/learning_graph.py` | source | Learning graph — structured knowledge recall | Experiment surface for retrieval | agent/learning_mutations.py;agent/learn_prompt.py |
+| `agent/learning_graph_render.py` | source | Terminal renderer for the learning timeline (learned skills + memories). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/learning_mutations.py` | source | User-initiated edit/delete for journey nodes (learned skills + memories). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lmstudio_reasoning.py` | source | LM Studio reasoning extraction | Local reasoning-model support | agent/reasoning_summaries.py |
+| `agent/lsp/__init__.py` | source | Language Server Protocol (LSP) integration for Hermes Agent. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lsp/cli.py` | source | ``hermes lsp`` CLI subcommand. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lsp/client.py` | source | Async LSP client over stdin/stdout. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lsp/eventlog.py` | source | Structured logging with steady-state silence for the LSP layer. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lsp/install.py` | source | Auto-installation of LSP server binaries. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lsp/manager.py` | source | Service-level orchestration for LSP clients. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lsp/protocol.py` | source | Minimal LSP JSON-RPC 2.0 framer over async streams. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lsp/range_shift.py` | source | Diff-aware line-shift map for cross-edit LSP delta filtering. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lsp/reporter.py` | source | Format LSP diagnostics for inclusion in tool output. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lsp/servers.py` | source | Server registry — per-language LSP server definitions. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/lsp/workspace.py` | source | Workspace and project-root resolution for LSP. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/manual_compression_feedback.py` | source | User-facing summaries for manual compression commands. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/markdown_tables.py` | source | CJK/wide-character-aware re-alignment of model-emitted markdown tables. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/memory_manager.py` | source | Memory orchestration — sync_turn, prefetch, shutdown across providers | The memory-provider seam the plugins implement | agent/memory_provider.py;plugins/memory/ |
+| `agent/memory_provider.py` | source | MemoryProvider ABC — the plugin contract for memory backends | New backends implement this (closed in-tree set per policy) | plugins/memory/;agent/memory_manager.py |
+| `agent/message_content.py` | source | Python module `message_content.py` | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/message_metadata.py` | source | Internal metadata attached to durable conversation messages. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/message_sanitization.py` | source | Message and tool-payload sanitization helpers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/moa_loop.py` | source | Mixture-of-agents loop | Multi-model consensus mode | agent/moa_trace.py |
+| `agent/moa_trace.py` | source | MoA trace instrumentation | Debuggability | agent/moa_loop.py |
+| `agent/model_metadata.py` | source | Model metadata, context lengths, and token estimation utilities. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/models_dev.py` | source | Models.dev registry integration — primary database for providers and models. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/monitoring/__init__.py` | source | Hermes gateway monitoring. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/monitoring/cron_health.py` | source | Content-free cron service-health and execution telemetry projection. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/monitoring/emitter.py` | source | Monitoring emitter: fire-and-forget queue + background dispatcher. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/monitoring/events.py` | source | Typed gateway monitoring events. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/monitoring/gateway_health.py` | source | Gateway health and diagnostics signal producer. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/monitoring/gateway_health_export.py` | source | Gateway Health & Diagnostics OTLP export runtime. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/monitoring/otlp_exporter.py` | source | Export monitoring events to an OpenTelemetry Collector over OTLP/HTTP. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/monitoring/policy.py` | source | Install identity for gateway monitoring. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/monitoring/redaction.py` | source | Redaction applied to monitoring data before egress. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/moonshot_schema.py` | source | Moonshot vendor schema quirks | Vendor-specific translation | agent/gemini_schema.py |
+| `agent/native_compaction.py` | source | Native token-aware compaction | Efficient compaction without re-embedding | agent/context_compressor.py |
+| `agent/nous_rate_guard.py` | source | Nous-provider rate limiting (breaker semantics) | Protects confirmed-empty buckets from re-probe | agent/rate_limit_tracker.py |
+| `agent/onboarding.py` | source | First-run onboarding flow | Setup UX | ev0_cli/config.py |
+| `agent/oneshot.py` | source | One-shot prompt execution | Non-interactive single turns | run_agent.py |
+| `agent/outbound_webhooks.py` | source | Outbound webhook notifications. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/__init__.py` | source | Petdex pet engine — shared core for the CLI, TUI, and desktop surfaces. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/constants.py` | source | Pet sprite geometry + animation-state taxonomy. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/generate/__init__.py` | source | Pet generation — base-draft → hatch pipeline. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/generate/atlas.py` | source | Deterministic spritesheet assembly — generated row strips → Hermes atlas. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/generate/imagegen.py` | source | Thin image-generation layer for pet sprites. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/generate/orchestrate.py` | source | Pet generation orchestration — the base-draft → hatch flow. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/generate/prompts.py` | source | Prompt builders for pet generation. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/manifest.py` | source | Fetch the public petdex manifest. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/render.py` | source | Decode a pet spritesheet and encode frames for a terminal. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/state.py` | source | Map agent activity → a :class:`PetState`. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/pet/store.py` | source | On-disk pet store — install / list / resolve pets. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/plugin_llm.py` | source | Plugin LLM facade — host-owned LLM access for trusted plugins. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/plugin_stream_hooks.py` | source | Asynchronous per-consumer plugin observers for streaming LLM output. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/portal_tags.py` | source | Centralized Nous Portal request tags. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/process_bootstrap.py` | source | Process-level bootstrap helpers for ``run_agent``. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/prompt_builder.py` | source | System prompt assembly — identity, platform hints, skills index, context files | Byte-stable per conversation (prompt caching is sacred) | run_agent.py;agent/prompt_cache_boundary.py |
+| `agent/prompt_cache_boundary.py` | source | Cache-safety boundary enforcement (what may/may not mutate) | Declares the cache-safe mutation sets | agent/prompt_caching.py |
+| `agent/prompt_cache_scope.py` | source | Cache scope resolution per provider | Per-backend cache semantics | agent/prompt_caching.py |
+| `agent/prompt_caching.py` | source | Prompt caching utilities (prefix reuse, cache control) | The sacred invariant; cache-breaking changes are banned | agent/prompt_cache_boundary.py;agent/prompt_cache_scope.py |
+| `agent/proxy_sources/__init__.py` | source | Egress proxy integrations. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/proxy_sources/iron_proxy.py` | source | iron-proxy (`ironsh/iron-proxy`) integration for credential-injecting egress control. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/rate_limit_tracker.py` | source | Per-endpoint rate limit tracking | Backoff bookkeeping | agent/nous_rate_guard.py |
+| `agent/reactions.py` | source | Token-free detection of user *reactions* to the agent. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/reasoning_summaries.py` | source | Boundary repair for providers that stream reasoning as discrete summary parts. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/reasoning_timeouts.py` | source | Per-reasoning-model stale-timeout floor for known reasoning models. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/redact.py` | source | Regex-based secret redaction for logs and tool output. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/relay_llm.py` | source | Relay LLM client — the shared relay protocol (nemo relay) | Multi-process/remote LLM transport | agent/relay_runtime.py;agent/relay_tools.py |
+| `agent/relay_runtime.py` | source | Profile-scoped NeMo Relay runtimes owned by the Hermes agent core. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/relay_tools.py` | source | Core NeMo Relay adapter for Hermes tool execution. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/repetition_guard.py` | source | Cheap content-sanity checks for the truncated-response continuation path. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/replay_cleanup.py` | source | Replay-history sanitization shared across resume code paths. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/retry_utils.py` | source | Retry utilities — jittered backoff for decorrelated retries. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/runtime_cwd.py` | source | Single source of truth for the agent working directory. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/secret_scope.py` | source | Secret scoping — multiplex-profile env isolation (fail-closed) | Never leaks another profile's .env; canonical wrapper contract | agent/credential_pool.py;gateway/authz_mixin.py |
+| `agent/secret_sources/__init__.py` | source | External secret source integrations. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/secret_sources/_cache.py` | source | Shared substrate for external secret-source backends. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/secret_sources/base.py` | source | Secret-source contract: the ABC every secret backend implements. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/secret_sources/bitwarden.py` | source | Bitwarden Secrets Manager (`bws` CLI) integration. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/secret_sources/command.py` | source | ``command`` secret source — resolve secrets via a user-configured helper. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/secret_sources/onepassword.py` | source | 1Password (`op` CLI) secret source. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/secret_sources/registry.py` | source | Secret-source registry + apply orchestrator. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/session_activity.py` | source | Shared session activity observation contract (#72016 / #72039). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/shell_hooks.py` | source | Shell-script hooks bridge. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/skill_bundles.py` | source | Skill bundles — aliases that load multiple skills under one slash command. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/skill_commands.py` | source | Skill slash-command injection (as USER message to preserve caching) | Skills live in commands without touching the system prompt | ev0_cli/commands.py;tools/skills_tool.py |
+| `agent/skill_preprocessing.py` | source | Shared SKILL.md preprocessing helpers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/skill_utils.py` | source | Lightweight skill metadata utilities shared by prompt_builder and skills_tool. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/ssl_guard.py` | source | Preventive SSL CA certificate checks for Hermes Agent. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/ssl_verify.py` | source | TLS verify resolution for httpx/OpenAI provider clients. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/stream_diag.py` | source | Stream diagnostics — per-attempt counters, exception chains, retry logging. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/stream_single_writer.py` | source | Best-effort accessors for the single-writer stream fence (#65991). | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/subagent_lifecycle.py` | source | Subagent spawn/terminate lifecycle | Parent-child turn management | agent/delegation_context.py |
+| `agent/subdirectory_hints.py` | source | Progressive subdirectory hint discovery. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/subscription_view.py` | source | Subscription view model | Account UX | agent/billing_view.py |
+| `agent/system_prompt.py` | source | System prompt content pieces | Prompt fragments assembled by prompt_builder | agent/prompt_builder.py |
+| `agent/think_scrubber.py` | source | Stateful scrubber for reasoning/thinking blocks in streamed assistant text. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/thinking_timeout_guidance.py` | source | Thinking-timeout detection and user-facing guidance for reasoning models. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/thread_scoped_output.py` | source | Thread-scoped stdout/stderr silencing for background worker threads. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/title_generator.py` | source | Session title generation (aux) | Session niceness | agent/auxiliary_client.py |
+| `agent/tool_dispatch_helpers.py` | source | Tool-dispatch helpers — parallelism gating, multimodal envelopes, mutation tracking. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/tool_executor.py` | source | Tool executor — runs handler with guards | Dispatch plumbing | model_tools.py;tools/registry.py |
+| `agent/tool_guardrails.py` | source | Tool-call guardrails (threat patterns, safety) | Safety layer | tools/threat_patterns.py;tools/tirith_security.py |
+| `agent/tool_result_classification.py` | source | Shared helpers for classifying tool result payloads. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/trace_upload.py` | source | Upload a Hermes session transcript to Hugging Face as an agent trace. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/trajectory.py` | source | Trajectory saving utilities and static helpers. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transcription_provider.py` | source | Transcription Provider ABC | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transcription_registry.py` | source | Transcription Provider Registry | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/__init__.py` | source | Transport layer types and registry for provider response normalization. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/anthropic.py` | source | Anthropic Messages API transport. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/base.py` | source | Abstract base for provider transports. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/bedrock.py` | source | AWS Bedrock Converse API transport. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/chat_completions.py` | source | OpenAI Chat Completions transport. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/codex.py` | source | OpenAI Responses API (Codex) transport. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/codex_app_server.py` | source | Codex app-server JSON-RPC client. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/codex_app_server_session.py` | source | Session adapter for codex app-server runtime. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/codex_event_projector.py` | source | Projects codex app-server events into Hermes' messages list. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/ev0_tools_mcp_server.py` | source | Hermes-tools-as-MCP server for the codex_app_server runtime. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/transports/types.py` | source | Shared types for normalized provider responses. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/tts_provider.py` | source | Text-to-Speech Provider ABC | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/tts_registry.py` | source | TTS Provider Registry | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/turn_context.py` | source | Per-turn context object | Loop plumbing | agent/conversation_loop.py |
+| `agent/turn_finalizer.py` | source | End-of-turn finalization (trajectory, memory sync, summary) | Loop completion | agent/turn_summary.py |
+| `agent/turn_retry_state.py` | source | Per-attempt recovery bookkeeping for the conversation turn loop. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/turn_summary.py` | source | Turn summary writer | Feed for memory + titles | agent/turn_finalizer.py |
+| `agent/usage_pricing.py` | source | Python module `usage_pricing.py` | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/verification_evidence.py` | source | Coding verification evidence ledger. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/verification_stop.py` | source | Turn-end verification guard for coding edits. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/verify/__init__.py` | source | Project verification subsystem. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/verify/environment.py` | source | Environment manifest for project verification. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/verify/recipes.py` | source | Static run-recipe detection for project verification. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/verify/runner.py` | source | Verification runner: execute a Recipe's phases and smoke-test the app. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/verify_hooks.py` | source | Verification-loop helpers for the ``pre_verify`` round-end gate. | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/vertex_adapter.py` | source | Google Vertex AI adapter | Enterprise Gemini path | agent/gemini_native_adapter.py |
+| `agent/video_gen_provider.py` | source | Video Generation Provider ABC | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/video_gen_registry.py` | source | Video Generation Provider Registry | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/web_search_provider.py` | source | Web Search Provider ABC | Python module executed or imported by the runtime; check git intent before deleting |  |
+| `agent/web_search_registry.py` | source | Web Search Provider Registry | Python module executed or imported by the runtime; check git intent before deleting |  |

@@ -1,0 +1,1 @@
+The waist of the system. `run_agent.py` is the conversation loop, `cli.py` the interactive shell, `model_tools.py`+`toolsets.py` the tool orchestration, `ev0_state*.py` the session store, `ev0_constants.py`/`ev0_logging.py` the profile-aware paths. Start here to trace any feature end-to-end.
