@@ -21,18 +21,18 @@ Columns: path · kind · purpose · why · related
 | `docs/billing-lifecycle.md` | doc | Billing lifecycle doc | Account/billing | agent/billing_view.py |
 | `docs/chronos-managed-cron-contract.md` | doc | Managed cron contract | Scheduled tasks spec | cron/scheduler_provider.py |
 | `docs/design/kanban-dialogs/index.html` | asset | File `index.html` | Repository content; see related files / area page for the enclosing subsystem | docs/design/kanban-dialogs/ |
-| `docs/design/profile-builder.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | docs/design/kanban-dialogs/index.html |
-| `docs/kanban/multi-gateway.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | docs/kanban/ |
+| `docs/design/profile-builder.md` | doc | Profile Builder — Dashboard-Native, Full-Featured Profile Creation | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/design/kanban-dialogs/index.html |
+| `docs/kanban/multi-gateway.md` | doc | Multi-gateway deployment | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/kanban/ |
 | `docs/micro-compaction.md` | doc | Micro-compaction design | Context compaction rationale | scripts/micro_compaction_report.py |
 | `docs/middleware/README.md` | readme | README (en) | Project introduction & quickstart for humans/new agents | docs/middleware/ |
 | `docs/observability/README.md` | readme | README (en) | Project introduction & quickstart for humans/new agents | docs/observability/monitoring.md; docs/observability/relay-shared-metrics.md |
-| `docs/observability/monitoring.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | docs/observability/README.md; docs/observability/relay-shared-metrics.md |
-| `docs/observability/relay-shared-metrics.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | docs/observability/README.md; docs/observability/monitoring.md |
+| `docs/observability/monitoring.md` | doc | Gateway Monitoring | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/observability/README.md; docs/observability/relay-shared-metrics.md |
+| `docs/observability/relay-shared-metrics.md` | doc | NeMo Relay Shared Metrics | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/observability/README.md; docs/observability/monitoring.md |
 | `docs/profile-routing.md` | doc | Profile routing design | Multi-instance routing | gateway/profile_routing.py;agent/secret_scope.py |
 | `docs/rca-ssl-cacert-post-git-pull.md` | doc | RCA: SSL CA certs after git pull | Postmortem lesson | tests/gateway/ |
 | `docs/relay-connector-contract.md` | doc | Relay connector contract | Cross-process relay spec | agent/relay_llm.py |
-| `docs/rfcs/2026-07-plugin-architecture-lessons-pi-opencode.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | docs/rfcs/plugin-config-state-bridge.md |
-| `docs/rfcs/plugin-config-state-bridge.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | docs/rfcs/2026-07-plugin-architecture-lessons-pi-opencode.md |
-| `docs/security/network-egress-isolation.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | docs/security/ |
+| `docs/rfcs/2026-07-plugin-architecture-lessons-pi-opencode.md` | doc | Research spike: plugin-architecture lessons from Pi and OpenCode | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/rfcs/plugin-config-state-bridge.md |
+| `docs/rfcs/plugin-config-state-bridge.md` | doc | Plugin Config & State Bridge | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/rfcs/2026-07-plugin-architecture-lessons-pi-opencode.md |
+| `docs/security/network-egress-isolation.md` | doc | Network Egress Isolation for Docker Deployments | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/security/ |
 | `docs/session-lifecycle.md` | doc | Session lifecycle doc | Messaging sessions | gateway/session.py |
 | `docs/streaming-tts.md` | doc | Streaming TTS doc | Voice streaming | tools/tts_streaming.py |

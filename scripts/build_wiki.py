@@ -103,6 +103,37 @@ def clean(s: str, cap: int) -> str:
     return s[:cap]
 
 
+def md_title(path: Path) -> str:
+    """Best one-line description of a markdown file: its first ATX heading,
+    else its first substantive line, else its YAML frontmatter `description:`
+    (skipping the frontmatter block entirely). Capped so it can serve as the
+    row's `purpose` for flash-class readers."""
+    try:
+        lines = [ln.rstrip() for ln in path.read_text(encoding="utf-8", errors="replace").splitlines()][:40]
+    except OSError:
+        return ""
+    front: list[str] = []
+    body = lines
+    if lines and lines[0].strip() == "---":
+        for i, ln in enumerate(lines[1:], 1):
+            if ln.strip() == "---":
+                body = lines[i + 1:]
+                break
+            front.append(ln)
+    for ln in body:
+        m = re.match(r"^#{1,6}\s+(.*)$", ln.strip())
+        if m:
+            return clean(m.group(1), MAXLEN["purpose"])
+    for ln in body:
+        if ln.strip():
+            return clean(ln, MAXLEN["purpose"])
+    for ln in front:
+        m = re.match(r"^\s*description\s*:\s*(.*)$", ln)
+        if m:
+            return clean(m.group(1).strip().strip('"\'\u2018\u2019'), MAXLEN["purpose"])
+    return ""
+
+
 def sibling_files(path: str, fileset: set[str]) -> list[str]:
     parent = path.rsplit("/", 1)[0] if "/" in path else "."
     prefix = parent + "/" if parent != "." else ""
@@ -180,6 +211,67 @@ def classify(path: str) -> tuple[str, str, str]:
     low = path.lower()
     parent = str(p.parent)
 
+    # ---- named-file rules: dotfiles, CI, build manifests (checked before
+    # generic extensions so they beat the fallbacks) ----
+    dotfiles = {
+        ".gitignore": ("version-control", "Git ignore rules", "Defines untracked paths; wrong rules leak artifacts or drop source from the repo"),
+        ".gitattributes": ("version-control", "Git attributes", "Sets line-ending/diff/merge attributes; keeps cross-platform checkouts deterministic"),
+        ".dockerignore": ("build", "Docker build context filter", "Keeps build context lean so images avoid leaking secrets/large cache"),
+        ".mailmap": ("version-control", "Git mailmap", "Normalizes author name/email dedup across history (contributor attribution)"),
+        ".npmrc": ("build", "npm registry config", "Registry/auth/scoping configuration for JS workspaces"),
+        ".nvmrc": ("build", "Node version pin", "Declares the Node major for nvm/CI; drift breaks install-e2e and JS checks"),
+        ".envrc": ("build", "direnv hook", "Auto-sets the dev environment on cd (via direnv); non-secret profile wiring"),
+        ".prettierrc": ("build", "Prettier config", "Formatting rules for JS/TS/JSON; CI format gate reads it"),
+        ".prettierignore": ("build", "Prettier ignore list", "Keeps generated/vendor files out of the formatter gate"),
+        ".python-version": ("build", "Python version pin", "Declares the interpreter version for pyenv/uv/CI; drift breaks the toolchain"),
+        ".hadolint.yaml": ("infra-checks", "Hadolint config", "Dockerfile lint rules; docker-lint CI workflow applies them"),
+        ".coderabbit.yaml": ("infra-checks", "CodeRabbit config", "Automated review bot settings for PRs"),
+        ".editorconfig": ("version-control", "EditorConfig", "Cross-editor whitespace/encoding conventions"),
+        ".pre-commit-config.yaml": ("infra-checks", "pre-commit config", "Declares the hook chain expected by contributors/local runs"),
+    }
+    if name in dotfiles:
+        kind, purpose, why = dotfiles[name]
+        return (kind, purpose, why)
+    if name in ("Dockerfile",) or (name.startswith("Dockerfile.")):
+        return ("build", "Docker image definition", "Builds the containerized runtime; docker-lint + docker workflows gate it")
+    if name == "Makefile":
+        return ("build", "Make targets", "Convenience build/test wrapper; check `make help` before manual steps")
+    if name.startswith("requirements") and name.endswith(".txt"):
+        return ("build", "Python pip dependency list", "Pins python deps for isolated sub-installs (skills/tools)")
+    if path.startswith(".githooks/"):
+        return ("script", f"Git hook `{name}`", "Runs on the named git event; the wiki 100% gate is pre-commit step 4")
+    if path.startswith(".github/workflows/"):
+        return ("ci", f"GitHub Actions workflow `{name[:-4]}`", "CI/CD pipeline run on push/PR/schedule; gate for the checked-in artifacts")
+    if path.startswith(".github/actions/"):
+        return ("ci", f"Composite GitHub Action `{name[:-4]}`", "Reusable CI step shared by workflows; versioned with the repo")
+    if path.startswith(".github/ISSUE_TEMPLATE/"):
+        return ("config", f"Issue template `{name}`", "Structured GitHub issue form; shapes bug/feature reporting")
+    if name == "dependabot.yml" and path.startswith(".github/"):
+        return ("infra-checks", "Dependabot config", "Automated dependency update schedule/scoping for GitHub")
+    if name.startswith("docker-compose") and name.endswith(".yml"):
+        return ("build", "Docker Compose definition", "Local multi-container orchestration (dev/CI matrix)")
+    if name == "py.typed":
+        return ("build", "Typing marker", "PEP 561 marker so type checkers treat the package as typed")
+    # JS/TS toolchain configs (frontend workspace long tail)
+    js_cfg = {
+        "tsconfig": ("build", "TypeScript compiler config", "tsc/editor compilation settings for the workspace"),
+        "eslint.config": ("infra-checks", "ESLint flat config", "Lint rules for JS/TS; lint gates read it"),
+        "vite.config": ("build", "Vite config", "Dev-server/build bundling for the frontend workspace"),
+        "vitest.config": ("build", "Vitest config", "Unit test runner setup for JS/TS"),
+        "jest.config": ("build", "Jest config", "Unit test runner setup for JS/TS"),
+        "playwright.config": ("build", "Playwright config", "E2E browser test configuration"),
+        "babel.config": ("build", "Babel config", "JS/TS transpilation presets/plugins"),
+        "postcss.config": ("build", "PostCSS config", "CSS post-processing pipeline (tailwind etc.)"),
+        "tailwind.config": ("build", "Tailwind config", "Design tokens/theme for the Tailwind build"),
+        "rollup.config": ("build", "Rollup config", "Library bundling configuration"),
+        "webpack.config": ("build", "Webpack config", "Bundler configuration for a frontend surface"),
+    }
+    for prefix, (kind, purpose, why) in js_cfg.items():
+        if name.startswith(prefix):
+            return (kind, purpose, why)
+    if name in ("docusaurus.config.js", "sidebars.js"):
+        return ("build", "Docusaurus site config", "Docs-site generation settings + doc sidebar tree")
+
     if name in ("uv.lock", "package-lock.json"):
         return ("lockfile", "Generated dependency lockfile",
                 "Pins every transitive dep with hashes (supply-chain invariant); regenerated by uv/npm")
@@ -196,7 +288,7 @@ def classify(path: str) -> tuple[str, str, str]:
         return ("artifact", "Bytecode compile fingerprint", "Runtime freshness marker; regenerated")
     if name.endswith((".pyc", ".pyo")):
         return ("artifact", "Bytecode cache", "Transient interpreter cache; reproducible")
-    if name.endswith(".md"):
+    if name.endswith((".md", ".mdx")):
         if name == "SKILL.md":
             return ("skill-doc", f"Skill definition for `{p.parent.name}`",
                     "The instruction contract a model loads when the skill's trigger matches")
@@ -209,6 +301,9 @@ def classify(path: str) -> tuple[str, str, str]:
             return ("readme", f"README ({lang})", "Project introduction & quickstart for humans/new agents")
         if name.startswith(("CONTRIBUTING", "SECURITY", "SUSTAINABILITY", "SELF_IMPROVEMENT")):
             return ("policy-doc", f"{name[:-3]} policy", "Defines the contribution/security contract")
+        title = md_title(p)
+        if title:
+            return ("doc", title, "Human/agent-readable documentation; the wiki keeps it pointer-capped")
         return ("doc", "Documentation page", "Human/agent-readable explanation; knowledge layer")
     if name.endswith(".py"):
         doc = clean(module_docstring(p), MAXLEN["purpose"])
@@ -216,15 +311,39 @@ def classify(path: str) -> tuple[str, str, str]:
         why = ("Test module — asserts the repo contract; run via scripts/run_tests.sh"
                if kind == "test" else
                "Python module executed or imported by the runtime; check git intent before deleting")
+        if kind == "test" and not doc:
+            # derive the module-under-test name from the path (mirrors relations())
+            core = path
+            for prefix in ("3v0/tests/", "tests/"):
+                if core.startswith(prefix):
+                    core = core[len(prefix):]
+                    break
+            stem = core[:-3] if core.endswith(".py") else core
+            if stem.startswith("test_"):
+                stem = stem[5:]
+            if stem.endswith("_test"):
+                stem = stem[:-5]
+            doc = f"Tests `{stem}.py` — see related for the module under test"
         if parent.startswith("scripts/"):
             kind, why = "script", "Dev/ops/release tooling invoked from the command line or CI"
         return (kind, doc or f"Python module `{name}`", why)
-    if name.endswith(".ts"):
-        return ("frontend-ts", clean(module_docstring(p) or f"TypeScript module `{name}`", MAXLEN["purpose"]),
-                "Frontend/shared TS source consumed by the tsc/vite build")
-    if name.endswith((".tsx", ".jsx")):
-        return ("frontend-tsx", f"React component `{name}`",
-                "Renders part of a frontend surface; bundled by the TS build")
+    if name.endswith((".ts", ".tsx", ".jsx", ".js", ".mjs", ".cjs")):
+        doc = clean(module_docstring(p) or "", MAXLEN["purpose"])
+        if name.endswith(".ts"):
+            kind, why = "frontend-ts", "Frontend/shared TS source consumed by the tsc/vite build"
+        elif name.endswith((".tsx", ".jsx")):
+            kind, why = "frontend-tsx", "Renders part of a frontend surface; bundled by the TS build"
+        else:
+            kind, why = "js-module", "Node/Electron JS source executed by the build/runtime; check git intent before deleting"
+        if re.search(r"\.(test|spec)\.(ts|tsx|js|jsx|mjs|cjs)$", name):
+            under = re.sub(r"\.(test|spec)\.([a-z]+)$", r".\2", name)
+            doc = doc or f"Tests `{under}` — see related for the module under test"
+        elif name.endswith((".tsx", ".jsx")):
+            doc = doc or f"React component `{name}`"
+        else:
+            doc = doc or (f"TypeScript module `{name}`" if name.endswith(".ts")
+                          else f"JS module `{name}`")
+        return (kind, doc, why)
     if name == "package.json":
         return ("build", "Node package manifest", "Declares JS workspace deps + scripts")
     if name.endswith((".yaml", ".yml")):
@@ -326,6 +445,34 @@ def save_manifest(rows: dict[str, dict]):
     MANIFEST.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+WEAK_PURPOSES = ("File `", "Documentation page", "Structured data/config file",
+                 "YAML configuration", "Python module `", "TypeScript module `",
+                 "React component `")
+
+
+def refresh_auto_rows(rows: dict[str, dict], files: list[str]) -> int:
+    """Reclassify auto rows whose description is still generator boilerplate,
+    so classifier upgrades (md-title extraction, named-file rules) apply
+    retroactively instead of only to newly added files. Only touches `auto`
+    rows matching a known weak purpose; idempotent (a refreshed row no longer
+    matches, and re-running rebuild is a no-op)."""
+    fileset = set(files)
+    n = 0
+    for path, rec in rows.items():
+        if rec.get("curated") != "auto":
+            continue
+        purpose = (rec.get("purpose") or "").strip()
+        if not purpose.startswith(WEAK_PURPOSES):
+            continue
+        kind, new_purpose, why = classify(path)
+        if new_purpose == purpose:
+            continue
+        rec["kind"], rec["purpose"], rec["why"] = kind, new_purpose, why
+        rec["related"] = relations(path, fileset)
+        n += 1
+    return n
+
+
 def rebuild():
     files = tracked_files(ROOT)
     old = load_manifest()
@@ -346,9 +493,11 @@ def rebuild():
         for f in FIELDS:
             rec.setdefault(f, "")
         rows[path] = rec
+    refreshed = refresh_auto_rows(rows, files)
     save_manifest(rows)
     render_areas(rows)
-    print(f"wiki: manifest {len(rows)} rows (manual={len(curated)}), areas rendered")
+    print(f"wiki: manifest {len(rows)} rows (manual={len(curated)}, "
+          f"refreshed={refreshed}), areas rendered")
 
 
 def deficiencies(rows: dict[str, dict]) -> tuple[int, int, int]:

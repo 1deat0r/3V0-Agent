@@ -6,8 +6,8 @@ Columns: path · kind · purpose · why · related
 | path | kind | purpose | why | related |
 |------|------|---------|-----|---------|
 | `skills/software-development/dogfood/SKILL.md` | skill-doc | Skill definition for `dogfood` | The instruction contract a model loads when the skill's trigger matches | skills/software-development/dogfood/references/issue-taxonomy.md; skills/software-development/dogfood/templates/dogfood-report-template.md |
-| `skills/software-development/dogfood/references/issue-taxonomy.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | skills/software-development/dogfood/references/ |
-| `skills/software-development/dogfood/templates/dogfood-report-template.md` | doc | Documentation page | Human/agent-readable explanation; knowledge layer | skills/software-development/dogfood/templates/ |
+| `skills/software-development/dogfood/references/issue-taxonomy.md` | doc | Issue Taxonomy | Human/agent-readable documentation; the wiki keeps it pointer-capped | skills/software-development/dogfood/references/ |
+| `skills/software-development/dogfood/templates/dogfood-report-template.md` | doc | Dogfood QA Report | Human/agent-readable documentation; the wiki keeps it pointer-capped | skills/software-development/dogfood/templates/ |
 | `skills/software-development/hermes-agent-skill-authoring/SKILL.md` | skill-doc | Skill definition for `hermes-agent-skill-authoring` | The instruction contract a model loads when the skill's trigger matches | skills/software-development/hermes-agent-skill-authoring/ |
 | `skills/software-development/inspecting-hermes-desktop-dom/SKILL.md` | skill-doc | Skill definition for `inspecting-hermes-desktop-dom` | The instruction contract a model loads when the skill's trigger matches | skills/software-development/inspecting-hermes-desktop-dom/ |
 | `skills/software-development/node-inspect-debugger/SKILL.md` | skill-doc | Skill definition for `node-inspect-debugger` | The instruction contract a model loads when the skill's trigger matches | skills/software-development/node-inspect-debugger/ |

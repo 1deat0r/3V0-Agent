@@ -38,6 +38,15 @@ fails until the manifest is regenerated.
 `manifest.tsv` header is `path\tkind\tcurated\tpurpose\twhy\trelated`.
 `curated` is `auto` (regenerated) or `manual` (from `curated.tsv`, preserved).
 
+**Auto-row refresh:** on every `--rebuild`, auto rows whose `purpose` is still
+generator boilerplate (`File \`x\``, `Documentation page`, `Structured
+config/data`, `Python module \`x\``, …) are reclassified with the current
+rules, so classifier upgrades apply retroactively, not just to new files.
+Auto rows are never refreshed from claimed knowledge — `manual` rows and
+anything a docstring already describes are left alone. The pass is
+idempotent: a refreshed row no longer matches, so repeated rebuilds are
+no-ops.
+
 ## 3. Editing workflow
 
 - **Tree changed (any add/rename/delete):** run
@@ -66,6 +75,11 @@ fails until the manifest is regenerated.
 5. Tests/docs/config rows may stay `auto` when the docstring is already the
    best description; curation effort goes to the load-bearing spine
    (root, core, agent, tools, gateway, cli, cron, plugins, skills, apps).
+6. Markdown files need no hand work in the long tail: the generator uses the
+   file's first ATX heading (else first substantive line, skipping YAML
+   frontmatter) as `purpose`, and named rules cover dotfiles, `.githooks/*`,
+   `.github/workflows/*` + `actions/*` + issue templates, Dockerfile /
+   docker-compose, Makefile, requirements*.txt, py.typed.
 6. **Auto rows get `related` for free**: the generator fills same-directory
    siblings (test files additionally point at the module(s) they exercise;
    singletons walk up to the nearest populated dir, last resort the
