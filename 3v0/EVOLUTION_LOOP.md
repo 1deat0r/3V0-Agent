@@ -528,7 +528,8 @@ proven, then ask the operator explicitly, with the skills gap on the table.
   the review log → read the just-ended session from the profile's `state.db`
   (reviewable sources only; ≥ `THREEV0_REVIEW_MIN_MESSAGES` user messages) →
   compact the transcript (head+tail trim under a char cap) → build the store
-  context (active facts with ids) → one DeepSeek-v4-pro chat call (JSON mode,
+  context (active facts with ids) → one configured-substrate chat call
+  (currently bitdeer DeepSeek-V4-Flash; JSON mode,
   tolerant parse, one retry without the flag) → apply decisions through
   `record.py --json --write` (the `threev0_record` backend; refusals — invalid
   kinds, `§` guard, unknown ids — are counted, never crash) → append an
@@ -677,7 +678,7 @@ Auditing before building surfaced that the ONE successful review in the log was
 the exception — the hook's reviews had been failing silently since go-live:
 
 1. **Reasoning-model empty content.** `max_tokens: 2500` was too small:
-   DeepSeek-v4-pro puts thinking in `reasoning_content`; on a large transcript
+   The review model's thinking goes to `reasoning_content`; on a large transcript
    the reasoning consumed the whole budget, leaving `content` empty.
    `_tolerant_json("")` returned None and `_call_llm` failed with no
    diagnostic. Fix: `max_tokens` 2500 → 8000 (`THREEV0_REVIEW_MAX_TOKENS`),

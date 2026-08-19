@@ -17,6 +17,8 @@ from core.insights import (  # noqa: E402
     memory_health,
     model_mix_findings,
     tool_reliability,
+    AUX_MODEL,
+    PRIMARY_MODEL,
 )
 
 
@@ -74,30 +76,30 @@ class TestCacheHealth(unittest.TestCase):
 
 class TestAuxRouting(unittest.TestCase):
     def test_aux_on_primary_flagged(self):
-        report = {"tasks": [{"task": "compression", "model": "deepseek-v4-pro",
+        report = {"tasks": [{"task": "compression", "model": PRIMARY_MODEL,
                              "estimated_cost_usd": 0.09}]}
         out = aux_routing(report)
         self.assertEqual(len(out), 1)
         self.assertEqual(out[0]["category"], "aux_routing")
 
     def test_aux_on_flash_ok(self):
-        report = {"tasks": [{"task": "compression", "model": "deepseek-v4-flash",
+        report = {"tasks": [{"task": "compression", "model": AUX_MODEL,
                              "estimated_cost_usd": 0.01}]}
         self.assertEqual(aux_routing(report), [])
 
     def test_main_task_not_flagged(self):
-        report = {"tasks": [{"task": "main", "model": "deepseek-v4-pro",
+        report = {"tasks": [{"task": "main", "model": PRIMARY_MODEL,
                              "estimated_cost_usd": 1.0}]}
         self.assertEqual(aux_routing(report), [])
 
     def test_zero_cost_aux_not_flagged(self):
-        report = {"tasks": [{"task": "compression", "model": "deepseek-v4-pro",
+        report = {"tasks": [{"task": "compression", "model": PRIMARY_MODEL,
                              "estimated_cost_usd": 0.0}]}
         self.assertEqual(aux_routing(report), [])
 
     def test_approval_on_primary_not_flagged(self):
-        # approval is deliberately pinned to pro (security guard) — not a violation
-        report = {"tasks": [{"task": "approval", "model": "deepseek-v4-pro",
+        # approval isn't in AUX_TASKS (its routing is controlled in config) — not a violation
+        report = {"tasks": [{"task": "approval", "model": PRIMARY_MODEL,
                              "estimated_cost_usd": 0.05}]}
         self.assertEqual(aux_routing(report), [])
 
@@ -122,12 +124,11 @@ class TestModelMix(unittest.TestCase):
         self.assertEqual(out[0]["category"], "model_mix")
 
     def test_flash_aux_not_flagged(self):
-        # deepseek-v4-flash is the policy-mandated aux model — not a violation
-        report = {"models": [{"model": "deepseek-v4-flash", "estimated_cost_usd": 2.0, "api_calls": 10}]}
+        report = {"models": [{"model": AUX_MODEL, "estimated_cost_usd": 2.0, "api_calls": 10}]}
         self.assertEqual(model_mix_findings(report), [])
 
     def test_primary_not_flagged(self):
-        report = {"models": [{"model": "deepseek-v4-pro", "estimated_cost_usd": 2.0, "api_calls": 10}]}
+        report = {"models": [{"model": PRIMARY_MODEL, "estimated_cost_usd": 2.0, "api_calls": 10}]}
         self.assertEqual(model_mix_findings(report), [])
 
     def test_cheap_unintended_not_flagged(self):

@@ -9,7 +9,7 @@ it). The driver then:
 
 1. reads the just-ended session transcript from the profile's ``state.db``,
 2. reads the current canonical memory store (active facts + lineage),
-3. asks the Prime-Directive model (DeepSeek-v4-pro via the DeepSeek API) for
+3. asks the configured primary model (currently bitdeer DeepSeek-V4-Flash) for
    **store-first** decisions — record / supersede / retract,
 4. applies each accepted decision through ``scripts/record.py --json --write``
    (the exact backend the ``threev0_record`` tool wraps), and
@@ -68,9 +68,9 @@ Env knobs (tests / explicit tuning — defaults are the live profile):
   THREEV0_REVIEW_LLM=fake + THREEV0_REVIEW_DECISIONS=<json file>
                           offline mode: read the model's answer from a file
                           (never touches the network)
-  THREEV0_REVIEW_MODEL / THREEV0_REVIEW_BASE_URL / DEEPSEEK_API_KEY
-                          LLM routing (defaults: deepseek-v4-pro @
-                          api.deepseek.com/v1 — the Prime Directive)
+  THREEV0_REVIEW_MODEL / THREEV0_REVIEW_BASE_URL / BITDEER_API_KEY
+                          LLM routing (defaults: deepseek-ai/DeepSeek-V4-Flash @
+                          api-inference.bitdeer.ai/v1 — the current substrate)
 """
 
 from __future__ import annotations
@@ -165,8 +165,8 @@ class ReviewConfig:
     appear here.
     """
 
-    model: str = "deepseek-v4-pro"
-    base_url: str = "https://api.deepseek.com/v1"
+    model: str = "deepseek-ai/DeepSeek-V4-Flash"
+    base_url: str = "https://api-inference.bitdeer.ai/v1"
     min_messages: int = 3
     cooldown_s: int = 300
     transcript_cap: int = 40000
@@ -378,22 +378,26 @@ def _log_run(line: str) -> None:
 
 
 def _load_api_key() -> Optional[str]:
-    """DEEPSEEK_API_KEY from the environment, else the profile's .env."""
-    env = os.environ.get("DEEPSEEK_API_KEY")
-    if env:
-        return env
-    dotenv = PROFILE_HOME / ".env"
+    """Bitdeer/DeepSeek API key, env-first, then the profile's .env.
+
+    Prefers ``BITDEER_API_KEY`` (the current substrate); falls back to
+    ``DEEPSEEK_API_KEY`` so older deployments still run. First found wins.
+    """
+    for name in ("BITDEER_API_KEY", "DEEPSEEK_API_KEY"):
+        val = os.environ.get(name)
+        if val:
+            return val
     try:
+        dotenv = PROFILE_HOME / ".env"
         for raw in dotenv.read_text(encoding="utf-8").splitlines():
             line = raw.strip()
             if not line or line.startswith("#") or "=" not in line:
                 continue
             key, _, value = line.partition("=")
-            if key.strip() == "DEEPSEEK_API_KEY":
-                val = value.strip().strip('"').strip("'")
-                return val or None
+            if key.strip() in ("BITDEER_API_KEY", "DEEPSEEK_API_KEY"):
+                return value.strip().strip('"').strip("'") or None
     except OSError:
-        return None
+        pass
     return None
 
 
@@ -420,7 +424,7 @@ def _load_canned() -> Optional[Dict[str, Any]]:
 def _call_llm(prompt: str) -> Optional[Dict[str, Any]]:
     """One DeepSeek chat-completion call (JSON mode, tolerant retry).
 
-    DeepSeek-v4-pro is a reasoning model: its thinking goes to
+    The review model is a reasoning model: its thinking goes to
     ``reasoning_content`` and the final answer to ``content``. A too-small
     ``max_tokens`` lets the reasoning consume the whole budget, leaving
     ``content`` empty — a silent failure unless detected. So: a generous

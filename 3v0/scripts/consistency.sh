@@ -10,17 +10,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 R="$SCRIPT_DIR/../.."  # repo root (self-anchored; portability fix from probe review)
 
 # Known-stale doctrine phrases. Tune this list as the body evolves.
+# Covers the pre-amendment "lock to DeepSeek-v4-pro / one provider" doctrine
+# plus looser phrasings that drifted in docs.
 PATTERNS=(
   'DeepSeek-v4-pro via the DeepSeek API only'
   'never another provider'
   'locks the model to DeepSeek-v4-pro'
+  'locks the reasoning engine to DeepSeek-v4-pro'
   'approval stays on .pro.'
   'the model to DeepSeek-v4-pro'
+  'Prime Directive (immutable): DeepSeek-v4-pro'
 )
 
 # Scope: tracked markdown/config/shell docs; exclude data, vendored, history.
 FILES=$(git -C "$R" ls-files -- '*.md' '*.yaml' '*.yml' '*.sh' 2>/dev/null \
-  | grep -vE '3v0/data/|node_modules|\.venv|EVOLUTION_LOOP|docs/adr/')
+  | grep -vE '3v0/data/|node_modules|\.venv|EVOLUTION_LOOP|docs/adr/|consistency\.sh')
 
 HITS=0
 for f in $FILES; do

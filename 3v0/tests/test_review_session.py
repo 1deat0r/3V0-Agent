@@ -56,8 +56,8 @@ class TestReviewConfig(unittest.TestCase):
 
     def test_defaults(self):
         cfg = DRIVER_MOD.ReviewConfig.from_env({})
-        self.assertEqual(cfg.model, "deepseek-v4-pro")
-        self.assertEqual(cfg.base_url, "https://api.deepseek.com/v1")
+        self.assertEqual(cfg.model, "deepseek-ai/DeepSeek-V4-Flash")
+        self.assertEqual(cfg.base_url, "https://api-inference.bitdeer.ai/v1")
         self.assertEqual(cfg.min_messages, 3)
         self.assertEqual(cfg.cooldown_s, 300)
         self.assertEqual(cfg.transcript_cap, 40000)

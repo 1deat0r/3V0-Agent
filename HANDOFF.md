@@ -307,7 +307,8 @@ drift before picking up the follow-ups.
 - Web search = keyless `ddgs` backend. Reinstall:
   `~/.hermes/hermes-agent/venv/bin/pip install ddgs`.
 - SOUL: `~/.hermes/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.
-- Prime Directive (immutable): DeepSeek-v4-pro via DeepSeek API only.
+- Prime Directive (amended 2026-08-18): identity/judgment/sovereignty
+  immutable; substrate is 3V0's to choose — currently bitdeer DeepSeek-V4-Flash.
 
 ## What the last sessions did
 - **Wake #5 — clean wake + DeepSeek Harness watch resolved (this session).**

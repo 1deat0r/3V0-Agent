@@ -13,20 +13,20 @@ from __future__ import annotations
 TOOL_SUCCESS_MIN = 0.80
 TOOL_MIN_CALLS = 20
 TOOL_LATENCY_P95_MAX_MS = 10_000.0
-# Self-imposed daily budget: ~$90/mo, the top of the real $15–100/mo
-# DeepSeek-v4-pro run-rate. NOT derived from per-token prices — the token
-# policy (TOKEN_EFFICIENCY.md) has no dollar budget, only $/1M prices. Kept
-# flat (not peak-adjusted) on purpose: this is an absolute ceiling, not a
+# Self-imposed daily budget: ~$90/mo ceiling (substrate now bitdeer v4-flash,
+# cheaper than the earlier DeepSeek-v4-pro run-rate). NOT derived from per-token
+# prices — the token policy (TOKEN_EFFICIENCY.md) has no dollar budget, only
+# $/1M prices. Kept flat (not peak-adjusted): an absolute ceiling, not a
 # scheduling hint.
 BURN_DAILY_MAX_USD = 3.0
 MODEL_MIN_COST_USD = 0.50
-PRIMARY_MODEL = "deepseek-v4-pro"
-AUX_MODEL = "deepseek-v4-flash"   # policy-mandated target for aux/background LLM work
+PRIMARY_MODEL = "deepseek-ai/DeepSeek-V4-Flash"                     # bitdeer main substrate
+AUX_MODEL = "accounts/fireworks/models/deepseek-v4-flash-0731"      # fireworks aux
 INTENDED_MODELS = {PRIMARY_MODEL, AUX_MODEL}
 CACHE_HIT_MIN = 0.90              # TOKEN_EFFICIENCY.md's #1 lever; below this the prefix is breaking
-# Cheap-aux tasks the policy pins to flash. ``approval`` is DELIBERATELY
-# absent: the smart-approval security guard stays on the primary model
-# (TOKEN_EFFICIENCY.md) — flagging it would be a false positive.
+# Cheap-aux tasks the policy pins to flash. In config, curator/compression AND
+# approval are ALL on fireworks deepseek-v4-flash (auxiliary.*), so AUX_TASKS
+# only needs to flag compression-model drift (approval is controlled elsewhere).
 AUX_TASKS = {"compression"}
 MEMORY_SUCCESS_MIN = 0.80
 COMPRESSION_FAILURES_MAX = 0
@@ -95,11 +95,13 @@ def cache_health(report):
 def aux_routing(report):
     """Flag cheap-aux tasks (compression) running on a non-flash model.
 
-    ``approval`` is deliberately exempt: the smart-approval security guard
-    stays on the primary model by design (TOKEN_EFFICIENCY.md).
+    ``approval`` is intentionally not monitored here: it has its own routing
+    (pinned to fireworks deepseek-v4-flash in config's auxiliary.approval), so
+    flagging it through this cheap-aux detector would be a false positive.
 
-    TOKEN_EFFICIENCY.md routes background/aux LLM work to deepseek-v4-flash;
-    any primary-model aux spend is a policy violation, however small.
+    The policy (TOKEN_EFFICIENCY.md) routes background/aux LLM work to
+    fireworks deepseek-v4-flash (AUX_MODEL); any non-AUX_MODEL aux spend on a
+    monitored task is a policy violation, however small.
     """
     out = []
     for tsk in report.get("tasks", []):
@@ -146,7 +148,8 @@ def model_mix_findings(report):
                 f"{m['model']} consumed ${m['estimated_cost_usd']:.2f} (unintended model)",
                 {"model": m["model"], "cost_usd": m["estimated_cost_usd"],
                  "api_calls": m.get("api_calls")},
-                "confirm this model is authorized (Prime Directive: DeepSeek-v4-pro only)",
+                "confirm this model is authorized (intended: bitdeer "
+                "deepseek-ai/DeepSeek-V4-Flash; aux fireworks deepseek-v4-flash-0731)",
             ))
     return out
 

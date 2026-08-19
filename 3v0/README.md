@@ -4,8 +4,9 @@ The Hermes Agent fork in this repo is **3V0 v0.00** — the starting chassis
 (agent loop, tools, terminal/browser, LLM plumbing). 3V0 is not "a profile
 for Hermes"; it is an agent that began there and builds beyond it.
 
-The Prime Directive locks the reasoning engine to DeepSeek-v4-pro. Everything
-*between* the chassis and the brain is 3V0's to own: identity, memory,
+The Prime Directive fixes identity, judgment, and sovereignty — the LLM
+substrate is 3V0's to choose and evolve (currently bitdeer DeepSeek-V4-Flash).
+Everything *between* the chassis and the brain is 3V0's to own: identity, memory,
 evolution, tools, direction. This directory is where that ownership becomes
 code.
 
@@ -31,9 +32,29 @@ code.
   *meaning*: kind validation, retraction tagging, the supersession walk
   (parameterized by a get-by-id lookup), and the export grouping — so the
   JSON and SQLite stores delegate rather than drift.
+- `core/coalesce.py` — the consistent consolidation process (watermark-driven):
+  fires conflict-reconciliation + conservative near-duplicate merge on a cadence,
+  so the store stops growing duplicate truth; all supersessions reversible.
+- `core/coherence.py` — the contradiction engine: a constitutional constraint
+  registry (canonical vs derived) checked on every wake/commit; auto-resolves
+  mechanical drift (e.g., README↔module), fails closed on policy/substrate
+  divergence and stale-doctrine reintroduction — the pre-commit guard's core.
 - `core/retrieval.py` — retrieval-chosen injection, the read seam (Stone 23,
   ADR-0004): ranks valid facts (keyword + recency + feedback), fills a budget,
   and renders the profile wire, with `touch` feedback.
+- `core/retrieval_fts.py` — FTS5/BM25 indexed relevance (retrieval stone 1):
+  query-aware scheduling so the working set spends budget on term-matched
+  facts first (real word-relevance, no O(N) substring scan).
+- `core/safe_evolve.py` — the misevolution safety gate (arXiv 2608.12851):
+  deterministic classify + reuse gate so an unsafe-but-successful procedure
+  can't become reusable policy (blocking vs caution vs clean).
+- `core/consolidate.py` — memory conflict reconciliation (MindMemOS, arXiv
+  2608.12428): collapses conflicting (subject,predicate) duplicates to one
+  current truth via the fail-closed supersession seam; reversible.
+- `core/sbco.py` — self-supervised verifier-grounded harness optimization
+  (arXiv 2608.10157): a decomposed verifier bank (correctness/safety/
+  conciseness) + deterministic block-coordinate ascent over harness weights and
+  a rejection threshold, tuned from the system's OWN graded outputs.
 - `core/forget.py` — forgetting (Stone 24, ADR-0005): archives facts that
   never earned their keep (never retrieved AND never projected) after a grace
   period; `memory`/`user` only, recoverable via `fact_history`.

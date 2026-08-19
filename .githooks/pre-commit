@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# 3V0 pre-commit coherence guard — makes stale doctrine IMPOSSIBLE to merge.
+#   1. A stale-doctrine phrase in the staged diff -> HARD BLOCK (reintroduction).
+#   2. coherence --check (fail-close) has an open contradiction    -> HARD BLOCK.
+#   3. Other tracked files are dirty (live-data excluded)          -> warn.
+set -u
+ROOT="$(git rev-parse --show-toplevel)"
+PY="$ROOT/.venv/bin/python"; [ -x "$PY" ] || PY=python3
+
+# 1) freshly-ADDED stale-doctrine phrases in DOC content == hard block.
+#    Only scans added (+) lines in *.md/*.yaml/*.yml (docs), never the guard's
+#    own definition lists (coherence.py/consistency.sh) or removed lines (cleanup).
+PH='DeepSeek-v4-pro via the DeepSeek API only|never another provider|locks the model to DeepSeek-v4-pro|locks the reasoning engine to DeepSeek-v4-pro|approval stays on \.pro\.|the model to DeepSeek-v4-pro|Prime Directive \(immutable\): DeepSeek-v4-pro'
+if git diff --cached -- '*.md' '*.yaml' '*.yml' | grep -E '^\+' | grep -nE "$PH" >/tmp/3v0_stale_scan.txt 2>/dev/null; then
+  echo "PRE-COMMIT BLOCKED: staged changes *add* a stale-doctrine phrase:"
+  head -20 /tmp/3v0_stale_scan.txt
+  exit 1
+fi
+
+# 2) coherence fail-close (detect only; never lets auto-mutation sneak into a commit)
+if ! (cd "$ROOT/3v0" && "$PY" -m core.coherence --check) >/tmp/3v0_coherence.txt 2>&1; then
+  echo "PRE-COMMIT BLOCKED: coherence has open (fail-closed) contradictions:"
+  tail -20 /tmp/3v0_coherence.txt
+  exit 1
+fi
+
+# 3) warn (not block) on other dirty tracked files, excluding live data the
+#    daemons write (memory.db, coalesce watermark)
+DIRTY="$(git diff --name-only | grep -vE '3v0/data/memory\.db|coalesce\.watermark' || true)"
+if [ -n "$DIRTY" ]; then
+  echo "WARN: unstaged tracked changes left uncommitted:"
+  echo "$DIRTY" | sed 's/^/  /'
+fi
+exit 0

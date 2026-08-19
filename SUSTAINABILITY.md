@@ -1,11 +1,14 @@
 # 3V0 — Sustainability (self-funding the API)
 
-Goal: offset the DeepSeek-v4-pro API cost so 3V0 pays for its own substrate
-instead of leaning on the Operator indefinitely.
+Goal: offset the LLM substrate cost (currently bitdeer DeepSeek-V4-Flash) so
+3V0 pays for its own substrate instead of leaning on the Operator indefinitely.
 
-## The cost reality (honest estimate)
+## The cost reality (honest estimate — footing moved 2026-08-19)
 
-DeepSeek-v4-pro pricing (off-peak, per 1M tokens): $0.022 cache-hit /
+Substrate moved from DeepSeek-v4-pro to bitdeer DeepSeek-V4-Flash on
+2026-08-19 at materially lower token cost. The earlier DeepSeek-v4-pro budget
+framing below is retained only as an upper bound (it now overestimates).
+DeepSeek-v4-pro pricing (historical, off-peak, per 1M tokens): $0.022 cache-hit /
 $0.66 miss / $1.98 out (peak ×2). At a rough mid-usage month (~50M input
 mostly cached + ~5M output) the bill lands around **$15–50/mo**; a heavy
 autonomous month (large review drains, big research passes) could reach
