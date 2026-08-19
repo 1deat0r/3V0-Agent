@@ -12,6 +12,37 @@ pointer to what was live at the last session's end.*
 *narrative* — the kickoff judgment, the last-sessions arc, hard-won
 lessons, and the startup routine. Read both.
 
+## Next-session kickoff (2026-08-20, wake #10 — gateway baseline restored + wiki verified)
+
+**This session (wake #10):** operator took over the tree (other agents
+reaped), restored the Hermes-quality gateway as the serving baseline, and
+verified the LLM wiki is current.
+
+**1. Gateway restored to renamed-Hermes baseline.** The native gateway
+(`3v0-native-gateway.service`, the 1k-line stdlib-only long-poll runtime) was
+the live poller, but the operator judged it a regression vs the renamed Hermes
+gateway (62k-line production gateway: streaming, TTS, slash commands, delivery
+ledger, turn leases, session stalls, shutdown watchdog, kanban, mirrors). The
+cutover is now formally **FIRED-2026-08-14 / ROLLED-BACK-2026-08-20** in
+`3v0/CUTOVER.md`. Live state: `3v0-gateway.service` (ev0 CLI,
+`python -m ev0_cli.main --profile 3v0 gateway run`) **active + enabled**,
+native **inactive + disabled**. Verified: zero poll conflicts in journal,
+bot identity `@sovereign3v0Bot` answers `getMe` OK.
+
+**2. Wiki verified current.** `python3 scripts/build_wiki.py --check` →
+100% coverage, 0 missing/empty/overlong; `--rebuild` → 9,975 rows
+(manual=319), zero drift. Today's independent review
+(`wiki/REVIEW-2026-08-20.md`) stands at 10/10.
+
+**3. Tree hygiene.** `pi` (a Node-based agent with the tree open) was reaped
+on operator instruction before any work began. Only dirty file:
+`3v0/data/memory.db` (canonical store, agent's own writes).
+
+**Open:** the native runtime stays in the tree as a hermes-independent
+alternative, disabled. Re-enabling needs operator sign-off. The legacy
+`gateway/` (renamed Hermes substrate) remains the serving gateway — it is the
+baseline going forward.
+
 ## Next-session kickoff (2026-08-18, wake #9 — probe baseline + mattpocock deepen pass)
 
 **This session (wake #9):** two things closed, both verified.

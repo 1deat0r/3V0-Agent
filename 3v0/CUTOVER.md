@@ -1,9 +1,13 @@
 # 3V0 CUTOVER — running the native gateway on the live bot
 
-Status: **STAGED — not fired.** The native runtime (N1–N5) is proven:
-432 tests green, end-to-end one-shot verified (`NATIVE_ENGINE_OK`, captured not
-posted). The last step — pointing the native gateway at the LIVE bot — is a
-deliberate, disruptive switch. This document is the ready procedure.
+Status: **FIRED 2026-08-14, ROLLED BACK 2026-08-20 (operator decision).** The
+native runtime (N1–N5) was cut over and ran on the live bot, then reverted:
+the operator judged the native gateway a quality regression vs the renamed
+Hermes gateway and restored `3v0-gateway.service` (ev0 CLI) as the serving
+baseline going forward. The native runtime remains in the tree as a
+hermes-independent alternative, but it is **disabled** and must not be
+re-enabled without operator sign-off. This document is kept for the
+procedure's historical record.
 
 ## Hard constraint
 You CANNOT run two `getUpdates` pollers on one bot — they steal each update.
