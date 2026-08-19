@@ -48,9 +48,9 @@ from typing import Any, Callable, Dict, List, Optional
 from agent.secret_scope import get_secret
 
 from agent.memory_provider import MemoryProvider, RecallStatus
-from hermes_constants import get_hermes_home
+from ev0_constants import get_hermes_home
 from tools.registry import tool_error
-from hermes_cli.config import cfg_get
+from ev0_cli.config import cfg_get
 
 logger = logging.getLogger(__name__)
 
@@ -930,10 +930,10 @@ class HindsightMemoryProvider(MemoryProvider):
         import sys
         from pathlib import Path
 
-        from hermes_cli.config import save_config
-        from hermes_cli.secret_prompt import masked_secret_prompt
+        from ev0_cli.config import save_config
+        from ev0_cli.secret_prompt import masked_secret_prompt
 
-        from hermes_cli.memory_setup import _CANCELLED, _curses_select, _print_cancelled_setup
+        from ev0_cli.memory_setup import _CANCELLED, _curses_select, _print_cancelled_setup
 
         print("\n  Configuring Hindsight memory:\n")
 
@@ -1146,7 +1146,7 @@ class HindsightMemoryProvider(MemoryProvider):
 
     def _offer_starter_template(self, mode: str, provider_config: dict, env_writes: dict) -> None:
         """Offer to seed the bank with a Hermes starter template (best-effort)."""
-        from hermes_cli.memory_setup import _CANCELLED, _curses_select
+        from ev0_cli.memory_setup import _CANCELLED, _curses_select
 
         from . import templates as _hs_templates
 

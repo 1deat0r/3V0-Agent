@@ -169,7 +169,7 @@ let
           "SECURITY.md"
           "README.zh-CN.md"
           ".gitignore"
-          "setup-hermes.sh"
+          "setup-3v0.sh"
         ];
       in
       if relPath == "" then

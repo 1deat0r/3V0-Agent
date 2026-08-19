@@ -35,7 +35,7 @@
 #
 # Marker: we claim HERMES_HOME\.hermes-update-in-progress with OUR pid as
 # step 0 (the wrapper cmd.exe pid the Desktop saw is useless -- it exits
-# immediately). hermes_cli/update_lock.py's ancestry rule lets our
+# immediately). ev0_cli/update_lock.py's ancestry rule lets our
 # `hermes update` child adopt the claim; electron/update-marker.ts parks a
 # relaunched Desktop on it. Cleanup only removes the marker while WE still
 # own it (a handoff partner that rewrote it keeps its claim).
@@ -711,7 +711,7 @@ try {
     # never reached and apps/desktop/release is left missing -- an install whose
     # Start Menu shortcut points at a Hermes.exe that no longer exists.
     #
-    # Running the same code as `python.exe -m hermes_cli.main update` puts the
+    # Running the same code as `python.exe -m ev0_cli.main update` puts the
     # inherited handles on python.exe, which uv never has to replace.
     #
     # posix.sh is deliberately left alone: unlinking a running executable is
@@ -723,7 +723,7 @@ try {
         Write-HandoffLog $finalMsg
         exit $finalCode
     }
-    $updateArgs = @("-m", "hermes_cli.main", "update", "--yes", "--gateway", "--force", "--branch", $Branch)
+    $updateArgs = @("-m", "ev0_cli.main", "update", "--yes", "--gateway", "--force", "--branch", $Branch)
     Write-HandoffLog ("running: python " + ($updateArgs -join " "))
     $res = Invoke-HermesStep $pythonExe $updateArgs "update"
     Write-HandoffLog "hermes update exit code: $($res.Code)"
@@ -744,7 +744,7 @@ try {
     $desktopBuildFailed = $false
     if ($res.Code -eq 0 -and $res.Output -match "Desktop build failed") {
         Write-HandoffLog "hermes update reported a desktop build failure (non-fatal there, fatal here); retrying build"
-        $rebuild = Invoke-HermesStep $pythonExe @("-m", "hermes_cli.main", "desktop", "--force-build", "--build-only") "rebuild"
+        $rebuild = Invoke-HermesStep $pythonExe @("-m", "ev0_cli.main", "desktop", "--force-build", "--build-only") "rebuild"
         Write-HandoffLog "desktop rebuild exit code: $($rebuild.Code)"
         if ($rebuild.Code -ne 0) { $desktopBuildFailed = $true }
     }

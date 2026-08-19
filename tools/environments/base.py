@@ -22,8 +22,8 @@ from collections import deque
 from pathlib import Path
 from typing import IO, Callable, Iterable, Protocol
 
-from hermes_constants import get_hermes_home
-from hermes_cli._subprocess_compat import windows_hide_flags
+from ev0_constants import get_hermes_home
+from ev0_cli._subprocess_compat import windows_hide_flags
 from tools.interrupt import is_interrupted
 
 logger = logging.getLogger(__name__)

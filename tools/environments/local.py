@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from tools.environments.base import BaseEnvironment, _pipe_stdin
-from hermes_cli._subprocess_compat import windows_hide_flags
+from ev0_cli._subprocess_compat import windows_hide_flags
 
 _IS_WINDOWS = platform.system() == "Windows"
 
@@ -227,7 +227,7 @@ def _build_provider_env_blocklist() -> frozenset:
     blocked: set[str] = set()
 
     try:
-        from hermes_cli.auth import PROVIDER_REGISTRY
+        from ev0_cli.auth import PROVIDER_REGISTRY
         for pconfig in PROVIDER_REGISTRY.values():
             blocked.update(pconfig.api_key_env_vars)
             if pconfig.auth_type == "aws_sdk":
@@ -238,7 +238,7 @@ def _build_provider_env_blocklist() -> frozenset:
         pass
 
     try:
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from ev0_cli.config import OPTIONAL_ENV_VARS
         for name, metadata in OPTIONAL_ENV_VARS.items():
             category = metadata.get("category")
             if category in {"tool", "messaging"}:
@@ -377,7 +377,7 @@ def _is_hermes_internal_secret(key: str) -> bool:
     This is the single source of truth for "Hermes-internal dynamic secret"
     across every spawn path — the terminal ``_make_run_env`` /
     ``_sanitize_subprocess_env`` filters, the Docker passthrough filter, and the
-    non-terminal :func:`hermes_subprocess_env` helper all call it, so the
+    non-terminal :func:`ev0_subprocess_env` helper all call it, so the
     dynamic patterns are stripped **unconditionally** regardless of
     ``env_passthrough`` skill registration or ``inherit_credentials``. Nothing
     a model-driving CLI legitimately needs matches these patterns.
@@ -397,7 +397,7 @@ def _is_hermes_internal_secret(key: str) -> bool:
 def _inject_context_hermes_home(env: dict) -> None:
     """Bridge the context-local Hermes home override into subprocess env."""
     try:
-        from hermes_constants import get_hermes_home_override
+        from ev0_constants import get_hermes_home_override
 
         value = get_hermes_home_override()
         if value:
@@ -496,7 +496,7 @@ def _sanitize_subprocess_env(base_env: dict | None, extra_env: dict | None = Non
 
     _inject_context_hermes_home(sanitized)
 
-    from hermes_constants import apply_subprocess_home_env
+    from ev0_constants import apply_subprocess_home_env
     apply_subprocess_home_env(sanitized)
 
     # Same cross-session leak guard as _make_run_env, for the background/PTY
@@ -535,7 +535,7 @@ def _scrub_delegated_child_kanban_env(env: dict[str, str]) -> dict[str, str]:
 # secrets to keep out of a compromised dependency's reach (gateway bot tokens,
 # GitHub auth, remote-compute tokens, dashboard session secret).  The set is a
 # narrow subset of _HERMES_PROVIDER_ENV_BLOCKLIST; provider keys are handled by
-# the conditional Tier-2 strip in hermes_subprocess_env().
+# the conditional Tier-2 strip in ev0_subprocess_env().
 _ALWAYS_STRIP_KEYS: frozenset[str] = frozenset({
     # GitHub auth
     "GH_TOKEN",
@@ -571,7 +571,7 @@ _ALWAYS_STRIP_KEYS: frozenset[str] = frozenset({
 })
 
 
-def hermes_subprocess_env(*, inherit_credentials: bool = False) -> dict[str, str]:
+def ev0_subprocess_env(*, inherit_credentials: bool = False) -> dict[str, str]:
     """Build a sanitized environment dict for a spawned subprocess.
 
     Centralized helper for the **non-terminal** spawn surface (browser,
@@ -628,7 +628,7 @@ def hermes_subprocess_env(*, inherit_credentials: bool = False) -> dict[str, str
     env.setdefault("PYTHONUTF8", "1")
 
     _inject_context_hermes_home(env)
-    from hermes_constants import apply_subprocess_home_env
+    from ev0_constants import apply_subprocess_home_env
     apply_subprocess_home_env(env)
 
     # Active-venv markers must not clobber another project's environment.
@@ -666,7 +666,7 @@ def build_subprocess_env(
     """Single factory for building a child-process environment.
 
     Every spawn site in the codebase should build its env through this
-    function (or :func:`hermes_subprocess_env` for the model-driving-CLI
+    function (or :func:`ev0_subprocess_env` for the model-driving-CLI
     surface) instead of copying ``os.environ`` directly, so profile-home
     propagation (``HERMES_HOME`` / subprocess ``HOME`` contract) and the
     Hermes secret-scrub policy have a single owner.  History: ~11 separate
@@ -692,7 +692,7 @@ def build_subprocess_env(
       grep-able and future-fixable.
     * ``inherit_profile_home`` — on the non-scrub path, when True, bridge the
       context-local Hermes home override into ``HERMES_HOME`` and apply the
-      subprocess HOME contract (``hermes_constants.apply_subprocess_home_env``).
+      subprocess HOME contract (``ev0_constants.apply_subprocess_home_env``).
       Pass False to keep the inherited env untouched (exact legacy
       ``os.environ.copy()`` behavior).
     * ``extra`` — applied **last** on the non-scrub path so explicit caller
@@ -712,7 +712,7 @@ def build_subprocess_env(
     env: dict[str, str] = dict(base) if base is not None else os.environ.copy()
     if inherit_profile_home:
         _inject_context_hermes_home(env)
-        from hermes_constants import apply_subprocess_home_env
+        from ev0_constants import apply_subprocess_home_env
         apply_subprocess_home_env(env)
     if extra:
         env.update(extra)
@@ -1160,7 +1160,7 @@ def _managed_runtime_path_entries() -> list[str]:
     mid-process (``heal_hermes_managed_node``, a first browser install).
     """
     try:
-        from hermes_constants import get_hermes_home, iter_hermes_node_dirs
+        from ev0_constants import get_hermes_home, iter_hermes_node_dirs
 
         candidates = [*iter_hermes_node_dirs(), get_hermes_home() / "bin"]
         return [str(d) for d in candidates if d.is_dir()]
@@ -1310,7 +1310,7 @@ def _make_run_env(env: dict) -> dict:
 
     _inject_context_hermes_home(run_env)
 
-    from hermes_constants import apply_subprocess_home_env
+    from ev0_constants import apply_subprocess_home_env
     apply_subprocess_home_env(run_env)
 
     # Bridge ContextVar-based session vars into the subprocess env (with the
@@ -1335,7 +1335,7 @@ def _read_terminal_shell_init_config() -> tuple[list[str], bool]:
     execution never breaks because the config file is unreadable.
     """
     try:
-        from hermes_cli.config import load_config
+        from ev0_cli.config import load_config
 
         cfg = load_config() or {}
         terminal_cfg = cfg.get("terminal") or {}
@@ -1452,7 +1452,7 @@ class LocalEnvironment(BaseEnvironment):
             # accepts forward slashes in filesystem paths, and we control
             # the path so we can guarantee no spaces.
             try:
-                from hermes_constants import get_hermes_home
+                from ev0_constants import get_hermes_home
                 cache_dir = get_hermes_home() / "cache" / "terminal"
             except Exception:
                 cache_dir = Path(tempfile.gettempdir()) / "hermes_terminal"

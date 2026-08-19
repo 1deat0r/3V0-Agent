@@ -729,11 +729,11 @@ const DESKTOP_BACKEND_OWNERSHIP_PATH = path.join(app.getPath('userData'), 'backe
 // active-profile.json records which Hermes profile the desktop launches its
 // local backend as. When set, startHermes() passes `hermes --profile <name>
 // dashboard …`, which deterministically pins HERMES_HOME (see
-// _apply_profile_override in hermes_cli/main.py) and bypasses the sticky
+// _apply_profile_override in ev0_cli/main.py) and bypasses the sticky
 // ~/.hermes/active_profile file. Unset (null) preserves the legacy behavior:
 // no --profile flag, so the backend honors active_profile / default.
 const DESKTOP_PROFILE_CONFIG_PATH = path.join(app.getPath('userData'), 'active-profile.json')
-// Mirrors hermes_cli.profiles._PROFILE_ID_RE so we never hand the backend a
+// Mirrors ev0_cli.profiles._PROFILE_ID_RE so we never hand the backend a
 // value its profile resolver would reject and exit on.
 const PROFILE_NAME_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/
 // Branch we track for self-update. The GUI work has merged to main, so this
@@ -741,7 +741,7 @@ const PROFILE_NAME_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/
 // hermesDesktop.updates.setBranch().
 const DEFAULT_UPDATE_BRANCH = 'main'
 // desktop.log lives under HERMES_HOME/logs/ so it sits next to agent.log,
-// errors.log, gateway.log produced by hermes_logging.setup_logging — one log
+// errors.log, gateway.log produced by ev0_logging.setup_logging — one log
 // directory per user, regardless of which UI surface produced the line.
 const DESKTOP_LOG_PATH = path.join(HERMES_HOME, 'logs', 'desktop.log')
 const DESKTOP_LOG_FLUSH_MS = 120
@@ -752,7 +752,7 @@ const DESKTOP_LOG_BUFFER_MAX_CHARS = 64 * 1024
 // bound — we have seen it reach ~326 GB and exhaust the disk, which then breaks
 // update/install (no room for git/venv/npm temp files).
 //
-// Mirror the Python logs (hermes_logging.py RotatingFileHandler, maxBytes x
+// Mirror the Python logs (ev0_logging.py RotatingFileHandler, maxBytes x
 // backupCount): cascade live -> .1 -> .2 -> .3, drop the oldest. Steady-state
 // stays bounded at ~(backupCount + 1) x cap however hard the app loops.
 //
@@ -2068,7 +2068,7 @@ function backendSupportsServe(backend) {
 
   if (backend.root) {
     try {
-      const src = fs.readFileSync(path.join(backend.root, 'hermes_cli', 'subcommands', 'dashboard.py'), 'utf8')
+      const src = fs.readFileSync(path.join(backend.root, 'ev0_cli', 'subcommands', 'dashboard.py'), 'utf8')
       supported = sourceDeclaresServe(src)
     } catch {
       supported = null // source unreadable — fall through to the probe
@@ -2161,7 +2161,7 @@ function looksLikeDesktopAppBinary(commandPath) {
 }
 
 function isHermesSourceRoot(root) {
-  return directoryExists(root) && fileExists(path.join(root, 'hermes_cli', 'main.py'))
+  return directoryExists(root) && fileExists(path.join(root, 'ev0_cli', 'main.py'))
 }
 
 function findPythonForRoot(root) {
@@ -4260,7 +4260,7 @@ function createPythonBackend(root, label, backendArgs, options: any = {}) {
     kind: 'python',
     label,
     command,
-    args: ['-m', 'hermes_cli.main', ...backendArgs],
+    args: ['-m', 'ev0_cli.main', ...backendArgs],
     env: buildDesktopBackendEnv({
       hermesHome: HERMES_HOME,
       pythonPathEntries: [root, ...getVenvSitePackagesEntries(venvRoot)],
@@ -4284,7 +4284,7 @@ function createActiveBackend(backendArgs) {
     kind: 'python',
     label: `Hermes at ${ACTIVE_HERMES_ROOT}`,
     command,
-    args: ['-m', 'hermes_cli.main', ...backendArgs],
+    args: ['-m', 'ev0_cli.main', ...backendArgs],
     env: buildDesktopBackendEnv({
       hermesHome: HERMES_HOME,
       pythonPathEntries: [ACTIVE_HERMES_ROOT, ...getVenvSitePackagesEntries(VENV_ROOT)],
@@ -4418,7 +4418,7 @@ function resolveHermesBackend(backendArgs) {
     }
   }
 
-  // 5. Last-ditch: pip-installed hermes_cli module via system Python.
+  // 5. Last-ditch: pip-installed ev0_cli module via system Python.
   //    Same rationale as #4 -- the user installed this; we use it but don't
   //    take ownership.
   const python = findSystemPython()
@@ -4426,7 +4426,7 @@ function resolveHermesBackend(backendArgs) {
   if (python) {
     // Same smoke-test rationale as step 4: a system Python in the
     // SUPPORTED_VERSIONS range can be registered (PEP 514) without
-    // having hermes_cli installed -- common on dev boxes that have
+    // having ev0_cli installed -- common on dev boxes that have
     // a python.org install from prior unrelated work. Returning that
     // backend hands the spawn step a guaranteed ModuleNotFoundError.
     // Verify the import works before trusting the candidate; on
@@ -4435,16 +4435,16 @@ function resolveHermesBackend(backendArgs) {
     if (canImportHermesCli(python)) {
       return {
         kind: 'python',
-        label: `installed hermes_cli module via ${python}`,
+        label: `installed ev0_cli module via ${python}`,
         command: python,
-        args: ['-m', 'hermes_cli.main', ...backendArgs],
+        args: ['-m', 'ev0_cli.main', ...backendArgs],
         bootstrap: false,
         env: {},
         shell: false
       }
     }
 
-    rememberLog(`Ignoring system Python ${python}: hermes_cli is not importable; falling through to bootstrap.`)
+    rememberLog(`Ignoring system Python ${python}: ev0_cli is not importable; falling through to bootstrap.`)
   }
 
   // 6. Nothing usable yet -- signal the bootstrap runner that we need to
@@ -4621,7 +4621,7 @@ async function ensureRuntime(backend) {
     // means we have a half-installed checkout: .git exists, source files
     // exist, but venv is missing or broken. This shouldn't happen in
     // normal flow because activeRuntimeState() requires isHermesSourceRoot()
-    // plus an importable hermes_cli before it hands back the active runtime.
+    // plus an importable ev0_cli before it hands back the active runtime.
     // If we hit this, the user (or a deleted venv) broke the invariant; tell
     // them to re-run the install.
     throw new Error(
@@ -6828,7 +6828,7 @@ function fetchJsonViaOauthSession(url, options: any = {}) {
 // involved. Tokens are persisted encrypted at rest via Electron ``safeStorage``
 // (OS keychain) keyed by gateway base URL, and refreshed via
 // ``/auth/native/refresh`` before expiry. This is the desktop half of the
-// feature; the server half lives in hermes_cli/dashboard_auth/native_flow.py.
+// feature; the server half lives in ev0_cli/dashboard_auth/native_flow.py.
 // ---------------------------------------------------------------------------
 
 // In-memory cache of decrypted native tokens, keyed by normalized base URL.
@@ -7263,7 +7263,7 @@ async function freshGatewayWsUrl(profile) {
 //     its own PKCE exchange; SSO removes the human click, not a security check.
 
 // Canonical Nous portal base URL, overridable for staging/dev. Mirrors the CLI
-// convention (hermes_cli/auth.py DEFAULT_NOUS_PORTAL_URL + the same env names)
+// convention (ev0_cli/auth.py DEFAULT_NOUS_PORTAL_URL + the same env names)
 // so a single override flips every Hermes surface to the same portal.
 const DEFAULT_NOUS_PORTAL_URL = 'https://portal.nousresearch.com'
 
@@ -9859,7 +9859,7 @@ async function spawnPoolBackend(profile, entry, opts: { forceLocal?: boolean; po
   }
 
   // --profile wins over the inherited HERMES_HOME env (see _apply_profile_override
-  // step 3 in hermes_cli/main.py), so the child re-homes to this profile.
+  // step 3 in ev0_cli/main.py), so the child re-homes to this profile.
   // --port 0: the OS assigns an ephemeral port; the child announces it on stdout.
   const backendArgs = ['--profile', profile, 'serve', '--host', '127.0.0.1', '--port', '0']
   const backend = await ensureRuntime(resolveHermesBackend(backendArgs))
@@ -11805,7 +11805,7 @@ ipcMain.handle('hermes:window:openInstance', async () => {
 // to continue the chat in the terminal they already live in.
 //
 // The desktop's runtime is usually a venv Python invoked as
-// `python -m hermes_cli.main`, so we resolve the SAME backend the app itself
+// `python -m ev0_cli.main`, so we resolve the SAME backend the app itself
 // launches and carry its argv + PYTHONPATH into a launcher script rather than
 // hoping a `hermes` exists on the user's interactive PATH. Resolution only —
 // never ensureRuntime(), which would kick off a first-run install from a menu
@@ -14291,14 +14291,14 @@ ipcMain.handle('hermes:updates:branch:set', async (_event, name) => {
 })
 
 // Resolve the canonical Hermes version (the one `release.py` bumps in
-// hermes_cli/__init__.py + pyproject.toml) so the desktop About panel shows the
+// ev0_cli/__init__.py + pyproject.toml) so the desktop About panel shows the
 // real Hermes version instead of the Electron app's own package.json version,
 // which historically drifted (stuck at 0.0.2). Falls back to app.getVersion()
 // when the source tree can't be read (e.g. a packaged build without the repo).
 function resolveHermesVersion() {
   try {
     const root = resolveUpdateRoot()
-    const initPath = path.join(root, 'hermes_cli', '__init__.py')
+    const initPath = path.join(root, 'ev0_cli', '__init__.py')
 
     if (fileExists(initPath)) {
       const raw = fs.readFileSync(initPath, 'utf8')
@@ -14344,7 +14344,7 @@ ipcMain.handle('hermes:version', async () => ({
 // CLI exactly: GUI only, Lite (keep user data), Full. We ask the agent to do
 // the actual removal via `hermes uninstall …` so the cross-platform PATH /
 // registry / service / node-symlink cleanup all lives in one place
-// (hermes_cli/uninstall.py + hermes_cli/gui_uninstall.py).
+// (ev0_cli/uninstall.py + ev0_cli/gui_uninstall.py).
 //
 // getUninstallSummary() shells out to `--gui-summary` (a fast, no-side-effect
 // JSON probe) so the UI can gate options on what's actually installed — and
@@ -14393,7 +14393,7 @@ async function getUninstallSummary() {
     try {
       const child = spawn(
         py,
-        ['-m', 'hermes_cli.main', 'uninstall', '--gui-summary'],
+        ['-m', 'ev0_cli.main', 'uninstall', '--gui-summary'],
         hiddenWindowsChildOptions({
           cwd: agentRoot,
           env: { ...process.env, HERMES_HOME, NO_COLOR: '1' },
@@ -14451,7 +14451,7 @@ async function runDesktopUninstall(mode) {
   // Interpreter choice (Finding 3): lite/full rmtree the venv that holds the
   // running python.exe. On Windows a running .exe is mandatory-locked, so the
   // rmtree must NOT be driven by the venv's own interpreter — use a system
-  // Python with PYTHONPATH=<agentRoot> so `import hermes_cli` resolves from
+  // Python with PYTHONPATH=<agentRoot> so `import ev0_cli` resolves from
   // source while the venv is torn down. gui-only doesn't touch the venv, so the
   // venv python is fine there. If no system Python exists (the Windows edge
   // case), fall back to the venv python — gui-only is unaffected; lite/full may

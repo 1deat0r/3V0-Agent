@@ -33,7 +33,7 @@ from gateway.whatsapp_identity import (
     expand_whatsapp_aliases,
     normalize_whatsapp_identifier,
 )
-from hermes_constants import (
+from ev0_constants import (
     get_default_hermes_root,
     get_hermes_dir,
     get_hermes_home,
@@ -156,7 +156,7 @@ def _read_allowlist_env(env_var: str) -> str:
     admin endpoints) keep the legacy ``os.getenv`` read.
 
     TODO(profile-secrets): the grant mirror below still WRITES through
-    ``hermes_cli.config.save_env_value`` / ``remove_env_value``, which target
+    ``ev0_cli.config.save_env_value`` / ``remove_env_value``, which target
     the root ``.env`` — those writes need a profile-aware counterpart before
     pairing grants can be mirrored correctly under multiplexing.
     """
@@ -192,7 +192,7 @@ def _sync_allowlist_add(platform: str, user_id: str) -> None:
         return  # Already covered.
     ids.append(str(user_id))
     try:
-        from hermes_cli.config import save_env_value
+        from ev0_cli.config import save_env_value
 
         save_env_value(env_var, ",".join(ids))
     except Exception:
@@ -316,7 +316,7 @@ def _sync_allowlist_remove(platform: str, user_id: str) -> None:
     if len(remaining) == len(ids):
         return  # Not present.
     try:
-        from hermes_cli.config import save_env_value, remove_env_value
+        from ev0_cli.config import save_env_value, remove_env_value
 
         if remaining:
             save_env_value(env_var, ",".join(remaining))

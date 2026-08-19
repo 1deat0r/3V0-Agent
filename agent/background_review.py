@@ -59,7 +59,7 @@ def _background_review_task_config(
     if task_cfg is not None:
         return task_cfg if isinstance(task_cfg, dict) else {}
     try:
-        from hermes_cli.config import load_config_readonly
+        from ev0_cli.config import load_config_readonly
 
         cfg = load_config_readonly()
     except Exception:
@@ -77,7 +77,7 @@ def load_background_review_settings() -> tuple[bool, Dict[str, Any]]:
     WARNING so the cost-incurring path is visible.
     """
     try:
-        from hermes_cli.config import load_config_readonly
+        from ev0_cli.config import load_config_readonly
         from utils import is_truthy_value
 
         cfg = load_config_readonly()
@@ -163,7 +163,7 @@ def _resolve_review_runtime(
     if task_provider == (agent.provider or "") and task_model == (agent.model or ""):
         return parent  # same model/provider as parent -> not routed
     try:
-        from hermes_cli.runtime_provider import resolve_runtime_provider
+        from ev0_cli.runtime_provider import resolve_runtime_provider
         rp = resolve_runtime_provider(
             requested=task_provider,
             target_model=task_model,
@@ -1139,7 +1139,7 @@ def _run_review_in_thread(
                     agent._active_children.append(review_agent)
 
             from model_tools import get_tool_definitions
-            from hermes_cli.plugins import (
+            from ev0_cli.plugins import (
                 set_thread_tool_whitelist,
                 clear_thread_tool_whitelist,
             )

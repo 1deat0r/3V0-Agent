@@ -47,7 +47,7 @@ from tools.environments.local import (
     _resolve_safe_cwd,
     _sanitize_subprocess_env,
     _windows_to_msys_path,
-    hermes_subprocess_env,
+    ev0_subprocess_env,
 )
 
 
@@ -228,8 +228,8 @@ class TestWindowsMsysPathconvDefaults:
         env = _sanitize_subprocess_env({})
         assert env.get("MSYS_NO_PATHCONV") == "1"
 
-    def test_hermes_subprocess_env_sets_msys_no_pathconv_on_windows(self):
-        env = hermes_subprocess_env()
+    def test_ev0_subprocess_env_sets_msys_no_pathconv_on_windows(self):
+        env = ev0_subprocess_env()
         assert env.get("MSYS_NO_PATHCONV") == "1"
 
     def test_msys2_arg_conv_excl_respects_user_override(self):

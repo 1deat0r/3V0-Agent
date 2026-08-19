@@ -47,7 +47,7 @@ or dynamic Relay plugins.
 
 Hermes core owns one Relay host and one isolated Relay session scope per Hermes
 session. Core lifecycle producers use
-`hermes_cli.observability.relay_runtime` to obtain the shared session handle or
+`ev0_cli.observability.relay_runtime` to obtain the shared session handle or
 run Relay scope, LLM, tool, and mark APIs in that session context. New product
 marks do not require Hermes plugin registration. Shared-metrics marks must
 still contain only fields approved by the versioned allowlist; the hard

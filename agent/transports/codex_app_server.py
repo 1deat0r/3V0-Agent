@@ -25,7 +25,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from tools.environments.local import hermes_subprocess_env
+from tools.environments.local import ev0_subprocess_env
 
 # Default minimum codex version we test against. The PR sets this from the
 # `codex --version` parsed at install time; bumping is a one-line change here.
@@ -87,7 +87,7 @@ class CodexAppServerClient:
         # centralized helper so Tier-1 + dynamic-internal secrets are always
         # stripped while provider creds still flow, matching copilot_acp_client
         # (#29157 sibling spawn-site gap).
-        spawn_env = hermes_subprocess_env(inherit_credentials=True)
+        spawn_env = ev0_subprocess_env(inherit_credentials=True)
         if env:
             spawn_env.update(env)
         if codex_home:
@@ -129,7 +129,7 @@ class CodexAppServerClient:
 
         # Hide the console the codex child would otherwise flash on Windows
         # (#56747). Hide-only — stdio pipes stay intact for the app-server wire.
-        from hermes_cli._subprocess_compat import windows_hide_flags
+        from ev0_cli._subprocess_compat import windows_hide_flags
 
         self._proc = subprocess.Popen(
             cmd,

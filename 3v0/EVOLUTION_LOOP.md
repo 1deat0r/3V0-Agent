@@ -39,7 +39,7 @@ The seam we need already exists, in three pieces:
 
 - **`post_tool_call` plugin hook** — `agent/tool_executor.py` dispatches
   `memory` inline and then fires `_emit_terminal_post_tool_call` →
-  `model_tools._emit_post_tool_call_hook` → `hermes_cli.lifecycle.invoke_hook`,
+  `model_tools._emit_post_tool_call_hook` → `ev0_cli.lifecycle.invoke_hook`,
   for *every* agent including the fork (the fork runs the same
   `run_conversation` → `execute_tool_calls_sequential`). Payload: `tool_name`,
   `args`, `result`, `task_id`, `session_id`, `tool_call_id`.
@@ -438,7 +438,7 @@ real DeepSeek call.
 Does the 3v0 profile even have a scheduler ticking in TUI-only use? **No.**
 
 - `InProcessCronScheduler().start(...)` is called in exactly two places:
-  `gateway/run.py` (messaging gateway) and `hermes_cli/web_server.py`
+  `gateway/run.py` (messaging gateway) and `ev0_cli/web_server.py`
   (dashboard). The TUI gateway (`tui_gateway/server.py`) never starts a
   scheduler — its `_cron_sig()` only watches `cron/jobs.json` mtime for UI
   change signals. The 3v0 profile's `cron/` directory is empty.
@@ -508,7 +508,7 @@ proven, then ask the operator explicitly, with the skills gap on the table.
    plugin-registered toolsets (`toolsets.py:987-990` consults
    `_get_plugin_toolset_names()`), `resolve_toolset(..., include_registry=True)`
    merges registry-registered tools, and `set_thread_tool_whitelist` /
-   `_get_pre_tool_call_directive_details` (`hermes_cli/plugins.py:5945-6008`)
+   `_get_pre_tool_call_directive_details` (`ev0_cli/plugins.py:5945-6008`)
    gate dispatch by tool name on the fork thread.
 2. **The fork-agent shape is nonetheless wrong for a session-END review, and
    the CLI driver is built instead.** The decisive fact: in TUI use (3V0's

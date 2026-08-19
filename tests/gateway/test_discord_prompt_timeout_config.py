@@ -58,9 +58,9 @@ from plugins.platforms.discord.adapter import (  # noqa: E402
 
 
 def _patch_config(monkeypatch, cfg):
-    """Stub ``hermes_cli.config.read_raw_config`` to return ``cfg``."""
-    import hermes_cli.config
-    monkeypatch.setattr(hermes_cli.config, "read_raw_config", lambda: cfg)
+    """Stub ``ev0_cli.config.read_raw_config`` to return ``cfg``."""
+    import ev0_cli.config
+    monkeypatch.setattr(ev0_cli.config, "read_raw_config", lambda: cfg)
 
 
 def test_explicit_int_value(monkeypatch):

@@ -23,7 +23,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+from ev0_constants import reset_hermes_home_override, set_hermes_home_override
 
 
 class _DB:

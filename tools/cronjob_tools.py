@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from hermes_constants import display_hermes_home
+from ev0_constants import display_hermes_home
 
 logger = logging.getLogger(__name__)
 
@@ -526,12 +526,12 @@ def _validate_cron_base_url(
             "configured custom provider to use a custom endpoint."
         )
     try:
-        from hermes_cli.runtime_provider import (
+        from ev0_cli.runtime_provider import (
             has_named_custom_provider,
             resolve_requested_provider,
             _get_named_custom_provider,
         )
-        from hermes_cli.auth import PROVIDER_REGISTRY
+        from ev0_cli.auth import PROVIDER_REGISTRY
         from utils import base_url_host_matches, base_url_hostname
     except Exception:
         # Can't resolve provider metadata -> fail closed.
@@ -590,7 +590,7 @@ def _validate_cron_script_path(script: Optional[str]) -> Optional[str]:
     if not script or not script.strip():
         return None  # empty/None = clearing the field, always OK
 
-    from hermes_constants import get_hermes_home
+    from ev0_constants import get_hermes_home
 
     raw = script.strip()
 

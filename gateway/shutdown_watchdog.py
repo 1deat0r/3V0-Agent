@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
 from gateway.restart import GATEWAY_SERVICE_RESTART_EXIT_CODE
-from hermes_constants import get_hermes_home
+from ev0_constants import get_hermes_home
 from utils import atomic_json_write
 
 logger = logging.getLogger(__name__)
@@ -408,7 +408,7 @@ def arm_shutdown_watchdog(
         except Exception:
             pass
         try:
-            from hermes_logging import drain_log_queue
+            from ev0_logging import drain_log_queue
             drain_log_queue(timeout=1.0)
         except Exception:
             pass

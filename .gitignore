@@ -34,8 +34,8 @@ logs/
 data/
 # Bundled community plugin index seed (shipped as package data) — the bare
 # `data/` pattern above would otherwise swallow it.
-!hermes_cli/data/
-!hermes_cli/data/plugin_index.json
+!ev0_cli/data/
+!ev0_cli/data/plugin_index.json
 # 3V0 native core — the `export*` and `data/` patterns above must not swallow
 # 3V0's own substrate; re-include its namespace explicitly.
 !3v0/data/
@@ -89,7 +89,7 @@ ignored/
 environments/benchmarks/evals/
 
 # Web UI build output
-hermes_cli/web_dist/
+ev0_cli/web_dist/
 # Cross-process web UI build lock (flock target, always empty)
 .web_ui_build.lock
 apps/desktop/build/
@@ -146,8 +146,8 @@ models-dev-upstream/
 opencode.json
 config/mcporter.json
 
-hermes_cli/tui_dist/*
-hermes_cli/scripts/
+ev0_cli/tui_dist/*
+ev0_cli/scripts/
 docs/superpowers/*
 # Working directory for the Hermes Agent's session state (~/.hermes/ at runtime;
 # also created in-repo when an agent operates in this checkout). Plans, audit

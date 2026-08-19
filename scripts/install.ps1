@@ -736,7 +736,7 @@ function Get-PowerShellHostExe {
 function Install-Uv {
     # Hermes owns its own uv at $HermesHome\bin\uv.exe.  Always install there --
     # no PATH probing, no conda guards, no multi-location resolution chains.
-    # The runtime update path (hermes_cli/managed_uv.py) looks in the same
+    # The runtime update path (ev0_cli/managed_uv.py) looks in the same
     # place, so install.ps1 and `hermes update` stay in sync.
     $managedUv = Join-Path $HermesHome "bin\uv.exe"
 
@@ -793,7 +793,7 @@ function Install-Uv {
         # on PATH, or at ~/.local/bin (the astral default location when
         # UV_INSTALL_DIR was ignored by an older installer) -- copy it into
         # the managed location so the managed-first invariant holds
-        # (hermes_cli/managed_uv.py looks only at $HermesHome\bin\uv.exe).
+        # (ev0_cli/managed_uv.py looks only at $HermesHome\bin\uv.exe).
         if (-not (Test-Path $managedUv)) {
             $existingUv = $null
             $uvOnPath = Get-Command uv -CommandType Application -ErrorAction SilentlyContinue |
@@ -936,7 +936,7 @@ function Get-NpmRange {
 #
 # Three details are load-bearing, mirroring _nb_ensure_bundled_npm_range in
 # scripts/lib/node-bootstrap.sh and upgrade_managed_npm in
-# hermes_cli/npm_engine.py:
+# ev0_cli/npm_engine.py:
 #   - a temp cwd, so the checkout's own .npmrc (engine-strict,
 #     min-release-age) does not gate the very upgrade meant to satisfy it;
 #   - npm_config_min_release_age=0, which also neutralises a user ~/.npmrc;
@@ -2476,7 +2476,7 @@ function Install-Venv {
             & taskkill /F /T /IM hermes.exe /FI "PID ne $myPid" 2>$null | Out-Null
             # taskkill /IM hermes.exe is NOT enough: the gateway/agent that a
             # scheduled task or watchdog autostarts runs as
-            # `pythonw.exe -m hermes_cli.main gateway run` straight out of
+            # `pythonw.exe -m ev0_cli.main gateway run` straight out of
             # venv\Scripts\, so its image name is python/pythonw, not hermes.exe.
             # That process holds the venv's .pyd files open and re-triggers the
             # access-denied failure. Select only roots whose executable lives
@@ -2487,7 +2487,7 @@ function Install-Venv {
             # outside this venv untouched.
             #
             # The gateway autostart task registers with /RL LIMITED as the current
-            # user (see hermes_cli/gateway_windows.py), so the installer always
+            # user (see ev0_cli/gateway_windows.py), so the installer always
             # runs at equal-or-higher integrity and can read its executable path.
             # Get-CimInstance is used over Get-Process because it returns a null
             # ExecutablePath for a process it cannot inspect (a different session)
@@ -2924,7 +2924,7 @@ print(','.join(scripts))
                     }
                     if ($stillMissing.Count -gt 0) {
                         Write-Warn "Entry points still missing after repair: $($stillMissing -join ', ')"
-                        Write-Info "Workaround: `"$pythonExe`" -m hermes_cli.main <command>"
+                        Write-Info "Workaround: `"$pythonExe`" -m ev0_cli.main <command>"
                     } else {
                         Write-Success "Console entry points restored"
                     }
@@ -2953,7 +2953,7 @@ print(','.join(scripts))
             if ($LASTEXITCODE -eq 0) { $webOk = $true }
         } catch { }
         try {
-            & $pythonExe -m py_compile "$InstallDir\hermes_cli\web_server.py" 2>&1 | Out-Null
+            & $pythonExe -m py_compile "$InstallDir\ev0_cli\web_server.py" 2>&1 | Out-Null
             if ($LASTEXITCODE -eq 0) { $webServerSyntaxOk = $true }
         } catch { }
         $ErrorActionPreference = $prevEAP
@@ -2968,7 +2968,7 @@ print(','.join(scripts))
             }
         }
         if (-not $webServerSyntaxOk) {
-            throw "dashboard backend source failed syntax check: hermes_cli/web_server.py"
+            throw "dashboard backend source failed syntax check: ev0_cli/web_server.py"
         }
     }
     
@@ -3171,7 +3171,7 @@ function Copy-ConfigTemplates {
     # PowerShell version.
     $soulPath = "$HermesHome\SOUL.md"
     if (-not (Test-Path $soulPath)) {
-        # MUST match DEFAULT_SOUL_MD in hermes_cli/default_soul.py. The runtime
+        # MUST match DEFAULT_SOUL_MD in ev0_cli/default_soul.py. The runtime
         # upgrades the old comment-only scaffold to this text on next run, so
         # drift is self-healing, but keep them in sync to avoid first-run churn.
         $soulContent = @"
@@ -3607,7 +3607,7 @@ function Test-CuaDriverRuntimeContract {
 # Provision it at install time so enabling the tool later -- via `hermes
 # tools`, the dashboard, or the desktop app -- is a config flip, not a
 # surprise multi-minute binary fetch. Best-effort and non-fatal: the enable
-# paths still lazy-install via install_cua_driver() (hermes_cli/tools_config)
+# paths still lazy-install via install_cua_driver() (ev0_cli/tools_config)
 # when this step was skipped or failed.
 function Install-CuaDriver {
     if ($SkipComputerUse) {
@@ -4297,9 +4297,9 @@ function Invoke-SetupWizard {
 
     # Run hermes setup using the venv Python directly (no activation needed)
     if (-not $NoVenv) {
-        & ".\venv\Scripts\python.exe" -m hermes_cli.main setup
+        & ".\venv\Scripts\python.exe" -m ev0_cli.main setup
     } else {
-        python -m hermes_cli.main setup
+        python -m ev0_cli.main setup
     }
 
     Pop-Location

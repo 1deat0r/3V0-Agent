@@ -45,7 +45,7 @@ _logged_components: set[str] = set()
 def _hermes_home() -> Path:
     """Resolve the active HERMES_HOME (profile-aware) at call time."""
     try:
-        from hermes_constants import get_hermes_home
+        from ev0_constants import get_hermes_home
         return get_hermes_home()
     except Exception:
         return Path(os.path.expanduser("~/.hermes"))

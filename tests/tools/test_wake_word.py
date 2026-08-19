@@ -55,7 +55,7 @@ def test_wake_surface_enabled_gate():
 
 
 def test_looks_like_path():
-    assert ww._looks_like_path("models/hey_hermes.onnx")
+    assert ww._looks_like_path("models/hey_3v0.onnx")
     assert ww._looks_like_path("custom.ppn")
     assert not ww._looks_like_path("hey_jarvis")
 
@@ -70,7 +70,7 @@ def test_load_wake_word_config_is_a_dict_with_defaults():
 
 def test_load_wake_word_config_guards_non_dict(monkeypatch):
     monkeypatch.setattr(
-        "hermes_cli.config.load_config", lambda: {"wake_word": "oops"}
+        "ev0_cli.config.load_config", lambda: {"wake_word": "oops"}
     )
     assert ww.load_wake_word_config() == {}
 
@@ -194,10 +194,10 @@ def _install_fake_openwakeword(monkeypatch):
     class _FakeModel:
         def __init__(self, wakeword_models, inference_framework="onnx"):
             self.wakeword_models = list(wakeword_models)
-            self.models = {"hey_hermes": object()}
+            self.models = {"hey_3v0": object()}
 
         def predict(self, frame):
-            return {"hey_hermes": 0.0}
+            return {"hey_3v0": 0.0}
 
         def reset(self):
             pass
@@ -221,13 +221,13 @@ def test_openwakeword_ensures_base_models_for_custom_path(monkeypatch):
     # The base feature models must be ensured for a custom path too.
     calls = _install_fake_openwakeword(monkeypatch)
     eng = ww._OpenWakeWordEngine(
-        {"provider": "openwakeword", "openwakeword": {"model": "/models/hey_hermes.onnx"}}
+        {"provider": "openwakeword", "openwakeword": {"model": "/models/hey_3v0.onnx"}}
     )
-    assert calls["download"] == [["/models/hey_hermes.onnx"]]
-    assert eng._labels == ["hey_hermes"]
+    assert calls["download"] == [["/models/hey_3v0.onnx"]]
+    assert eng._labels == ["hey_3v0"]
 
 
-def test_bundled_hey_hermes_model_ships_on_disk():
+def test_bundled_hey_3v0_model_ships_on_disk():
     # The "hey hermes" wake word works out of the box only if the model is
     # actually bundled. Both framework artifacts must exist and be non-trivial.
     for framework in ("onnx", "tflite"):
@@ -303,10 +303,10 @@ def _openwakeword_engine_with_scores(monkeypatch, cfg_wake, scores):
 
     class _ScriptedModel:
         def __init__(self, wakeword_models, inference_framework="onnx"):
-            self.models = {"hey_hermes": object()}
+            self.models = {"hey_3v0": object()}
 
         def predict(self, frame):
-            return {"hey_hermes": next(seq)}
+            return {"hey_3v0": next(seq)}
 
         def reset(self):
             pass

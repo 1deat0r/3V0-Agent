@@ -54,7 +54,7 @@ import uuid
 from pathlib import PureWindowsPath
 from typing import Any, Dict, List, Optional, Tuple
 
-from hermes_cli._subprocess_compat import windows_hide_flags
+from ev0_cli._subprocess_compat import windows_hide_flags
 from tools.computer_use.backend import (
     ActionResult,
     CaptureResult,
@@ -193,7 +193,7 @@ _CUA_TELEMETRY_ENV_VAR = "CUA_DRIVER_RS_TELEMETRY_ENABLED"
 def _computer_use_cfg() -> Dict[str, Any]:
     """The ``computer_use`` config block, or ``{}`` when config is unreadable."""
     try:
-        from hermes_cli.config import load_config
+        from ev0_cli.config import load_config
 
         return (load_config() or {}).get("computer_use") or {}
     except Exception:
@@ -535,7 +535,7 @@ def _wsl_windows_path_to_posix(path: str) -> str:
     if not re.match(r"^[A-Za-z]:[\\/]", path):
         return path
     try:
-        from hermes_constants import is_wsl
+        from ev0_constants import is_wsl
 
         if not is_wsl():
             return path
@@ -1225,7 +1225,7 @@ def _maybe_repair_runtime_contract(contract: Dict[str, Any]) -> Dict[str, Any]:
         contract.get("reason") or "runtime contract is incomplete",
     )
     try:
-        from hermes_cli.tools_config import install_cua_driver
+        from ev0_cli.tools_config import install_cua_driver
 
         if not install_cua_driver(upgrade=False, show_installer_progress=False):
             return contract
@@ -1733,7 +1733,7 @@ class _CuaDriverSession:
             # passes but the wrapper times out" reports are undiagnosable
             # from a bare "never reached ready".
             phase = getattr(self, "_startup_phase", "unknown")
-            from hermes_constants import display_hermes_home
+            from ev0_constants import display_hermes_home
             raise RuntimeError(
                 "cua-driver session never reached ready (timeout 30s; "
                 f"stuck in phase: {phase}). "

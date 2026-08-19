@@ -637,7 +637,7 @@ def _resolve_script_path(script_path: str) -> Optional[Path]:
     ``_expand_candidate_path``; such a value can never name a file the
     scheduler would execute, so there is nothing to scan.
     """
-    from hermes_constants import get_hermes_home
+    from ev0_constants import get_hermes_home
 
     raw = _expand_candidate_path(script_path)
     if raw is None:

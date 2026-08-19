@@ -17,13 +17,13 @@ The agent's soul lives in the hermes profile: ~/.hermes/profiles/3v0/SOUL.md.
 
 ---
 
-# Hermes Agent - Development Guide
+# 3V0 Agent - Development Guide
 
 Instructions for AI coding assistants and developers working on the hermes-agent codebase.
 
 **Never give up on the right solution.**
 
-## What Hermes Is
+## What 3V0 Is
 
 Hermes is a personal AI agent that runs the same agent core across a CLI, a
 messaging gateway (Telegram, Discord, Slack, and ~20 other platforms), a TUI,
@@ -291,12 +291,12 @@ hermes-agent/
 ├── model_tools.py        # Tool orchestration, discover_builtin_tools(), handle_function_call()
 ├── toolsets.py           # Toolset definitions, _HERMES_CORE_TOOLS list
 ├── cli.py                # HermesCLI class — interactive CLI orchestrator (~11k LOC)
-├── hermes_state.py       # SessionDB — SQLite session store (FTS5 search)
-├── hermes_constants.py   # get_hermes_home(), display_hermes_home() — profile-aware paths
-├── hermes_logging.py     # setup_logging() — agent.log / errors.log / gateway.log (profile-aware)
+├── ev0_state.py       # SessionDB — SQLite session store (FTS5 search)
+├── ev0_constants.py   # get_hermes_home(), display_hermes_home() — profile-aware paths
+├── ev0_logging.py     # setup_logging() — agent.log / errors.log / gateway.log (profile-aware)
 ├── batch_runner.py       # Parallel batch processing
 ├── agent/                # Agent internals (provider adapters, memory, caching, compression, etc.)
-├── hermes_cli/           # CLI subcommands, setup wizard, plugins loader, skin engine
+├── ev0_cli/           # CLI subcommands, setup wizard, plugins loader, skin engine
 ├── tools/                # Tool implementations — auto-discovered via tools/registry.py
 │   └── environments/     # Terminal backends (local, docker, ssh, modal, daytona, singularity)
 ├── gateway/              # Messaging gateway — run.py + session.py + platforms/
@@ -434,11 +434,11 @@ Reasoning content is stored in `assistant_msg["reasoning"]`.
 - **Rich** for banner/panels, **prompt_toolkit** for input with autocomplete
 - **KawaiiSpinner** (`agent/display.py`) — animated faces during API calls, `┊` activity feed for tool results
 - `load_cli_config()` in cli.py merges hardcoded defaults + user config YAML
-- **Skin engine** (`hermes_cli/skin_engine.py`) — data-driven CLI theming; initialized from `display.skin` config key at startup; skins customize banner colors, spinner faces/verbs/wings, tool prefix, response box, branding text
+- **Skin engine** (`ev0_cli/skin_engine.py`) — data-driven CLI theming; initialized from `display.skin` config key at startup; skins customize banner colors, spinner faces/verbs/wings, tool prefix, response box, branding text
 - `process_command()` is a method on `HermesCLI` — dispatches on canonical command name resolved via `resolve_command()` from the central registry
 - Skill slash commands: `agent/skill_commands.py` scans `~/.hermes/skills/`, injects as **user message** (not system prompt) to preserve prompt caching
 
-### Slash Command Registry (`hermes_cli/commands.py`)
+### Slash Command Registry (`ev0_cli/commands.py`)
 
 All slash commands are defined in a central `COMMAND_REGISTRY` list of `CommandDef` objects. Every downstream consumer derives from this registry automatically:
 
@@ -452,7 +452,7 @@ All slash commands are defined in a central `COMMAND_REGISTRY` list of `CommandD
 
 ### Adding a Slash Command
 
-1. Add a `CommandDef` entry to `COMMAND_REGISTRY` in `hermes_cli/commands.py`:
+1. Add a `CommandDef` entry to `COMMAND_REGISTRY` in `ev0_cli/commands.py`:
 ```python
 CommandDef("mycommand", "Description of what it does", "Session",
            aliases=("mc",), args_hint="[arg]"),
@@ -534,9 +534,9 @@ npm run fmt       # prettier
 npm test          # vitest
 ```
 
-### TUI in the Dashboard (`hermes dashboard` → `/chat`)
+### TUI in the Dashboard (`3v0 dashboard` → `/chat`)
 
-The dashboard embeds the real `hermes --tui` — **not** a rewrite.  See `hermes_cli/pty_bridge.py` + the `@app.websocket("/api/pty")` endpoint in `hermes_cli/web_server.py`.
+The dashboard embeds the real `hermes --tui` — **not** a rewrite.  See `ev0_cli/pty_bridge.py` + the `@app.websocket("/api/pty")` endpoint in `ev0_cli/web_server.py`.
 
 - Browser loads `web/src/pages/ChatPage.tsx`, which mounts xterm.js's `Terminal` with the WebGL renderer, `@xterm/addon-fit` for container-driven resize, and `@xterm/addon-unicode11` for modern wide-character widths.
 - `/api/pty?token=…` upgrades to a WebSocket; auth uses the same ephemeral `_SESSION_TOKEN` as REST, via query param (browsers can't set `Authorization` on WS upgrade).
@@ -640,7 +640,7 @@ Reference: #2810 (bounds pass), #9801 (SHA pinning + audit CI).
 ## Adding Configuration
 
 ### config.yaml options:
-1. Add to `DEFAULT_CONFIG` in `hermes_cli/config.py`
+1. Add to `DEFAULT_CONFIG` in `ev0_cli/config.py`
 2. Bump `_config_version` (check the current value at the top of `DEFAULT_CONFIG`)
    ONLY if you need to actively migrate/transform existing user config
    (renaming keys, changing structure). Adding a new key to an existing
@@ -664,7 +664,7 @@ its own provider/model/base_url/max_tokens/reasoning_effort. See
 `archive_after_days`, `backup` (nested).
 
 ### .env variables (SECRETS ONLY — API keys, tokens, passwords):
-1. Add to `OPTIONAL_ENV_VARS` in `hermes_cli/config.py` with metadata:
+1. Add to `OPTIONAL_ENV_VARS` in `ev0_cli/config.py` with metadata:
 ```python
 "NEW_API_KEY": {
     "description": "What it's for",
@@ -685,7 +685,7 @@ the env var in code (see `gateway_timeout`, `terminal.cwd` → `TERMINAL_CWD`).
 | Loader | Used by | Location |
 |--------|---------|----------|
 | `load_cli_config()` | CLI mode | `cli.py` — merges CLI-specific defaults + user YAML |
-| `load_config()` | `hermes tools`, `hermes setup`, most CLI subcommands | `hermes_cli/config.py` — merges `DEFAULT_CONFIG` + user YAML |
+| `load_config()` | `hermes tools`, `hermes setup`, most CLI subcommands | `ev0_cli/config.py` — merges `DEFAULT_CONFIG` + user YAML |
 | Direct YAML load | Gateway runtime | `gateway/run.py` + `gateway/config.py` — reads user YAML raw |
 
 If you add a new key and the CLI sees it but the gateway doesn't (or vice
@@ -703,12 +703,12 @@ versa), you're on the wrong loader. Check `DEFAULT_CONFIG` coverage.
 
 ## Skin/Theme System
 
-The skin engine (`hermes_cli/skin_engine.py`) provides data-driven CLI visual customization. Skins are **pure data** — no code changes needed to add a new skin.
+The skin engine (`ev0_cli/skin_engine.py`) provides data-driven CLI visual customization. Skins are **pure data** — no code changes needed to add a new skin.
 
 ### Architecture
 
 ```
-hermes_cli/skin_engine.py    # SkinConfig dataclass, built-in skins, YAML loader
+ev0_cli/skin_engine.py    # SkinConfig dataclass, built-in skins, YAML loader
 ~/.hermes/skins/*.yaml       # User-installed custom skins (drop-in)
 ```
 
@@ -748,7 +748,7 @@ hermes_cli/skin_engine.py    # SkinConfig dataclass, built-in skins, YAML loader
 
 ### Adding a built-in skin
 
-Add to `_BUILTIN_SKINS` dict in `hermes_cli/skin_engine.py`:
+Add to `_BUILTIN_SKINS` dict in `ev0_cli/skin_engine.py`:
 
 ```python
 "mytheme": {
@@ -796,7 +796,7 @@ Hermes has two plugin surfaces. Both live under `plugins/` in the repo so
 repo-shipped plugins can be discovered alongside user-installed ones in
 `~/.hermes/plugins/` and pip-installed entry points.
 
-### General plugins (`hermes_cli/plugins.py` + `plugins/<name>/`)
+### General plugins (`ev0_cli/plugins.py` + `plugins/<name>/`)
 
 `PluginManager` discovers plugins from `~/.hermes/plugins/`, `./.hermes/plugins/`,
 and pip entry points. Each plugin exposes a `register(ctx)` function that
@@ -868,7 +868,7 @@ provider (read from `memory.provider` in config.yaml), so disabled
 providers don't clutter `hermes --help`.
 
 **Rule (Teknium, May 2026):** plugins MUST NOT modify core files
-(`run_agent.py`, `cli.py`, `gateway/run.py`, `hermes_cli/main.py`, etc.).
+(`run_agent.py`, `cli.py`, `gateway/run.py`, `ev0_cli/main.py`, etc.).
 If a plugin needs a capability the framework doesn't expose, expand the
 generic plugin surface (new hook, new ctx method) — never hardcode
 plugin-specific logic into core. PR #5295 removed 95 lines of hardcoded
@@ -1114,7 +1114,7 @@ go to `~/.hermes/skills/.archive/` and are restorable.
 
 - **Core:** `agent/curator.py` (review loop, auto-transitions, LLM review
   prompt) + `agent/curator_backup.py` (pre-run tar.gz snapshots).
-- **CLI:** `hermes_cli/curator.py` wires `hermes curator <verb>` where
+- **CLI:** `ev0_cli/curator.py` wires `hermes curator <verb>` where
   verbs are: `status`, `run`, `pause`, `resume`, `pin`, `unpin`,
   `archive`, `restore`, `prune`, `backup`, `rollback`.
 - **Telemetry:** `tools/skill_usage.py` owns the sidecar
@@ -1184,7 +1184,7 @@ workers spawned by the dispatcher drive it via a dedicated `kanban_*`
 toolset so their schema footprint is zero when they're not inside a
 kanban task.
 
-- **CLI:** `hermes_cli/kanban.py` wires `hermes kanban` with verbs
+- **CLI:** `ev0_cli/kanban.py` wires `hermes kanban` with verbs
   `init`, `create`, `list` (alias `ls`), `show`, `assign`, `link`,
   `unlink`, `comment`, `attach`, `attachments`, `attach-rm`, `complete`,
   `request-review`, `request-changes`, `reopen-review`, `block`, `unblock`, `archive`,
@@ -1202,7 +1202,7 @@ kanban task.
   assigned profiles. Runs **inside the gateway** by default via
   `kanban.dispatch_in_gateway: true`.
 - **Plugin assets:** `plugins/kanban/dashboard/` (web UI) +
-  `plugins/kanban/systemd/` (`hermes-kanban-dispatcher.service` for
+  `plugins/kanban/systemd/` (`3v0-kanban-dispatcher.service` for
   standalone dispatcher deployment).
 
 Isolation model:
@@ -1256,28 +1256,28 @@ in config.yaml (or `HERMES_BACKGROUND_NOTIFICATIONS` env var):
 Hermes supports **profiles** — multiple fully isolated instances, each with its own
 `HERMES_HOME` directory (config, API keys, memory, sessions, skills, gateway, etc.).
 
-The core mechanism: `_apply_profile_override()` in `hermes_cli/main.py` sets
+The core mechanism: `_apply_profile_override()` in `ev0_cli/main.py` sets
 `HERMES_HOME` before any module imports. All `get_hermes_home()` references
 automatically scope to the active profile.
 
 ### Rules for profile-safe code
 
-1. **Use `get_hermes_home()` for all HERMES_HOME paths.** Import from `hermes_constants`.
+1. **Use `get_hermes_home()` for all HERMES_HOME paths.** Import from `ev0_constants`.
    NEVER hardcode `~/.hermes` or `Path.home() / ".hermes"` in code that reads/writes state.
    ```python
    # GOOD
-   from hermes_constants import get_hermes_home
+   from ev0_constants import get_hermes_home
    config_path = get_hermes_home() / "config.yaml"
 
    # BAD — breaks profiles
    config_path = Path.home() / ".hermes" / "config.yaml"
    ```
 
-2. **Use `display_hermes_home()` for user-facing messages.** Import from `hermes_constants`.
+2. **Use `display_hermes_home()` for user-facing messages.** Import from `ev0_constants`.
    This returns `~/.hermes` for default or `~/.hermes/profiles/<name>` for profiles.
    ```python
    # GOOD
-   from hermes_constants import display_hermes_home
+   from ev0_constants import display_hermes_home
    print(f"Config saved to {display_hermes_home()}/config.yaml")
 
    # BAD — shows wrong path for profiles
@@ -1334,12 +1334,12 @@ automatically scope to the active profile.
 ## Known Pitfalls
 
 ### DO NOT hardcode `~/.hermes` paths
-Use `get_hermes_home()` from `hermes_constants` for code paths. Use `display_hermes_home()`
+Use `get_hermes_home()` from `ev0_constants` for code paths. Use `display_hermes_home()`
 for user-facing print/log messages. Hardcoding `~/.hermes` breaks profiles — each profile
 has its own `HERMES_HOME` directory. This was the source of 5 bugs fixed in PR #3575.
 
 ### All CLI menu-pickers MUST use curses.
-Interactive menus must use `hermes_cli/curses_ui.py`. See `hermes_cli/tools_config.py` for an example.
+Interactive menus must use `ev0_cli/curses_ui.py`. See `ev0_cli/tools_config.py` for an example.
 
 ### DO NOT use `\033[K` (ANSI erase-to-EOL) in spinner/display code
 Leaks as literal `?[K` text under `prompt_toolkit`'s `patch_stdout`. Use space-padding: `f"\r{line}{' ' * pad}"`.
@@ -1379,7 +1379,7 @@ The `_isolate_hermes_home` autouse fixture in `tests/conftest.py` redirects `HER
 
 **Profile tests**: When testing profile features, also mock `Path.home()` so that
 `_get_profiles_root()` and `_get_default_hermes_home()` resolve within the temp dir.
-Use the pattern from `tests/hermes_cli/test_profiles.py`:
+Use the pattern from `tests/ev0_cli/test_profiles.py`:
 ```python
 @pytest.fixture
 def profile_env(tmp_path, monkeypatch):

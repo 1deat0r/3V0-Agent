@@ -14,7 +14,7 @@ import asyncio
 
 from gateway.config import Platform
 from gateway.run import GatewayRunner
-from hermes_cli import kanban_db as kb
+from ev0_cli import kanban_db as kb
 
 
 class RecordingAdapter:

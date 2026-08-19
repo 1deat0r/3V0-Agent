@@ -25,7 +25,7 @@ import time
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
-from hermes_constants import get_hermes_home, _get_platform_default_hermes_home
+from ev0_constants import get_hermes_home, _get_platform_default_hermes_home
 from typing import Any, Callable, NamedTuple, Optional
 from utils import atomic_json_write
 
@@ -254,7 +254,7 @@ def terminate_pid(pid: int, *, force: bool = False) -> None:
         # CREATE_NO_WINDOW: terminate_pid runs from the windowless pythonw.exe
         # gateway/desktop backend, so a bare taskkill spawn would flash a
         # conhost window on every force-kill.
-        from hermes_cli._subprocess_compat import windows_hide_flags
+        from ev0_cli._subprocess_compat import windows_hide_flags
 
         try:
             result = subprocess.run(
@@ -372,7 +372,7 @@ def _gateway_command_subcommand(command: str | None) -> str | None:
 
     Lifecycle decisions (is the gateway up? did restart relaunch it?) must not
     fire on loose substring matches.  The previous ``"... gateway" in cmdline``
-    test also matched ``hermes_cli.main gateway status`` and even unrelated
+    test also matched ``ev0_cli.main gateway status`` and even unrelated
     processes like ``python -m tui_gateway`` -- which made ``restart()`` race
     against a still-draining old process and ``status``/``start`` report false
     positives.  This requires the actual ``gateway`` subcommand followed by
@@ -409,8 +409,8 @@ def _gateway_command_subcommand(command: str | None) -> str | None:
 
     joined = " ".join(tokens)
     has_gateway_entry = (
-        "hermes_cli.main" in joined
-        or "hermes_cli/main.py" in joined
+        "ev0_cli.main" in joined
+        or "ev0_cli/main.py" in joined
         or any(t.rsplit("/", 1)[-1] in ("hermes", "hermes.exe") for t in tokens)
     )
     if not has_gateway_entry:
@@ -497,7 +497,7 @@ def _profile_name_for_home(profile_home: Path) -> Optional[str]:
 def _command_line_belongs_to_profile(command: str, profile_home: Path) -> bool:
     """Return True when a gateway command line belongs to ``profile_home``.
 
-    Mirrors ``hermes_cli.gateway._matches_current_profile`` so the dashboard's
+    Mirrors ``ev0_cli.gateway._matches_current_profile`` so the dashboard's
     cross-profile liveness fallback scopes a live PID to the *right* profile.
     In a per-profile container, one profile's stale ``gateway_state.json`` can
     record a PID that the OS has since recycled onto a DIFFERENT profile's live
@@ -1224,7 +1224,7 @@ def resolve_gateway_liveness(
 
     ``pid_probe`` / ``runtime_reader`` / ``runtime_pid_probe`` let a caller
     inject its own module-level references to these helpers.  The dashboard
-    passes its ``hermes_cli.web_server`` bindings so the long-standing
+    passes its ``ev0_cli.web_server`` bindings so the long-standing
     monkeypatch seam in the test-suite keeps working; production callers
     leave them ``None`` and get this module's implementations.
     """

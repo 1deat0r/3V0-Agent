@@ -357,7 +357,7 @@ class TokenMapping:
 
 
 def _hermes_bin_dir() -> Path:
-    from hermes_constants import get_hermes_home
+    from ev0_constants import get_hermes_home
 
     return get_hermes_home() / "bin"
 
@@ -369,7 +369,7 @@ def _proxy_state_dir_ro() -> Path:
     this — there's no reason to materialize ``~/.hermes/proxy/`` just to
     check whether a pidfile exists.
     """
-    from hermes_constants import get_hermes_home
+    from ev0_constants import get_hermes_home
 
     return get_hermes_home() / "proxy"
 

@@ -49,7 +49,7 @@ import time
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional
 
-from hermes_constants import get_hermes_home
+from ev0_constants import get_hermes_home
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ def _connect() -> sqlite3.Connection:
 
 
 def _initialize_schema(conn: sqlite3.Connection) -> None:
-    from hermes_state import apply_wal_with_fallback
+    from ev0_state import apply_wal_with_fallback
 
     apply_wal_with_fallback(conn, db_label="state.db (delivery_ledger)")
     conn.execute(
@@ -356,7 +356,7 @@ def ledger_enabled(config: Optional[Dict[str, Any]] = None) -> bool:
     """Read the ``gateway.delivery_ledger`` config gate (default on)."""
     try:
         if config is None:
-            from hermes_cli.config import load_config
+            from ev0_cli.config import load_config
 
             config = load_config()
         gw = config.get("gateway") or {}

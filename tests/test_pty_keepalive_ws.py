@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from hermes_cli import web_server
+from ev0_cli import web_server
 
 
 class FakeBridge:
