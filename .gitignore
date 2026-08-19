@@ -242,3 +242,8 @@ HANDOFF.generated.md
 
 # Benchmark artifacts + secrets (TencentDB-Agent-Memory data/key) — do NOT version
 3v0/data/benchmark/
+
+# Live-derived runtime artifacts, not canonical truth (regenerated each handoff)
+3v0/data/analytics/insights.json
+actions/coalesce.watermark.json
+3v0/data/coalesce.watermark.json
