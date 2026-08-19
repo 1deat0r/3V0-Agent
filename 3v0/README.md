@@ -45,6 +45,10 @@ code.
 - `core/retrieval_fts.py` — FTS5/BM25 indexed relevance (retrieval stone 1):
   query-aware scheduling so the working set spends budget on term-matched
   facts first (real word-relevance, no O(N) substring scan).
+- `core/retrieval_fuzzy.py` — fuzzy/typo-tolerant expansion (retrieval stone 2):
+  corrects unknown query terms to a known content token within edit-distance 1
+  (incl. transpositions) so a misspelled query ("foverr"→fiverr) still surfaces
+  and scores its true fact — embedding-free, deterministic.
 - `core/safe_evolve.py` — the misevolution safety gate (arXiv 2608.12851):
   deterministic classify + reuse gate so an unsafe-but-successful procedure
   can't become reusable policy (blocking vs caution vs clean).
