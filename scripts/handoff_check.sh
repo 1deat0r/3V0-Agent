@@ -74,6 +74,10 @@ echo "== SELF-INSIGHTS (owned findings) =="
 python3 3v0/scripts/insights.py 2>&1
 echo
 
+echo "== COHERENCE + CONSOLIDATION (standing system) =="
+python3 3v0/scripts/coherence_coalesce.py 2>&1 || true
+echo
+
 echo "== GENERATED HANDOFF (shadow draft) =="
 python3 3v0/scripts/generate_handoff.py 2>&1
 echo

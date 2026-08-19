@@ -245,5 +245,4 @@ HANDOFF.generated.md
 
 # Live-derived runtime artifacts, not canonical truth (regenerated each handoff)
 3v0/data/analytics/insights.json
-actions/coalesce.watermark.json
 3v0/data/coalesce.watermark.json
