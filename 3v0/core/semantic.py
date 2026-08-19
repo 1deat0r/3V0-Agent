@@ -24,9 +24,19 @@ from pathlib import Path
 
 from . import backoff
 
-EMBED_URL = "https://api-inference.bitdeer.ai/v1/embeddings"
-EMBED_MODEL = "BAAI/bge-m3"
-DIMS = 1024
+# Embedding provider/model resolve via the native provider registry (the
+# model-agnostic seam) so the tier can re-point without a code edit; a hard
+# default fallback keeps semantic.py self-sufficient if native isn't importable.
+try:
+    from native import providers as _providers
+    _EMBED = _providers.resolve("embed")
+    EMBED_MODEL = _EMBED.model
+    DIMS = _EMBED.dims or 1024
+    EMBED_URL = f"{_EMBED.base_url}/embeddings"
+except Exception:  # noqa: BLE001 — native not on path: keep the built-in default
+    EMBED_MODEL = "BAAI/bge-m3"
+    DIMS = 1024
+    EMBED_URL = "https://api-inference.bitdeer.ai/v1/embeddings"
 UA = "3V0-native-runtime/0.1.0"
 
 _EMBED_TABLE = "fact_embeddings"
@@ -88,8 +98,17 @@ def embed_texts(texts: list[str], *, key: str | None = None, batch: int = 64,
 
 
 def _ensure_table(conn) -> None:
+    # Keyed by model so swapping the embedding model never collides vectors of
+    # different dimensionality under one fact id.
     conn.execute(f"CREATE TABLE IF NOT EXISTS {_EMBED_TABLE} "
-                 "(fact_id INTEGER PRIMARY KEY, vec TEXT)")
+                 "(model TEXT NOT NULL, fact_id INTEGER NOT NULL, vec TEXT, "
+                 "PRIMARY KEY(model, fact_id))")
+    cols = {r[1] for r in conn.execute(f"PRAGMA table_info({_EMBED_TABLE})").fetchall()}
+    if "model" not in cols:  # migrate a pre-model (single-model) table
+        conn.execute(f"DROP TABLE {_EMBED_TABLE}")
+        conn.execute(f"CREATE TABLE {_EMBED_TABLE} "
+                     "(model TEXT NOT NULL, fact_id INTEGER NOT NULL, vec TEXT, "
+                     "PRIMARY KEY(model, fact_id))")
     conn.commit()
 
 
@@ -103,9 +122,10 @@ def _cos(a: list[float], b: list[float]) -> float:
 class SemanticStore:
     """Fact-embedding cache backed by a table on the memdb connection."""
 
-    def __init__(self, conn, *, embed_fn=embed_texts):
+    def __init__(self, conn, *, embed_fn=embed_texts, model: str | None = None):
         self.conn = conn
         self.embed_fn = embed_fn
+        self.model = model or EMBED_MODEL
         _ensure_table(conn)
 
     def ensure(self, facts: list[dict]) -> None:
@@ -120,18 +140,19 @@ class SemanticStore:
             vecs = self.embed_fn([self._text(by_id[i]) for i in chunk])
             for fid, vec in zip(chunk, vecs):
                 self.conn.execute(
-                    f"INSERT OR REPLACE INTO {_EMBED_TABLE} (fact_id, vec) VALUES (?, ?)",
-                    (fid, json.dumps(vec)))
+                    f"INSERT OR REPLACE INTO {_EMBED_TABLE} (model, fact_id, vec) "
+                    "VALUES (?, ?, ?)", (self.model, fid, json.dumps(vec)))
             self.conn.commit()
 
     def vectors(self) -> dict[int, list[float]]:
         rows = self.conn.execute(
-            f"SELECT fact_id, vec FROM {_EMBED_TABLE}").fetchall()
+            f"SELECT fact_id, vec FROM {_EMBED_TABLE} WHERE model=?", (self.model,)).fetchall()
         return {r[0]: json.loads(r[1]) for r in rows}
 
     def _vec(self, fid: int):
         r = self.conn.execute(
-            f"SELECT vec FROM {_EMBED_TABLE} WHERE fact_id=?", (fid,)).fetchone()
+            f"SELECT vec FROM {_EMBED_TABLE} WHERE model=? AND fact_id=?",
+            (self.model, fid)).fetchone()
         return r[0] if r else None
 
     @staticmethod

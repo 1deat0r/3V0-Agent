@@ -20,8 +20,16 @@ TOOL_LATENCY_P95_MAX_MS = 10_000.0
 # scheduling hint.
 BURN_DAILY_MAX_USD = 3.0
 MODEL_MIN_COST_USD = 0.50
-PRIMARY_MODEL = "deepseek-ai/DeepSeek-V4-Flash"                     # bitdeer main substrate
-AUX_MODEL = "accounts/fireworks/models/deepseek-v4-flash-0731"      # fireworks aux
+# Substrate expectations derive from the provider registry so budget policy
+# follows the LIVE substrate (model-agnostic) instead of a stale literal copy;
+# a hard fallback keeps core.insights self-sufficient if native is absent.
+try:
+    from native import providers as _p
+    PRIMARY_MODEL = _p.resolve("main").model
+    AUX_MODEL = _p.resolve("aux").model
+except Exception:  # noqa: BLE001 — native not importable: keep built-in defaults
+    PRIMARY_MODEL = "deepseek-ai/DeepSeek-V4-Flash"                     # bitdeer main substrate
+    AUX_MODEL = "accounts/fireworks/models/deepseek-v4-flash-0731"      # fireworks aux
 INTENDED_MODELS = {PRIMARY_MODEL, AUX_MODEL}
 CACHE_HIT_MIN = 0.90              # TOKEN_EFFICIENCY.md's #1 lever; below this the prefix is breaking
 # Cheap-aux tasks the policy pins to flash. In config, curator/compression AND

@@ -52,6 +52,27 @@ class SemanticStoreTest(unittest.TestCase):
         self.store.ensure(facts)          # all cached -> no new embed call
         self.assertEqual(self.calls["n"], first)
 
+    def test_cache_keyed_by_model_does_not_collide(self):
+        # A second store under a DIFFERENT embedding model must re-embed (the
+        # model is part of the cache key), and its vectors coexist with m1's.
+        fid = memdb.add_fact(self.conn, "a", "b", "o", domain="benchmark",
+                             content="warm sea")
+        fact = dict(self.conn.execute(
+            "SELECT * FROM facts WHERE id=?", (fid,)).fetchone())
+        calls = {"n": 0}
+        def counting(ts):
+            calls["n"] += 1
+            return fake_embed(ts)
+        s1 = semantic.SemanticStore(self.conn, embed_fn=counting, model="m1")
+        s1.ensure([fact])
+        first = calls["n"]
+        self.assertEqual(len(s1.vectors()), 1)
+        s2 = semantic.SemanticStore(self.conn, embed_fn=counting, model="m2")
+        s2.ensure([fact])                 # different model -> must re-embed
+        self.assertGreater(calls["n"], first)
+        self.assertEqual(len(s2.vectors()), 1)
+        self.assertEqual(len(s1.vectors()), 1)  # m1's rows untouched
+
 
 class SemanticRankerTest(unittest.TestCase):
     def setUp(self):

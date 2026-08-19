@@ -53,10 +53,12 @@ code.
   calls (throttle/transient 403-429/5xx self-heal with increasing waits; hard
   4xx raise immediately). Used by the LLM + embedding clients.
 - `core/semantic.py` — OPT-IN semantic retrieval tier (bitdeer BAAI/bge-m3
-  embeddings): a lexical-gated cosine rerank that lifts paraphrase / under-
-  specified queries lexical matching cannot (paraphrase recall@1 0.12->0.56,
-  approaching the 0.81 pure-cosine ceiling). Fail-open (network errors keep
-  the lexical result); not enabled by default pending cost/benefit.
+  embeddings): a coverage-fraction-gated cosine rerank (corrected-term aware)
+  that lifts paraphrase / under-specified queries lexical matching cannot
+  (paraphrase recall@1 0.12->0.81, the pure-cosine ceiling; typo held 1.00).
+  Embedding provider/model resolve via the native provider registry and the
+  vector cache is keyed by model. Fail-open (network errors keep the lexical
+  result); not enabled by default pending cost/benefit.
 - `core/safe_evolve.py` — the misevolution safety gate (arXiv 2608.12851):
   deterministic classify + reuse gate so an unsafe-but-successful procedure
   can't become reusable policy (blocking vs caution vs clean).
