@@ -33,9 +33,10 @@ plus two later fix commits) surfaced real misses; the follow-up fix pass is
 5. **fork remote removed** (redundant with `public`; nothing referenced it).
 
 **Still open:**
-1. `upstream` remote = `NousResearch/hermes-agent` — the LAST `hermes` line in
-   the body /.git/config. Removing it loses the parent-project reference and the
-   dev-root-guard blocks re-adding it — **operator decision**.
+1. **RESOLVED (operator decision 2026-08-21):** upstream remote removed — the
+   last refname-mention of the old name in `.git/config` is gone; git refs
+   contain zero old-name refs; history objects remain (rewrite not performed).
+   Remotes: `public` only.
 2. `@3v0/shared` `file:../apps/shared` dep is **PRE-EXISTING dangling**
    (present at aa821f9361 as `@hermes/shared`) — ui-tui/web typecheck fails on
    it; shared package not vendored in this fork. Needs vendoring, not renaming.
