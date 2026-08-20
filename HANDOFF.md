@@ -28,7 +28,7 @@ plus two later fix commits) surfaced real misses; the follow-up fix pass is
    archive URLs, `scripts/install.sh`, `release.py`, README.*/CONTRIBUTING/
    SECURITY, tests, 3v0/data stores. Kept: provider host `nousresearch.com`,
    security email, plugin-org repos (`3v0-media-studio` etc.), author credits.
-3. **memory.db:** residual `Hermes` ×2 scrubbed + FTS rebuilt; file byte-clean.
+3. **memory.db:** residual old-name strings ×2 scrubbed + FTS rebuilt; file byte-clean.
 4. **.gitignore:** `ev0_agent.egg-info/` → `3v0_agent.egg-info/`.
 5. **fork remote removed** (redundant with `public`; nothing referenced it).
 
@@ -38,8 +38,8 @@ plus two later fix commits) surfaced real misses; the follow-up fix pass is
    contain zero old-name refs; history objects remain (rewrite not performed).
    Remotes: `public` only.
 2. `@3v0/shared` `file:../apps/shared` dep is **PRE-EXISTING dangling**
-   (present at aa821f9361 as `@hermes/shared`) — ui-tui/web typecheck fails on
-   it; shared package not vendored in this fork. Needs vendoring, not renaming.
+   (present at aa821f9361 under the pre-rename shared-package alias) —
+   ui-tui/web typecheck fails on it; shared package not vendored in this fork. Needs vendoring, not renaming.
 3. Tests: suite collects 33.9k; rename-subset run = 334 fails (env-credential +
    order-dependent flake; pass in isolation). "562 tests green" claim not
    reproducible — de-flake + re-verify next.
