@@ -28,3 +28,22 @@ a look. TDD gate for any code change: run the file's tests in this worktree.
 ## State log
 - 2026-08-21: worktree created (branch audit/untouched-2026-08-21),
   inventory → audit/untouched-inventory.txt. VERDICTS-1 drafted.
+
+## Operator directive 2026-08-21: "remove everything except what legally has
+to stay" — EXECUTION RESULT (evidence, no blind deletions):
+
+Full-reachability scan over all 2,920 untouched files (path-string OR module
+token in ANY other tracked file, plus legal/functional auto-keeps):
+**REMOVE-candidates = 0.** Every untouched file is referenced somewhere in the
+corpus. Infra deep-check: nix (none tracked), locales (17, referenced by
+ev0_cli/gateway — functional), .github workflows (17, all parse/real),
+docs (18, no dup titles). Nothing qualifies for mass removal; the mandate
+resolves to the verdict-by-verdict audit (content-level rot), continuing.
+
+LEGAL KEEPS (untouchable): LICENSE (MIT notice © 2025 Nous Research required
+on derivative), .mailmap (contributor attribution), SECURITY*.md.
+FUNCTIONAL KEEPS: every referenced module, config the tooling reads, CI,
+docs, skills, tests, locales.
+
+Cross-cutting find (from infra pass): AGENTS.md watch list includes
+flake.nix / nix/*.nix but no nix files are tracked — LOW-priority IMPROVE.
