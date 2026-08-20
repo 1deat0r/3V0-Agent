@@ -20,9 +20,9 @@ def temp_pyproject(tmp_path, monkeypatch):
         version = "0.0.0"
 
         [project.scripts]
-        ev0 = "ev0_cli.main:main"
-        ev0-agent = "run_agent:main"
-        ev0-acp = "acp_adapter.entry:main"
+        3v0 = "ev0_cli.main:main"
+        3v0-agent = "run_agent:main"
+        3v0-acp = "acp_adapter.entry:main"
     """
         )
     )

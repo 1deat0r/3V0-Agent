@@ -8,7 +8,7 @@ from pathlib import Path
 
 def test_launcher_delegates_to_argparse_entrypoint(monkeypatch):
     """`./3v0` should use `ev0_cli.main`, not the legacy Fire wrapper."""
-    launcher_path = Path(__file__).resolve().parents[2] / "3v0"
+    launcher_path = Path(__file__).resolve().parents[2] / "3v0-cli"
     called = []
 
     fake_main_module = types.ModuleType("ev0_cli.main")

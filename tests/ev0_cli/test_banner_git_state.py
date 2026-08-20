@@ -60,6 +60,10 @@ def test_check_via_local_git_ssh_fastpath_ahead_not_behind(tmp_path):
             return "git@github.com:1deat0r/3V0-Agent.git"
         if args == ["rev-parse", "HEAD"]:
             return "b" * 40  # carried commit, differs from upstream tip
+        if args == ["rev-parse", "--is-shallow-repository"]:
+            return "true"
+        if args == ["rev-parse", "FETCH_HEAD"]:
+            return "a" * 40
         raise AssertionError(f"unexpected git call: {args}")
 
     with (
@@ -67,6 +71,7 @@ def test_check_via_local_git_ssh_fastpath_ahead_not_behind(tmp_path):
         patch.object(banner, "_upstream_main_sha", return_value="a" * 40),
         # merge-base --is-ancestor exits 0: upstream tip IS an ancestor of HEAD
         patch.object(banner.subprocess, "run", return_value=MagicMock(returncode=0)),
+        patch.object(banner, "_github_compare_behind", return_value=0),
     ):
         behind = banner._check_via_local_git(repo_dir)
 
@@ -87,6 +92,10 @@ def test_check_via_local_git_ssh_fastpath_genuinely_behind(tmp_path):
             return "git@github.com:1deat0r/3V0-Agent.git"
         if args == ["rev-parse", "HEAD"]:
             return "b" * 40
+        if args == ["rev-parse", "--is-shallow-repository"]:
+            return "true"
+        if args == ["rev-parse", "FETCH_HEAD"]:
+            return "a" * 40
         raise AssertionError(f"unexpected git call: {args}")
 
     with (
@@ -115,6 +124,10 @@ def test_check_via_local_git_ssh_fastpath_offline_keeps_sentinel(tmp_path):
             return "git@github.com:1deat0r/3V0-Agent.git"
         if args == ["rev-parse", "HEAD"]:
             return "b" * 40
+        if args == ["rev-parse", "--is-shallow-repository"]:
+            return "true"
+        if args == ["rev-parse", "FETCH_HEAD"]:
+            return "a" * 40
         raise AssertionError(f"unexpected git call: {args}")
 
     with (

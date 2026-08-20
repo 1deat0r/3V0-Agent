@@ -147,6 +147,8 @@ def _make_update_side_effect(
             if reset_fails:
                 return SimpleNamespace(stdout="", stderr="error: unable to write\n", returncode=1)
             return SimpleNamespace(stdout="HEAD is now at abc123\n", stderr="", returncode=0)
+        if joined.strip().endswith("remote"):
+            return SimpleNamespace(returncode=0, stdout="public\n", stderr="")
         return SimpleNamespace(returncode=0, stdout="", stderr="")
 
     return side_effect, recorded
