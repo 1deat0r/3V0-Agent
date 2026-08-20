@@ -1189,7 +1189,6 @@ class HermesConsoleEngine:
             "desktop",
             "fallback",
             "gateway",
-            "gui",
             "login",
             "logout",
             "model",

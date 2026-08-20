@@ -4371,10 +4371,8 @@ def _rebuild_desktop_after_update(
     # surface the captured tail so the failure is debuggable.
     #
     # Start the build subprocess with the Hermes-managed Node on PATH: when
-    # `hermes update` runs inside the desktop updater chain (Desktop →
-    # hermes-setup → hermes update), the shell PATH customizations are lost,
-    # so a bare-PATH child would fail with `node: not found` before cmd_gui can
-    # self-heal.
+    # `hermes update` runs in a chained updater flow, shell PATH customizations
+    # are lost, so a bare-PATH child would fail with `node: not found`.
     from ev0_constants import with_hermes_node_path
 
     build_env = with_hermes_node_path()
