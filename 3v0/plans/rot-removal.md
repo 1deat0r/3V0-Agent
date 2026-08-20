@@ -65,8 +65,15 @@ genuine rot is surgical, not systemic: ~12 orphan files, ~800 comment lines,
 - `tenacity==9.1.4` from pyproject.toml + uv.lock ("Removed tenacity v9.1.4",
   248 pkgs) — no import anywhere (sole mention = skill doc).
 
-**Remaining P1:** comment-rot strip (comment-only diffs) in the 6 heaviest files.
-**Gate:** stable-subset pytest rerun vs 339-failure baseline (proc kicked 2026-08-21).
+**Remaining P1:** comment-rot strip — RESOLVED as disciplined NO-OP: strict
+"code-shaped" scan (330 statement-like lines) reviewed — 100% prose, ZERO
+commented-out code in the tree. Stripping "lookalikes" would destroy rationale;
+P1c closed without changes.
+**P1 gate:** stable-subset pytest rerun = 339 failed / 6,089 passed — IDENTICAL
+to baseline → deletions behavior-preserving. BUT the batch-process baseline
+itself was contaminated (cross-file env leak; node id showed a stale binary
+name). Correct P2 baseline = `scripts/run_tests.sh` (per-file isolation), now
+running (proc_6ca34c79581e).
 
 ## Phases (each gated)
 
