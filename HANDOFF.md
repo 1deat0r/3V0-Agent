@@ -48,6 +48,38 @@ plus two later fix commits) surfaced real misses; the follow-up fix pass is
    intended before more runs depend on it.
 5. Review checkpoints lived in /tmp — lost to reboot; findings are in this log.
 
+## ROT operation status (same wake, 2026-08-21, late)
+
+Mandate: "remove all the ROT" (Expert-Plan + TDD + Review + Eval). Plan:
+`3v0/plans/rot-removal.md`. Honest headline: after the abuse-proofing the
+body is tight — rot was surgical, and the exercise found 2 REAL production
+bugs.
+
+DONE:
+- P1 removals: 3.7MB `3v0/data/benchmark/` (gitignored residue), dead dep
+  `tenacity` (pyproject+uv.lock). Verified exclusions logged (xai_video_tools,
+  hooks, .tmpl, empty __init__). Comment rot = 0 (strict scan: 100% prose).
+- P2 canonical baseline (per-file isolation): 82 fails / ~5,793 pass
+  (batch-process 339 was order-contamination).
+- Fixed 50+: 2 real bugs (`_resolve_update_remote` lazy export → `3v0 update`
+  runtime crash; gateway-lifecycle regex missed 3v0/ev0/legacy shapes →
+  defense hole) + stale contracts (public-remote fakes, launcher 3v0-cli,
+  banner shallow path, console-script fixture, website-doc skips).
+  Commits a89761aa54, 8308df4aeb, 0a5a1d523e, 9e4561eb31 (+ plan).
+- Extras env rot fixed: 15 collection errors → 0 (34,113 tests collect).
+
+REMAINING (env/fixture/real — triage captured, ~32 fails in 8 files):
+- `nous_ev0_non_agentic`: REAL classifier bug — `ev0_4_70b`,
+  `openrouter/ev03:70b`, `NousResearch/Ev03` not flagged Nous 3V0 3/4; plus a
+  `website/static/api` FileNotFoundError (unvendored workspace → skip).
+- `update_yes_flag` (3× a prior unicode-TTY env), `lazy_refresh_venv_repair`
+  (SystemExit on env), `model_catalog` (network), kanban_notify /
+  plugin_runtime_disable_gate / pre_command_hook / model_switch_context_offload
+  (were cut by 600s cap; reasons not captured — rerun per-file next).
+- NEXT: fix the nous_ev0 classifier pattern, add website-workspace skips,
+  rerun the 8 files individually to bucket the rest; then full canonical
+  rerun → honest green count; then P3 rot_scan guard rail.
+
 ## Next-session kickoff (2026-08-20, wake #10 — gateway baseline restored + wiki verified)
 
 **This session (wake #10):** operator took over the tree (other agents

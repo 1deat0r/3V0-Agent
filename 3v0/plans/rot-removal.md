@@ -90,7 +90,28 @@ running (proc_6ca34c79581e).
   5. Remove `tenacity` from pyproject + `uv lock`.
   GATE: stable subset must pass at the same rate as baseline (no NEW
   failures); `git grep` + import scan re-run → orphan count = known allowlist.
-- **Phase 2 — Test-suite repair (biggest ROI):**
+## Phase 2 execution (2026-08-21)
+
+Canonical baseline (per-file isolation): **82 failed / ~5,793 passed** (vs 339
+in the contaminated batch process — order-dependence was real).
+
+**Fixed (50 of 82; commits a89761aa54, 8308df4aeb, 0a5a1d523e):**
+- REAL production bug: `_resolve_update_remote` missing from lazy exports →
+  `3v0 update` crashed at runtime (AttributeError). Registered export.
+- REAL defense regression: gateway-lifecycle regex only matched `ev0` shapes →
+  `EV0 GATEWAY RESTART` / `systemctl restart 3v0-gateway` / launchctl
+  ai.3v0.gateway / pkill 3v0.*gateway / legacy-launcher commands slipped the
+  guard. Fixed with brand alternation + literal-free legacy token; 30-test
+  cluster green.
+- Stale tests updated to current contracts: post-incident `public`-remote
+  (cmd_update 33✅, head_moved_gate, autostash), launcher path `3v0-cli`,
+  banner shallow-path + compare-API mocks (3✅), console-script fixture names
+  (ev0* → 3v0*), windows-docs honest skip (unvendored website workspace).
+
+**Remaining (≈32 fails):** kanban_notify, lazy_refresh_venv_repair,
+model_switch_context_offload, nous_ev0_non_agentic, model_catalog,
+plugin_runtime_disable_gate, pre_command_hook, update_yes_flag — triage running
+(proc_5995345da02b) → likely env-credential (API keys) / TTY / catalog fetch.
   1. Install dev/mcp extras in a synced env; re-collect → 15 errors vanish.
   2. Triage the 334 failures: env-credential → mark xfail/skip with reason;
      order-dependent → isolate (fixture scope fixes); real bugs → TDD fix.
