@@ -93,6 +93,15 @@ class TestValidateProfileName:
         with pytest.raises(ValueError):
             validate_profile_name(name)
 
+    def test_canonical_3v0_profile_accepted(self):
+        # The canonical single-agent profile is named '3v0'
+        # (~/.3V0/profiles/3v0): the gateway, review daemon and `3v0`
+        # CLI wrapper all operate on it by name. It must remain valid
+        # even though the installation binary is also named `3v0` --
+        # alias-level collision is enforced separately by
+        # check_alias_collision() via the PATH lookup.
+        validate_profile_name("3v0")
+
 
 # ===================================================================
 # TestGetProfileDir
@@ -423,6 +432,20 @@ class TestAliasCollision:
         assert result is not None
         assert "invalid alias name" in result.lower()
         mock_run.assert_not_called()
+
+    def test_3v0_alias_blocked_by_binary_collision_not_reserved(self, profile_env):
+        """An *alias* named '3v0' is still refused -- but via the PATH
+        binary collision, not the reserved-name list. The canonical
+        profile name must stay usable for `-p 3v0` deployments.
+        """
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(
+                returncode=0, stdout="/home/user/.local/bin/3v0",
+            )
+            result = check_alias_collision("3v0")
+        assert result is not None
+        assert "reserved" not in result.lower()
+        assert "conflicts with an existing command" in result.lower()
 
 
 # ===================================================================

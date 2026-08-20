@@ -252,7 +252,7 @@ _DEFAULT_EXPORT_INCLUDE_ROOT = frozenset({
 
 # Names that cannot be used as profile aliases
 _RESERVED_NAMES = frozenset({
-    "3v0", "default", "test", "tmp", "root", "sudo",
+    "default", "test", "tmp", "root", "sudo",
 })
 
 # 3V0 subcommands that cannot be used as profile names/aliases
@@ -334,11 +334,13 @@ def validate_profile_name(name: str) -> None:
     honest about what the on-disk directory name must look like, while
     ingress-point normalization handles UX flexibility (see #18498).
 
-    Also rejects names in :data:`_RESERVED_NAMES` (``3v0``, ``test``,
+    Also rejects names in :data:`_RESERVED_NAMES` (``test``,
     ``tmp``, ``root``, ``sudo``) that would create confusing on-disk
-    collisions (a ``3v0`` profile inside ``~/.3V0/``) or get refused
-    at alias-creation time anyway. ``default`` is a special pass-through —
-    it's a valid alias for the built-in root profile.
+    collisions or get refused at alias-creation time anyway. ``default``
+    is a special pass-through — it's a valid alias for the built-in root
+    profile. The canonical ``3v0`` profile (``~/.3V0/profiles/3v0``) is
+    NOT reserved: the single-agent body and its gateway, review daemons,
+    and ``3v0`` CLI wrapper all operate on it by name.
     """
     if name == "default":
         return  # special alias for ~/.3V0
