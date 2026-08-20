@@ -1,4 +1,4 @@
-# tests/ + tests-js/ + evals/ — the test suites — `tests/tui_gateway/`
+# tests/ + 3v0/tests/ — the Python test suites (tests-js/ and evals/ pruned) — `tests/tui_gateway/`
 
 Auto-rendered from `wiki/manifest.tsv`.
 Columns: path · kind · purpose · why · related

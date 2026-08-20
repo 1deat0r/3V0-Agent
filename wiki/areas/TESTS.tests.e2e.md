@@ -1,4 +1,4 @@
-# tests/ + tests-js/ + evals/ — the test suites — `tests/e2e/`
+# tests/ + 3v0/tests/ — the Python test suites (tests-js/ and evals/ pruned) — `tests/e2e/`
 
 Auto-rendered from `wiki/manifest.tsv`.
 Columns: path · kind · purpose · why · related

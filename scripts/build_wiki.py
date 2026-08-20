@@ -58,15 +58,15 @@ AREA_TITLE = {
     "PLUGINS": "plugins/ — plugin ecosystem (memory, providers, tools)",
     "SKILLS": "skills/ + optional-skills/ — the skill libraries",
     "PROVIDERS": "providers/ + native/ — inference provider profiles",
-    "APPS": "apps/ — desktop app + shared TS packages",
+    "APPS": "(pruned — desktop app removed; see commit 377b41e14b)",
     "UITUI": "ui-tui/ — Ink terminal UI",
     "WEB": "web/ — dashboard frontend",
-    "WEBSITE": "website/ — Docusaurus docs site",
+    "WEBSITE": "(pruned — Docusaurus docs site removed)",
     "DOCS": "docs/ + README* + CONTRIBUTING* — documentation",
     "SCRIPTS": "scripts/ — dev/test/ops tooling",
-    "TESTS": "tests/ + tests-js/ + evals/ — the test suites",
-    "INFRA": "docker/ nix/ .github/ packaging — deployment & CI",
-    "MISC": "locales/ assets/ contributors/ — auxiliary content",
+    "TESTS": "tests/ + 3v0/tests/ — the Python test suites (tests-js/ and evals/ pruned)",
+    "INFRA": ".github/ + pyproject.toml + uv.lock — CI & packaging (docker/, nix/ pruned)",
+    "MISC": "locales/ — auxiliary content (assets/, contributors/, sustainability/ pruned)",
 }
 
 
@@ -492,6 +492,15 @@ def rebuild():
                    "purpose": purpose, "why": why, "related": relations(path, set(files))}
         for f in FIELDS:
             rec.setdefault(f, "")
+        # `related` must never point at files that no longer exist. Always
+        # recompute for auto rows; for curated rows, filter existing paths.
+        if rec.get("curated") == "auto":
+            rec["related"] = relations(path, set(files))
+        elif rec.get("related"):
+            rec["related"] = "; ".join(
+                r for r in (x.strip() for x in rec["related"].split(";"))
+                if r and (not "/" in r or r in files or r.endswith("/"))
+            )
         rows[path] = rec
     refreshed = refresh_auto_rows(rows, files)
     save_manifest(rows)
@@ -545,6 +554,10 @@ def render_areas(rows: dict[str, dict]):
     by_area: dict[str, list] = {}
     for path, rec in rows.items():
         by_area.setdefault(area_of(path), []).append(rec)
+    # Track every page this run writes so stale pages from previous runs
+    # (files whose manifest rows no longer exist — pruned/apps/docker/website
+    # etc.) are removed. Hand-maintained `_intro_*` pages are preserved.
+    written: set[str] = set()
     for area in AREA_ORDER:
         recs = sorted(by_area.get(area, []), key=lambda r: r["path"])
         intro = AREAS_DIR / f"_intro_{area}.md"
@@ -560,6 +573,7 @@ def render_areas(rows: dict[str, dict]):
             lines.append("")
             lines.extend(render_table(recs))
             (AREAS_DIR / f"{area}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+            written.add(f"{area}.md")
             continue
         # Large area: split into per-directory sub-pages so a budget-constrained
         # model can read any page in one pass. The area page becomes a map.
@@ -582,7 +596,18 @@ def render_areas(rows: dict[str, dict]):
             sbody = "\n".join(["Auto-rendered from `wiki/manifest.tsv`.",
                                 "Columns: path · kind · purpose · why · related", ""] + sub)
             sname.write_text(shead + sbody + "\n", encoding="utf-8")
+            written.add(f"{area}.{safe}.md")
         (AREAS_DIR / f"{area}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        written.add(f"{area}.md")
+
+    # Prune stale pages: any rendered-looking .md not written by this run is
+    # an orphan from an earlier manifest (deleted/pruned files). Keep only
+    # hand-maintained intro pages. Never touch manifest/curated/log/index.
+    for stale in AREAS_DIR.glob("*.md"):
+        if stale.name in written or stale.name.startswith("_intro_"):
+            continue
+        stale.unlink()
+        print(f"wiki: pruned stale area page {stale.name}")
 
 
 def report() -> dict:

@@ -1,4 +1,4 @@
-# tests/ + tests-js/ + evals/ — the test suites — `tests/install/`
+# tests/ + 3v0/tests/ — the Python test suites (tests-js/ and evals/ pruned) — `tests/install/`
 
 Auto-rendered from `wiki/manifest.tsv`.
 Columns: path · kind · purpose · why · related

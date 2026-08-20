@@ -31,13 +31,31 @@ if [ -n "$DIRTY" ]; then
   echo "WARN: unstaged tracked changes left uncommitted:"
   echo "$DIRTY" | sed 's/^/  /'
 fi
-# 4) wiki coverage gate — every tracked path must be indexed (100%).
-#    Runs against the working tree; a stale wiki blocks the commit.
+# 4) wiki auto-sync — every commit must leave wiki == the exact staged tree.
+#    The manifest is generated from `git ls-files`, so the commit boundary is
+#    the correct sync point: a commit carries its own fresh wiki atomically.
+#    --rebuild is idempotent (unchanged tree -> refreshed=0), so an in-sync
+#    commit pays ~seconds; a stale one is fixed and re-staged automatically.
+if ! "$PY" "$ROOT/scripts/build_wiki.py" --check >/tmp/3v0_wiki_pre.txt 2>&1; then
+  echo "wiki: stale — auto-rebuilding and re-staging (in-sync commit)"
+  if ! "$PY" "$ROOT/scripts/build_wiki.py" --rebuild >/tmp/3v0_wiki_rebuild.txt 2>&1; then
+    echo "PRE-COMMIT BLOCKED: wiki rebuild failed:"
+    tail -20 /tmp/3v0_wiki_rebuild.txt
+    exit 1
+  fi
+  git add wiki/
+fi
+
+# Fail-close: even after a (possibly no-op) rebuild, the wiki must be at
+# 100% coverage and contain no stale rows. A rebuild that can't reach that
+# must block — the auto-sync must never silently paper over a real gap.
 if ! "$PY" "$ROOT/scripts/build_wiki.py" --check >/tmp/3v0_wiki.txt 2>&1; then
-  echo "PRE-COMMIT BLOCKED: wiki not at 100% coverage — fix and re-stage:"
-  echo "  python3 scripts/build_wiki.py --rebuild"
+  echo "PRE-COMMIT BLOCKED: wiki not at 100% coverage after auto-sync:"
   tail -20 /tmp/3v0_wiki.txt
   exit 1
+fi
+if [ -n "$(git diff --cached --name-only -- wiki/ | head -1)" ]; then
+  echo "wiki: auto-synced $(git diff --cached --name-only -- wiki/ | wc -l) file(s) into this commit"
 fi
 
 exit 0

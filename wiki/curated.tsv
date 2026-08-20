@@ -16,8 +16,8 @@ ev0_constants.py	source	manual	get_hermes_home() / display_hermes_home() — pro
 ev0_logging.py	source	manual	setup_logging() — agent.log / errors.log / gateway.log (profile-aware)	All logs land per-profile via HERMES_HOME; browse with hermes logs	ev0_constants.py;gateway/run.py
 ev0_time.py	source	manual	Time helpers (UTC stamps, duration parsing)	Consistent time handling across scheduler/cron/session code	cron/scheduler.py;ev0_constants.py
 mcp_serve.py	source	manual	MCP server mode — expose the agent as an MCP host/server	Lets external MCP clients drive the agent; catalog + client bridging lives in tools/mcp_tool.py	tools/mcp_tool.py;tools/setup_mcp_tool.py
-mini_swe_runner.py	source	manual	Minimal SWE-bench-style evaluator harness for the agent	Runs model patch-turns against task instances for offline evals	evals/;scripts/run_tests.sh
-registration_lifecycle.py	source	manual	Lifecycle hooks for registration/licensing flows	Registration/activation side of the product surface	ev0_cli/auth*.py
+mini_swe_runner.py	source	manual	Minimal SWE-bench-style evaluator harness for the agent	Runs model patch-turns against task instances for offline evals	scripts/run_tests.sh;3v0/tests/
+registration_lifecycle.py	source	manual	Lifecycle hooks for registration/licensing flows	Registration/activation side of the product surface	ev0_cli/auth.py;ev0_cli/auth_commands.py
 3v0-cli	script	manual	Launcher script for the 3v0 CLI	Thin exec shim so `3v0 --tui` etc. work from PATH	ev0_cli/main.py;run_agent.py
 AGENTS.md	doc	manual	The body's governance + contribution contract (3V0 sovereignty, footprint ladder, testing policy)	Constitutional doc; every AI assistant working here is bound by it	wiki/SCHEMA.md;3v0/SOUL.md;3v0/CONTEXT.md
 README.md	readme	manual	Project README (English)	for humans/new agents	README.es.md;README.zh-CN.md;README.ur-pk.md;CONTRIBUTING.md
@@ -25,7 +25,7 @@ README.es.md	readme	manual	Spanish project README	Spanish community surface	READ
 SECURITY.md	policy-doc	manual	Security policy + reporting	Public security contract	SECURITY.es.md;.coderabbit.yaml
 CONTRIBUTING.md	policy-doc	manual	Contribution guide (full engineering standards)	Merging law for the repo	AGENTS.md;CONTRIBUTING.es.md
 LICENSE	doc	manual	License text	Legal basis for distribution	README.md
-SUSTAINABILITY.md	policy-doc	manual	Cost-efficiency doctrine for LLM spend	Guides token-efficiency; pairs with 3v0/TOKEN_EFFICIENCY.md	3v0/TOKEN_EFFICIENCY.md;sustainability/
+SUSTAINABILITY.md	policy-doc	manual	Cost-efficiency doctrine for LLM spend	Guides token-efficiency; pairs with 3v0/TOKEN_EFFICIENCY.md	3v0/TOKEN_EFFICIENCY.md
 SELF_IMPROVEMENT.md	policy-doc	manual	Self-improvement doctrine (quality loops, verify.sh culture)	Policies the body's own evolution	3v0/EVOLUTION_LOOP.md;3v0/scripts/verify.sh
 HANDOFF.md	doc	manual	Manual session handoff — the operator's narrative continuity document	Tracked continuity artifact; regenerated draft lives in HANDOFF.generated.md (gitignored)	3v0/data/continuity/claims.json;3v0/scripts/generate_handoff.py
 pyproject.toml	build	manual	Python packaging + dependency declaration with upper-bound pins	Defines the package and the supply-chain pinning policy	uv.lock;setup.py
@@ -446,3 +446,19 @@ wiki/SCHEMA.md	doc	manual	The wiki maintenance contract — invariant, artifacts
 wiki/log.md	doc	manual	Append-only change log for the wiki itself	Audit trail of wiki schema/coverage changes	wiki/SCHEMA.md
 wiki/README.md	doc	manual	One-paragraph orientation to the wiki	Fast entry for humans	wiki/index.md
 wiki/areas/_intro_CORE.md	doc	manual	Hand-written CORE area narrative, prepended to areas/CORE.md	Human-owned narrative survives regenerated tables	scripts/build_wiki.py
+3v0/VERSION	doc	manual	Single-sourced version; release tooling reads it	Keeps the body version in one place for sync/release	pyproject.toml;ev0_cli/__init__.py;3v0/scripts/sync.py
+3v0/scripts/redo_tracker.sh	script	manual	Durability bookkeeping for ingest	Tracks redo state so failed ingests can be replayed	3v0/scripts/ingest.py;3v0/scripts/consistency.sh;3v0/scripts/verify.sh
+agent/background_review.py	source	manual	Deferred review queues	Queues background self-review for later review_session runs	agent/curator.py;3v0/scripts/review_session.py
+agent/conversation_compression.py	source	manual	Sibling of context compressor for messaging	Compresses long conversations on the messaging surface	agent/context_compressor.py;agent/conversation_loop.py;agent/native_compaction.py
+cron/executions.py	source	manual	Audit of what fired	Records cron executions for the scheduler's audit trail	cron/scheduler.py;cron/jobs.py;gateway/run.py
+cron/notepad.py	source	manual	Context persistence	Persists scratch context for cron jobs across runs	cron/scheduler.py;agent/memory_manager.py
+cron/suggestions.py	source	manual	UX helper	Builds suggested cron-job prompts for interactive setup	cron/scheduler.py;gateway/slash_commands.py
+docs/3v0-kanban-v1-spec.pdf	doc	manual	Kanban contract artifact	Specifies the kanban mode contract	ev0_cli/kanban_db.py;3v0/docs/adr/
+docs/ADR.md	doc	manual	Design rationale ledger	Records architectural decisions for the body's evolution	3v0/docs/adr/;AGENTS.md
+gateway/cgroup_cleanup.py	source	manual	Leak control	Cleans up cgroup/process leftovers on gateway stop	gateway/run.py
+gateway/code_skew.py	source	manual	Mixed-version fleet safety	Detects version drift between gateway processes	gateway/run.py;ev0_cli/update_cmd.py;ev0_constants.py
+tools/clarify_tool.py	source	manual	Human-in-the-loop	Lets the agent ask the operator a bounded-choice question	agent/tool_executor.py;tools/patch_parser.py
+tools/homeassistant_tool.py	source	manual	Smart-home automation	Drives Home Assistant entities from tools	plugins/platforms/homeassistant/;providers/
+tools/patch_parser.py	source	manual	The patch tool's engine	Parses V4A patches for the patch tool	agent/tool_executor.py
+tools/thread_context.py	source	manual	Multi-thread safety	Carries thread-scoped output state across tool calls	agent/thread_scoped_output.py;agent/tool_executor.py
+tools/vision_tools.py	source	manual	Aux vision routing	Routes vision_analyze calls to the vision-capable path	agent/image_routing.py;tools/web_tools.py

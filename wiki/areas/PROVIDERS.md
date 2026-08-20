@@ -14,4 +14,4 @@ Columns: path · kind · purpose · why · related
 | `native/fts5_cjk/vendor/sqlite3ext.h` | asset | File `sqlite3ext.h` | Repository content; see related files / area page for the enclosing subsystem | native/fts5_cjk/vendor/sqlite3.h |
 | `providers/README.md` | readme | README (en) | Project introduction & quickstart for humans/new agents | providers/__init__.py; providers/base.py |
 | `providers/__init__.py` | source | Provider registry + lazy discovery (bundled, user, legacy) | Lazy separate discovery; user plugins override bundled (last-writer-wins) | plugins/model-providers/ |
-| `providers/base.py` | source | Provider ABC — base contract for model-provider plugins | The seam implemented by every provider plugin | plugins/model-providers/;providers/__init__.py |
+| `providers/base.py` | source | Provider ABC — base contract for model-provider plugins | The seam implemented by every provider plugin | plugins/model-providers/; providers/__init__.py |
