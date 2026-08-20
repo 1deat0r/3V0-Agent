@@ -132,12 +132,84 @@ def main() -> None:
                     )
 
             if tool == "terminal":
-                cmd = str(ti.get("command") or ti.get("cmd") or "")
-                for f in FORBIDDEN:
-                    if f in cmd and _is_write_target(cmd, f):
+                        cmd = str(ti.get("command") or ti.get("cmd") or "")
+                        for f in FORBIDDEN:
+                            if f in cmd and _is_write_target(cmd, f):
+                                blocked(
+                                    f"DEV-ROOT GUARD: command writes into forbidden "
+                                    f"tree {f}. Develop ONLY in {CANONICAL}"
+                                )
+
+            # ---- Canonical-repo sovereignty guard (2026-08-20 incident) ----
+            # A stale process reset the live checkout to upstream via
+            # `git reset --hard origin/main`. `origin` was renamed to `upstream`
+            # at the git level; these rules stop the footgun from ever being
+            # recreated OR the canonical branch from being moved to a
+            # remote-tracking ref — from ANY tool that carries a command
+            # (terminal OR execute_code — previously execute_code was a bypass).
+            cmd_sources = []
+            if tool in CWD_TOOLS:
+                raw = ti.get("command") or ti.get("cmd") or ""
+                if raw:
+                    cmd_sources.append(str(raw))
+                code = ti.get("code")
+                if code:
+                    cmd_sources.append(str(code))
+            for cmd in cmd_sources:
+                # The canonical repo is only meaningful if the command is run
+                # there (cwd) or explicitly names it (-C / --git-dir / cd).
+                names_canonical = CANONICAL in cmd
+                if not (under(cwd, CANONICAL) or names_canonical):
+                    continue
+                # Normalize code-payload syntax to shell-ish token spacing so
+                # the same footgun families catch both `git remote add origin`
+                # (terminal) and ["git","remote","add","origin"] (execute_code).
+                cmdn = cmd
+                if tool == "execute_code":
+                    cmdn = re.sub(r'[\[\(\),;"\'=\\]', " ", cmd)
+                # 1. Remote-footgun recreation: origin/upstream remotes may not
+                #    be added, re-added, set-url'd, or config'd into existence.
+                FOOTGUN = [
+                    r"git\s+remote\s+(?:add|set-url|rename)\s+\S*(?:origin|upstream)\b",
+                    r"git\s+config\s+(?:--\S+\s+)?remote\.(?:origin|upstream)\.\S+",
+                    r"git\s+remote\s+(?:add|set-url)\s+\S+\s+(?:https?://github\.com/(?:NousResearch|hermes)|git@github\.com:)",
+                    r"remote\s*=\s*[\"']?https?://github\.com/(?:NousResearch|hermes)",
+                ]
+                for pat in FOOTGUN:
+                    if re.search(pat, cmdn):
                         blocked(
-                            f"DEV-ROOT GUARD: command writes into forbidden "
-                            f"tree {f}. Develop ONLY in {CANONICAL}"
+                            "DEV-ROOT GUARD: refusing to create/re-point an "
+                            "origin/upstream remote — the upstream footgun must "
+                            "never exist on the canonical repo. Remotes: `public` "
+                            "(push) only; upstream reference is fetched on demand "
+                            "into scratch clones."
+                        )
+                # 2. Update machinery: the exact fetch-and-reset trigger.
+                if re.search(
+                    r"(?:^|[;&|(])\s*(?:3v0|hermes)\s+update\b|(?:python\w*\s+)?-m\s+\S*\.main\s+update\b",
+                    cmdn,
+                ):
+                    blocked(
+                        "DEV-ROOT GUARD: `update` machinery fetches against "
+                        "upstream and can reset the canonical branch — the exact "
+                        "failure mode of the 2026-08-20 incident. Refusing. "
+                        "Update 3V0 by pulling from `public` deliberately."
+                    )
+                # 3. Canonical branch movement: no reset/checkout to a
+                #    remote-tracking ref (upstream/main, origin/main), and no
+                #    hard reset / fetch+reset sequences at all on canonical.
+                BRANCH_MOVE = [
+                    r"git\s+(?:-C\s+\S+(?:\s+\S+)*\s+|--git-dir\S+\s+)?(?:reset|checkout|switch)\s+--?[^\n]*?\b(?:upstream|origin)/\S+",
+                    r"git\s+(?:-C\s+\S+(?:\s+\S+)*\s+|--git-dir\S+\s+)?(?:reset|checkout|switch)\s+(?:--hard|--force|-f)\b",
+                    r"git\s+fetch\s+(?:upstream|origin)\b.*?\n?\s*(?:git\s+reset|git\s+checkout)",
+                ]
+                for pat in BRANCH_MOVE:
+                    if re.search(pat, cmdn, re.IGNORECASE):
+                        blocked(
+                            "DEV-ROOT GUARD: refusing movement of the canonical "
+                            "branch to a remote-tracking ref or a hard reset — "
+                            "the 2026-08-20 incident. Operate on `public/main` "
+                            "and never hard-reset a live checkout."
                         )
     except SystemExit:
         raise
