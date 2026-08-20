@@ -31,15 +31,19 @@ _DENY_REASONS = (
 
 
 def _resolve_safe(path: str) -> Path:
-    p = Path(path).expanduser()
+    # Reject traversal FIRST, before any resolution: `../../etc/passwd` must
+    # fail regardless of where the repo lives (a resolved path has no ".."
+    # parts, so checking after resolve() makes the traversal check dead code).
+    raw = Path(path)
+    if ".." in raw.parts:
+        raise PermissionError(f"path traversal: {path}")
+    p = raw.expanduser()
     if not p.is_absolute():
         p = (REPO / p).resolve()
     else:
         p = p.resolve()
     if not any(str(p).startswith(str(root)) for root in _ALLOWED_ROOTS):
         raise PermissionError(f"path outside allowed roots: {p}")
-    if any(part in p.parts for part in ("..",)):
-        raise PermissionError(f"path traversal: {path}")
     if any(_SECRET in p.name.lower() or _SECRET in str(p).lower() for _SECRET in _SECRET_PARTS):
         raise PermissionError(f"secret-path denied: {path}")
     return p
