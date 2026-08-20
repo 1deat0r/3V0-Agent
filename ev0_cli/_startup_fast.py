@@ -183,7 +183,7 @@ def read_install_method() -> str | None:
 def print_fast_version_info() -> None:
     from ev0_cli import __release_date__, __version__
 
-    print(f"Hermes Agent v{__version__} ({__release_date__})")
+    print(f"3V0 Agent v{__version__} ({__release_date__})")
     print(f"Install directory: {project_root_str()}")
     install_method = read_install_method()
     if install_method:

@@ -7,7 +7,7 @@
 # the clock is 3V0's own.
 #
 # No secrets here: the driver reads DEEPSEEK_API_KEY from the profile .env
-# (~/.hermes/profiles/3v0/.env) and resolves the body repo from its own path.
+# (~/.3V0/profiles/3v0/.env) and resolves the body repo from its own path.
 #
 # Install (as the user):
 #   cp 3v0/deploy/3v0-review.service ~/.config/systemd/user/
