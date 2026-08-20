@@ -707,7 +707,7 @@ def extract_skill_conditions(frontmatter: Dict[str, Any]) -> Dict[str, List]:
     # Handle cases where metadata is not a dict (e.g., a string from malformed YAML)
     if not isinstance(metadata, dict):
         metadata = {}
-    ev0 = metadata.get("ev0") or {}
+    ev0 = metadata.get("3v0") or {}
     if not isinstance(ev0, dict):
         ev0 = {}
     return {
@@ -740,7 +740,7 @@ def extract_skill_config_vars(frontmatter: Dict[str, Any]) -> List[Dict[str, Any
     metadata = frontmatter.get("metadata")
     if not isinstance(metadata, dict):
         return []
-    ev0 = metadata.get("ev0")
+    ev0 = metadata.get("3v0")
     if not isinstance(ev0, dict):
         return []
     raw = ev0.get("config")

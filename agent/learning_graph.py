@@ -52,7 +52,7 @@ def _ev0_meta(fm: dict[str, Any]) -> dict[str, Any]:
     """``metadata.3v0`` as a dict, tolerant of the string-valued frontmatter
     that ``parse_frontmatter``'s malformed-YAML fallback produces."""
     meta = fm.get("metadata")
-    ev0 = meta.get("ev0") if isinstance(meta, dict) else None
+    ev0 = meta.get("3v0") if isinstance(meta, dict) else None
     return ev0 if isinstance(ev0, dict) else {}
 
 

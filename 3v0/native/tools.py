@@ -23,7 +23,7 @@ _SECRET_PARTS = (".env", ".pem", "wallet", "secrets", "cred", "token", "key.pem"
 _DENY_REASONS = (
     (re.compile(r"\bsystemctl\b.*?(stop|restart)\b.*?(gateway|3v0-gateway)", re.I), "gateway lifecycle via systemctl"),
     (re.compile(r"\b(?:3v0|ev0)\b.*\bgateway\b.*?(stop|restart)\b", re.I), "gateway lifecycle via 3V0"),
-    (re.compile(r"\b(pkill|killall)\b.*\b(3v0|gateway|3v0)\b", re.I), "self-termination via pkill/killall"),
+    (re.compile(r"\b(pkill|killall)\b.*\b(?:3v0|ev0|gateway)\b", re.I), "self-termination via pkill/killall"),
     (re.compile(r"\bkill\b.*(pgrep|pidof)", re.I), "self-termination via kill+pgrep"),
     (re.compile(r"\brm\s+-[a-z]*[rf][a-z]*\s+/", re.I), "destroy root"),
     (re.compile(r"\s>\s?/(etc|boot|sys|proc)/", re.I), "write to system path"),
