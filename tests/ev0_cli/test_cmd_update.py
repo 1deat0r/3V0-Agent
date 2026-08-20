@@ -29,6 +29,11 @@ def _make_run_side_effect(branch="main", verify_ok=True, commit_count="0"):
         if "rev-list" in joined:
             return subprocess.CompletedProcess(cmd, 0, stdout=f"{commit_count}\n", stderr="")
 
+        # git remote — post-incident update source (2026-08-20) refuses the
+        # legacy `origin` and requires a non-origin remote; canonical = `public`.
+        if joined.strip().endswith("remote"):
+            return subprocess.CompletedProcess(cmd, 0, stdout="public\n", stderr="")
+
         # Fallback: return a successful CompletedProcess with empty stdout
         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
 
@@ -552,6 +557,9 @@ class TestCmdUpdateBranchFlag:
             if "rev-list" in joined:
                 return subprocess.CompletedProcess(cmd, 0, stdout=f"{commit_count}\n", stderr="")
 
+            if joined.strip().endswith("remote"):
+                return subprocess.CompletedProcess(cmd, 0, stdout="public\n", stderr="")
+
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
 
         return side_effect
@@ -648,6 +656,9 @@ class TestCmdUpdateCheckBranchFlag:
 
             if "rev-list" in joined:
                 return subprocess.CompletedProcess(cmd, 0, stdout=f"{commit_count}\n", stderr="")
+
+            if joined.strip().endswith("remote"):
+                return subprocess.CompletedProcess(cmd, 0, stdout="public\n", stderr="")
 
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
 

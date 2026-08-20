@@ -39,6 +39,11 @@ def _make_head_moved_side_effect(pre_sha="abc123", post_sha="def456"):
                 return SimpleNamespace(returncode=0, stdout=f"{pre_sha}\n", stderr="")
             return SimpleNamespace(returncode=0, stdout=f"{post_sha}\n", stderr="")
 
+        # git remote — post-incident resolver requires a non-origin remote to
+        # update from; the canonical repo carries `public`.
+        if joined.strip().endswith("remote"):
+            return SimpleNamespace(returncode=0, stdout="public\n", stderr="")
+
         # Everything else (merge, checkout, etc.) succeeds quietly.
         return SimpleNamespace(returncode=0, stdout="", stderr="")
 
@@ -59,6 +64,10 @@ def _make_head_pinned_side_effect(sha="abc123"):
 
         if joined.endswith("rev-parse HEAD"):
             return SimpleNamespace(returncode=0, stdout=f"{sha}\n", stderr="")
+
+        # git remote — post-incident resolver requires a non-origin remote.
+        if joined.strip().endswith("remote"):
+            return SimpleNamespace(returncode=0, stdout="public\n", stderr="")
 
         return SimpleNamespace(returncode=0, stdout="", stderr="")
 
