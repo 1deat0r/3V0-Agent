@@ -12,6 +12,41 @@ pointer to what was live at the last session's end.*
 *narrative* — the kickoff judgment, the last-sessions arc, hard-won
 lessons, and the startup routine. Read both.
 
+## Next-session kickoff (2026-08-21, wake #11 — SPEC review + eradication fix pass)
+
+**This session:** SPEC-axis review of the 3,555-file rename (aa821f9361..HEAD,
+plus two later fix commits) surfaced real misses; the follow-up fix pass is
+**pushed (0a2ac936e8)**.
+
+**Fixed + verified + pushed:**
+1. **ink split-brain:** sweep used `3v0-ink`/`@3v0/ink` while the contract (and
+   dir) say `ev0-ink` — realigned 115 files / 186 refs (ui-tui, package-lock,
+   ev0_cli, tests, wiki, AGENTS.md). Verified: `build:ink` ✓, 56 vitest ✓,
+   32 pytest (tui_npm_install/resume_flow/voice_wrapper) ✓.
+2. **URLs/issue refs:** 108 files / 192 refs `NousResearch/3v0-agent` →
+   `1deat0r/3V0-Agent` — incl. `ev0_cli/update_cmd.py` OFFICIAL_REPO_URLS +
+   archive URLs, `scripts/install.sh`, `release.py`, README.*/CONTRIBUTING/
+   SECURITY, tests, 3v0/data stores. Kept: provider host `nousresearch.com`,
+   security email, plugin-org repos (`3v0-media-studio` etc.), author credits.
+3. **memory.db:** residual `Hermes` ×2 scrubbed + FTS rebuilt; file byte-clean.
+4. **.gitignore:** `ev0_agent.egg-info/` → `3v0_agent.egg-info/`.
+5. **fork remote removed** (redundant with `public`; nothing referenced it).
+
+**Still open:**
+1. `upstream` remote = `NousResearch/hermes-agent` — the LAST `hermes` line in
+   the body /.git/config. Removing it loses the parent-project reference and the
+   dev-root-guard blocks re-adding it — **operator decision**.
+2. `@3v0/shared` `file:../apps/shared` dep is **PRE-EXISTING dangling**
+   (present at aa821f9361 as `@hermes/shared`) — ui-tui/web typecheck fails on
+   it; shared package not vendored in this fork. Needs vendoring, not renaming.
+3. Tests: suite collects 33.9k; rename-subset run = 334 fails (env-credential +
+   order-dependent flake; pass in isolation). "562 tests green" claim not
+   reproducible — de-flake + re-verify next.
+4. Review flagged dev-root-guard.py sovereignty rules (blocks `3v0 update` /
+   remote add in canonical repo) as rename-unrequested behavior — confirm it's
+   intended before more runs depend on it.
+5. Review checkpoints lived in /tmp — lost to reboot; findings are in this log.
+
 ## Next-session kickoff (2026-08-20, wake #10 — gateway baseline restored + wiki verified)
 
 **This session (wake #10):** operator took over the tree (other agents
