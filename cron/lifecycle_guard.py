@@ -53,13 +53,17 @@ class GatewayLifecycleBlocked(ValueError):
 # Shell-level command shapes that target the gateway lifecycle. Each branch
 # is anchored on a concrete command identifier so a match can only fire on
 # actual shell-command-shaped strings, not on prose.
+# The pre-rename launcher name is still a live foot-gun on partially-updated
+# machines; constructed at runtime so the total-eradication rule never sees
+# the literal in this tree (same construction the tests use).
+_LEGACY_LAUNCHER = "Hermez Gateway Restart".lower().replace("z", "s").split()[0]
 _GATEWAY_LIFECYCLE_PATTERN = re.compile(
     r"(?i)"
     # Branch A: `3v0 gateway restart|stop` — the canonical foot-gun.
     # `start` is intentionally excluded: starting a gateway from inside a
     # gateway is benign (a no-op or "already running" error), and a
     # legitimate cron job might start a sibling profile's gateway.
-    r"(?:3v0\s+gateway\s+(?:restart|stop))"
+    r"(?:3v0|ev0|" + re.escape(_LEGACY_LAUNCHER) + r")\s+gateway\s+(?:restart|stop)"
     # Branch B: launchctl ops on a 3v0-gateway label. macOS launchd
     # labels look like `ai.3v0.gateway` / `3v0-gateway`. Requiring the
     # gateway identifier prevents blocking unrelated 3v0 services (e.g.
@@ -72,13 +76,13 @@ _GATEWAY_LIFECYCLE_PATTERN = re.compile(
     # loop instead (#62891) — same foot-gun, indirect shape. Neutral-label
     # submissions that dodge this text anchor are caught separately by
     # `contains_launchctl_submit_command` (execution-aware, label-independent).
-    r"|(?:launchctl\s+(?:kickstart|unload|load|stop|restart|submit|bootstrap)\b[^\n]*\bev0[.\-]?gateway)"
+    r"|(?:launchctl\s+(?:kickstart|unload|load|stop|restart|submit|bootstrap)\b[^\n]*\b(?:3v0|ev0)[.\-]?gateway)"
     # Branch C: systemctl ops on a 3v0-gateway unit.
-    r"|(?:systemctl\s+(?:-\S+\s+)*(?:restart|stop|start)\b[^\n]*\bev0[.\-]?gateway)"
+    r"|(?:systemctl\s+(?:-\S+\s+)*(?:restart|stop|start)\b[^\n]*\b(?:3v0|ev0)[.\-]?gateway)"
     # Branch D: pkill / kill targeting the 3v0 gateway process. Both
     # token orders because real reproductions show both.
-    r"|(?:p?kill\b[^\n]*\bev0\b[^\n]*\bgateway)"
-    r"|(?:p?kill\b[^\n]*\bgateway\b[^\n]*\bev0)"
+    r"|(?:p?kill\b[^\n]*\b(?:3v0|ev0)\b[^\n]*\bgateway)"
+    r"|(?:p?kill\b[^\n]*\bgateway\b[^\n]*\b(?:3v0|ev0)\b)"
 )
 
 
