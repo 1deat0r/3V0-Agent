@@ -139,7 +139,7 @@ class TestFallbackChain:
 
     PRIMARY = "https://github.com/1deat0r/3V0-Agent/docs/api/model-catalog.json"
     FALLBACK = (
-        "https://raw.githubusercontent.com/NousResearch/3v0-agent"
+        "https://raw.githubusercontent.com/1deat0r/3V0-Agent"
         "/main/website/static/api/model-catalog.json"
     )
 

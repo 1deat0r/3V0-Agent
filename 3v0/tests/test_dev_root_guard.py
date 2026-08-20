@@ -61,28 +61,28 @@ class GuardSeamTest(unittest.TestCase):
     def test_remote_add_origin_via_terminal(self):
         self.assert_blocked(
             "terminal",
-            {"command": "git remote add origin https://github.com/NousResearch/3v0-agent"},
+            {"command": "git remote add origin https://github.com/1deat0r/3V0-Agent"},
             msg="terminal git remote add origin must block",
         )
 
     def test_remote_add_upstream_via_terminal(self):
         self.assert_blocked(
             "terminal",
-            {"command": "git remote add upstream https://github.com/NousResearch/3v0-agent"},
+            {"command": "git remote add upstream https://github.com/1deat0r/3V0-Agent"},
             msg="adding upstream remote (same footgun later) must block",
         )
 
     def test_remote_set_url_origin_via_terminal(self):
         self.assert_blocked(
             "terminal",
-            {"command": "git remote set-url origin https://github.com/NousResearch/3v0-agent"},
+            {"command": "git remote set-url origin https://github.com/1deat0r/3V0-Agent"},
             msg="set-url origin must block (regex gap closed)",
         )
 
     def test_remote_config_origin_via_terminal(self):
         self.assert_blocked(
             "terminal",
-            {"command": "git config remote.origin.url https://github.com/NousResearch/3v0-agent"},
+            {"command": "git config remote.origin.url https://github.com/1deat0r/3V0-Agent"},
             msg="config remote.origin.url must block (regex gap closed)",
         )
 
@@ -97,7 +97,7 @@ class GuardSeamTest(unittest.TestCase):
         # F1: sovereignty checks must also inspect execute_code payloads.
         self.assert_blocked(
             "execute_code",
-            {"code": "import subprocess\nsubprocess.run(['git','remote','add','origin','https://github.com/NousResearch/3v0-agent'])"},
+            {"code": "import subprocess\nsubprocess.run(['git','remote','add','origin','https://github.com/1deat0r/3V0-Agent'])"},
             msg="execute_code must be scanned for remote-add (F1)",
         )
 
@@ -184,7 +184,7 @@ class GuardSeamTest(unittest.TestCase):
         # A remote-add that names the canonical repo from elsewhere must still block.
         self.assert_blocked(
             "terminal",
-            {"command": "git remote add origin https://github.com/NousResearch/3v0-agent"},
+            {"command": "git remote add origin https://github.com/1deat0r/3V0-Agent"},
         )
 
     def test_write_into_forbidden_tree_still_blocked(self):

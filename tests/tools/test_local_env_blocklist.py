@@ -4,8 +4,8 @@ Verifies that 3V0-managed provider, tool, and gateway env vars are
 stripped from subprocess environments so external CLIs are not silently
 misrouted or handed 3V0 secrets.
 
-See: https://github.com/NousResearch/3v0-agent/issues/1002
-See: https://github.com/NousResearch/3v0-agent/issues/1264
+See: https://github.com/1deat0r/3V0-Agent/issues/1002
+See: https://github.com/1deat0r/3V0-Agent/issues/1264
 """
 
 import os

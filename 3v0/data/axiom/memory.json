@@ -3,7 +3,7 @@
   "facts": [
     {
       "id": "5a717fc27ffa",
-      "content": "axiom-agent re-founded 2026-08-16 as 3V0 Agent hardfork: main reset to upstream HEAD 0c50bdbde, prime era archived archive/prime-v0.7.2, upstream→NousResearch/3v0-agent; decision layer under axiom/ (ADR-0087, handoff axiom/docs/handoff.md).",
+      "content": "axiom-agent re-founded 2026-08-16 as 3V0 Agent hardfork: main reset to upstream HEAD 0c50bdbde, prime era archived archive/prime-v0.7.2, upstream→1deat0r/3V0-Agent; decision layer under axiom/ (ADR-0087, handoff axiom/docs/handoff.md).",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-15T21:54:37Z",

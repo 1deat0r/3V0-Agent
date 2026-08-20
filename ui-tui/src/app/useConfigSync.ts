@@ -1,4 +1,4 @@
-import type { MouseTrackingMode } from '@3v0/ink'
+import type { MouseTrackingMode } from '@ev0/ink'
 import { useEffect, useRef } from 'react'
 
 import { resolveDetailsMode, resolveSections } from '../domain/details.js'

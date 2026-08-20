@@ -13,7 +13,7 @@ required_credential_files:
 metadata:
   3v0:
     tags: [Google, Gmail, Calendar, Drive, Sheets, Docs, Contacts, Email, OAuth]
-    homepage: https://github.com/NousResearch/3v0-agent
+    homepage: https://github.com/1deat0r/3V0-Agent
     related_skills: [himalaya]
 ---
 

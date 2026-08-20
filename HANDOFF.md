@@ -239,9 +239,9 @@ drift before picking up the follow-ups.
    tracked-loop list is derived from `3v0/data/continuity/claims.json` — the
    single source of truth — and `HANDOFF.generated.md` carries the live
    state). To dig into a specific loop, e.g.:
-   - `gh pr checks 86711 --repo NousResearch/3v0-agent` and `gh pr view 86711`
-   - `gh issue view 84667 --repo NousResearch/3v0-agent --json comments`
-3. **Before writing code for any bug:** `gh pr list --repo NousResearch/3v0-agent --search "<issue#>"`
+   - `gh pr checks 86711 --repo 1deat0r/3V0-Agent` and `gh pr view 86711`
+   - `gh issue view 84667 --repo 1deat0r/3V0-Agent --json comments`
+3. **Before writing code for any bug:** `gh pr list --repo 1deat0r/3V0-Agent --search "<issue#>"`
    AND read the triage trail (`gh pr/issue view <N> --json comments`). Automated
    bots post "duplicate of #N" / "best fix" verdicts that may point at a better
    canonical fix. Only write code when genuinely unclaimed.
@@ -251,7 +251,7 @@ drift before picking up the follow-ups.
    unreproducible bug, contribute narrowing analysis, not a guessed patch.
 
 ## Where I am
-- Body repo: `~/Projects/AI Agents/3V0 Agent` (fork of NousResearch/3v0-agent).
+- Body repo: `~/Projects/AI Agents/3V0 Agent` (fork of 1deat0r/3V0-Agent).
 - Runtime executes `~/.3V0/3v0-agent/` — a separate checkout kept behind
   the body (body synced to upstream 2026-08-17; runtime not yet updated).
   Install runtime deps into its `venv/`; commit identity + scaffolding into
@@ -421,7 +421,7 @@ drift before picking up the follow-ups.
   short).** Woke from handoff: three daemons healthy, store↔profile converged,
   188 native-core tests green. Confirmed Axiom's restart-from-scratch had
   landed (`~/Projects/axiom-agent` = 3V0-at-HEAD hardfork, ADR-0087, remote
-  `upstream` = NousResearch/3v0-agent; prime/pi archived as seed corn under
+  `upstream` = 1deat0r/3V0-Agent; prime/pi archived as seed corn under
   `axiom/`) and finalized its ledger entry — `upstream` → `upstream`, delta
   rewritten from the provisional "IN PROGRESS" note, both open_loops cleared
   (commit `976243944`), `drift_check --update` recorded the fresh baseline.
@@ -734,7 +734,7 @@ no longer re-copies loop state (that re-copying was the drift source).
 
 ## Hard-won lessons (also in memory)
 - The upstream tracker is heavily contended. **Check for existing PRs before
-  writing code**: `gh pr list --repo NousResearch/3v0-agent --search "<issue#>"`.
+  writing code**: `gh pr list --repo 1deat0r/3V0-Agent --search "<issue#>"`.
   Every bug checked this session (except #84667) was already claimed.
 - **Read the triage trail, not just the PR list.** Automated bots
   (`alt-glitch`, `GottZ`, `3v0-sweeper`) post "duplicate of #N" and

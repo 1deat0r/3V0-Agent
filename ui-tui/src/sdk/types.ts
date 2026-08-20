@@ -1,4 +1,4 @@
-import type { Key } from '@3v0/ink'
+import type { Key } from '@ev0/ink'
 import type { ReactNode } from 'react'
 
 import type { Theme } from '../theme.js'

@@ -115,7 +115,7 @@ INSTALLER_PATH=""
 # reachable from main -- so "can a user two releases back still update?" is
 # expressible. --from-main is shorthand for refs/heads/main.
 INSTALL_REF=""
-UPSTREAM_URL="${EV0_DEV_SANDBOX_UPSTREAM:-https://github.com/NousResearch/3v0-agent.git}"
+UPSTREAM_URL="${EV0_DEV_SANDBOX_UPSTREAM:-https://github.com/1deat0r/3V0-Agent.git}"
 
 if [ "${1:-}" = install ]; then
   INSTALL_SHORTCUT=true

@@ -337,7 +337,7 @@ class OpenRouterCompatImageProvider(ImageGenProvider):
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             # OpenRouter attribution headers (harmless against Nous Portal).
-            "HTTP-Referer": "https://github.com/NousResearch/3v0-agent",
+            "HTTP-Referer": "https://github.com/1deat0r/3V0-Agent",
             "X-Title": "3V0 Agent",
         }
         last_error: Optional[Dict[str, Any]] = None

@@ -6,7 +6,7 @@ Usage (via cron with --no-agent):
     3v0 cron create 3v0-issues \\
       --schedule "*/5 * * * *" --no-agent \\
       --script "$EV0_HOME/skills/devops/watchers/scripts/watch_github.py" \\
-      --script-args "--name 3v0-issues --repo NousResearch/3v0-agent --scope issues"
+      --script-args "--name 3v0-issues --repo 1deat0r/3V0-Agent --scope issues"
 
 Set GITHUB_TOKEN (or GH_TOKEN) in the 3V0 .env file
 (``${EV0_HOME:-~/.3v0}/.env``) to avoid the 60 req/hr

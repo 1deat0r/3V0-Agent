@@ -138,7 +138,7 @@ _UPDATE_CHECK_CACHE_SECONDS = 6 * 3600
 # (e.g. nix-built 3v0 — no local git history to count against).
 UPDATE_AVAILABLE_NO_COUNT = -1
 
-_UPSTREAM_REPO_URL = "https://github.com/NousResearch/3v0-agent.git"
+_UPSTREAM_REPO_URL = "https://github.com/1deat0r/3V0-Agent.git"
 _OFFICIAL_REPO_CANONICAL = "github.com/nousresearch/3v0-agent"
 
 
@@ -565,7 +565,7 @@ def _compute_git_banner_state(repo_dir: Optional[Path] = None) -> Optional[dict]
     return {"upstream": upstream, "local": local, "ahead": max(ahead, 0)}
 
 
-_RELEASE_URL_BASE = "https://github.com/NousResearch/3v0-agent/releases/tag"
+_RELEASE_URL_BASE = "https://github.com/1deat0r/3V0-Agent/releases/tag"
 _latest_release_cache: Optional[tuple] = None  # (tag, url) once resolved
 
 
@@ -574,7 +574,7 @@ def get_latest_release_tag(repo_dir: Optional[Path] = None) -> Optional[tuple]:
 
     Local-only — runs ``git describe --tags --abbrev=0`` against the
     3V0 checkout. Cached per-process. Release URL always points at the
-    canonical NousResearch/3v0-agent repo (forks don't get a link).
+    canonical 1deat0r/3V0-Agent repo (forks don't get a link).
     """
     global _latest_release_cache
     if _latest_release_cache is not None:

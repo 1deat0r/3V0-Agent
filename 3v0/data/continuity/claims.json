@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "repo": "NousResearch/3v0-agent",
+  "repo": "1deat0r/3V0-Agent",
   "loops": {
     "86711": {
       "kind": "pr",

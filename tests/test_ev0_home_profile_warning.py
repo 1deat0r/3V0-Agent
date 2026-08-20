@@ -1,6 +1,6 @@
 """Tests for get_ev0_home() profile-mode fallback warning.
 
-Regression test for https://github.com/NousResearch/3v0-agent/issues/18594.
+Regression test for https://github.com/1deat0r/3V0-Agent/issues/18594.
 
 When EV0_HOME is unset but an active_profile file indicates a non-default
 profile is active, get_ev0_home() should:

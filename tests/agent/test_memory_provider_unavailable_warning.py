@@ -1,4 +1,4 @@
-"""Regression tests for NousResearch/3v0-agent#2765.
+"""Regression tests for 1deat0r/3V0-Agent#2765.
 
 A memory provider configured via ``memory.provider`` but reporting
 ``is_available() == False`` (e.g. missing credentials, or a systemd/gateway

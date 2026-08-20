@@ -3,7 +3,7 @@
 Verifies that a clear error is raised when neither apptainer nor
 singularity is installed, instead of a cryptic FileNotFoundError.
 
-See: https://github.com/NousResearch/3v0-agent/issues/1511
+See: https://github.com/1deat0r/3V0-Agent/issues/1511
 """
 
 import subprocess

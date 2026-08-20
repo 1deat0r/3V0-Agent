@@ -13,7 +13,7 @@ import urllib.request
 
 DEFAULT_UA = (
     "3v0-osint-investigation/0.2 "
-    "(+https://github.com/NousResearch/3v0-agent; "
+    "(+https://github.com/1deat0r/3V0-Agent; "
     "set EV0_OSINT_UA env var to identify yourself per "
     "Wikimedia / SEC fair-use guidance)"
 )

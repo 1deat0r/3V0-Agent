@@ -1,4 +1,4 @@
-import { Text, useInput } from '@3v0/ink'
+import { Text, useInput } from '@ev0/ink'
 
 import type { Theme } from '../theme.js'
 

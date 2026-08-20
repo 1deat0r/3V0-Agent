@@ -139,6 +139,6 @@ The implementation is covered with real temporary-3V0-home tests for:
 
 ## Related
 
-- [Issue #64227](https://github.com/NousResearch/3v0-agent/issues/64227)
-- [RFC PR #58542](https://github.com/NousResearch/3v0-agent/pull/58542) by Topher Ross
+- [Issue #64227](https://github.com/1deat0r/3V0-Agent/issues/64227)
+- [RFC PR #58542](https://github.com/1deat0r/3V0-Agent/pull/58542) by Topher Ross
 - #67531 — standalone plugin settings namespace discussion

@@ -12,7 +12,7 @@
 # `python3 3v0/scripts/continuity_check.py --accept` to re-record its state;
 # the "Open loops" section and the generated draft both follow automatically.
 set -uo pipefail
-REPO="NousResearch/3v0-agent"
+REPO="1deat0r/3V0-Agent"
 
 echo "== BODY =="
 git status --short --branch

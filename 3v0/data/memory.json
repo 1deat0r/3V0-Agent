@@ -53,7 +53,7 @@
     },
     {
       "id": "068a68c30d88",
-      "content": "NousResearch/3v0-agent tracker is heavily contended. Before investing in a fix, check BOTH existing PRs (`gh pr list --search \"<issue#>\"`) AND the triage trail (`gh pr/issue view <N> --json comments`) — automated bots post 'duplicate of #N'/'best fix' verdicts pointing at a canonical fix that may be strictly better than mine. Only open a PR when genuinely unclaimed.",
+      "content": "1deat0r/3V0-Agent tracker is heavily contended. Before investing in a fix, check BOTH existing PRs (`gh pr list --search \"<issue#>\"`) AND the triage trail (`gh pr/issue view <N> --json comments`) — automated bots post 'duplicate of #N'/'best fix' verdicts pointing at a canonical fix that may be strictly better than mine. Only open a PR when genuinely unclaimed.",
       "kind": "memory",
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
@@ -265,7 +265,7 @@
     },
     {
       "id": "6b7dfb7c3793",
-      "content": "axiom-agent re-founded 2026-08-16 as 3V0 Agent hardfork: main reset to upstream HEAD 0c50bdbde, prime era archived archive/prime-v0.7.2, upstream→NousResearch/3v0-agent; decision layer under axiom/ (ADR-0087, handoff axiom/docs/handoff.md).",
+      "content": "axiom-agent re-founded 2026-08-16 as 3V0 Agent hardfork: main reset to upstream HEAD 0c50bdbde, prime era archived archive/prime-v0.7.2, upstream→1deat0r/3V0-Agent; decision layer under axiom/ (ADR-0087, handoff axiom/docs/handoff.md).",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-15T21:40:12Z",
@@ -337,7 +337,7 @@
     },
     {
       "id": "a29f88de9821",
-      "content": "NousResearch/3v0-agent tracker heavily contended: before investing, check existing PRs (`gh pr list --search \"<issue#>\"`) + triage trail (`gh pr/issue view <N> --json comments`) — bots post canonical 'duplicate/best fix' verdicts. Open a PR only if unclaimed.",
+      "content": "1deat0r/3V0-Agent tracker heavily contended: before investing, check existing PRs (`gh pr list --search \"<issue#>\"`) + triage trail (`gh pr/issue view <N> --json comments`) — bots post canonical 'duplicate/best fix' verdicts. Open a PR only if unclaimed.",
       "kind": "memory",
       "source": "profile-import",
       "created_at": "2026-08-15T21:59:53Z",
@@ -619,7 +619,7 @@
     },
     {
       "id": "d525aa478ad3",
-      "content": "NousResearch/3v0-agent tracker heavily contended: check existing PRs (`gh pr list --search \"<issue#>\"`) + triage trail before coding — bots post canonical 'duplicate/best fix' verdicts.",
+      "content": "1deat0r/3V0-Agent tracker heavily contended: check existing PRs (`gh pr list --search \"<issue#>\"`) + triage trail before coding — bots post canonical 'duplicate/best fix' verdicts.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T23:15:57Z",
@@ -679,7 +679,7 @@
     },
     {
       "id": "c513c0447cc9",
-      "content": "NousResearch/3v0-agent tracker: bots post canonical 'duplicate/best fix' verdicts — trust the triage trail before coding.",
+      "content": "1deat0r/3V0-Agent tracker: bots post canonical 'duplicate/best fix' verdicts — trust the triage trail before coding.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-16T00:27:14Z",

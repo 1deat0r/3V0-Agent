@@ -20,7 +20,7 @@ the classifier signal + helper-mutation tests; the integration only adds
 a trivial flag-and-continue around the existing pattern used for
 ``image_too_large`` recovery.
 
-See: https://github.com/NousResearch/3v0-agent/issues/27344
+See: https://github.com/1deat0r/3V0-Agent/issues/27344
 """
 
 from __future__ import annotations

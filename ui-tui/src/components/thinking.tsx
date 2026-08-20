@@ -1,4 +1,4 @@
-import { Box, NoSelect, Text } from '@3v0/ink'
+import { Box, NoSelect, Text } from '@ev0/ink'
 import { memo, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import spinners, { type BrailleSpinnerName } from 'unicode-animations'
 

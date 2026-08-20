@@ -11,7 +11,7 @@ The fix adds ``_expand_tilde()`` which delegates to
 ``ev0_constants.get_subprocess_home()`` — the same policy the terminal tool
 uses for subprocess environments.
 
-See: https://github.com/NousResearch/3v0-agent/issues/48552
+See: https://github.com/1deat0r/3V0-Agent/issues/48552
 """
 
 import os

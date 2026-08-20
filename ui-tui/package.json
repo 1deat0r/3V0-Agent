@@ -7,7 +7,7 @@
     "dev": "npm run build:ink && tsx --watch src/entry.tsx",
     "start": "tsx src/entry.tsx",
     "build": "node scripts/build.mjs",
-    "build:ink": "npm run build --prefix packages/3v0-ink",
+    "build:ink": "npm run build --prefix packages/ev0-ink",
     "visual": "node scripts/visual/run.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint src/ packages/",
@@ -19,7 +19,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@3v0/ink": "file:./packages/3v0-ink",
+    "@ev0/ink": "file:./packages/ev0-ink",
     "@3v0/shared": "file:../apps/shared",
     "@nanostores/react": "1.1.0",
     "ink-text-input": "6.0.0",
@@ -30,7 +30,7 @@
   },
   "overrides": {
     "ink-text-input": {
-      "ink": "npm:@3v0/ink@0.0.1"
+      "ink": "npm:@ev0/ink@0.0.1"
     }
   },
   "devDependencies": {

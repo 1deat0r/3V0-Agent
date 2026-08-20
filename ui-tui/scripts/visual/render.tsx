@@ -15,7 +15,7 @@ import { PassThrough } from 'stream'
 
 import { visualOutDir } from './paths.mjs'
 
-import { Box, renderSync, Text } from '@3v0/ink'
+import { Box, renderSync, Text } from '@ev0/ink'
 import React, { type ReactElement } from 'react'
 
 import { GatewayProvider } from '../../src/app/gatewayContext.js'

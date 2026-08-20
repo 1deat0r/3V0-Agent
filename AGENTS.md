@@ -532,9 +532,9 @@ Newline-delimited JSON-RPC over stdio. Requests from Ink, events from Python. Se
 ```bash
 cd ui-tui
 npm install       # first time
-npm run dev       # watch mode (rebuilds 3v0-ink + tsx --watch)
+npm run dev       # watch mode (rebuilds ev0-ink + tsx --watch)
 npm start         # production
-npm run build     # full build (3v0-ink + tsc)
+npm run build     # full build (ev0-ink + tsc)
 npm run typecheck # typecheck only (tsc --noEmit)
 npm run lint      # eslint
 npm run fmt       # prettier

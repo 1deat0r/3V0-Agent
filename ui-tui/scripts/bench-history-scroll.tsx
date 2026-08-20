@@ -13,7 +13,7 @@
 
 import { PassThrough } from 'stream'
 
-import { Box, renderSync, ScrollBox, type ScrollBoxHandle, Text } from '@3v0/ink'
+import { Box, renderSync, ScrollBox, type ScrollBoxHandle, Text } from '@ev0/ink'
 import React, { useLayoutEffect, useRef } from 'react'
 
 import { useVirtualHistory } from '../src/hooks/useVirtualHistory.js'

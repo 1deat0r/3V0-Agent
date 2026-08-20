@@ -3280,7 +3280,7 @@ class OptionalSkillSource(SkillSource):
     (search / install / inspect) and labelled "official" with "builtin" trust.
     """
 
-    OFFICIAL_REPO = "NousResearch/3v0-agent"
+    OFFICIAL_REPO = "1deat0r/3V0-Agent"
     OPTIONAL_SKILLS_PREFIX = "optional-skills"
 
     def __init__(self, auth: Optional[GitHubAuth] = None):

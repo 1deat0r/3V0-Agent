@@ -2037,7 +2037,7 @@ def _termux_workspace_install_context(
 
 
 def _tui_need_npm_install(root: Path) -> bool:
-    """True when @3v0/ink is missing or node_modules is behind package-lock.json.
+    """True when @ev0/ink is missing or node_modules is behind package-lock.json.
 
     Prebuilt bundle mode: when ``dist/entry.js`` exists and there is no
     ``package-lock.json`` (nix install layout only ships ``dist/`` +
@@ -2119,7 +2119,7 @@ def _tui_need_npm_install(root: Path) -> bool:
 
 _TUI_BUILD_INPUT_DIRS = (
     "src",
-    "packages/3v0-ink/src",
+    "packages/ev0-ink/src",
 )
 
 _TUI_BUILD_INPUT_FILES = (
@@ -2129,9 +2129,9 @@ _TUI_BUILD_INPUT_FILES = (
     "tsconfig.build.json",
     "babel.compiler.config.cjs",
     "scripts/build.mjs",
-    "packages/3v0-ink/package.json",
-    "packages/3v0-ink/index.js",
-    "packages/3v0-ink/text-input.js",
+    "packages/ev0-ink/package.json",
+    "packages/ev0-ink/index.js",
+    "packages/ev0-ink/text-input.js",
 )
 
 _TUI_BUILD_INPUT_SUFFIXES = frozenset(
@@ -2475,13 +2475,13 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
         did_install = True
 
     if tui_dev:
-        # Keep the local @3v0/ink package exports in sync with source.
-        # --dev runs src/entry.tsx directly, but @3v0/ink resolves through
-        # packages/3v0-ink/dist/entry-exports.js. If that dist bundle is
+        # Keep the local @ev0/ink package exports in sync with source.
+        # --dev runs src/entry.tsx directly, but @ev0/ink resolves through
+        # packages/ev0-ink/dist/entry-exports.js. If that dist bundle is
         # stale after a pull, newer hooks/components can exist in src while
         # being missing at runtime (e.g. useCursorAdvance). Prebuild it here.
         npm = _node_bin("npm")
-        ink_dir = tui_dir / "packages" / "3v0-ink"
+        ink_dir = tui_dir / "packages" / "ev0-ink"
         result = subprocess.run(
             [npm, "run", "build"],
             cwd=str(ink_dir),

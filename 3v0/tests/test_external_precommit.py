@@ -55,14 +55,14 @@ class ExternalPreCommitTest(unittest.TestCase):
         )
 
     def test_commit_fails_when_origin_remote_exists(self):
-        git(self.repo, "remote", "add", "origin", "https://github.com/NousResearch/3v0-agent")
+        git(self.repo, "remote", "add", "origin", "https://github.com/1deat0r/3V0-Agent")
         git(self.repo, "remote", "add", "public", "https://github.com/1deat0r/3V0-Agent.git")
         proc = self.run_hook()
         self.assertNotEqual(proc.returncode, 0, f"hook must fail with origin present: {proc.stdout}")
 
     def test_commit_succeeds_when_no_origin(self):
         git(self.repo, "remote", "add", "public", "https://github.com/1deat0r/3V0-Agent.git")
-        git(self.repo, "remote", "add", "upstream", "https://github.com/NousResearch/3v0-agent")
+        git(self.repo, "remote", "add", "upstream", "https://github.com/1deat0r/3V0-Agent")
         proc = self.run_hook()
         self.assertEqual(proc.returncode, 0, f"hook must pass without origin: {proc.stdout}")
 

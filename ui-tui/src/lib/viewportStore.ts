@@ -1,4 +1,4 @@
-import type { ScrollBoxHandle } from '@3v0/ink'
+import type { ScrollBoxHandle } from '@ev0/ink'
 import type { RefObject } from 'react'
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
 

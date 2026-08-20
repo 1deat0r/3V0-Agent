@@ -259,7 +259,7 @@ def test_launch_tui_exports_model_provider_and_toolsets(monkeypatch, main_mod):
 def test_make_tui_argv_dev_prebuilds_ev0_ink(monkeypatch, main_mod, tmp_path):
     tui_dir = tmp_path / "ui-tui"
     tsx = tui_dir / "node_modules" / ".bin" / "tsx"
-    ink_dir = tui_dir / "packages" / "3v0-ink"
+    ink_dir = tui_dir / "packages" / "ev0-ink"
     tsx.parent.mkdir(parents=True)
     ink_dir.mkdir(parents=True)
     tsx.write_text("#!/usr/bin/env node\n", encoding="utf-8")

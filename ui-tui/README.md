@@ -329,7 +329,7 @@ Current color overrides:
 
 ```text
 ui-tui/
-  packages/3v0-ink/   forked Ink renderer (local dep)
+  packages/ev0-ink/   forked Ink renderer (local dep)
   src/
     entry.tsx            TTY gate + render()
     app.tsx              top-level Ink tree, composes src/app/*
@@ -476,7 +476,7 @@ ui-tui/
       paste.ts                   bracketed paste snippet token regex
 
     types/
-      3v0-ink.d.ts            type declarations for @3v0/ink
+      ev0-ink.d.ts            type declarations for @ev0/ink
 
     __tests__/                   vitest suite
 ```

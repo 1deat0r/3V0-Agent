@@ -1,4 +1,4 @@
-import { useStdout } from '@3v0/ink'
+import { useStdout } from '@ev0/ink'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { PetGrid } from '../components/petSprite.js'

@@ -1,4 +1,4 @@
-import type { RunExternalProcess } from '@3v0/ink'
+import type { RunExternalProcess } from '@ev0/ink'
 
 import type { SetupStatusResponse } from '../gatewayTypes.js'
 import type { LaunchResult } from '../lib/externalCli.js'

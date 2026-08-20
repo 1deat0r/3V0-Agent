@@ -2,7 +2,7 @@
 
 Renders any content as colored ASCII character video. Audio, video, images, text, or pure math in, MP4/GIF/PNG sequence out. Full RGB color per character cell, 1080p 24fps default. No GPU.
 
-Built for [3V0 Agent](https://github.com/NousResearch/3v0-agent). Usable in any coding agent. Canonical source lives here; synced to [`NousResearch/3v0-agent/skills/creative/ascii-video`](https://github.com/NousResearch/3v0-agent/tree/main/skills/creative/ascii-video) via PR.
+Built for [3V0 Agent](https://github.com/1deat0r/3V0-Agent). Usable in any coding agent. Canonical source lives here; synced to [`1deat0r/3V0-Agent/skills/creative/ascii-video`](https://github.com/1deat0r/3V0-Agent/tree/main/skills/creative/ascii-video) via PR.
 
 ## What this is
 

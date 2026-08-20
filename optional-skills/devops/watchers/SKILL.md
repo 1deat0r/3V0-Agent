@@ -66,7 +66,7 @@ Watch a GitHub repo (set `GITHUB_TOKEN` in `${EV0_HOME:-~/.3v0}/.env` to avoid t
 
 ```bash
 python $EV0_HOME/skills/devops/watchers/scripts/watch_github.py \
-  --name 3v0-issues --repo NousResearch/3v0-agent --scope issues
+  --name 3v0-issues --repo 1deat0r/3V0-Agent --scope issues
 ```
 
 Poll an arbitrary JSON API:

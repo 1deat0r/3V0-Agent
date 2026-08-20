@@ -1,4 +1,4 @@
-import { Box, Text } from '@3v0/ink'
+import { Box, Text } from '@ev0/ink'
 import { memo } from 'react'
 
 // A cell is [tr,tg,tb,ta, br,bg,bb,ba] — the top + bottom pixel of one

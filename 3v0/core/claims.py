@@ -16,7 +16,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-DEFAULT_REPO = "NousResearch/3v0-agent"
+DEFAULT_REPO = "1deat0r/3V0-Agent"
 
 
 def load_claims(claims_path: Path) -> Dict[str, Any]:

@@ -81,7 +81,7 @@ def _patch_update_deps(monkeypatch, tmp_path, run_side_effect):
     monkeypatch.setattr(ev0_main, "_is_windows", lambda: False)
     monkeypatch.setattr(
         ev0_main, "_get_origin_url",
-        lambda *a, **k: "https://github.com/NousResearch/3v0-agent.git",
+        lambda *a, **k: "https://github.com/1deat0r/3V0-Agent.git",
     )
     monkeypatch.setattr(ev0_main, "_is_fork", lambda *a, **k: False)
     monkeypatch.setattr(

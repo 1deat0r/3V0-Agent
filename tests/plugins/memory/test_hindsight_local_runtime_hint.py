@@ -1,4 +1,4 @@
-"""NousResearch/3v0-agent#7718 — actionable message when local_embedded
+"""1deat0r/3V0-Agent#7718 — actionable message when local_embedded
 runtime (`hindsight-all`) is missing.
 
 `local_embedded` imports `from hindsight import HindsightEmbedded`, provided

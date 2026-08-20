@@ -6,7 +6,7 @@ scope for vulnerability reports.
 
 ## 1. Reporting a Vulnerability
 
-Report privately via [GitHub Security Advisories](https://github.com/NousResearch/3v0-agent/security/advisories/new)
+Report privately via [GitHub Security Advisories](https://github.com/1deat0r/3V0-Agent/security/advisories/new)
 or **security@nousresearch.com**. Do not open public issues for
 security vulnerabilities. **3V0 Agent does not operate a bug
 bounty program.**

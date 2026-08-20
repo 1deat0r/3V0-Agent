@@ -363,7 +363,7 @@ apps/shared	source	manual	Framework-agnostic shared package (@3v0/shared) — Js
 apps/bootstrap-installer	source	manual	Bootstrap/installer assets for the desktop app	Distribution	apps/desktop
 ui-tui	source	manual	Ink (React) terminal UI — 3v0 --tui; Node frontend of the TUI process model	The full TUI replacement for classic CLI; TS owns the screen, Python owns sessions	ui-tui/src;tui_gateway/;apps/desktop
 ui-tui/src	source	manual	TUI source (entry.tsx, app.tsx, gatewayClient.ts + components/hooks/lib)	The screen-side implementation	ui-tui/packages;tui_gateway/server.py
-ui-tui/packages	source	manual	Shared JS packages for the TUI (3v0-ink etc.)	Reusable UI kit	tui_gateway/
+ui-tui/packages	source	manual	Shared JS packages for the TUI (ev0-ink etc.)	Reusable UI kit	tui_gateway/
 ui-tui/scripts	source	manual	TUI build/dev scripts	Tooling for the Ink app	tui_gateway/
 tui_gateway	source	manual	Python JSON-RPC backend for the TUI + desktop (server.py catalog: methods/events)	The other half of the process model; slash catalog + completions live here	ui-tui/src;apps/shared
 web	source	manual	Dashboard frontend (React + Vite) — embedding the real 3v0 --tui via /api/pty	Complements, never re-implements, the chat surface	ev0_cli/web_server.py;apps/shared;ui-tui/

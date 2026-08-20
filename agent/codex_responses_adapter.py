@@ -1660,7 +1660,7 @@ def _normalize_codex_response(
         # are queued/in_progress/incomplete, reasoning alone is a valid final
         # state — forcing "incomplete" causes multi-minute stalls as the
         # continuation path re-issues calls (3 retries × up to 240s each).
-        # See https://github.com/NousResearch/3v0-agent/issues/64434
+        # See https://github.com/1deat0r/3V0-Agent/issues/64434
         if response_status == "completed" and issuer_kind not in (
             "codex_backend",
             "xai_responses",

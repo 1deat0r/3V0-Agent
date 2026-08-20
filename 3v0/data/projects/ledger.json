@@ -6,7 +6,7 @@
       "repo": "~/Projects/axiom-agent",
       "upstream": "upstream",
       "upstream_ref": "main",
-      "delta": "Axiom \u2014 hardfork of 3V0 Agent at HEAD (ADR-0087); `upstream` = NousResearch/3v0-agent merged routinely. prime-agent + pi fork archived as seed corn; Axiom's own layer (SOUL, AGENTS, ADR series 0087+, port queue) lives under `axiom/`, re-implementing archived prime-era capabilities as tracked ports.",
+      "delta": "Axiom \u2014 hardfork of 3V0 Agent at HEAD (ADR-0087); `upstream` = 1deat0r/3V0-Agent merged routinely. prime-agent + pi fork archived as seed corn; Axiom's own layer (SOUL, AGENTS, ADR series 0087+, port queue) lives under `axiom/`, re-implementing archived prime-era capabilities as tracked ports.",
       "track_upstream": true,
       "profile": "axiom",
       "store": "3v0/data/axiom/memory.json",

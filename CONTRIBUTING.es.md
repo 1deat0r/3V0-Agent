@@ -81,7 +81,7 @@ Esto no es una barra de calidad — es una decisión de acoplamiento y mantenimi
 ### Clonar e instalar
 
 ```bash
-git clone https://github.com/NousResearch/3v0-agent.git
+git clone https://github.com/1deat0r/3V0-Agent.git
 cd 3v0-agent
 
 # Crear venv con Python 3.11
@@ -581,7 +581,7 @@ test(tools): añadir tests unitarios para file_operations
 
 ## Reportar Issues
 
-- Usa [GitHub Issues](https://github.com/NousResearch/3v0-agent/issues)
+- Usa [GitHub Issues](https://github.com/1deat0r/3V0-Agent/issues)
 - Incluye: SO, versión de Python, versión de 3V0 (`3v0 version`), traza de error completa
 - Incluye pasos para reproducir
 - Verifica los issues existentes antes de crear duplicados

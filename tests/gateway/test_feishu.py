@@ -191,7 +191,7 @@ class TestFeishuAdapterMessaging(unittest.TestCase):
 
         Without this UA tag the Feishu server does not push group @mention
         events over the WebSocket transport.  See
-        https://github.com/NousResearch/3v0-agent/issues/50656
+        https://github.com/1deat0r/3V0-Agent/issues/50656
         """
         from gateway.config import PlatformConfig
         from plugins.platforms.feishu.adapter import FeishuAdapter

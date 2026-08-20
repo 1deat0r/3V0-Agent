@@ -8,7 +8,7 @@ platforms: [linux, macos, windows]
 metadata:
   3v0:
     tags: [3v0, setup, configuration, multi-agent, spawning, cli, gateway, themes, skins, desktop-plugins, tui-widgets, petdex, development]
-    homepage: https://github.com/NousResearch/3v0-agent
+    homepage: https://github.com/1deat0r/3V0-Agent
     related_skills: [claude-code, codex, opencode]
 ---
 
@@ -38,7 +38,7 @@ Good verification targets:
 
 - CLI commands: `3v0 --help`, `3v0 <command> --help`, and `ev0_cli/main.py`
 - User documentation: https://github.com/1deat0r/3V0-Agent/docs/
-- Source tree: https://github.com/NousResearch/3v0-agent
+- Source tree: https://github.com/1deat0r/3V0-Agent
 
 ## Quick Start
 

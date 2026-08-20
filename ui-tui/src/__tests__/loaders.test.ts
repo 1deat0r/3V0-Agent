@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { renderToScreen } from '../../packages/3v0-ink/src/ink/render-to-screen.js'
-import { cellAtIndex } from '../../packages/3v0-ink/src/ink/screen.js'
+import { renderToScreen } from '../../packages/ev0-ink/src/ink/render-to-screen.js'
+import { cellAtIndex } from '../../packages/ev0-ink/src/ink/screen.js'
 import { ShimmerRows, shimmerSegments, subscribeShimmerClock } from '../components/loaders.js'
 
 describe('ShimmerRows leniency (agent-authored calls)', () => {

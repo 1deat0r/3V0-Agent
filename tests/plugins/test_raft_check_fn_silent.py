@@ -7,7 +7,7 @@ operation). It must therefore be a *silent* predicate — returning True/False
 without logging — otherwise every user without the ``raft`` CLI installed
 gets their logs flooded with WARNING messages every few seconds.
 
-See: https://github.com/NousResearch/3v0-agent/issues/49234
+See: https://github.com/1deat0r/3V0-Agent/issues/49234
 """
 
 import logging

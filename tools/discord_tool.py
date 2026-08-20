@@ -100,7 +100,7 @@ def _discord_request(
         headers={
             "Authorization": f"Bot {token}",
             "Content-Type": "application/json",
-            "User-Agent": "3V0-Agent (https://github.com/NousResearch/3v0-agent)",
+            "User-Agent": "3V0-Agent (https://github.com/1deat0r/3V0-Agent)",
         },
     )
 

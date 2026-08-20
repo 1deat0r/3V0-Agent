@@ -12,7 +12,7 @@ metadata:
     tags: [privacy, data-broker, opt-out, ccpa, gdpr, security, doxxing]
     category: security
     related_skills: [google-workspace, agentmail, himalaya, scrapling, osint-investigation]
-    homepage: https://github.com/NousResearch/3v0-agent
+    homepage: https://github.com/1deat0r/3V0-Agent
 ---
 
 # unbroker

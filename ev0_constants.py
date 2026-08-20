@@ -127,7 +127,7 @@ def get_ev0_home() -> Path:
     callers that import this at load time.  Subprocess spawners are
     expected to propagate ``EV0_HOME`` explicitly (see the systemd
     template in ``ev0_cli/gateway.py`` and the kanban dispatcher in
-    ``ev0_cli/kanban_db.py``).  See https://github.com/NousResearch/3v0-agent/issues/18594.
+    ``ev0_cli/kanban_db.py``).  See https://github.com/1deat0r/3V0-Agent/issues/18594.
     """
     override = get_ev0_home_override()
     if override:
@@ -1017,7 +1017,7 @@ def secure_parent_dir(path: Path) -> None:
     prevent catastrophic host bricking when ``EV0_HOME`` or other path
     env vars resolve to an unexpected location.
 
-    See https://github.com/NousResearch/3v0-agent/issues/25821.
+    See https://github.com/1deat0r/3V0-Agent/issues/25821.
     """
     parent = path.parent.resolve()
     # Refuse root and its direct children (/usr, /home, /var, /tmp, …).
@@ -1461,7 +1461,7 @@ def is_container() -> bool:
 
     Result is cached for the process lifetime.  Import-safe — no heavy deps.
 
-    See: NousResearch/3v0-agent#47111
+    See: 1deat0r/3V0-Agent#47111
     """
     global _container_detected
     if _container_detected is not None:

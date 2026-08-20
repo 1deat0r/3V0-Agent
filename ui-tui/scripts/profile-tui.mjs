@@ -4,7 +4,7 @@ import inspector from 'node:inspector'
 import { performance } from 'node:perf_hooks'
 
 import React from 'react'
-import { render } from '@3v0/ink'
+import { render } from '@ev0/ink'
 import { AppLayout } from '../src/components/appLayout.tsx'
 import { resetOverlayState } from '../src/app/overlayStore.ts'
 import { resetTurnState } from '../src/app/turnStore.ts'

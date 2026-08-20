@@ -49,7 +49,7 @@ class TestWhitespaceDifference:
     def test_boundary_space_preserved_after_match(self):
         """Regression: whitespace_normalized match ending with a non-space
         character must NOT consume the word-boundary space that follows.
-        https://github.com/NousResearch/3v0-agent/issues/52491"""
+        https://github.com/1deat0r/3V0-Agent/issues/52491"""
         # Case 1 — simple word boundary
         new, count, strategy, err = fuzzy_find_and_replace(
             "foo   bar baz", "foo bar", "XY",

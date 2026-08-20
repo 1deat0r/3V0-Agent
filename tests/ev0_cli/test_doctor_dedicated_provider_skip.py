@@ -8,7 +8,7 @@ with HTTP 404. The dedicated check at ev0_cli/doctor.py already covers
 Anthropic with the right headers, so the pluggable profile must be
 skipped by `_build_apikey_providers_list()`.
 
-See: NousResearch/3v0-agent#22346
+See: 1deat0r/3V0-Agent#22346
 """
 
 from __future__ import annotations

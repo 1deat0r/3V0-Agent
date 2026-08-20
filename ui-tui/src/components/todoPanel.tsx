@@ -1,4 +1,4 @@
-import { Box, Text } from '@3v0/ink'
+import { Box, Text } from '@ev0/ink'
 import { memo, useState } from 'react'
 
 import { countPendingTodos } from '../lib/liveProgress.js'
