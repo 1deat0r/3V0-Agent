@@ -1592,6 +1592,63 @@ def _is_fork(origin_url: Optional[str]) -> bool:
             return False
     return True
 
+
+def _resolve_update_remote(git_cmd: list[str], cwd: Path) -> Optional[str]:
+    """Resolve the remote the updater should fetch from.
+
+    Post-incident invariant (2026-08-20): the canonical repo must not carry a
+    remote named ``origin`` pointing at upstream. Callers that used to fetch
+    ``origin`` must now resolve a safe update remote:
+      - if an ``origin`` remote somehow exists (shouldn't after the rename),
+        refuse it — never update from ``origin``;
+      - prefer ``public`` (the sovereign body's canonical push remote);
+      - fall back to any remote whose URL is NOT the upstream official repo;
+      - else None (caller should fail closed with a clear message).
+    """
+    try:
+        result = subprocess.run(
+            git_cmd + ["remote"],
+            cwd=cwd,
+            capture_output=True,
+            text=True, encoding="utf-8", errors="replace",
+        )
+        if result.returncode != 0:
+            return None
+        remotes = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    except Exception:
+        return None
+
+    if not remotes:
+        return None
+
+    # 1. Never update from a literal origin.
+    if "origin" in remotes:
+        return None
+
+    # 2. Prefer public.
+    if "public" in remotes:
+        return "public"
+
+    # 3. Otherwise any remote that isn't the upstream official repo.
+    for name in remotes:
+        if name in ("upstream", "fork", "nousresearch"):
+            continue
+        try:
+            r = subprocess.run(
+                git_cmd + ["remote", "get-url", name],
+                cwd=cwd, capture_output=True, text=True,
+                encoding="utf-8", errors="replace",
+            )
+            url = r.stdout.strip() if r.returncode == 0 else ""
+        except Exception:
+            url = ""
+        if url and not any(
+            official in url for official in OFFICIAL_REPO_URLS
+        ):
+            return name
+
+    return None
+
 def _has_upstream_remote(git_cmd: list[str], cwd: Path) -> bool:
     """Check if an 'upstream' remote already exists."""
     try:
@@ -4635,8 +4692,16 @@ def _cmd_update_impl(args, gateway_mode: bool):
             print("  (removed stale git lock(s): %s)" % ", ".join(cleared))
 
         print("→ Fetching updates...")
+        update_remote = _m()._resolve_update_remote(git_cmd, _m().PROJECT_ROOT)
+        if not update_remote:
+            print(
+                "✗ No safe update remote. The update path refuses the legacy "
+                "`origin` remote (2026-08-20 incident). Configure `public` "
+                "and retry."
+            )
+            sys.exit(1)
         fetch_result = subprocess.run(
-            git_cmd + ["fetch", "origin", branch],
+            git_cmd + ["fetch", update_remote, branch],
             cwd=_m().PROJECT_ROOT,
             capture_output=True,
             text=True, encoding="utf-8", errors="replace",
@@ -4924,17 +4989,18 @@ def _cmd_update_impl(args, gateway_mode: bool):
                     "  ⚠ Fast-forward not possible (history diverged), resetting to match remote..."
                 )
                 reset_result = subprocess.run(
-                    git_cmd + ["reset", "--hard", f"origin/{branch}"],
+                    git_cmd + ["reset", "--hard", f"{update_remote}/{branch}"],
                     cwd=_m().PROJECT_ROOT,
                     capture_output=True,
                     text=True, encoding="utf-8", errors="replace",
                 )
                 if reset_result.returncode != 0:
-                    print(f"✗ Failed to reset to origin/{branch}.")
+                    print(f"✗ Failed to reset to {update_remote}/{branch}.")
                     if reset_result.stderr.strip():
                         print(f"  {reset_result.stderr.strip()}")
                     print(
-                        f"  Try manually: git fetch origin && git reset --hard origin/{branch}"
+                        f"  Try manually: git fetch {update_remote} && "
+                        f"git reset --hard {update_remote}/{branch}"
                     )
                     sys.exit(1)
 
