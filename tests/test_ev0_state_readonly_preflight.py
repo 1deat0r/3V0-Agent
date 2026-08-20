@@ -7,7 +7,7 @@ from deep inside ``_init_schema`` — naming no file and no fix.
 
 ``preflight_db_writability`` now runs before the first connection:
 
-- files inside the Hermes home tree are repaired with ``chmod u+rw``
+- files inside the 3V0 home tree are repaired with ``chmod u+rw``
   (the safe scope — chmod fails on files the user doesn't own);
 - anything else fails fast with an error naming the exact file and the
   exact ``chmod`` command;
@@ -35,11 +35,11 @@ pytestmark = [
 
 
 @pytest.fixture()
-def hermes_home(tmp_path, monkeypatch):
-    """Isolated HERMES_HOME so the repair scope covers tmp DBs."""
-    home = tmp_path / ".hermes"
+def ev0_home(tmp_path, monkeypatch):
+    """Isolated EV0_HOME so the repair scope covers tmp DBs."""
+    home = tmp_path / ".3V0"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("EV0_HOME", str(home))
     return home
 
 
@@ -73,8 +73,8 @@ def _make_wal_db(path: Path) -> None:
 
 
 class TestRepairScope:
-    def test_repairs_readonly_db_inside_home(self, hermes_home):
-        db = hermes_home / "state.db"
+    def test_repairs_readonly_db_inside_home(self, ev0_home):
+        db = ev0_home / "state.db"
         _make_db(db)
         os.chmod(db, 0o444)
 
@@ -82,8 +82,8 @@ class TestRepairScope:
 
         assert os.access(db, os.W_OK)
 
-    def test_repairs_readonly_sidecars(self, hermes_home):
-        db = hermes_home / "state.db"
+    def test_repairs_readonly_sidecars(self, ev0_home):
+        db = ev0_home / "state.db"
         _make_wal_db(db)
         wal = db.with_name(db.name + "-wal")
         assert wal.is_file(), "fixture must leave a -wal behind"
@@ -96,8 +96,8 @@ class TestRepairScope:
         assert os.access(wal, os.W_OK)
 
 
-    def test_repairs_readonly_parent_directory(self, hermes_home):
-        sub = hermes_home / "kanban"
+    def test_repairs_readonly_parent_directory(self, ev0_home):
+        sub = ev0_home / "kanban"
         sub.mkdir()
         db = sub / "kanban.db"
         _make_db(db)
@@ -110,7 +110,7 @@ class TestRepairScope:
 
 
 class TestRefusalOutsideScope:
-    def test_actionable_error_names_file_and_chmod(self, hermes_home, tmp_path):
+    def test_actionable_error_names_file_and_chmod(self, ev0_home, tmp_path):
         outside = tmp_path / "elsewhere"
         outside.mkdir()
         db = outside / "custom.db"
@@ -127,7 +127,7 @@ class TestRefusalOutsideScope:
         finally:
             os.chmod(db, 0o644)
 
-    def test_wal_error_warns_against_deletion(self, hermes_home, tmp_path):
+    def test_wal_error_warns_against_deletion(self, ev0_home, tmp_path):
         outside = tmp_path / "elsewhere"
         outside.mkdir()
         db = outside / "custom.db"
@@ -148,8 +148,8 @@ class TestSkips:
 
 
 
-    def test_healthy_db_untouched(self, hermes_home):
-        db = hermes_home / "state.db"
+    def test_healthy_db_untouched(self, ev0_home):
+        db = ev0_home / "state.db"
         _make_db(db)
         before = stat.S_IMODE(db.stat().st_mode)
         preflight_db_writability(db)
@@ -157,8 +157,8 @@ class TestSkips:
 
 
 class TestSessionDBIntegration:
-    def test_sessiondb_selfheals_readonly_db_in_home(self, hermes_home):
-        db_path = hermes_home / "state.db"
+    def test_sessiondb_selfheals_readonly_db_in_home(self, ev0_home):
+        db_path = ev0_home / "state.db"
         first = SessionDB(db_path)
         first.close()
         for suffix in ("", "-wal", "-shm"):
@@ -173,7 +173,7 @@ class TestSessionDBIntegration:
             db.close()
 
     def test_sessiondb_actionable_error_outside_home(
-        self, hermes_home, tmp_path
+        self, ev0_home, tmp_path
     ):
         outside = tmp_path / "custom-loc"
         outside.mkdir()

@@ -1,4 +1,4 @@
-import { Text } from '@hermes/ink'
+import { Text } from '@3v0/ink'
 
 import { Dialog, Overlay, type OverlayZone } from '../../components/overlay.js'
 import { defineWidgetApp } from '../registry.js'

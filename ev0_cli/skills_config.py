@@ -1,9 +1,9 @@
 """
-Skills configuration for Hermes Agent.
-`hermes skills` enters this module.
+Skills configuration for 3V0 Agent.
+`3v0 skills` enters this module.
 
 Toggle individual skills or categories on/off, globally or per-platform.
-Config stored in ~/.hermes/config.yaml under:
+Config stored in ~/.3V0/config.yaml under:
 
   skills:
     disabled: [skill-a, skill-b]          # global disabled list
@@ -148,7 +148,7 @@ def _toggle_by_category(skills: List[dict], disabled: Set[str]) -> Set[str]:
 # ─── Entry Point ──────────────────────────────────────────────────────────────
 
 def skills_command(args=None):
-    """Entry point for `hermes skills`."""
+    """Entry point for `3v0 skills`."""
     from ev0_cli.curses_ui import curses_checklist
 
     config = load_config()

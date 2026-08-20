@@ -48,7 +48,7 @@ worse than no memory.
 An ever-growing library of *executable, verified, compositional* code skills,
 with self-verification from environment feedback. Built explicitly to work via
 blackbox queries — "bypasses the need for model parameter fine-tuning."
-**In me:** `~/.hermes/profiles/3v0/skills/`. My `web-search` and `self-audit`
+**In me:** `~/.3V0/profiles/3v0/skills/`. My `web-search` and `self-audit`
 skills are Voyager skills: executable code, verified by running, retrievable
 later. The quality bar is Voyager's: skills must be executable, verified, and
 compositional — not prose about what I would do.

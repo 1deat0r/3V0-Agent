@@ -39,19 +39,19 @@ def test_discovery_policy_change_clears_only_discovered_rows(conn):
 
 
 def test_create_get_list(conn):
-    pid = pdb.create_project(conn, name="Hermes Agent", folders=["/tmp/hermes"])
+    pid = pdb.create_project(conn, name="3V0 Agent", folders=["/tmp/3v0"])
     proj = pdb.get_project(conn, pid)
 
     assert proj is not None
-    assert proj.slug == "hermes-agent"
-    assert proj.name == "Hermes Agent"
+    assert proj.slug == "3v0-agent"
+    assert proj.name == "3V0 Agent"
     # First folder becomes primary.
-    assert proj.primary_path == "/tmp/hermes"
-    assert [f.path for f in proj.folders] == ["/tmp/hermes"]
+    assert proj.primary_path == "/tmp/3v0"
+    assert [f.path for f in proj.folders] == ["/tmp/3v0"]
     assert proj.folders[0].is_primary is True
 
     # Lookup by slug too.
-    assert pdb.get_project(conn, "hermes-agent").id == pid
+    assert pdb.get_project(conn, "3v0-agent").id == pid
     assert len(pdb.list_projects(conn)) == 1
 
 
@@ -126,7 +126,7 @@ def test_find_by_primary_path(conn):
 
 
 def test_per_profile_isolation(tmp_path):
-    # Two distinct DB paths stand in for two profiles' HERMES_HOME.
+    # Two distinct DB paths stand in for two profiles' EV0_HOME.
     a = pdb.connect(db_path=tmp_path / "a" / "projects.db")
     b = pdb.connect(db_path=tmp_path / "b" / "projects.db")
     try:

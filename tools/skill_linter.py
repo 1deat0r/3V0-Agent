@@ -11,7 +11,7 @@ instead of native tools, a missing author/license/metadata block, a
 marketing words in the description, ``platforms:`` gating vs POSIX-only
 primitives, and forbidden scaffolding files.
 
-Design contract (matches the Hermes "no lazy-reading escape hatches / don't
+Design contract (matches the 3V0 "no lazy-reading escape hatches / don't
 destroy the feature" posture):
 
 * Findings are **advisory** by default. ``lint_skill`` returns a list of
@@ -196,31 +196,31 @@ def _check_metadata_block(frontmatter: Dict[str, Any]) -> List[LintFinding]:
                 )
             )
     meta = frontmatter.get("metadata")
-    hermes_meta = meta.get("hermes") if isinstance(meta, dict) else None
-    if not isinstance(hermes_meta, dict):
+    ev0_meta = meta.get("3v0") if isinstance(meta, dict) else None
+    if not isinstance(ev0_meta, dict):
         findings.append(
             LintFinding(
                 WARNING,
                 "missing-metadata",
-                "frontmatter is missing metadata.hermes.{tags, related_skills}.",
+                "frontmatter is missing metadata.3v0.{tags, related_skills}.",
             )
         )
     else:
-        if "tags" not in hermes_meta:
+        if "tags" not in ev0_meta:
             findings.append(
                 LintFinding(
-                    WARNING, "missing-metadata", "metadata.hermes.tags is missing."
+                    WARNING, "missing-metadata", "metadata.3v0.tags is missing."
                 )
             )
     author = str(frontmatter.get("author", ""))
-    if author and author.strip().lower() in ("hermes", "agent", "hermes agent") and (
-        author != "Hermes Agent"
+    if author and author.strip().lower() in ("3v0", "agent", "3v0 agent") and (
+        author != "3V0 Agent"
     ):
         findings.append(
             LintFinding(
                 WARNING,
                 "author-caps",
-                f"author '{author}' should be 'Hermes Agent' (proper caps) "
+                f"author '{author}' should be '3V0 Agent' (proper caps) "
                 f"or a real contributor name.",
             )
         )

@@ -63,7 +63,7 @@ class TestRecord(unittest.TestCase):
             record(self.store, "x", "memory", "test", supersede_id="doesnotexist")
 
     def test_rejects_profile_separator_in_content(self) -> None:
-        # '§' cannot round-trip through the Hermes profile's wire format,
+        # '§' cannot round-trip through the 3V0 profile's wire format,
         # so the record path refuses it before it enters the store.
         with self.assertRaises(RecordError):
             record(self.store, "bad § fact", "memory", "test")

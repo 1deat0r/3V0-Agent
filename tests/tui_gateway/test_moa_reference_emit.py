@@ -22,7 +22,7 @@ def server():
         "sys.modules",
         {
             "ev0_constants": MagicMock(
-                get_hermes_home=MagicMock(return_value="/tmp/hermes_test_moa_emit")
+                get_ev0_home=MagicMock(return_value="/tmp/ev0_test_moa_emit")
             ),
             "ev0_cli.env_loader": MagicMock(),
             "ev0_cli.banner": MagicMock(),

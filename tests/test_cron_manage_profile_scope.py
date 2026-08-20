@@ -2,8 +2,8 @@
 
 Mirrors ``skills.manage`` / ``mcp.catalog``: when a ``profile`` is passed the
 handler resolves ``get_profile_dir(profile)`` and wraps the action dispatch in
-``set_hermes_home_override`` / ``reset_hermes_home_override``. Because
-``cronjob()`` -> ``list_jobs()`` keys off ``get_hermes_home()``, the list action
+``set_ev0_home_override`` / ``reset_ev0_home_override``. Because
+``cronjob()`` -> ``list_jobs()`` keys off ``get_ev0_home()``, the list action
 must then read THAT profile's ``cron/jobs.json``, not the launch profile's.
 """
 
@@ -52,9 +52,9 @@ def test_cron_manage_profile_reads_that_profiles_store(tmp_path, monkeypatch):
 
     # The override must not leak: an unscoped call after this one resolves the
     # launch profile again, which does not contain botA's job.
-    from ev0_constants import get_hermes_home_override
+    from ev0_constants import get_ev0_home_override
 
-    assert get_hermes_home_override() is None
+    assert get_ev0_home_override() is None
 
 
 def test_cron_manage_unknown_profile_errors(tmp_path, monkeypatch):

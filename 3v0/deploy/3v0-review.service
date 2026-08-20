@@ -1,6 +1,6 @@
 # 3V0 own-clock session reviewer (Stone 9 — direction 4's opening).
 #
-# 3V0's first Hermes-independent autonomous process: the review driver loops
+# 3V0's first 3V0-independent autonomous process: the review driver loops
 # on its own schedule (--latest every --interval seconds), reviewing the
 # newest unreviewed *ended* session against the canonical store via a real
 # DeepSeek-v4-pro call. systemd is only the supervisor (restart on crash);

@@ -1,4 +1,4 @@
-import { Box, NoSelect, ScrollBox, type ScrollBoxHandle, Text, useInput, useStdout } from '@hermes/ink'
+import { Box, NoSelect, ScrollBox, type ScrollBoxHandle, Text, useInput, useStdout } from '@3v0/ink'
 import { useEffect, useRef, useState } from 'react'
 
 import type { GatewayClient } from '../gatewayClient.js'

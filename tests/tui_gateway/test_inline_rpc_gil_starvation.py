@@ -38,7 +38,7 @@ def server():
     # the whole test would poison modules first imported inside test bodies
     # (see tests/tui_gateway/test_protocol.py for the full rationale).
     with patch.dict("sys.modules", {
-        "ev0_constants": MagicMock(get_hermes_home=MagicMock(return_value="/tmp/hermes_test")),
+        "ev0_constants": MagicMock(get_ev0_home=MagicMock(return_value="/tmp/ev0_test")),
         "ev0_cli.env_loader": MagicMock(),
         "ev0_cli.banner": MagicMock(),
         "ev0_state": MagicMock(),

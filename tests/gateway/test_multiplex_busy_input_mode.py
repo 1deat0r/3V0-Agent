@@ -116,7 +116,7 @@ async def test_secondary_profile_busy_mode_controls_live_busy_behavior(
     expected_text_mode,
 ):
     """A routed profile chooses queue/steer/interrupt independently."""
-    monkeypatch.setenv("HERMES_GATEWAY_BUSY_ACK_ENABLED", "false")
+    monkeypatch.setenv("EV0_GATEWAY_BUSY_ACK_ENABLED", "false")
     runner = _runner(default_mode="interrupt")
     adapter = await _load_profile_snapshot(
         runner,
@@ -153,7 +153,7 @@ async def test_secondary_profile_busy_mode_controls_priority_path(
     secondary_mode,
 ):
     """The runner's early active-agent path uses the same routed policy."""
-    monkeypatch.setenv("HERMES_TELEGRAM_FOLLOWUP_GRACE_SECONDS", "0")
+    monkeypatch.setenv("EV0_TELEGRAM_FOLLOWUP_GRACE_SECONDS", "0")
     runner = _runner(default_mode="interrupt")
     adapter = await _load_profile_snapshot(
         runner,
@@ -212,7 +212,7 @@ async def test_secondary_profile_busy_mode_controls_priority_restart_drain(
     tmp_path,
     monkeypatch,
 ):
-    monkeypatch.setenv("HERMES_TELEGRAM_FOLLOWUP_GRACE_SECONDS", "0")
+    monkeypatch.setenv("EV0_TELEGRAM_FOLLOWUP_GRACE_SECONDS", "0")
     runner = _runner(default_mode="interrupt")
     adapter = await _load_profile_snapshot(
         runner,
@@ -241,7 +241,7 @@ async def test_secondary_adapter_busy_guard_stamps_profile_before_resolving_mode
     monkeypatch,
 ):
     """Per-profile adapters route busy events before the message wrapper runs."""
-    monkeypatch.setenv("HERMES_GATEWAY_BUSY_ACK_ENABLED", "false")
+    monkeypatch.setenv("EV0_GATEWAY_BUSY_ACK_ENABLED", "false")
     runner = _runner(default_mode="interrupt")
     adapter = await _load_profile_snapshot(
         runner,
@@ -288,7 +288,7 @@ async def test_secondary_legacy_busy_text_mode_is_profile_specific(tmp_path):
 
 @pytest.mark.asyncio
 async def test_default_busy_mode_is_unchanged_by_secondary_profile(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_GATEWAY_BUSY_ACK_ENABLED", "false")
+    monkeypatch.setenv("EV0_GATEWAY_BUSY_ACK_ENABLED", "false")
     runner = _runner(default_mode="interrupt")
     await _load_profile_snapshot(runner, tmp_path / "research", "steer")
     adapter = _adapter()

@@ -188,15 +188,15 @@ class TestOneTurnNeverPersisted:
         from gateway.run import GatewayRunner
         from ev0_cli.model_switch import ModelSwitchResult
 
-        hermes_home = tmp_path / ".hermes"
-        hermes_home.mkdir()
-        (hermes_home / "config.yaml").write_text(
+        ev0_home = tmp_path / ".3V0"
+        ev0_home.mkdir()
+        (ev0_home / "config.yaml").write_text(
             _yaml.safe_dump(
                 {"model": {"default": "old-model", "provider": "openrouter"}}
             ),
             encoding="utf-8",
         )
-        monkeypatch.setattr(gateway_run, "_hermes_home", hermes_home)
+        monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
         monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda: {})
         monkeypatch.setattr(
             "ev0_cli.model_switch.switch_model",
@@ -211,8 +211,8 @@ class TestOneTurnNeverPersisted:
                 provider_label="OpenRouter",
             ),
         )
-        monkeypatch.setattr("ev0_constants.get_hermes_home", lambda: hermes_home)
-        monkeypatch.setattr("ev0_cli.config.get_hermes_home", lambda: hermes_home)
+        monkeypatch.setattr("ev0_constants.get_ev0_home", lambda: ev0_home)
+        monkeypatch.setattr("ev0_cli.config.get_ev0_home", lambda: ev0_home)
 
         runner = object.__new__(GatewayRunner)
         runner.adapters = {}

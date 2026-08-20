@@ -12,7 +12,7 @@ from gateway.session import SessionStore
 
 @pytest.mark.asyncio
 async def test_gateway_retry_replaces_last_user_turn_in_transcript(tmp_path, monkeypatch):
-    # Pin DEFAULT_DB_PATH so SessionDB() doesn't write to the real ~/.hermes/state.db.
+    # Pin DEFAULT_DB_PATH so SessionDB() doesn't write to the real ~/.3V0/state.db.
     # (Module-level constant snapshot, see test_load_transcript_db_only.)
     import ev0_state
     monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", tmp_path / "state.db")

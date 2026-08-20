@@ -1,4 +1,4 @@
-"""Hermes middleware contract helpers.
+"""3V0 middleware contract helpers.
 
 Observer hooks report what happened. Middleware can change what happens by
 rewriting a request or wrapping the actual execution callback. Keep the small
@@ -14,8 +14,8 @@ from typing import Any, Callable, Dict, List
 
 logger = logging.getLogger(__name__)
 
-OBSERVER_SCHEMA_VERSION = "hermes.observer.v1"
-MIDDLEWARE_SCHEMA_VERSION = "hermes.middleware.v1"
+OBSERVER_SCHEMA_VERSION = "3v0.observer.v1"
+MIDDLEWARE_SCHEMA_VERSION = "3v0.middleware.v1"
 
 TOOL_REQUEST_MIDDLEWARE = "tool_request"
 TOOL_EXECUTION_MIDDLEWARE = "tool_execution"
@@ -81,7 +81,7 @@ def apply_llm_request_middleware(
     """Apply registered LLM request middleware.
 
     Middleware may return ``{"request": {...}}`` to replace the effective
-    provider kwargs before Hermes sends them.
+    provider kwargs before 3V0 sends them.
     """
     if not _has_middleware(LLM_REQUEST_MIDDLEWARE):
         return RequestMiddlewareResult(

@@ -20,7 +20,7 @@ Contract (mirrors Muse Code's documented semantics):
   exactly as before.
 - **One worktree per child**, branched from the parent repo's current
   ``HEAD`` under ``<repo>/.worktrees/subagent-<id>`` on branch
-  ``hermes-subagent/<id>``.
+  ``3v0-subagent/<id>``.
 - **The parent reviews/merges.** Children commit inside their own worktree;
   each result entry reports the worktree path, branch, commit count, and
   dirty state so the parent can review or merge each branch.
@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 _GIT_TIMEOUT = 30
 _WORKTREES_DIRNAME = ".worktrees"
-_BRANCH_NAMESPACE = "hermes-subagent"
+_BRANCH_NAMESPACE = "3v0-subagent"
 
 
 def _run_git(args, cwd: str, timeout: int = _GIT_TIMEOUT):

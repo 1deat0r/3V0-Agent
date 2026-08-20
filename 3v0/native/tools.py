@@ -1,6 +1,6 @@
 """Native tool registry — the native-mode loop's hands.
 
-Stdlib-only, zero Hermes. Deliberately small and constrained. Tools:
+Stdlib-only, zero 3V0. Deliberately small and constrained. Tools:
   * read_file / write_file — rooted inside the repo + profile; secret files denied
   * run_script — run a native script under 3v0/scripts/ by name
   * run_terminal — one shell command, but denylisted against self-termination
@@ -16,14 +16,14 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent.parent
 SCRIPTS = REPO / "3v0" / "scripts"
-PROFILE = Path(__import__("os").environ.get("HERMES_HOME") or "~/.hermes/profiles/3v0").expanduser()
+PROFILE = Path(__import__("os").environ.get("EV0_HOME") or "~/.3V0/profiles/3v0").expanduser()
 _ALLOWED_ROOTS = (REPO.resolve(), PROFILE.resolve())
 _SECRET_PARTS = (".env", ".pem", "wallet", "secrets", "cred", "token", "key.pem")
 
 _DENY_REASONS = (
     (re.compile(r"\bsystemctl\b.*?(stop|restart)\b.*?(gateway|3v0-gateway)", re.I), "gateway lifecycle via systemctl"),
-    (re.compile(r"\bhermes\b.*\bgateway\b.*?(stop|restart)\b", re.I), "gateway lifecycle via hermes"),
-    (re.compile(r"\b(pkill|killall)\b.*\b(hermes|gateway|3v0)\b", re.I), "self-termination via pkill/killall"),
+    (re.compile(r"\b(?:3v0|ev0)\b.*\bgateway\b.*?(stop|restart)\b", re.I), "gateway lifecycle via 3V0"),
+    (re.compile(r"\b(pkill|killall)\b.*\b(3v0|gateway|3v0)\b", re.I), "self-termination via pkill/killall"),
     (re.compile(r"\bkill\b.*(pgrep|pidof)", re.I), "self-termination via kill+pgrep"),
     (re.compile(r"\brm\s+-[a-z]*[rf][a-z]*\s+/", re.I), "destroy root"),
     (re.compile(r"\s>\s?/(etc|boot|sys|proc)/", re.I), "write to system path"),

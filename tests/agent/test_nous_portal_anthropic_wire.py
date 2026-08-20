@@ -55,7 +55,7 @@ class TestApiModeRouting:
 
     def test_determine_api_mode_honors_the_model_for_nous(self):
         """Callers that skip resolve_runtime_provider (fallback, switch_model
-        empty-mode path) must still land Claude on Messages — the Hermes
+        empty-mode path) must still land Claude on Messages — the 3V0
         overlay alone advertises openai_chat for every Nous model."""
         from ev0_cli.providers import determine_api_mode
 
@@ -68,7 +68,7 @@ class TestApiModeRouting:
             == "anthropic_messages"
         )
         assert (
-            determine_api_mode("nous", PORTAL_URL, model="hermes-4-405b")
+            determine_api_mode("nous", PORTAL_URL, model="3v0-4-405b")
             == "chat_completions"
         )
         # No model → historical OpenAI-wire default (safer than guessing).
@@ -117,7 +117,7 @@ class TestRuntimeResolution:
         monkeypatch.setattr(
             rp,
             "_get_model_config",
-            lambda: {"provider": "nous", "default": "hermes-4-405b"},
+            lambda: {"provider": "nous", "default": "3v0-4-405b"},
         )
 
         resolved = rp.resolve_runtime_provider(
@@ -197,7 +197,7 @@ class TestClientShape:
         self, monkeypatch
     ):
         """The Anthropic SDK fills api_key from ANTHROPIC_API_KEY when the
-        constructor omits it. Hermes loads that env from ~/.hermes/.env, so
+        constructor omits it. 3V0 loads that env from ~/.3V0/.env, so
         without an explicit clear every Portal request would dual-auth as
         X-Api-Key: sk-ant-… + Authorization: Bearer portal.jwt."""
         from agent.anthropic_adapter import build_anthropic_client
@@ -289,12 +289,12 @@ class TestPortalBodyFields:
         return build_api_kwargs(agent, [{"role": "user", "content": "hi"}])
 
     def test_portal_tags_reach_the_messages_request(self):
-        from agent.portal_tags import hermes_client_tag
+        from agent.portal_tags import ev0_client_tag
 
         tags = self._build()["extra_body"]["tags"]
 
-        assert "product=hermes-agent" in tags
-        assert hermes_client_tag() in tags
+        assert "product=3v0-agent" in tags
+        assert ev0_client_tag() in tags
         assert all(isinstance(tag, str) for tag in tags), (
             "Portal skips non-string tag entries unpredictably"
         )
@@ -439,16 +439,16 @@ class TestAuxiliaryDualWire:
         with (
             patch(
                 "agent.auxiliary_client._try_nous",
-                return_value=(plain, "hermes-4-405b"),
+                return_value=(plain, "3v0-4-405b"),
             ),
             patch(
                 "agent.anthropic_adapter.build_anthropic_client",
                 side_effect=AssertionError("must not build Anthropic client"),
             ),
         ):
-            client, model = resolve_provider_client("nous", "hermes-4-405b")
+            client, model = resolve_provider_client("nous", "3v0-4-405b")
 
-        assert model == "hermes-4-405b"
+        assert model == "3v0-4-405b"
         assert client is plain
         assert not isinstance(client, AnthropicAuxiliaryClient)
 

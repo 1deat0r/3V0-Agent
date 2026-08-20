@@ -78,7 +78,7 @@ class TestManagedUvPath:
     # for real by TestEnsureUvWindowsSafe on the Windows lane.
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX-only: bin/uv name")
     def test_posix(self, tmp_path):
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path):
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path):
             from ev0_cli.managed_uv import managed_uv_path
             assert managed_uv_path() == tmp_path / "bin" / "uv"
 
@@ -91,7 +91,7 @@ class TestResolveUv:
 
     def test_existing_executable(self, tmp_path):
         _make_executable(tmp_path / "bin" / "uv")
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path):
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path):
             from ev0_cli.managed_uv import resolve_uv
             result = resolve_uv()
             assert result == str(tmp_path / "bin" / "uv")
@@ -102,7 +102,7 @@ class TestResolveUv:
         uv.write_text("not a binary")
         # Ensure no execute bit
         uv.chmod(0o644)
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path):
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path):
             from ev0_cli.managed_uv import resolve_uv
             assert resolve_uv() is None
 
@@ -114,7 +114,7 @@ class TestResolveUv:
 class TestEnsureUv:
 
     def test_installs_if_missing(self, tmp_path):
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path), \
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
              patch("ev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")), \
              patch("ev0_cli.managed_uv._install_uv") as mock_install:
             # Simulate the installer creating the binary
@@ -144,7 +144,7 @@ class TestEnsureUv:
 
         observed = []
         with patch(
-            "ev0_cli.managed_uv.get_hermes_home",
+            "ev0_cli.managed_uv.get_ev0_home",
             return_value=tmp_path,
         ), patch(
             "ev0_cli.managed_uv._install_uv",
@@ -165,7 +165,7 @@ class TestEnsureUvUpdateBoundary:
     """``ensure_uv()`` must answer to both the single-value and the legacy
     ``(path, fresh_bootstrap)`` call conventions — **on POSIX**.
 
-    ``hermes update`` runs the call site from the old, already-imported
+    ``3v0 update`` runs the call site from the old, already-imported
     ``ev0_cli.main`` against the freshly pulled ``managed_uv``. A release
     parked on a ``(path, fresh)`` tuple runs ``uv_bin, fresh = ensure_uv()``
     against the single-value module; the path is an iterable ``str`` so the
@@ -183,7 +183,7 @@ class TestEnsureUvUpdateBoundary:
 
     def test_success_usable_as_single_value(self, tmp_path):
         _make_executable(tmp_path / "bin" / "uv")
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path), \
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
              patch("ev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")):
             from ev0_cli.managed_uv import ensure_uv
             uv_bin = ensure_uv()
@@ -192,7 +192,7 @@ class TestEnsureUvUpdateBoundary:
 
     def test_success_unpacks_as_legacy_two_tuple(self, tmp_path):
         _make_executable(tmp_path / "bin" / "uv")
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path), \
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
              patch("ev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")):
             from ev0_cli.managed_uv import ensure_uv
             uv_bin, fresh = ensure_uv()  # old: uv_bin, fresh_bootstrap = ensure_uv()
@@ -200,7 +200,7 @@ class TestEnsureUvUpdateBoundary:
             assert fresh is False
 
     def test_failure_unpacks_without_raising(self, tmp_path):
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path), \
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
              patch("ev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")), \
              patch("ev0_cli.managed_uv._install_uv", side_effect=RuntimeError("network down")):
             from ev0_cli.managed_uv import ensure_uv
@@ -232,7 +232,7 @@ class TestEnsureUvWindowsSafe:
         import subprocess
         from ev0_cli.managed_uv import _UvResult
         with pytest.raises(TypeError):
-            subprocess.list2cmdline([_UvResult("C:\\hermes\\uv.exe"), "pip"])
+            subprocess.list2cmdline([_UvResult("C:\\3v0\\uv.exe"), "pip"])
 
     @pytest.mark.windows_only
     def test_windows_returns_plain_str_safe_for_subprocess(self, tmp_path):
@@ -243,7 +243,7 @@ class TestEnsureUvWindowsSafe:
         import subprocess
         # On Windows the managed binary is uv.exe.
         _make_executable(tmp_path / "bin" / "uv.exe")
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path), \
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
              patch("ev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")):
             from ev0_cli.managed_uv import _UvResult, ensure_uv
             uv_bin = ensure_uv()
@@ -268,13 +268,13 @@ class TestUpdateManagedUv:
 
         uv = tmp_path / "bin" / "uv"
         _make_executable(uv)
-        # Fresh stamp under the isolated HERMES_HOME.
+        # Fresh stamp under the isolated EV0_HOME.
         import ev0_constants
-        stamp = ev0_constants.get_hermes_home() / "cache" / ".uv_self_update_stamp"
+        stamp = ev0_constants.get_ev0_home() / "cache" / ".uv_self_update_stamp"
         stamp.parent.mkdir(parents=True, exist_ok=True)
         stamp.touch()
 
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path), \
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
              patch("ev0_cli.managed_uv.subprocess.run") as mock_run, \
              patch(
                  "ev0_cli.managed_uv.repair_vulnerable_runtime",
@@ -296,13 +296,13 @@ class TestUpdateManagedUv:
         uv = tmp_path / "bin" / "uv"
         _make_executable(uv)
         import ev0_constants
-        stamp = ev0_constants.get_hermes_home() / "cache" / ".uv_self_update_stamp"
+        stamp = ev0_constants.get_ev0_home() / "cache" / ".uv_self_update_stamp"
         stamp.parent.mkdir(parents=True, exist_ok=True)
         stamp.touch()
         old = _time.time() - UV_SELF_UPDATE_INTERVAL_SECONDS - 60
         _os.utime(stamp, (old, old))
 
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path), \
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
              patch("ev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")), \
              patch("ev0_cli.managed_uv.subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0, stdout="uv 0.2.0")
@@ -319,12 +319,12 @@ class TestManagedPythonStore:
         from ev0_cli.managed_uv import managed_python_install_dir
 
         checkout = tmp_path / "checkout"
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "profiles" / "alpha"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "profiles" / "alpha"))
         alpha = managed_python_install_dir(checkout)
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "profiles" / "beta"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "profiles" / "beta"))
         beta = managed_python_install_dir(checkout)
 
-        expected = checkout / ".hermes-runtime" / "python"
+        expected = checkout / ".3v0-runtime" / "python"
         assert alpha == expected
         assert beta == expected
 
@@ -354,7 +354,7 @@ class TestManagedPythonStore:
         assert env["UV_PYTHON_INSTALL_BIN"] == "0"
         assert env["UV_PYTHON_INSTALL_REGISTRY"] == "0"
         assert env["UV_PYTHON_INSTALL_DIR"] == str(
-            checkout / ".hermes-runtime" / "python"
+            checkout / ".3v0-runtime" / "python"
         )
         for key in (
             "CONDA_DEFAULT_ENV",
@@ -393,7 +393,7 @@ class TestRuntimeRepair:
         assert result.sqlite_before == "3.53.1"
         assert result.sqlite_after == "3.53.1"
         assert sentinel.read_text(encoding="utf-8") == "live"
-        assert not (root / ".hermes-runtime").exists()
+        assert not (root / ".3v0-runtime").exists()
         mock_install.assert_not_called()
 
     def test_stage_candidate_sync_keeps_uv_project_config(self, tmp_path):
@@ -402,7 +402,7 @@ class TestRuntimeRepair:
         root = tmp_path / "checkout"
         root.mkdir()
         (root / "uv.lock").write_text("# lock\n", encoding="utf-8")
-        generation = root / ".hermes-runtime" / "python" / "gen"
+        generation = root / ".3v0-runtime" / "python" / "gen"
         python = generation / "bin" / "python"
         python.parent.mkdir(parents=True)
         python.write_text("py", encoding="utf-8")
@@ -446,7 +446,7 @@ class TestRuntimeRepair:
 
         root, live, sentinel = _make_runtime_install(tmp_path)
         current = _runtime_info(live / "bin" / "python", (3, 50, 4))
-        generation = root / ".hermes-runtime" / "python" / "generation-test"
+        generation = root / ".3v0-runtime" / "python" / "generation-test"
         candidate_python = generation / "bin" / "python"
         candidate_python.parent.mkdir(parents=True)
         candidate_python.write_text("candidate interpreter", encoding="utf-8")
@@ -473,7 +473,7 @@ class TestRuntimeRepair:
             "live interpreter"
         )
         assert not generation.exists()
-        reacquired = _acquire_repair_lock(root / ".hermes-runtime")
+        reacquired = _acquire_repair_lock(root / ".3v0-runtime")
         assert reacquired is not None
         _release_repair_lock(reacquired)
 
@@ -514,12 +514,12 @@ class TestRuntimeRepair:
 
         root, live, sentinel = _make_runtime_install(tmp_path)
         current = _runtime_info(live / "bin" / "python", (3, 50, 4))
-        generation = root / ".hermes-runtime" / "python" / "generation-test"
+        generation = root / ".3v0-runtime" / "python" / "generation-test"
         candidate_python = generation / "bin" / "python"
         candidate_python.parent.mkdir(parents=True)
         candidate_python.write_text("candidate interpreter", encoding="utf-8")
         fixed = _runtime_info(candidate_python, (3, 53, 1))
-        candidate_venv = root / ".hermes-runtime" / "venv-candidate"
+        candidate_venv = root / ".3v0-runtime" / "venv-candidate"
         (candidate_venv / "bin").mkdir(parents=True)
         (candidate_venv / "bin" / "python").write_text(
             "candidate venv interpreter", encoding="utf-8"
@@ -556,7 +556,7 @@ class TestRuntimeCutover:
     def test_os_lock_blocks_concurrent_repair_and_releases(self, tmp_path):
         from ev0_cli.managed_uv import _acquire_repair_lock, _release_repair_lock
 
-        runtime_root = tmp_path / ".hermes-runtime"
+        runtime_root = tmp_path / ".3v0-runtime"
         first = _acquire_repair_lock(runtime_root)
         assert first is not None
         assert _acquire_repair_lock(runtime_root) is None
@@ -572,7 +572,7 @@ class TestRuntimeCutover:
         from ev0_cli.managed_uv import _cut_over_candidate
 
         root, live, sentinel = _make_runtime_install(tmp_path)
-        runtime_root = root / ".hermes-runtime"
+        runtime_root = root / ".3v0-runtime"
         candidate = runtime_root / "venv-candidate-test"
         candidate.mkdir(parents=True)
         (candidate / "sentinel").write_text("candidate", encoding="utf-8")
@@ -838,7 +838,7 @@ class TestMinorLineFallForward:
     the provisioner must fall forward to the next supported minor line
     (3.12, then 3.13) -- first via a bare minor request, then via explicit
     patches on that line -- instead of leaving the user stuck on every
-    `hermes update` with no path to a fixed runtime.
+    `3v0 update` with no path to a fixed runtime.
     """
 
     @staticmethod
@@ -1063,7 +1063,7 @@ class TestRefreshManagedUvCatalog:
         import ev0_cli.managed_uv as managed_uv
 
         versions = iter(["uv 0.1.0", "uv 0.2.0"])
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path), \
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
              patch("ev0_cli.managed_uv._install_uv"), \
              patch(
                  "ev0_cli.managed_uv._uv_version_string",
@@ -1080,7 +1080,7 @@ class TestRefreshManagedUvCatalog:
     def test_installer_failure_reports_false(self, tmp_path):
         import ev0_cli.managed_uv as managed_uv
 
-        with patch("ev0_cli.managed_uv.get_hermes_home", return_value=tmp_path), \
+        with patch("ev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
              patch(
                  "ev0_cli.managed_uv._install_uv",
                  side_effect=RuntimeError("network down"),
@@ -1152,7 +1152,7 @@ class TestRepairRetriesAfterUvRefresh:
 
     def test_retry_success_proceeds_to_staging(self, tmp_path):
         def second_attempt(root):
-            generation = root / ".hermes-runtime" / "python" / "generation-retry"
+            generation = root / ".3v0-runtime" / "python" / "generation-retry"
             candidate_python = generation / "bin" / "python"
             candidate_python.parent.mkdir(parents=True)
             candidate_python.write_text("candidate", encoding="utf-8")
@@ -1176,7 +1176,7 @@ class TestDefaultLiveVenv:
     """_default_live_venv() must cover BOTH install layouts (venv/ and .venv/).
 
     Historically repair hardcoded venv/, so uv-default/.venv checkouts got
-    'not-applicable' on every hermes update and stayed on journal_mode=DELETE
+    'not-applicable' on every 3v0 update and stayed on journal_mode=DELETE
     (2,600x slower state.db appends) while the WAL warning promised repair.
     """
 
@@ -1218,7 +1218,7 @@ class TestDefaultLiveVenv:
 class TestVenvPythonUpdateBoundary:
     """``_venv_python`` must survive a ev0_constants predating its symbol.
 
-    ``hermes update`` imports ev0_constants from the OLD checkout, ``git
+    ``3v0 update`` imports ev0_constants from the OLD checkout, ``git
     pull`` replaces that file, and the freshly-pulled managed_uv then runs its
     lazy ``from ev0_constants import venv_python_path`` against the module
     object already cached in ``sys.modules``. That cached module has no such
@@ -1226,7 +1226,7 @@ class TestVenvPythonUpdateBoundary:
     plainly contains it, which is what made the error so confusing:
 
         cannot import name 'venv_python_path' from 'ev0_constants'
-        (~/.hermes/hermes-agent/ev0_constants.py)
+        (~/.3V0/3v0-agent/ev0_constants.py)
 
     It aborted the managed-Python runtime repair on the first update from any
     release older than the symbol. Same class as the ``ensure_uv()`` arity skew
@@ -1245,15 +1245,15 @@ class TestVenvPythonUpdateBoundary:
 
         # Host-native: the subject is the reload-recovery seam, not the
         # bin/Scripts mapping — assert whatever layout the real host resolves.
-        expected = Path("/opt/hermes/venv/Scripts/python.exe") \
-            if sys.platform == "win32" else Path("/opt/hermes/venv/bin/python")
-        assert _venv_python(Path("/opt/hermes/venv")) == expected
+        expected = Path("/opt/3v0/venv/Scripts/python.exe") \
+            if sys.platform == "win32" else Path("/opt/3v0/venv/bin/python")
+        assert _venv_python(Path("/opt/3v0/venv")) == expected
 
     def test_recovery_uses_the_shared_helper_not_a_second_copy(self, monkeypatch):
         """The reload must resolve through ev0_constants, not open-code it.
 
         Hand-rolling `Scripts`/`bin` here is what #76105 deduped away and what
-        `test_no_open_coded_venv_layout_remains_in_hermes_cli` bans.
+        `test_no_open_coded_venv_layout_remains_in_ev0_cli` bans.
         """
         import ev0_constants
 
@@ -1272,7 +1272,7 @@ class TestVenvPythonUpdateBoundary:
             return fresh
 
         monkeypatch.setattr("importlib.reload", _reload_with_marker)
-        assert _venv_python(Path("/opt/hermes/venv")) == sentinel
+        assert _venv_python(Path("/opt/3v0/venv")) == sentinel
 
     def test_uses_the_real_helper_when_it_is_importable(self, monkeypatch):
         """The normal path never reloads — recovery stays a fallback."""
@@ -1283,7 +1283,7 @@ class TestVenvPythonUpdateBoundary:
 
         monkeypatch.setattr("importlib.reload", _no_reload)
 
-        expected = Path("/opt/hermes/venv/Scripts/python.exe") \
-            if sys.platform == "win32" else Path("/opt/hermes/venv/bin/python")
-        assert _venv_python(Path("/opt/hermes/venv")) == expected
+        expected = Path("/opt/3v0/venv/Scripts/python.exe") \
+            if sys.platform == "win32" else Path("/opt/3v0/venv/bin/python")
+        assert _venv_python(Path("/opt/3v0/venv")) == expected
 

@@ -172,7 +172,7 @@ def test_apply_nous_managed_defaults_writes_video_gen_config(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# ensure_nous_portal_access — inline login gate for `hermes tools`
+# ensure_nous_portal_access — inline login gate for `3v0 tools`
 # ---------------------------------------------------------------------------
 
 
@@ -298,11 +298,11 @@ def test_has_agent_browser_import_failure_falls_back_to_path_check(monkeypatch):
     assert ns._has_agent_browser() is True
 
 
-def test_has_agent_browser_import_failure_falls_back_to_hermes_managed_node_path(
+def test_has_agent_browser_import_failure_falls_back_to_ev0_managed_node_path(
     monkeypatch, tmp_path
 ):
     """If tools.browser_tool cannot be imported, the managed-Node rung must
-    still find a runnable agent-browser under the Hermes Node dir even when
+    still find a runnable agent-browser under the 3V0 Node dir even when
     it's absent from the probe process's PATH — the Windows installer shape
     where install succeeded but the GUI still said needs setup."""
     monkeypatch.setitem(sys.modules, "tools.browser_tool", None)
@@ -323,7 +323,7 @@ def test_has_agent_browser_import_failure_falls_back_to_hermes_managed_node_path
         ),
     )
     monkeypatch.setattr(
-        "ev0_constants.with_hermes_node_path", lambda: {"PATH": str(managed_dir)}
+        "ev0_constants.with_ev0_node_path", lambda: {"PATH": str(managed_dir)}
     )
     monkeypatch.setattr(
         "ev0_constants.agent_browser_runnable",

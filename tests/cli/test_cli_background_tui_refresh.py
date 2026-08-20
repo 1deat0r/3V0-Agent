@@ -7,12 +7,12 @@ to prevent spinner/status bar overlap (#2718).
 from unittest.mock import MagicMock, patch
 
 
-from cli import HermesCLI
+from cli import Ev0CLI
 
 
 def _make_cli():
-    """Create a minimal HermesCLI instance for testing."""
-    cli_obj = HermesCLI.__new__(HermesCLI)
+    """Create a minimal Ev0CLI instance for testing."""
+    cli_obj = Ev0CLI.__new__(Ev0CLI)
     cli_obj.model = "test-model"
     cli_obj._background_tasks = {}
     cli_obj._background_task_counter = 0

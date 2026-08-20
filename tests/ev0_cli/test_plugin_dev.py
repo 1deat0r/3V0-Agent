@@ -101,7 +101,7 @@ def test_doctor_restores_global_tool_policy_and_module_state(tmp_path: Path) -> 
     before_modules = {
         name
         for name in sys.modules
-        if name == "hermes_plugins" or name.startswith("hermes_plugins.")
+        if name == "ev0_plugins" or name.startswith("ev0_plugins.")
     }
 
     report = doctor_plugin(target)
@@ -113,7 +113,7 @@ def test_doctor_restores_global_tool_policy_and_module_state(tmp_path: Path) -> 
     after_modules = {
         name
         for name in sys.modules
-        if name == "hermes_plugins" or name.startswith("hermes_plugins.")
+        if name == "ev0_plugins" or name.startswith("ev0_plugins.")
     }
     assert after_modules == before_modules
 

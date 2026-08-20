@@ -96,9 +96,9 @@ def _exec_profile(ctx: CommandContext) -> CommandReply:
 
         profile_name = get_active_profile_name()
     if not home_display:
-        from ev0_constants import display_hermes_home
+        from ev0_constants import display_ev0_home
 
-        home_display = display_hermes_home()
+        home_display = display_ev0_home()
 
     return CommandReply(
         f"Profile: {profile_name}\nHome: {home_display}",
@@ -121,7 +121,7 @@ def _exec_bundles(ctx: CommandContext) -> CommandReply:
     if not bundles:
         return CommandReply(
             "No skill bundles installed.\n"
-            "Create one with: hermes bundles create <name> --skill <s1> --skill <s2>\n"
+            "Create one with: 3v0 bundles create <name> --skill <s1> --skill <s2>\n"
             f"Directory: {bundles_dir}",
             data={"bundles": [], "dir": bundles_dir},
         )

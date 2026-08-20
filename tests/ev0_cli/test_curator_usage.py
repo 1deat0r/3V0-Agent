@@ -1,4 +1,4 @@
-"""Tests for `hermes curator usage` — the all-skills usage view.
+"""Tests for `3v0 curator usage` — the all-skills usage view.
 
 Covers:
 - Lists every skill regardless of provenance (agent / bundled / hub), unlike

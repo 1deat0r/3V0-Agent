@@ -2,11 +2,11 @@
 name: github-issue-to-pr
 description: "Carry a GitHub issue to a verified PR with honest CI state."
 version: 0.1.0
-author: Ben Barclay (benbarclay), Hermes Agent
+author: Ben Barclay (benbarclay), 3V0 Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  3v0:
     tags: [GitHub, Issues, Coding, Pull-Requests, CI]
     related_skills: [github-issues, github-pr-workflow, systematic-debugging, test-driven-development, requesting-code-review]
 ---

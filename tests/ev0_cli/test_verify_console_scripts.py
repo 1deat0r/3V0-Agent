@@ -20,9 +20,9 @@ def temp_pyproject(tmp_path, monkeypatch):
         version = "0.0.0"
 
         [project.scripts]
-        hermes = "ev0_cli.main:main"
-        hermes-agent = "run_agent:main"
-        hermes-acp = "acp_adapter.entry:main"
+        ev0 = "ev0_cli.main:main"
+        ev0-agent = "run_agent:main"
+        ev0-acp = "acp_adapter.entry:main"
     """
         )
     )
@@ -41,7 +41,7 @@ def fake_scripts_dir(tmp_path):
 
 class TestVerifyConsoleScriptsInstalled:
     def test_no_action_when_all_shims_present(self, temp_pyproject, fake_scripts_dir):
-        for name in ("hermes", "hermes-agent", "hermes-acp"):
+        for name in ("3v0", "3v0-agent", "3v0-acp"):
             (fake_scripts_dir / f"{name}.exe").write_bytes(b"fake")
 
         with patch("ev0_cli.main._is_windows", return_value=True), \
@@ -62,7 +62,7 @@ class TestVerifyConsoleScriptsInstalled:
         import ev0_cli.main as main_mod
 
         with patch("ev0_cli.main._is_windows", return_value=True):
-            names = {path.name for path in main_mod._hermes_exe_shims(fake_scripts_dir)}
+            names = {path.name for path in main_mod._ev0_exe_shims(fake_scripts_dir)}
 
-        assert {"hermes.exe", "hermes-agent.exe", "hermes-acp.exe"} <= names
-        assert "hermes-gateway.exe" in names
+        assert {"3v0.exe", "3v0-agent.exe", "3v0-acp.exe"} <= names
+        assert "3v0-gateway.exe" in names

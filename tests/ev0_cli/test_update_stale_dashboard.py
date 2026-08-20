@@ -1,6 +1,6 @@
-"""Tests for the stale-dashboard handling run at the end of ``hermes update``.
+"""Tests for the stale-dashboard handling run at the end of ``3v0 update``.
 
-``hermes update`` detects ``hermes dashboard`` processes left over from the
+``3v0 update`` detects ``3v0 dashboard`` processes left over from the
 previous version and kills them (SIGTERM + SIGKILL grace, or ``taskkill /F``
 on Windows).  Without this, the running backend silently serves stale Python
 against a freshly-updated JS bundle, producing 401s / empty data.
@@ -99,7 +99,7 @@ class TestFindStaleDashboardPids:
                 returncode=0,
                 stdout="\n".join([
                     _ps_line(os.getpid(), "python3 -m ev0_cli.main dashboard"),
-                    _ps_line(12345, "hermes dashboard --port 9119"),
+                    _ps_line(12345, "3v0 dashboard --port 9119"),
                 ]) + "\n",
                 stderr="",
             )
@@ -166,13 +166,13 @@ class TestKillStaleDashboardPosix:
 
         def fake_run(args, *a, **kw):
             calls.append(list(args))
-            if args == ["systemctl", "--user", "list-unit-files", "hermes-dashboard.service", "--no-legend", "--no-pager"]:
-                return MagicMock(returncode=0, stdout="hermes-dashboard.service enabled enabled\n", stderr="")
-            if args == ["systemctl", "--user", "is-active", "hermes-dashboard.service"]:
+            if args == ["systemctl", "--user", "list-unit-files", "3v0-dashboard.service", "--no-legend", "--no-pager"]:
+                return MagicMock(returncode=0, stdout="3v0-dashboard.service enabled enabled\n", stderr="")
+            if args == ["systemctl", "--user", "is-active", "3v0-dashboard.service"]:
                 return MagicMock(returncode=0, stdout="active\n", stderr="")
-            if args == ["systemctl", "--user", "is-enabled", "hermes-dashboard.service"]:
+            if args == ["systemctl", "--user", "is-enabled", "3v0-dashboard.service"]:
                 return MagicMock(returncode=0, stdout="enabled\n", stderr="")
-            if args == ["systemctl", "--user", "restart", "hermes-dashboard.service"]:
+            if args == ["systemctl", "--user", "restart", "3v0-dashboard.service"]:
                 return MagicMock(returncode=0, stdout="", stderr="")
             raise AssertionError(f"unexpected subprocess.run call: {args}")
 
@@ -182,15 +182,15 @@ class TestKillStaleDashboardPosix:
             _kill_stale_dashboard_processes(restart_managed=True)
 
         assert calls == [
-            ["systemctl", "--user", "list-unit-files", "hermes-dashboard.service", "--no-legend", "--no-pager"],
-            ["systemctl", "--user", "is-active", "hermes-dashboard.service"],
-            ["systemctl", "--user", "is-enabled", "hermes-dashboard.service"],
-            ["systemctl", "--user", "restart", "hermes-dashboard.service"],
+            ["systemctl", "--user", "list-unit-files", "3v0-dashboard.service", "--no-legend", "--no-pager"],
+            ["systemctl", "--user", "is-active", "3v0-dashboard.service"],
+            ["systemctl", "--user", "is-enabled", "3v0-dashboard.service"],
+            ["systemctl", "--user", "restart", "3v0-dashboard.service"],
         ]
         assert all(call[:1] != ["sudo"] and call[:2] != ["systemctl"] for call in calls)
         find_pids.assert_not_called()
         kill.assert_not_called()
-        assert "✓ restarted hermes-dashboard.service" in capsys.readouterr().out
+        assert "✓ restarted 3v0-dashboard.service" in capsys.readouterr().out
 
 
 
@@ -252,7 +252,7 @@ class TestDashboardUpdateCleanup:
 
 class TestWindowsWmicEncoding:
     """Regression tests for #17049 — the Windows wmic branch must not crash
-    `hermes update` on non-UTF-8 system locales (e.g. cp936 on zh-CN).
+    `3v0 update` on non-UTF-8 system locales (e.g. cp936 on zh-CN).
     """
 
     def test_wmic_routed_through_bounded_probe_run_with_ignore_errors(self):
@@ -322,24 +322,24 @@ class TestSupervisedBackendRestart:
         with patch.object(live, "_restart_managed_dashboard_service", return_value=False), \
              patch.object(live, "_find_stale_dashboard_pids", return_value=[4321]), \
              patch.object(live, "_get_pid_cgroup_path",
-                          return_value="/system.slice/hermes-serve.service"), \
+                          return_value="/system.slice/3v0-serve.service"), \
              patch.object(live, "_get_systemd_service_for_pid",
-                          return_value="hermes-serve.service"), \
+                          return_value="3v0-serve.service"), \
              patch.object(live, "_try_restart_systemd_service", return_value=True) as restart, \
              patch("os.kill", side_effect=fake_kill), \
              patch("time.sleep"):
             _kill_stale_dashboard_processes(restart_managed=True)
 
         restart.assert_called_once_with(
-            "hermes-serve.service", "/system.slice/hermes-serve.service"
+            "3v0-serve.service", "/system.slice/3v0-serve.service"
         )
         out = capsys.readouterr().out
-        assert "✓ restarted systemd service hermes-serve.service" in out
+        assert "✓ restarted systemd service 3v0-serve.service" in out
         # Supervised restart succeeded — no manual hint.
         assert "when you're ready" not in out
 
     def test_already_restarted_unit_is_left_untouched(self):
-        """Review on #83595: hermes update's systemd fleet-restart loop may
+        """Review on #83595: 3v0 update's systemd fleet-restart loop may
         already have restarted this PID's owning unit directly (e.g. a
         Serve-only install). Passing it via already_restarted_units must
         skip killing/restarting it again here."""
@@ -348,14 +348,14 @@ class TestSupervisedBackendRestart:
         with patch.object(live, "_restart_managed_dashboard_service", return_value=False), \
              patch.object(live, "_find_stale_dashboard_pids", return_value=[4321]), \
              patch.object(live, "_get_pid_cgroup_path",
-                          return_value="/system.slice/hermes-serve.service"), \
+                          return_value="/system.slice/3v0-serve.service"), \
              patch.object(live, "_get_systemd_service_for_pid",
-                          return_value="hermes-serve.service"), \
+                          return_value="3v0-serve.service"), \
              patch.object(live, "_try_restart_systemd_service") as restart, \
              patch("os.kill") as kill, \
              patch("time.sleep"):
             result = _kill_stale_dashboard_processes(
-                restart_managed=True, already_restarted_units={"hermes-serve"}
+                restart_managed=True, already_restarted_units={"3v0-serve"}
             )
 
         kill.assert_not_called()
@@ -397,7 +397,7 @@ class TestManualBackendRespawn:
     def test_non_orphan_fixed_port_still_respawns(self, capsys):
         """A supervised-by-shell dashboard with a fixed port is still restarted."""
         live = self._live()
-        argv = ["hermes", "dashboard", "--port", "8300"]
+        argv = ["3v0", "dashboard", "--port", "8300"]
 
         def fake_kill(pid, sig):
             if sig == 0:
@@ -408,7 +408,7 @@ class TestManualBackendRespawn:
              patch.object(live, "_get_pid_cgroup_path", return_value=None), \
              patch.object(live, "_get_systemd_service_for_pid", return_value=None), \
              patch.object(live, "_dashboard_cmdline_for_pid", return_value=argv), \
-             patch("ev0_cli.dashboard_procs._hermes_home_for_pid", return_value=None), \
+             patch("ev0_cli.dashboard_procs._ev0_home_for_pid", return_value=None), \
              patch.object(live, "_respawn_dashboard_processes", return_value=[]) as respawn, \
              patch("os.kill", side_effect=fake_kill), \
              patch("time.sleep"):
@@ -436,7 +436,7 @@ class TestManualBackendRespawn:
              patch.object(live, "_get_pid_cgroup_path", return_value=None), \
              patch.object(live, "_get_systemd_service_for_pid", return_value=None), \
              patch.object(live, "_dashboard_cmdline_for_pid", return_value=argv), \
-             patch("ev0_cli.dashboard_procs._hermes_home_for_pid", return_value=None), \
+             patch("ev0_cli.dashboard_procs._ev0_home_for_pid", return_value=None), \
              patch.object(live, "_respawn_dashboard_processes") as respawn, \
              patch("os.kill", side_effect=fake_kill), \
              patch("time.sleep"):
@@ -452,7 +452,7 @@ class TestManualBackendRespawn:
     def test_detached_fixed_port_still_respawns_after_prior_update(self, capsys):
         """PPID-1 fixed-port backends (prior start_new_session respawn) stay eligible."""
         live = self._live()
-        argv = ["hermes", "dashboard", "--port", "8300"]
+        argv = ["3v0", "dashboard", "--port", "8300"]
 
         def fake_kill(pid, sig):
             if sig == 0:
@@ -463,7 +463,7 @@ class TestManualBackendRespawn:
              patch.object(live, "_get_pid_cgroup_path", return_value=None), \
              patch.object(live, "_get_systemd_service_for_pid", return_value=None), \
              patch.object(live, "_dashboard_cmdline_for_pid", return_value=argv), \
-             patch("ev0_cli.dashboard_procs._hermes_home_for_pid", return_value=None), \
+             patch("ev0_cli.dashboard_procs._ev0_home_for_pid", return_value=None), \
              patch.object(live, "_respawn_dashboard_processes", return_value=[]) as respawn, \
              patch("os.kill", side_effect=fake_kill), \
              patch("time.sleep"):
@@ -475,7 +475,7 @@ class TestManualBackendRespawn:
     def test_respawn_adds_no_open_to_dashboard_commands(self, tmp_path, monkeypatch):
         """Respawned `dashboard` argv gains --no-open; `serve` argv untouched."""
         live = self._live()
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / ".3V0"))
         spawned: list[list[str]] = []
 
         class _FakePopen:
@@ -484,22 +484,22 @@ class TestManualBackendRespawn:
 
         with patch.object(live.subprocess, "Popen", _FakePopen):
             failed = live._respawn_dashboard_processes([
-                ["hermes", "dashboard", "--port", "8300"],
-                ["hermes", "serve", "--host", "0.0.0.0"],
+                ["3v0", "dashboard", "--port", "8300"],
+                ["3v0", "serve", "--host", "0.0.0.0"],
             ])
 
         assert failed == []
-        assert spawned[0] == ["hermes", "dashboard", "--port", "8300", "--no-open"]
-        assert spawned[1] == ["hermes", "serve", "--host", "0.0.0.0"]
+        assert spawned[0] == ["3v0", "dashboard", "--port", "8300", "--no-open"]
+        assert spawned[1] == ["3v0", "serve", "--host", "0.0.0.0"]
 
     def test_respawn_failure_returned(self, tmp_path, monkeypatch, capsys):
         live = self._live()
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / ".3V0"))
 
         with patch.object(live.subprocess, "Popen", side_effect=OSError("no such file")):
-            failed = live._respawn_dashboard_processes([["hermes", "serve"]])
+            failed = live._respawn_dashboard_processes([["3v0", "serve"]])
 
-        assert failed == [["hermes", "serve"]]
+        assert failed == [["3v0", "serve"]]
         out = capsys.readouterr().out
         assert "✗ failed to restart" in out
 
@@ -516,14 +516,14 @@ class TestFilterDashboardRespawnCandidates:
             "serve", "--host", "127.0.0.1", "--port", "0",
         ]
         assert _filter_dashboard_respawn_candidates([
-            (42, argv, "/home/u/.hermes/profiles/mini-cat"),
+            (42, argv, "/home/u/.3V0/profiles/mini-cat"),
         ]) == []
 
     def test_skips_legacy_dashboard_port_zero(self):
         from ev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
         argv = [
-            "hermes", "--profile", "coder",
+            "3v0", "--profile", "coder",
             "dashboard", "--no-open", "--host", "127.0.0.1", "--port", "0",
         ]
         assert _filter_dashboard_respawn_candidates([(7, argv, None)]) == []
@@ -531,14 +531,14 @@ class TestFilterDashboardRespawnCandidates:
     def test_skips_serve_port_equals_zero(self):
         from ev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
-        argv = ["hermes", "serve", "--port=0"]
+        argv = ["3v0", "serve", "--port=0"]
         assert _filter_dashboard_respawn_candidates([(1, argv, None)]) == []
 
     def test_keeps_ppid1_fixed_port_for_repeat_update(self):
         """Detached prior-update respawns (PPID 1) must remain restartable (#40449)."""
         from ev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
-        argv = ["hermes", "dashboard", "--port", "9119"]
+        argv = ["3v0", "dashboard", "--port", "9119"]
         assert _filter_dashboard_respawn_candidates([(10, argv, None)]) == [argv]
 
     def test_dedupes_identical_normalized_cmdlines(self):
@@ -555,9 +555,9 @@ class TestFilterDashboardRespawnCandidates:
     def test_caps_one_per_profile(self):
         from ev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
-        a = ["hermes", "--profile", "coder", "dashboard", "--port", "8300"]
-        b = ["hermes", "--profile", "coder", "dashboard", "--port", "8301"]
-        c = ["hermes", "--profile", "writer", "dashboard", "--port", "8302"]
+        a = ["3v0", "--profile", "coder", "dashboard", "--port", "8300"]
+        b = ["3v0", "--profile", "coder", "dashboard", "--port", "8301"]
+        c = ["3v0", "--profile", "writer", "dashboard", "--port", "8302"]
         out = _filter_dashboard_respawn_candidates([
             (1, a, None),
             (2, b, None),
@@ -565,12 +565,12 @@ class TestFilterDashboardRespawnCandidates:
         ])
         assert out == [a, c]
 
-    def test_caps_one_per_hermes_home(self):
+    def test_caps_one_per_ev0_home(self):
         from ev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
-        home = "/tmp/hermes-home-a"
-        a = ["hermes", "dashboard", "--port", "8300"]
-        b = ["hermes", "dashboard", "--port", "8301"]
+        home = "/tmp/3v0-home-a"
+        a = ["3v0", "dashboard", "--port", "8300"]
+        b = ["3v0", "dashboard", "--port", "8301"]
         out = _filter_dashboard_respawn_candidates([
             (1, a, home),
             (2, b, home),
@@ -580,41 +580,41 @@ class TestFilterDashboardRespawnCandidates:
     def test_profile_flag_and_profiles_home_share_cap(self):
         from ev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
-        a = ["hermes", "--profile", "coder", "dashboard", "--port", "8300"]
-        b = ["hermes", "dashboard", "--port", "8301"]
+        a = ["3v0", "--profile", "coder", "dashboard", "--port", "8300"]
+        b = ["3v0", "dashboard", "--port", "8301"]
         out = _filter_dashboard_respawn_candidates([
             (1, a, None),
-            (2, b, "/home/u/.hermes/profiles/coder"),
+            (2, b, "/home/u/.3V0/profiles/coder"),
         ])
         assert out == [a]
 
     def test_default_profile_same_root_home_caps(self):
         from ev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
-        a = ["hermes", "--profile", "default", "dashboard", "--port", "8300"]
-        b = ["hermes", "dashboard", "--port", "8301"]
-        home = "/home/u/.hermes"
+        a = ["3v0", "--profile", "default", "dashboard", "--port", "8300"]
+        b = ["3v0", "dashboard", "--port", "8301"]
+        home = "/home/u/.3V0"
         out = _filter_dashboard_respawn_candidates([
             (1, a, home),
             (2, b, home),
         ])
         assert out == [a]
 
-    def test_distinct_dot_hermes_homes_do_not_share_cap(self):
+    def test_distinct_dot_ev0_homes_do_not_share_cap(self):
         from ev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
-        a = ["hermes", "dashboard", "--port", "8300"]
-        b = ["hermes", "dashboard", "--port", "8301"]
+        a = ["3v0", "dashboard", "--port", "8300"]
+        b = ["3v0", "dashboard", "--port", "8301"]
         out = _filter_dashboard_respawn_candidates([
-            (1, a, "/home/u/.hermes"),
-            (2, b, "/work/project/.hermes"),
+            (1, a, "/home/u/.3V0"),
+            (2, b, "/work/project/.3V0"),
         ])
         assert out == [a, b]
 
     def test_keeps_fixed_port_serve(self):
         from ev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
-        argv = ["hermes", "serve", "--host", "0.0.0.0", "--port", "9119"]
+        argv = ["3v0", "serve", "--host", "0.0.0.0", "--port", "9119"]
         assert _filter_dashboard_respawn_candidates([
             (9, argv, None),
         ]) == [argv]
@@ -641,7 +641,7 @@ class TestCmdlineCapture:
     def test_reads_proc_cmdline_when_available(self, tmp_path, monkeypatch):
         live = self._live()
         proc_file = tmp_path / "cmdline"
-        proc_file.write_bytes(b"/usr/bin/python3\x00-m\x00hermes_cli.main\x00serve\x00")
+        proc_file.write_bytes(b"/usr/bin/python3\x00-m\x00ev0_cli.main\x00serve\x00")
 
         real_exists = os.path.exists
 
@@ -669,13 +669,13 @@ class TestCmdlineCapture:
 
         def fake_run(args, *a, **kw):
             assert args == ["ps", "-p", "888", "-o", "command="]
-            return MagicMock(returncode=0, stdout="hermes serve --port 8300\n", stderr="")
+            return MagicMock(returncode=0, stdout="3v0 serve --port 8300\n", stderr="")
 
         with patch.object(live.os.path, "exists", return_value=False), \
              patch("subprocess.run", side_effect=fake_run):
             argv = live._dashboard_cmdline_for_pid(888)
 
-        assert argv == ["hermes", "serve", "--port", "8300"]
+        assert argv == ["3v0", "serve", "--port", "8300"]
 
     @pytest.mark.windows_only
     def test_returns_none_on_windows(self):
@@ -690,7 +690,7 @@ class TestCmdlineCapture:
 class TestPostUpdateStaleModuleReload:
     """Regression tests for the post-update stale-module ImportError.
 
-    ``hermes update`` runs in the PRE-pull Python process. When the update
+    ``3v0 update`` runs in the PRE-pull Python process. When the update
     adds a new symbol to ``ev0_cli._subprocess_compat`` (as #87134 added
     ``bounded_probe_run``), the post-update dashboard cleanup's lazy
     ``from ev0_cli._subprocess_compat import bounded_probe_run`` hits the

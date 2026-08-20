@@ -48,12 +48,12 @@ IGNORED_PATTERNS = [
     re.compile(r"^github-actions(\[bot\])?$", re.IGNORECASE),
     re.compile(r"^dependabot", re.IGNORECASE),
     re.compile(r"^renovate", re.IGNORECASE),
-    re.compile(r"^Hermes\s+(Agent|Audit)$", re.IGNORECASE),
+    re.compile(r"^3V0\s+(Agent|Audit)$", re.IGNORECASE),
     re.compile(r"^nousbot(-eng)?$", re.IGNORECASE),
     re.compile(r"^Ubuntu$", re.IGNORECASE),
     # v0.20.0 audit additions:
     re.compile(r"^Blut-?Agent$", re.IGNORECASE),          # self-described AI agent account
-    re.compile(r".*\[bot\]$", re.IGNORECASE),             # any GitHub [bot] suffix (hermes-seaeye[bot] etc.)
+    re.compile(r".*\[bot\]$", re.IGNORECASE),             # any GitHub [bot] suffix (3v0-seaeye[bot] etc.)
     re.compile(r"^TRON$", re.IGNORECASE),                 # AgentMail agent
     re.compile(r"^Happy$", re.IGNORECASE),                # happy.engineering AI agent
     re.compile(r"^Orca$", re.IGNORECASE),                 # Stably AI agent
@@ -64,10 +64,10 @@ IGNORED_EMAILS = {
     "noreply@github.com",
     "noreply@nousresearch.com",
     "cursoragent@cursor.com",
-    "hermes@nousresearch.com",
-    "hermes-audit@example.com",
+    "3v0@nousresearch.com",
+    "3v0-audit@example.com",
     "nousbot@nousresearch.com",
-    "hermes@habibilabs.dev",
+    "3v0@habibilabs.dev",
     "omx@oh-my-codex.dev",
     "codex@openai.com",
     "noreply@commandcode.ai",
@@ -116,7 +116,7 @@ def gh_pr_list():
         result = subprocess.run(
             [
                 "gh", "pr", "list",
-                "--repo", "NousResearch/hermes-agent",
+                "--repo", "NousResearch/3v0-agent",
                 "--state", "merged",
                 "--json", "number,title,body,author,mergedAt",
                 "--limit", "300",

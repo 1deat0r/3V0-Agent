@@ -1,6 +1,6 @@
-"""Map Hermes skill_manage operations onto the native skill store.
+"""Map 3V0 skill_manage operations onto the native skill store.
 
-The Hermes ``skill_manage`` tool writes SKILL.md / supporting files into the
+The 3V0 ``skill_manage`` tool writes SKILL.md / supporting files into the
 profile; the bridge replays those same operations against the native skill
 store so the store stays the auditable record of 3V0's skill evolution and
 the profile remains the operational system. This is the skill half of the

@@ -21,20 +21,20 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 @pytest.fixture
 def cron_env(tmp_path, monkeypatch):
-    """Isolated cron environment with temp HERMES_HOME."""
-    hermes_home = tmp_path / ".hermes"
-    hermes_home.mkdir()
-    (hermes_home / "cron").mkdir()
-    (hermes_home / "cron" / "output").mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    """Isolated cron environment with temp EV0_HOME."""
+    ev0_home = tmp_path / ".3V0"
+    ev0_home.mkdir()
+    (ev0_home / "cron").mkdir()
+    (ev0_home / "cron" / "output").mkdir()
+    monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
     import cron.jobs as jobs_mod
-    monkeypatch.setattr(jobs_mod, "HERMES_DIR", hermes_home)
-    monkeypatch.setattr(jobs_mod, "CRON_DIR", hermes_home / "cron")
-    monkeypatch.setattr(jobs_mod, "JOBS_FILE", hermes_home / "cron" / "jobs.json")
-    monkeypatch.setattr(jobs_mod, "OUTPUT_DIR", hermes_home / "cron" / "output")
+    monkeypatch.setattr(jobs_mod, "EV0_DIR", ev0_home)
+    monkeypatch.setattr(jobs_mod, "CRON_DIR", ev0_home / "cron")
+    monkeypatch.setattr(jobs_mod, "JOBS_FILE", ev0_home / "cron" / "jobs.json")
+    monkeypatch.setattr(jobs_mod, "OUTPUT_DIR", ev0_home / "cron" / "output")
 
-    return hermes_home
+    return ev0_home
 
 
 class TestRewriteSkillRefsNoop:

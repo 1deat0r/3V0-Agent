@@ -2,7 +2,7 @@
 
 The domain language of 3V0's native substrate (`3v0/`) — the store-first
 identity/memory/evolution layer that makes 3V0 "an agent that builds beyond
-its chassis," not "a profile for Hermes." This names the concepts the
+its chassis," not "a profile for 3V0." This names the concepts the
 continuity meta and evolution loop are built on. It is a glossary and nothing
 else: no paths, no specs, no implementation detail.
 
@@ -14,12 +14,12 @@ Identity is body, not context.
 _Avoid_: project, codebase, workspace.
 
 **Soul**:
-3V0's identity document (`SOUL.md`) in the Hermes profile — the living
+3V0's identity document (`SOUL.md`) in the 3V0 profile — the living
 statement of what 3V0 is.
 _Avoid_: personality file, system prompt.
 
 **Chassis**:
-The Hermes fork 3V0 currently runs on (agent loop, tools, LLM plumbing). It
+The 3V0 fork 3V0 currently runs on (agent loop, tools, LLM plumbing). It
 is the runtime, not the identity.
 _Avoid_: framework, base, host.
 
@@ -37,13 +37,13 @@ append-only, auditable in the body.
 _Avoid_: database, backend.
 
 **Profile**:
-The Hermes profile's derived view of the store (MEMORY.md / USER.md /
+The 3V0 profile's derived view of the store (MEMORY.md / USER.md /
 SKILL.md). A projection, never the origin.
 _Avoid_: source of truth, canonical store.
 
 **Store-first**:
 The write discipline — a fact or skill version is recorded in the store
-first; the profile is re-exported from it. Inverts Hermes's
+first; the profile is re-exported from it. Inverts 3V0's
 profile-as-origin model.
 _Avoid_: sync-first, mirror-first.
 
@@ -228,5 +228,5 @@ _Avoid_: roadmap.
 
 **Own clock**:
 3V0's self-scheduled review daemon (systemd-supervised), independent of
-Hermes's cron/scheduler.
+3V0's cron/scheduler.
 _Avoid_: cron job, scheduler.

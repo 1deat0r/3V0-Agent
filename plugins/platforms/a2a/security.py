@@ -347,10 +347,10 @@ def is_safe_callback_url(url: str) -> bool:
 
 def _audit_path() -> Path:
     try:
-        from ev0_constants import get_hermes_home
-        base = Path(get_hermes_home())
+        from ev0_constants import get_ev0_home
+        base = Path(get_ev0_home())
     except Exception:
-        base = Path(os.path.expanduser("~/.hermes"))
+        base = Path(os.path.expanduser("~/.3V0"))
     return base / "a2a_audit.jsonl"
 
 

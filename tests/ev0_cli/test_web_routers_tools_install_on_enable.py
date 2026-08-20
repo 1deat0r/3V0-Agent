@@ -3,7 +3,7 @@
 When a toolset is toggled ON via ``PUT /api/tools/toolsets/{name}`` and its
 provider carries a post_setup hook with a registered, UNSATISFIED
 install-state predicate (``_POST_SETUP_INSTALLED`` — today: cua-driver),
-the endpoint spawns the same background ``hermes tools post-setup <key>``
+the endpoint spawns the same background ``3v0 tools post-setup <key>``
 action the interactive CLI flow runs. Without this, a GUI toggle "saves"
 but the tool never appears in the schema because its check_fn can't find
 the binary.
@@ -14,18 +14,18 @@ import pytest
 
 class TestToggleToolsetInstallOnEnable:
     @pytest.fixture(autouse=True)
-    def _setup(self, monkeypatch, _isolate_hermes_home):
+    def _setup(self, monkeypatch, _isolate_ev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import ev0_state
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
         monkeypatch.setattr(
-            ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db"
+            ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db"
         )
         self.client = TestClient(app)
         self.client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
@@ -42,7 +42,7 @@ class TestToggleToolsetInstallOnEnable:
             calls.append((tuple(subcommand), name))
             return _FakeProc()
 
-        monkeypatch.setattr(web_server, "_spawn_hermes_action", _fake_spawn)
+        monkeypatch.setattr(web_server, "_spawn_ev0_action", _fake_spawn)
         return calls
 
     def test_enable_computer_use_spawns_cua_install_when_binary_missing(
@@ -123,7 +123,7 @@ class TestToggleToolsetInstallOnEnable:
         def _boom(subcommand, name, **kwargs):
             raise RuntimeError("spawn exploded")
 
-        monkeypatch.setattr(web_server, "_spawn_hermes_action", _boom)
+        monkeypatch.setattr(web_server, "_spawn_ev0_action", _boom)
 
         resp = self.client.put(
             "/api/tools/toolsets/computer_use", json={"enabled": True}

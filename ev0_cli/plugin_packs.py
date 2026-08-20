@@ -1,6 +1,6 @@
 """Plugin packs — declarative, shareable plugin sets (#64166).
 
-A pack is a single YAML file (``hermes-pack.yaml``) that pins a set of
+A pack is a single YAML file (``3v0-pack.yaml``) that pins a set of
 plugins (source + exact commit SHA + optional non-secret config seeds).
 Installing a pack is nothing new at runtime: it fans out to N ordinary
 plugin installs through the existing pinned-ref install path, then seeds
@@ -13,13 +13,13 @@ Format (canonical)::
     author: hyper
     version: 1.0.0
     plugins:
-      - name: hermes-media-studio          # bare community-index name…
+      - name: 3v0-media-studio          # bare community-index name…
         ref: e8d59971d2b7901405b39dac7b03bdd616272d0d
       - repo: owner/approval-relay         # …or explicit owner/repo / git URL
         ref: 8f3c2d1a9b4e5f6071829304a5b6c7d8e9f00112
         subdir: plugins/relay              # optional path within the repo
     config:                                # optional plugins.entries seeds
-      hermes-media-studio:
+      3v0-media-studio:
         default_model: flux-3
     skills: []                             # declared seam — NOT auto-installed
 
@@ -32,7 +32,7 @@ Supply-chain posture:
   capability-grant keys (a pack cannot pre-consent capabilities).
 * Capability consent is NEVER bulk-granted: after each plugin installs,
   its declared capabilities ride the exact same per-plugin consent flow
-  as a normal ``hermes plugins install`` (#64228).
+  as a normal ``3v0 plugins install`` (#64228).
 
 ``skills:`` is parsed and displayed but not installed — wiring skill-hub
 ids into the skills installer is a documented follow-up seam.
@@ -389,7 +389,7 @@ def render_pack_review(console, pack: PluginPack, resolved: List[ResolvedPackPlu
             + ", ".join(pack.skills)
         )
         console.print(
-            "[dim]Install them manually, e.g. `hermes skills install <id>`.[/dim]"
+            "[dim]Install them manually, e.g. `3v0 skills install <id>`.[/dim]"
         )
     console.print(
         "\n[dim]Installing a pack runs third-party code × "
@@ -580,7 +580,7 @@ def _sanitized_entry_config(plugin_id: str) -> dict[str, Any]:
     return out
 
 
-def export_pack(*, enabled_only: bool = False, pack_name: str = "my-hermes-pack") -> tuple[str, List[str]]:
+def export_pack(*, enabled_only: bool = False, pack_name: str = "my-3v0-pack") -> tuple[str, List[str]]:
     """Build pack YAML from the current install.
 
     Returns ``(yaml_text, warnings)``. Plugins whose Git provenance is
@@ -630,7 +630,7 @@ def export_pack(*, enabled_only: bool = False, pack_name: str = "my-hermes-pack"
 
     doc: dict[str, Any] = {
         "name": pack_name,
-        "description": "Exported by `hermes plugins pack export`.",
+        "description": "Exported by `3v0 plugins pack export`.",
         "version": "1.0.0",
         "plugins": entries,
     }
@@ -651,7 +651,7 @@ def export_pack(*, enabled_only: bool = False, pack_name: str = "my-hermes-pack"
 # ---------------------------------------------------------------------------
 
 def cmd_pack_show(source: str) -> None:
-    """``hermes plugins pack show <path-or-url>`` — dry-run review."""
+    """``3v0 plugins pack show <path-or-url>`` — dry-run review."""
     from rich.console import Console
 
     console = Console()
@@ -668,11 +668,11 @@ def cmd_pack_show(source: str) -> None:
             f"\n[yellow]{len(unresolved)} entr{'y' if len(unresolved) == 1 else 'ies'} "
             "could not be resolved — install would skip them and exit non-zero.[/yellow]"
         )
-    console.print("\n[dim]Dry run only. Install with `hermes plugins pack install ...`.[/dim]")
+    console.print("\n[dim]Dry run only. Install with `3v0 plugins pack install ...`.[/dim]")
 
 
 def cmd_pack_install(source: str, *, force: bool = False) -> None:
-    """``hermes plugins pack install <path-or-url>``.
+    """``3v0 plugins pack install <path-or-url>``.
 
     Mandatory review screen → one summary consent for the pack contents →
     fan-out installs with pinned refs → per-plugin capability consent via
@@ -721,13 +721,13 @@ def cmd_pack_install(source: str, *, force: bool = False) -> None:
         console.print(f"  [red]✗[/red] {r.display}: {r.error}")
     if ok:
         console.print("[dim]Restart the gateway for the plugins to take effect:[/dim]")
-        console.print("[dim]  hermes gateway restart[/dim]")
+        console.print("[dim]  3v0 gateway restart[/dim]")
     if failed:
         sys.exit(1)
 
 
-def cmd_pack_export(*, enabled_only: bool = False, name: str = "my-hermes-pack") -> None:
-    """``hermes plugins pack export [--enabled-only]`` — pack YAML on stdout."""
+def cmd_pack_export(*, enabled_only: bool = False, name: str = "my-3v0-pack") -> None:
+    """``3v0 plugins pack export [--enabled-only]`` — pack YAML on stdout."""
     from rich.console import Console
 
     console = Console(stderr=True)
@@ -742,14 +742,14 @@ def cmd_pack_export(*, enabled_only: bool = False, name: str = "my-hermes-pack")
 
 
 def pack_command(args) -> None:
-    """Dispatch ``hermes plugins pack <action>``."""
+    """Dispatch ``3v0 plugins pack <action>``."""
     action = getattr(args, "pack_action", None)
     if action == "install":
         cmd_pack_install(args.source, force=getattr(args, "force", False))
     elif action == "export":
         cmd_pack_export(
             enabled_only=getattr(args, "enabled_only", False),
-            name=getattr(args, "name", None) or "my-hermes-pack",
+            name=getattr(args, "name", None) or "my-3v0-pack",
         )
     elif action == "show":
         cmd_pack_show(args.source)
@@ -757,6 +757,6 @@ def pack_command(args) -> None:
         from rich.console import Console
 
         Console().print(
-            "[red]Error:[/red] Usage: hermes plugins pack {install|export|show}"
+            "[red]Error:[/red] Usage: 3v0 plugins pack {install|export|show}"
         )
         sys.exit(1)

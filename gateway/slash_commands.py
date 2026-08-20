@@ -7,7 +7,7 @@ lifting them into a mixin that ``GatewayRunner`` inherits keeps every
 ``self._handle_*_command`` dispatch + test reference working via the MRO, while
 removing the bulk from run.py.
 
-Module-level run.py helpers a handler needs (``_hermes_home``,
+Module-level run.py helpers a handler needs (``_ev0_home``,
 ``_load_gateway_config``, ``_resolve_gateway_model``, etc.) are imported lazily
 inside the handler body — a deferred ``from gateway.run import ...`` resolves at
 call time (run.py fully loaded by then), avoiding an import cycle.
@@ -93,7 +93,7 @@ def _model_switch_skew_guard() -> Optional[str]:
         error=(
             f"This gateway is running code from {boot_rev} but the checkout on "
             f"disk is now {disk_rev}. Switching models would risk a stale-module "
-            f"crash — restart the gateway to load the new code: hermes gateway restart"
+            f"crash — restart the gateway to load the new code: 3v0 gateway restart"
         ),
     )
 
@@ -129,7 +129,7 @@ class GatewaySlashCommandsMixin:
     async_session_store: AsyncSessionStore
 
     def _typed_command_prefix_for(self, platform) -> str:
-        """Return the prefix users can always type to reach Hermes commands.
+        """Return the prefix users can always type to reach 3V0 commands.
 
         Reads the adapter's ``typed_command_prefix`` capability flag
         (default "/"). Slack and Matrix return "!" because typed "/"
@@ -367,7 +367,7 @@ class GatewaySlashCommandsMixin:
         ``_run_agent`` and ``_reset_notice_session_info`` — and the command
         reports the active profile and default home, byte-identical to before.
         """
-        from ev0_constants import display_hermes_home
+        from ev0_constants import display_ev0_home
         from ev0_cli.slash_exec import CommandContext, execute_command
 
         multiplexed = getattr(
@@ -384,9 +384,9 @@ class GatewaySlashCommandsMixin:
 
                 profile_home = self._resolve_profile_home_for_source(source)
                 with _profile_runtime_scope(profile_home):
-                    display = display_hermes_home()
+                    display = display_ev0_home()
             except Exception:
-                display = display_hermes_home()
+                display = display_ev0_home()
 
         # Shared executor resolves process-level fallbacks; the multiplexed
         # per-source overrides (when any) ride in via options.
@@ -1556,7 +1556,7 @@ class GatewaySlashCommandsMixin:
                 return (
                     f"✓ {platform.value} paused. "
                     f"Resume with `/platform resume {platform.value}` or "
-                    f"`hermes gateway restart` to reset."
+                    f"`3v0 gateway restart` to reset."
                 )
             # action == "resume"
             if platform not in failed:
@@ -1581,7 +1581,7 @@ class GatewaySlashCommandsMixin:
 
     async def _handle_restart_command(self, event: MessageEvent) -> Union[str, EphemeralReply]:
         """Handle /restart command - drain active work, then restart the gateway."""
-        from gateway.run import _hermes_home
+        from gateway.run import _ev0_home
         # Defensive idempotency check: if the previous gateway process
         # recorded this same /restart (same platform + update_id) and the new
         # process is seeing it *again*, this is a re-delivery caused by PTB's
@@ -1638,7 +1638,7 @@ class GatewaySlashCommandsMixin:
                     self._restart_command_source = event.source
             await asyncio.to_thread(
                 atomic_json_write,
-                _hermes_home / ".restart_notify.json",
+                _ev0_home / ".restart_notify.json",
                 notify_data,
                 indent=None,
             )
@@ -1659,7 +1659,7 @@ class GatewaySlashCommandsMixin:
                 dedup_data["update_id"] = event.platform_update_id
             await asyncio.to_thread(
                 atomic_json_write,
-                _hermes_home / ".restart_last_processed.json",
+                _ev0_home / ".restart_last_processed.json",
                 dedup_data,
                 indent=None,
             )
@@ -1740,7 +1740,7 @@ class GatewaySlashCommandsMixin:
           /model <name> --provider <provider> — switch provider + model
           /model --provider <provider>        — switch to provider, auto-detect model
         """
-        from gateway.run import _hermes_home, _load_gateway_config
+        from gateway.run import _ev0_home, _load_gateway_config
         from ev0_cli.model_switch import (
             switch_model as _switch_model, parse_model_switch_args,
             resolve_persist_behavior,
@@ -1792,7 +1792,7 @@ class GatewaySlashCommandsMixin:
         user_provs = None
         custom_provs = None
         excluded_provs = []
-        config_path = (_command_profile_home or _hermes_home) / "config.yaml"
+        config_path = (_command_profile_home or _ev0_home) / "config.yaml"
         try:
             cfg = _load_gateway_config(config_path=config_path)
             if cfg:
@@ -2512,7 +2512,7 @@ class GatewaySlashCommandsMixin:
 
         Same surface as the CLI handler in cli.py:
             /codex-runtime                  — show current state
-            /codex-runtime auto             — Hermes default runtime
+            /codex-runtime auto             — 3V0 default runtime
             /codex-runtime codex_app_server — codex subprocess runtime
             /codex-runtime on / off         — synonyms
 
@@ -2908,7 +2908,7 @@ class GatewaySlashCommandsMixin:
         return (
             f"♥ Heartbeat set (every {format_interval(state.interval_seconds)}): {state.prompt}\n"
             "Fires as a normal turn whenever this session is idle and the interval has "
-            "elapsed. Lives while the gateway runs — use `hermes cron` for durable schedules."
+            "elapsed. Lives while the gateway runs — use `3v0 cron` for durable schedules."
         )
 
     async def _handle_refine_command(self, event: "MessageEvent") -> str:
@@ -3331,7 +3331,7 @@ class GatewaySlashCommandsMixin:
         ``/diff`` (default) shows unstaged + untracked changes, ``/diff
         staged`` the staged ones, ``/diff all`` everything since HEAD, and
         ``/diff session`` the cumulative checkpoint-baseline diff of what
-        Hermes itself changed. ``--stat`` limits output to the summary.
+        3V0 itself changed. ``--stat`` limits output to the summary.
 
         The diff body is truncated hard here (messaging surfaces are not a
         pager); platform senders additionally split/clamp long messages to
@@ -3475,9 +3475,9 @@ class GatewaySlashCommandsMixin:
     def _save_gateway_config_key(self, key_path: str, value) -> bool:
         """Save a dot-separated key to config.yaml (shared by /reasoning, /fast
         and their interactive pickers)."""
-        from gateway.run import _hermes_home
+        from gateway.run import _ev0_home
         from ev0_cli.config import read_user_config_raw
-        config_path = _hermes_home / "config.yaml"
+        config_path = _ev0_home / "config.yaml"
         try:
             # Write-back round-trip: raw read is correct (merged defaults must
             # not be persisted back to the user's file).
@@ -3719,7 +3719,7 @@ class GatewaySlashCommandsMixin:
         Gate changes persist to config.yaml and evict the cached agent so the
         new setting takes effect on the next message.
         """
-        from gateway.run import _hermes_home
+        from gateway.run import _ev0_home
         from ev0_cli.write_approval_commands import handle_pending_subcommand
         from tools import write_approval as wa
         from tools.memory_tool import load_on_disk_store
@@ -3727,7 +3727,7 @@ class GatewaySlashCommandsMixin:
         raw_args = event.get_command_args().strip()
         args = raw_args.split() if raw_args else []
         session_key = self._session_key_for_source(event.source)
-        config_path = _hermes_home / "config.yaml"
+        config_path = _ev0_home / "config.yaml"
 
         def _set_approval(enabled: bool):
             # Write-back round-trip: raw read is correct (merged defaults must
@@ -3764,18 +3764,18 @@ class GatewaySlashCommandsMixin:
         stranded).
 
         ``diff`` output is truncated for chat bubbles — the full diff lives in
-        the pending JSON file under ``~/.hermes/pending/skills/``. (Note this is
+        the pending JSON file under ``~/.3V0/pending/skills/``. (Note this is
         the write-approval ``diff <id>``; the CLI also has an unrelated
-        ``hermes skills diff <name>`` that diffs a bundled skill vs stock.)
+        ``3v0 skills diff <name>`` that diffs a bundled skill vs stock.)
         """
-        from gateway.run import _hermes_home
+        from gateway.run import _ev0_home
         from ev0_cli.write_approval_commands import handle_pending_subcommand
         from tools import write_approval as wa
 
         raw_args = event.get_command_args().strip()
         args = raw_args.split() if raw_args else []
         session_key = self._session_key_for_source(event.source)
-        config_path = _hermes_home / "config.yaml"
+        config_path = _ev0_home / "config.yaml"
 
         gate_on = wa.write_approval_enabled(wa.SKILLS)
         wants_toggle = bool(args) and args[0].lower() in {"approval", "mode"}
@@ -3803,14 +3803,14 @@ class GatewaySlashCommandsMixin:
                     "(Search/install are CLI-only.)")
 
         # Chat bubbles can't hold a full skill diff — truncate and point at
-        # the real review surface. (Note: `hermes skills diff <name>` is a
+        # the real review surface. (Note: `3v0 skills diff <name>` is a
         # *different* command — it diffs a bundled skill against its stock
         # version — so we point at the pending JSON file, not that command.)
         if args and args[0].lower() == "diff" and len(out) > 3000:
             pending_id = args[1] if len(args) > 1 else "<id>"
             out = (out[:3000]
                    + "\n… (truncated — full diff in "
-                     f"~/.hermes/pending/skills/{pending_id}.json)")
+                     f"~/.3V0/pending/skills/{pending_id}.json)")
         return out
 
     async def _handle_fast_command(self, event: MessageEvent) -> Optional[str]:
@@ -3941,9 +3941,9 @@ class GatewaySlashCommandsMixin:
         ``display.platforms.<platform>.tool_progress`` so each channel can
         have its own verbosity level independently.
         """
-        from gateway.run import _hermes_home, _load_gateway_config, _platform_config_key
+        from gateway.run import _ev0_home, _load_gateway_config, _platform_config_key
 
-        config_path = _hermes_home / "config.yaml"
+        config_path = _ev0_home / "config.yaml"
         platform_key = _platform_config_key(event.source.platform)
 
         # --- check config gate ------------------------------------------------
@@ -4010,10 +4010,10 @@ class GatewaySlashCommandsMixin:
         are respected but not modified here — edit config.yaml directly for
         per-platform control.
         """
-        from gateway.run import _hermes_home, _load_gateway_config, _platform_config_key, _resolve_gateway_model
+        from gateway.run import _ev0_home, _load_gateway_config, _platform_config_key, _resolve_gateway_model
         from gateway.runtime_footer import resolve_footer_config
 
-        config_path = _hermes_home / "config.yaml"
+        config_path = _ev0_home / "config.yaml"
         platform_key = _platform_config_key(event.source.platform)
 
         # --- parse argument -------------------------------------------------
@@ -4606,7 +4606,7 @@ class GatewaySlashCommandsMixin:
 
         import tempfile
 
-        temp_dir = tempfile.mkdtemp(prefix="hermes_save_")
+        temp_dir = tempfile.mkdtemp(prefix="ev0_save_")
         temp_path = os.path.join(temp_dir, filename)
         try:
             content = render_session_for_save(export_data, fmt)
@@ -5622,7 +5622,7 @@ class GatewaySlashCommandsMixin:
             return (
                 "No skill bundles installed.\n"
                 "Create one on the host with:\n"
-                "  `hermes bundles create <name> --skill <s1> --skill <s2>`\n"
+                "  `3v0 bundles create <name> --skill <s1> --skill <s2>`\n"
                 f"Directory: `{reply.data['dir']}`"
             )
 
@@ -5764,7 +5764,7 @@ class GatewaySlashCommandsMixin:
 
         Gateway uploads ONLY the summary report (system info + log tails),
         NOT full log files, to protect conversation privacy.  Users who need
-        full log uploads should use ``hermes debug share`` from the CLI.
+        full log uploads should use ``3v0 debug share`` from the CLI.
         """
         import asyncio
         from ev0_cli.debug import (
@@ -5804,14 +5804,14 @@ class GatewaySlashCommandsMixin:
         return await loop.run_in_executor(None, _collect_and_upload)
 
     async def _handle_update_command(self, event: MessageEvent) -> str:
-        """Handle /update command — update Hermes Agent to the latest version.
+        """Handle /update command — update 3V0 Agent to the latest version.
 
-        Spawns ``hermes update`` in a detached session (via ``setsid``) so it
-        survives the gateway restart that ``hermes update`` may trigger. Marker
+        Spawns ``3v0 update`` in a detached session (via ``setsid``) so it
+        survives the gateway restart that ``3v0 update`` may trigger. Marker
         files are written so either the current gateway process or the next one
         can notify the user when the update finishes.
         """
-        from gateway.run import _hermes_home, _resolve_hermes_bin
+        from gateway.run import _ev0_home, _resolve_ev0_bin
         import json
         import shutil
         import subprocess
@@ -5832,7 +5832,7 @@ class GatewaySlashCommandsMixin:
                 return t("gateway.update.platform_not_messaging")
 
         if is_managed():
-            return f"✗ {format_managed_message('update Hermes Agent')}"
+            return f"✗ {format_managed_message('update 3V0 Agent')}"
 
         project_root = Path(__file__).parent.parent.resolve()
         git_dir = project_root / '.git'
@@ -5840,13 +5840,13 @@ class GatewaySlashCommandsMixin:
         if not git_dir.exists():
             return t("gateway.update.not_git_repo")
 
-        hermes_cmd = _resolve_hermes_bin()
-        if not hermes_cmd:
-            return t("gateway.update.hermes_cmd_not_found")
+        ev0_cmd = _resolve_ev0_bin()
+        if not ev0_cmd:
+            return t("gateway.update.ev0_cmd_not_found")
 
-        pending_path = _hermes_home / ".update_pending.json"
-        output_path = _hermes_home / ".update_output.txt"
-        exit_code_path = _hermes_home / ".update_exit_code"
+        pending_path = _ev0_home / ".update_pending.json"
+        output_path = _ev0_home / ".update_output.txt"
+        exit_code_path = _ev0_home / ".update_exit_code"
         session_key = self._session_key_for_source(event.source)
         pending = {
             "platform": event.source.platform.value,
@@ -5865,7 +5865,7 @@ class GatewaySlashCommandsMixin:
         _tmp_pending.replace(pending_path)
         exit_code_path.unlink(missing_ok=True)
 
-        # Spawn `hermes update --gateway` detached so it survives gateway restart.
+        # Spawn `3v0 update --gateway` detached so it survives gateway restart.
         # --gateway enables file-based IPC for interactive prompts (stash
         # restore, config migration) so the gateway can forward them to the
         # user instead of silently skipping them.
@@ -5873,7 +5873,7 @@ class GatewaySlashCommandsMixin:
         # where systemd-run --user fails due to missing D-Bus session).
         # PYTHONUNBUFFERED ensures output is flushed line-by-line so the
         # gateway can stream it to the messenger in near-real-time.
-        # Spawn `hermes update --gateway` detached so it survives gateway restart.
+        # Spawn `3v0 update --gateway` detached so it survives gateway restart.
         # --gateway enables file-based IPC for interactive prompts (stash
         # restore, config migration) so the gateway can forward them to the
         # user instead of silently skipping them.
@@ -5882,7 +5882,7 @@ class GatewaySlashCommandsMixin:
         # PYTHONUNBUFFERED ensures output is flushed line-by-line so the
         # gateway can stream it to the messenger in near-real-time.
         #
-        # Windows: no bash/setsid chain.  Run `hermes update --gateway`
+        # Windows: no bash/setsid chain.  Run `3v0 update --gateway`
         # directly via sys.executable; redirect stdout/stderr to the same
         # output files via Popen file handles; write the exit code in a
         # follow-up write.  A tiny Python watcher would be cleaner but
@@ -5894,7 +5894,7 @@ class GatewaySlashCommandsMixin:
                 import textwrap
                 from ev0_cli._subprocess_compat import windows_detach_popen_kwargs
 
-                # hermes_cmd is a list of argv parts we can pass directly
+                # ev0_cmd is a list of argv parts we can pass directly
                 # (no shell-quoting needed).
                 helper = textwrap.dedent(
                     """
@@ -5915,16 +5915,16 @@ class GatewaySlashCommandsMixin:
                     [
                         sys.executable, "-c", helper,
                         str(output_path), str(exit_code_path),
-                        *hermes_cmd, "update", "--gateway",
+                        *ev0_cmd, "update", "--gateway",
                     ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     **windows_detach_popen_kwargs(),
                 )
             else:
-                hermes_cmd_str = " ".join(shlex.quote(part) for part in hermes_cmd)
+                ev0_cmd_str = " ".join(shlex.quote(part) for part in ev0_cmd)
                 update_cmd = (
-                    f"PYTHONUNBUFFERED=1 {hermes_cmd_str} update --gateway"
+                    f"PYTHONUNBUFFERED=1 {ev0_cmd_str} update --gateway"
                     f" > {shlex.quote(str(output_path))} 2>&1; "
                     # Avoid `status=$?`: `status` is a read-only special parameter
                     # in zsh, and this command string is copied/reused in macOS/zsh

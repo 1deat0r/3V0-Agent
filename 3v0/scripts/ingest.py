@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ingest a Hermes memory-tool write into the native store (store-first).
+"""Ingest a 3V0 memory-tool write into the native store (store-first).
 
 Reads a JSON payload on stdin describing one memory-tool write and replays it
 against the store under the cross-process lock. Called by the

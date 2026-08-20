@@ -286,7 +286,7 @@ async def test_session_hygiene_preserves_transcript_when_no_rotation(monkeypatch
         }
     )
 
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_ev0_home", tmp_path)
     monkeypatch.setattr(gateway_run, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "fake"})
     monkeypatch.setattr(
         "agent.model_metadata.get_model_context_length",
@@ -448,7 +448,7 @@ async def test_session_hygiene_preserves_transcript_when_in_place_configured_but
         }
     )
 
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_ev0_home", tmp_path)
     monkeypatch.setattr(gateway_run, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "fake"})
     monkeypatch.setattr(
         "agent.model_metadata.get_model_context_length",
@@ -582,7 +582,7 @@ async def test_session_hygiene_timeout_continues_to_agent_and_sets_cooldown(monk
         }
     )
 
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_ev0_home", tmp_path)
     monkeypatch.setattr(gateway_run, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "fake"})
     monkeypatch.setattr(
         "agent.model_metadata.get_model_context_length",
@@ -651,7 +651,7 @@ async def test_session_hygiene_forces_in_place_compaction_with_bound_session_db(
     monkeypatch.setitem(sys.modules, "dotenv", fake_dotenv)
 
     stored_system_prompt = (
-        "You are Hermes.\n\n"
+        "You are 3V0.\n\n"
         "<memory_provider_context>\n"
         "Pinboard provider instructions\n"
         "</memory_provider_context>"
@@ -740,7 +740,7 @@ async def test_session_hygiene_forces_in_place_compaction_with_bound_session_db(
         }
     )
 
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_ev0_home", tmp_path)
     monkeypatch.setattr(
         gateway_run, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "fake"}
     )
@@ -876,7 +876,7 @@ async def test_session_hygiene_honors_configurable_hard_message_limit(
         }
     )
 
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_ev0_home", tmp_path)
     monkeypatch.setattr(
         gateway_run, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "fake"}
     )
@@ -967,7 +967,7 @@ def _make_progress_runner(monkeypatch, tmp_path, agent_cls, cfg_text):
         }
     )
 
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_ev0_home", tmp_path)
     monkeypatch.setattr(gateway_run, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "fake"})
     monkeypatch.setattr(
         "agent.model_metadata.get_model_context_length",
@@ -1058,7 +1058,7 @@ def _make_cooldown_runner(monkeypatch, tmp_path, agent_cls, session_db, session_
         }
     )
 
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_ev0_home", tmp_path)
     monkeypatch.setattr(gateway_run, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "fake"})
     monkeypatch.setattr(
         "agent.model_metadata.get_model_context_length",

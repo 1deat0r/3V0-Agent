@@ -1,6 +1,6 @@
 """Native probe core — deterministic measurement for the evolution monitor.
 
-Stdlib-only, zero Hermes. Implements the OBSERVABLE half of EVOLUTION_PROBE.md
+Stdlib-only, zero 3V0. Implements the OBSERVABLE half of EVOLUTION_PROBE.md
 v0.2: bank validation, per-band stats, calibration / noise-floor estimation, the
 pre-registered trend rule, and git-versioned result recording.
 
@@ -27,7 +27,7 @@ BAND_ORDER = ["easy", "medium", "hard", "escalated"]
 # accuracy on the known-answer subset is >= this PRE-REGISTERED floor. (Set before
 # any certification run; grader_cert_v1.json result must clear this to count.)
 GRADER_CERT_FLOOR = 0.9
-LEAK_TERMS = ("3v0", "hermes", "mustbearn", "fiverr", "axiom")
+LEAK_TERMS = ("3v0", "3v0", "mustbearn", "fiverr", "axiom")
 DATE_RE = re.compile(r"\b(20\d\d|current year|today|this month)\b", re.I)
 _REQUIRED = {"id", "band", "domain", "prompt", "rubric", "time_box_min"}
 

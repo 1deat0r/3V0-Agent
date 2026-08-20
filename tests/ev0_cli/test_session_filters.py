@@ -1,5 +1,5 @@
 """Tests for ev0_cli.session_filters — CLI time/filter parsing for
-`hermes sessions prune` / `hermes sessions archive`."""
+`3v0 sessions prune` / `3v0 sessions archive`."""
 
 import time
 from argparse import Namespace

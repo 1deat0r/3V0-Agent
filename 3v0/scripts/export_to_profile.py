@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Emit MEMORY.md / USER.md as a DERIVED VIEW of 3V0's native store.
 
-Default: print to stdout (dry run). With --write, write into the Hermes
+Default: print to stdout (dry run). With --write, write into the 3V0
 profile's memories/ directory — so the profile becomes a projection of the
 store, not the origin.
 
@@ -22,7 +22,7 @@ from core.store import open_store  # noqa: E402
 from core.project import project_memory  # noqa: E402
 from core.sync import profile_text  # noqa: E402
 
-PROFILE_MEM = Path.home() / ".hermes" / "profiles" / "3v0" / "memories"
+PROFILE_MEM = Path.home() / ".3V0" / "profiles" / "3v0" / "memories"
 STORE_PATH = REPO_ROOT / "3v0" / "data" / "memory.db"
 
 

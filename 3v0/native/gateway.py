@@ -1,10 +1,10 @@
-"""Native Telegram gateway — Bot API long-polling. Stdlib-only, zero Hermes.
+"""Native Telegram gateway — Bot API long-polling. Stdlib-only, zero 3V0.
 
-N4: hermes-independent messaging. getUpdates (allowed_updates=['message'],
+N4: 3v0-independent messaging. getUpdates (allowed_updates=['message'],
 long-poll timeout) -> handler(update) -> send_message. The handler is a plain
 callable, so the loop is testable without a live bot.
 
-SAFETY: never run a SECOND poller on the live bot while the Hermes gateway is
+SAFETY: never run a SECOND poller on the live bot while the 3V0 gateway is
 active — two getUpdates consumers steal each other's messages. The live proof
 uses getMe (identity; consumes nothing).
 """

@@ -14,7 +14,7 @@ import ev0_cli.web_server as web_server
 from ev0_cli.web_server import _SESSION_TOKEN, app
 
 client = TestClient(app)
-HEADERS = {"X-Hermes-Session-Token": _SESSION_TOKEN}
+HEADERS = {"X-3V0-Session-Token": _SESSION_TOKEN}
 
 
 def _env_rows(monkeypatch, env_on_disk):

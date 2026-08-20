@@ -24,23 +24,23 @@ def test_unsupported_allocator_is_noop_without_gc(monkeypatch):
 
 
 def test_config_kill_switch_overrides_force_from_config_file(monkeypatch, tmp_path):
-    from ev0_constants import reset_hermes_home_override, set_hermes_home_override
+    from ev0_constants import reset_ev0_home_override, set_ev0_home_override
 
-    hermes_home = tmp_path / "hermes"
-    hermes_home.mkdir()
-    (hermes_home / "config.yaml").write_text(
+    ev0_home = tmp_path / "3v0"
+    ev0_home.mkdir()
+    (ev0_home / "config.yaml").write_text(
         "context:\n  memory_trim:\n    enabled: false\n",
         encoding="utf-8",
     )
     trim = Mock(return_value=1)
     monkeypatch.setattr(mem_trim, "_malloc_trim", trim)
-    token = set_hermes_home_override(hermes_home)
+    token = set_ev0_home_override(ev0_home)
 
     try:
         assert mem_trim.trim_memory(force=True) is False
         trim.assert_not_called()
     finally:
-        reset_hermes_home_override(token)
+        reset_ev0_home_override(token)
 
 
 def test_default_config_declares_memory_trim_controls():
@@ -164,7 +164,7 @@ def test_config_cooldown_controls_rate_limit(monkeypatch):
 def test_legacy_environment_switch_does_not_control_behavior(monkeypatch):
     trim = Mock(return_value=1)
     monkeypatch.setattr(mem_trim, "_malloc_trim", trim)
-    monkeypatch.setenv("HERMES_DISABLE_MEMORY_TRIM", "1")
+    monkeypatch.setenv("EV0_DISABLE_MEMORY_TRIM", "1")
     monkeypatch.setattr(
         "ev0_cli.config.load_config_readonly",
         lambda: {"context": {"memory_trim": {"enabled": True}}},

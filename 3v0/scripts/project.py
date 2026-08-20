@@ -15,7 +15,7 @@ Commands:
 
 Env (tests / explicit): THREEV0_BODY (body root), THREEV0_LEDGER (ledger path).
 
-``--profile <name>`` marks a project as a Hermes hardfork 3V0 reviews, and
+``--profile <name>`` marks a project as a 3V0 hardfork 3V0 reviews, and
 defaults its store to ``3v0/data/<name>/memory.json``. ``--primary`` is 3V0's
 own slot (store + skill axis + profile projection). Without either, a project
 is drift-tracking only (no store, no review).
@@ -220,7 +220,7 @@ def main() -> int:
     p_add.add_argument("--repo", required=True, help="path to the git repo (~/... ok)")
     p_add.add_argument("--upstream", default="origin", help="git remote name to merge from")
     p_add.add_argument("--ref", default="main", help="branch on that remote")
-    p_add.add_argument("--profile", default=None, help="Hermes profile name (marks a reviewed hardfork)")
+    p_add.add_argument("--profile", default=None, help="3V0 profile name (marks a reviewed hardfork)")
     p_add.add_argument("--delta", default="", help="description of the deliberate divergence")
     p_add.add_argument("--store", default=None, help="canonical memory store path")
     p_add.add_argument("--skill-store", default=None, help="canonical skill store path")

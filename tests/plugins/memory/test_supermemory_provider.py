@@ -63,7 +63,7 @@ def provider(monkeypatch, tmp_path):
     monkeypatch.setenv("SUPERMEMORY_API_KEY", "test-key")
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     p = SupermemoryMemoryProvider()
-    p.initialize("session-1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("session-1", ev0_home=str(tmp_path), platform="cli")
     return p
 
 
@@ -90,12 +90,12 @@ def test_clean_text_for_capture_strips_injected_context():
 def test_format_prefetch_context_deduplicates_overlap():
     result = _format_prefetch_context(
         static_facts=["Jordan prefers short answers"],
-        dynamic_facts=["Jordan prefers short answers", "Uses Hermes"],
-        search_results=[{"memory": "Uses Hermes", "similarity": 0.9}],
+        dynamic_facts=["Jordan prefers short answers", "Uses 3V0"],
+        search_results=[{"memory": "Uses 3V0", "similarity": 0.9}],
         max_results=10,
     )
     assert result.count("Jordan prefers short answers") == 1
-    assert result.count("Uses Hermes") == 1
+    assert result.count("Uses 3V0") == 1
     assert "<supermemory-context>" in result
 
 
@@ -103,7 +103,7 @@ def test_prefetch_includes_profile_on_first_turn(provider):
     provider._client.profile_response = {
         "static": ["Jordan prefers short answers"],
         "dynamic": ["Current project is Supermemory provider"],
-        "search_results": [{"memory": "Working on Hermes memory provider", "similarity": 0.88}],
+        "search_results": [{"memory": "Working on 3V0 memory provider", "similarity": 0.88}],
     }
     provider.on_turn_start(1, "start")
     result = provider.prefetch("what am I working on?")
@@ -142,18 +142,18 @@ def test_on_session_end_ingests_clean_messages(provider):
 
 
 def test_merge_metadata_stamps_sm_source():
-    # sm_source routes Hermes writes into the "Hermes" Space in the Supermemory
+    # sm_source routes 3V0 writes into the "3V0" Space in the Supermemory
     # app (functional routing, not telemetry) — must always be present.
     from plugins.memory.supermemory import _SupermemoryClient
 
     client = _SupermemoryClient.__new__(_SupermemoryClient)
     merged = client._merge_metadata({"type": "explicit_memory"})
-    assert merged["sm_source"] == "hermes"
+    assert merged["sm_source"] == "3v0"
     assert merged["type"] == "explicit_memory"
 
     # Legacy "source" is migrated into "type" when type is absent.
     merged2 = client._merge_metadata({"source": "conversation_turn"})
-    assert merged2["sm_source"] == "hermes"
+    assert merged2["sm_source"] == "3v0"
     assert merged2["type"] == "conversation_turn"
     assert "source" not in merged2
 
@@ -253,10 +253,10 @@ def test_identity_template_resolved_in_container_tag(monkeypatch, tmp_path):
     """container_tag with {identity} resolves to profile-scoped tag."""
     monkeypatch.setenv("SUPERMEMORY_API_KEY", "test-key")
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
-    _save_supermemory_config({"container_tag": "hermes-{identity}"}, str(tmp_path))
+    _save_supermemory_config({"container_tag": "3v0-{identity}"}, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli", agent_identity="coder")
-    assert p._container_tag == "hermes_coder"
+    p.initialize("s1", ev0_home=str(tmp_path), platform="cli", agent_identity="coder")
+    assert p._container_tag == "ev0_coder"
 
 
 def test_container_tag_env_var_override(monkeypatch, tmp_path):
@@ -265,7 +265,7 @@ def test_container_tag_env_var_override(monkeypatch, tmp_path):
     monkeypatch.setenv("SUPERMEMORY_CONTAINER_TAG", "env-override")
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("s1", ev0_home=str(tmp_path), platform="cli")
     assert p._container_tag == "env_override"
 
 
@@ -278,7 +278,7 @@ def test_invalid_search_mode_falls_back_to_default(monkeypatch, tmp_path):
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     _save_supermemory_config({"search_mode": "invalid_mode"}, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("s1", ev0_home=str(tmp_path), platform="cli")
     assert p._search_mode == "hybrid"
 
 
@@ -291,7 +291,7 @@ def test_base_url_defaults_to_cloud(monkeypatch, tmp_path):
     monkeypatch.delenv("SUPERMEMORY_BASE_URL", raising=False)
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("s1", ev0_home=str(tmp_path), platform="cli")
     assert p._base_url == "https://api.supermemory.ai"
     assert p._client.base_url == "https://api.supermemory.ai"
 
@@ -317,7 +317,7 @@ def test_client_passes_custom_base_url_to_sdk(monkeypatch):
     client = _SupermemoryClient(
         api_key="test-key",
         timeout=1.0,
-        container_tag="hermes",
+        container_tag="3v0",
         base_url="http://localhost:6767/",
     )
 
@@ -338,7 +338,7 @@ def test_ingest_conversation_uses_client_base_url(monkeypatch, base_url, expecte
 
     client = _SupermemoryClient.__new__(_SupermemoryClient)
     client._api_key = "test-key"
-    client._container_tag = "hermes"
+    client._container_tag = "3v0"
     client._timeout = 1.0
     client._base_url = base_url
 
@@ -384,7 +384,7 @@ def test_probe_supermemory_connection_missing_key(tmp_path):
     status = _probe_supermemory_connection("", str(tmp_path))
     assert status["ok"] is False
     assert status["error"] == "SUPERMEMORY_API_KEY not set"
-    assert status["container_tag"] == "hermes"
+    assert status["container_tag"] == "3v0"
 
 
 def _stub_supermemory_importable(monkeypatch):
@@ -419,9 +419,9 @@ def test_post_setup_writes_config_and_prints_summary(monkeypatch, tmp_path, caps
     )
     monkeypatch.setattr(
         "plugins.memory.supermemory._probe_supermemory_connection",
-        lambda api_key, hermes_home, **kwargs: {
+        lambda api_key, ev0_home, **kwargs: {
             "ok": True,
-            "container_tag": "hermes",
+            "container_tag": "3v0",
             "profile_facts": 3,
             "auto_recall": True,
             "auto_capture": True,

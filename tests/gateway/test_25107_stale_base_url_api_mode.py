@@ -79,15 +79,15 @@ def _fake_switch_result(*, base_url="", api_mode=""):
 def _setup_isolated_home(tmp_path, monkeypatch, model_yaml_value, *, base_url="", api_mode=""):
     import gateway.run as gateway_run
 
-    hermes_home = tmp_path / ".hermes"
-    hermes_home.mkdir()
-    cfg_path = hermes_home / "config.yaml"
+    ev0_home = tmp_path / ".3V0"
+    ev0_home.mkdir()
+    cfg_path = ev0_home / "config.yaml"
     cfg_path.write_text(
         yaml.safe_dump({"model": model_yaml_value, "providers": {}}),
         encoding="utf-8",
     )
 
-    monkeypatch.setattr(gateway_run, "_hermes_home", hermes_home)
+    monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
     monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda: {})
     monkeypatch.setattr(
         "ev0_cli.model_switch.list_picker_providers",
@@ -101,8 +101,8 @@ def _setup_isolated_home(tmp_path, monkeypatch, model_yaml_value, *, base_url=""
         "ev0_cli.model_switch.resolve_display_context_length",
         lambda *a, **k: 8192,
     )
-    monkeypatch.setattr("ev0_constants.get_hermes_home", lambda: hermes_home)
-    monkeypatch.setattr("ev0_cli.config.get_hermes_home", lambda: hermes_home)
+    monkeypatch.setattr("ev0_constants.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("ev0_cli.config.get_ev0_home", lambda: ev0_home)
     return cfg_path
 
 

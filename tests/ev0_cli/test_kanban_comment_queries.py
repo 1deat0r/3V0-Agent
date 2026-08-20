@@ -21,15 +21,15 @@ from ev0_cli import kanban_db as kb
 
 @pytest.fixture
 def fresh_home(tmp_path, monkeypatch):
-    home = tmp_path / "hermes_home"
+    home = tmp_path / "ev0_home"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("EV0_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    for var in ("HERMES_KANBAN_DB", "HERMES_KANBAN_WORKSPACES_ROOT", "HERMES_KANBAN_HOME", "HERMES_KANBAN_BOARD"):
+    for var in ("EV0_KANBAN_DB", "EV0_KANBAN_WORKSPACES_ROOT", "EV0_KANBAN_HOME", "EV0_KANBAN_BOARD"):
         monkeypatch.delenv(var, raising=False)
     try:
         import ev0_constants
-        ev0_constants._cached_default_hermes_root = None  # type: ignore[attr-defined]
+        ev0_constants._cached_default_ev0_root = None  # type: ignore[attr-defined]
     except Exception:
         pass
     kb._INITIALIZED_PATHS.clear()

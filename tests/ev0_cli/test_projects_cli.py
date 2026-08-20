@@ -1,4 +1,4 @@
-"""Tests for the `hermes project` CLI dispatch (ev0_cli/projects_cmd)."""
+"""Tests for the `3v0 project` CLI dispatch (ev0_cli/projects_cmd)."""
 
 from __future__ import annotations
 

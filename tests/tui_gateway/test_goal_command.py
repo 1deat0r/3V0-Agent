@@ -20,13 +20,13 @@ import pytest
 
 
 @pytest.fixture()
-def hermes_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+def ev0_home(tmp_path, monkeypatch):
+    home = tmp_path / ".3V0"
     home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("EV0_HOME", str(home))
 
-    # Bust the goal-module DB cache so it re-resolves HERMES_HOME.
+    # Bust the goal-module DB cache so it re-resolves EV0_HOME.
     from ev0_cli import goals
 
     goals._DB_CACHE.clear()
@@ -35,7 +35,7 @@ def hermes_home(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
-def server(hermes_home, monkeypatch):
+def server(ev0_home, monkeypatch):
     # Mocks are scoped to the initial import only (see
     # tests/tui_gateway/test_protocol.py for the rationale).
     with patch.dict(
@@ -47,18 +47,18 @@ def server(hermes_home, monkeypatch):
     ):
         mod = importlib.import_module("tui_gateway.server")
 
-    # Pin config resolution to the isolated HERMES_HOME. Sibling test
+    # Pin config resolution to the isolated EV0_HOME. Sibling test
     # files (test_billing_rpc, test_delegation_session_lifecycle,
     # test_gateway_owned_session_reap, ...) import tui_gateway.server at
     # collection time — BEFORE the conftest env isolation runs — so the
-    # module-level ``_hermes_home = get_hermes_home()`` snapshot freezes
+    # module-level ``_ev0_home = get_ev0_home()`` snapshot freezes
     # the developer's real home. When any of them precede this file in
     # the same process, ``importlib.import_module`` returns that cached
     # module and ``_load_cfg()`` would read the REAL config.yaml (e.g. a
     # local MoA preset) instead of the one ``_write_moa_config`` writes.
     # Also reset the mtime-keyed config cache; monkeypatch restores the
     # originals on teardown so nothing leaks to later tests either.
-    monkeypatch.setattr(mod, "_hermes_home", hermes_home)
+    monkeypatch.setattr(mod, "_ev0_home", ev0_home)
     monkeypatch.setattr(mod, "_cfg_cache", None)
     monkeypatch.setattr(mod, "_cfg_mtime", None)
     monkeypatch.setattr(mod, "_cfg_path", None)
@@ -398,8 +398,8 @@ def _write_moa_config(home, text):
     cfg_path.write_text(text)
 
 
-def test_moa_bare_returns_usage(server, session, hermes_home):
-    _write_moa_config(hermes_home, """
+def test_moa_bare_returns_usage(server, session, ev0_home):
+    _write_moa_config(ev0_home, """
 moa:
   default_preset: default
   presets:

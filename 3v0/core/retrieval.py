@@ -15,7 +15,7 @@ callers. Design contract (ADR-0004):
   score is keyword match + recency + feedback frequency; the budget is the
   profile view's size cap, so ``text`` never exceeds ``budget_chars``.
 - **The text is the profile wire** — one line per chosen fact, the fact's
-  ``content`` (the natural-language form Hermes parses), not the internal
+  ``content`` (the natural-language form 3V0 parses), not the internal
   triple form.
 - **Feedback is the module's own write.** With ``touch=True`` the chosen
   facts' ``access_count``/``last_accessed`` are updated, so future ranking

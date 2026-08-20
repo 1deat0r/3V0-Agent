@@ -22,7 +22,7 @@ def _run(*args: str) -> subprocess.CompletedProcess[str]:
 def _invoke(monkeypatch: pytest.MonkeyPatch, *args: str) -> int:
     """Run the in-process CLI and normalize its process-style exit status."""
     cli_main = import_module("ev0_cli.main")
-    monkeypatch.setattr(sys, "argv", ["hermes", "computer-use", *args])
+    monkeypatch.setattr(sys, "argv", ["3v0", "computer-use", *args])
     monkeypatch.setattr(cli_main, "_prepare_agent_startup", lambda _args: None)
     try:
         cli_main.main()
@@ -54,7 +54,7 @@ def test_computer_use_status_returns_zero_for_compatible_driver(
     from tools.computer_use import cua_backend
 
     driver = r"C:\Users\tester\.local\bin\cua-driver.exe"
-    monkeypatch.delenv("HERMES_CUA_DRIVER_CMD", raising=False)
+    monkeypatch.delenv("EV0_CUA_DRIVER_CMD", raising=False)
     monkeypatch.setattr(cua_backend, "resolve_cua_driver_cmd", lambda: driver)
     monkeypatch.setattr(
         tools_config,
@@ -90,7 +90,7 @@ def test_computer_use_status_returns_nonzero_for_incompatible_standard_driver(
     from tools.computer_use import cua_backend
 
     driver = r"C:\Users\tester\.local\bin\cua-driver.exe"
-    monkeypatch.delenv("HERMES_CUA_DRIVER_CMD", raising=False)
+    monkeypatch.delenv("EV0_CUA_DRIVER_CMD", raising=False)
     monkeypatch.setattr(cua_backend, "resolve_cua_driver_cmd", lambda: driver)
     monkeypatch.setattr(
         tools_config,
@@ -104,7 +104,7 @@ def test_computer_use_status_returns_nonzero_for_incompatible_standard_driver(
     assert _invoke(monkeypatch, "status") == 1
     output = capsys.readouterr().out
     assert "Repair required" in output
-    assert "Run: hermes computer-use install" in output
+    assert "Run: 3v0 computer-use install" in output
 
 
 def test_computer_use_status_returns_nonzero_for_incompatible_custom_driver(
@@ -115,7 +115,7 @@ def test_computer_use_status_returns_nonzero_for_incompatible_custom_driver(
     from tools.computer_use import cua_backend
 
     driver = r"C:\custom\cmd.exe"
-    monkeypatch.setenv("HERMES_CUA_DRIVER_CMD", driver)
+    monkeypatch.setenv("EV0_CUA_DRIVER_CMD", driver)
     monkeypatch.setattr(cua_backend, "resolve_cua_driver_cmd", lambda: driver)
     monkeypatch.setattr(
         tools_config,
@@ -125,7 +125,7 @@ def test_computer_use_status_returns_nonzero_for_incompatible_custom_driver(
 
     assert _invoke(monkeypatch, "status") == 1
     output = capsys.readouterr().out
-    assert "custom binary from HERMES_CUA_DRIVER_CMD" in output
+    assert "custom binary from EV0_CUA_DRIVER_CMD" in output
     assert "unset the override" in output
 
 
@@ -155,7 +155,7 @@ def test_computer_use_install_returns_nonzero_for_unrepairable_custom_override(
     from ev0_cli import tools_config
 
     driver = r"C:\custom\cmd.exe"
-    monkeypatch.setenv("HERMES_CUA_DRIVER_CMD", driver)
+    monkeypatch.setenv("EV0_CUA_DRIVER_CMD", driver)
     install = Mock(return_value=False)
     contract = Mock(side_effect=AssertionError("failed install must short-circuit"))
     monkeypatch.setattr(tools_config, "install_cua_driver", install)

@@ -19,11 +19,11 @@ import pytest
 
 
 @pytest.fixture()
-def hermes_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+def ev0_home(tmp_path, monkeypatch):
+    home = tmp_path / ".3V0"
     home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("EV0_HOME", str(home))
 
     from ev0_cli import loops
 
@@ -33,7 +33,7 @@ def hermes_home(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
-def server(hermes_home):
+def server(ev0_home):
     with patch.dict(
         "sys.modules",
         {

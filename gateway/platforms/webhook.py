@@ -477,7 +477,7 @@ class WebhookAdapter(BasePlatformAdapter):
         Set via ``platforms.webhook.extra.routes.<name>.toolsets`` in
         config.yaml or a ``toolsets`` key on a subscription in
         ``webhook_subscriptions.json`` (manual edit — deliberately NOT
-        exposed through `hermes webhook subscribe`, so an agent-created
+        exposed through `3v0 webhook subscribe`, so an agent-created
         subscription cannot self-grant elevated tools).
         """
         chat_id = str(getattr(source, "chat_id", "") or "")
@@ -503,9 +503,9 @@ class WebhookAdapter(BasePlatformAdapter):
 
     def _reload_dynamic_routes(self) -> None:
         """Reload agent-created subscriptions from disk if the file changed."""
-        from ev0_constants import get_hermes_home
-        hermes_home = get_hermes_home()
-        subs_path = hermes_home / _DYNAMIC_ROUTES_FILENAME
+        from ev0_constants import get_ev0_home
+        ev0_home = get_ev0_home()
+        subs_path = ev0_home / _DYNAMIC_ROUTES_FILENAME
         if not subs_path.exists():
             if self._dynamic_routes:
                 self._dynamic_routes = {}

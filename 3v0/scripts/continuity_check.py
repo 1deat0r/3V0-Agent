@@ -57,7 +57,7 @@ STORE_PATH = Path(
 )
 PROFILE_MEM = Path(
     os.environ.get("THREEV0_PROFILE_MEM")
-    or (Path.home() / ".hermes" / "profiles" / "3v0" / "memories")
+    or (Path.home() / ".3V0" / "profiles" / "3v0" / "memories")
 )
 SKILL_STORE_PATH = Path(
     os.environ.get("THREEV0_SKILL_STORE") or (BODY / "3v0" / "data" / "skills.json")

@@ -1,8 +1,8 @@
-"""Per-terminal session breadcrumbs for ``hermes -c`` / ``--continue``.
+"""Per-terminal session breadcrumbs for ``3v0 -c`` / ``--continue``.
 
 Each CLI session writes a tiny breadcrumb file
-``$HERMES_HOME/terminal-sessions/<terminal-id>`` containing
-``{"session_id": ..., "cwd": ..., "ts": ...}``.  A bare ``hermes -c`` then
+``$EV0_HOME/terminal-sessions/<terminal-id>`` containing
+``{"session_id": ..., "cwd": ..., "ts": ...}``.  A bare ``3v0 -c`` then
 resumes the session that belongs to THIS terminal (tty / tmux pane / kitty
 window / wezterm pane / ...) instead of the globally most-recent session —
 so two terminals side by side each continue their own conversation.
@@ -44,9 +44,9 @@ _SANITIZE_RE = re.compile(r"[^A-Za-z0-9._-]")
 
 
 def _breadcrumbs_dir() -> Path:
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
 
-    return get_hermes_home() / "terminal-sessions"
+    return get_ev0_home() / "terminal-sessions"
 
 
 def _sanitize(raw: str) -> str:

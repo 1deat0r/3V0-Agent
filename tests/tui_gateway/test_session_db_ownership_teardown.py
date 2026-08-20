@@ -264,8 +264,8 @@ def build_env(monkeypatch, tmp_path):
     ]:
         if hasattr(server, name):
             monkeypatch.setattr(server, name, value)
-    monkeypatch.setattr(server, "set_hermes_home_override", lambda _home: None)
-    monkeypatch.setattr(server, "reset_hermes_home_override", lambda _tok: None)
+    monkeypatch.setattr(server, "set_ev0_home_override", lambda _home: None)
+    monkeypatch.setattr(server, "reset_ev0_home_override", lambda _tok: None)
     yield types.SimpleNamespace(opened=opened, profile_home=str(profile_home))
 
 

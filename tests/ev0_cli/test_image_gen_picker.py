@@ -108,7 +108,7 @@ class TestConfigPrompt:
         not force a setup prompt on the user."""
         from ev0_cli import tools_config
 
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         monkeypatch.delenv("FAL_KEY", raising=False)
 
         image_gen_registry.register_provider(_FakeProvider("avail-img", available=True))
@@ -123,7 +123,7 @@ class TestConfigWriting:
         ``image_gen.provider`` and ``image_gen.model``."""
         from ev0_cli import tools_config
 
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         image_gen_registry.register_provider(_FakeProvider("noenv", schema={
             "name": "NoEnv",
             "badge": "free",

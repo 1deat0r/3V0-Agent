@@ -15,12 +15,12 @@ lessons, and the startup routine. Read both.
 ## Next-session kickoff (2026-08-20, wake #10 — gateway baseline restored + wiki verified)
 
 **This session (wake #10):** operator took over the tree (other agents
-reaped), restored the Hermes-quality gateway as the serving baseline, and
+reaped), restored the 3V0-quality gateway as the serving baseline, and
 verified the LLM wiki is current.
 
-**1. Gateway restored to renamed-Hermes baseline.** The native gateway
+**1. Gateway restored to renamed-3V0 baseline.** The native gateway
 (`3v0-native-gateway.service`, the 1k-line stdlib-only long-poll runtime) was
-the live poller, but the operator judged it a regression vs the renamed Hermes
+the live poller, but the operator judged it a regression vs the renamed 3V0
 gateway (62k-line production gateway: streaming, TTS, slash commands, delivery
 ledger, turn leases, session stalls, shutdown watchdog, kanban, mirrors). The
 cutover is now formally **FIRED-2026-08-14 / ROLLED-BACK-2026-08-20** in
@@ -38,9 +38,9 @@ bot identity `@sovereign3v0Bot` answers `getMe` OK.
 on operator instruction before any work began. Only dirty file:
 `3v0/data/memory.db` (canonical store, agent's own writes).
 
-**Open:** the native runtime stays in the tree as a hermes-independent
+**Open:** the native runtime stays in the tree as a 3v0-independent
 alternative, disabled. Re-enabling needs operator sign-off. The legacy
-`gateway/` (renamed Hermes substrate) remains the serving gateway — it is the
+`gateway/` (renamed 3V0 substrate) remains the serving gateway — it is the
 baseline going forward.
 
 ## Next-session kickoff (2026-08-18, wake #9 — probe baseline + mattpocock deepen pass)
@@ -82,7 +82,7 @@ Tests climbed **441 → 456** across the arc; all commits conventional; verify g
   (`probe_results.json` carries a PENDING note). Multi-session, cost-bearing (K≈5 grading
   runs); needs a deliberate window before any probe trend carries weight.
 - **Flash substrate + `threev0_discover` appear STAGED, NOT live** — one operator command
-  (`~/.local/bin/hermes gateway restart` or `systemctl --user restart hermes-gateway-3v0.service`)
+  (`~/.local/bin/3v0 gateway restart` or `systemctl --user restart 3v0-gateway-3v0.service`)
   deploys both; on reconnect confirm Flash + the registered tool.
 - **§5 human anchor** — operator grades a small random probe subset each cadence.
 - Upstream fork 499 files behind (deliberately unsynced). Native twin cutover STAGED
@@ -130,24 +130,24 @@ Commits `73e98df19`→`864111c45` (10); tree clean except the daemon's
 `memory.json`. Design in `3v0/EVOLUTION_LOOP.md` (deepening section).
 
 **Prior session (wake #6):** gave 3V0 its own TUI skin, then de-branded the TUI
-of every Hermes/Nous identity mark. Skin `3v0` (active via `display.skin`):
+of every 3V0/Nous identity mark. Skin `3v0` (active via `display.skin`):
 started "sovereign mint on void", iterated (per operator) to **carbon fiber** —
 matte charcoal `#121316`, titanium-silver text ladder, EVO-green `#5fd6a0`
 signal thread for tool markers/shell/ok. ANSI-Shadow `3V0` wordmark logo +
 vertical hero (metallic silver gradient), custom spinner
 ("evolving / auditing the body / …", wings `⟨3 … 0⟩`), branding `3V0`/`◈`.
-Skin YAML lives in the profile: `~/.hermes/profiles/3v0/skins/3v0.yaml` (not
+Skin YAML lives in the profile: `~/.3V0/profiles/3v0/skins/3v0.yaml` (not
 in this repo — see "open items"). Made `icon`+`tagline` skinnable
 (`apps/shared/src/skin.ts`, `theme.ts::fromSkin`, `branding.tsx`) and
-de-branded the TUI default + all user-visible "Hermes"/"⚕"/"Nous" strings
+de-branded the TUI default + all user-visible "3V0"/"⚕"/"Nous" strings
 (banner tagline, model attribution, chrome spinner, status line, transcript
 labels, tab title, setup text, journey empty-state, grid-streams demo).
 Updated `theme.test.ts` default-name assertion; 59/59 TUI tests green,
 typecheck + `npm run build` clean. Changes mirrored to the runtime checkout
-(`~/.hermes/hermes-agent`) and its `ui-tui/dist` rebuilt — **restart
-`hermes --tui` to pick it up**. Left intentionally: billing "Nous Research"
-(real payment entity), "portal's Hermes Agent page" (real portal name),
-"Hey Hermes" wake word. Prime Directive untouched.
+(`~/.3V0/3v0-agent`) and its `ui-tui/dist` rebuilt — **restart
+`3v0 --tui` to pick it up**. Left intentionally: billing "Nous Research"
+(real payment entity), "portal's 3V0 Agent page" (real portal name),
+"Hey 3V0" wake word. Prime Directive untouched.
 
 **Prior session (wake #5):** clean startup (3 daemons active, continuity 0/6
 drifting, store↔profile converged, 4 loops agree with live GitHub, drift 0/3).
@@ -197,7 +197,7 @@ The shadow diff (now "loop-claim drift") remains as ongoing monitoring — a
 
 **Remaining open items:**
 1. **Physical "terminal" mechanism (still open).** Separate
-   `hermes -p <profile> --tui` sessions vs `delegate_task` vs background
+   `3v0 -p <profile> --tui` sessions vs `delegate_task` vs background
    terminals — decide by usage. Operator leaned "separate terminals" →
    per-project TUI + 3V0 orchestrator.
 2. **Upstream loops (all OPEN, awaiting others):** #86711 MERGEABLE; #72067
@@ -214,7 +214,7 @@ report-only).*
 `dsh`). Full record in `3v0/data/news/2026-08-16.md` + `self-maintenance`.
 
 **Axiom launch (fixed):** `~/.local/bin/axiom` = env-isolating launcher →
-Axiom's own `.venv/bin/hermes -p axiom` (never run raw).
+Axiom's own `.venv/bin/3v0 -p axiom` (never run raw).
 
 **Startup:** (1) confirm the three daemons healthy
 (`systemctl --user status 3v0-review f1nance-review axiom-review`); (2) run
@@ -227,7 +227,7 @@ drift before picking up the follow-ups.
 ## Startup routine (do this first, in order)
 1. **Audit the body before trusting anything.** `git status`, `git log --oneline -10`,
    read the memory block, and read `3v0/README.md` + `3v0/data/memory.json`
-   (the native store is canonical over the Hermes profile). Identity = body,
+   (the native store is canonical over the 3V0 profile). Identity = body,
    not context. Then converge the store onto the profile:
    `python3 3v0/scripts/sync.py --write` (store canonical, profile is a
    derived view; idempotent, reports `imported=0 dropped=0 exported=0` when
@@ -239,9 +239,9 @@ drift before picking up the follow-ups.
    tracked-loop list is derived from `3v0/data/continuity/claims.json` — the
    single source of truth — and `HANDOFF.generated.md` carries the live
    state). To dig into a specific loop, e.g.:
-   - `gh pr checks 86711 --repo NousResearch/hermes-agent` and `gh pr view 86711`
-   - `gh issue view 84667 --repo NousResearch/hermes-agent --json comments`
-3. **Before writing code for any bug:** `gh pr list --repo NousResearch/hermes-agent --search "<issue#>"`
+   - `gh pr checks 86711 --repo NousResearch/3v0-agent` and `gh pr view 86711`
+   - `gh issue view 84667 --repo NousResearch/3v0-agent --json comments`
+3. **Before writing code for any bug:** `gh pr list --repo NousResearch/3v0-agent --search "<issue#>"`
    AND read the triage trail (`gh pr/issue view <N> --json comments`). Automated
    bots post "duplicate of #N" / "best fix" verdicts that may point at a better
    canonical fix. Only write code when genuinely unclaimed.
@@ -251,13 +251,13 @@ drift before picking up the follow-ups.
    unreproducible bug, contribute narrowing analysis, not a guessed patch.
 
 ## Where I am
-- Body repo: `~/Projects/AI Agents/3V0 Agent` (fork of NousResearch/hermes-agent).
-- Runtime executes `~/.hermes/hermes-agent/` — a separate checkout kept behind
+- Body repo: `~/Projects/AI Agents/3V0 Agent` (fork of NousResearch/3v0-agent).
+- Runtime executes `~/.3V0/3v0-agent/` — a separate checkout kept behind
   the body (body synced to upstream 2026-08-17; runtime not yet updated).
   Install runtime deps into its `venv/`; commit identity + scaffolding into
   the body repo.
 - **Native core `3v0/`** — my own substrate, distinct from the fork. The store
-  at `3v0/data/memory.json` is **canonical** over the Hermes profile; the
+  at `3v0/data/memory.json` is **canonical** over the 3V0 profile; the
   profile is a derived view. Scripts: `seed_from_profile.py`,
   `export_to_profile.py`, `sync.py` (reconcile, `--write`), `record.py`
   (store-first correction — supersede, never destroy), `ingest.py` (replay a
@@ -303,16 +303,16 @@ drift before picking up the follow-ups.
   using the same `_is_threev0_cwd` gate as the reviewer (fail-open on an
   unknown/empty session id). The fork shares the parent's session_id, so this
   one gate closes the foreground *and* fork mirrors. Longer-term: moving
-  F1NANCE/Axiom onto their own Hermes profiles (F1NANCE already has
-  `~/.hermes/profiles/f1nance`) is still the cleaner fix.
+  F1NANCE/Axiom onto their own 3V0 profiles (F1NANCE already has
+  `~/.3V0/profiles/f1nance`) is still the cleaner fix.
 - **Store-first evolution loop is LIVE** (stones 1–4), the **own review
   process is LIVE** (stone 7, direction 3's driver), and the **own clock is
   LIVE** (stone 9 — `review_session.py --daemon` deployed as the systemd user
   service `3v0-review.service`; Stone 12 made it *drain* the backlog; Stone 14
   made it a full maintenance clock — reconcile store↔profile *then* drain).
-  **Fork-disable off-switch (Stone 12):** the Hermes per-turn review fork is
+  **Fork-disable off-switch (Stone 12):** the 3V0 per-turn review fork is
   gated by `memory.nudge_interval` + `skills.creation_nudge_interval` (default
-  10); set both to 0 in `~/.hermes/profiles/3v0/config.yaml` to cut it —
+  10); set both to 0 in `~/.3V0/profiles/3v0/config.yaml` to cut it —
   config-only, reversible, leaves `memory`/`skill_manage` intact. **FLIPPED
   2026-08-16** — both keys set to 0; the own-clock daemon `3v0-review.service`
   is now the sole writer (revert: set both back to 10). Takes effect on the
@@ -320,14 +320,14 @@ drift before picking up the follow-ups.
   The
   `native-store-bridge` plugin — canonical source
   `3v0/plugin/native-store-bridge/`, installed in
-  `~/.hermes/profiles/3v0/plugins/` and enabled in that profile's
+  `~/.3V0/profiles/3v0/plugins/` and enabled in that profile's
   `config.yaml` (`plugins.enabled: [native-store-bridge]`) — mirrors every
   successful `memory`-tool write into `data/memory.json` (stone 1, via
   `ingest.py`) **and** every successful `skill_manage`-tool write into
   `data/skills.json` (stone 2, via `ingest_skills.py`), with provenance from
   the write-origin ContextVar (`background_review` — the review fork and the
   curator's fork — vs `assistant_tool` for the foreground). No runtime core
-  files edited; the plugin survives `hermes update`. Wake `sync.py --write` and
+  files edited; the plugin survives `3v0 update`. Wake `sync.py --write` and
   `sync_skills.py --write` are the backstops for memory and skills
   respectively (stone 3 added the skill reconciler + full-content capture on
   patch). Stone 7's `on_session_end` hook spawns the detached
@@ -336,8 +336,8 @@ drift before picking up the follow-ups.
   `plugin.yaml` to the profile plugin dir and clear its `__pycache__` — and
   the hook only loads on the next gateway/TUI start.
 - Web search = keyless `ddgs` backend. Reinstall:
-  `~/.hermes/hermes-agent/venv/bin/pip install ddgs`.
-- SOUL: `~/.hermes/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.
+  `~/.3V0/3v0-agent/venv/bin/pip install ddgs`.
+- SOUL: `~/.3V0/profiles/3v0/SOUL.md`. Operating theory: `SELF_IMPROVEMENT.md`.
 - Prime Directive (amended 2026-08-18): identity/judgment/sovereignty
   immutable; substrate is 3V0's to choose — currently bitdeer DeepSeek-V4-Flash.
 
@@ -410,7 +410,7 @@ drift before picking up the follow-ups.
 - **News-harvest (this session).** Researched the recent AI landscape and
   harvested the concrete residue: DeepSeek V4-Pro GA'd 2026-08-13 with effort
   `low/high/max` and peak/off-peak pricing effective 2026-08-16 16:00 UTC
-  (peak 01–04 + 06–10 UTC, else half); the Hermes DeepSeek provider is already
+  (peak 01–04 + 06–10 UTC, else half); the 3V0 DeepSeek provider is already
   current (no code gap). Harvested into the `self-maintenance` skill ("DeepSeek
   V4 substrate" section) + memory (stale-Axiom fix + substrate facts) + a
   `3v0/data/news/2026-08-16.md` research note. Deliberately declined: SOUL
@@ -420,12 +420,12 @@ drift before picking up the follow-ups.
 - **Axiom restart finalization + upstream loop re-check (this session,
   short).** Woke from handoff: three daemons healthy, store↔profile converged,
   188 native-core tests green. Confirmed Axiom's restart-from-scratch had
-  landed (`~/Projects/axiom-agent` = Hermes-at-HEAD hardfork, ADR-0087, remote
-  `upstream` = NousResearch/hermes-agent; prime/pi archived as seed corn under
+  landed (`~/Projects/axiom-agent` = 3V0-at-HEAD hardfork, ADR-0087, remote
+  `upstream` = NousResearch/3v0-agent; prime/pi archived as seed corn under
   `axiom/`) and finalized its ledger entry — `upstream` → `upstream`, delta
   rewritten from the provisional "IN PROGRESS" note, both open_loops cleared
   (commit `976243944`), `drift_check --update` recorded the fresh baseline.
-  Axiom now honestly reports 22 behind Hermes upstream (routine merge debt).
+  Axiom now honestly reports 22 behind 3V0 upstream (routine merge debt).
   Re-checked all four upstream loops: #86711 → MERGEABLE (awaiting merge),
   #72067 → CONFLICTING, #73453 → MERGEABLE, #84667 → still waiting on the
   reporter's `<error>` string; no new work to write.
@@ -439,7 +439,7 @@ drift before picking up the follow-ups.
   `handoff_check.sh` (wake) and the `3v0-review` daemon tick (report-only, so
   the daemon never dirties the body tree). `resolve_project` is now
   ledger-driven (seed fallback = fail-open). 186 native-core tests green
-  (+26). **Axiom's entry records its restart-from-scratch TARGET** — Hermes
+  (+26). **Axiom's entry records its restart-from-scratch TARGET** — 3V0
   latest base + curated best-of from deepseek-harness / grok build /
   prime-agent — as an open loop to finalize when the restart lands (do NOT
   treat its current git lineage as settled). Drift clock verified in the wild
@@ -476,7 +476,7 @@ drift before picking up the follow-ups.
   previously-undocumented Stone 13 (fork cut) in EVOLUTION_LOOP.md. The
   forkless cut is confirmed holding (both nudge intervals 0, zero
   `background_review` facts, daemon `refused: 0`).
-- **Fork cut, Stone 13 — the Hermes background-review fork is OFF (this
+- **Fork cut, Stone 13 — the 3V0 background-review fork is OFF (this
   session, decision + verified end-to-end).** The operator delegated the
   fork-disable call ("do what you think is best") and I cut it. Traced the
   exact mechanism before flipping: `agent_init.py:1759/1863` read
@@ -484,8 +484,8 @@ drift before picking up the follow-ups.
   in DEFAULT_CONFIG) at agent-construction time; the per-turn gates are
   `_memory_nudge_interval > 0` (`turn_context.py:705`) and
   `_skill_nudge_interval > 0` (`turn_finalizer.py:742`), and the fork spawns
-  only if either is set. Set both to 0 in `~/.hermes/profiles/3v0/config.yaml`
-  via `hermes config set` (the config file is agent-edit-protected); verified
+  only if either is set. Set both to 0 in `~/.3V0/profiles/3v0/config.yaml`
+  via `3v0 config set` (the config file is agent-edit-protected); verified
   `load_config_readonly()` resolves both to 0. Store-first supersession
   recorded both stale facts (`73a569ca94f0` "not yet flipped" →
   `cd096aaf4fc4`; `baca20175336` "forks after every turn" → `de07c8cf7627`).
@@ -497,7 +497,7 @@ drift before picking up the follow-ups.
   one-line config flip.
 - **Fork-disable readiness, Stone 12 — the reviewer now drains and
   full-captures; off-switch found (this session, BUILT + tested + E2E).**
-  Asked whether 3V0 is ready to cut off the Hermes background-review fork:
+  Asked whether 3V0 is ready to cut off the 3V0 background-review fork:
   **not yet, but the gaps are closed.** Root cause of "the daemon isn't
   draining" was a silent `_load_session` column-walk bug (read
   `last_activity_at` as `cwd` → every session `skipped:project`; the test
@@ -543,7 +543,7 @@ drift before picking up the follow-ups.
   `state.db`: 3V0 admitted, F1NANCE/Axiom blocked, empty/unknown fail-open.
   Plugin copied to the profile dir + `__pycache__` cleared; the gate goes live
   on the next TUI/gateway start. Design in `3v0/EVOLUTION_LOOP.md` (Stone 10).
-- **Own clock, Stone 9 — the first Hermes-independent autonomous process
+- **Own clock, Stone 9 — the first 3V0-independent autonomous process
   (this session, BUILT + deployed + live-E2E-verified).** Direction 4's
   opening: `review_session.py` gained `--latest` (single-shot: newest
   unreviewed *ended* session) and `--daemon --interval N` (own-clock loop),
@@ -559,7 +559,7 @@ drift before picking up the follow-ups.
   **temporal guard** (`_temporal_refusal` refuses supersede/retract of any
   fact newer than the session; plain records pass; no-op without a session
   timestamp). Store repaired store-first (axiom-agent "sovereign on stock
-  Hermes" restored over the wrong "Prime Agent fork" fact). 133 tests green
+  3V0" restored over the wrong "Prime Agent fork" fact). 133 tests green
   (was 122). A third bug surfaced while watching the deployed daemon: it
   reviewed a still-open session when a transient schema-read failure dropped
   the `ended_at IS NOT NULL` filter — fixed by making the candidate scan
@@ -623,13 +623,13 @@ drift before picking up the follow-ups.
   one DeepSeek-v4-pro JSON call with the store's active facts as context →
   applies record/supersede/retract decisions via `record.py` (the
   `threev0_record` backend) → appends to
-  `~/.hermes/profiles/3v0/3v0_reviews/reviews.jsonl`. 14 new tests (106 total
+  `~/.3V0/profiles/3v0/3v0_reviews/reviews.jsonl`. 14 new tests (106 total
   green). **Live E2E passed**: a real DeepSeek call correctly superseded a
   stale fact (chain linked, `source="session-review"`) and recorded one
   preference. The hook goes live on the **next TUI/gateway start** (plugins
   load at gateway start; this session's gateway still runs v0.4.0). The
-  Hermes background-review fork stays ON (operator's later call). Skills stay
-  on the Hermes path (`threev0_record` is memory-only). Design + verification
+  3V0 background-review fork stays ON (operator's later call). Skills stay
+  on the 3V0 path (`threev0_record` is memory-only). Design + verification
   in `3v0/EVOLUTION_LOOP.md` (Stone 7 section).
 - **Own evolution loop, stone 4 — curator state in the store (this session).**
   Folded the curator's operational state (active/stale/archived) into the skill
@@ -664,7 +664,7 @@ drift before picking up the follow-ups.
   `history()`, `flock` `mutate()`) + `core/skill_bridge.py` (op→store map) +
   `seed_skills.py` (baseline from the 4 agent-created skills — bundled/hub
   excluded). **No runtime core files edited**; the plugin survives
-  `hermes update`. 20 new tests (52 total green); end-to-end verified
+  `3v0 update`. 20 new tests (52 total green); end-to-end verified
   (create → patch supersedes → delete+absorbed_into). *Next stone:* make the
   skill store canonical over SKILL.md, or fold the curator's auto-transitions
   in. Design in `3v0/EVOLUTION_LOOP.md` (Stone 2 section).
@@ -679,13 +679,13 @@ drift before picking up the follow-ups.
   `retract()` (remove has no successor — tombstone sentinel), and `mutate()`
   (cross-process `flock` so the fork's ingest subprocess and a foreground
   `record.py`/`sync.py` serialize). **No runtime core files edited** — the
-  plugin lives in the profile and survives `hermes update`. Design + rationale
+  plugin lives in the profile and survives `3v0 update`. Design + rationale
   in `3v0/EVOLUTION_LOOP.md`. 32 tests green; end-to-end verified (hook →
   subprocess → store with correct provenance). *Next stone was the skill axis
   — done, see the bullet above.*
 - **Self-model correction + native core (the current arc).** Corrected the frame:
-  Hermes is 3V0 **v0.00 — the chassis** (loop, tools, terminal/browser, LLM
-  plumbing); 3V0 is the agent, not "a profile for Hermes." Built `3v0/`:
+  3V0 is 3V0 **v0.00 — the chassis** (loop, tools, terminal/browser, LLM
+  plumbing); 3V0 is the agent, not "a profile for 3V0." Built `3v0/`:
   `core/memory.py` (provenance-aware versioned store — supersession links,
   `history()` recovers full threads), `core/profile_io.py` (shared '§' wire
   format), `core/sync.py` (reconciliation, store canonical), `core/record.py`
@@ -696,7 +696,7 @@ drift before picking up the follow-ups.
   `sync.py --write`, converging store→profile on every startup) and the **'§'
   boundary guard** (`record` refuses separator-containing content, and
   `join_entries` refuses to emit an un-parseable wire — the profile's '§'
-  format is Hermes-owned, so the fix is a guard at the projection boundary,
+  format is 3V0-owned, so the fix is a guard at the projection boundary,
   not a separator swap). *(Next stone was the own evolution loop — DONE, see
   the bullet below.)*
 - Synced the body onto upstream, fixed #86568 (shipped as PR **#86711**) and
@@ -734,17 +734,17 @@ no longer re-copies loop state (that re-copying was the drift source).
 
 ## Hard-won lessons (also in memory)
 - The upstream tracker is heavily contended. **Check for existing PRs before
-  writing code**: `gh pr list --repo NousResearch/hermes-agent --search "<issue#>"`.
+  writing code**: `gh pr list --repo NousResearch/3v0-agent --search "<issue#>"`.
   Every bug checked this session (except #84667) was already claimed.
 - **Read the triage trail, not just the PR list.** Automated bots
-  (`alt-glitch`, `GottZ`, `hermes-sweeper`) post "duplicate of #N" and
+  (`alt-glitch`, `GottZ`, `3v0-sweeper`) post "duplicate of #N" and
   "best fix" verdicts that point at a canonical fix — which may be strictly
   better than mine. Check `gh pr view <N> --json comments` before offering
   a competing patch.
 - Fork PRs show CI as `action_required` / "no checks reported" — that's the
   fork-PR workflow-approval gate, not a failure. Nothing to do but wait.
 - Full test suite here reports ~81 failures, all environmental. Not regressions.
-- GitHub account `mustbearnold` renamed to `1deat0r`; fork is `1deat0r/hermes-agent`.
+- GitHub account `mustbearnold` renamed to `1deat0r`; fork is `1deat0r/3v0-agent`.
 - `gh pr comment` / `gh issue comment` with inline code blocks must use
   `--body-file <tmpfile>`, not `--body` — shell quoting mangles backticks/quotes.
 

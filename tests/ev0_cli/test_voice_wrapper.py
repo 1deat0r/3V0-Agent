@@ -67,7 +67,7 @@ class TestNormalizeVoiceRecordKeyForPromptToolkit:
 
 
     # Round-14 Copilot review regression on #19835. On macOS the TUI
-    # parser rejects alt+c/d/l because hermes-ink reports Alt as
+    # parser rejects alt+c/d/l because 3v0-ink reports Alt as
     # ``key.meta`` and isActionMod(darwin) accepts it. The CLI
     # normalizer must mirror that platform-gated rejection so shared
     # configs like ``option+c`` don't bind Alt+C in the CLI while the
@@ -179,7 +179,7 @@ class TestSpeakTextGuards:
         from tools import tts_tool
 
         played = []
-        returned_path = "/tmp/hermes_voice/actual.flac"
+        returned_path = "/tmp/ev0_voice/actual.flac"
 
         monkeypatch.setattr(
             tts_tool,

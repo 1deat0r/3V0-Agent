@@ -1,7 +1,7 @@
 """Record a fact into the store — including provenance-tracked correction.
 
 This is the write path that makes the store the live origin of 3V0's memory.
-Unlike the Hermes `memory` tool (which silently rewrites the profile), a
+Unlike the 3V0 `memory` tool (which silently rewrites the profile), a
 correction here SUPERSEDES the old fact: the old fact is marked inactive and
 linked to its successor, so the full thread stays recoverable via
 MemoryStore.history(). After recording, the caller re-exports the derived view

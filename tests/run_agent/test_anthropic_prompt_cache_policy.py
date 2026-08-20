@@ -259,9 +259,9 @@ class TestThirdPartyAnthropicGateway:
         agent and the policy loads config itself."""
         import textwrap
 
-        hermes_home = tmp_path / ".hermes"
-        hermes_home.mkdir()
-        (hermes_home / "config.yaml").write_text(
+        ev0_home = tmp_path / ".3V0"
+        ev0_home.mkdir()
+        (ev0_home / "config.yaml").write_text(
             textwrap.dedent(
                 """
                 providers:
@@ -277,9 +277,9 @@ class TestThirdPartyAnthropicGateway:
                 """
             )
         )
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
         # load_config's cache is keyed by resolved config path, so pointing
-        # HERMES_HOME at a fresh tempdir needs no cache invalidation.
+        # EV0_HOME at a fresh tempdir needs no cache invalidation.
         agent = _make_agent(
             provider="custom:anthropic-proxy",
             base_url="https://gateway.example.com/anthropic",

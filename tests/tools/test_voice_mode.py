@@ -45,7 +45,7 @@ def sample_wav(tmp_path):
 @pytest.fixture
 def temp_voice_dir(tmp_path, monkeypatch):
     """Redirect _TEMP_DIR to a temporary path."""
-    voice_dir = tmp_path / "hermes_voice"
+    voice_dir = tmp_path / "ev0_voice"
     voice_dir.mkdir()
     monkeypatch.setattr("tools.voice_mode._TEMP_DIR", str(voice_dir))
     return voice_dir
@@ -1421,7 +1421,7 @@ class TestWSL2PowerShellFallback:
                    side_effect=self._fake_check_output([
                        b"C:/Temp\r\n",
                        b"/mnt/c/Temp\n",
-                       b"C:/Temp/hermes.wav\n",
+                       b"C:/Temp/3v0.wav\n",
                    ])), \
              patch("tools.voice_mode.subprocess.Popen", side_effect=_capture_popen):
             result = vm.play_audio_file(str(sample_wav))

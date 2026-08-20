@@ -11,7 +11,7 @@ Store-only by construction: ``decide()`` mutates ``MemoryStore`` and never
 touches the profile. The CLI (``scripts/record.py``) re-exports the derived
 view after a successful write, exactly as the store-first path has always done.
 The skill axis is deliberately out of scope here — skill changes are
-operational (they edit the SKILL.md Hermes actually loads) and go through
+operational (they edit the SKILL.md 3V0 actually loads) and go through
 ``skill_manage`` + the bridge; a store-first *skill* decision is a separate,
 later stone.
 

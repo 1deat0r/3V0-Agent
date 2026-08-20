@@ -1,4 +1,4 @@
-"""``hermes sessions`` command — extracted from ``ev0_cli/main.py``.
+"""``3v0 sessions`` command — extracted from ``ev0_cli/main.py``.
 
 Mechanical move (main.py decomposition): ``cmd_sessions`` was a ``def`` nested
 inside ``main()``'s body; its dispatch on ``args.sessions_action`` is lifted
@@ -11,7 +11,7 @@ byte-identical. A symtable/AST closure check found exactly two free variables:
   threaded as a keyword parameter via ``functools.partial`` at the
   ``set_defaults(func=...)`` wiring site in ``main()``.
 
-Helpers that stay in ``ev0_cli.main`` (``get_hermes_home``,
+Helpers that stay in ``ev0_cli.main`` (``get_ev0_home``,
 ``_relative_time``, ``_session_browse_picker``, ``_size_delta_label``) are
 delegated through call-time wrappers below so existing test monkeypatches on
 ``ev0_cli.main.<name>`` keep reaching this code path, and so imports stay
@@ -31,8 +31,8 @@ def _m():
     return main
 
 
-def get_hermes_home():
-    return _m().get_hermes_home()
+def get_ev0_home():
+    return _m().get_ev0_home()
 
 
 def _relative_time(ts):
@@ -55,14 +55,14 @@ def _confirm_prompt(prompt: str) -> bool:
         return False
 
 
-#: Default age floor for `hermes sessions prune --never-active`.  Deliberately
+#: Default age floor for `3v0 sessions prune --never-active`.  Deliberately
 #: generous: the rows are worthless but harmless, and a young never-active row
 #: may simply be a chat that nobody has replied to yet.
 _NEVER_ACTIVE_DEFAULT_DAYS = 30.0
 
 
 def _prune_never_active_keyed(db, args):
-    """`hermes sessions prune --never-active` — drop leaked/dead keyed rows.
+    """`3v0 sessions prune --never-active` — drop leaked/dead keyed rows.
 
     Targets keyed gateway rows that were opened and never used at all.  The
     population is dominated by escaped test fixtures (#82770), which the
@@ -111,7 +111,7 @@ def _prune_never_active_keyed(db, args):
         print("Aborted.")
         return
 
-    sessions_dir = get_hermes_home() / "sessions"
+    sessions_dir = get_ev0_home() / "sessions"
     deleted, routing_deleted = db.prune_never_active_keyed_sessions(
         older_than_days=days, sessions_dir=sessions_dir
     )
@@ -181,11 +181,11 @@ def cmd_sessions(args, sessions_parser=None):
             print("")
             print("  Next step — offline recovery (never modifies the source):")
             source_hint = report.get("backup_path") or db_path
-            print(f"    hermes sessions recover --source {source_hint} \\")
+            print(f"    3v0 sessions recover --source {source_hint} \\")
             print("        --inspect-only")
             print("  If that reports the data is recoverable, rebuild it into")
             print("  a NEW database (the active one is left untouched):")
-            print(f"    hermes sessions recover --source {source_hint} \\")
+            print(f"    3v0 sessions recover --source {source_hint} \\")
             print("        --output recovered-state.db")
         return
 
@@ -619,7 +619,7 @@ def cmd_sessions(args, sessions_parser=None):
                     out_dir = (
                         Path(args.output).expanduser()
                         if args.output and args.output != "-"
-                        else get_hermes_home() / "session-exports"
+                        else get_ev0_home() / "session-exports"
                     )
                     out_dir.mkdir(parents=True, exist_ok=True)
                     exported = 0
@@ -709,7 +709,7 @@ def cmd_sessions(args, sessions_parser=None):
             print("Markdown/QMD export writes files; stdout (-) is only supported with --format jsonl.")
             db.close()
             return
-        output_dir = Path(args.output).expanduser() if args.output else get_hermes_home() / "session-exports"
+        output_dir = Path(args.output).expanduser() if args.output else get_ev0_home() / "session-exports"
 
         def _export_one(session_id: str, *, include_lineage: bool = False):
             data = (
@@ -803,7 +803,7 @@ def cmd_sessions(args, sessions_parser=None):
                         )
                         db.close()
                         return
-                sessions_dir = get_hermes_home() / "sessions"
+                sessions_dir = get_ev0_home() / "sessions"
                 if db.delete_session(
                     resolved_session_id,
                     sessions_dir=sessions_dir,
@@ -872,7 +872,7 @@ def cmd_sessions(args, sessions_parser=None):
             ):
                 print("Cancelled.")
                 return
-        sessions_dir = get_hermes_home() / "sessions"
+        sessions_dir = get_ev0_home() / "sessions"
         if db.delete_session(resolved_session_id, sessions_dir=sessions_dir):
             print(f"Deleted session '{resolved_session_id}'.")
         else:
@@ -892,7 +892,7 @@ def cmd_sessions(args, sessions_parser=None):
         )
 
         # Preserve the historical default ONLY for a truly bare
-        # `hermes sessions prune`: no time window and no filters at all
+        # `3v0 sessions prune`: no time window and no filters at all
         # means "older than 90 days". ANY filter — including --source —
         # suppresses the implicit cutoff, so `prune --source cron`
         # matches ALL cron sessions regardless of age. The preview +
@@ -953,7 +953,7 @@ def cmd_sessions(args, sessions_parser=None):
             print(
                 f"Note: {skipped_open} open session{suffix} also match these "
                 "filters but will be skipped because prune only deletes ended "
-                "sessions. Use `hermes sessions delete <id>` "
+                "sessions. Use `3v0 sessions delete <id>` "
                 "to remove one explicitly."
             )
         verb = "Delete" if action == "prune" else "Archive"
@@ -999,7 +999,7 @@ def cmd_sessions(args, sessions_parser=None):
                 return
 
         if action == "prune":
-            sessions_dir = get_hermes_home() / "sessions"
+            sessions_dir = get_ev0_home() / "sessions"
             count = db.prune_sessions(sessions_dir=sessions_dir, **filters)
             print(f"Pruned {count} session(s).")
         else:
@@ -1105,7 +1105,7 @@ def cmd_sessions(args, sessions_parser=None):
             print("Cancelled.")
             return
 
-        # Launch hermes --resume <id> by replacing the current process
+        # Launch 3v0 --resume <id> by replacing the current process
         print(f"Resuming session: {selected_id}")
         from ev0_cli.relaunch import relaunch
 
@@ -1265,7 +1265,7 @@ def cmd_sessions(args, sessions_parser=None):
         )
         if result.get("vacuumed") is False:
             print("  (VACUUM was skipped or failed — run "
-                  "`hermes sessions optimize` later to reclaim freed space.)")
+                  "`3v0 sessions optimize` later to reclaim freed space.)")
 
     elif action == "repair-routing":
         records = db.find_orphaned_gateway_sessions(

@@ -1,15 +1,15 @@
-"""Regression tests for #76414: `hermes honcho peers` showed "(not set)"
+"""Regression tests for #76414: `3v0 honcho peers` showed "(not set)"
 for every non-default profile.
 
 _all_profile_host_configs() built the per-profile host key inline as
-f"{HOST}.{profile}" ("hermes.work") while every other reader/writer —
+f"{HOST}.{profile}" ("3v0.work") while every other reader/writer —
 profile_host_key(), resolve_active_host(), honcho status/enable/sync and
-the runtime plugin — uses the underscore form ("hermes_work"). The lookup
+the runtime plugin — uses the underscore form ("ev0_work"). The lookup
 always missed, so cmd_peers fell back to "(not set)" and leaked the raw
 malformed key into the AI-peer column.
 
 These tests drive the real cmd_peers / _all_profile_host_configs against
-a real honcho.json (temp HERMES_HOME, no network).
+a real honcho.json (temp EV0_HOME, no network).
 """
 import io
 import json
@@ -27,9 +27,9 @@ def honcho_home(tmp_path, monkeypatch):
     cfg = {
         "peerName": "alice",
         "hosts": {
-            "hermes": {"peerName": "alice", "aiPeer": "hermes"},
-            "hermes_work": {"peerName": "alice", "aiPeer": "hermes"},
-            "hermes_my_profile": {"peerName": "bob", "aiPeer": "hermes"},
+            "3v0": {"peerName": "alice", "aiPeer": "3v0"},
+            "ev0_work": {"peerName": "alice", "aiPeer": "3v0"},
+            "ev0_my_profile": {"peerName": "bob", "aiPeer": "3v0"},
         },
     }
     path = tmp_path / "honcho.json"
@@ -60,12 +60,12 @@ class TestAllProfileHostConfigs:
         rows = honcho_cli._all_profile_host_configs()
         by_name = {name: (host, block) for name, host, block in rows}
         host, block = by_name["work"]
-        assert host == "hermes_work"  # not "hermes.work"
+        assert host == "ev0_work"  # not "3v0.work"
         assert block.get("peerName") == "alice"  # the populated block was found
 
     def test_sanitized_profile_names_resolve(self, honcho_home, monkeypatch):
         """Profiles needing sanitization (dots/spaces in the name) also
-        resolve — profile_host_key maps 'my.profile' -> 'hermes_my_profile';
+        resolve — profile_host_key maps 'my.profile' -> 'ev0_my_profile';
         the inline dot form never could."""
         monkeypatch.setattr(
             "ev0_cli.profiles.list_profiles",
@@ -78,13 +78,13 @@ class TestAllProfileHostConfigs:
 
     def test_legacy_dot_form_host_key_still_readable(self, honcho_home, monkeypatch):
         """Back-compat: honcho.json files with LEGACY dot-form host keys
-        ("hermes.work") must keep working — the README promises those keys
+        ("3v0.work") must keep working — the README promises those keys
         stay readable, and _host_block() exists precisely for that fallback.
         A bare hosts.get(profile_host_key(...)) would regress them."""
         path = honcho_home / "honcho.json"
         cfg = json.loads(path.read_text())
-        del cfg["hosts"]["hermes_work"]
-        cfg["hosts"]["hermes.work"] = {"peerName": "carol", "aiPeer": "hermes"}
+        del cfg["hosts"]["ev0_work"]
+        cfg["hosts"]["3v0.work"] = {"peerName": "carol", "aiPeer": "3v0"}
         path.write_text(json.dumps(cfg))
         monkeypatch.setattr(
             "ev0_cli.profiles.list_profiles",
@@ -99,17 +99,17 @@ class TestCmdPeers:
     def test_peers_shows_populated_identity_not_host_key_leak(
             self, honcho_home, monkeypatch):
         """Issue #76414's visible symptom: the AI-peer column showed the
-        raw malformed key 'hermes.work' (or '(not set)')."""
+        raw malformed key '3v0.work' (or '(not set)')."""
         monkeypatch.setattr(
             "ev0_cli.profiles.list_profiles",
             lambda: [SimpleNamespace(name="default"), SimpleNamespace(name="work")],
         )
         out = _peers_output(SimpleNamespace())
-        assert "hermes.work" not in out
+        assert "3v0.work" not in out
         assert "(not set)" not in out
         # work row shows the populated block's values
         work_line = [l for l in out.splitlines() if l.strip().startswith("work")][0]
-        assert "alice" in work_line and "hermes" in work_line
+        assert "alice" in work_line and "3v0" in work_line
 
     def test_peers_falls_back_cleanly_when_block_missing(
             self, honcho_home, monkeypatch):
@@ -120,6 +120,6 @@ class TestCmdPeers:
             lambda: [SimpleNamespace(name="default"), SimpleNamespace(name="new")],
         )
         out = _peers_output(SimpleNamespace())
-        assert "hermes.new" not in out  # well-formed key, no dot-form leak
+        assert "3v0.new" not in out  # well-formed key, no dot-form leak
         new_line = [l for l in out.splitlines() if l.strip().startswith("new")][0]
         assert "alice" in new_line  # top-level peerName fallback

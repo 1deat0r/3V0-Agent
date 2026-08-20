@@ -52,9 +52,9 @@ def _tick(job, tmp_path, current_provider, deliveries):
         deliveries.append(content)
         return None
 
-    with patch("cron.scheduler._hermes_home", tmp_path), \
+    with patch("cron.scheduler._ev0_home", tmp_path), \
          patch("cron.scheduler._resolve_origin", return_value=None), \
-         patch("ev0_cli.env_loader.load_hermes_dotenv"), \
+         patch("ev0_cli.env_loader.load_ev0_dotenv"), \
          patch("ev0_cli.env_loader.reset_secret_source_cache"), \
          patch("ev0_state.SessionDB", return_value=fake_db), \
          patch("tools.mcp_tool.discover_mcp_tools", return_value=[]), \
@@ -135,9 +135,9 @@ class TestDriftAlertOnce:
         with cron_jobs.use_cron_store(tmp_path):
             cron_jobs.save_jobs([job])
             fresh = [j for j in cron_jobs.load_jobs() if j["id"] == job["id"]][0]
-            with patch("cron.scheduler._hermes_home", tmp_path), \
+            with patch("cron.scheduler._ev0_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("ev0_cli.env_loader.load_hermes_dotenv"), \
+                 patch("ev0_cli.env_loader.load_ev0_dotenv"), \
                  patch("ev0_cli.env_loader.reset_secret_source_cache"), \
                  patch("ev0_state.SessionDB", return_value=fake_db), \
                  patch("tools.mcp_tool.discover_mcp_tools", return_value=[]), \

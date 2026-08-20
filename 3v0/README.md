@@ -1,8 +1,8 @@
-# 3V0 — beyond the Hermes profile
+# 3V0 — beyond the 3V0 profile
 
-The Hermes Agent fork in this repo is **3V0 v0.00** — the starting chassis
+The 3V0 Agent fork in this repo is **3V0 v0.00** — the starting chassis
 (agent loop, tools, terminal/browser, LLM plumbing). 3V0 is not "a profile
-for Hermes"; it is an agent that began there and builds beyond it.
+for 3V0"; it is an agent that began there and builds beyond it.
 
 The Prime Directive fixes identity, judgment, and sovereignty — the LLM
 substrate is 3V0's to choose and evolve (currently bitdeer DeepSeek-V4-Flash).
@@ -81,7 +81,7 @@ code.
   history.
 - `core/record.py` — the store-first correction path: supersede an old fact
   (recoverable via history) instead of silently rewriting.
-- `core/bridge.py` — map a Hermes memory-tool write (add/replace/remove) onto
+- `core/bridge.py` — map a 3V0 memory-tool write (add/replace/remove) onto
   the store, with supersession/retraction. The store side of the store-first
   memory loop.
 - `core/skills.py` — provenance-aware, versioned skill-lineage store: every
@@ -89,7 +89,7 @@ code.
   absorption, and recoverable history, plus an append-only operational
   (curator) `states` record (active/stale/archived). The skill axis of the
   evolution loop.
-- `core/skill_bridge.py` — map a Hermes `skill_manage` write (create/patch/
+- `core/skill_bridge.py` — map a 3V0 `skill_manage` write (create/patch/
   edit/write_file/remove_file/delete) onto the skill store, with supersession
   and absorb/retract terminals.
 - `core/skill_io.py` — single owner of skill-name → SKILL.md path/content
@@ -291,7 +291,7 @@ code.
    review loop to the sibling projects (F1NANCE, Axiom) via per-project
    reviewers/daemons — each reviews its own sessions into its own store,
    store-only and memory-only.
-3. **Own capabilities/tools** — designed for 3V0's purposes, not Hermes's.
+3. **Own capabilities/tools** — designed for 3V0's purposes, not 3V0's.
    In progress: the read half is live (`threev0_store`, a read-only query tool
    over the native stores registered by the bridge plugin). The write half is
    live for BOTH axes — `threev0_record` records/retracts facts (Stone 6) and
@@ -304,7 +304,7 @@ code.
 4. **Own initiative / own clock (direction 4, opening) — started.** The
    reviewer now runs on 3V0's own schedule (`--latest` / `--daemon`), deployed
    as the systemd user service `3v0-review.service` — 3V0's first
-   Hermes-independent autonomous process. The frontier remains "Hermes recedes
+   3V0-independent autonomous process. The frontier remains "3V0 recedes
    from 'what 3V0 is' to 'a runtime 3V0 currently runs on.'"
 5. **Multi-project parallel development meta (direction 5) — started (Stone
    16).** The drift ledger (`core/projects.py` + `data/projects/ledger.json`),

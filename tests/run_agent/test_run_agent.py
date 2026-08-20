@@ -205,7 +205,7 @@ def test_aiagent_reuses_existing_errors_log_handler():
     """Repeated AIAgent init should not accumulate duplicate errors.log handlers."""
     root_logger = logging.getLogger()
     original_handlers = list(root_logger.handlers)
-    error_log_path = (run_agent._hermes_home / "logs" / "errors.log").resolve()
+    error_log_path = (run_agent._ev0_home / "logs" / "errors.log").resolve()
 
     try:
         for handler in list(root_logger.handlers):
@@ -510,7 +510,7 @@ class TestSessionJsonSnapshotOptIn:
 
     def test_traversal_session_id_cannot_escape_logs_dir(self, agent, tmp_path):
         # Security regression (#5958): a traversal-shaped session ID (which can
-        # originate from the untrusted X-Hermes-Session-Id API header) must not
+        # originate from the untrusted X-3V0-Session-Id API header) must not
         # redirect the session snapshot outside the sessions directory.
         agent._session_json_enabled = True
         agent.logs_dir = tmp_path
@@ -542,11 +542,11 @@ class TestSaveSessionLogRedactsSecrets:
 
     @pytest.fixture(autouse=True)
     def _ensure_redaction_enabled(self, monkeypatch):
-        """Force redaction on regardless of host HERMES_REDACT_SECRETS state.
+        """Force redaction on regardless of host EV0_REDACT_SECRETS state.
         The hermetic conftest blanks the env var; the module-level
         ``_REDACT_ENABLED`` constant is captured at import time, so we
         flip it directly for the duration of these tests."""
-        monkeypatch.delenv("HERMES_REDACT_SECRETS", raising=False)
+        monkeypatch.delenv("EV0_REDACT_SECRETS", raising=False)
         monkeypatch.setattr("agent.redact._REDACT_ENABLED", True)
 
     def test_redacts_api_key_in_tool_content(self, agent, tmp_path):
@@ -1710,8 +1710,8 @@ class TestExecuteToolCalls:
         assert "tool was not executed" in messages[0]["content"].lower()
 
     def test_result_truncation_over_100k(self, agent, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
-        (tmp_path / ".hermes").mkdir()
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / ".3V0"))
+        (tmp_path / ".3V0").mkdir()
         tc = _mock_tool_call(name="web_search", arguments="{}", call_id="c1")
         mock_msg = _mock_assistant_msg(content="", tool_calls=[tc])
         messages = []
@@ -2243,7 +2243,7 @@ class TestConcurrentToolExecution:
         assert outcome.result == "ok"
         assert dispatched == [{"command": "true"}]
         assert duplicate_errors == [
-            "Hermes tool execution callback invoked more than once"
+            "3V0 tool execution callback invoked more than once"
         ]
         assert outcome.blocked is False
 
@@ -2305,7 +2305,7 @@ class TestConcurrentToolExecution:
 
         assert outcome.result == "ok"
         assert dispatched == [{"command": "true"}]
-        assert errors == ["Hermes tool execution callback invoked more than once"]
+        assert errors == ["3V0 tool execution callback invoked more than once"]
         assert outcome.blocked is False
 
 
@@ -2711,7 +2711,7 @@ class TestHandleMaxIterations:
         output ...'. The sanitizer renames the blank name to a non-empty
         sentinel so the call and its result stay PAIRED (no orphaned output,
         no 400) while the result content is preserved — it must NOT drop the
-        call, because hermes' dispatch loop keeps empty-name calls paired with
+        call, because 3v0' dispatch loop keeps empty-name calls paired with
         an anti-priming result for self-correction (#47967). (#12807)"""
         messages = [
             {
@@ -2945,7 +2945,7 @@ class TestRunConversation:
         assert "Ollama loaded `qwen3.5:9b` with only 4,096 tokens" in result["final_response"]
         assert "model.ollama_num_ctx: 65536" in result["final_response"]
         assert not agent.client.chat.completions.create.called
-        assert "Ollama runtime context too small for Hermes tool use" in caplog.text
+        assert "Ollama runtime context too small for 3V0 tool use" in caplog.text
         assert "runtime_context=4096" in caplog.text
 
     def test_tool_calls_then_stop(self, agent):
@@ -3818,7 +3818,7 @@ class TestRunConversation:
 
         Regression test for #20316: when running below the threshold_tokens
         cutoff, run_conversation must still consult the engine's
-        should_compress_preflight() hook so engines like hermes-lcm can
+        should_compress_preflight() hook so engines like 3v0-lcm can
         perform incremental maintenance (e.g. leaf-chunk compaction)
         without waiting for the 75% context fill threshold.
         """
@@ -4233,7 +4233,7 @@ class TestRunConversation:
         self._setup_agent(agent)
         agent.max_iterations = 2
 
-        monkeypatch.setenv("HERMES_KANBAN_TASK", "t_test_task_123")
+        monkeypatch.setenv("EV0_KANBAN_TASK", "t_test_task_123")
 
         # Return a tool call for every iteration to exhaust the budget.
         tc = _mock_tool_call(name="web_search", arguments="{}", call_id="c1")
@@ -4281,12 +4281,12 @@ class TestRunConversation:
         assert "Iteration budget exhausted" in call.kwargs.get("error", "")
 
     def test_no_kanban_block_when_not_in_kanban_mode(self, agent, monkeypatch):
-        """The exhaustion bridge must NOT fire when HERMES_KANBAN_TASK
+        """The exhaustion bridge must NOT fire when EV0_KANBAN_TASK
         is unset (non-kanban runs are unaffected by #29747 gap 2)."""
         self._setup_agent(agent)
         agent.max_iterations = 2
 
-        monkeypatch.delenv("HERMES_KANBAN_TASK", raising=False)
+        monkeypatch.delenv("EV0_KANBAN_TASK", raising=False)
 
         tc = _mock_tool_call(name="web_search", arguments="{}", call_id="c1")
         tool_resp = _mock_response(
@@ -5180,7 +5180,7 @@ class TestSystemPromptStability:
         # Should have built fresh, not queried the DB
         mock_db.get_session.assert_not_called()
         assert agent._cached_system_prompt is not None
-        assert "Hermes Agent" in agent._cached_system_prompt
+        assert "3V0 Agent" in agent._cached_system_prompt
 
 
 class TestBudgetPressure:

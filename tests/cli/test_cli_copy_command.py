@@ -2,11 +2,11 @@
 
 from unittest.mock import MagicMock, patch
 
-from cli import HermesCLI
+from cli import Ev0CLI
 
 
-def _make_cli() -> HermesCLI:
-    cli_obj = HermesCLI.__new__(HermesCLI)
+def _make_cli() -> Ev0CLI:
+    cli_obj = Ev0CLI.__new__(Ev0CLI)
     cli_obj.config = {}
     cli_obj.console = MagicMock()
     cli_obj.agent = None

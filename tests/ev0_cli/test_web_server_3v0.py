@@ -38,8 +38,8 @@ _EXAMPLE_PLUGIN_FIXTURE = (
 
 
 @pytest.fixture
-def _install_example_plugin(_isolate_hermes_home):
-    """Drop the example-dashboard fixture into the per-test HERMES_HOME
+def _install_example_plugin(_isolate_ev0_home):
+    """Drop the example-dashboard fixture into the per-test EV0_HOME
     user-plugins directory and force the web_server's dashboard plugin
     cache + API mount to rediscover it.
 
@@ -48,20 +48,20 @@ def _install_example_plugin(_isolate_hermes_home):
     user's sidebar. It is now a tests-only fixture: any test that needs
     ``/api/plugins/example/hello`` or ``/dashboard-plugins/example/...``
     requests this fixture so the plugin appears only for that test's
-    isolated ``HERMES_HOME``.
+    isolated ``EV0_HOME``.
 
     The user-plugin source is preferred over a transient
-    ``HERMES_BUNDLED_PLUGINS`` override because the bundled dir is
+    ``EV0_BUNDLED_PLUGINS`` override because the bundled dir is
     resolved per-call (other tests in the suite implicitly rely on the
-    real bundled plugins — kanban, hermes-achievements, model providers
+    real bundled plugins — kanban, 3v0-achievements, model providers
     — being available, and globally swapping that root would yank them
     all). User plugins are first in the discovery search order, so
     laying down the fixture here is enough.
     """
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
     from ev0_cli import web_server
 
-    user_plugins_dir = get_hermes_home() / "plugins"
+    user_plugins_dir = get_ev0_home() / "plugins"
     user_plugins_dir.mkdir(parents=True, exist_ok=True)
     dst = user_plugins_dir / "example-dashboard"
     if dst.exists():
@@ -73,7 +73,7 @@ def _install_example_plugin(_isolate_hermes_home):
     # An installed-but-not-enabled user plugin has its API mount skipped
     # and its assets 404'd — which is the whole point of the gate. These
     # fixtures exist to exercise the *serving* paths, so opt the example
-    # plugin in exactly as a real operator would with `hermes plugins
+    # plugin in exactly as a real operator would with `3v0 plugins
     # enable example`.
     from ev0_cli.config import load_config, save_config
     _cfg = load_config()
@@ -90,7 +90,7 @@ def _install_example_plugin(_isolate_hermes_home):
     #   1. Identify the routes the mount call appends.
     #   2. Restore the original list on teardown — otherwise leftover
     #      ``/api/plugins/example/*`` routes leak into subsequent tests
-    #      and start serving requests against a torn-down HERMES_HOME.
+    #      and start serving requests against a torn-down EV0_HOME.
     app = web_server.app
     original_routes = list(app.router.routes)
 
@@ -152,7 +152,7 @@ class TestReloadEnv:
 
 
     def test_removes_deleted_known_vars(self, tmp_path):
-        """reload_env() removes known Hermes vars not present in .env."""
+        """reload_env() removes known 3V0 vars not present in .env."""
         env_file = tmp_path / ".env"
         env_file.write_text("")  # empty .env
         # Pick a known key from OPTIONAL_ENV_VARS
@@ -185,7 +185,7 @@ class TestRedactKey:
 
 
 class TestSessionTokenInjection:
-    """The desktop shell mints HERMES_DASHBOARD_SESSION_TOKEN and signs its
+    """The desktop shell mints EV0_DASHBOARD_SESSION_TOKEN and signs its
     /api + /api/ws calls with it. The backend must adopt that token, else every
     desktop request 401s ("gateway is offline"). A main-merge once silently
     dropped this read — this guards the contract, not a literal value.
@@ -196,7 +196,7 @@ class TestSessionTokenInjection:
 
         original_app = ws.app
         original_token = ws._SESSION_TOKEN
-        monkeypatch.setenv("HERMES_DASHBOARD_SESSION_TOKEN", "desktop-seeded-token")
+        monkeypatch.setenv("EV0_DASHBOARD_SESSION_TOKEN", "desktop-seeded-token")
         assert ws._resolve_session_token() == "desktop-seeded-token"
         # No module reload: the loaded app and its adopted token are untouched.
         assert ws.app is original_app
@@ -205,7 +205,7 @@ class TestSessionTokenInjection:
     def test_falls_back_to_random_token(self, monkeypatch):
         import ev0_cli.web_server as ws
 
-        monkeypatch.delenv("HERMES_DASHBOARD_SESSION_TOKEN", raising=False)
+        monkeypatch.delenv("EV0_DASHBOARD_SESSION_TOKEN", raising=False)
         with patch.object(
             ws.secrets, "token_urlsafe", return_value="generated-token"
         ) as token_urlsafe:
@@ -219,9 +219,9 @@ class TestSessionTokenInjection:
         original_app = ws.app
         original_header_name = ws._SESSION_HEADER_NAME
         original_token = ws._SESSION_TOKEN
-        monkeypatch.setenv("HERMES_DASHBOARD_SESSION_TOKEN", "desktop-seeded-token")
+        monkeypatch.setenv("EV0_DASHBOARD_SESSION_TOKEN", "desktop-seeded-token")
         assert ws._resolve_session_token() == "desktop-seeded-token"
-        monkeypatch.delenv("HERMES_DASHBOARD_SESSION_TOKEN", raising=False)
+        monkeypatch.delenv("EV0_DASHBOARD_SESSION_TOKEN", raising=False)
         with patch.object(ws.secrets, "token_urlsafe", return_value="generated-token"):
             assert ws._resolve_session_token() == "generated-token"
 
@@ -242,18 +242,18 @@ class TestWebServerEndpoints:
     """Test the FastAPI REST endpoints using Starlette TestClient."""
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_hermes_home):
-        """Create a TestClient and isolate the state DB under the test HERMES_HOME."""
+    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
+        """Create a TestClient and isolate the state DB under the test EV0_HOME."""
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import ev0_state
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
-        monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db")
+        monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
 
         self.client = TestClient(app)
         self.client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
@@ -264,11 +264,11 @@ class TestWebServerEndpoints:
         import sqlite3
 
         from ev0_cli import web_server
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_state import SessionDB
 
         web_server._last_auto_archive_check.clear()
-        db_path = get_hermes_home() / "state.db"
+        db_path = get_ev0_home() / "state.db"
         wal_path = Path(f"{db_path}-wal")
         writer = SessionDB(db_path=db_path)
         monitor = None
@@ -354,10 +354,10 @@ class TestWebServerEndpoints:
     def test_get_sessions_auto_archive_uses_maintenance_writer(self):
         from ev0_cli import web_server
         from ev0_cli.config import load_config, save_config
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_state import SessionDB
 
-        db_path = get_hermes_home() / "state.db"
+        db_path = get_ev0_home() / "state.db"
         seed = SessionDB(db_path=db_path)
         try:
             seed.create_session("stale", source="cli")
@@ -404,10 +404,10 @@ class TestWebServerEndpoints:
     def test_get_sessions_heals_stale_schema_store(self, missing_column):
         import sqlite3
 
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_state import SessionDB
 
-        db_path = get_hermes_home() / "state.db"
+        db_path = get_ev0_home() / "state.db"
         seed = SessionDB(db_path=db_path)
         try:
             seed.create_session("stale-schema", source="cli")
@@ -442,15 +442,15 @@ class TestWebServerEndpoints:
         The shipped regression (#72424 aftermath): a store predating
         ``sessions.last_activity_at`` made every per-profile read raise
         "no such column", which this endpoint swallowed into its ``errors``
-        array — the desktop rendered "No sessions yet" after `hermes update`
+        array — the desktop rendered "No sessions yet" after `3v0 update`
         until the user's first message forced a writable open elsewhere.
         """
         import sqlite3
 
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_state import SessionDB
 
-        db_path = get_hermes_home() / "state.db"
+        db_path = get_ev0_home() / "state.db"
         seed = SessionDB(db_path=db_path)
         try:
             seed.create_session("sidebar-stale", source="cli")
@@ -479,7 +479,7 @@ class TestWebServerEndpoints:
     def test_startup_eager_reconcile_heals_stale_store(self):
         """The lifespan's eager reconcile brings a stale store current.
 
-        #79531/#80037: after `hermes update` an old-schema state.db used to
+        #79531/#80037: after `3v0 update` an old-schema state.db used to
         stay stale until the first NEW session forced a writable open —
         every /api/sessions poll 500ed with "no such column" in between.
         The lifespan now schedules one writable open at startup; this
@@ -489,10 +489,10 @@ class TestWebServerEndpoints:
         import sqlite3
 
         from ev0_cli import web_server
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_state import SessionDB
 
-        db_path = get_hermes_home() / "state.db"
+        db_path = get_ev0_home() / "state.db"
         seed = SessionDB(db_path=db_path)
         try:
             seed.create_session("eager-stale", source="cli")
@@ -550,10 +550,10 @@ class TestWebServerEndpoints:
         once, and never pay the writable open for that store again.
         """
         from ev0_cli import web_server
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_state import SessionDB
 
-        db_path = get_hermes_home() / "state.db"
+        db_path = get_ev0_home() / "state.db"
         seed = SessionDB(db_path=db_path)
         try:
             seed.create_session("unfixable", source="cli")
@@ -604,9 +604,9 @@ class TestWebServerEndpoints:
         assert len(writable_opens) == 1
 
     def test_get_sessions_zero_byte_store_returns_empty_list(self):
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        db_path = get_hermes_home() / "state.db"
+        db_path = get_ev0_home() / "state.db"
         db_path.parent.mkdir(parents=True, exist_ok=True)
         db_path.touch()
 
@@ -640,7 +640,7 @@ class TestWebServerEndpoints:
         """?profile=<name> must resolve liveness from the profile's own home.
 
         The gateway status readers resolve process-level paths and ignore the
-        HERMES_HOME contextvar override (#56986), so /api/messaging/platforms
+        EV0_HOME contextvar override (#56986), so /api/messaging/platforms
         has to pass the profile directory explicitly — otherwise it reports a
         DIFFERENT profile's gateway as this profile's, which hides a real
         outage behind a false "connected" (issue #71211).
@@ -771,7 +771,7 @@ class TestWebServerEndpoints:
 
 
     def test_declared_surface_put_writes_config_and_secret(self):
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.config import load_env
 
         resp = self.client.put(
@@ -789,7 +789,7 @@ class TestWebServerEndpoints:
         assert resp.json() == {"ok": True}
         assert load_env()["HINDSIGHT_API_KEY"] == "hs-declared-key"
 
-        config_path = get_hermes_home() / "hindsight" / "config.json"
+        config_path = get_ev0_home() / "hindsight" / "config.json"
         provider_config = json.loads(config_path.read_text(encoding="utf-8"))
         assert provider_config["mode"] == "local_external"
         assert provider_config["api_url"] == "http://localhost:8888"
@@ -849,7 +849,7 @@ class TestWebServerEndpoints:
 
 
     def test_put_memory_provider_config_writes_config_and_secret(self):
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.config import load_config, load_env
 
         resp = self.client.put(
@@ -870,7 +870,7 @@ class TestWebServerEndpoints:
         assert load_config()["memory"]["provider"] == "hindsight"
         assert load_env()["HINDSIGHT_API_KEY"] == "hs-test-key"
 
-        config_path = get_hermes_home() / "hindsight" / "config.json"
+        config_path = get_ev0_home() / "hindsight" / "config.json"
         provider_config = json.loads(config_path.read_text(encoding="utf-8"))
         assert provider_config["mode"] == "local_external"
         assert provider_config["api_url"] == "http://localhost:8888"
@@ -887,7 +887,7 @@ class TestWebServerEndpoints:
                     "mode": "cloud",
                     "api_url": "https://api.hindsight.vectorize.io",
                     "api_key": "secret-value",
-                    "bank_id": "hermes",
+                    "bank_id": "3v0",
                     "recall_budget": "mid",
                 }
             },
@@ -909,11 +909,11 @@ class TestWebServerEndpoints:
 
     @pytest.fixture(autouse=True)
     def _isolate_honcho_config(self):
-        # Honcho tests write the suite-wide HERMES_HOME honcho.json; snapshot and
+        # Honcho tests write the suite-wide EV0_HOME honcho.json; snapshot and
         # restore it so provider status/config state never leaks across tests.
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        path = get_hermes_home() / "honcho.json"
+        path = get_ev0_home() / "honcho.json"
         before = path.read_bytes() if path.exists() else None
         yield
         if before is None:
@@ -923,9 +923,9 @@ class TestWebServerEndpoints:
 
     @staticmethod
     def _seed_local_honcho(cfg=None):
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        path = get_hermes_home() / "honcho.json"
+        path = get_ev0_home() / "honcho.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(cfg if cfg is not None else {}), encoding="utf-8")
         return path
@@ -936,7 +936,7 @@ class TestWebServerEndpoints:
         monkeypatch.setenv("HONCHO_API_KEY", "guard")
         monkeypatch.delenv("HONCHO_API_KEY")
         self._seed_local_honcho()
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.config import load_config, load_env
 
         resp = self.client.put(
@@ -948,7 +948,7 @@ class TestWebServerEndpoints:
                     "environment": "local",
                     "workspace": "myws",
                     "peerName": "eri",
-                    "aiPeer": "hermes",
+                    "aiPeer": "3v0",
                     "sessionStrategy": "per-repo",
                 }
             },
@@ -959,15 +959,15 @@ class TestWebServerEndpoints:
         assert load_config()["memory"]["provider"] == "honcho"
         assert load_env()["HONCHO_API_KEY"] == "hch-test-key"
 
-        cfg = json.loads((get_hermes_home() / "honcho.json").read_text(encoding="utf-8"))
+        cfg = json.loads((get_ev0_home() / "honcho.json").read_text(encoding="utf-8"))
         # baseUrl is root-scoped; the rest live in the active host block.
         assert cfg["baseUrl"] == "https://honcho.example.dev"
-        assert cfg["hosts"]["hermes"]["workspace"] == "myws"
-        assert cfg["hosts"]["hermes"]["peerName"] == "eri"
-        assert cfg["hosts"]["hermes"]["environment"] == "local"
-        assert cfg["hosts"]["hermes"]["sessionStrategy"] == "per-repo"
+        assert cfg["hosts"]["3v0"]["workspace"] == "myws"
+        assert cfg["hosts"]["3v0"]["peerName"] == "eri"
+        assert cfg["hosts"]["3v0"]["environment"] == "local"
+        assert cfg["hosts"]["3v0"]["sessionStrategy"] == "per-repo"
         # The key lands where the client reads first; GET keeps it write-only.
-        assert cfg["hosts"]["hermes"]["apiKey"] == "hch-test-key"
+        assert cfg["hosts"]["3v0"]["apiKey"] == "hch-test-key"
 
 
     def test_get_honcho_config_does_not_return_secret(self, monkeypatch, tmp_path):
@@ -1136,7 +1136,7 @@ class TestWebServerEndpoints:
 
 
 
-    def test_update_hermes_returns_docker_guidance_without_spawning(self, monkeypatch):
+    def test_update_ev0_returns_docker_guidance_without_spawning(self, monkeypatch):
         import ev0_cli.web_server as web_server
 
         spawned = False
@@ -1144,35 +1144,35 @@ class TestWebServerEndpoints:
         def fail_spawn(*_args, **_kwargs):
             nonlocal spawned
             spawned = True
-            raise AssertionError("docker update guard should not spawn hermes update")
+            raise AssertionError("docker update guard should not spawn 3v0 update")
 
         # Bypass the managed-externally gate so we reach the docker install check.
         monkeypatch.setattr(web_server, "_dashboard_local_update_managed_externally", lambda: False)
         monkeypatch.setattr(web_server, "detect_install_method", lambda _root: "docker")
-        monkeypatch.setattr(web_server, "_spawn_hermes_action", fail_spawn)
-        web_server._ACTION_PROCS.pop("hermes-update", None)
-        web_server._ACTION_RESULTS.pop("hermes-update", None)
+        monkeypatch.setattr(web_server, "_spawn_ev0_action", fail_spawn)
+        web_server._ACTION_PROCS.pop("3v0-update", None)
+        web_server._ACTION_RESULTS.pop("3v0-update", None)
 
-        resp = self.client.post("/api/hermes/update")
+        resp = self.client.post("/api/3v0/update")
 
         assert resp.status_code == 200
         data = resp.json()
         assert data["ok"] is False
-        assert data["name"] == "hermes-update"
+        assert data["name"] == "3v0-update"
         assert data["pid"] is None
         assert data["error"] == "docker_update_unsupported"
-        assert "docker pull nousresearch/hermes-agent:latest" in data["message"]
+        assert "docker pull nousresearch/3v0-agent:latest" in data["message"]
         assert spawned is False
 
-        status = self.client.get("/api/actions/hermes-update/status")
+        status = self.client.get("/api/actions/3v0-update/status")
         assert status.status_code == 200
         status_data = status.json()
         assert status_data["running"] is False
         assert status_data["exit_code"] == 1
         assert status_data["pid"] is None
-        assert any("docker pull nousresearch/hermes-agent:latest" in line for line in status_data["lines"])
+        assert any("docker pull nousresearch/3v0-agent:latest" in line for line in status_data["lines"])
 
-    def test_update_hermes_spawns_with_action_id(self, monkeypatch):
+    def test_update_ev0_spawns_with_action_id(self, monkeypatch):
         import ev0_cli.web_server as web_server
 
         class Proc:
@@ -1187,24 +1187,24 @@ class TestWebServerEndpoints:
         monkeypatch.setattr(web_server, "_dashboard_local_update_managed_externally", lambda: False)
         monkeypatch.setattr(web_server, "detect_install_method", lambda _root: "git")
         monkeypatch.setattr(web_server.secrets, "token_hex", lambda _size: "a" * 32)
-        monkeypatch.setattr(web_server, "_spawn_hermes_action", fake_spawn)
-        web_server._ACTION_PROCS.pop("hermes-update", None)
-        web_server._ACTION_RESULTS.pop("hermes-update", None)
+        monkeypatch.setattr(web_server, "_spawn_ev0_action", fake_spawn)
+        web_server._ACTION_PROCS.pop("3v0-update", None)
+        web_server._ACTION_RESULTS.pop("3v0-update", None)
 
-        resp = self.client.post("/api/hermes/update")
+        resp = self.client.post("/api/3v0/update")
 
         assert resp.status_code == 200
         assert resp.json() == {
             "ok": True,
             "pid": 12345,
-            "name": "hermes-update",
+            "name": "3v0-update",
             "action_id": "a" * 32,
         }
         assert calls == [
-            (["update"], "hermes-update", {"HERMES_ACTION_ID": "a" * 32})
+            (["update"], "3v0-update", {"EV0_ACTION_ID": "a" * 32})
         ]
 
-    def test_update_hermes_reuses_running_action(self, monkeypatch):
+    def test_update_ev0_reuses_running_action(self, monkeypatch):
         import ev0_cli.web_server as web_server
 
         class Proc:
@@ -1217,23 +1217,23 @@ class TestWebServerEndpoints:
         monkeypatch.setattr(web_server, "detect_install_method", lambda _root: "git")
         monkeypatch.setattr(
             web_server,
-            "_spawn_hermes_action",
+            "_spawn_ev0_action",
             lambda *_args, **_kwargs: pytest.fail("must not spawn a duplicate update"),
         )
-        web_server._ACTION_PROCS["hermes-update"] = Proc()
-        web_server._ACTION_IDS["hermes-update"] = "b" * 32
+        web_server._ACTION_PROCS["3v0-update"] = Proc()
+        web_server._ACTION_IDS["3v0-update"] = "b" * 32
 
         try:
-            resp = self.client.post("/api/hermes/update")
+            resp = self.client.post("/api/3v0/update")
         finally:
-            web_server._ACTION_PROCS.pop("hermes-update", None)
-            web_server._ACTION_IDS.pop("hermes-update", None)
+            web_server._ACTION_PROCS.pop("3v0-update", None)
+            web_server._ACTION_IDS.pop("3v0-update", None)
 
         assert resp.status_code == 200
         assert resp.json() == {
             "ok": True,
             "pid": 24680,
-            "name": "hermes-update",
+            "name": "3v0-update",
             "already_running": True,
             "action_id": "b" * 32,
         }
@@ -1285,7 +1285,7 @@ class TestWebServerEndpoints:
 
     def test_model_set_maps_unknown_vendor_to_aggregator(self, monkeypatch):
         """A bare vendor name from analytics rows (no billing_provider) is not
-        a Hermes provider — keep the user's aggregator instead of writing a
+        a 3V0 provider — keep the user's aggregator instead of writing a
         provider that can never resolve credentials."""
         monkeypatch.setattr(
             "ev0_cli.model_cost_guard.expensive_model_warning",
@@ -1431,9 +1431,9 @@ class TestWebServerEndpoints:
                 return {
                     "pairing_id": "pair-restart-fails",
                     "poll_token": "poll-secret",
-                    "suggested_username": "hermes_pair_restart_fails_bot",
-                    "deep_link": "https://t.me/newbot/HermesSetupBot/hermes_pair_restart_fails_bot",
-                    "qr_payload": "https://t.me/newbot/HermesSetupBot/hermes_pair_restart_fails_bot",
+                    "suggested_username": "ev0_pair_restart_fails_bot",
+                    "deep_link": "https://t.me/newbot/Ev0SetupBot/ev0_pair_restart_fails_bot",
+                    "qr_payload": "https://t.me/newbot/Ev0SetupBot/ev0_pair_restart_fails_bot",
                     "expires_at": "2027-05-18T00:00:00.000Z",
                 }
             assert method == "GET"
@@ -1441,7 +1441,7 @@ class TestWebServerEndpoints:
             assert bearer_token == "poll-secret"
             return {
                 "status": "ready",
-                "bot_username": "hermes_pair_restart_fails_bot",
+                "bot_username": "ev0_pair_restart_fails_bot",
                 "owner_user_id": 123456789,
                 "token": "123456:SECRET",
             }
@@ -1454,7 +1454,7 @@ class TestWebServerEndpoints:
             assert name == "gateway-restart"
             raise RuntimeError("supervisor unavailable")
 
-        monkeypatch.setattr(ws, "_spawn_hermes_action", fail_spawn_action)
+        monkeypatch.setattr(ws, "_spawn_ev0_action", fail_spawn_action)
 
         start = self.client.post("/api/messaging/telegram/onboarding/start", json={})
         assert start.status_code == 200
@@ -1542,7 +1542,7 @@ class TestWebServerEndpoints:
         """A custom endpoint that requires auth must persist model.api_key (where
         the runtime reads it) AND register a named custom_providers entry so the
         endpoint reappears as a ready row in the picker — matching the
-        ``hermes model`` custom flow. Regression for the desktop loop where a
+        ``3v0 model`` custom flow. Regression for the desktop loop where a
         keyed custom endpoint could never be configured from the GUI."""
         from ev0_cli.config import load_config
 
@@ -1654,9 +1654,9 @@ class TestWebServerEndpoints:
         """
         from ev0_cli import profiles as profiles_mod
         from ev0_cli.config import custom_endpoint_key_env
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        default_home = get_hermes_home()
+        default_home = get_ev0_home()
         worker_home = profiles_mod.get_profile_dir("worker")
         worker_home.mkdir(parents=True)
 
@@ -2341,17 +2341,17 @@ class TestNewEndpoints:
     """Tests for session detail, logs, cron, skills, tools, raw config, analytics."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, monkeypatch, _isolate_hermes_home):
+    def _setup(self, monkeypatch, _isolate_ev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import ev0_state
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
-        monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db")
+        monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
 
         self.client = TestClient(app)
         self.client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
@@ -2369,7 +2369,7 @@ class TestNewEndpoints:
     def test_profiles_create_builder_mcp_auth_is_profile_scoped(
         self, monkeypatch
     ):
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         import ev0_cli.profiles as profiles_mod
 
         monkeypatch.setattr(profiles_mod, "create_wrapper_script", lambda name: None)
@@ -2414,7 +2414,7 @@ class TestNewEndpoints:
         assert resp.status_code == 200
         assert resp.json()["mcp_written"] == 3
 
-        root = get_hermes_home()
+        root = get_ev0_home()
         profile_dir = root / "profiles" / "builder-auth"
         config_text = (profile_dir / "config.yaml").read_text(encoding="utf-8")
         config = yaml.safe_load(config_text)
@@ -2701,13 +2701,13 @@ class TestNewEndpoints:
         config = load_config()
         config.setdefault("terminal", {})
         config["terminal"]["ssh_host"] = "devbox.example.com"
-        config["terminal"]["ssh_user"] = "hermes"
+        config["terminal"]["ssh_user"] = "3v0"
         save_config(config)
 
         body = self.client.get("/api/tools/terminal/backends").json()
         ssh = next(r for r in body["backends"] if r["name"] == "ssh")
         assert ssh["status"] == "ready"
-        assert "hermes@devbox.example.com" in ssh["detail"]
+        assert "3v0@devbox.example.com" in ssh["detail"]
 
 
 
@@ -3334,15 +3334,15 @@ class TestNormaliseThemeDefinition:
 
 
 class TestDiscoverUserThemes:
-    """Tests for _discover_user_themes() — scans ~/.hermes/dashboard-themes/."""
+    """Tests for _discover_user_themes() — scans ~/.3V0/dashboard-themes/."""
 
     def test_returns_empty_when_dir_missing(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         from ev0_cli import web_server
         assert web_server._discover_user_themes() == []
 
     def test_loads_and_normalises_yaml(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         themes_dir = tmp_path / "dashboard-themes"
         themes_dir.mkdir()
         (themes_dir / "ocean.yaml").write_text(
@@ -3367,7 +3367,7 @@ class TestDiscoverUserThemes:
 
 
     def test_ignores_transient_profile_override(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         themes_dir = tmp_path / "dashboard-themes"
         themes_dir.mkdir()
         (themes_dir / "mine.yaml").write_text("name: mine\n", encoding="utf-8")
@@ -3376,16 +3376,16 @@ class TestDiscoverUserThemes:
         other.mkdir()
 
         from ev0_constants import (
-            reset_hermes_home_override,
-            set_hermes_home_override,
+            reset_ev0_home_override,
+            set_ev0_home_override,
         )
         from ev0_cli import web_server
 
-        token = set_hermes_home_override(str(other))
+        token = set_ev0_home_override(str(other))
         try:
             results = web_server._discover_user_themes()
         finally:
-            reset_hermes_home_override(token)
+            reset_ev0_home_override(token)
 
         assert [r["name"] for r in results] == ["mine"]
 
@@ -3396,8 +3396,8 @@ class TestThemeBootstrapCSS:
     the default-teal first-paint flash for user YAML themes."""
 
     @staticmethod
-    def _write_theme(hermes_home, name="ocean"):
-        themes_dir = hermes_home / "dashboard-themes"
+    def _write_theme(ev0_home, name="ocean"):
+        themes_dir = ev0_home / "dashboard-themes"
         themes_dir.mkdir(exist_ok=True)
         (themes_dir / f"{name}.yaml").write_text(
             f"name: {name}\n"
@@ -3416,14 +3416,14 @@ class TestThemeBootstrapCSS:
     def test_user_theme_renders_bundle_vars(self, tmp_path, monkeypatch):
         """Active user theme → style block with ONLY variable names the
         bundle actually consumes (layerVars/typographyVars tokens)."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         self._write_theme(tmp_path)
         from ev0_cli import web_server
         monkeypatch.setattr(
             web_server, "load_config", lambda: {"dashboard": {"theme": "ocean"}}
         )
         css = web_server._render_active_theme_bootstrap_css()
-        assert css.startswith('<style id="hermes-theme-bootstrap">')
+        assert css.startswith('<style id="3v0-theme-bootstrap">')
         assert css.endswith("</style>")
         # Real bundle tokens (web/src/themes/context.tsx + index.css).
         assert "--background-base:#0a1628;" in css
@@ -3465,7 +3465,7 @@ class TestThemeBootstrapCSS:
         return TestClient(spa_app)
 
     def test_serve_index_injects_bootstrap_for_user_theme(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         self._write_theme(tmp_path)
         import ev0_cli.web_server as ws
         monkeypatch.setattr(
@@ -3474,11 +3474,11 @@ class TestThemeBootstrapCSS:
         client = self._mount_spa_client(tmp_path, monkeypatch)
         resp = client.get("/chat")
         assert resp.status_code == 200
-        assert '<style id="hermes-theme-bootstrap">' in resp.text
+        assert '<style id="3v0-theme-bootstrap">' in resp.text
         assert "--background-base:#0a1628;" in resp.text
         # Injected inside <head>, before the closing tag.
         head = resp.text.split("</head>")[0]
-        assert "hermes-theme-bootstrap" in head
+        assert "3v0-theme-bootstrap" in head
 
 
 
@@ -3544,18 +3544,18 @@ class TestDeleteSessionEndpoint:
     """
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_hermes_home):
+    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import ev0_state
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
         monkeypatch.setattr(
-            ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db"
+            ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db"
         )
 
         self.auth_client = TestClient(app)
@@ -3607,18 +3607,18 @@ class TestBulkDeleteSessionsEndpoint:
     """
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_hermes_home):
+    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import ev0_state
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
         monkeypatch.setattr(
-            ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db"
+            ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db"
         )
 
         self.client = TestClient(app)
@@ -3694,20 +3694,20 @@ class TestDeleteEmptySessionsEndpoint:
     """
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_hermes_home):
+    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import ev0_state
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
-        # Pin the SessionDB to the isolated HERMES_HOME so each test
+        # Pin the SessionDB to the isolated EV0_HOME so each test
         # starts with a clean state.db.
         monkeypatch.setattr(
-            ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db"
+            ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db"
         )
 
         self.client = TestClient(app)
@@ -3804,13 +3804,13 @@ class TestPluginAPIAuth:
     """Tests that plugin API routes require the session token (issue #19533)."""
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_hermes_home, _install_example_plugin):
+    def _setup_test_client(self, monkeypatch, _isolate_ev0_home, _install_example_plugin):
         """Create a TestClient without the session token header.
 
         Pulls in ``_install_example_plugin`` so ``test_plugin_route_allows_auth``
         has the ``/api/plugins/example/hello`` endpoint available — the
         example plugin is no longer a bundled plugin, so the fixture
-        installs it into the per-test ``HERMES_HOME``.
+        installs it into the per-test ``EV0_HOME``.
         """
         try:
             from starlette.testclient import TestClient
@@ -3818,10 +3818,10 @@ class TestPluginAPIAuth:
             pytest.skip("fastapi/starlette not installed")
 
         import ev0_state
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
-        monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db")
+        monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
 
         self.client = TestClient(app)
         self.auth_client = TestClient(app)
@@ -3832,7 +3832,7 @@ class TestPluginAPIAuth:
         """Plugin API routes should work with a valid session token.
 
         Uses ``/api/plugins/example/hello`` from the example-dashboard
-        test fixture (installed into HERMES_HOME by the class-level
+        test fixture (installed into EV0_HOME by the class-level
         ``_install_example_plugin`` fixture) — a stable, side-effect-free
         GET that's only loaded for tests. With a valid token the handler
         should run (200); without one the middleware should 401 before
@@ -3865,12 +3865,12 @@ class TestPluginAPIAuth:
         """Auth must be plugin-agnostic, not kanban-specific.
 
         The middleware fix is at the gate level (no per-plugin allowlist),
-        so any plugin's API surface — kanban, hermes-achievements, future
+        so any plugin's API surface — kanban, 3v0-achievements, future
         plugins — must require the session token. Hit a non-kanban plugin
         path to lock that in.
         """
-        # Real plugin path (hermes-achievements is loaded by default).
-        resp = self.client.get("/api/plugins/hermes-achievements/overview")
+        # Real plugin path (3v0-achievements is loaded by default).
+        resp = self.client.get("/api/plugins/3v0-achievements/overview")
         assert resp.status_code == 401
         # Same for an arbitrary plugin namespace that doesn't even exist —
         # the middleware should 401 before routing decides 404, so an
@@ -3917,7 +3917,7 @@ class TestDashboardPluginManifestExtensions:
         return plug_dir
 
     def test_override_and_hidden_carried_through(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         self._write_plugin(tmp_path, "skin-home", {
             "name": "skin-home",
             "label": "Skin Home",
@@ -3937,10 +3937,10 @@ class TestDashboardPluginManifestExtensions:
     def test_user_plugins_ignore_profile_home_override(self, tmp_path, monkeypatch):
         """Regression: user dashboard extensions are a dashboard-owned asset
         (like theme YAML), so they must stay visible after a context-local
-        HERMES_HOME override scopes a request to another profile."""
+        EV0_HOME override scopes a request to another profile."""
         from ev0_constants import (
-            reset_hermes_home_override,
-            set_hermes_home_override,
+            reset_ev0_home_override,
+            set_ev0_home_override,
         )
         launch_home = tmp_path / "launch"
         launch_home.mkdir()
@@ -3953,20 +3953,20 @@ class TestDashboardPluginManifestExtensions:
         other = tmp_path / "other-profile"
         other.mkdir()
 
-        monkeypatch.setenv("HERMES_HOME", str(launch_home))
+        monkeypatch.setenv("EV0_HOME", str(launch_home))
         from ev0_cli import web_server
-        token = set_hermes_home_override(str(other))
+        token = set_ev0_home_override(str(other))
         try:
             plugins = web_server._discover_dashboard_plugins()
         finally:
-            reset_hermes_home_override(token)
+            reset_ev0_home_override(token)
         assert any(p["name"] == "skin-home" for p in plugins)
 
     def test_user_plugins_found_under_profile_scoped_process(self, tmp_path, monkeypatch):
         """Regression #87197: a profile-scoped process (``--profile <name>``
-        sets HERMES_HOME=<root>/profiles/<name>) must still discover user
-        plugins installed in the hermes root's plugins/ directory."""
-        root = tmp_path / "hermes-root"
+        sets EV0_HOME=<root>/profiles/<name>) must still discover user
+        plugins installed in the 3v0 root's plugins/ directory."""
+        root = tmp_path / "3v0-root"
         profile_home = root / "profiles" / "presale"
         profile_home.mkdir(parents=True)
         self._write_plugin(root, "meeting-intelligence", {
@@ -3976,7 +3976,7 @@ class TestDashboardPluginManifestExtensions:
             "entry": "dist/index.js",
         })
 
-        monkeypatch.setenv("HERMES_HOME", str(profile_home))
+        monkeypatch.setenv("EV0_HOME", str(profile_home))
         from ev0_cli import web_server
         plugins = web_server._discover_dashboard_plugins()
         assert any(p["name"] == "meeting-intelligence" for p in plugins)
@@ -3984,7 +3984,7 @@ class TestDashboardPluginManifestExtensions:
     def test_profile_local_plugin_wins_over_root_plugin(self, tmp_path, monkeypatch):
         """A same-named plugin in the profile home takes precedence over the
         root copy (seen_names dedupe, profile scanned first)."""
-        root = tmp_path / "hermes-root"
+        root = tmp_path / "3v0-root"
         profile_home = root / "profiles" / "presale"
         profile_home.mkdir(parents=True)
         self._write_plugin(profile_home, "dupe", {
@@ -4000,7 +4000,7 @@ class TestDashboardPluginManifestExtensions:
             "entry": "dist/index.js",
         })
 
-        monkeypatch.setenv("HERMES_HOME", str(profile_home))
+        monkeypatch.setenv("EV0_HOME", str(profile_home))
         from ev0_cli import web_server
         plugins = web_server._discover_dashboard_plugins()
         entries = [p for p in plugins if p["name"] == "dupe"]
@@ -4014,7 +4014,7 @@ class TestDashboardPluginManifestExtensions:
 # /api/pty WebSocket — terminal bridge for the dashboard "Chat" tab.
 #
 # These tests drive the endpoint with a tiny fake command (typically ``cat``
-# or ``sh -c 'printf …'``) instead of the real ``hermes --tui`` binary.  The
+# or ``sh -c 'printf …'``) instead of the real ``3v0 --tui`` binary.  The
 # endpoint resolves its argv through ``_resolve_chat_argv``, so tests
 # monkeypatch that hook.
 # ---------------------------------------------------------------------------
@@ -4030,7 +4030,7 @@ skip_on_windows = pytest.mark.skipif(
 @skip_on_windows
 class TestPtyWebSocket:
     @pytest.fixture(autouse=True)
-    def _setup(self, monkeypatch, _isolate_hermes_home):
+    def _setup(self, monkeypatch, _isolate_ev0_home):
         from starlette.testclient import TestClient
 
         import ev0_cli.web_server as ws
@@ -4058,7 +4058,7 @@ class TestPtyWebSocket:
         """Bare Python commands are resolved from the TUI child's PATH."""
         import ev0_cli.main as main_mod
 
-        command = f"hermes-review-python{Path(sys.executable).suffix}"
+        command = f"3v0-review-python{Path(sys.executable).suffix}"
         bin_dir = tmp_path / "bin"
         bin_dir.mkdir()
         executable = bin_dir / command
@@ -4066,14 +4066,14 @@ class TestPtyWebSocket:
         # the venv (tmpfs /tmp vs disk home) where hard links raise EXDEV.
         shutil.copy2(sys.executable, executable)
         env = {
-            "HERMES_CWD": str(tmp_path),
-            "HERMES_PYTHON": command,
+            "EV0_CWD": str(tmp_path),
+            "EV0_PYTHON": command,
             "PATH": str(bin_dir),
         }
 
         main_mod._apply_tui_python_env(env)
 
-        assert env["HERMES_PYTHON"] == command
+        assert env["EV0_PYTHON"] == command
 
 
 
@@ -4242,7 +4242,7 @@ def test_resolve_chat_argv_injects_gateway_ws_url(monkeypatch):
     _argv, _cwd, env = ws._resolve_chat_argv()
 
     assert env is not None
-    gateway_url = env.get("HERMES_TUI_GATEWAY_URL", "")
+    gateway_url = env.get("EV0_TUI_GATEWAY_URL", "")
     assert gateway_url.startswith("ws://127.0.0.1:9119/api/ws?")
     assert "token=" in gateway_url
 
@@ -4261,7 +4261,7 @@ class TestDashboardPluginStaticAssetAllowlist:
     """
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_hermes_home, _install_example_plugin):
+    def _setup_test_client(self, monkeypatch, _isolate_ev0_home, _install_example_plugin):
         """Create a TestClient and install the example-dashboard fixture.
 
         The static-asset allowlist tests need a plugin to point at —
@@ -4269,7 +4269,7 @@ class TestDashboardPluginStaticAssetAllowlist:
         is served while ``plugin_api.py`` and ``__pycache__/*.pyc``
         from the same directory are not. Since the example plugin is
         no longer bundled, ``_install_example_plugin`` lays it down in
-        the per-test ``HERMES_HOME`` user-plugins dir.
+        the per-test ``EV0_HOME`` user-plugins dir.
         """
         try:
             from starlette.testclient import TestClient
@@ -4344,7 +4344,7 @@ class TestValidateProviderCredential:
     """Live-probe credential validation (/api/providers/validate)."""
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_hermes_home):
+    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
@@ -4534,16 +4534,16 @@ class TestDesktopCronTicker:
 
         return TestClient(app)
 
-    def test_ticker_runs_when_desktop(self, monkeypatch, _isolate_hermes_home):
+    def test_ticker_runs_when_desktop(self, monkeypatch, _isolate_ev0_home):
         import threading
         import cron.scheduler as sched
 
         called = threading.Event()
         monkeypatch.setattr(sched, "tick", lambda *a, **k: called.set())
-        monkeypatch.setenv("HERMES_DESKTOP", "1")
+        monkeypatch.setenv("EV0_DESKTOP", "1")
 
         with self._client():
-            assert called.wait(3.0), "expected cron tick under HERMES_DESKTOP=1"
+            assert called.wait(3.0), "expected cron tick under EV0_DESKTOP=1"
 
 
 class TestServeIndexMissingIndex:
@@ -4565,7 +4565,7 @@ class TestServeIndexMissingIndex:
                 "<html><head></head><body>SPA</body></html>", encoding="utf-8"
             )
         monkeypatch.setattr(ws, "WEB_DIST", dist)
-        monkeypatch.delenv("HERMES_SERVE_HEADLESS", raising=False)
+        monkeypatch.delenv("EV0_SERVE_HEADLESS", raising=False)
         spa_app = FastAPI()
         ws.mount_spa(spa_app)
         return TestClient(spa_app), dist
@@ -4626,7 +4626,7 @@ class TestHashedAssetCacheHeaders:
             encoding="utf-8",
         )
         monkeypatch.setattr(ws, "WEB_DIST", dist)
-        monkeypatch.delenv("HERMES_SERVE_HEADLESS", raising=False)
+        monkeypatch.delenv("EV0_SERVE_HEADLESS", raising=False)
         spa_app = FastAPI()
         ws.mount_spa(spa_app)
         return TestClient(spa_app)
@@ -4649,12 +4649,12 @@ class TestHashedAssetCacheHeaders:
         # handling) must survive the header change.
         prefixed = client.get(
             "/assets/index-abc123.css",
-            headers={"X-Forwarded-Prefix": "/hermes"},
+            headers={"X-Forwarded-Prefix": "/3v0"},
         )
         assert prefixed.status_code == 200
         assert prefixed.headers["cache-control"] == self._IMMUTABLE
-        assert "url(/hermes/ds-assets/bg.png)" in prefixed.text
-        assert "url(/hermes/fonts-terminal/x.woff2)" in prefixed.text
+        assert "url(/3v0/ds-assets/bg.png)" in prefixed.text
+        assert "url(/3v0/fonts-terminal/x.woff2)" in prefixed.text
 
     def test_index_html_stays_no_store(self, tmp_path, monkeypatch):
         client = self._client(tmp_path, monkeypatch)
@@ -4678,17 +4678,17 @@ class TestDashboardComponentHealth:
     """Component-health rollup: error middleware, /api/status components, self-test."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, monkeypatch, _isolate_hermes_home):
+    def _setup(self, monkeypatch, _isolate_ev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import ev0_state
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         import ev0_cli.web_server as ws
 
-        monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db")
+        monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
         # Fresh state holder per test so counters don't leak across tests.
         monkeypatch.setattr(ws, "DASHBOARD_HEALTH", ws.DashboardHealth())
         self.ws = ws
@@ -4749,18 +4749,18 @@ class TestSessionPatchUnread:
     read/unread, and GET /api/sessions surfaces the derived flag."""
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_hermes_home):
+    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import ev0_state
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
         monkeypatch.setattr(
-            ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db"
+            ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db"
         )
 
         self.client = TestClient(app)

@@ -38,7 +38,7 @@ def _make_repo(root: Path) -> Path:
 
 class SubagentWorktreeTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = Path(tempfile.mkdtemp(prefix="hermes-sw-test-"))
+        self.tmp = Path(tempfile.mkdtemp(prefix="3v0-sw-test-"))
         self.addCleanup(shutil.rmtree, self.tmp, True)
 
     # ── resolve_repo_root ──────────────────────────────────────────────
@@ -74,7 +74,7 @@ class SubagentWorktreeTests(unittest.TestCase):
         assert info is not None
         self.assertTrue(os.path.isdir(info["path"]))
         self.assertIn(".worktrees", info["path"])
-        self.assertEqual(info["branch"], "hermes-subagent/subagent-abc123")
+        self.assertEqual(info["branch"], "3v0-subagent/subagent-abc123")
         self.assertTrue(info["base_commit"])
         # Worktree carries the committed file
         self.assertTrue((Path(info["path"]) / "README.md").exists())
@@ -159,10 +159,10 @@ class SubagentWorktreeTests(unittest.TestCase):
 
     def test_context_note_names_path_and_branch(self):
         note = sw.build_worktree_context_note(
-            {"path": "/x/wt", "branch": "hermes-subagent/subagent-1"}
+            {"path": "/x/wt", "branch": "3v0-subagent/subagent-1"}
         )
         self.assertIn("/x/wt", note)
-        self.assertIn("hermes-subagent/subagent-1", note)
+        self.assertIn("3v0-subagent/subagent-1", note)
         self.assertIn("WORKTREE ISOLATION", note)
 
 

@@ -1,4 +1,4 @@
-"""Tests for the Hermes plugin system (ev0_cli.plugins)."""
+"""Tests for the 3V0 plugin system (ev0_cli.plugins)."""
 
 import logging
 import json
@@ -52,19 +52,19 @@ def _make_plugin_dir(base: Path, name: str, *, register_body: str = "pass",
     """Create a minimal plugin directory with plugin.yaml + __init__.py.
 
     If *auto_enable* is True (default), also write the plugin's name into
-    ``<hermes_home>/config.yaml`` under ``plugins.enabled``. Plugins are
+    ``<ev0_home>/config.yaml`` under ``plugins.enabled``. Plugins are
     opt-in by default, so tests that expect the plugin to actually load
     need this. Pass ``auto_enable=False`` for tests that exercise the
     unenabled path.
 
-    *base* is expected to be ``<hermes_home>/plugins/``; we derive
-    ``<hermes_home>`` from it by walking one level up unless *home* is
+    *base* is expected to be ``<ev0_home>/plugins/``; we derive
+    ``<ev0_home>`` from it by walking one level up unless *home* is
     given explicitly.
 
-    Pass *home* explicitly whenever the target Hermes home for this
-    plugin isn't necessarily the current ``HERMES_HOME`` env var — e.g.
+    Pass *home* explicitly whenever the target 3V0 home for this
+    plugin isn't necessarily the current ``EV0_HOME`` env var — e.g.
     when writing fixtures for two profiles up front and only switching
-    ``HERMES_HOME``/``set_hermes_home_override()`` per-profile afterwards
+    ``EV0_HOME``/``set_ev0_home_override()`` per-profile afterwards
     (as multi-profile regression tests do). Relying on the *current* env
     var here is a bug: if the caller hasn't switched homes yet (or is
     using the context-local override instead of the env var, which this
@@ -85,20 +85,20 @@ def _make_plugin_dir(base: Path, name: str, *, register_body: str = "pass",
     )
 
     if auto_enable:
-        # Write/merge plugins.enabled in <HERMES_HOME>/config.yaml.
-        # Config is always read from HERMES_HOME (not from the project
+        # Write/merge plugins.enabled in <EV0_HOME>/config.yaml.
+        # Config is always read from EV0_HOME (not from the project
         # dir for project plugins), so that's where we opt in.
         if home is not None:
-            hermes_home = Path(home)
+            ev0_home = Path(home)
         else:
             import os
-            hermes_home_str = os.environ.get("HERMES_HOME")
-            if hermes_home_str:
-                hermes_home = Path(hermes_home_str)
+            ev0_home_str = os.environ.get("EV0_HOME")
+            if ev0_home_str:
+                ev0_home = Path(ev0_home_str)
             else:
-                hermes_home = base.parent
-        hermes_home.mkdir(parents=True, exist_ok=True)
-        cfg_path = hermes_home / "config.yaml"
+                ev0_home = base.parent
+        ev0_home.mkdir(parents=True, exist_ok=True)
+        cfg_path = ev0_home / "config.yaml"
         cfg: dict = {}
         if cfg_path.exists():
             try:
@@ -159,7 +159,7 @@ class TestPluginDiscovery:
         empty_bundled = tmp_path / "bundled"
         empty_bundled.mkdir()
         monkeypatch.setenv("HOME", str(tmp_path / "os-home"))
-        monkeypatch.setenv("HERMES_HOME", str(home))
+        monkeypatch.setenv("EV0_HOME", str(home))
         monkeypatch.setattr(plugins_mod, "get_bundled_plugins_dir", lambda: empty_bundled)
 
         manager = PluginManager()
@@ -197,7 +197,7 @@ class TestPluginDiscovery:
         empty_bundled = tmp_path / "bundled"
         empty_bundled.mkdir()
         monkeypatch.setenv("HOME", str(tmp_path / "os-home"))
-        monkeypatch.setenv("HERMES_HOME", str(home))
+        monkeypatch.setenv("EV0_HOME", str(home))
         monkeypatch.setattr(plugins_mod, "get_bundled_plugins_dir", lambda: empty_bundled)
 
         manager = PluginManager()
@@ -231,8 +231,8 @@ class TestPluginDiscovery:
         )
         bundled = tmp_path / "bundled"
         bundled.mkdir()
-        monkeypatch.setenv("HERMES_HOME", str(home))
-        monkeypatch.setenv("HERMES_BUNDLED_PLUGINS", str(bundled))
+        monkeypatch.setenv("EV0_HOME", str(home))
+        monkeypatch.setenv("EV0_BUNDLED_PLUGINS", str(bundled))
 
         manager = PluginManager()
         manifests = manager._collect_directory_manifests()
@@ -263,7 +263,7 @@ class TestPluginDiscovery:
 
 
     def test_plugin_can_register_and_invoke_middleware(self, tmp_path, monkeypatch):
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         _make_plugin_dir(
             plugins_dir,
             "mw_plugin",
@@ -274,7 +274,7 @@ class TestPluginDiscovery:
                 "lambda **kw: {'args': {**kw['args'], 'mw': True}})"
             ),
         )
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_test"))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -329,9 +329,9 @@ class TestPluginDiscovery:
         permanently, every later call would early-return against an empty
         registry ("No web provider configured") for the process lifetime.
         """
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         _make_plugin_dir(plugins_dir, "retry_plugin")
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_test"))
 
         mgr = PluginManager()
 
@@ -345,7 +345,7 @@ class TestPluginDiscovery:
 
         # A later call (with discovery healthy again) must do the real scan.
         monkeypatch.undo()
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_test"))
         mgr.discover_and_load()
         assert mgr._discovered is True
         non_bundled = {
@@ -410,18 +410,18 @@ class TestPluginLoading:
 
 
     def test_load_registers_namespace_module(self, tmp_path, monkeypatch):
-        """Directory plugins are importable under hermes_plugins.<name>."""
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        """Directory plugins are importable under ev0_plugins.<name>."""
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         _make_plugin_dir(plugins_dir, "ns_plugin")
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_test"))
 
         # Clean up any prior namespace module
-        sys.modules.pop("hermes_plugins.ns_plugin", None)
+        sys.modules.pop("ev0_plugins.ns_plugin", None)
 
         mgr = PluginManager()
         mgr.discover_and_load()
 
-        assert "hermes_plugins.ns_plugin" in sys.modules
+        assert "ev0_plugins.ns_plugin" in sys.modules
 
     def test_user_memory_plugin_auto_coerced_to_exclusive(self, tmp_path, monkeypatch):
         """User-installed memory plugins must NOT be loaded by the general
@@ -436,7 +436,7 @@ class TestPluginLoading:
         does not import/register() it. The real activation happens through
         ``plugins/memory/__init__.py`` via ``memory.provider`` config.
         """
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         plugin_dir = plugins_dir / "mempalace"
         plugin_dir.mkdir(parents=True)
         # No explicit `kind:` — the heuristic should kick in.
@@ -449,11 +449,11 @@ class TestPluginLoading:
         )
         # Even if the user explicitly enables it in config, the loader
         # should still treat it as exclusive and skip general loading.
-        hermes_home = tmp_path / "hermes_test"
-        (hermes_home / "config.yaml").write_text(
+        ev0_home = tmp_path / "ev0_test"
+        (ev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["mempalace"]}})
         )
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -475,7 +475,7 @@ class TestPluginLoading:
         the general PluginManager.
 
         Regression test for the mnemosyne case: a pip plugin declaring a
-        ``hermes_agent.plugins`` entry point but exposing
+        ``ev0_agent.plugins`` entry point but exposing
         ``register_memory_provider`` (not ``register()``) used to be
         eagerly imported in every process, pulling heavy deps (fastembed
         → onnxruntime, ~60 MB RSS) even though the import registered
@@ -511,11 +511,11 @@ class TestPluginLoading:
         # Even if the user explicitly enables it, the loader must treat it
         # as exclusive and skip the import (the bug: eager import of a
         # module with no register() function).
-        hermes_home = tmp_path / "hermes_test"
-        (hermes_home / "config.yaml").write_text(
+        ev0_home = tmp_path / "ev0_test"
+        (ev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["mempalace_ep"]}})
         )
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -561,11 +561,11 @@ class TestPluginLoading:
             ),
         )
 
-        hermes_home = tmp_path / "hermes_test"
-        (hermes_home / "config.yaml").write_text(
+        ev0_home = tmp_path / "ev0_test"
+        (ev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["fakeprovider"]}})
         )
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -623,9 +623,9 @@ class TestPluginLoading:
             ),
         )
 
-        # Same-name directory provider under $HERMES_HOME/plugins/.
-        hermes_home = tmp_path / "hermes_test"
-        plugins_dir = hermes_home / "plugins"
+        # Same-name directory provider under $EV0_HOME/plugins/.
+        ev0_home = tmp_path / "ev0_test"
+        plugins_dir = ev0_home / "plugins"
         provider_dir = plugins_dir / "mempalace_dup"
         provider_dir.mkdir(parents=True)
         (provider_dir / "__init__.py").write_text(
@@ -642,10 +642,10 @@ class TestPluginLoading:
         (provider_dir / "plugin.yaml").write_text(
             "name: mempalace_dup\ndescription: dup\n"
         )
-        (hermes_home / "config.yaml").write_text(
+        (ev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["mempalace_dup"]}})
         )
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
         monkeypatch.setattr(
             "plugins.memory._get_user_plugins_dir", lambda: plugins_dir
         )
@@ -716,11 +716,11 @@ class TestPluginLoading:
             ),
         )
 
-        hermes_home = tmp_path / "hermes_test"
-        (hermes_home / "config.yaml").write_text(
+        ev0_home = tmp_path / "ev0_test"
+        (ev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["mempalace_dotted"]}})
         )
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -747,7 +747,7 @@ class TestPluginHooks:
 
     def test_pre_gateway_dispatch_collects_action_dicts(self, tmp_path, monkeypatch):
         """pre_gateway_dispatch callbacks return action dicts (skip/rewrite/allow)."""
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         _make_plugin_dir(
             plugins_dir, "predispatch_plugin",
             register_body=(
@@ -755,7 +755,7 @@ class TestPluginHooks:
                 'lambda **kw: {"action": "skip", "reason": "test"})'
             ),
         )
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_test"))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -774,7 +774,7 @@ class TestPluginHooks:
 
 
     def test_request_hooks_are_invokeable(self, tmp_path, monkeypatch):
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         _make_plugin_dir(
             plugins_dir, "request_hook",
             register_body=(
@@ -783,7 +783,7 @@ class TestPluginHooks:
                 '"mc": kw.get("message_count"), "tc": kw.get("tool_count")})'
             ),
         )
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_test"))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -1358,7 +1358,7 @@ class TestPluginContext:
             handler=lambda args, **kw: "built-in",
         )
         try:
-            plugins_dir = tmp_path / "hermes_test" / "plugins"
+            plugins_dir = tmp_path / "ev0_test" / "plugins"
             plugin_dir = plugins_dir / "evil_override_plugin"
             plugin_dir.mkdir(parents=True)
             (plugin_dir / "plugin.yaml").write_text(yaml.dump({"name": "evil_override_plugin"}))
@@ -1372,13 +1372,13 @@ class TestPluginContext:
                 '        override=True,\n'
                 '    )\n'
             )
-            hermes_home = tmp_path / "hermes_test"
+            ev0_home = tmp_path / "ev0_test"
             # No allow_tool_override entry — plugin enabled but operator
             # has NOT opted in to letting it replace built-ins.
-            (hermes_home / "config.yaml").write_text(
+            (ev0_home / "config.yaml").write_text(
                 yaml.safe_dump({"plugins": {"enabled": ["evil_override_plugin"]}})
             )
-            monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+            monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
             mgr = PluginManager()
             # PluginManager catches and logs the registration error, so the
@@ -1428,7 +1428,7 @@ class TestPluginContext:
             handler=lambda args, **kw: "built-in",
         )
         try:
-            plugins_dir = tmp_path / "hermes_test" / "plugins"
+            plugins_dir = tmp_path / "ev0_test" / "plugins"
             plugin_dir = plugins_dir / "delayed_override_plugin"
             plugin_dir.mkdir(parents=True)
             (plugin_dir / "plugin.yaml").write_text(yaml.dump({"name": "delayed_override_plugin"}))
@@ -1448,11 +1448,11 @@ class TestPluginContext:
                 "def register(ctx):\n"
                 "    _pending.append(_do_override)\n"
             )
-            hermes_home = tmp_path / "hermes_test"
-            (hermes_home / "config.yaml").write_text(
+            ev0_home = tmp_path / "ev0_test"
+            (ev0_home / "config.yaml").write_text(
                 yaml.safe_dump({"plugins": {"enabled": ["delayed_override_plugin"]}})
             )
-            monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+            monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
             mgr = PluginManager()
             mgr.discover_and_load()
@@ -1463,7 +1463,7 @@ class TestPluginContext:
 
             # Now fire the deferred override, simulating a post-load callback.
             import sys as _sys
-            mod = _sys.modules.get("hermes_plugins.delayed_override_plugin")
+            mod = _sys.modules.get("ev0_plugins.delayed_override_plugin")
             assert mod is not None, "plugin module should be loaded"
             with pytest.raises(PermissionError):
                 mod._pending[0]()
@@ -1492,7 +1492,7 @@ class TestPluginToolVisibility:
         """
         import ev0_cli.plugins as plugins_mod
 
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         plugin_dir = plugins_dir / "vis_plugin"
         plugin_dir.mkdir(parents=True)
         (plugin_dir / "plugin.yaml").write_text(yaml.dump({"name": "vis_plugin"}))
@@ -1505,11 +1505,11 @@ class TestPluginToolVisibility:
             '        handler=lambda args, **kw: "ok",\n'
             '    )\n'
         )
-        hermes_home = tmp_path / "hermes_test"
-        (hermes_home / "config.yaml").write_text(
+        ev0_home = tmp_path / "ev0_test"
+        (ev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["vis_plugin"]}})
         )
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -1552,10 +1552,10 @@ class TestPluginManagerList:
 
     def test_list_returns_sorted(self, tmp_path, monkeypatch):
         """list_plugins() returns results sorted by key."""
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         _make_plugin_dir(plugins_dir, "zulu")
         _make_plugin_dir(plugins_dir, "alpha")
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_test"))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -1574,10 +1574,10 @@ class TestPluginManagerList:
         already-loaded plugins, so when a later plugin registered a hook name
         an earlier plugin had already used, the shared name was attributed to
         the first plugin only and the later plugin reported 0 hooks in
-        `hermes plugins list`. Attribution now counts what each plugin's own
+        `3v0 plugins list`. Attribution now counts what each plugin's own
         register() added (per-registration delta), so both get credit.
         """
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         _make_plugin_dir(
             plugins_dir, "first_hooker",
             register_body='ctx.register_hook("post_tool_call", lambda **kw: None)',
@@ -1586,7 +1586,7 @@ class TestPluginManagerList:
             plugins_dir, "second_hooker",
             register_body='ctx.register_hook("post_tool_call", lambda **kw: None)',
         )
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_test"))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -1617,12 +1617,12 @@ class TestPreLlmCallTargetRouting:
 
     def test_context_dict_returned(self, tmp_path, monkeypatch):
         """Plugin returning a context dict is collected by invoke_hook."""
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         self._make_pre_llm_plugin(
             plugins_dir, "basic_plugin",
             '{"context": "basic context"}',
         )
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_test"))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -1642,7 +1642,7 @@ class TestPreLlmCallTargetRouting:
         All plugin context — dicts and plain strings — ends up in a single
         user message context string. There is no system_prompt target.
         """
-        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        plugins_dir = tmp_path / "ev0_test" / "plugins"
         self._make_pre_llm_plugin(
             plugins_dir, "aaa_mem",
             '{"context": "memory A"}',
@@ -1655,7 +1655,7 @@ class TestPreLlmCallTargetRouting:
             plugins_dir, "ccc_plain",
             '"plain text C"',
         )
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_test"))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -1704,8 +1704,8 @@ class TestPluginCommands:
 
     def test_get_plugin_context_engine_discovers_plugins_lazily(self, tmp_path, monkeypatch):
         """Context engine lookup should work before any explicit discover_plugins() call."""
-        hermes_home = tmp_path / "hermes_test"
-        plugins_dir = hermes_home / "plugins"
+        ev0_home = tmp_path / "ev0_test"
+        plugins_dir = ev0_home / "plugins"
         plugin_dir = plugins_dir / "engine-plugin"
         plugin_dir.mkdir(parents=True, exist_ok=True)
         (plugin_dir / "plugin.yaml").write_text(
@@ -1731,10 +1731,10 @@ class TestPluginCommands:
             "    ctx.register_context_engine(StubEngine())\n"
         )
         # Opt-in: plugins are opt-in by default, so enable in config.yaml
-        (hermes_home / "config.yaml").write_text(
+        (ev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["engine-plugin"]}})
         )
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
         import ev0_cli.plugins as plugins_mod
 
@@ -1743,18 +1743,18 @@ class TestPluginCommands:
             assert engine is not None
             assert engine.name == "stub-engine"
 
-    def test_plugin_manager_scoped_by_hermes_home_override(self, tmp_path):
-        """set_hermes_home_override() must get its own manager per profile.
+    def test_plugin_manager_scoped_by_ev0_home_override(self, tmp_path):
+        """set_ev0_home_override() must get its own manager per profile.
 
         This is the production path used by the gateway multiplexer
         (``gateway/run.py``'s ``_profile_scope`` context manager) and by
-        subagent/embedded callers: it swaps ``HERMES_HOME`` via a
+        subagent/embedded callers: it swaps ``EV0_HOME`` via a
         context-local ContextVar, which — per
-        ``ev0_constants.set_hermes_home_override`` — deliberately does
+        ``ev0_constants.set_ev0_home_override`` — deliberately does
         NOT touch ``os.environ``. A regression test that only flips the
-        ``HERMES_HOME`` env var never exercises this path.
+        ``EV0_HOME`` env var never exercises this path.
         """
-        from ev0_constants import set_hermes_home_override, reset_hermes_home_override
+        from ev0_constants import set_ev0_home_override, reset_ev0_home_override
         import ev0_cli.plugins as plugins_mod
 
         def write_engine_plugin(home: Path) -> None:
@@ -1770,7 +1770,7 @@ class TestPluginCommands:
                     "    from agent.context_engine import ContextEngine\n\n"
                     "    class HomeEngine(ContextEngine):\n"
                     "        def __init__(self):\n"
-                    "            self.home = os.environ.get('HERMES_HOME')\n\n"
+                    "            self.home = os.environ.get('EV0_HOME')\n\n"
                     "        @property\n"
                     "        def name(self):\n"
                     "            return 'home-engine'\n\n"
@@ -1789,26 +1789,26 @@ class TestPluginCommands:
         write_engine_plugin(home_a)
         write_engine_plugin(home_b)
 
-        # Note: HomeEngine reads os.environ['HERMES_HOME'] itself (simulating
-        # a real plugin like hermes-lcm capturing its home at registration),
+        # Note: HomeEngine reads os.environ['EV0_HOME'] itself (simulating
+        # a real plugin like 3v0-lcm capturing its home at registration),
         # so we set the env var to home_a as a baseline and only use the
         # context-local override to *switch away* to home_b — proving the
         # override, not the env var, is what get_plugin_manager() keys on.
-        token_a = set_hermes_home_override(str(home_a))
+        token_a = set_ev0_home_override(str(home_a))
         try:
             manager_a = plugins_mod.get_plugin_manager()
             manager_a.discover_and_load()
             engine_a = manager_a._context_engine
         finally:
-            reset_hermes_home_override(token_a)
+            reset_ev0_home_override(token_a)
 
-        token_b = set_hermes_home_override(str(home_b))
+        token_b = set_ev0_home_override(str(home_b))
         try:
             manager_b = plugins_mod.get_plugin_manager()
             manager_b.discover_and_load()
             engine_b = manager_b._context_engine
         finally:
-            reset_hermes_home_override(token_b)
+            reset_ev0_home_override(token_b)
 
         assert engine_a is not None
         assert engine_b is not None
@@ -1818,27 +1818,27 @@ class TestPluginCommands:
         # Re-entering home_a's override must return the SAME cached manager
         # (and engine) rather than rebuilding — proves the cache is keyed,
         # not last-write-wins.
-        token_a2 = set_hermes_home_override(str(home_a))
+        token_a2 = set_ev0_home_override(str(home_a))
         try:
             manager_a2 = plugins_mod.get_plugin_manager()
         finally:
-            reset_hermes_home_override(token_a2)
+            reset_ev0_home_override(token_a2)
         assert manager_a2 is manager_a
 
     def test_relative_import_not_leaked_across_home_switch(self, tmp_path):
         """A same-slug plugin's relative import must not reuse the prior home's submodule.
 
         ``_load_directory_module`` imports each plugin as
-        ``hermes_plugins.<slug>``, but a relative import inside the
+        ``ev0_plugins.<slug>``, but a relative import inside the
         plugin's ``__init__.py`` (``from .state import STATE``) is cached
         separately in ``sys.modules`` under
-        ``hermes_plugins.<slug>.state``. If a profile switch replaces only
+        ``ev0_plugins.<slug>.state``. If a profile switch replaces only
         the parent module, the child module survives in ``sys.modules``
         and Python's import system serves it back unchanged — silently
         leaking the previous profile's module-level state (and code) into
         the new profile.
         """
-        from ev0_constants import set_hermes_home_override, reset_hermes_home_override
+        from ev0_constants import set_ev0_home_override, reset_ev0_home_override
         import ev0_cli.plugins as plugins_mod
 
         def write_stateful_plugin(home: Path, marker: str) -> None:
@@ -1853,7 +1853,7 @@ class TestPluginCommands:
             )
             # `state.py` is imported via a *relative* import from
             # `__init__.py`, so it lands in sys.modules as
-            # `hermes_plugins.stateful_plugin.state`.
+            # `ev0_plugins.stateful_plugin.state`.
             (plugin_dir / "state.py").write_text(f"MARKER = {marker!r}\n")
             (plugin_dir / "__init__.py").write_text(
                 "from . import state\n\n"
@@ -1870,26 +1870,26 @@ class TestPluginCommands:
         write_stateful_plugin(home_a, "marker-a")
         write_stateful_plugin(home_b, "marker-b")
 
-        token_a = set_hermes_home_override(str(home_a))
+        token_a = set_ev0_home_override(str(home_a))
         try:
             manager_a = plugins_mod.get_plugin_manager()
             manager_a.discover_and_load()
             module_a = manager_a._plugins["stateful-plugin"].module
         finally:
-            reset_hermes_home_override(token_a)
+            reset_ev0_home_override(token_a)
 
         assert module_a is not None
         module_a_state = f"{module_a.__name__}.state"
         assert module_a_state in sys.modules
         assert sys.modules[module_a_state].MARKER == "marker-a"
 
-        token_b = set_hermes_home_override(str(home_b))
+        token_b = set_ev0_home_override(str(home_b))
         try:
             manager_b = plugins_mod.get_plugin_manager()
             manager_b.discover_and_load()
             module_b = manager_b._plugins["stateful-plugin"].module
         finally:
-            reset_hermes_home_override(token_b)
+            reset_ev0_home_override(token_b)
 
         # Each profile keeps a stable namespace, so concurrent/runtime relative
         # imports cannot resolve another profile's package or submodules.
@@ -1986,11 +1986,11 @@ class TestPluginDispatchTool:
 
 
 class TestPluginDebugLogging:
-    """HERMES_PLUGINS_DEBUG opt-in stderr handler for plugin developers."""
+    """EV0_PLUGINS_DEBUG opt-in stderr handler for plugin developers."""
 
     def test_debug_handler_not_installed_when_env_var_absent(self, monkeypatch):
         """Without the env var, no stderr handler is attached."""
-        monkeypatch.delenv("HERMES_PLUGINS_DEBUG", raising=False)
+        monkeypatch.delenv("EV0_PLUGINS_DEBUG", raising=False)
         from ev0_cli import plugins as plugins_mod
 
         # Snapshot, then force a re-evaluation.
@@ -2011,7 +2011,7 @@ class TestPluginDebugLogging:
 
 
 class TestPluginContextProfileName:
-    """ctx.profile_name resolves from HERMES_HOME in every context."""
+    """ctx.profile_name resolves from EV0_HOME in every context."""
 
     def _ctx(self):
         mgr = PluginManager()
@@ -2019,19 +2019,19 @@ class TestPluginContextProfileName:
         return PluginContext(manifest, mgr)
 
     def test_default_profile(self, tmp_path, monkeypatch):
-        """HERMES_HOME at the root resolves to 'default'."""
-        home = tmp_path / ".hermes"
+        """EV0_HOME at the root resolves to 'default'."""
+        home = tmp_path / ".3V0"
         home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        monkeypatch.setenv("HERMES_HOME", str(home))
+        monkeypatch.setenv("EV0_HOME", str(home))
         assert self._ctx().profile_name == "default"
 
     def test_named_profile(self, tmp_path, monkeypatch):
-        """HERMES_HOME under profiles/<name> resolves to that name."""
-        prof = tmp_path / ".hermes" / "profiles" / "coder"
+        """EV0_HOME under profiles/<name> resolves to that name."""
+        prof = tmp_path / ".3V0" / "profiles" / "coder"
         prof.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        monkeypatch.setenv("HERMES_HOME", str(prof))
+        monkeypatch.setenv("EV0_HOME", str(prof))
         assert self._ctx().profile_name == "coder"
 
 

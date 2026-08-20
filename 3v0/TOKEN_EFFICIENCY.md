@@ -84,7 +84,7 @@ auxiliary:
   `max` sparingly for genuinely deep design/architecture judgment.
 - **Protect the prefix.** Never edit SOUL.md, AGENTS.md, memory, or switch
   toolsets mid-conversation. Slash commands that mutate system-prompt state
-  defer to next session (Hermes cache-awareness) unless `--now` is justified.
+  defer to next session (3V0 cache-awareness) unless `--now` is justified.
 - **Cheap aux.** `auxiliary.*` tasks resolve `provider: auto` → **the main
   model** (currently `accounts/fireworks/models/deepseek-v4-flash-0731`) —
   verified against `agent/auxiliary_client.py` ("default `auto = main model`").
@@ -103,9 +103,9 @@ auxiliary:
 
 ## Verification
 
-- `hermes config check` — no ✗ items; config version current.
-- `hermes config get compression.proactive_prune_tokens` → `48000`.
-- Model pin `deepseek-v4-pro` survives any `hermes config migrate`.
+- `3v0 config check` — no ✗ items; config version current.
+- `3v0 config get compression.proactive_prune_tokens` → `48000`.
+- Model pin `deepseek-v4-pro` survives any `3v0 config migrate`.
 - Memory usage < 100% (headroom available) after a consolidation pass.
 
 ## Change log

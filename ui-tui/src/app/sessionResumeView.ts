@@ -1,5 +1,5 @@
-import type { ScrollBoxHandle } from '@hermes/ink'
-import { evictInkCaches, forceRedraw } from '@hermes/ink'
+import type { ScrollBoxHandle } from '@3v0/ink'
+import { evictInkCaches, forceRedraw } from '@3v0/ink'
 import type { RefObject } from 'react'
 
 export const refreshSessionView = (stdout: NodeJS.WriteStream = process.stdout) => {

@@ -3,7 +3,7 @@
 The main.py decomposition re-exports the sessions/update/dashboard command
 surface from ev0_cli.main so argparse wiring and monkeypatches keep
 resolving. Those re-exports must not import the modules eagerly: every
-`hermes` invocation (including `hermes --version`) would pay for update_cmd's
+`3v0` invocation (including `3v0 --version`) would pay for update_cmd's
 dependency chain (jwt, click, ...) even when no subcommand runs.
 """
 

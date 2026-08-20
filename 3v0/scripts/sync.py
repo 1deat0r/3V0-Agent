@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reconcile the native store with the Hermes profile (store is canonical).
+"""Reconcile the native store with the 3V0 profile (store is canonical).
 
 Reports drift by default; with --write, converges the profile to the store's
 active facts — importing profile-only entries into the store and dropping
@@ -31,7 +31,7 @@ STORE_PATH = Path(
 )
 PROFILE_MEM = Path(
     os.environ.get("THREEV0_PROFILE_MEM")
-    or (Path.home() / ".hermes" / "profiles" / "3v0" / "memories")
+    or (Path.home() / ".3V0" / "profiles" / "3v0" / "memories")
 )
 
 

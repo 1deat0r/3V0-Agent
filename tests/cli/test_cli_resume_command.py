@@ -2,11 +2,11 @@ import os
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from cli import HermesCLI
+from cli import Ev0CLI
 
 
 def _make_cli():
-    cli_obj = HermesCLI.__new__(HermesCLI)
+    cli_obj = Ev0CLI.__new__(Ev0CLI)
     cli_obj.session_id = "current_session"
     cli_obj._resumed = False
     cli_obj._pending_title = None
@@ -106,7 +106,7 @@ class TestCliResumeCommand:
 
 class TestCliResumeRestoresCwd:
     """Mid-chat /resume must retarget the working directory to where the
-    session was started — the same contract as a startup ``hermes -c`` /
+    session was started — the same contract as a startup ``3v0 -c`` /
     ``--resume``.
 
     Regression coverage for #38562: ``_restore_session_cwd()`` was wired into

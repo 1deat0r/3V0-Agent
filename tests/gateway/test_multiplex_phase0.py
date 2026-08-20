@@ -13,7 +13,7 @@ from datetime import datetime
 from unittest.mock import patch
 import yaml
 
-from ev0_constants import reset_hermes_home_override, set_hermes_home_override
+from ev0_constants import reset_ev0_home_override, set_ev0_home_override
 from gateway.config import GatewayConfig, Platform
 from gateway.session import SessionSource, SessionStore, build_session_key
 

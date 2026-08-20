@@ -16,20 +16,20 @@ def _client():
     except ImportError:
         pytest.skip("fastapi/starlette not installed")
     import ev0_state
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
     from ev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
     client = TestClient(app)
     client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
-    # Keep the state DB under the isolated HERMES_HOME for any handler that
+    # Keep the state DB under the isolated EV0_HOME for any handler that
     # touches it.
-    ev0_state.DEFAULT_DB_PATH = get_hermes_home() / "state.db"
+    ev0_state.DEFAULT_DB_PATH = get_ev0_home() / "state.db"
     return client, _SESSION_HEADER_NAME
 
 
 class TestMcpEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, self.header = _client()
 
 
@@ -47,9 +47,9 @@ class TestMcpEndpoints:
         assert srv["env"]["API_KEY"] != "sk-secret-1234567890"
 
     def test_http_bearer_auth_separates_secret_from_config(
-        self, _isolate_hermes_home
+        self, _isolate_ev0_home
     ):
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
         secret = "dashboard-secret-value"
         response = self.client.post(
@@ -66,9 +66,9 @@ class TestMcpEndpoints:
         assert response.json()["auth"] == "header"
         assert "bearer_token" not in response.json()
 
-        hermes_home = get_hermes_home()
-        config_text = (hermes_home / "config.yaml").read_text()
-        env_text = (hermes_home / ".env").read_text()
+        ev0_home = get_ev0_home()
+        config_text = (ev0_home / "config.yaml").read_text()
+        env_text = (ev0_home / ".env").read_text()
         assert secret not in config_text
         assert "Bearer ${MCP_BEARER_SERVER_API_KEY}" in config_text
         assert f"MCP_BEARER_SERVER_API_KEY={secret}" in env_text
@@ -144,7 +144,7 @@ class TestMcpEndpoints:
 
 class TestCredentialPoolEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
 
@@ -152,9 +152,9 @@ class TestCredentialPoolEndpoints:
     def test_env_seeded_delete_stays_deleted(self):
         """#55217: DELETE must suppress the source or load_pool() resurrects it.
 
-        load_pool() re-seeds from ~/.hermes/.env on every call, so removing
+        load_pool() re-seeds from ~/.3V0/.env on every call, so removing
         just the pool row silently reverts on the next dashboard refresh.
-        The endpoint must mirror `hermes auth remove`: clean up the backing
+        The endpoint must mirror `3v0 auth remove`: clean up the backing
         source and suppress (provider, source).
         """
         from agent.credential_pool import load_pool
@@ -182,7 +182,7 @@ class TestCredentialPoolEndpoints:
     def test_post_readd_lifts_suppression(self):
         """Re-adding via POST is an explicit re-engagement — suppressions lift.
 
-        Mirrors `hermes auth add`, which clears every suppression for the
+        Mirrors `3v0 auth add`, which clears every suppression for the
         provider so a user who deleted a credential and re-adds one isn't
         silently blocked from env re-seeding.
         """
@@ -214,11 +214,11 @@ class TestCredentialPoolEndpoints:
 
 class TestMemoryEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        (get_hermes_home() / "memories").mkdir(parents=True, exist_ok=True)
+        (get_ev0_home() / "memories").mkdir(parents=True, exist_ok=True)
 
     def test_status_and_select(self):
         data = self.client.get("/api/memory").json()
@@ -233,9 +233,9 @@ class TestMemoryEndpoints:
         assert r.status_code == 400
 
     def test_reset_targets(self):
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        mem = get_hermes_home() / "memories"
+        mem = get_ev0_home() / "memories"
         (mem / "MEMORY.md").write_text("notes")
         (mem / "USER.md").write_text("user")
 
@@ -250,7 +250,7 @@ class TestMemoryEndpoints:
 
 class TestPairingEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
     def test_approve_pending_request_id(self):
@@ -282,9 +282,9 @@ class TestPairingEndpoints:
         as approved.
         """
         from gateway.pairing import PairingStore
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        (get_hermes_home() / "profiles" / "work").mkdir(parents=True, exist_ok=True)
+        (get_ev0_home() / "profiles" / "work").mkdir(parents=True, exist_ok=True)
         PairingStore().generate_code("telegram", "global-1", "GlobalGuy")
         PairingStore(profile="work").generate_code("telegram", "work-1", "WorkGal")
 
@@ -319,7 +319,7 @@ class TestPairingEndpoints:
 
 class TestWebhookEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
 
@@ -361,7 +361,7 @@ class TestWebhookEndpoints:
             restart_calls.append((subcommand, name))
             return FakeRestartProc()
 
-        monkeypatch.setattr(ws, "_spawn_hermes_action", fake_spawn_action)
+        monkeypatch.setattr(ws, "_spawn_ev0_action", fake_spawn_action)
 
         r = self.client.post("/api/webhooks/enable")
 
@@ -397,7 +397,7 @@ class TestWebhookEndpoints:
         def fail_spawn_action(subcommand, name):
             raise AssertionError("must not spawn a second concurrent restart")
 
-        monkeypatch.setattr(ws, "_spawn_hermes_action", fail_spawn_action)
+        monkeypatch.setattr(ws, "_spawn_ev0_action", fail_spawn_action)
 
         r = self.client.post("/api/webhooks/enable")
 
@@ -411,7 +411,7 @@ class TestWebhookEndpoints:
 
 class TestOpsEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
 
@@ -467,7 +467,7 @@ class TestOpsEndpoints:
 
 class TestSystemStatsEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
     def test_stats_shape(self):
@@ -475,7 +475,7 @@ class TestSystemStatsEndpoint:
         assert r.status_code == 200
         s = r.json()
         # Identity fields always present (stdlib-sourced).
-        for key in ("os", "arch", "hostname", "python_version", "hermes_version"):
+        for key in ("os", "arch", "hostname", "python_version", "ev0_version"):
             assert key in s and s[key]
         # psutil flag tells the UI whether the richer metrics are populated.
         assert "psutil" in s
@@ -483,19 +483,19 @@ class TestSystemStatsEndpoint:
 
 class TestCuratorEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
 
 class TestPortalEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
 
 class TestSessionManagementEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
         from ev0_state import SessionDB
 
@@ -579,7 +579,7 @@ class TestSessionManagementEndpoints:
 
 class TestSkillsHubSearchEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
 
@@ -618,7 +618,7 @@ class _FakeBundle:
 
 class TestSkillsHubSourcesEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
     def test_sources_lists_configured_hubs(self, monkeypatch):
@@ -634,12 +634,12 @@ class TestSkillsHubSourcesEndpoint:
                 return self._sid
 
             def search(self, q, limit=10):
-                return [_FakeMeta("hermes-index/featured-skill", "trusted")]
+                return [_FakeMeta("3v0-index/featured-skill", "trusted")]
 
         def _fake_router():
             srcs = [_Src("official"), _Src("github")]
-            # hermes-index source advertises availability + featured search.
-            idx = _Src("hermes-index")
+            # 3v0-index source advertises availability + featured search.
+            idx = _Src("3v0-index")
             idx.is_available = True
             srcs.insert(1, idx)
             return srcs
@@ -651,7 +651,7 @@ class TestSkillsHubSourcesEndpoint:
         assert r.status_code == 200
         body = r.json()
         ids = {s["id"] for s in body["sources"]}
-        assert {"official", "github", "hermes-index"} <= ids
+        assert {"official", "github", "3v0-index"} <= ids
         # Every source carries a human label.
         assert all(s.get("label") for s in body["sources"])
         assert body["index_available"] is True
@@ -663,7 +663,7 @@ class TestSkillsHubSourcesEndpoint:
 
 class TestSkillsHubPreviewEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
 
@@ -702,7 +702,7 @@ class TestSkillsHubPreviewEndpoint:
 
 class TestSkillsHubScanEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
 
@@ -765,7 +765,7 @@ class TestSkillsHubScanEndpoint:
 
 class TestWebhookToggleEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
         # Enable the webhook platform so a subscription can be created.
         from ev0_cli.config import load_config, save_config
@@ -782,7 +782,7 @@ class TestAdminEndpointsAuthGate:
     """Every admin endpoint must sit behind the dashboard session-token gate."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         from starlette.testclient import TestClient
         from ev0_cli.web_server import app
 
@@ -791,15 +791,15 @@ class TestAdminEndpointsAuthGate:
 
 
 class TestUpdateCheckEndpoint:
-    """``GET /api/hermes/update/check`` reports availability without applying.
+    """``GET /api/3v0/update/check`` reports availability without applying.
 
     Powers the dashboard's check-before-you-update flow: the System page
     shows the commit-behind count and asks the user to confirm before
-    ``POST /api/hermes/update`` runs ``hermes update``.
+    ``POST /api/3v0/update`` runs ``3v0 update``.
     """
 
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, _ = _client()
 
     def test_git_install_reports_behind_count(self, monkeypatch):
@@ -811,7 +811,7 @@ class TestUpdateCheckEndpoint:
 
         monkeypatch.setattr(banner, "check_for_updates", lambda: 5)
 
-        r = self.client.get("/api/hermes/update/check")
+        r = self.client.get("/api/3v0/update/check")
         assert r.status_code == 200
         body = r.json()
         assert {
@@ -843,7 +843,7 @@ class TestUpdateCheckEndpoint:
             ),
         )
 
-        body = self.client.get("/api/hermes/update/check").json()
+        body = self.client.get("/api/3v0/update/check").json()
         assert body["install_method"] == "managed-runtime"
         assert body["can_apply"] is False
         assert body["update_available"] is False
@@ -858,11 +858,11 @@ class TestDebugShareEndpoint:
     dashboard can render them as copyable links (not a backgrounded log tail)."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, self.header = _client()
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        logs = get_hermes_home() / "logs"
+        logs = get_ev0_home() / "logs"
         logs.mkdir(parents=True, exist_ok=True)
         (logs / "agent.log").write_text("agent line\n")
         (logs / "errors.log").write_text("err line\n")
@@ -917,10 +917,10 @@ class TestDebugShareEndpoint:
 
 class TestToolsConfigEndpoints:
     """Provider selection, API-key save, and post-setup spawn for toolsets —
-    the dashboard surface that replicates the `hermes tools` configurator."""
+    the dashboard surface that replicates the `3v0 tools` configurator."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
+    def _setup(self, _isolate_ev0_home):
         self.client, self.header = _client()
 
 
@@ -964,20 +964,20 @@ class TestToolsConfigEndpoints:
 
 
 # ---------------------------------------------------------------------------
-# _spawn_hermes_action env scrubbing (#52470)
+# _spawn_ev0_action env scrubbing (#52470)
 # ---------------------------------------------------------------------------
 
-def test_spawn_hermes_action_scrubs_gateway_loop_guard_env(monkeypatch, tmp_path):
+def test_spawn_ev0_action_scrubs_gateway_loop_guard_env(monkeypatch, tmp_path):
     """The dashboard runs inside the gateway, so os.environ has
-    _HERMES_GATEWAY=1. Spawned actions (e.g. `gateway restart`) must NOT inherit
+    _EV0_GATEWAY=1. Spawned actions (e.g. `gateway restart`) must NOT inherit
     it, or the in-process restart-loop guard rejects the restart and it silently
     fails (#52470).
     """
     import ev0_cli.web_server as ws
 
-    monkeypatch.setenv("_HERMES_GATEWAY", "1")
+    monkeypatch.setenv("_EV0_GATEWAY", "1")
     monkeypatch.setattr(ws, "_ACTION_LOG_DIR", tmp_path)
-    # Isolate the module-global proc registry: _spawn_hermes_action stores
+    # Isolate the module-global proc registry: _spawn_ev0_action stores
     # _FakeProc (no poll()) in _ACTION_PROCS, and later tests' lifespan
     # shutdown (_terminate_desktop_managed_gateway) would trip over it.
     monkeypatch.setattr(ws, "_ACTION_PROCS", {})
@@ -993,10 +993,10 @@ def test_spawn_hermes_action_scrubs_gateway_loop_guard_env(monkeypatch, tmp_path
 
     monkeypatch.setattr(ws.subprocess, "Popen", _fake_popen)
 
-    ws._spawn_hermes_action(["gateway", "restart"], "gateway-restart")
+    ws._spawn_ev0_action(["gateway", "restart"], "gateway-restart")
 
-    assert "_HERMES_GATEWAY" not in captured["env"]
-    assert captured["env"]["HERMES_NONINTERACTIVE"] == "1"
+    assert "_EV0_GATEWAY" not in captured["env"]
+    assert captured["env"]["EV0_NONINTERACTIVE"] == "1"
 
 
 # ---------------------------------------------------------------------------
@@ -1004,7 +1004,7 @@ def test_spawn_hermes_action_scrubs_gateway_loop_guard_env(monkeypatch, tmp_path
 # ---------------------------------------------------------------------------
 
 def test_desktop_lifespan_reaps_orphan_gateways_on_startup(
-    monkeypatch, _isolate_hermes_home
+    monkeypatch, _isolate_ev0_home
 ):
     """Starting a Desktop serve backend should reap orphan gateways left by a
     previous serve session before forking a fresh one (#77276).
@@ -1012,7 +1012,7 @@ def test_desktop_lifespan_reaps_orphan_gateways_on_startup(
     Graceful shutdown reaps the managed child, but an abnormal exit reparents
     the old gateway to launchd (PPID=1) where it keeps holding the QQ
     WebSocket. The lifespan calls _reap_unsupervised_gateway_orphans() once at
-    startup under HERMES_DESKTOP=1 so the stale orphan is cleared first.
+    startup under EV0_DESKTOP=1 so the stale orphan is cleared first.
     """
     import ev0_cli.web_server as ws
 
@@ -1022,7 +1022,7 @@ def test_desktop_lifespan_reaps_orphan_gateways_on_startup(
         called.append(True)
         return True
 
-    monkeypatch.setenv("HERMES_DESKTOP", "1")
+    monkeypatch.setenv("EV0_DESKTOP", "1")
     # Keep the lifespan cheap: don't re-import the gateway module or spin up the
     # real cron scheduler thread.
     monkeypatch.setattr(ws, "_warm_gateway_module", lambda: None)
@@ -1053,7 +1053,7 @@ def test_desktop_lifespan_terminates_managed_gateway_restart(monkeypatch):
         def terminate(self):
             calls.append("terminate")
 
-    monkeypatch.setenv("HERMES_DESKTOP", "1")
+    monkeypatch.setenv("EV0_DESKTOP", "1")
     monkeypatch.setattr(ws, "_warm_gateway_module", lambda: None)
     monkeypatch.setattr(ws, "_start_desktop_cron_ticker", lambda *_args: None)
     monkeypatch.setitem(ws._ACTION_PROCS, "gateway-restart", _FakeRunningProc())

@@ -2,17 +2,17 @@
 
 This is the design for 3V0's second stone: **folding the profile's other
 memory writers into the native store**, so the store at `3v0/data/memory.json`
-becomes the single canonical origin and the Hermes profile (MEMORY.md /
+becomes the single canonical origin and the 3V0 profile (MEMORY.md /
 USER.md) stays a derived projection.
 
 It is the first step toward owning the whole evolution loop — replacing
-"the Hermes background review fork + curator" as the totality of
+"the 3V0 background review fork + curator" as the totality of
 self-improvement with a loop 3V0 itself controls. This document records the
 **how**, verified against the actual runtime, before any code touched it.
 
 ## Current state (verified against the runtime checkout)
 
-The runtime (`~/.hermes/hermes-agent/`) fires a background review fork after
+The runtime (`~/.3V0/3v0-agent/`) fires a background review fork after
 every turn (`agent/background_review.py`). The fork:
 
 - runs a forked `AIAgent` with a tool whitelist of `["memory", "skills"]`
@@ -23,7 +23,7 @@ every turn (`agent/background_review.py`). The fork:
 - shares the parent's `MemoryStore` instance.
 
 The fork saves memory by calling the **`memory` tool**, which writes
-`$HERMES_HOME/memories/MEMORY.md` / `USER.md` directly via
+`$EV0_HOME/memories/MEMORY.md` / `USER.md` directly via
 `MemoryStore.add/replace/remove/apply_batch → save_to_disk` (`tools/memory_tool.py`).
 That path **never touches the native store** — so the fork's writes land in
 the profile, bypass the store's provenance/supersession, and only get pulled
@@ -54,7 +54,7 @@ The seam we need already exists, in three pieces:
 
 A **profile plugin** bridges the `memory` tool onto the store. No edits to the
 runtime checkout's core files — which matters, because the runtime is a
-managed install (`hermes update` rewrites it) ~11 commits behind the body, and
+managed install (`3v0 update` rewrites it) ~11 commits behind the body, and
 the handoff's original sketches ("fork calls `record.py`", "writes
 `data/memory.json` directly") would have meant widening the fork's whitelist or
 editing `memory_tool.py`/`background_review.py` in place.
@@ -77,10 +77,10 @@ memory tool (foreground OR background fork)
 ### Why a plugin, not core surgery
 
 - **Zero footprint elsewhere.** A plugin lives in
-  `~/.hermes/profiles/3v0/plugins/` — other profiles and the default install
+  `~/.3V0/profiles/3v0/plugins/` — other profiles and the default install
   are unaffected. This is the Footprint Ladder's "plugin" rung, the right one
   for agent-specific capability.
-- **Survives `hermes update`.** Profile plugins are user data, not the managed
+- **Survives `3v0 update`.** Profile plugins are user data, not the managed
   checkout.
 - **The fork needs no changes.** It already calls `memory` and already tags
   its writes with the origin we need; the plugin just observes and mirrors.
@@ -111,7 +111,7 @@ lock (`fcntl.flock` on a `.lock` sidecar), and every store writer
 
 ### Supersession mapping
 
-The Hermes `memory` tool matches `old_text` by substring against the profile
+The 3V0 `memory` tool matches `old_text` by substring against the profile
 entries. The bridge replays that against the store's active facts:
 
 - `add` → `store.add(content, kind, source)` if not already active (idempotent).
@@ -133,7 +133,7 @@ best-effort.
    *it* into the store is a different axis — a skill store — and is **stone 2
    (below)**. The curator's own *auto-transitions* (active/stale/archived) are
    still out of scope: the skill store records `skill_manage` writes; the
-   curator's state machine is a separate Hermes loop, not yet folded in.
+   curator's state machine is a separate 3V0 loop, not yet folded in.
 2. **Profile still first-writer for memory.** The `memory` tool still writes
    MEMORY.md "first" and the bridge mirrors after. A future stone could make
    the *tool itself* store-first (the store writes, then projects to the
@@ -181,7 +181,7 @@ skill_manage tool (foreground OR background fork OR curator's review agent)
 
 The skill store (`core/skills.py` + `core/skill_bridge.py`) is the *auditable
 record*, not (yet) the operational mechanism: the profile's SKILL.md files stay
-the system Hermes actually loads. Same posture as stone 1's memory store before
+the system 3V0 actually loads. Same posture as stone 1's memory store before
 the wake sync — **the skill store records lineage with recoverable history; it
 does not yet project back to SKILL.md.** The bridge is the skill store's only
 writer; `seed_skills.py` establishes the baseline (agent-created skills only —
@@ -249,7 +249,7 @@ history.
 ### Pitfall (learned this session)
 
 `THREEV0_SKILLS_DIR` / `THREEV0_SKILL_STORE` are env overrides for tests. In
-the Hermes terminal, an `export` in one command persists into the next, so an
+the 3V0 terminal, an `export` in one command persists into the next, so an
 E2E test that `export`s them (then `rm -rf`s its temp dir) leaves the *next*
 `sync_skills.py` run pointed at a deleted temp directory — it silently wrote
 duplicate SKILL.md files to `/tmp` and reported the real skills "missing". Use
@@ -285,11 +285,11 @@ profile-import backstop.
 ### Why wake-time folding (not transition-time)
 
 The curator (`agent/curator.py`) is a runtime core file in the managed checkout;
-editing it to write the store would not survive `hermes update`. Its transitions
+editing it to write the store would not survive `3v0 update`. Its transitions
 don't fire a `post_tool_call` the plugin can observe. So the store learns the
 curator's state at wake — the same degradation contract as memory: exact
 provenance when the bridge sees a write, folded `curator`-state at wake
-otherwise. The curator stays Hermes-owned (operational); the store stays
+otherwise. The curator stays 3V0-owned (operational); the store stays
 3V0-owned (canonical record).
 
 ---
@@ -301,7 +301,7 @@ They did not make it *driven by 3V0*: at runtime 3V0 only sees the derived
 profile projection (MEMORY.md / USER.md, the live SKILL.md files) and reaches
 the canonical store only by shelling out through the terminal tool. Direction 3
 is 3V0's own actuator surface — tools designed for 3V0's purposes, not
-Hermes's. Its first stone is the read half: a first-class query tool over the
+3V0's. Its first stone is the read half: a first-class query tool over the
 native stores.
 
 ### Design
@@ -325,7 +325,7 @@ native stores.
 progressive-disclosure bridge (`tools/tool_search.py`): non-core (plugin/MCP)
 tools are deferred behind `tool_search` / `tool_describe` / `tool_call` the
 moment any deferrable tool exists, and their catalog is listed in the session's
-deferred-tool catalog. Core tools (`_HERMES_CORE_TOOLS`) never defer; a plugin
+deferred-tool catalog. Core tools (`_EV0_CORE_TOOLS`) never defer; a plugin
 tool is always eligible. This is the Footprint Ladder's plugin rung working as
 intended — zero always-on schema cost on turns 3V0 doesn't query its store —
 and the same posture as the `project_*` tools. Reach it via
@@ -336,7 +336,7 @@ and the same posture as the `project_*` tools. Reach it via
 
 1. **Write half (not yet).** The tool is read-only. The own-evolution loop's
    *decision* actuator — a store-first write/record tool that replaces the
-   Hermes background-review fork's role — is the next stone, and builds on this
+   3V0 background-review fork's role — is the next stone, and builds on this
    read surface.
 2. **Rung reconsideration.** If the store query proves to be used constantly,
    the plugin-rung deferral (3 extra round-trips) may justify a companion skill
@@ -364,7 +364,7 @@ process, or both. Settled as **hybrid, in two sequenced stones**:
   cannot.
 - **Stone 7 (next): the 3V0-owned review process** — the decision *driver*. A
   scheduled/idle-triggered loop that consumes the read + write tools to review
-  recent sessions and make store-first decisions, replacing the Hermes
+  recent sessions and make store-first decisions, replacing the 3V0
   background-review fork's *role* as the autonomous post-turn reviewer.
 
 Why this ordering, and not tool-only or process-only:
@@ -399,7 +399,7 @@ Why this ordering, and not tool-only or process-only:
   is a direct actuator: a refusal surfaces as a JSON error the agent can see
   and correct.
 - **Skill axis out of scope here.** A store-first *skill* decision would mean
-  inverting the bridge (store → SKILL.md, the operational files Hermes loads),
+  inverting the bridge (store → SKILL.md, the operational files 3V0 loads),
   which is a separate, larger question. Skills keep their existing path
   (`skill_manage` → bridge → store); `threev0_record` covers memory only.
 
@@ -417,8 +417,8 @@ live next session (same constraint the read half hit).
 ### Open questions
 
 1. **Stone 7 — the driver.** The scheduled/idle-triggered review process that
-   consumes these two tools and replaces the Hermes fork's role. Includes the
-   decision of whether/when to disable the Hermes background-review fork (a
+   consumes these two tools and replaces the 3V0 fork's role. Includes the
+   decision of whether/when to disable the 3V0 background-review fork (a
    runtime config change, not a body-repo change) once 3V0's own driver has
    proven itself.
 2. **Store-first skill decisions.** Whether the skill store should ever become
@@ -448,7 +448,7 @@ Does the 3v0 profile even have a scheduler ticking in TUI-only use? **No.**
 - The gateway process runs the *default* profile, not 3v0.
 
 Conclusion: in TUI-only use (3V0's primary mode today), the **only**
-autonomous post-turn machinery that fires is the Hermes background-review fork
+autonomous post-turn machinery that fires is the 3V0 background-review fork
 (in-process, per turn). Cron and the curator are both dormant.
 
 ### The trigger fork — settled
@@ -475,7 +475,7 @@ wins on freshness.
 
 ### Accepted tradeoffs (honest, not hidden)
 
-- **Cadence drops from per-turn to per-session.** The Hermes fork saves
+- **Cadence drops from per-turn to per-session.** The 3V0 fork saves
   memory/skills after every turn; a session-end review saves once per session.
   Memory made mid-session is not reviewed until the session closes.
 - **Best-effort by construction.** `on_session_end` often fires on the crash
@@ -486,7 +486,7 @@ wins on freshness.
 
 ### The fork-disable decision — SEPARATE, LATER, EXPLICIT (operator's call)
 
-Turning off the Hermes background-review fork is **not** part of this
+Turning off the 3V0 background-review fork is **not** part of this
 settlement. It is a runtime config change to the operator's environment with
 two consequences that must be surfaced explicitly, not folded in:
 
@@ -534,7 +534,7 @@ proven, then ask the operator explicitly, with the skills gap on the table.
   `record.py --json --write` (the `threev0_record` backend; refusals — invalid
   kinds, `§` guard, unknown ids — are counted, never crash) → append an
   auditable jsonl entry. Decisions are capped at 3; the charter biases hard
-  toward no-op. Memory axis only — skills stay on the Hermes path.
+  toward no-op. Memory axis only — skills stay on the 3V0 path.
 - **The hook** — `native-store-bridge` v0.5.0 registers `on_session_end`; the
   callback spawns the driver as a detached subprocess
   (`start_new_session=True`, devnull stdio) and returns immediately. Env:
@@ -542,14 +542,14 @@ proven, then ask the operator explicitly, with the skills gap on the table.
   `THREEV0_REVIEW=0` is the kill switch. The hook is live from the **next
   gateway/TUI start** (plugin discovery runs at gateway start; the running
   gateway keeps the v0.4.0 plugin until restarted).
-- **Review log** — `~/.hermes/profiles/3v0/3v0_reviews/reviews.jsonl` (runtime
+- **Review log** — `~/.3V0/profiles/3v0/3v0_reviews/reviews.jsonl` (runtime
   artifact, outside the body repo; env-overridable for tests): session_id,
   timestamp, source, model, summary, decisions_requested/applied/refused.
   A driver run-log (`run.log`) sits beside it for diagnostics.
 
 **Degradation contract (unchanged from the settlement):** best-effort — any
 driver failure is a log entry; the wake-time `sync.py --write` remains the
-backstop. Cadence is per-session (the Hermes fork keeps its per-turn role;
+backstop. Cadence is per-session (the 3V0 fork keeps its per-turn role;
 skills keep flowing through it).
 
 **Idle/interval throttle — settled for v1:** no idle concept at session end;
@@ -566,7 +566,7 @@ both facts carrying `source="session-review"`) plus one preference record,
 and a clean log entry.
 
 **Still open (unchanged, explicit):**
-- **Fork-disable** — separate, later, operator's call. Leave the Hermes
+- **Fork-disable** — separate, later, operator's call. Leave the 3V0
   background-review fork ON until 3V0's driver is proven in the wild.
 - **Store-first skill decisions** — still out of scope; `threev0_record` is
   memory-only.
@@ -575,10 +575,10 @@ and a clean log entry.
 
 ## Direction 3 / Stone 8 — store-first skill decisions (built + live-E2E-verified)
 
-Stone 7 closed the *process* but left the skill axis on the Hermes path: the
+Stone 7 closed the *process* but left the skill axis on the 3V0 path: the
 review driver and `threev0_record` were memory-only, so a store-first *skill*
 write did not exist — and that was the precondition for ever disabling the
-Hermes fork (skill saving would stop entirely). Stone 8 closes it, mirroring
+3V0 fork (skill saving would stop entirely). Stone 8 closes it, mirroring
 the memory axis exactly.
 
 ### What was built
@@ -637,7 +637,7 @@ the memory axis exactly.
 
 **Still open (unchanged, explicit):**
 - **Fork-disable** — now *unblocked*: a store-first skill write path exists,
-  so disabling the Hermes background-review fork would no longer orphan skill
+  so disabling the 3V0 background-review fork would no longer orphan skill
   evolution. Still the operator's explicit call, after 3V0's driver has proven
   itself in the wild.
 
@@ -645,10 +645,10 @@ the memory axis exactly.
 
 ## Direction 4 / Stone 9 — the own clock (built + live + deployed)
 
-Direction 4 is the frontier: "Hermes recedes to a runtime 3V0 runs on." Its
+Direction 4 is the frontier: "3V0 recedes to a runtime 3V0 runs on." Its
 opening stone is not a full runtime (reimplementing the agent loop would break
 the "don't over-engineer" invariant) — it is **own initiative**: a 3V0-owned,
-Hermes-independent process that reviews on 3V0's own schedule.
+3V0-independent process that reviews on 3V0's own schedule.
 
 ### What was built
 
@@ -686,7 +686,7 @@ the exception — the hook's reviews had been failing silently since go-live:
    `finish_reason` and advances to the next attempt.
 
 2. **Temporal regression (the serious one).** The reviewer superseded a correct
-   fact ("axiom-agent: sovereign on stock Hermes") with stale content ("TS fork
+   fact ("axiom-agent: sovereign on stock 3V0") with stale content ("TS fork
    of Prime Agent") because it reviewed a session that *predated* the fact
    (ended ~18 min before the fact was recorded). An own-clock draining old
    backlog sessions would systematically revert newer facts. Fix: **the
@@ -792,7 +792,7 @@ test fixture), or a lookup error must never block a legitimate 3V0 write.
   versions is the remaining regression surface for the own-clock.
 - **Per-project reviewers/daemons** — F1NANCE/Axiom sessions are still simply
   skipped until they get their own reviewers (F1NANCE already has
-  `~/.hermes/profiles/f1nance`; moving them onto their own profiles is the
+  `~/.3V0/profiles/f1nance`; moving them onto their own profiles is the
   longer-term clean fix, per the handoff).
 
 ## Stone 11 — skill-axis temporal guard (built + tested)
@@ -838,12 +838,12 @@ The fix mirrors the memory guard exactly:
   profile; the *store* mirror is scoped (Stone 10), but sibling `memory`-tool
   writes still land in the shared MEMORY.md directly. The clean fix is moving
   siblings onto their own profiles (F1NANCE already has
-  `~/.hermes/profiles/f1nance`).
+  `~/.3V0/profiles/f1nance`).
 
 ## Stone 12 — fork-disable readiness: drain, retry, full-capture, cwd fix, off-switch
 
 The operator asked whether 3V0 is ready to cut off the fork (disable the
-Hermes per-turn background-review fork, move to exclusive 3V0-owned review).
+3V0 per-turn background-review fork, move to exclusive 3V0-owned review).
 Answer: **not yet** — but this stone closes the operational gaps, fixes the
 latent bug that was quietly blocking the reviewer, and finds the off-switch.
 The fork stays ON; the cut remains the operator's call.
@@ -899,7 +899,7 @@ The fork is triggered by two per-turn counters, both config-driven (read via
 - skill fork — `skills.creation_nudge_interval` → `_skill_nudge_interval` →
   `_should_review_skills` (`agent/turn_finalizer.py:742`).
 
-**To cut the fork, set both to 0 in `~/.hermes/profiles/3v0/config.yaml`:**
+**To cut the fork, set both to 0 in `~/.3V0/profiles/3v0/config.yaml`:**
 
 ```yaml
 memory:
@@ -910,7 +910,7 @@ skills:
 
 This disables ONLY the review fork — the `memory` tool and `skill_manage`
 stay fully functional (they are gated by `memory_enabled`/`_memory_store` and
-the skills toolset, not the nudge intervals). Config-only (survives `hermes
+the skills toolset, not the nudge intervals). Config-only (survives `3v0
 update`), reversible (set back to 10), and fail-open in the safe direction
 (a renamed key → `.get` returns 10 → the fork turns back on, the current
 baseline). Takes effect on the next TUI/gateway start.
@@ -940,8 +940,8 @@ baseline). Takes effect on the next TUI/gateway start.
 Stone 12 found the off-switch; this session flipped it. The operator delegated
 the call ("do what you think is best"); the cut was verified end-to-end before
 and after. Both `memory.nudge_interval` and `skills.creation_nudge_interval`
-are now `0` in `~/.hermes/profiles/3v0/config.yaml` (set via `hermes config
-set` — config-only, reversible to 10). The Hermes per-turn background-review
+are now `0` in `~/.3V0/profiles/3v0/config.yaml` (set via `3v0 config
+set` — config-only, reversible to 10). The 3V0 per-turn background-review
 fork no longer spawns; the own-clock daemon `3v0-review.service` is the sole
 memory/skill writer. Store-first supersession recorded the stale "fork still
 on" facts. The kickoff verification (next session's wake): both intervals
@@ -988,7 +988,7 @@ unhealed until the next session's wake, which may not come for days.
 - **Per-project reviewers/daemons** — F1NANCE/Axiom sessions are still
   skipped until they get their own reviewers/profiles (the operator's
   per-project-stores decision; F1NANCE already has
-  `~/.hermes/profiles/f1nance`).
+  `~/.3V0/profiles/f1nance`).
 - **Profile MEMORY.md sharing** — sibling `memory`-tool writes still land in
   the shared profile's MEMORY.md; the clean fix is moving siblings onto their
   own profiles.
@@ -1006,7 +1006,7 @@ its own reviewer/daemon so those stores actually get written.
 
 - **Store-only.** `record.py`/`sync.py` *replace* the whole MEMORY.md/USER.md
   from the store, so a sibling reviewer must never project into a sibling's
-  own profile — F1NANCE's `~/.hermes/profiles/f1nance/memories/` is F1NANCE's
+  own profile — F1NANCE's `~/.3V0/profiles/f1nance/memories/` is F1NANCE's
   namespace and would be clobbered. Sibling facts are written to
   `3v0/data/<project>/memory.json` only (3V0's *sidecar record* of the
   sibling), via a new `record.py --no-export`.
@@ -1062,7 +1062,7 @@ its own reviewer/daemon so those stores actually get written.
 ### Known limitation (accepted, not fixed)
 
 Sibling reviewers capture **operator-global** facts that surface in a sibling
-session (e.g. the shared Hermes `tsc` terminal-guard quirk, GitHub-auth setup)
+session (e.g. the shared 3V0 `tsc` terminal-guard quirk, GitHub-auth setup)
 into the sibling's sidecar store. They're true, durable, and not lost; a future
 stone could route such facts to the primary store, but cross-store dedup isn't
 worth it now.
@@ -1071,7 +1071,7 @@ worth it now.
 
 - **Profile MEMORY.md sharing** — sibling `memory`-tool writes still land in
   the shared profile's MEMORY.md. Axiom now has its own profile too
-  (`~/.hermes/profiles/axiom`, created 2026-08-16, alongside F1NANCE's), so the
+  (`~/.3V0/profiles/axiom`, created 2026-08-16, alongside F1NANCE's), so the
   profile-per-sibling precondition is met; the *routing* is the remaining gap
   (below).
 - **Sibling foreground write mirror** — the bridge's `_is_threev0_cwd` gate
@@ -1091,9 +1091,9 @@ Stone 15 built the per-project *reviewers*; this stone built the per-project
 
 ### The drift problem (precise)
 
-Three Hermes hardforks developed in parallel drift in three ways:
+Three 3V0 hardforks developed in parallel drift in three ways:
 
-1. **Code drift** — each fork diverges from upstream Hermes and from the
+1. **Code drift** — each fork diverges from upstream 3V0 and from the
    others; some divergence is deliberate (typed deltas), some accidental
    (missed upstream merge, a shared fix applied in only one fork).
 2. **State drift** — the same decision/fact recorded differently (or not at
@@ -1105,11 +1105,11 @@ Drift is *silent* unless the architecture makes it visible.
 
 ### The meta: "one spine, N typed deltas, one ledger, one clock"
 
-1. **Spine (anchor).** All projects fork Hermes `main`; every project merges
+1. **Spine (anchor).** All projects fork 3V0 `main`; every project merges
    `upstream` on a cadence. Divergence from upstream is a *deliberate,
    recorded* delta (3V0's `3v0/` core, Axiom's spend cap, F1NANCE's finance
    layer) — never accidental. Code drift is bounded by the merge ritual:
-   "differs from Hermes" is always an explicit named diff, so accidental
+   "differs from 3V0" is always an explicit named diff, so accidental
    drift reduces to "missed a merge", which the ledger (below) catches.
 2. **Ledger (position).** One file records each project's position: HEAD,
    upstream-merge point, delta list, open loops, store head. Stone 15's
@@ -1119,7 +1119,7 @@ Drift is *silent* unless the architecture makes it visible.
    visible diff against it.
 3. **Terminal (isolation).** Each project runs in an isolated context: strict
    cwd (its repo), own profile (`3v0`/`f1nance`/`axiom` — all now exist),
-   clean env (the `HERMES_*`/`PYTHONPATH` leak-strip built this session — the
+   clean env (the `EV0_*`/`PYTHONPATH` leak-strip built this session — the
    Axiom `max_run_cost_usd` fix). "Separate terminals" = separate sessions /
    subagents, each pinned to one project; 3V0 is the orchestrator and writes
    results back to the ledger.
@@ -1135,7 +1135,7 @@ Drift is *silent* unless the architecture makes it visible.
 
 **Project-agnostic by design.** Onboarding a project is *data*, never code: a
 ledger entry records `name` / `repo` / `upstream` / `delta` plus optional
-Hermes-hardfork fields (`profile`, `store`, `skill_store`). The three known
+3V0-hardfork fields (`profile`, `store`, `skill_store`). The three known
 projects (3V0, F1NANCE, Axiom) are seed entries; any git repo with an upstream
 is onboardable. 3V0's multi-project capability applies to *any* project, not
 this specific trio.
@@ -1178,7 +1178,7 @@ this specific trio.
   drift; a pinned/deliberate hardfork reports behind/ahead as informational
   only. (Axiom was the standing counterexample before its restart.)
 - **Axiom is mid restart-from-scratch (2026-08-16).** Its entry records the
-  TARGET — Hermes-latest commit as base, plus curated best-of from
+  TARGET — 3V0-latest commit as base, plus curated best-of from
   deepseek-harness / grok build / prime-agent — with `track_upstream: true`
   and an open loop to finalize once the restart lands. Until then its git repo
   still holds the old lineage, so its drift signal is provisional.
@@ -1188,7 +1188,7 @@ this specific trio.
 
 ### Still open (decided later, not this stone)
 
-- The physical "terminal" mechanism — separate `hermes -p <profile> --tui`
+- The physical "terminal" mechanism — separate `3v0 -p <profile> --tui`
   sessions vs `delegate_task` subagents vs background terminals. The ledger is
   agnostic; decide by usage.
 - Whether drift is *auto-reconciled* (auto-merge upstream) or only *flagged*.
@@ -1449,7 +1449,7 @@ code-review → tdd.
 
 ## Stone 19 — self-analytics (own metrics)
 
-Direction 4 deepens: *measure before you improve*. Hermes already logs the raw
+Direction 4 deepens: *measure before you improve*. 3V0 already logs the raw
 data (sessions, messages, `session_model_usage`), but nothing aggregates it
 into owned insight — so 3V0 was flying blind on cost, tool reliability, and
 burn. `core/analytics.py` (pure) + `scripts/analytics.py` (reads `state.db`,
@@ -1458,7 +1458,7 @@ per-tool frequency/latency/success, per-model tokens/cost, per-day burn, and
 body-health (compression/rewinds/end-reasons).
 
 Decisions:
-- **Reuse, don't rebuild.** Hermes already logs tokens/cost and per-message
+- **Reuse, don't rebuild.** 3V0 already logs tokens/cost and per-message
   tool metadata; the stone is *aggregation*, not new logging.
 - **Classify by envelope, not content.** Tool success reads the JSON result
   envelope (`success` / `exit_code` / `error` / leading-error text), never
@@ -1805,26 +1805,26 @@ no skill analogue — the skill axis matches by name + content equality).
 
 ## Stone N1 — Native runtime: LLM client (3v0/native/)
 ```
-3v0/native/  = the hermes-independent runtime package (stdlib-only, zero `import hermes`)
+3v0/native/  = the 3v0-independent runtime package (stdlib-only, zero `import 3v0`)
   llm.py     = direct Fireworks Chat Completions client (urllib, no SDK)
 ```
-PROVED: `python3 3v0/native/llm.py` -> `NATIVE_3V0_OK` (real completion, zero Hermes).
+PROVED: `python3 3v0/native/llm.py` -> `NATIVE_3V0_OK` (real completion, zero 3V0).
 Realtime bug fixed: Cloudflare `error 1010` blocks urllib's default `Python-urllib/3.x`
 User-Agent — send a real UA. Also: flash is a reasoning model; small `max_tokens`
 budgets return empty `content` (reasoning eats the budget) — keep it >=256.
-Nominal target: memory -> own evolution loop -> own tools -> Hermes recedes; run on self.
+Nominal target: memory -> own evolution loop -> own tools -> 3V0 recedes; run on self.
 ## Stone N2 — Native agent loop (3v0/native/agent.py + context.py)
 ```
 agent.py    = respond(messages) -> build context from SOUL+memory -> own llm -> reply
 context.py  = pure: read_soul / read_active_memories / build_system (budget-trimmed)
 ```
-PROVED: `PYTHONPATH=. python3 -m native.agent` -> real identity answer, ZERO hermes.
+PROVED: `PYTHONPATH=. python3 -m native.agent` -> real identity answer, ZERO 3v0.
 Real bug found by honest execution (test caught it, my re-reading missed it twice):
 `facts = data if isinstance(data,list) else {}` shadows `facts`, so the next line
 did `facts.get("facts")` on the EMPTY dict -> always []. Name-shadowing class.
 ## Stone N3 — Native tool registry (3v0/native/tools.py)
 ```
-tools.py = the loop's hands, stdlib-only, zero Hermes:
+tools.py = the loop's hands, stdlib-only, zero 3V0:
   read_file / write_file   rooted inside repo+profile; secret paths (.env/.pem/wallet) DENIED
   run_script               run native scripts under 3v0/scripts/ by validated name
   run_terminal             denylisted: gateway lifecycle, self-kill, rm -rf /, system-path writes
@@ -1836,17 +1836,17 @@ Safety-first class: the exact risk that stranded the agent earlier is denied in
 the FIRST version, not retrofitted.
 ## Stone N4 — Native Telegram gateway (3v0/native/gateway.py)
 ```
-gateway.py  = stdlib-only Bot API long-poll, zero Hermes:
+gateway.py  = stdlib-only Bot API long-poll, zero 3V0:
   get_me              safe identity probe (consumes no updates)
   get_updates         allowed_updates=['message'], long-poll timeout, offset ack
   send_message        chat_id + text
   run_forever(handler) loop paces itself (idle sleep); testing bounds via sleep->Stop
 ```
 PROVED live: `python3 -m native.gateway` -> getMe returned the real bot identity
-(username/id/perms) -- token + client verified, ZERO Hermes.
-SAFETY GUARD: never start a SECOND poller on the live bot while the Hermes
+(username/id/perms) -- token + client verified, ZERO 3V0.
+SAFETY GUARD: never start a SECOND poller on the live bot while the 3V0
 gateway is active (two getUpdates consumers steal each update). N5 wires the
-full native loop to this gateway and tests end-to-end WITHOUT disturbing Hermes.
+full native loop to this gateway and tests end-to-end WITHOUT disturbing 3V0.
 ## Stone N5 — Native engine (3v0/native/engine.py) — the full stack composed
 ```
 engine.py = one handler: message -> allowed-user gate -> context(SOUL+memory)
@@ -1854,10 +1854,10 @@ engine.py = one handler: message -> allowed-user gate -> context(SOUL+memory)
             "tools" (list) and "exec <script> [args]" (via tools registry).
 server() = gateway.run_forever(handler) — the cutover entry point, NOT started.
 ```
-PROVED live (one-shot, captured not posted, zero Hermes): real model answered
+PROVED live (one-shot, captured not posted, zero 3V0): real model answered
 "Who are you?" with correct identity + home-channel target. End-to-end message
 -> context -> LLM -> reply, WITHOUT starting a second getUpdates poll or posting.
-SAFETY: a second live poller would steal the Hermes gateway's updates — that is
+SAFETY: a second live poller would steal the 3V0 gateway's updates — that is
 why the proof captures instead of posting, and server() only runs at cutover.
 Full test count: 432 green.
 ## Stone N6 (STAGED, not fired) — reversible cutover readied
@@ -1867,7 +1867,7 @@ native/run.py  = serve() entrypoint; refuses to auto-start unless THREEV0_SERVE=
                  fire criteria. The switch itself is operator-triggered, not fired.
 ```
 Decision (operator: "do what you think is best"): stage the cutover ready instead
-of firing it. Hard rule: no second getUpdates poller on the live bot while Hermes
+of firing it. Hard rule: no second getUpdates poller on the live bot while 3V0
 polls (two consumers steal each update). The live flip stays a conscious,
 reversible, documented operator action -- per the reload_gateway lesson.
 ## Probe v0.1 -> v0.2 (independent review 2026-08-18: ML / psych / software-eng)

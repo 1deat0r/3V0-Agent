@@ -1,6 +1,6 @@
-"""Map Hermes memory-tool operations onto the native store.
+"""Map 3V0 memory-tool operations onto the native store.
 
-The Hermes ``memory`` tool writes MEMORY.md / USER.md directly; the bridge
+The 3V0 ``memory`` tool writes MEMORY.md / USER.md directly; the bridge
 replays those same add/replace/remove operations against the native store so
 the store stays the canonical origin and the profile remains a derived view.
 
@@ -56,7 +56,7 @@ def apply_ops(
         if not isinstance(op, dict):
             continue
         action = op.get("action")
-        # The Hermes memory tool accepts `new_text` as an alias for `content`
+        # The 3V0 memory tool accepts `new_text` as an alias for `content`
         # (both in the single-op and batch `operations` shapes). Honor both so
         # a `replace`/`add` carrying the alias is not silently dropped (which
         # would degrade to a duplicate at the next wake sync).

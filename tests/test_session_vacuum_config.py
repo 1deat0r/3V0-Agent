@@ -28,7 +28,7 @@ def test_cli_auto_maintenance_forwards_vacuum_interval(monkeypatch, tmp_path: Pa
             }
         },
     )
-    monkeypatch.setattr(ev0_constants, "get_hermes_home", lambda: tmp_path)
+    monkeypatch.setattr(ev0_constants, "get_ev0_home", lambda: tmp_path)
 
     cli._run_state_db_auto_maintenance(session_db)
 

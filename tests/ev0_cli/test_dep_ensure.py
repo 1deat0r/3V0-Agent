@@ -75,7 +75,7 @@ def test_find_agent_browser_lazy_install_cycle_terminates(monkeypatch):
     monkeypatch.setattr(shutil, "which", lambda *a, **k: None)
     monkeypatch.setattr(bt, "_resolve_npx_bin", lambda: None)
     monkeypatch.setattr(dep_ensure, "_has_system_browser", lambda: False)
-    monkeypatch.setattr(dep_ensure, "_has_hermes_agent_browser", lambda: False)
+    monkeypatch.setattr(dep_ensure, "_has_ev0_agent_browser", lambda: False)
     monkeypatch.setattr(dep_ensure, "_find_install_script", lambda *a, **k: (None, None))
 
     real_find_agent_browser = bt._find_agent_browser
@@ -110,7 +110,7 @@ def test_ensure_dependency_uses_powershell_on_windows(tmp_path):
     with patch("ev0_cli.dep_ensure._DEP_CHECKS", {"node": lambda: False}), \
          patch("ev0_cli.dep_ensure._find_install_script", return_value=(scripts_dir / "install.ps1", "powershell")), \
          patch("ev0_cli.dep_ensure.shutil") as mock_shutil, \
-         patch("ev0_constants.get_hermes_home", return_value=tmp_path / "fakehome"), \
+         patch("ev0_constants.get_ev0_home", return_value=tmp_path / "fakehome"), \
          patch("subprocess.run") as mock_run, \
          patch("sys.stdin") as mock_stdin:
         mock_shutil.which.side_effect = lambda name: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" if name == "powershell" else None
@@ -121,5 +121,5 @@ def test_ensure_dependency_uses_powershell_on_windows(tmp_path):
         assert "powershell" in cmd[0].lower()
         assert "-Ensure" in cmd
         assert cmd[cmd.index("-Ensure") + 1] == "node"
-        assert "-HermesHome" in cmd
+        assert "-Ev0Home" in cmd
         assert str(tmp_path / "fakehome") in cmd

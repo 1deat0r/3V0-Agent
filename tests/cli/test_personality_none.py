@@ -15,10 +15,10 @@ import yaml
 class TestCLIPersonalityNone:
 
     def _make_cli(self, personalities=None):
-        from cli import HermesCLI
+        from cli import Ev0CLI
         from ev0_cli.personality import available_personalities
 
-        cli = HermesCLI.__new__(HermesCLI)
+        cli = Ev0CLI.__new__(Ev0CLI)
         user = personalities or {
             "helpful": "You are helpful.",
             "concise": "You are concise.",
@@ -97,11 +97,11 @@ class TestGatewayPersonalityNone:
 
     def _gateway_env(self, tmp_path):
         # The gateway reads via _load_gateway_config (rooted at
-        # gateway.run._hermes_home) and persists via persist_personality
-        # (rooted at HERMES_HOME) — point both at the same tmp dir.
+        # gateway.run._ev0_home) and persists via persist_personality
+        # (rooted at EV0_HOME) — point both at the same tmp dir.
         return (
-            patch("gateway.run._hermes_home", tmp_path),
-            patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}),
+            patch("gateway.run._ev0_home", tmp_path),
+            patch.dict(os.environ, {"EV0_HOME": str(tmp_path)}),
         )
 
     @pytest.mark.asyncio
@@ -184,10 +184,10 @@ class TestPersonalityDictFormat:
     """Test dict-format custom personalities with description, tone, style."""
 
     def _make_cli(self, personalities):
-        from cli import HermesCLI
+        from cli import Ev0CLI
         from ev0_cli.personality import available_personalities
 
-        cli = HermesCLI.__new__(HermesCLI)
+        cli = Ev0CLI.__new__(Ev0CLI)
         cli.config = {"agent": {"personalities": personalities}}
         cli.personalities = available_personalities(cli.config)
         cli.system_prompt = ""
@@ -226,14 +226,14 @@ class TestPersonalityDictFormat:
         assert cli.system_prompt == "You are helpful."
 
     def test_resolve_prompt_dict_no_tone_no_style(self):
-        from cli import HermesCLI
-        result = HermesCLI._resolve_personality_prompt({
+        from cli import Ev0CLI
+        result = Ev0CLI._resolve_personality_prompt({
             "description": "A helper",
             "system_prompt": "You are helpful.",
         })
         assert result == "You are helpful."
 
     def test_resolve_prompt_string(self):
-        from cli import HermesCLI
-        result = HermesCLI._resolve_personality_prompt("You are helpful.")
+        from cli import Ev0CLI
+        result = Ev0CLI._resolve_personality_prompt("You are helpful.")
         assert result == "You are helpful."

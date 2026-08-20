@@ -46,7 +46,7 @@ def _api_key() -> str:
     key = os.environ.get("BITDEER_API_KEY")
     if key:
         return key
-    dotenv = Path("~/.hermes/profiles/3v0/.env").expanduser()
+    dotenv = Path("~/.3V0/profiles/3v0/.env").expanduser()
     try:
         for raw in dotenv.read_text(encoding="utf-8").splitlines():
             line = raw.strip()

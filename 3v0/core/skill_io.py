@@ -1,7 +1,7 @@
 """Shared skill-file I/O for the 3v0 skill axis.
 
-Locating, writing, and removing SKILL.md files in the Hermes profile's skills
-directory. The profile directory is the *operational* system (Hermes loads
+Locating, writing, and removing SKILL.md files in the 3V0 profile's skills
+directory. The profile directory is the *operational* system (3V0 loads
 skills from it); the native skill store is the canonical record. These helpers
 are the single place that knows how to map a skill name -> SKILL.md path and
 content, shared by ``seed_skills.py`` (baseline), ``ingest_skills.py``
@@ -19,25 +19,25 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-# Fallback when neither THREEV0_SKILLS_DIR nor HERMES_HOME resolves (the 3v0
-# profile's skills dir). The runtime subprocess inherits HERMES_HOME, so this is
+# Fallback when neither THREEV0_SKILLS_DIR nor EV0_HOME resolves (the 3v0
+# profile's skills dir). The runtime subprocess inherits EV0_HOME, so this is
 # only a last resort for direct CLI use outside a profile.
-DEFAULT_PROFILE = Path.home() / ".hermes" / "profiles" / "3v0" / "skills"
+DEFAULT_PROFILE = Path.home() / ".3V0" / "profiles" / "3v0" / "skills"
 
 
 def profile_skills_dir() -> Path:
     """The active profile's skills directory.
 
     Honors ``THREEV0_SKILLS_DIR`` (tests / explicit override) first, then
-    ``HERMES_HOME/skills`` (the runtime's profile), then the 3v0 profile
+    ``EV0_HOME/skills`` (the runtime's profile), then the 3v0 profile
     default.
     """
     env = os.environ.get("THREEV0_SKILLS_DIR")
     if env:
         return Path(env).expanduser()
-    hermes_home = os.environ.get("HERMES_HOME")
-    if hermes_home:
-        return Path(hermes_home).expanduser() / "skills"
+    ev0_home = os.environ.get("EV0_HOME")
+    if ev0_home:
+        return Path(ev0_home).expanduser() / "skills"
     return DEFAULT_PROFILE
 
 

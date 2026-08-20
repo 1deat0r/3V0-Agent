@@ -16,12 +16,12 @@ def _context(name: str = "notify-plugin") -> tuple[PluginContext, PluginManager]
 
 
 def _write_plugin_config(tmp_path, monkeypatch, entry: dict) -> None:
-    hermes_home = tmp_path / "hermes"
-    hermes_home.mkdir()
-    (hermes_home / "config.yaml").write_text(
+    ev0_home = tmp_path / "3v0"
+    ev0_home.mkdir()
+    (ev0_home / "config.yaml").write_text(
         yaml.safe_dump({"plugins": {"entries": {"notify-plugin": entry}}})
     )
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
 
 def test_cli_idle_injection_keeps_existing_queue_behaviour():

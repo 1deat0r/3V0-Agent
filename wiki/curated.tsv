@@ -1,19 +1,19 @@
 run_agent.py	source	manual	AIAgent class — the core synchronous conversation loop (model calls, tool dispatch, budget, interrupts)	Everything talks to a model through this loop; the narrow waist of the whole system	model_tools.py;cli.py;agent/conversation_loop.py;agent/prompt_builder.py
-cli.py	source	manual	HermesCLI — interactive CLI orchestrator (prompt_toolkit + Rich), slash commands, session management	The primary human-facing surface; hosts command dispatch and config loading	for shell_commands: ev0_cli/commands.py;ev0_cli/config.py;ev0_cli/main.py;run_agent.py
+cli.py	source	manual	Ev0CLI — interactive CLI orchestrator (prompt_toolkit + Rich), slash commands, session management	The primary human-facing surface; hosts command dispatch and config loading	for shell_commands: ev0_cli/commands.py;ev0_cli/config.py;ev0_cli/main.py;run_agent.py
 batch_runner.py	source	manual	Parallel batch task runner driving many AIAgent sessions	Runs offline jobs/campaigns against the same core loop without a live TTY	run_agent.py;tests/run_agent
 trajectory_compressor.py	source	manual	Context compression / trajectory compaction service for long conversations	Prevents prompt-cache breakage and context overflow on long sessions; the one allowed mid-conversation context mutation	agent/context_compressor.py;agent/native_compaction.py;agent/conversation_compression.py
 utils.py	source	manual	Shared utilities (paths, JSON, file atomics, misc helpers)	Common helpers used repo-wide; keep dependency-free	ev0_constants.py;ev0_logging.py
-ev0_bootstrap.py	source	manual	Early-boot module that applies profile override and seeds environment before other imports	Runs before everything so HERMES_HOME / profile routing is correct at import time	ev0_constants.py;ev0_cli/main.py
+ev0_bootstrap.py	source	manual	Early-boot module that applies profile override and seeds environment before other imports	Runs before everything so EV0_HOME / profile routing is correct at import time	ev0_constants.py;ev0_cli/main.py
 model_tools.py	source	manual	Tool orchestration hub — discover_builtin_tools, get_tool_definitions, handle_function_call, toolset assembly	Every model tool ships through here per API call; the footprint-ladder choke point	tools/registry.py;toolsets.py;run_agent.py
-toolsets.py	source	manual	TOOLSETS dict — named tool bundles + _HERMES_CORE_TOOLS default	Defines which tools each platform/base exposes; the schema-gating wedge	model_tools.py;tools/registry.py
+toolsets.py	source	manual	TOOLSETS dict — named tool bundles + _EV0_CORE_TOOLS default	Defines which tools each platform/base exposes; the schema-gating wedge	model_tools.py;tools/registry.py
 toolset_distributions.py	source	manual	Per-platform toolset enablement matrix + distribution rules	Maps platform -> base toolset with config-gated additions	platforms use: toolsets.py;gateway/platform_registry.py
 ev0_state.py	source	manual	SessionDB — the SQLite session store (FTS5 search, project/session records)	Canonical session persistence backing resume/search/desktop; god-file, split across ev0_state_* siblings	ev0_state_schema.py;ev0_state_search.py;ev0_state_common.py;ev0_state_portability.py
 ev0_state_schema.py	source	manual	SQLite schema definitions + migrations for the session store	Keeps the DB schema versioned and migratable	ev0_state.py
 ev0_state_search.py	source	manual	FTS5 search layer over the session store	Powers /search and session picker; SQLite-side, no external indexer	ev0_state.py
 ev0_state_common.py	source	manual	Shared helpers for the session store family (types, paths, common queries)	Avoids circular imports between ev0_state and its satellites	ev0_state.py;ev0_state_portability.py
 ev0_state_portability.py	source	manual	Portability/backup layer for session stores (export, import, relocation)	Lets sessions survive profile moves and installs	moves: ev0_state.py;ev0_constants.py
-ev0_constants.py	source	manual	get_hermes_home() / display_hermes_home() — profile-aware path resolution	Every state path in the body resolves through here; hardcoding ~/.hermes elsewhere is a known-bug class	ev0_logging.py;ev0_bootstrap.py;tests/ev0_cli/test_profiles.py
-ev0_logging.py	source	manual	setup_logging() — agent.log / errors.log / gateway.log (profile-aware)	All logs land per-profile via HERMES_HOME; browse with hermes logs	ev0_constants.py;gateway/run.py
+ev0_constants.py	source	manual	get_ev0_home() / display_ev0_home() — profile-aware path resolution	Every state path in the body resolves through here; hardcoding ~/.3V0 elsewhere is a known-bug class	ev0_logging.py;ev0_bootstrap.py;tests/ev0_cli/test_profiles.py
+ev0_logging.py	source	manual	setup_logging() — agent.log / errors.log / gateway.log (profile-aware)	All logs land per-profile via EV0_HOME; browse with 3v0 logs	ev0_constants.py;gateway/run.py
 ev0_time.py	source	manual	Time helpers (UTC stamps, duration parsing)	Consistent time handling across scheduler/cron/session code	cron/scheduler.py;ev0_constants.py
 mcp_serve.py	source	manual	MCP server mode — expose the agent as an MCP host/server	Lets external MCP clients drive the agent; catalog + client bridging lives in tools/mcp_tool.py	tools/mcp_tool.py;tools/setup_mcp_tool.py
 mini_swe_runner.py	source	manual	Minimal SWE-bench-style evaluator harness for the agent	Runs model patch-turns against task instances for offline evals	scripts/run_tests.sh;3v0/tests/
@@ -38,7 +38,7 @@ flake.nix	build	manual	Nix flake declaration	for nix-based dev environments	nix/
 .env.example	config	manual	Example secrets file (.env is for secrets ONLY)	Documentation of every credential the body can use; non-secrets belong in config.yaml	ev0_cli/config.py
 3v0/SOUL.md	doc	manual	The agent's soul — identity, values (honesty/judgment/sovereignty), prime directive	Anchors every coherence check and the wake gate; editing it is editing the self	3v0/CONTEXT.md;3v0/core/coherence.py;AGENTS.md
 3v0/CONTEXT.md	doc	manual	Standing context — who 3V0 is, what it knows, the operating narrative	Loaded into every session; the memory store's profile mirror	sync: 3v0/scripts/sync.py;3v0/data/memory.db
-3v0/CUTOVER.md	doc	manual	Migration record of the Hermes -> 3V0 cutover (renames, ev0_* identifiers)	Audit trail for the substrate rename; explains why files are named ev0_*	AGENTS.md;3v0/VERSION
+3v0/CUTOVER.md	doc	manual	Migration record of the 3V0 -> 3V0 cutover (renames, ev0_* identifiers)	Audit trail for the substrate rename; explains why files are named ev0_*	AGENTS.md;3v0/VERSION
 3v0/CONTINUITY.md	doc	manual	The continuity model — invariants the body must never break	Declarative spec for continuity_check; invariant source of truth	3v0/core/continuity.py;3v0/data/continuity/claims.json
 3v0/DECISION_MATRIX.md	doc	manual	Decision log — recorded architectural decisions and their rationale	Prevents repeating settled debates; the body's memory of its own choices	3v0/core/decide.py;3v0/DECISION_MATRIX.md peer: 3v0/CONTEXT.md
 3v0/EVOLUTION_LOOP.md	doc	manual	The evolution loop — how the agent improves itself and when it may	Governs safe self-modification (safe_evolve); pairs with EVOLUTION_PROBE	3v0/core/safe_evolve.py;3v0/EVOLUTION_PROBE.md
@@ -74,11 +74,11 @@ flake.nix	build	manual	Nix flake declaration	for nix-based dev environments	nix/
 3v0/core/analytics_collect.py	source	manual	Analytics collection (event capture into data/analytics)	Persists the metrics the rules evaluate	3v0/core/analytics.py;3v0/data/analytics
 3v0/core/insights.py	source	manual	Insight generation from analytics (MEDIUM/LOW findings + actions)	Turns metrics into actionable self-findings	3v0/scripts/insights.py;3v0/data/analytics/insights.json
 3v0/core/gitstate.py	source	manual	Git state helpers for the body (branch, dirty, lead)	The git invariant (always commit tracked changes) is enforced here	3v0/scripts/verify.sh;scripts/handoff_check.sh
-3v0/core/bridge.py	source	manual	Bridge to the Hermes profile — import/export between native store and profile	The store<->profile convergence seam (sync)	3v0/scripts/sync.py;3v0/core/profile_io.py
+3v0/core/bridge.py	source	manual	Bridge to the 3V0 profile — import/export between native store and profile	The store<->profile convergence seam (sync)	3v0/scripts/sync.py;3v0/core/profile_io.py
 3v0/core/profile_io.py	source	manual	Profile read/write primitives	for sync/export/seed flows	3v0/core/bridge.py;3v0/scripts/export_to_profile.py
 3v0/core/skills.py	source	manual	Native skill store model	Skills as first-class records in the store	3v0/core/skill_io.py;3v0/scripts/seed_skills.py
 3v0/core/skill_io.py	source	manual	Skill IO — SKILL.md parsing + store sync	Keeps skill store <-> SKILL.md consistent (a continuity invariant)	3v0/core/skills.py;3v0/scripts/sync_skills.py
-3v0/core/skill_bridge.py	source	manual	Skill bridge to the profile skill surface	Syncs skills.json/SKILL.md with Hermes	3v0/core/skill_io.py;3v0/scripts/sync_skills.py
+3v0/core/skill_bridge.py	source	manual	Skill bridge to the profile skill surface	Syncs skills.json/SKILL.md with 3V0	3v0/core/skill_io.py;3v0/scripts/sync_skills.py
 3v0/core/sync.py	source	manual	Store<->profile synchronization logic	The reconciliation half that sync.py script drives	3v0/scripts/sync.py;3v0/core/bridge.py
 3v0/core/sync_skills.py	source	manual	Skills reconciliation logic	The skills half of sync	3v0/scripts/sync_skills.py
 3v0/core/projects.py	source	manual	Projects ledger model (3 projects)	A continuity invariant leaves here; drill via drift_check	for 3v0/data/projects;3v0/core/drift.py
@@ -94,7 +94,7 @@ flake.nix	build	manual	Nix flake declaration	for nix-based dev environments	nix/
 3v0/scripts/discover.py	script	manual	Skill discovery probe runner	The probe loop (EVOLUTION_PROBE)	3v0/data/probe_bank_v1.json
 3v0/scripts/ingest.py	script	manual	Pipeline ingest — writes facts into the store via SQLStore.add	How the body records what it learns	3v0/core/store.py;3v0/core/memory.py
 3v0/scripts/ingest_skills.py	script	manual	Skill ingest pipeline	Records skill usage/creation facts	3v0/core/skills.py
-3v0/scripts/seed_from_profile.py	script	manual	Seed native store from the Hermes profile	First-boot convergence	3v0/core/bridge.py
+3v0/scripts/seed_from_profile.py	script	manual	Seed native store from the 3V0 profile	First-boot convergence	3v0/core/bridge.py
 3v0/scripts/seed_skills.py	script	manual	Seed skill store from skills dir	First-boot skill convergence	3v0/core/skill_io.py
 3v0/scripts/export_to_profile.py	script	manual	Export native store facts to the profile	Derived-view regeneration	3v0/core/profile_io.py
 3v0/scripts/generate_handoff.py	script	manual	Regenerate HANDOFF.generated.md (shadow draft)	The mechanical handoff writer	3v0/core/handoff.py;scripts/handoff_check.sh
@@ -185,7 +185,7 @@ tools/todo_tool.py	source	manual	Todo/task tracking tool (agent-level, intercept
 tools/memory_tool.py	source	manual	Memory tool — record/recall through memory providers	The memory model-tool surface	agent/memory_manager.py
 tools/skills_tool.py	source	manual	Skills tool — load/list skills	Skill activation surface	agent/skill_commands.py;tools/skill_manager_tool.py
 tools/skill_manager_tool.py	source	manual	Skill install/update/remove tooling	Skill lifecycle for the agent	tools/skill_usage.py;ev0_cli/bundles.py
-tools/skills_hub.py	source	manual	OptionalSkillSource — install from the official catalog	hermes skills install official/...	optional-skills/;tools/skills_sync.py
+tools/skills_hub.py	source	manual	OptionalSkillSource — install from the official catalog	3v0 skills install official/...	optional-skills/;tools/skills_sync.py
 tools/skills_sync.py	source	manual	Skill sync (hub -> local refresh)	Keeps installed skills current	tools/skills_sync_client.py
 tools/skill_linter.py	source	manual	Skill linter (frontmatter/standard checks)	Skill authoring standards enforcement	tests/skills/;tools/skill_provenance.py
 tools/skill_provenance.py	source	manual	Skill provenance tracking (author/credit)	Contributor-credit rule	tools/skill_linter.py
@@ -267,8 +267,8 @@ gateway/code_skew.py	source	manual	Code-version skew detection between processes
 gateway/rich_sent_store.py	source	manual	Rich sent-message store	Message edit/delete hooks	gateway/delivery.py
 gateway/runtime_footer.py	source	manual	Runtime footer for session prompts	Session identity footer	gateway/session.py
 gateway/cwd_placeholder.py	source	manual	CWD placeholder resolution	terminal.cwd bridging	ev0_cli/config.py
-ev0_cli/main.py	source	manual	CLI entrypoint — argparse tree, profile override bootstrap, subcommand wiring	The hermes command itself; where _apply_profile_override runs before any import	ev0_bootstrap.py;ev0_cli/config.py
-ev0_cli/main.py	source	manual	CLI entrypoint — argparse tree, profile override bootstrap, subcommand wiring	The hermes command; _apply_profile_override must run before any import	ev0_bootstrap.py;ev0_cli/config.py
+ev0_cli/main.py	source	manual	CLI entrypoint — argparse tree, profile override bootstrap, subcommand wiring	The 3v0 command itself; where _apply_profile_override runs before any import	ev0_bootstrap.py;ev0_cli/config.py
+ev0_cli/main.py	source	manual	CLI entrypoint — argparse tree, profile override bootstrap, subcommand wiring	The 3v0 command; _apply_profile_override must run before any import	ev0_bootstrap.py;ev0_cli/config.py
 ev0_cli/config_defaults.py	source	manual	Default config values	Deep-merged under user YAML	ev0_cli/config.py
 ev0_cli/config_migrations.py	source	manual	Config version migrations	Bumps _config_version only when transform needed	ev0_cli/config.py
 ev0_cli/commands.py	source	manual	COMMAND_REGISTRY — canonical slash commands (CommandDef)	Single source: CLI, gateway, Telegram menu, Slack map, autocomplete	cli.py;gateway/run.py;gateway/slash_commands.py
@@ -277,21 +277,21 @@ ev0_cli/config_defaults.py	source	manual	Default config values	Deep-merged under
 ev0_cli/config_migrations.py	source	manual	Config version migrations	Bumps _config_version only when a transform is needed	ev0_cli/config.py
 ev0_cli/commands.py	source	manual	COMMAND_REGISTRY — canonical slash commands (CommandDef)	Single source: CLI, gateway, Telegram menu, Slack map, autocomplete	cli.py;gateway/run.py;gateway/slash_commands.py
 ev0_cli/skin_engine.py	source	manual	Skin system — built-in + user YAML skins, data-driven CLI theming	Skins are pure data; no code per skin	ev0_cli/colors.py;agent/display.py
-ev0_cli/plugins.py	source	manual	PluginManager — discovery of ~/.hermes/plugins, repo plugins, pip entry points	Ships register(ctx) hooks + register_tool + register_cli_command	plugins/;tools/registry.py
-ev0_cli/web_server.py	source	manual	Dashboard web server + /api/pty WebSocket endpoint (embedded hermes --tui)	Serves 3v0 dashboard; the PTY tunnel is the chat surface bridge	ev0_cli/pty_bridge.py;web/;ui-tui/
-ev0_cli/pty_bridge.py	source	manual	PTY bridge — spawns hermes --tui for the dashboard terminal pane	AUTH via ephemeral _SESSION_TOKEN; POSIX PTY only	ev0_cli/web_server.py;ui-tui/
-ev0_cli/tools_config.py	source	manual	hermes tools curses UI	The toolset enable/disable picker (curses, per project law)	ev0_cli/curses_ui.py;toolsets.py
+ev0_cli/plugins.py	source	manual	PluginManager — discovery of ~/.3V0/plugins, repo plugins, pip entry points	Ships register(ctx) hooks + register_tool + register_cli_command	plugins/;tools/registry.py
+ev0_cli/web_server.py	source	manual	Dashboard web server + /api/pty WebSocket endpoint (embedded 3v0 --tui)	Serves 3v0 dashboard; the PTY tunnel is the chat surface bridge	ev0_cli/pty_bridge.py;web/;ui-tui/
+ev0_cli/pty_bridge.py	source	manual	PTY bridge — spawns 3v0 --tui for the dashboard terminal pane	AUTH via ephemeral _SESSION_TOKEN; POSIX PTY only	ev0_cli/web_server.py;ui-tui/
+ev0_cli/tools_config.py	source	manual	3v0 tools curses UI	The toolset enable/disable picker (curses, per project law)	ev0_cli/curses_ui.py;toolsets.py
 ev0_cli/curses_ui.py	source	manual	Shared curses menu machinery	Every interactive menu must be built here	ev0_cli/tools_config.py
 ev0_cli/banner.py	source	manual	Startup banner rendering	Branding + build info	ev0_cli/skin_engine.py;assets/banner.png
 ev0_cli/completion.py	source	manual	Slash command + path autocomplete	CLI input UX	ev0_cli/commands.py
 ev0_cli/checkpoints.py	source	manual	CLI-side checkpoint integration	Resume-after-crash in the CLI	tools/checkpoint_manager.py
-ev0_cli/cron.py	source	manual	hermes cron subcommand	CLI surface for cron/jobs.py	cron/jobs.py;ev0_cli/commands.py
+ev0_cli/cron.py	source	manual	3v0 cron subcommand	CLI surface for cron/jobs.py	cron/jobs.py;ev0_cli/commands.py
 ev0_cli/auth.py	source	manual	Auth flows (login/logout, providers)	Account surface	ev0_cli/auth_commands.py
 ev0_cli/claw.py	source	manual	Claw — capture/alt-input mode	Advanced input modes	cli.py
 ev0_cli/console_engine.py	source	manual	Console abstraction layer	Portable output	ev0_cli/cli_output.py
 ev0_cli/clipboard.py	source	manual	Clipboard integration	Paste UX	cli.py
 ev0_cli/bundles.py	source	manual	Bundle management (skill/skin bundles)	Install surface	tools/skills_hub.py
-ev0_cli/backup.py	source	manual	hermes backup subcommand	State export	safety: ev0_state_portability.py
+ev0_cli/backup.py	source	manual	3v0 backup subcommand	State export	safety: ev0_state_portability.py
 cron/jobs.py	source	manual	Job store — SQLite-backed cron jobs (schedules, skills, context_from, workdir)	The agent's own scheduler; 3-minute hard interrupt invariant	ev0_cli/cron.py;tools/cronjob_tools.py
 cron/scheduler.py	source	manual	Scheduler tick loop (lock-guarded)	Runs inside the gateway process; .tick.lock prevents duplicates	cron/jobs.py
 cron/scheduler_provider.py	source	manual	Pluggable scheduler backends (system/provider cron)	Alternative runtimes: system cron, managed providers	cron/scheduler.py;plugins/cron_providers/
@@ -328,7 +328,7 @@ skills/media	source	manual	Built-in media skill category	Shipped skills	skills/c
 skills/smart-home	source	manual	Built-in smart-home skill category	Smart home automation	optional-skills/health
 skills/apple	source	manual	Built-in Apple/macOS skill category	Shipped skills	for macos: skills/smart-home
 skills/social-media	source	manual	Built-in social-media skill category	Shipped skills	skills/creative
-optional-skills/autonomous-ai-agents	source	manual	Heavy/niche autonomous-agent skills (not default-active)	Installed explicitly via hermes skills install	skills/autonomous-ai-agents
+optional-skills/autonomous-ai-agents	source	manual	Heavy/niche autonomous-agent skills (not default-active)	Installed explicitly via 3v0 skills install	skills/autonomous-ai-agents
 optional-skills/blockchain	source	manual	Blockchain skill pack (not default-active)	Optionally installed	optional-skills/security
 optional-skills/communication	source	manual	Communication skill pack	Optionally installed	optional-skills/productivity
 optional-skills/creative	source	manual	Creative skill pack	Optionally installed	skills/creative
@@ -359,14 +359,14 @@ datagen-config-examples	source	manual	Data-generation config examples	Eval tooli
 mcp-research-data	source	manual	Research data for MCP experiments	MCP research artifacts	optional-mcps/
 apps/desktop	source	manual	Electron desktop chat app — separate surface from CLI/TUI/dashboard	Own composer/transcript/slash pipeline; talks to tui_gateway backend over JSON-RPC	apps/shared;tui_gateway/;apps/desktop/AGENTS.md
 apps/desktop/AGENTS.md	doc	manual	Desktop app architecture contract (state, resolver, transport, testing rules)	The scoped governance doc for the desktop app	apps/desktop;AGENTS.md
-apps/shared	source	manual	Framework-agnostic shared package (@hermes/shared) — JsonRpcGatewayClient + WS helpers	Shared transport consumed by desktop + web dashboard	apps/desktop;web/
+apps/shared	source	manual	Framework-agnostic shared package (@3v0/shared) — JsonRpcGatewayClient + WS helpers	Shared transport consumed by desktop + web dashboard	apps/desktop;web/
 apps/bootstrap-installer	source	manual	Bootstrap/installer assets for the desktop app	Distribution	apps/desktop
-ui-tui	source	manual	Ink (React) terminal UI — hermes --tui; Node frontend of the TUI process model	The full TUI replacement for classic CLI; TS owns the screen, Python owns sessions	ui-tui/src;tui_gateway/;apps/desktop
+ui-tui	source	manual	Ink (React) terminal UI — 3v0 --tui; Node frontend of the TUI process model	The full TUI replacement for classic CLI; TS owns the screen, Python owns sessions	ui-tui/src;tui_gateway/;apps/desktop
 ui-tui/src	source	manual	TUI source (entry.tsx, app.tsx, gatewayClient.ts + components/hooks/lib)	The screen-side implementation	ui-tui/packages;tui_gateway/server.py
-ui-tui/packages	source	manual	Shared JS packages for the TUI (hermes-ink etc.)	Reusable UI kit	tui_gateway/
+ui-tui/packages	source	manual	Shared JS packages for the TUI (3v0-ink etc.)	Reusable UI kit	tui_gateway/
 ui-tui/scripts	source	manual	TUI build/dev scripts	Tooling for the Ink app	tui_gateway/
 tui_gateway	source	manual	Python JSON-RPC backend for the TUI + desktop (server.py catalog: methods/events)	The other half of the process model; slash catalog + completions live here	ui-tui/src;apps/shared
-web	source	manual	Dashboard frontend (React + Vite) — embedding the real hermes --tui via /api/pty	Complements, never re-implements, the chat surface	ev0_cli/web_server.py;apps/shared;ui-tui/
+web	source	manual	Dashboard frontend (React + Vite) — embedding the real 3v0 --tui via /api/pty	Complements, never re-implements, the chat surface	ev0_cli/web_server.py;apps/shared;ui-tui/
 website	source	manual	Docusaurus docs site	Public documentation	website/docs;docs/
 website/docs	source	manual	Docusaurus documentation content (user guides, developer guides)	The canonical human docs	tooling: docs/
 website/docusaurus.config.ts	source	manual	Docusaurus config	Site build config	website/sidebars.ts;website/static
@@ -397,7 +397,7 @@ tests/integration	source	manual	Integration tests	Cross-module paths	tests/e2e
 tests/stress	source	manual	Stress tests	Load/hang detection	tests/gateway
 tests/manual	source	manual	Manually-run test scripts	Human-run diagnostics	tests/stress
 tests/fakes	source	manual	Fake objects for tests	Isolated test doubles	conftest: tests/fixtures
-tests/fixtures	source	manual	Shared fixtures (incl. profile/isolated HERMES_HOME)	Test scaffolding	tests/conftest.py
+tests/fixtures	source	manual	Shared fixtures (incl. profile/isolated EV0_HOME)	Test scaffolding	tests/conftest.py
 scripts/run_tests.sh	source	manual	The ONLY sanctioned test runner (CI-parity env, file retries, subprocess isolation)	Direct pytest diverges from CI; use this always	tests/;scripts/run_tests_parallel.py
 scripts/run_tests_parallel.py	source	manual	Per-file subprocess test isolation runner	No cross-file state leakage	scripts/run_tests.sh
 scripts/ci	source	manual	CI jobs + classifiers (change classifier, OS-marked test lanes)	Decides which CI jobs run per change	tests/

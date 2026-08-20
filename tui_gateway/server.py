@@ -26,12 +26,12 @@ from agent.secret_scope import (
 from ev0_constants import (
     DEFAULT_INDICATOR_STYLE,
     INDICATOR_STYLES,
-    get_hermes_home,
-    get_hermes_home_override,
-    reset_hermes_home_override,
-    set_hermes_home_override,
+    get_ev0_home,
+    get_ev0_home_override,
+    reset_ev0_home_override,
+    set_ev0_home_override,
 )
-from ev0_cli.env_loader import load_hermes_dotenv
+from ev0_cli.env_loader import load_ev0_dotenv
 from utils import is_truthy_value
 from tools.environments.local import ev0_subprocess_env
 from agent.replay_cleanup import sanitize_replay_history
@@ -53,9 +53,9 @@ from tui_gateway.transport import (
 
 logger = logging.getLogger(__name__)
 
-_hermes_home = get_hermes_home()
-load_hermes_dotenv(
-    hermes_home=_hermes_home, project_env=Path(__file__).parent.parent / ".env"
+_ev0_home = get_ev0_home()
+load_ev0_dotenv(
+    ev0_home=_ev0_home, project_env=Path(__file__).parent.parent / ".env"
 )
 
 
@@ -64,11 +64,11 @@ load_hermes_dotenv(
 # JSON-RPC pipe (TUI side parses it, doesn't log raw), the root logger
 # only catches handled warnings, and the subprocess exits before stderr
 # flushes through the stderr->gateway.stderr event pump. This hook
-# appends every unhandled exception to ~/.hermes/logs/tui_gateway_crash.log
+# appends every unhandled exception to ~/.3V0/logs/tui_gateway_crash.log
 # AND re-emits a one-line summary to stderr so the TUI can surface it in
 # Activity — exactly what was missing when the voice-mode turns started
 # exiting the gateway mid-TTS.
-_CRASH_LOG = os.path.join(_hermes_home, "logs", "tui_gateway_crash.log")
+_CRASH_LOG = os.path.join(_ev0_home, "logs", "tui_gateway_crash.log")
 
 
 def _panic_hook(exc_type, exc_value, exc_tb):
@@ -156,7 +156,7 @@ _cfg_mtime: float | None = None
 _cfg_path = None
 _session_resume_lock = threading.Lock()
 try:
-    _slash_timeout = float(os.environ.get("HERMES_TUI_SLASH_TIMEOUT_S") or "45")
+    _slash_timeout = float(os.environ.get("EV0_TUI_SLASH_TIMEOUT_S") or "45")
 except (ValueError, TypeError):
     _slash_timeout = 45.0
 _SLASH_WORKER_TIMEOUT_S = max(5.0, _slash_timeout)
@@ -173,7 +173,7 @@ _SLASH_WORKER_TIMEOUT_S = max(5.0, _slash_timeout)
 # Set to 0 to disable (park forever, pre-fix behaviour).
 try:
     _ws_orphan_reap_grace = float(
-        os.environ.get("HERMES_TUI_WS_ORPHAN_REAP_GRACE_S") or "20"
+        os.environ.get("EV0_TUI_WS_ORPHAN_REAP_GRACE_S") or "20"
     )
 except (ValueError, TypeError):
     _ws_orphan_reap_grace = 20.0
@@ -325,7 +325,7 @@ _LONG_HANDLERS = frozenset(
 
 try:
     _rpc_pool_workers = max(
-        2, int(os.environ.get("HERMES_TUI_RPC_POOL_WORKERS") or "8")
+        2, int(os.environ.get("EV0_TUI_RPC_POOL_WORKERS") or "8")
     )
 except (ValueError, TypeError):
     _rpc_pool_workers = 8
@@ -338,7 +338,7 @@ atexit.register(lambda: _pool.shutdown(wait=False, cancel_futures=True))
 # Exact in-memory session generation executing on the current turn thread.
 # Unlike a public session id, this object identity cannot be supplied by RPC.
 _current_runtime_session_record: contextvars.ContextVar[dict | None] = (
-    contextvars.ContextVar("hermes_gateway_runtime_session_record", default=None)
+    contextvars.ContextVar("ev0_gateway_runtime_session_record", default=None)
 )
 
 # Reserve real stdout for JSON-RPC only; redirect Python's stdout to stderr
@@ -370,17 +370,17 @@ _detached_ws_transport = _DropTransport()
 
 
 def _prepend_tool_paths(env: dict[str, str]) -> dict[str, str]:
-    """Prepend Hermes' managed bin, the venv bin dir, and the user-local
+    """Prepend 3V0' managed bin, the venv bin dir, and the user-local
     bin dir to PATH so slash_worker child processes can resolve
-    Hermes-managed CLIs (browser-use, uvx, uv) even when the parent
+    3V0-managed CLIs (browser-use, uvx, uv) even when the parent
     gateway was launched with a minimal PATH (e.g. by the
     Desktop/Dashboard app). Managed bin leads, matching the managed-first
     resolution policy for the Browser Use CLI."""
     managed_bin = ""
     try:
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        managed_bin = str(Path(get_hermes_home()) / "bin")
+        managed_bin = str(Path(get_ev0_home()) / "bin")
     except Exception:
         pass
     venv_bin = str(Path(sys.executable).parent)  # <venv>/bin (POSIX) or <venv>/Scripts (Windows)
@@ -394,7 +394,7 @@ def _prepend_tool_paths(env: dict[str, str]) -> dict[str, str]:
 
 
 class _SlashWorker:
-    """Persistent HermesCLI subprocess for slash commands."""
+    """Persistent Ev0CLI subprocess for slash commands."""
 
     def __init__(self, session_key: str, model: str, profile_home: str | None = None):
         self._lock = threading.Lock()
@@ -415,22 +415,22 @@ class _SlashWorker:
         self._closed = False
         from ev0_cli._subprocess_compat import windows_hide_flags
 
-        # slash_worker runs the Hermes agent → needs provider credentials.
+        # slash_worker runs the 3V0 agent → needs provider credentials.
         # Tier-1 secrets (gateway/GitHub/infra) are still stripped (#29157).
         # Global-remote / multi-profile sessions: the worker must resolve
         # config/skills/state against the session's profile home, not the
-        # gateway's launch HERMES_HOME (#40677). The override goes through the
+        # gateway's launch EV0_HOME (#40677). The override goes through the
         # build_subprocess_env factory's `extra` (applied last, always wins)
-        # instead of a hand-rolled env["HERMES_HOME"] assignment.
+        # instead of a hand-rolled env["EV0_HOME"] assignment.
         from tools.environments.local import build_subprocess_env
         env = build_subprocess_env(
             ev0_subprocess_env(inherit_credentials=True),
             scrub_secrets=False,
             inherit_profile_home=False,  # base already carries the HOME contract
-            extra={"HERMES_HOME": str(profile_home)} if profile_home else None,
+            extra={"EV0_HOME": str(profile_home)} if profile_home else None,
         )
-        # Prepend the Hermes venv bin dir and the user-local bin dir to PATH so
-        # slash_worker child processes can resolve Hermes-managed CLIs
+        # Prepend the 3V0 venv bin dir and the user-local bin dir to PATH so
+        # slash_worker child processes can resolve 3V0-managed CLIs
         # (browser-use, uvx) even when the parent gateway was launched with a
         # minimal PATH (e.g. by the Desktop/Dashboard app). See #83845.
         env = _prepend_tool_paths(env)
@@ -1190,7 +1190,7 @@ def _close_sessions_for_transport(
         else:
             # Point detached sessions at the drop sentinel (NOT real stdio) so
             # _ws_session_is_orphaned recognizes them and the grace-reap can
-            # actually fire; a standalone `hermes --tui` keeps real _stdio.
+            # actually fire; a standalone `3v0 --tui` keeps real _stdio.
             session["transport"] = _detached_ws_transport
             detached += 1
             try:
@@ -1215,7 +1215,7 @@ def _shutdown_sessions() -> None:
 # hours-scale because last_active freezes during a long turn and on passive
 # viewing — running/pending/starting/live-transport are hard exemptions instead.
 try:
-    _SESSION_TTL_S = float(os.environ.get("HERMES_TUI_SESSION_TTL_S") or 6 * 3600)
+    _SESSION_TTL_S = float(os.environ.get("EV0_TUI_SESSION_TTL_S") or 6 * 3600)
 except (TypeError, ValueError):
     _SESSION_TTL_S = float(6 * 3600)
 _SESSION_TTL_S = max(0.0, _SESSION_TTL_S)
@@ -1225,7 +1225,7 @@ _REAPER_SCAN_S = 300.0
 def _transport_is_dead(transport) -> bool:
     # _detached_ws_transport is the post-WS-disconnect drop sentinel; a session
     # parked on it has no live client. _stdio_transport is the REAL transport
-    # for a standalone `hermes --tui`, so it must NOT count as dead here (doing
+    # for a standalone `3v0 --tui`, so it must NOT count as dead here (doing
     # so let the idle reaper evict healthy standalone TUI sessions).
     if transport is _detached_ws_transport:
         return True
@@ -1508,7 +1508,7 @@ def _db_unavailable_error(rid, *, code: int):
 # One dashboard normally serves its launch profile. But the desktop's app-global
 # remote mode points every profile at this single backend, so resume/prompt must
 # be able to act on ANOTHER local profile's state.db + home. The desktop passes
-# ``profile`` on those calls; we open that profile's db and bind its HERMES_HOME
+# ``profile`` on those calls; we open that profile's db and bind its EV0_HOME
 # (a ContextVar override) for the duration of the call so config/skills/model and
 # message persistence all resolve to the right profile. Omitted/own profile → the
 # launch profile (unchanged for single-profile and per-profile-remote setups).
@@ -1524,16 +1524,16 @@ def _profile_home(profile: str | None) -> Path | None:
     except Exception:
         return None
     # Already the launch profile? No override needed.
-    if home.resolve() == Path(_hermes_home).resolve():
+    if home.resolve() == Path(_ev0_home).resolve():
         return None
     return home if (home / "state.db").exists() or home.exists() else None
 
 
 def _profile_scoped(handler):
-    """Bind ``params['profile']``'s HERMES_HOME around a pet RPC handler.
+    """Bind ``params['profile']``'s EV0_HOME around a pet RPC handler.
 
     Pets are per-profile: ``display.pet.*`` lives in the profile's config.yaml and
-    sprites install under its ``pets/`` dir (both resolve via ``get_hermes_home``).
+    sprites install under its ``pets/`` dir (both resolve via ``get_ev0_home``).
     The desktop sends ``profile`` on pet calls so config + pets dir resolve to the
     focused profile even in app-global remote mode, where one backend serves every
     profile. No-op for the launch profile (own-profile backends already resolve it).
@@ -1543,11 +1543,11 @@ def _profile_scoped(handler):
         home = _profile_home(params.get("profile") if isinstance(params, dict) else None)
         if home is None:
             return handler(rid, params)
-        token = set_hermes_home_override(home)
+        token = set_ev0_home_override(home)
         try:
             return handler(rid, params)
         finally:
-            reset_hermes_home_override(token)
+            reset_ev0_home_override(token)
 
     return wrapper
 
@@ -1613,7 +1613,7 @@ def _launch_configured_cwd() -> str | None:
     process's in-memory TUI gateway. The Node PTY child receives a bridged
     ``TERMINAL_CWD`` env var, but this in-memory process does not — so reading
     the process env alone leaves a fresh chat starting in ``os.getcwd()``
-    (wherever ``hermes dashboard`` was launched) instead of the configured
+    (wherever ``3v0 dashboard`` was launched) instead of the configured
     ``terminal.cwd``. Read config directly so changing ``terminal.cwd`` affects
     new in-memory TUI sessions too.
     """
@@ -1717,7 +1717,7 @@ _compute_host_supervisor_lock = threading.Lock()
 
 
 def _inside_compute_host_child() -> bool:
-    return os.environ.get("HERMES_COMPUTE_HOST_CHILD") == "1"
+    return os.environ.get("EV0_COMPUTE_HOST_CHILD") == "1"
 
 
 def _turn_isolation_enabled(cfg: dict | None = None) -> bool:
@@ -2262,7 +2262,7 @@ def _wait_agent_for_prompt(session: dict, rid: str, sid: str) -> dict | None:
 def _start_agent_build(sid: str, session: dict) -> None:
     """Start building the real AIAgent for a TUI session, once.
 
-    Classic `hermes` shows the prompt before constructing AIAgent; the TUI used
+    Classic `3v0` shows the prompt before constructing AIAgent; the TUI used
     to eagerly build it during session.create, making startup feel blocked on
     tool discovery/model metadata even though the composer was visible.  Keep
     the shell responsive by deferring this work until the first prompt (or any
@@ -2315,11 +2315,11 @@ def _start_agent_build(sid: str, session: dict) -> None:
                         return
             tokens = _set_session_context(key)
             # Build against the session's profile (global-remote): bind its
-            # HERMES_HOME so config/skills/model resolve to it, and hand the
+            # EV0_HOME so config/skills/model resolve to it, and hand the
             # agent that profile's db so turns persist to the right state.db.
             session_db = None
             if profile_home:
-                home_token = set_hermes_home_override(profile_home)
+                home_token = set_ev0_home_override(profile_home)
                 try:
                     from agent.secret_scope import build_profile_secret_scope, set_secret_scope
 
@@ -2458,7 +2458,7 @@ def _start_agent_build(sid: str, session: dict) -> None:
             _emit("error", sid, {"message": f"agent init failed: {e}"})
         finally:
             if home_token is not None:
-                reset_hermes_home_override(home_token)
+                reset_ev0_home_override(home_token)
             if secret_token is not None:
                 try:
                     from agent.secret_scope import reset_secret_scope
@@ -2908,7 +2908,7 @@ def _ensure_session_db_row(session: dict) -> None:
       or the user's home), so stamping that would file every unpicked chat under
       a folder the user never chose. Those stay null and group under "No
       workspace", which is the desired default.
-    * A terminal session (``hermes`` / ``hermes --tui`` / CLI) is started from a
+    * A terminal session (``3v0`` / ``3v0 --tui`` / CLI) is started from a
       directory the user deliberately ``cd``'d into — that IS the workspace, and
       it is also where the agent's terminal actually runs. Dropping it stranded
       the session with no cwd AND no git_repo_root, so the sidebar could never
@@ -3290,10 +3290,10 @@ def _load_cfg_raw() -> dict:
     try:
         # Honor a per-session profile override (see session.resume) so a resumed
         # remote profile loads ITS config (model, skills, prompt); otherwise the
-        # launch profile's _hermes_home. Cache is keyed on the resolved path, so
+        # launch profile's _ev0_home. Cache is keyed on the resolved path, so
         # profiles don't clobber each other.
-        override = get_hermes_home_override()
-        home = override if isinstance(override, str) and override else _hermes_home
+        override = get_ev0_home_override()
+        home = override if isinstance(override, str) and override else _ev0_home
         p = Path(home) / "config.yaml"
         mtime = p.stat().st_mtime if p.exists() else None
         with _cfg_lock:
@@ -3364,7 +3364,7 @@ def _save_cfg(cfg: dict):
 
     from utils import atomic_roundtrip_yaml_save
 
-    path = _hermes_home / "config.yaml"
+    path = _ev0_home / "config.yaml"
     # Comment-, ordering-, and Unicode-preserving full-state write.
     # Replaces the previous `yaml.safe_dump(cfg, f)` (and later
     # `atomic_config_write`, which is not comment-preserving) which clobbered
@@ -3415,11 +3415,11 @@ def _set_session_context(
         resolved = cwd if cwd is not None else _cwd_for_session_key(session_key)
         source = _resolve_session_platform()
         # Derive the live conversation id so terminal/execute_code subprocesses
-        # can read HERMES_SESSION_ID. Without this, set_session_vars leaves the
+        # can read EV0_SESSION_ID. Without this, set_session_vars leaves the
         # session-id contextvar as "" (explicitly empty), and the subprocess-env
         # bridge treats that as authoritative — NOT falling back to os.environ —
         # so every command in a dashboard/TUI/web session saw an empty
-        # HERMES_SESSION_ID even though agent_init set it via
+        # EV0_SESSION_ID even though agent_init set it via
         # set_current_session_id(). Prefer the agent's durable session_id, then
         # fall back to the session_key (matching the id derivation used at
         # session-finalize), so an identified session is never left blank.
@@ -3457,9 +3457,9 @@ def _clear_session_context(tokens: list) -> None:
 
 def _enable_gateway_prompts() -> None:
     """Route approvals through gateway callbacks instead of CLI input()."""
-    os.environ["HERMES_GATEWAY_SESSION"] = "1"
-    os.environ["HERMES_EXEC_ASK"] = "1"
-    os.environ["HERMES_INTERACTIVE"] = "1"
+    os.environ["EV0_GATEWAY_SESSION"] = "1"
+    os.environ["EV0_EXEC_ASK"] = "1"
+    os.environ["EV0_INTERACTIVE"] = "1"
 
 
 # ── Blocking prompt factory ──────────────────────────────────────────
@@ -3577,8 +3577,8 @@ def _skin_sig() -> tuple[str, float | None]:
     """(active skin name, its user-file mtime). Built-ins have no file, so only
     their name moves; a user skin's mtime lets an in-place color edit repaint too."""
     name = str((_load_cfg().get("display") or {}).get("skin") or "default")
-    override = get_hermes_home_override()
-    home = override if isinstance(override, str) and override else _hermes_home
+    override = get_ev0_home_override()
+    home = override if isinstance(override, str) and override else _ev0_home
     try:
         mtime: float | None = (Path(home) / "skins" / f"{name}.yaml").stat().st_mtime
     except OSError:
@@ -3598,7 +3598,7 @@ def _note_skin_broadcast() -> None:
 
 def _broadcast_skin_if_changed() -> None:
     """Emit ``skin.changed`` when the active skin moved — the agent switched it
-    (``hermes config set display.skin``) OR edited the active skin's colors in
+    (``3v0 config set display.skin``) OR edited the active skin's colors in
     place ("I don't like that coral" → tweak the YAML).
 
     Routes through the SAME live path as ``/skin`` so every surface (TUI + desktop)
@@ -3621,8 +3621,8 @@ def _broadcast_skin_if_changed() -> None:
 
 def _watcher_home() -> Path:
     """Active profile home for the change watcher's signature probes."""
-    override = get_hermes_home_override()
-    return Path(override if isinstance(override, str) and override else _hermes_home)
+    override = get_ev0_home_override()
+    return Path(override if isinstance(override, str) and override else _ev0_home)
 
 
 def _pet_sig() -> tuple:
@@ -3796,7 +3796,7 @@ _skin_watcher_started = False
 
 def _ensure_skin_watcher() -> None:
     """Watch cheap on-disk signatures and broadcast change events — so a skin
-    Hermes activates, a pet ``/pet`` adopts, a cron the scheduler fires, or a
+    3V0 activates, a pet ``/pet`` adopts, a cron the scheduler fires, or a
     messaging turn another process writes goes live on every surface within a
     couple seconds, on its own, with no client-side poll in the loop.
     Idempotent; started at gateway.ready. (Named for its original skin-only
@@ -3813,13 +3813,13 @@ def _ensure_skin_watcher() -> None:
             _broadcast_skin_if_changed()
             _broadcast_watched_changes()
 
-    threading.Thread(target=_loop, name="hermes-change-watcher", daemon=True).start()
+    threading.Thread(target=_loop, name="3v0-change-watcher", daemon=True).start()
 
 
 def _resolve_model() -> str:
     env = (
-        os.environ.get("HERMES_MODEL", "")
-        or os.environ.get("HERMES_INFERENCE_MODEL", "")
+        os.environ.get("EV0_MODEL", "")
+        or os.environ.get("EV0_INFERENCE_MODEL", "")
     ).strip()
     if env:
         return env
@@ -3849,17 +3849,17 @@ def _resolve_session_platform() -> str:
     TUI-only slash commands (``/reload-mcp``, …) to chat-panel users.
 
     Resolution:
-      * ``HERMES_DESKTOP=1`` and ``HERMES_DESKTOP_TERMINAL`` unset → "desktop"
+      * ``EV0_DESKTOP=1`` and ``EV0_DESKTOP_TERMINAL`` unset → "desktop"
         (the chat-panel backend — a graphical React surface, not a terminal).
-      * ``HERMES_DESKTOP_TERMINAL=1`` → "tui"
-        (``hermes --tui`` running in the desktop's embedded terminal pane;
+      * ``EV0_DESKTOP_TERMINAL=1`` → "tui"
+        (``3v0 --tui`` running in the desktop's embedded terminal pane;
         it IS a TUI, just embedded. The clarifier attached to the tui hint
         in system_prompt.py tells the agent about the embedding.)
       * neither set → "tui"
-        (standalone ``hermes --tui``.)
+        (standalone ``3v0 --tui``.)
     """
-    if is_truthy_value(os.environ.get("HERMES_DESKTOP")) and not is_truthy_value(
-        os.environ.get("HERMES_DESKTOP_TERMINAL")
+    if is_truthy_value(os.environ.get("EV0_DESKTOP")) and not is_truthy_value(
+        os.environ.get("EV0_DESKTOP_TERMINAL")
     ):
         return "desktop"
     return "tui"
@@ -3885,9 +3885,9 @@ def _resolve_agent_platform(source: str | None) -> str:
 def _config_model_target() -> tuple[str, str]:
     """(model, provider) currently selected by config.yaml — and ONLY config.
 
-    Unlike `_resolve_model()`, this never reads HERMES_MODEL /
-    HERMES_INFERENCE_MODEL. Those env vars are a launch-scoped seed
-    (`hermes --tui -m <model>`, hosted-instance provisioning); if they
+    Unlike `_resolve_model()`, this never reads EV0_MODEL /
+    EV0_INFERENCE_MODEL. Those env vars are a launch-scoped seed
+    (`3v0 --tui -m <model>`, hosted-instance provisioning); if they
     fed the per-turn sync, the seed would be replayed as a /model switch
     and persisted globally, or would pin the session so dashboard/CLI
     model changes never reach an open chat.
@@ -3902,8 +3902,8 @@ def _config_model_target() -> tuple[str, str]:
             provider = ""
     elif isinstance(cfg_model, str):
         model = cfg_model.strip()
-    # No fallback to _resolve_model() here: that reads HERMES_MODEL /
-    # HERMES_INFERENCE_MODEL, which `hermes --tui -m <model>` sets as a
+    # No fallback to _resolve_model() here: that reads EV0_MODEL /
+    # EV0_INFERENCE_MODEL, which `3v0 --tui -m <model>` sets as a
     # session-scoped seed for THIS launch. When config.yaml has no
     # model.default (custom-provider-only setups), falling back to the env
     # seed made the per-turn sync treat the -m flag as "the configured
@@ -3916,13 +3916,13 @@ def _config_model_target() -> tuple[str, str]:
 
 def _resolve_startup_runtime() -> tuple[str, str | None]:
     model = _resolve_model()
-    explicit_provider = os.environ.get("HERMES_TUI_PROVIDER", "").strip()
+    explicit_provider = os.environ.get("EV0_TUI_PROVIDER", "").strip()
     if explicit_provider:
         return model, explicit_provider
 
     explicit_model = (
-        os.environ.get("HERMES_MODEL", "")
-        or os.environ.get("HERMES_INFERENCE_MODEL", "")
+        os.environ.get("EV0_MODEL", "")
+        or os.environ.get("EV0_INFERENCE_MODEL", "")
     ).strip()
     if not explicit_model:
         return model, None
@@ -3937,7 +3937,7 @@ def _resolve_startup_runtime() -> tuple[str, str | None]:
                 if isinstance(cfg, dict)
                 else ""
             )
-            or os.environ.get("HERMES_INFERENCE_PROVIDER", "").strip().lower()
+            or os.environ.get("EV0_INFERENCE_PROVIDER", "").strip().lower()
             or "auto"
         )
         detected = detect_static_provider_for_model(explicit_model, current_provider)
@@ -4168,14 +4168,14 @@ def _persist_live_session_system_prompt(session: dict | None) -> None:
     if db is None or not hasattr(db, "update_system_prompt"):
         return
 
-    # Re-bind HERMES_HOME to the session's profile so load_soul_md() and
+    # Re-bind EV0_HOME to the session's profile so load_soul_md() and
     # build_skills_system_prompt() resolve to the correct profile.  Without
     # this, _start_agent_build's finally block has already reset the
     # override and the rebuilt prompt silently uses the root profile's
     # SOUL.md and skills.  See issue #50233.
     profile_home = session.get("profile_home")
     home_token = (
-        set_hermes_home_override(profile_home) if profile_home else None
+        set_ev0_home_override(profile_home) if profile_home else None
     )
     try:
         prompt = agent._build_system_prompt(None)
@@ -4189,7 +4189,7 @@ def _persist_live_session_system_prompt(session: dict | None) -> None:
         )
     finally:
         if home_token is not None:
-            reset_hermes_home_override(home_token)
+            reset_ev0_home_override(home_token)
 
 
 # Stable leading text of the model-switch marker, shared by the builder and the
@@ -4444,7 +4444,7 @@ def _load_memory_notifications() -> str:
 
 
 def _load_tool_progress_mode() -> str:
-    env = os.environ.get("HERMES_TUI_TOOL_PROGRESS", "").strip().lower()
+    env = os.environ.get("EV0_TUI_TOOL_PROGRESS", "").strip().lower()
     if env in {"off", "new", "all", "verbose"}:
         return env
     raw = (_load_cfg().get("display") or {}).get("tool_progress", "all")
@@ -4459,16 +4459,16 @@ def _load_tool_progress_mode() -> str:
 def _gui_surface_toolsets(platform: str) -> set[str]:
     """Toolsets that exist because of the CLIENT on the other end, not the host.
 
-    Both entries are deliberately off ``_HERMES_CORE_TOOLS`` — every other
+    Both entries are deliberately off ``_EV0_CORE_TOOLS`` — every other
     platform would carry their schema for nothing — so this resolver is the one
     gate that exposes them.
 
     ``platform`` is the SESSION's source (``session.create``'s ``source``
     field), never a process env var. The desktop app is a client: it can be
     driving a local, SSH, URL, or cloud backend, and only the local/SSH spawn
-    paths run with ``HERMES_DESKTOP=1``. Keying GUI capability off that env var
+    paths run with ``EV0_DESKTOP=1``. Keying GUI capability off that env var
     silently stripped every pane/browser tool from URL and cloud gateways while
-    the same backend told the model it was "chatting inside the Hermes desktop
+    the same backend told the model it was "chatting inside the 3V0 desktop
     app". See the surface-capability rule in AGENTS.md.
     """
     surfaces = {"project"}
@@ -4481,15 +4481,15 @@ def _load_enabled_toolsets(platform: str | None = None) -> list[str] | None:
     session_platform = platform or _resolve_session_platform()
     explicit = [
         item.strip()
-        for item in os.environ.get("HERMES_TUI_TOOLSETS", "").split(",")
+        for item in os.environ.get("EV0_TUI_TOOLSETS", "").split(",")
         if item.strip()
     ]
     cfg = None
     fallback_notice = None
 
-    # Coding posture (base Hermes): with no explicit pin, collapse to the
+    # Coding posture (base 3V0): with no explicit pin, collapse to the
     # coding toolset (+ enabled MCP servers) when sitting in a code workspace.
-    # The desktop app and `hermes --tui` both land here. See
+    # The desktop app and `3v0 --tui` both land here. See
     # agent/coding_context.py. No config is loaded yet at this point, so we let
     # coding_selection() load it lazily (cli.py passes its already-resolved
     # CLI_CONFIG instead, purely to avoid a redundant read).
@@ -4533,7 +4533,7 @@ def _load_enabled_toolsets(platform: str | None = None) -> list[str] | None:
             ignored = [name for name in explicit if name not in {"all", "*"}]
             if ignored:
                 print(
-                    "[tui] HERMES_TUI_TOOLSETS=all enables every toolset; "
+                    "[tui] EV0_TUI_TOOLSETS=all enables every toolset; "
                     f"ignoring additional entries: {', '.join(ignored)}",
                     file=sys.stderr,
                     flush=True,
@@ -4577,13 +4577,13 @@ def _load_enabled_toolsets(platform: str | None = None) -> list[str] | None:
 
         if unknown:
             print(
-                f"[tui] ignoring unknown HERMES_TUI_TOOLSETS entries: {', '.join(unknown)}",
+                f"[tui] ignoring unknown EV0_TUI_TOOLSETS entries: {', '.join(unknown)}",
                 file=sys.stderr,
                 flush=True,
             )
         if disabled:
             print(
-                "[tui] ignoring disabled MCP servers in HERMES_TUI_TOOLSETS "
+                "[tui] ignoring disabled MCP servers in EV0_TUI_TOOLSETS "
                 "(set enabled: true in config.yaml to use): "
                 f"{', '.join(disabled)}",
                 file=sys.stderr,
@@ -4594,7 +4594,7 @@ def _load_enabled_toolsets(platform: str | None = None) -> list[str] | None:
             return valid
 
         fallback_notice = (
-            "[tui] no valid HERMES_TUI_TOOLSETS entries; using configured CLI toolsets"
+            "[tui] no valid EV0_TUI_TOOLSETS entries; using configured CLI toolsets"
         )
 
     try:
@@ -4614,9 +4614,9 @@ def _load_enabled_toolsets(platform: str | None = None) -> list[str] | None:
             print(fallback_notice, file=sys.stderr, flush=True)
         if not enabled:
             return None
-        # The client-surface toolsets are off _HERMES_CORE_TOOLS (every other
+        # The client-surface toolsets are off _EV0_CORE_TOOLS (every other
         # platform would carry their schema for nothing), so the platform
-        # recovery above — which keys off hermes-cli's tool universe — can't
+        # recovery above — which keys off 3v0-cli's tool universe — can't
         # surface them. This resolver runs ONLY in the desktop/TUI gateway, so
         # folding them in here is the gate that exposes them on exactly the
         # surface that can answer them.
@@ -4624,7 +4624,7 @@ def _load_enabled_toolsets(platform: str | None = None) -> list[str] | None:
     except Exception:
         if fallback_notice is not None:
             print(
-                "[tui] no valid HERMES_TUI_TOOLSETS entries and configured CLI toolsets could not be loaded; enabling all toolsets",
+                "[tui] no valid EV0_TUI_TOOLSETS entries and configured CLI toolsets could not be loaded; enabling all toolsets",
                 file=sys.stderr,
                 flush=True,
             )
@@ -4923,8 +4923,8 @@ def _apply_model_switch(
     # session (e.g. /new via _reset_session_agent, or resume) re-derives the
     # user's chosen model/provider instead of falling back to global config.
     #
-    # We deliberately do NOT write process-global env vars (HERMES_MODEL /
-    # HERMES_INFERENCE_MODEL / HERMES_TUI_PROVIDER / HERMES_INFERENCE_PROVIDER)
+    # We deliberately do NOT write process-global env vars (EV0_MODEL /
+    # EV0_INFERENCE_MODEL / EV0_TUI_PROVIDER / EV0_INFERENCE_PROVIDER)
     # here. The desktop backend hosts every same-profile session in ONE process,
     # so mutating os.environ on a /model switch leaked the new model/provider
     # into every OTHER live session's next agent rebuild — switching the model
@@ -5047,7 +5047,7 @@ def _sync_agent_model_with_config(sid: str, session: dict) -> None:
             # This sync ADOPTS a config.yaml change into the live session; it
             # must never write config back. Without this, the flag/config
             # default (persist_switch_by_default=True) re-persisted whatever
-            # target the sync computed — the path that leaked `hermes --tui -m`
+            # target the sync computed — the path that leaked `3v0 --tui -m`
             # into config.yaml as the permanent global model.
             persist_override=False,
         )
@@ -5381,8 +5381,8 @@ def _get_usage(agent) -> dict:
     except Exception:
         pass
     # Dev-only live credits-spent readout (L0 usage-aware-credits). Gated on
-    # HERMES_DEV_CREDITS so the payload stays clean when the flag is off.
-    if is_truthy_value(os.environ.get("HERMES_DEV_CREDITS")):
+    # EV0_DEV_CREDITS so the payload stays clean when the flag is off.
+    if is_truthy_value(os.environ.get("EV0_DEV_CREDITS")):
         try:
             spent = agent.get_credits_spent_micros()
             if spent is not None:
@@ -6207,7 +6207,7 @@ def _agent_cbs(sid: str) -> dict:
         ),
         # read_window_below tool (desktop GUI): the renderer asks its main
         # process (which owns native window enumeration) which OS window sits
-        # directly underneath the Hermes window, and answers
+        # directly underneath the 3V0 window, and answers
         # window.read.respond with the serialized metadata.
         "read_window_below_callback": lambda: _block(
             "window.read.request",
@@ -6437,7 +6437,7 @@ def _apply_personality_to_session(
 
 def _cfg_max_turns(cfg: dict, default: int) -> int:
     try:
-        env_max = int(os.environ.get("HERMES_TUI_MAX_TURNS", "") or 0)
+        env_max = int(os.environ.get("EV0_TUI_MAX_TURNS", "") or 0)
         if env_max > 0:
             return env_max
     except (TypeError, ValueError):
@@ -6447,7 +6447,7 @@ def _cfg_max_turns(cfg: dict, default: int) -> int:
 
 
 def _parse_tui_skills_env() -> list[str]:
-    raw = os.environ.get("HERMES_TUI_SKILLS", "")
+    raw = os.environ.get("EV0_TUI_SKILLS", "")
     skills: list[str] = []
     seen: set[str] = set()
     for part in raw.replace("\n", ",").split(","):
@@ -6462,7 +6462,7 @@ def _load_fallback_model():
     """Return the configured fallback chain for TUI-created agents.
 
     Delegates to the shared ``get_fallback_chain`` helper so the TUI path
-    stays in parity with ``HermesCLI.__init__`` and ``gateway/run.py``:
+    stays in parity with ``Ev0CLI.__init__`` and ``gateway/run.py``:
     ``fallback_providers`` is the primary source of truth and keeps its
     order, with legacy ``fallback_model`` entries merged in afterwards
     (deduped on provider/model/base_url).
@@ -6891,7 +6891,7 @@ def _make_agent(
                 logger.warning(
                     "Unknown skill(s) requested, skipping: %s. "
                     "Continuing with: %s. "
-                    "List available skills with `hermes skills list`.",
+                    "List available skills with `3v0 skills list`.",
                     missing_display,
                     ", ".join(loaded_skills),
                 )
@@ -7008,10 +7008,10 @@ def _make_agent(
         session_id=session_id or key,
         session_db=session_db if session_db is not None else _get_db(),
         ephemeral_system_prompt=system_prompt or None,
-        checkpoints_enabled=is_truthy_value(os.environ.get("HERMES_TUI_CHECKPOINTS")),
-        pass_session_id=is_truthy_value(os.environ.get("HERMES_TUI_PASS_SESSION_ID")),
-        skip_context_files=is_truthy_value(os.environ.get("HERMES_IGNORE_RULES")),
-        skip_memory=is_truthy_value(os.environ.get("HERMES_IGNORE_RULES")),
+        checkpoints_enabled=is_truthy_value(os.environ.get("EV0_TUI_CHECKPOINTS")),
+        pass_session_id=is_truthy_value(os.environ.get("EV0_TUI_PASS_SESSION_ID")),
+        skip_context_files=is_truthy_value(os.environ.get("EV0_IGNORE_RULES")),
+        skip_memory=is_truthy_value(os.environ.get("EV0_IGNORE_RULES")),
         fallback_model=_load_fallback_model(),
         **_agent_cbs(sid),
     )
@@ -7050,7 +7050,7 @@ def _init_session(
             "tool_progress_mode": _load_tool_progress_mode(),
             "edit_snapshots": {},
             "tool_started_at": {},
-            # Profile-scoped HERMES_HOME for app-global remote mode; None =
+            # Profile-scoped EV0_HOME for app-global remote mode; None =
             # launch profile. SessionBranch copies the parent's value so the
             # child stays on the same state.db.
             "profile_home": profile_home,
@@ -7204,7 +7204,7 @@ def _build_image_ref_message(user_text: str, image_paths: list[str]) -> str:
 def _build_persist_message_with_image_refs(user_text: str, image_paths: list[str]) -> str:
     """Build the clean, UI-recognizable version of the user's message for
     persisting to session history. Uses ``@image:<path>`` directives — the
-    format the desktop client (directive-text.tsx / HERMES_DIRECTIVE_RE)
+    format the desktop client (directive-text.tsx / EV0_DIRECTIVE_RE)
     actually parses and renders as an image — unlike
     ``_build_image_ref_message``, which embeds an
     ``image_url:`` hint meant only for the model and must never be
@@ -7759,9 +7759,9 @@ def _auto_continue_config() -> tuple[bool, float, int]:
 
 
 def _session_home(session: dict) -> Path:
-    """The HERMES_HOME the session's durable state lives in (profile-aware)."""
+    """The EV0_HOME the session's durable state lives in (profile-aware)."""
     profile_home = session.get("profile_home")
-    return Path(profile_home) if profile_home else Path(_hermes_home)
+    return Path(profile_home) if profile_home else Path(_ev0_home)
 
 
 def _retire_turn_marker(session: dict, *keys: str) -> None:
@@ -8965,7 +8965,7 @@ def _pet_active_selection():
 def _pet_state_rows(spritesheet) -> list[str]:
     """Row taxonomy for the concrete active pet sheet.
 
-    Hermes has to support both the legacy 8-row petdex atlas and the current
+    3V0 has to support both the legacy 8-row petdex atlas and the current
     Codex/petdex 9-row atlas. The desktop canvas gets this list and indexes it
     with the same `PetState` names the Python renderer uses.
     """
@@ -8985,9 +8985,9 @@ def _pet_state_rows(spritesheet) -> list[str]:
 
 def _pet_gen_root():
     """Profile-scoped staging dir for in-progress generation drafts."""
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
 
-    root = get_hermes_home() / "cache" / "pet-gen"
+    root = get_ev0_home() / "cache" / "pet-gen"
     root.mkdir(parents=True, exist_ok=True)
     return root
 
@@ -9037,7 +9037,7 @@ _PET_REFERENCE_MIME_EXT = {
 try:
     _PET_REFERENCE_MAX_BYTES = max(
         1,
-        int(os.environ.get("HERMES_PET_REFERENCE_MAX_BYTES") or str(16 * 1024 * 1024)),
+        int(os.environ.get("EV0_PET_REFERENCE_MAX_BYTES") or str(16 * 1024 * 1024)),
     )
 except (TypeError, ValueError):
     _PET_REFERENCE_MAX_BYTES = 16 * 1024 * 1024
@@ -9407,14 +9407,14 @@ def _serialize_subscription_preview(p) -> dict:
 # from the event stream).  On turn-complete it posts the final tree here;
 # /replay and /replay-diff fetch past snapshots by session_id + filename.
 #
-# Layout:  $HERMES_HOME/spawn-trees/<session_id>/<timestamp>.json
+# Layout:  $EV0_HOME/spawn-trees/<session_id>/<timestamp>.json
 # Each file contains { session_id, started_at, finished_at, subagents: [...] }.
 
 
 def _spawn_trees_root():
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
 
-    root = get_hermes_home() / "spawn-trees"
+    root = get_ev0_home() / "spawn-trees"
     root.mkdir(parents=True, exist_ok=True)
     return root
 
@@ -9791,7 +9791,7 @@ def _collect_kanban_notifications(session: dict) -> list:
     """Claim unseen terminal kanban events for this TUI session's subscriptions.
 
     ``kanban_create`` auto-subscribes TUI/desktop sessions with
-    ``platform="tui"`` and ``chat_id=HERMES_SESSION_KEY`` (see
+    ``platform="tui"`` and ``chat_id=EV0_SESSION_KEY`` (see
     tools/kanban_tools.py ``_maybe_auto_subscribe``). The gateway notifier
     can't deliver those — there is no "tui" messaging adapter — so this
     poller is the delivery path for them (issue #59890). Uses the same
@@ -9817,7 +9817,7 @@ def _collect_kanban_notifications(session: dict) -> list:
         except Exception:
             return []
     # Poll each resolved DB path once — multiple slugs can point at the same
-    # DB when HERMES_KANBAN_DB pins the board path (same guard as the gateway
+    # DB when EV0_KANBAN_DB pins the board path (same guard as the gateway
     # notifier).
     seen_db_paths: set = set()
     for board_meta in boards:
@@ -10233,7 +10233,7 @@ _desktop_ui_wired = False
 def _wire_desktop_ui() -> None:
     """Bridge desktop-only tools (open_preview, focus_pane) to renderer events.
 
-    Idempotent. The tool hands back the turn's ``HERMES_UI_SESSION_ID`` as
+    Idempotent. The tool hands back the turn's ``EV0_UI_SESSION_ID`` as
     ``sid`` so the event routes to the window that asked (``_emit`` /
     ``write_json`` is ``_stdout_lock``-guarded, so calling it from the tool's
     thread is safe)."""
@@ -10537,7 +10537,7 @@ def _run_prompt_submit(
         agent = session["agent"]
         approval_token = None
         session_tokens = []
-        home_token = None  # per-turn HERMES_HOME override for a resumed remote profile
+        home_token = None  # per-turn EV0_HOME override for a resumed remote profile
         secret_token = None
         goal_followup = None  # set by the post-turn goal hook below
         result = None  # turn outcome; read after the finally for leftover /steer
@@ -10572,7 +10572,7 @@ def _run_prompt_submit(
             )
             _profile_home_str = session.get("profile_home")
             if _profile_home_str:
-                home_token = set_hermes_home_override(_profile_home_str)
+                home_token = set_ev0_home_override(_profile_home_str)
                 secret_token = set_secret_scope(build_profile_secret_scope(Path(_profile_home_str)))
             # The sudo password callback is thread-local (tools.terminal_tool
             # _callback_tls), so wiring it on the build thread doesn't reach this
@@ -11245,7 +11245,7 @@ def _run_prompt_submit(
             if isinstance(local_run_kwargs, dict):
                 local_run_kwargs.clear()
 
-            # Run while any profile-specific HERMES_HOME override is still active
+            # Run while any profile-specific EV0_HOME override is still active
             # so context.memory_trim is resolved from the session's own config.
             try:
                 from ev0_cli.mem_trim import trim_memory
@@ -11279,7 +11279,7 @@ def _run_prompt_submit(
             except Exception:
                 pass
             if home_token is not None:
-                reset_hermes_home_override(home_token)
+                reset_ev0_home_override(home_token)
             if secret_token is not None:
                 reset_secret_scope(secret_token)
             _clear_session_context(session_tokens)
@@ -11508,8 +11508,8 @@ def _session_images_dir(session: dict) -> Path:
     """Resolve the uploads ``images/`` dir against the session's effective home.
 
     Attach RPCs (``image.attach_bytes``, ``clipboard.paste``, ``pdf.attach``)
-    run BEFORE ``prompt.submit`` installs the session's profile HERMES_HOME
-    override, so ``get_hermes_home()`` here would return the gateway's launch
+    run BEFORE ``prompt.submit`` installs the session's profile EV0_HOME
+    override, so ``get_ev0_home()`` here would return the gateway's launch
     home. In a multi-profile / root-gateway deployment that writes the upload to
     the launch home's ``images/`` while the sandbox mount and the vision host-
     read allowlist both resolve the *session profile's* ``images/`` at run time
@@ -11520,7 +11520,7 @@ def _session_images_dir(session: dict) -> Path:
     per-profile isolation: a profile's uploads stay under that profile's home.
     """
     profile_home = session.get("profile_home")
-    base = Path(profile_home) if profile_home else _hermes_home
+    base = Path(profile_home) if profile_home else _ev0_home
     return base / "images"
 
 
@@ -11585,14 +11585,14 @@ def _desktop_attachment_dir(session: dict) -> Path:
 
     Anchored on the session profile's ``attachments/`` dir (same rule as
     ``_session_images_dir``): ``file.attach`` runs BEFORE ``prompt.submit``
-    installs the session's profile HERMES_HOME override, while the docker/ssh
+    installs the session's profile EV0_HOME override, while the docker/ssh
     sandbox mounts are resolved against the *session profile's* home at run
     time — so the staged file must land where the bind mount points, or the
     container can never see it (#76577). ``attachments/`` is registered in
     ``tools.credential_files._CACHE_DIRS`` and auto-mounted into containers.
     """
     profile_home = session.get("profile_home")
-    base = Path(profile_home) if profile_home else _hermes_home
+    base = Path(profile_home) if profile_home else _ev0_home
     root = base / "attachments"
     root.mkdir(parents=True, exist_ok=True)
     return root
@@ -12088,13 +12088,13 @@ def _(rid, params: dict) -> dict:
                         _session_info(agent, session),
                     )
             else:
-                current = is_truthy_value(os.environ.get("HERMES_YOLO_MODE"))
+                current = is_truthy_value(os.environ.get("EV0_YOLO_MODE"))
                 enable = _resolve_toggle(current)
                 if enable:
-                    os.environ["HERMES_YOLO_MODE"] = "1"
+                    os.environ["EV0_YOLO_MODE"] = "1"
                     nv = "1"
                 else:
-                    os.environ.pop("HERMES_YOLO_MODE", None)
+                    os.environ.pop("EV0_YOLO_MODE", None)
                     nv = "0"
             return _ok(rid, {"key": key, "value": nv, "scope": "session"})
         except Exception as e:
@@ -12600,21 +12600,21 @@ def _non_workspace_dirs() -> set[str]:
 
 def _is_repo_junk(root: str) -> bool:
     """A git root we never auto-surface as a project: a non-workspace dir (see
-    :func:`_non_workspace_dirs`) or anything under HERMES_HOME (~/.hermes by
+    :func:`_non_workspace_dirs`) or anything under EV0_HOME (~/.3V0 by
     default) — config/sessions/skills, not a workspace. User-created projects
     pointing there are still honored."""
     if not root:
         return True
 
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
 
     real = os.path.realpath(root)
-    hermes_home = os.path.realpath(str(get_hermes_home()))
+    ev0_home = os.path.realpath(str(get_ev0_home()))
 
     return (
         os.path.normcase(real) in _non_workspace_dirs()
-        or real == hermes_home
-        or real.startswith(hermes_home + os.sep)
+        or real == ev0_home
+        or real.startswith(ev0_home + os.sep)
     )
 
 
@@ -12622,19 +12622,19 @@ def _is_session_cwd_junk(cwd: str) -> bool:
     """A non-git cwd that should stay in flat Recents rather than auto-group.
 
     Unlike discovered git roots, an explicitly selected descendant of
-    HERMES_HOME may be an intentional prose/data workspace. The pre-Projects
+    EV0_HOME may be an intentional prose/data workspace. The pre-Projects
     desktop surfaced every such cwd, so exclude only the broad defaults that
-    would create catch-all projects: HERMES_HOME itself and the dirs in
+    would create catch-all projects: EV0_HOME itself and the dirs in
     :func:`_non_workspace_dirs`.
     """
     if not cwd:
         return True
 
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
 
     real = os.path.normcase(os.path.realpath(cwd))
-    hermes_home = os.path.normcase(os.path.realpath(str(get_hermes_home())))
-    return real in _non_workspace_dirs() or real == hermes_home
+    ev0_home = os.path.normcase(os.path.realpath(str(get_ev0_home())))
+    return real in _non_workspace_dirs() or real == ev0_home
 
 
 def _repo_discovery_policy(raw: dict | None = None) -> dict:
@@ -12701,8 +12701,8 @@ def _discover_repos_payload(
     """Merge filesystem-scanned repos (cached) with session-derived repo roots.
 
     Repo-first: the disk scan (persisted by `projects.record_repos`) surfaces
-    repos even with zero hermes sessions. Session-derived roots cover repos
-    outside the scan roots. Both are junk-filtered (hermes home subtree + bare
+    repos even with zero 3v0 sessions. Session-derived roots cover repos
+    outside the scan roots. Both are junk-filtered (3v0 home subtree + bare
     home) and carry their session totals for the overview.
 
     ``conn`` reuses an already-open projects.db connection (the tree path holds
@@ -12767,7 +12767,7 @@ def _discover_repos_payload(
                 # NOTE: `last_seen` is when the disk scan last saw the directory,
                 # not when the user last worked in it. Folding it into
                 # `last_active` stamped every scanned repo with the scan time —
-                # i.e. "just now" — so a git checkout with zero Hermes sessions
+                # i.e. "just now" — so a git checkout with zero 3V0 sessions
                 # outranked the repos the user actually works in. Activity stays
                 # session-derived; a repo with no sessions has no activity.
 
@@ -13127,7 +13127,7 @@ def _rank_slash_completions(
     ``usage``/``origin_of`` are the callables :func:`_skill_usage_lookup`
     returns. Registry commands keep their existing order — only the skill
     block is reordered, most-used first and A-Z within a tie, so the handful
-    of skills someone invokes daily lead the ones that shipped with Hermes
+    of skills someone invokes daily lead the ones that shipped with 3V0
     and were never opened.
 
     ``score_of`` (optional) is the fuzzy-match scorer from
@@ -13175,16 +13175,16 @@ def _rank_slash_completions(
 def _cli_exec_blocked(argv: list[str]) -> str | None:
     """Return user hint if this argv must not run headless in the gateway process."""
     if not argv:
-        return "bare `hermes` is interactive — use `/hermes chat -q …` or run `hermes` in another terminal"
+        return "bare `3v0` is interactive — use `/3v0 chat -q …` or run `3v0` in another terminal"
     a0 = argv[0].lower()
     if a0 == "setup":
-        return "`hermes setup` needs a full terminal — run it outside the TUI"
+        return "`3v0 setup` needs a full terminal — run it outside the TUI"
     if a0 == "gateway":
-        return "`hermes gateway` is long-running — run it in another terminal"
+        return "`3v0 gateway` is long-running — run it in another terminal"
     if a0 == "sessions" and len(argv) > 1 and argv[1].lower() == "browse":
-        return "`hermes sessions browse` is interactive — use /resume here, or run browse in another terminal"
+        return "`3v0 sessions browse` is interactive — use /resume here, or run browse in another terminal"
     if a0 == "config" and len(argv) > 1 and argv[1].lower() == "edit":
-        return "`hermes config edit` needs $EDITOR in a real terminal"
+        return "`3v0 config edit` needs $EDITOR in a real terminal"
     return None
 
 
@@ -13611,7 +13611,7 @@ def _format_live_history_output(session: dict) -> str:
     lines = ["Conversation History", "────────────────────────────────────────"]
     for idx, message in enumerate(messages, start=1):
         role = str(message.get("role") or "unknown")
-        label = "You" if role == "user" else "Hermes" if role == "assistant" else role.title()
+        label = "You" if role == "user" else "3V0" if role == "assistant" else role.title()
         text = str(message.get("text") or message.get("context") or "").strip()
         if len(text) > 400:
             text = f"{text[:400]}..."
@@ -13973,12 +13973,12 @@ def _voice_mode_enabled() -> bool:
     avoids the TUI auto-starting in REC the next time the user opens it
     just because they happened to enable voice in a prior session.
     """
-    return os.environ.get("HERMES_VOICE", "").strip() == "1"
+    return os.environ.get("EV0_VOICE", "").strip() == "1"
 
 
 def _voice_tts_enabled() -> bool:
     """Whether agent replies should be spoken back via TTS (runtime only)."""
-    return os.environ.get("HERMES_VOICE_TTS", "").strip() == "1"
+    return os.environ.get("EV0_VOICE_TTS", "").strip() == "1"
 
 
 def _any_session_running() -> bool:
@@ -14227,8 +14227,8 @@ def _full_duplex_listener() -> None:
                     # Bare stop phrase — in EITHER phase the user means
                     # "stop everything": the turn was already interrupted /
                     # TTS cut at trip time; now end the voice chat.
-                    os.environ["HERMES_VOICE"] = "0"
-                    os.environ["HERMES_VOICE_TTS"] = "0"
+                    os.environ["EV0_VOICE"] = "0"
+                    os.environ["EV0_VOICE_TTS"] = "0"
                     try:
                         from ev0_cli.voice import stop_continuous
 
@@ -14307,7 +14307,7 @@ def _voice_record_key() -> str:
     return str(record_key) if isinstance(record_key, str) and record_key else "ctrl+b"
 
 
-# ── Wake word ("Hey Hermes") ──────────────────────────────────────────────
+# ── Wake word ("Hey 3V0") ──────────────────────────────────────────────
 # The detector is process-global (one mic), like voice. The first eligible
 # transport to call wake.start owns it until stop, disconnect, or stream failure.
 # On detection we emit wake.detected; the client opens a new session and starts
@@ -14782,7 +14782,7 @@ def _(rid, params: dict) -> dict:
         # Runtime-only flag (CLI parity) — no _write_config_key, so the
         # next TUI launch starts with voice OFF instead of auto-REC from a
         # persisted stale toggle.
-        os.environ["HERMES_VOICE"] = "1" if enabled else "0"
+        os.environ["EV0_VOICE"] = "1" if enabled else "0"
 
         stop_hint = ""
         if enabled:
@@ -14810,7 +14810,7 @@ def _(rid, params: dict) -> dict:
 
             # Clear TTS so it can be toggled independently after voice is off,
             # and silence any in-flight streaming speech.
-            os.environ["HERMES_VOICE_TTS"] = "0"
+            os.environ["EV0_VOICE_TTS"] = "0"
             _tts_stream_stop(user_barge=False)
 
         return _ok(
@@ -14828,7 +14828,7 @@ def _(rid, params: dict) -> dict:
             return _err(rid, 4014, "enable voice mode first: /voice on")
         new_value = not _voice_tts_enabled()
         # Runtime-only flag (CLI parity) — see voice.toggle on/off above.
-        os.environ["HERMES_VOICE_TTS"] = "1" if new_value else "0"
+        os.environ["EV0_VOICE_TTS"] = "1" if new_value else "0"
         if not new_value:
             _tts_stream_stop(user_barge=False)
         # Include ``record_key`` on every branch so a /voice tts toggle
@@ -14941,8 +14941,8 @@ def _(rid, params: dict) -> dict:
                 # (TUI, desktop) end the conversation instead of treating
                 # it as a no-speech timeout. The continuous loop has
                 # already halted before this callback fires.
-                os.environ["HERMES_VOICE"] = "0"
-                os.environ["HERMES_VOICE_TTS"] = "0"
+                os.environ["EV0_VOICE"] = "0"
+                os.environ["EV0_VOICE_TTS"] = "0"
                 try:
                     _tts_stream_stop(user_barge=False)
                 except Exception:

@@ -1,4 +1,4 @@
-"""Tests for state.db health/stats collection (hermes doctor section).
+"""Tests for state.db health/stats collection (3v0 doctor section).
 
 Covers:
 - ``ev0_state.collect_state_db_stats``: read-only, best-effort stats

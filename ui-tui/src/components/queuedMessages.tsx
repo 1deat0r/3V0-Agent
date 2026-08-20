@@ -1,4 +1,4 @@
-import { Box, Text } from '@hermes/ink'
+import { Box, Text } from '@3v0/ink'
 
 import { compactPreview } from '../lib/text.js'
 import type { Theme } from '../theme.js'

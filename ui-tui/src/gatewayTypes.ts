@@ -1,11 +1,11 @@
-import type { BillingBlock, UsageModelData } from '@hermes/shared/billing'
-import type { HermesSkin } from '@hermes/shared/skin'
+import type { BillingBlock, UsageModelData } from '@3v0/shared/billing'
+import type { Ev0Skin } from '@3v0/shared/skin'
 
 import type { SessionInfo, SlashCategory, SubagentStatus, Usage } from './types.js'
 
-/** The cross-surface skin contract (canonical shape in `@hermes/shared`).
+/** The cross-surface skin contract (canonical shape in `@3v0/shared`).
  *  Includes the paired light_colors/dark_colors overlays from #20379. */
-export type GatewaySkin = HermesSkin
+export type GatewaySkin = Ev0Skin
 
 export interface GatewayCompletionItem {
   display: string
@@ -48,7 +48,7 @@ export interface SlashExecResponse {
 
 // ── Remote Spending (Phase 2b) ───────────────────────────────────────
 
-// Wire shapes now live in @hermes/shared for reuse by TypeScript clients.
+// Wire shapes now live in @3v0/shared for reuse by TypeScript clients.
 export type {
   BillingAutoReload,
   BillingBlock,
@@ -65,7 +65,7 @@ export type {
   SubscriptionUpgradeResponse,
   UsageBarData,
   UsageModelData
-} from '@hermes/shared/billing'
+} from '@3v0/shared/billing'
 
 export type CommandDispatchResponse =
   | { output?: string; type: 'exec' | 'plugin' }

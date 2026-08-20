@@ -45,7 +45,7 @@ def test_refresh_secret_sources_noop_without_plugin_sources(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "ev0_cli.env_loader.load_hermes_dotenv",
+        "ev0_cli.env_loader.load_ev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -71,7 +71,7 @@ def test_refresh_secret_sources_noop_when_only_builtins(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "ev0_cli.env_loader.load_hermes_dotenv",
+        "ev0_cli.env_loader.load_ev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -95,7 +95,7 @@ def test_refresh_secret_sources_repulls_when_plugin_enabled(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "ev0_cli.env_loader.load_hermes_dotenv",
+        "ev0_cli.env_loader.load_ev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -123,7 +123,7 @@ def test_refresh_respects_custom_is_enabled(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "ev0_cli.env_loader.load_hermes_dotenv",
+        "ev0_cli.env_loader.load_ev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -150,7 +150,7 @@ def test_refresh_skips_custom_source_when_not_activated(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "ev0_cli.env_loader.load_hermes_dotenv",
+        "ev0_cli.env_loader.load_ev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -178,7 +178,7 @@ def test_refresh_skips_source_whose_is_enabled_raises(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "ev0_cli.env_loader.load_hermes_dotenv",
+        "ev0_cli.env_loader.load_ev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -206,7 +206,7 @@ def test_real_plugin_source_discovery_applies_dotenv(monkeypatch, tmp_path):
 
     reg._reset_registry_for_tests()
     env_loader.reset_secret_source_cache()
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".3V0"
     plugin_dir = home / "plugins" / "fixture-secret-source"
     plugin_dir.mkdir(parents=True)
     (home / "config.yaml").write_text(
@@ -233,24 +233,24 @@ def test_real_plugin_source_discovery_applies_dotenv(monkeypatch, tmp_path):
         "    shape = 'bulk'\n\n"
         "    def fetch(self, cfg: dict, home_path: Path) -> FetchResult:\n"
         "        return FetchResult(secrets={\n"
-        "            'HERMES_TEST_PLUGIN_BOOTSTRAP': 'from-plugin',\n"
+        "            'EV0_TEST_PLUGIN_BOOTSTRAP': 'from-plugin',\n"
         "        })\n\n"
         "def register(ctx):\n"
         "    ctx.register_secret_source(FixtureVault())\n",
         encoding="utf-8",
     )
 
-    monkeypatch.setenv("HERMES_HOME", str(home))
-    monkeypatch.delenv("HERMES_TEST_PLUGIN_BOOTSTRAP", raising=False)
+    monkeypatch.setenv("EV0_HOME", str(home))
+    monkeypatch.delenv("EV0_TEST_PLUGIN_BOOTSTRAP", raising=False)
 
     try:
         PluginManager().discover_and_load()
 
-        assert os.environ["HERMES_TEST_PLUGIN_BOOTSTRAP"] == "from-plugin"
+        assert os.environ["EV0_TEST_PLUGIN_BOOTSTRAP"] == "from-plugin"
         assert [source.name for source in reg.list_plugin_sources()] == [
             "fixturevault"
         ]
     finally:
-        os.environ.pop("HERMES_TEST_PLUGIN_BOOTSTRAP", None)
+        os.environ.pop("EV0_TEST_PLUGIN_BOOTSTRAP", None)
         reg._reset_registry_for_tests()
         env_loader.reset_secret_source_cache()

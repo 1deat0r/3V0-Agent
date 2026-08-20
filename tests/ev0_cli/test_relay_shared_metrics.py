@@ -1,4 +1,4 @@
-"""Focused tests for the Hermes shared-metrics durable store."""
+"""Focused tests for the 3V0 shared-metrics durable store."""
 
 from __future__ import annotations
 
@@ -122,7 +122,7 @@ def _dimensions() -> dict[str, str]:
 
 
 def _resource(
-    hermes_version: str = "test-version",
+    ev0_version: str = "test-version",
     *,
     os_family: str = "linux",
     architecture: str = "x86_64",
@@ -130,7 +130,7 @@ def _resource(
 ) -> dict[str, str]:
     return {
         "architecture": architecture,
-        "hermes_version": hermes_version,
+        "ev0_version": ev0_version,
         "install_method": install_method,
         "os_family": os_family,
     }
@@ -227,7 +227,7 @@ def test_v2_package_preserves_pending_v1_model_counters(tmp_path):
             INSERT INTO counter_aggregates(
                 period_start,
                 metric_name,
-                hermes_version,
+                ev0_version,
                 os_family,
                 architecture,
                 install_method,
@@ -292,7 +292,7 @@ def test_v1_outbox_package_exports_unchanged_after_upgrade(tmp_path):
         "period_start": "2026-07-28T00:00:00Z",
         "period_end": "2026-07-29T00:00:00Z",
         "generated_at": "2026-07-29T01:00:00Z",
-        "resource": {"hermes_version": "legacy-version"},
+        "resource": {"ev0_version": "legacy-version"},
         "metrics": [
             {
                 "name": LEGACY_MODEL_CALL_METRIC,
@@ -542,13 +542,13 @@ def test_package_schema_matches_the_client_resource_contract():
     # Every v2 package records the complete bounded client resource.
     assert set(resource["required"]) == {
         "architecture",
-        "hermes_version",
+        "ev0_version",
         "install_method",
         "os_family",
     }
     assert set(resource["properties"]) == {
         "architecture",
-        "hermes_version",
+        "ev0_version",
         "install_method",
         "os_family",
     }
@@ -564,10 +564,10 @@ def test_client_active_mark_accepts_only_an_empty_allowlisted_payload():
         kind="mark",
         category=None,
         category_profile=None,
-        name="hermes.client.active",
+        name="3v0.client.active",
         scope_category=None,
         metadata={
-            "hermes.metrics.schema_version": "hermes.metrics.event.v2",
+            "3v0.metrics.schema_version": "3v0.metrics.event.v2",
         },
         data={},
     )
@@ -579,7 +579,7 @@ def test_client_active_mark_accepts_only_an_empty_allowlisted_payload():
     assert client_active_counter(with_payload) is None
 
     wrong_schema = deepcopy(event)
-    wrong_schema.metadata["hermes.metrics.schema_version"] = "unknown"
+    wrong_schema.metadata["3v0.metrics.schema_version"] = "unknown"
     assert client_active_counter(wrong_schema) is None
 
 
@@ -781,7 +781,7 @@ def test_auxiliary_logical_scope_projects_one_normalized_terminal_route():
         metadata={
             relay_runtime.RUNTIME_SCHEMA_KEY: relay_runtime.RUNTIME_SCHEMA_VERSION,
             relay_runtime.RUNTIME_INSTANCE_KEY: "runtime-1",
-            "hermes.call_role": "auxiliary:compression",
+            "3v0.call_role": "auxiliary:compression",
         },
     )
 
@@ -799,7 +799,7 @@ def test_auxiliary_logical_scope_projects_one_normalized_terminal_route():
         "provider": "openrouter",
     }
 
-    event.metadata["hermes.call_role"] = "primary"
+    event.metadata["3v0.call_role"] = "primary"
     assert model_call_dimensions(event) is None
 
 
@@ -848,9 +848,9 @@ def test_tool_subscriber_contract_accepts_only_bounded_events():
         kind="scope",
         category="tool",
         category_profile={},
-        name="hermes.tool_call",
+        name="3v0.tool_call",
         scope_category="end",
-        metadata={"hermes.metrics.schema_version": "hermes.metrics.event.v2"},
+        metadata={"3v0.metrics.schema_version": "3v0.metrics.event.v2"},
         data={
             "approval_outcome": "approved",
             "latency_bucket": "250ms_to_500ms",
@@ -874,13 +874,13 @@ def test_tool_subscriber_contract_accepts_only_bounded_events():
         kind="mark",
         category=None,
         category_profile=None,
-        name="hermes.tool_approval",
+        name="3v0.tool_approval",
         scope_category=None,
-        metadata={"hermes.metrics.schema_version": "hermes.metrics.event.v2"},
+        metadata={"3v0.metrics.schema_version": "3v0.metrics.event.v2"},
         data={"attribution": "unattributed", "outcome": "denied"},
     )
     assert tool_approval_counter(approval) == (
-        "hermes.tool_approval.count",
+        "3v0.tool_approval.count",
         approval.data,
     )
     approval.data["command"] = "must-not-pass"
@@ -888,24 +888,24 @@ def test_tool_subscriber_contract_accepts_only_bounded_events():
 
 
 def test_skill_subscriber_contract_accepts_only_bounded_marks():
-    metadata = {"hermes.metrics.schema_version": "hermes.metrics.event.v2"}
+    metadata = {"3v0.metrics.schema_version": "3v0.metrics.event.v2"}
     lifecycle = SimpleNamespace(
         kind="mark",
         category=None,
         category_profile=None,
-        name="hermes.skill.lifecycle",
+        name="3v0.skill.lifecycle",
         scope_category=None,
         metadata=metadata,
         data={"action": "patched", "provenance": "agent_created"},
     )
     assert skill_counter(lifecycle) == (
-        "hermes.skill.lifecycle.count",
+        "3v0.skill.lifecycle.count",
         lifecycle.data,
     )
 
     load = SimpleNamespace(**{
         **lifecycle.__dict__,
-        "name": "hermes.skill.load",
+        "name": "3v0.skill.load",
         "data": {
             "post_patch_state": "reused_after_patch",
             "provenance": "agent_created",
@@ -913,7 +913,7 @@ def test_skill_subscriber_contract_accepts_only_bounded_marks():
             "use_count_bucket": "3_to_5",
         },
     })
-    assert skill_counter(load) == ("hermes.skill.load.count", load.data)
+    assert skill_counter(load) == ("3v0.skill.load.count", load.data)
 
     load.data["skill_name"] = "privacy-canary"
     assert skill_counter(load) is None
@@ -997,14 +997,14 @@ def test_store_migrates_v1_counters_with_unknown_client_dimensions(tmp_path):
             CREATE TABLE counter_aggregates (
                 period_start TEXT NOT NULL,
                 metric_name TEXT NOT NULL,
-                hermes_version TEXT NOT NULL,
+                ev0_version TEXT NOT NULL,
                 dimensions_json TEXT NOT NULL,
                 value INTEGER NOT NULL,
                 packaged_value INTEGER NOT NULL DEFAULT 0,
                 PRIMARY KEY (
                     period_start,
                     metric_name,
-                    hermes_version,
+                    ev0_version,
                     dimensions_json
                 )
             )
@@ -1015,7 +1015,7 @@ def test_store_migrates_v1_counters_with_unknown_client_dimensions(tmp_path):
             INSERT INTO counter_aggregates(
                 period_start,
                 metric_name,
-                hermes_version,
+                ev0_version,
                 dimensions_json,
                 value,
                 packaged_value
@@ -1073,7 +1073,7 @@ def test_pending_metrics_keep_the_client_resource_recorded_at_event_time(tmp_pat
 def test_store_exports_task_started_and_terminal_counters(tmp_path):
     store = SharedMetricsStore(tmp_path / "metrics.sqlite3", tmp_path / "outbox")
     store.record_counter(
-        "hermes.task_run.started",
+        "3v0.task_run.started",
         {"entrypoint": "interactive", "execution_surface": "cli"},
         _resource(),
     )
@@ -1088,15 +1088,15 @@ def test_store_exports_task_started_and_terminal_counters(tmp_path):
         tool_call_count=2,
         retry_count=0,
     )
-    store.record_counter("hermes.task_run.finished", terminal, _resource())
+    store.record_counter("3v0.task_run.finished", terminal, _resource())
 
     [package_path] = store.create_and_export_package()
     package = json.loads(package_path.read_text(encoding="utf-8"))
     _schema_validator().validate(package)
 
     assert {metric["name"] for metric in package["metrics"]} == {
-        "hermes.task_run.finished",
-        "hermes.task_run.started",
+        "3v0.task_run.finished",
+        "3v0.task_run.started",
     }
 
 def test_package_schema_rejects_unknown_fields(tmp_path):
@@ -1240,7 +1240,7 @@ def test_retention_prunes_only_expired_exported_history(tmp_path):
             """
             UPDATE counter_aggregates
             SET period_start = '2026-05-01'
-            WHERE hermes_version = 'expired-version'
+            WHERE ev0_version = 'expired-version'
             """
         )
         connection.execute(
@@ -1268,7 +1268,7 @@ def test_retention_prunes_only_expired_exported_history(tmp_path):
         aggregate_versions = {
             row[0]
             for row in connection.execute(
-                "SELECT hermes_version FROM counter_aggregates"
+                "SELECT ev0_version FROM counter_aggregates"
             ).fetchall()
         }
     assert {row[0] for row in outbox_rows} == {

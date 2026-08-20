@@ -1,5 +1,5 @@
 """
-Top-level argparse construction for the hermes CLI.
+Top-level argparse construction for the 3v0 CLI.
 
 Lives in its own module so other modules (e.g. ``relaunch.py``) can
 introspect the parser to discover which flags exist without running the
@@ -14,7 +14,7 @@ import argparse
 
 
 # `--profile` / `-p` is consumed by ``main._apply_profile_override`` before
-# argparse runs (it sets ``HERMES_HOME`` and strips itself from ``sys.argv``),
+# argparse runs (it sets ``EV0_HOME`` and strips itself from ``sys.argv``),
 # so it isn't on the parser. Listed here so all "carry over on relaunch"
 # metadata lives in one file.
 PRE_ARGPARSE_INHERITED_FLAGS: list[tuple[str, bool]] = [
@@ -39,48 +39,48 @@ def _inherited_flag(parser, *args, **kwargs):
 
 _EPILOGUE = """
 Examples:
-    hermes                        Start interactive chat
-    hermes chat -q "Hello"        Single query mode
-    hermes --tui                  Launch the modern TUI (or set display.interface: tui)
-    hermes --cli                  Force the classic REPL (overrides display.interface: tui)
-    hermes -c                     Resume the most recent session
-    hermes -c "my project"        Resume a session by name (latest in lineage)
-    hermes --resume <session_id>  Resume a specific session by ID
-    hermes --resume latest        Resume the most recent session (same as -c)
-    hermes --tui --resume latest --in ./dir   Resume ./dir's latest session in the TUI
-    hermes setup                  Run setup wizard
-    hermes logout                 Clear stored authentication
-    hermes auth add <provider>    Add a pooled credential
-    hermes auth list              List pooled credentials
-    hermes auth remove <p> <t>    Remove pooled credential by index, id, or label
-    hermes auth reset <provider>  Clear exhaustion status for a provider
-    hermes model                  Select default model
-    hermes fallback [list]        Show fallback provider chain
-    hermes fallback add           Add a fallback provider (same picker as `hermes model`)
-    hermes fallback remove        Remove a fallback provider from the chain
-    hermes config                 View configuration
-    hermes config edit            Edit config in $EDITOR
-    hermes config set model gpt-4 Set a config value
-    hermes gateway                Run messaging gateway
-    hermes -s hermes-agent-dev,github-auth
-    hermes -w                     Start in isolated git worktree
-    hermes gateway install        Install gateway background service
-    hermes sessions list          List past sessions
-    hermes sessions browse        Interactive session picker
-    hermes sessions rename ID T   Rename/title a session
-    hermes logs                   View agent.log (last 50 lines)
-    hermes logs -f                Follow agent.log in real time
-    hermes logs errors            View errors.log
-    hermes logs --since 1h        Lines from the last hour
-    hermes debug share             Upload debug report for support
-    hermes console                Open the safe Hermes command console
-    hermes update                 Update to latest version
-    hermes dashboard              Start web UI dashboard (port 9119)
-    hermes dashboard --stop       Stop running dashboard processes
-    hermes dashboard --status     List running dashboard processes
+    3v0                        Start interactive chat
+    3v0 chat -q "Hello"        Single query mode
+    3v0 --tui                  Launch the modern TUI (or set display.interface: tui)
+    3v0 --cli                  Force the classic REPL (overrides display.interface: tui)
+    3v0 -c                     Resume the most recent session
+    3v0 -c "my project"        Resume a session by name (latest in lineage)
+    3v0 --resume <session_id>  Resume a specific session by ID
+    3v0 --resume latest        Resume the most recent session (same as -c)
+    3v0 --tui --resume latest --in ./dir   Resume ./dir's latest session in the TUI
+    3v0 setup                  Run setup wizard
+    3v0 logout                 Clear stored authentication
+    3v0 auth add <provider>    Add a pooled credential
+    3v0 auth list              List pooled credentials
+    3v0 auth remove <p> <t>    Remove pooled credential by index, id, or label
+    3v0 auth reset <provider>  Clear exhaustion status for a provider
+    3v0 model                  Select default model
+    3v0 fallback [list]        Show fallback provider chain
+    3v0 fallback add           Add a fallback provider (same picker as `3v0 model`)
+    3v0 fallback remove        Remove a fallback provider from the chain
+    3v0 config                 View configuration
+    3v0 config edit            Edit config in $EDITOR
+    3v0 config set model gpt-4 Set a config value
+    3v0 gateway                Run messaging gateway
+    3v0 -s 3v0-agent-dev,github-auth
+    3v0 -w                     Start in isolated git worktree
+    3v0 gateway install        Install gateway background service
+    3v0 sessions list          List past sessions
+    3v0 sessions browse        Interactive session picker
+    3v0 sessions rename ID T   Rename/title a session
+    3v0 logs                   View agent.log (last 50 lines)
+    3v0 logs -f                Follow agent.log in real time
+    3v0 logs errors            View errors.log
+    3v0 logs --since 1h        Lines from the last hour
+    3v0 debug share             Upload debug report for support
+    3v0 console                Open the safe 3V0 command console
+    3v0 update                 Update to latest version
+    3v0 dashboard              Start web UI dashboard (port 9119)
+    3v0 dashboard --stop       Stop running dashboard processes
+    3v0 dashboard --status     List running dashboard processes
 
 For more help on a command:
-    hermes <command> --help
+    3v0 <command> --help
 """
 
 
@@ -93,7 +93,7 @@ def build_top_level_parser():
     """
     parser = argparse.ArgumentParser(
         prog="3v0",
-        description="Hermes Agent - AI assistant with tool-calling capabilities",
+        description="3V0 Agent - AI assistant with tool-calling capabilities",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=_EPILOGUE,
     )
@@ -128,7 +128,7 @@ def build_top_level_parser():
     # --model / --provider are accepted at the top level so they can pair
     # with -z without needing the `chat` subcommand.  If neither -z nor a
     # subcommand consumes them, they fall through harmlessly as None.
-    # Mirrors `hermes chat --model ... --provider ...` semantics.
+    # Mirrors `3v0 chat --model ... --provider ...` semantics.
     _inherited_flag(
         parser,
         "-m",
@@ -136,7 +136,7 @@ def build_top_level_parser():
         default=None,
         help=(
             "Model override for this invocation (e.g. anthropic/claude-sonnet-4.6). "
-            "Applies to -z/--oneshot and --tui. Also settable via HERMES_INFERENCE_MODEL env var."
+            "Applies to -z/--oneshot and --tui. Also settable via EV0_INFERENCE_MODEL env var."
         ),
     )
     _inherited_flag(
@@ -146,7 +146,7 @@ def build_top_level_parser():
         help=(
             "Provider override for this invocation (e.g. openrouter, anthropic). "
             "Applies to -z/--oneshot and --tui. The persistent provider lives in config.yaml "
-            "under model.provider — use `hermes setup` or edit the file to change it."
+            "under model.provider — use `3v0 setup` or edit the file to change it."
         ),
     )
     _inherited_flag(
@@ -219,7 +219,7 @@ def build_top_level_parser():
         default=False,
         help=(
             "Auto-approve any unseen shell hooks declared in config.yaml "
-            "without a TTY prompt.  Equivalent to HERMES_ACCEPT_HOOKS=1 or "
+            "without a TTY prompt.  Equivalent to EV0_ACCEPT_HOOKS=1 or "
             "hooks_auto_accept: true in config.yaml.  Use on CI / headless "
             "runs that can't prompt."
         ),
@@ -251,7 +251,7 @@ def build_top_level_parser():
         "--ignore-user-config",
         action="store_true",
         default=False,
-        help="Ignore ~/.hermes/config.yaml and fall back to built-in defaults (credentials in .env are still loaded)",
+        help="Ignore ~/.3V0/config.yaml and fall back to built-in defaults (credentials in .env are still loaded)",
     )
     _inherited_flag(
         parser,
@@ -298,7 +298,7 @@ def build_top_level_parser():
     chat_parser = subparsers.add_parser(
         "chat",
         help="Interactive chat with the agent",
-        description="Start an interactive chat session with Hermes Agent",
+        description="Start an interactive chat session with 3V0 Agent",
     )
     chat_parser.add_argument(
         "-q", "--query", help="Single query (non-interactive mode)"
@@ -307,7 +307,7 @@ def build_top_level_parser():
         "--image", help="Optional local image path to attach to a single query"
     )
     # `default=argparse.SUPPRESS` on flags that are ALSO declared on the
-    # top-level parser: when the user writes `hermes -m foo chat`, argparse
+    # top-level parser: when the user writes `3v0 -m foo chat`, argparse
     # first sets `args.model = "foo"` from the top-level parser, then
     # dispatches to the chat subparser. Without SUPPRESS the chat subparser's
     # own default (`None`) would silently clobber the top-level value because
@@ -431,7 +431,7 @@ def build_top_level_parser():
         default=argparse.SUPPRESS,
         help=(
             "Auto-approve any unseen shell hooks declared in config.yaml "
-            "without a TTY prompt (see also HERMES_ACCEPT_HOOKS env var and "
+            "without a TTY prompt (see also EV0_ACCEPT_HOOKS env var and "
             "hooks_auto_accept: in config.yaml)."
         ),
     )
@@ -467,7 +467,7 @@ def build_top_level_parser():
         "--ignore-user-config",
         action="store_true",
         default=argparse.SUPPRESS,
-        help="Ignore ~/.hermes/config.yaml and fall back to built-in defaults (credentials in .env are still loaded). Useful for isolated CI runs, reproduction, and third-party integrations.",
+        help="Ignore ~/.3V0/config.yaml and fall back to built-in defaults (credentials in .env are still loaded). Useful for isolated CI runs, reproduction, and third-party integrations.",
     )
     _inherited_flag(
         chat_parser,
@@ -481,7 +481,7 @@ def build_top_level_parser():
         "--safe-mode",
         action="store_true",
         default=argparse.SUPPRESS,
-        help="Troubleshooting mode: disable ALL customizations — user config, AGENTS.md/memory injection, plugins, and MCP servers (implies --ignore-user-config and --ignore-rules). Use to isolate whether a problem comes from your setup or from Hermes itself.",
+        help="Troubleshooting mode: disable ALL customizations — user config, AGENTS.md/memory injection, plugins, and MCP servers (implies --ignore-user-config and --ignore-rules). Use to isolate whether a problem comes from your setup or from 3V0 itself.",
     )
     chat_parser.add_argument(
         "--source",

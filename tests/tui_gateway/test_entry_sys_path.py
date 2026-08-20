@@ -1,7 +1,7 @@
 """Tests for tui_gateway/entry.py sys.path hardening (issues #15989, #51286).
 
 When the TUI backend is spawned by Node.js, the launch directory may shadow
-Hermes's own top-level modules (``utils``, ``proxy``, ``ui``).  entry.py must
+3V0's own top-level modules (``utils``, ``proxy``, ``ui``).  entry.py must
 neutralize this before any non-stdlib import is resolved, by delegating to the
 shared ``ev0_bootstrap.harden_import_path`` guard.
 
@@ -55,16 +55,16 @@ def test_entry_calls_shared_harden_guard_before_heavy_imports():
 
 def test_guard_handles_absolute_cwd_path():
     """The #51286 case: the launch dir is on sys.path as its own absolute
-    path, ahead of the Hermes root.  harden_import_path must relocate the
-    Hermes root to the front so ``from utils import ...`` resolves to Hermes."""
+    path, ahead of the 3V0 root.  harden_import_path must relocate the
+    3V0 root to the front so ``from utils import ...`` resolves to 3V0."""
     import sys
 
     original = sys.path[:]
     try:
-        sys.path[:] = ["/home/user/tg-ws-proxy", "/opt/hermes", "/usr/lib"]
-        ev0_bootstrap.harden_import_path(src_root="/opt/hermes")
-        assert sys.path[0] == "/opt/hermes"
-        assert sys.path.index("/opt/hermes") < sys.path.index(
+        sys.path[:] = ["/home/user/tg-ws-proxy", "/opt/3v0", "/usr/lib"]
+        ev0_bootstrap.harden_import_path(src_root="/opt/3v0")
+        assert sys.path[0] == "/opt/3v0"
+        assert sys.path.index("/opt/3v0") < sys.path.index(
             "/home/user/tg-ws-proxy"
         )
     finally:

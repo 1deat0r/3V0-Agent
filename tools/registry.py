@@ -1,4 +1,4 @@
-"""Central registry for all hermes-agent tools.
+"""Central registry for all 3v0-agent tools.
 
 Each tool file calls ``registry.register()`` at module level to declare its
 schema, handler, toolset membership, and availability check.  ``model_tools.py``
@@ -25,7 +25,7 @@ import time
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set
 
-from ev0_constants import hermes_home_key
+from ev0_constants import ev0_home_key
 
 logger = logging.getLogger(__name__)
 
@@ -167,9 +167,9 @@ def _discovery_cache_path() -> Optional[Path]:
     try:
         # Deferred import keeps tools/registry.py a no-deps leaf at module
         # import time (ev0_constants itself is stdlib-only, so no cycle).
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        return Path(get_hermes_home()) / "cache" / "tool_discovery_cache.json"
+        return Path(get_ev0_home()) / "cache" / "tool_discovery_cache.json"
     except Exception:
         return None
 
@@ -249,7 +249,7 @@ class _PluginOverridePolicy:
 # probe external state (Docker daemon, Modal SDK install, playwright binary
 # availability). For a long-lived CLI or gateway process, calling them on
 # every get_definitions() is pure waste — external state changes on human
-# timescales. Cache results for ~30 s so env-var flips via ``hermes tools``
+# timescales. Cache results for ~30 s so env-var flips via ``3v0 tools``
 # or live credential file changes propagate within a turn or two without
 # requiring any explicit invalidation.
 #
@@ -300,7 +300,7 @@ def check_fn_cache_scope() -> Optional[str]:
     """Return the active profile key when availability is profile-scoped.
 
     Single-profile processes intentionally keep the historical process-wide
-    cache. A multiplex gateway installs a Hermes-home override for every
+    cache. A multiplex gateway installs a 3V0-home override for every
     profile turn, so the canonical profile key is the stable isolation
     boundary across repeated turns for that profile.
     """
@@ -309,9 +309,9 @@ def check_fn_cache_scope() -> Optional[str]:
 
         if not is_multiplex_active():
             return None
-        from ev0_constants import get_hermes_home_override
+        from ev0_constants import get_ev0_home_override
 
-        override = get_hermes_home_override()
+        override = get_ev0_home_override()
         if not override:
             return CHECK_FN_CACHE_BYPASS
         return str(Path(override).expanduser().resolve())
@@ -393,7 +393,7 @@ def _check_fn_cached(fn: Callable) -> bool:
 
 def invalidate_check_fn_cache() -> None:
     """Drop all cached ``check_fn`` results. Call after config changes that
-    affect tool availability (e.g. ``hermes tools enable``)."""
+    affect tool availability (e.g. ``3v0 tools enable``)."""
     with _check_fn_cache_lock:
         _check_fn_cache.clear()
         _check_fn_last_good.clear()
@@ -429,7 +429,7 @@ class ToolRegistry:
     def __init__(self):
         # Built-in and other process-global registrations.
         self._tools: Dict[str, ToolEntry] = {}
-        # Plugin registrations are overlays keyed by resolved HERMES_HOME. A
+        # Plugin registrations are overlays keyed by resolved EV0_HOME. A
         # profile sees its own overlay first and then the global built-ins.
         self._scoped_tools: Dict[str, Dict[str, ToolEntry]] = {}
         # Plugin module namespace -> operator opt-in for built-in override.
@@ -457,7 +457,7 @@ class ToolRegistry:
     @staticmethod
     def current_scope_key() -> str:
         """Return the active profile's canonical registry scope."""
-        return hermes_home_key()
+        return ev0_home_key()
 
     def _merged_tools(self, scope: Optional[str] = None) -> Dict[str, ToolEntry]:
         """Return global tools overlaid with one profile's plugin tools."""
@@ -688,7 +688,7 @@ class ToolRegistry:
                 return max(matches, key=len)
         # Also gate plugin modules currently loading but not yet policy-recorded
         # (defensive: a handler defined in the plugin namespace is plugin code).
-        if module_namespace.startswith("hermes_plugins."):
+        if module_namespace.startswith("ev0_plugins."):
             return ".".join(module_namespace.split(".")[:2])
         return None
 
@@ -898,9 +898,9 @@ class ToolRegistry:
             if not entry.toolset.startswith("mcp-"):
                 owner = self._plugin_owner_of(entry.handler)
                 # Ownership check: bind to the plugin package root
-                # (``hermes_plugins.{name}``), not the exact module string.
-                # A handler defined in ``hermes_plugins.pkg.handlers`` is
-                # still owned by the ``hermes_plugins.pkg`` package — exact
+                # (``ev0_plugins.{name}``), not the exact module string.
+                # A handler defined in ``ev0_plugins.pkg.handlers`` is
+                # still owned by the ``ev0_plugins.pkg`` package — exact
                 # string equality would wrongly block root-module cleanup code
                 # from removing tools registered by a submodule of the same
                 # plugin (egilewski review on #55840).
@@ -1022,7 +1022,7 @@ class ToolRegistry:
         are included. ``check_fn()`` results are cached for ~30 s via
         :func:`_check_fn_cached` to amortize repeat probes (check_terminal_
         requirements probes modal/docker, browser checks probe playwright,
-        etc.); TTL chosen so env-var changes (``hermes tools enable foo``)
+        etc.); TTL chosen so env-var changes (``3v0 tools enable foo``)
         still take effect in near-real-time without forcing a full cache
         flush on every call.
         """

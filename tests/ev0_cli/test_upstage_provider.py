@@ -1,6 +1,6 @@
 """Focused tests for Upstage Solar first-class provider wiring.
 
-Regression guard for the bug where `hermes model` saved `provider: upstage`
+Regression guard for the bug where `3v0 model` saved `provider: upstage`
 correctly but, on re-entry, showed a different provider as active. Root cause:
 `ev0_cli/providers.py` (the resolver behind `resolve_provider_full`) had no
 `upstage` overlay, so `resolve_provider_full("upstage")` returned None, the
@@ -37,10 +37,10 @@ class TestUpstageResolver:
 
 class TestUpstageOverlay:
     def test_overlay_exists(self):
-        from ev0_cli.providers import HERMES_OVERLAYS
+        from ev0_cli.providers import EV0_OVERLAYS
 
-        assert "upstage" in HERMES_OVERLAYS
-        overlay = HERMES_OVERLAYS["upstage"]
+        assert "upstage" in EV0_OVERLAYS
+        overlay = EV0_OVERLAYS["upstage"]
         assert overlay.transport == "openai_chat"
         assert overlay.extra_env_vars == ("UPSTAGE_API_KEY",)
         assert overlay.base_url_override == "https://api.upstage.ai/v1"

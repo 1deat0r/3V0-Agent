@@ -1,13 +1,13 @@
 # cron/ — scheduled jobs
 
-Scheduled jobs: store (`jobs.py`), scheduler tick (lock-guarded, hard 3-min interrupt), provider backends, execution ledger, suggestions, blueprint catalog. Agent schedules via the `cronjob` tool; users via `hermes cron` or `/cron`.
+Scheduled jobs: store (`jobs.py`), scheduler tick (lock-guarded, hard 3-min interrupt), provider backends, execution ledger, suggestions, blueprint catalog. Agent schedules via the `cronjob` tool; users via `3v0 cron` or `/cron`.
 ---
 Auto-rendered from `wiki/manifest.tsv` — `python3 scripts/build_wiki.py --rebuild` regenerates.
 Columns: path · kind · purpose · why · related
 
 | path | kind | purpose | why | related |
 |------|------|---------|-----|---------|
-| `cron/__init__.py` | source | Cron job scheduling system for Hermes Agent. | Python module executed or imported by the runtime; check git intent before deleting | cron/blueprint_catalog.py; cron/executions.py; cron/jobs.py; cron/lifecycle_guard.py; cron/monitor.py; cron/notepad.py; cron/scheduler.py; cron/scheduler_provider.py; cron/scripts/__init__.py |
+| `cron/__init__.py` | source | Cron job scheduling system for 3V0 Agent. | Python module executed or imported by the runtime; check git intent before deleting | cron/blueprint_catalog.py; cron/executions.py; cron/jobs.py; cron/lifecycle_guard.py; cron/monitor.py; cron/notepad.py; cron/scheduler.py; cron/scheduler_provider.py; cron/scripts/__init__.py |
 | `cron/blueprint_catalog.py` | source | Blueprint jobs catalog (well-known scheduled tasks) | One-shot canonical jobs | cron/jobs.py |
 | `cron/executions.py` | source | Audit of what fired | Records cron executions for the scheduler's audit trail | cron/scheduler.py; cron/jobs.py; gateway/run.py |
 | `cron/jobs.py` | source | Job store — SQLite-backed cron jobs (schedules, skills, context_from, workdir) | The agent's own scheduler; 3-minute hard interrupt invariant | ev0_cli/cron.py; tools/cronjob_tools.py |

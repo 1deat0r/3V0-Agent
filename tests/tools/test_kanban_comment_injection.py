@@ -35,15 +35,15 @@ class FakeAgent:
 
 @pytest.fixture
 def worker_home(tmp_path, monkeypatch):
-    home = tmp_path / "hermes_home"
+    home = tmp_path / "ev0_home"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("EV0_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    for var in ("HERMES_KANBAN_DB", "HERMES_KANBAN_WORKSPACES_ROOT", "HERMES_KANBAN_HOME", "HERMES_KANBAN_BOARD"):
+    for var in ("EV0_KANBAN_DB", "EV0_KANBAN_WORKSPACES_ROOT", "EV0_KANBAN_HOME", "EV0_KANBAN_BOARD"):
         monkeypatch.delenv(var, raising=False)
     try:
         import ev0_constants
-        ev0_constants._cached_default_hermes_root = None  # type: ignore[attr-defined]
+        ev0_constants._cached_default_ev0_root = None  # type: ignore[attr-defined]
     except Exception:
         pass
     kb._INITIALIZED_PATHS.clear()
@@ -59,7 +59,7 @@ def _unthrottle():
 
 
 def test_noop_without_worker_env(worker_home, monkeypatch):
-    monkeypatch.delenv("HERMES_KANBAN_TASK", raising=False)
+    monkeypatch.delenv("EV0_KANBAN_TASK", raising=False)
     agent = FakeAgent()
     assert kt.inject_new_comments_from_env(agent) is False
     assert agent.steers == []
@@ -73,8 +73,8 @@ def test_seed_then_inject_new_comment(worker_home, monkeypatch):
     finally:
         conn.close()
 
-    monkeypatch.setenv("HERMES_KANBAN_TASK", tid)
-    monkeypatch.setenv("HERMES_PROFILE", "worker-bot")
+    monkeypatch.setenv("EV0_KANBAN_TASK", tid)
+    monkeypatch.setenv("EV0_PROFILE", "worker-bot")
     agent = FakeAgent()
 
     # First poll seeds the watermark past the existing thread — no injection.
@@ -106,8 +106,8 @@ def test_skips_own_authored_comments(worker_home, monkeypatch):
     finally:
         conn.close()
 
-    monkeypatch.setenv("HERMES_KANBAN_TASK", tid)
-    monkeypatch.setenv("HERMES_PROFILE", "worker-bot")
+    monkeypatch.setenv("EV0_KANBAN_TASK", tid)
+    monkeypatch.setenv("EV0_PROFILE", "worker-bot")
     agent = FakeAgent()
 
     _unthrottle()

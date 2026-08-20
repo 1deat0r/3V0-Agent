@@ -13,7 +13,7 @@ Size caps (documented contract):
   untouched — the notepad is prompt-injected each run, so unbounded growth
   would bloat every wake-up's prompt.
 
-Write path is the CLI (``hermes cron notepad <job_id> set <key> <value>``),
+Write path is the CLI (``3v0 cron notepad <job_id> set <key> <value>``),
 which the running agent invokes via its terminal tool; no model tool is
 added.
 
@@ -28,10 +28,10 @@ import threading
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional
 
-from ev0_constants import get_hermes_home
-from ev0_time import now as _hermes_now
+from ev0_constants import get_ev0_home
+from ev0_time import now as _ev0_now
 
-NOTEPAD_FILE = get_hermes_home().resolve() / "cron" / "notepad.db"
+NOTEPAD_FILE = get_ev0_home().resolve() / "cron" / "notepad.db"
 MAX_VALUE_BYTES = 16 * 1024
 MAX_KEY_CHARS = 128
 MAX_JOB_TOTAL_BYTES = 64 * 1024
@@ -95,7 +95,7 @@ def set_note(job_id: str, key: str, value: str) -> Dict[str, Any]:
     """Upsert one key. Raises ValueError when a size cap would be exceeded."""
     job_id, key, value = str(job_id), str(key), str(value)
     _validate(job_id, key, value)
-    now = _hermes_now().isoformat()
+    now = _ev0_now().isoformat()
     with _transaction() as conn:
         row = conn.execute(
             """SELECT COALESCE(SUM(LENGTH(CAST(key AS BLOB))
@@ -181,7 +181,7 @@ def render_notepad_section(job_id: str) -> str:
         "## Job notepad (persistent across runs)\n"
         "This durable scratchpad survives between scheduled runs of this "
         "job. Update it via the CLI, e.g.:\n"
-        f"`hermes cron notepad {job_id} set <key> <value>` "
-        f"(also: get/delete/list; `hermes cron notepad {job_id} delete "
+        f"`3v0 cron notepad {job_id} set <key> <value>` "
+        f"(also: get/delete/list; `3v0 cron notepad {job_id} delete "
         "<key>` removes an entry).\n\n" + "\n".join(lines) + "\n\n"
     )

@@ -54,8 +54,8 @@ def seed_tasks(conn, kb, n, assignee="bench-worker", with_parents=False):
 
 
 def main():
-    home = tempfile.mkdtemp(prefix="hermes_bench_")
-    os.environ["HERMES_HOME"] = home
+    home = tempfile.mkdtemp(prefix="ev0_bench_")
+    os.environ["EV0_HOME"] = home
     os.environ["HOME"] = home
     sys.path.insert(0, WT)
     from ev0_cli import kanban_db as kb

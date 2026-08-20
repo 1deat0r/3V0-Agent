@@ -8,7 +8,7 @@ def test_tui_finds_bundled_entry_js(tmp_path):
     entry.write_text("// bundled TUI", encoding="utf-8")
 
     from ev0_cli.main import _find_bundled_tui
-    result = _find_bundled_tui(hermes_cli_dir=tmp_path / "ev0_cli")
+    result = _find_bundled_tui(ev0_cli_dir=tmp_path / "ev0_cli")
     assert result is not None
     assert result.name == "entry.js"
 

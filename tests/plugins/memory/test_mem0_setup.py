@@ -19,7 +19,7 @@ from plugins.memory.mem0._setup import (
 )
 
 
-def _inject_fake_hermes_cli(monkeypatch):
+def _inject_fake_ev0_cli(monkeypatch):
     """Inject fake ev0_cli modules so yaml/curses aren't required."""
     fake_config_mod = types.ModuleType("ev0_cli.config")
     fake_config_mod.save_config = lambda c: None
@@ -28,11 +28,11 @@ def _inject_fake_hermes_cli(monkeypatch):
     fake_setup_mod._curses_select = lambda *a, **kw: 0
     fake_setup_mod._prompt = lambda label, default=None, secret=False: default or ""
 
-    fake_hermes_cli = types.ModuleType("ev0_cli")
-    fake_hermes_cli.config = fake_config_mod
-    fake_hermes_cli.memory_setup = fake_setup_mod
+    fake_ev0_cli = types.ModuleType("ev0_cli")
+    fake_ev0_cli.config = fake_config_mod
+    fake_ev0_cli.memory_setup = fake_setup_mod
 
-    monkeypatch.setitem(sys.modules, "ev0_cli", fake_hermes_cli)
+    monkeypatch.setitem(sys.modules, "ev0_cli", fake_ev0_cli)
     monkeypatch.setitem(sys.modules, "ev0_cli.config", fake_config_mod)
     monkeypatch.setitem(sys.modules, "ev0_cli.memory_setup", fake_setup_mod)
 
@@ -187,9 +187,9 @@ class TestPromptApiKey:
 class TestPostSetup:
 
     def test_platform_flag_mode(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("sys.argv", ["hermes", "--mode", "platform", "--api-key", "sk-test"])
-        monkeypatch.setattr("plugins.memory.mem0._setup.get_hermes_home", lambda: tmp_path)
-        _inject_fake_hermes_cli(monkeypatch)
+        monkeypatch.setattr("sys.argv", ["3v0", "--mode", "platform", "--api-key", "sk-test"])
+        monkeypatch.setattr("plugins.memory.mem0._setup.get_ev0_home", lambda: tmp_path)
+        _inject_fake_ev0_cli(monkeypatch)
         config = {"memory": {}}
         post_setup(str(tmp_path), config)
         assert config["memory"]["provider"] == "mem0"
@@ -201,11 +201,11 @@ class TestPostSetup:
 
     def test_selfhosted_flag_mode(self, tmp_path, monkeypatch):
         monkeypatch.setattr("sys.argv", [
-            "hermes", "--mode", "selfhosted",
+            "3v0", "--mode", "selfhosted",
             "--host", "http://localhost:8888/", "--api-key", "admin-key",
         ])
-        monkeypatch.setattr("plugins.memory.mem0._setup.get_hermes_home", lambda: tmp_path)
-        _inject_fake_hermes_cli(monkeypatch)
+        monkeypatch.setattr("plugins.memory.mem0._setup.get_ev0_home", lambda: tmp_path)
+        _inject_fake_ev0_cli(monkeypatch)
         monkeypatch.setattr("plugins.memory.mem0._setup._check_selfhosted_server", lambda h: None)
         config = {"memory": {}}
         post_setup(str(tmp_path), config)
@@ -214,7 +214,7 @@ class TestPostSetup:
         assert "MEM0_API_KEY=admin-key" in env_content
         mem0_json = json.loads((tmp_path / "mem0.json").read_text())
         assert mem0_json["host"] == "http://localhost:8888"  # trailing slash stripped
-        assert mem0_json["user_id"] == "hermes-user"
+        assert mem0_json["user_id"] == "3v0-user"
 
 
 class TestDryRun:

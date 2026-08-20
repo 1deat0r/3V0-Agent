@@ -21,7 +21,7 @@ from core.projects import LedgerEntry, ProjectLedger, resolve_project  # noqa: E
 
 
 BODY = Path("/home/me/Projects/AI Agents/3V0 Agent")
-PROFILE = Path("/home/me/.hermes/profiles/3v0")
+PROFILE = Path("/home/me/.3V0/profiles/3v0")
 HOME = Path("/home/me")
 
 

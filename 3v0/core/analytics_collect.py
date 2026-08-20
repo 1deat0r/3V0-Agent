@@ -1,6 +1,6 @@
 """Collection half of self-analytics (Stone 22 architecture pass).
 
-Reads the Hermes state DB and turns raw rows into the inputs
+Reads the 3V0 state DB and turns raw rows into the inputs
 `core.analytics.summarize` consumes. Collection-at-the-edge, mirroring
 `core/session_db.py` / `core/gitstate.py`: every function takes the DB path as
 a parameter — no profile/global I/O, no environment reads, no CLI coupling.

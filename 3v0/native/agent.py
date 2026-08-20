@@ -1,6 +1,6 @@
 """Native agent loop — message -> context -> OWN LLM -> response.
 
-Zero Hermes imports. The loop is deliberately thin: assemble a system prompt
+Zero 3V0 imports. The loop is deliberately thin: assemble a system prompt
 from SOUL + native memory, hold the conversation in a messages list, and call
 the native LLM client. Tool execution lands in Stone N3."""
 from __future__ import annotations
@@ -12,7 +12,7 @@ from . import llm
 from .context import build_system_from_store, read_soul
 
 _REPO = Path(__file__).resolve().parent.parent.parent  # repo root
-_PROFILE = Path(os.environ.get("HERMES_HOME") or "~/.hermes/profiles/3v0").expanduser()
+_PROFILE = Path(os.environ.get("EV0_HOME") or "~/.3V0/profiles/3v0").expanduser()
 _SOUL = _PROFILE / "SOUL.md"                # the injected soul (canonical)
 _MEM_DB = _REPO / "3v0" / "data" / "memory.db"  # canonical store (SQLite, ADR-0001/0004)
 

@@ -1,6 +1,6 @@
 """
 SQLite-backed fact store with entity resolution and trust scoring.
-Single-user Hermes memory store plugin.
+Single-user 3V0 memory store plugin.
 """
 
 import re
@@ -120,8 +120,8 @@ class MemoryStore:
         hrr_dim: int = 1024,
     ) -> None:
         if db_path is None:
-            from ev0_constants import get_hermes_home
-            db_path = str(get_hermes_home() / "memory_store.db")
+            from ev0_constants import get_ev0_home
+            db_path = str(get_ev0_home() / "memory_store.db")
         self.db_path = Path(db_path).expanduser()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.default_trust = _clamp_trust(default_trust)
@@ -170,7 +170,7 @@ class MemoryStore:
     def _init_db(self) -> None:
         """Create tables, indexes, and triggers if they do not exist. Enable WAL mode."""
         # Use the shared WAL-fallback helper so memory_store.db degrades
-        # gracefully on NFS/SMB/FUSE-mounted HERMES_HOME (same issue as
+        # gracefully on NFS/SMB/FUSE-mounted EV0_HOME (same issue as
         # state.db / kanban.db — see ev0_state._WAL_INCOMPAT_MARKERS).
         from ev0_state import apply_wal_with_fallback
         apply_wal_with_fallback(self._conn, db_label="memory_store.db (holographic)")

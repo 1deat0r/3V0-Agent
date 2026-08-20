@@ -13,7 +13,7 @@ The fix has two halves:
     delivers a loud actionable error.
 
 These tests exercise the full run_job path (real imports, mocked AIAgent +
-resolve_runtime_provider against a temp HERMES_HOME) and the create_job
+resolve_runtime_provider against a temp EV0_HOME) and the create_job
 snapshot capture. They are load-bearing: without the guard, cases (b) call the
 agent and "succeed" instead of failing closed.
 """
@@ -50,9 +50,9 @@ def _run_with_current_provider(job, current_provider, tmp_path):
     Returns (success, output, final_response, error, agent_constructed).
     """
     fake_db = MagicMock()
-    with patch("cron.scheduler._hermes_home", tmp_path), \
+    with patch("cron.scheduler._ev0_home", tmp_path), \
          patch("cron.scheduler._resolve_origin", return_value=None), \
-         patch("ev0_cli.env_loader.load_hermes_dotenv"), \
+         patch("ev0_cli.env_loader.load_ev0_dotenv"), \
          patch("ev0_cli.env_loader.reset_secret_source_cache"), \
          patch("ev0_state.SessionDB", return_value=fake_db), \
          patch(
@@ -239,10 +239,10 @@ def _run_with_current_provider_and_model(
         config_yaml += "cron:\n" + "\n".join(cron_lines) + "\n"
     (tmp_path / "config.yaml").write_text(config_yaml)
     fake_db = MagicMock()
-    with patch("cron.scheduler._hermes_home", tmp_path), \
-         patch("cron.scheduler._get_hermes_home", return_value=tmp_path), \
+    with patch("cron.scheduler._ev0_home", tmp_path), \
+         patch("cron.scheduler._get_ev0_home", return_value=tmp_path), \
          patch("cron.scheduler._resolve_origin", return_value=None), \
-         patch("ev0_cli.env_loader.load_hermes_dotenv"), \
+         patch("ev0_cli.env_loader.load_ev0_dotenv"), \
          patch("ev0_cli.env_loader.reset_secret_source_cache"), \
          patch("ev0_state.SessionDB", return_value=fake_db), \
          patch(
@@ -404,9 +404,9 @@ class TestRuntimeResolutionTargetModel:
             }
 
         fake_db = MagicMock()
-        with patch("cron.scheduler._hermes_home", tmp_path), \
+        with patch("cron.scheduler._ev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("ev0_cli.env_loader.load_hermes_dotenv"), \
+             patch("ev0_cli.env_loader.load_ev0_dotenv"), \
              patch("ev0_cli.env_loader.reset_secret_source_cache"), \
              patch("ev0_state.SessionDB", return_value=fake_db), \
              patch(

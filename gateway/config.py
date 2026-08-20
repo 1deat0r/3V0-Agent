@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import Dict, List, Optional, Any, Callable
 from enum import Enum
 
-from ev0_cli.config import get_hermes_home
+from ev0_cli.config import get_ev0_home
 from agent.secret_scope import current_secret_scope, get_secret as _get_secret
 from utils import is_truthy_value
 
@@ -670,7 +670,7 @@ class PlatformConfig:
     # assistant.threads.setStatus line (shown next to the bot name; needs the
     # assistant:write scope to render) and Google Chat's visible marker
     # message. None keeps each platform's built-in default ("is thinking..." /
-    # "Hermes is thinking…"). Platforms with textless indicators (Discord,
+    # "3V0 is thinking…"). Platforms with textless indicators (Discord,
     # Telegram, Matrix, …) ignore it.
     typing_status_text: Optional[str] = None
 
@@ -936,7 +936,7 @@ class GatewayConfig:
     quick_commands: Dict[str, Any] = field(default_factory=dict)
     
     # Storage paths
-    sessions_dir: Path = field(default_factory=lambda: get_hermes_home() / "sessions")
+    sessions_dir: Path = field(default_factory=lambda: get_ev0_home() / "sessions")
 
     # Whether to keep writing the legacy sessions.json mirror of the gateway
     # routing index. The primary copy lives in state.db (gateway_routing
@@ -968,7 +968,7 @@ class GatewayConfig:
     # When True, the default profile's gateway serves inbound messages for every
     # profile on the host: profiles are stamped into session keys and (in later
     # phases) per-profile adapters/credentials are resolved. When False, the
-    # gateway behaves exactly as before — single HERMES_HOME, no profile stamping.
+    # gateway behaves exactly as before — single EV0_HOME, no profile stamping.
     multiplex_profiles: bool = False
     # Optional named-profile allowlist for multiplex mode. None preserves the
     # historical serve-all behavior; [] serves only the default profile.
@@ -1163,7 +1163,7 @@ class GatewayConfig:
         if "default_reset_policy" in data:
             default_policy = SessionResetPolicy.from_dict(data["default_reset_policy"])
         
-        sessions_dir = get_hermes_home() / "sessions"
+        sessions_dir = get_ev0_home() / "sessions"
         if "sessions_dir" in data:
             sessions_dir = Path(data["sessions_dir"])
         
@@ -1209,7 +1209,7 @@ class GatewayConfig:
         loop_watchdog = _coerce_bool(loop_watchdog_raw, True)
         if multiplex_profiles is None and isinstance(nested_gateway, dict):
             # Also honor gateway.multiplex_profiles written by
-            # ``hermes config set gateway.multiplex_profiles true``.
+            # ``3v0 config set gateway.multiplex_profiles true``.
             multiplex_profiles = nested_gateway.get("multiplex_profiles")
         # Operator override: GATEWAY_MULTIPLEX_PROFILES wins over config.yaml when
         # set to a recognized value. Hosted deployments (Nous Portal / Fly) stamp
@@ -1312,11 +1312,11 @@ def load_gateway_config() -> GatewayConfig:
 
     Priority (highest to lowest):
     1. Environment variables
-    2. ~/.hermes/config.yaml (primary user-facing config)
-    3. ~/.hermes/gateway.json (legacy — provides defaults under config.yaml)
+    2. ~/.3V0/config.yaml (primary user-facing config)
+    3. ~/.3V0/gateway.json (legacy — provides defaults under config.yaml)
     4. Built-in defaults
     """
-    _home = get_hermes_home()
+    _home = get_ev0_home()
     gw_data: dict = {}
 
     # Legacy fallback: gateway.json provides the base layer.
@@ -1351,7 +1351,7 @@ def load_gateway_config() -> GatewayConfig:
 
             # Shared nested-fallback source: settings meant to be top-level
             # keys are also accepted when a user nests them under `gateway:`
-            # (e.g. via `hermes config set gateway.<key> ...`, which naturally
+            # (e.g. via `3v0 config set gateway.<key> ...`, which naturally
             # produces that shape). Every key below mirrors the precedent
             # already established for gateway.multiplex_profiles/streaming/
             # write_sessions_json: top-level wins, nested gateway.* falls back.
@@ -1406,7 +1406,7 @@ def load_gateway_config() -> GatewayConfig:
 
             # Multiplexing flag: accept both the top-level key and the nested
             # gateway.multiplex_profiles form (written by
-            # ``hermes config set gateway.multiplex_profiles true``).
+            # ``3v0 config set gateway.multiplex_profiles true``).
             if "multiplex_profiles" in yaml_cfg:
                 gw_data["multiplex_profiles"] = yaml_cfg["multiplex_profiles"]
 
@@ -1433,7 +1433,7 @@ def load_gateway_config() -> GatewayConfig:
 
             if isinstance(gateway_section, dict):
                 if "multiplex_profiles" in gateway_section and "multiplex_profiles" not in gw_data:
-                    # gateway.multiplex_profiles written by `hermes config set gateway.multiplex_profiles true`
+                    # gateway.multiplex_profiles written by `3v0 config set gateway.multiplex_profiles true`
                     gw_data["multiplex_profiles"] = gateway_section["multiplex_profiles"]
                 if "max_concurrent_sessions" in gateway_section:
                     gw_data["max_concurrent_sessions"] = gateway_section["max_concurrent_sessions"]
@@ -1448,7 +1448,7 @@ def load_gateway_config() -> GatewayConfig:
             streaming_cfg = yaml_cfg.get("streaming")
             if not isinstance(streaming_cfg, dict) and isinstance(gateway_section, dict):
                 # Fall back to nested gateway.streaming written by
-                # ``hermes config set gateway.streaming.*``
+                # ``3v0 config set gateway.streaming.*``
                 streaming_cfg = gateway_section.get("streaming")
             if isinstance(streaming_cfg, dict):
                 gw_data["streaming"] = streaming_cfg

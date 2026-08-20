@@ -45,15 +45,15 @@ from utils import base_url_host_matches, base_url_hostname
 import fire
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeElapsedColumn, TimeRemainingColumn
 from rich.console import Console
-from ev0_constants import OPENROUTER_BASE_URL, get_hermes_home
+from ev0_constants import OPENROUTER_BASE_URL, get_ev0_home
 from agent.retry_utils import jittered_backoff
 
-# Load .env from HERMES_HOME first, then project root as a dev fallback.
-from ev0_cli.env_loader import load_hermes_dotenv
+# Load .env from EV0_HOME first, then project root as a dev fallback.
+from ev0_cli.env_loader import load_ev0_dotenv
 
-_hermes_home = get_hermes_home()
+_ev0_home = get_ev0_home()
 _project_env = Path(__file__).parent / ".env"
-load_hermes_dotenv(hermes_home=_hermes_home, project_env=_project_env)
+load_ev0_dotenv(ev0_home=_ev0_home, project_env=_project_env)
 
 
 def _effective_temperature_for_model(
@@ -386,7 +386,7 @@ class TrajectoryCompressor:
             if client is None:
                 raise RuntimeError(
                     f"Provider '{provider}' is not configured. "
-                    f"Check your API key or run: hermes setup")
+                    f"Check your API key or run: 3v0 setup")
             self.client = None  # Not used directly
             self.async_client = None  # Not used directly
         else:

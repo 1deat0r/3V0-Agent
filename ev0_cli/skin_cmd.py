@@ -1,4 +1,4 @@
-"""``hermes skin`` — list, switch, and tweak skins from the CLI.
+"""``3v0 skin`` — list, switch, and tweak skins from the CLI.
 
 ``set`` is the load-bearing verb: it changes ONE color of the ACTIVE skin **in
 place**, so tweaking (say) the tool marker never disturbs the rest of the look —
@@ -15,13 +15,13 @@ import re
 import sys
 from pathlib import Path
 
-from ev0_constants import display_hermes_home, get_hermes_home
+from ev0_constants import display_ev0_home, get_ev0_home
 
 _HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 def _skins_dir() -> Path:
-    return get_hermes_home() / "skins"
+    return get_ev0_home() / "skins"
 
 
 def _active_skin() -> str:
@@ -81,7 +81,7 @@ def _skin_set(key: str, value: str, skin: str | None) -> int:
     if target != name:
         _use(target)
 
-    print(f"✓ {key} = {value} in {display_hermes_home()}/skins/{target}.yaml (live within ~1s)")
+    print(f"✓ {key} = {value} in {display_ev0_home()}/skins/{target}.yaml (live within ~1s)")
     return 0
 
 
@@ -96,7 +96,7 @@ def _skin_list() -> int:
 
 
 def skin_command(args) -> None:
-    """Dispatch ``hermes skin <verb>``."""
+    """Dispatch ``3v0 skin <verb>``."""
     verb = getattr(args, "skin_command", None)
 
     if verb == "set":

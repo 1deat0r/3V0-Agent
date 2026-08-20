@@ -7,7 +7,7 @@ license: MIT
 dependencies: [faiss-cpu, faiss-gpu, numpy]
 platforms: [linux, macos]
 metadata:
-  hermes:
+  3v0:
     tags: [RAG, FAISS, Similarity Search, Vector Search, Facebook AI, GPU Acceleration, Billion-Scale, K-NN, HNSW, High Performance, Large Scale]
 
 ---

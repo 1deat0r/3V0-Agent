@@ -3,7 +3,7 @@
 Covers issue #43747 (externally-reset variant): Codex 429s persist a
 ``last_error_reset_at`` that can be days in the future, but the upstream
 window can reopen early (banked reset redeemed, plan upgrade, upstream
-reset).  Hermes must detect that and lift the stale local cooldown instead
+reset).  3V0 must detect that and lift the stale local cooldown instead
 of refusing requests until re-auth.
 """
 
@@ -128,9 +128,9 @@ def test_probe_sends_chatgpt_account_id_from_jwt(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def _write_auth_store(hermes_home, payload):
-    hermes_home.mkdir(parents=True, exist_ok=True)
-    (hermes_home / "auth.json").write_text(json.dumps(payload, indent=2))
+def _write_auth_store(ev0_home, payload):
+    ev0_home.mkdir(parents=True, exist_ok=True)
+    (ev0_home / "auth.json").write_text(json.dumps(payload, indent=2))
 
 
 def _exhausted_pool_store(now=None):
@@ -222,9 +222,9 @@ def test_resolver_recovers_when_probe_confirms_reset(tmp_path, monkeypatch):
     """The screenshot bug: pool-only cooldown raises `quota exhausted (429);
     retry after Ns` even though the upstream window already reset.  A positive
     probe must clear the cooldown and return the pool credential."""
-    hermes_home = tmp_path / "hermes"
-    _write_auth_store(hermes_home, _pool_only_rate_limited_store())
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    ev0_home = tmp_path / "3v0"
+    _write_auth_store(ev0_home, _pool_only_rate_limited_store())
+    monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
     monkeypatch.setattr(
         auth_mod, "_probe_codex_quota_restored", lambda token, **kw: True
@@ -234,7 +234,7 @@ def test_resolver_recovers_when_probe_confirms_reset(tmp_path, monkeypatch):
     assert resolved["api_key"] == "tok-quota"
     assert resolved["source"] == "credential_pool"
 
-    store = json.loads((hermes_home / "auth.json").read_text())
+    store = json.loads((ev0_home / "auth.json").read_text())
     entry = store["credential_pool"]["openai-codex"][0]
     assert entry["last_status"] is None
     assert entry["last_error_reset_at"] is None
@@ -257,8 +257,8 @@ def test_pool_probe_not_fired_for_non_quota_exhaustion(tmp_path, monkeypatch):
     entry["last_error_code"] = 401
     entry["last_error_reason"] = "token_expired"
     entry["last_error_message"] = "expired"
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
-    _write_auth_store(tmp_path / "hermes", store)
+    monkeypatch.setenv("EV0_HOME", str(tmp_path / "3v0"))
+    _write_auth_store(tmp_path / "3v0", store)
 
     from agent.credential_pool import load_pool
 

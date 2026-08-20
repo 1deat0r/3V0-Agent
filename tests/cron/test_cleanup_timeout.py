@@ -54,9 +54,9 @@ def test_run_job_bounds_sessiondb_finalization(tmp_path):
     job = {"id": "cleanup-sessiondb-hang", "name": "test", "prompt": "hello"}
 
     try:
-        with patch("cron.scheduler._hermes_home", tmp_path), \
+        with patch("cron.scheduler._ev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("ev0_cli.env_loader.load_hermes_dotenv"), \
+             patch("ev0_cli.env_loader.load_ev0_dotenv"), \
              patch("ev0_cli.env_loader.reset_secret_source_cache"), \
              patch("ev0_state.SessionDB", return_value=fake_db), \
              patch("ev0_cli.runtime_provider.resolve_runtime_provider", return_value=_RUNTIME), \
@@ -114,9 +114,9 @@ def test_dispatch_guard_releases_after_sessiondb_finalization_hang(tmp_path):
     sched._running_job_ids.clear()
 
     try:
-        with patch("cron.scheduler._hermes_home", tmp_path), \
+        with patch("cron.scheduler._ev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("ev0_cli.env_loader.load_hermes_dotenv"), \
+             patch("ev0_cli.env_loader.load_ev0_dotenv"), \
              patch("ev0_cli.env_loader.reset_secret_source_cache"), \
              patch("ev0_state.SessionDB", return_value=fake_db), \
              patch("ev0_cli.runtime_provider.resolve_runtime_provider", return_value=_RUNTIME), \

@@ -1,4 +1,4 @@
-"""Native LLM client — direct chat completions, no Hermes import.
+"""Native LLM client — direct chat completions, no 3V0 import.
 
 Stdlib-only (urllib.request/json). Provider-agnostic: the endpoint, auth key
 and model come from the named-provider registry (native.providers), so 3V0 can
@@ -68,7 +68,7 @@ def chat(
 
 
 if __name__ == "__main__":
-    # Round-trip proof: a real completion from the model, no Hermes involved.
+    # Round-trip proof: a real completion from the model, no 3V0 involved.
     out = chat(
         [
             {

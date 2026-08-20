@@ -25,11 +25,11 @@ from ev0_cli import kanban_db as kb
 
 @pytest.fixture
 def kanban_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".3V0"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
-    monkeypatch.setenv("HERMES_KANBAN_HOME", str(home))
-    monkeypatch.setenv("HERMES_KANBAN_CRASH_GRACE_SECONDS", "0")
+    monkeypatch.setenv("EV0_HOME", str(home))
+    monkeypatch.setenv("EV0_KANBAN_HOME", str(home))
+    monkeypatch.setenv("EV0_KANBAN_CRASH_GRACE_SECONDS", "0")
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     db_path = kb.kanban_db_path(board="default")
     kb._INITIALIZED_PATHS.discard(str(db_path.resolve()))

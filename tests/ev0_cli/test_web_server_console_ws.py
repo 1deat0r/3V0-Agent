@@ -1,4 +1,4 @@
-"""Dashboard Hermes Console websocket tests."""
+"""Dashboard 3V0 Console websocket tests."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from ev0_cli import web_server
 
 
 @pytest.fixture
-def console_client(monkeypatch, _isolate_hermes_home):
+def console_client(monkeypatch, _isolate_ev0_home):
     previous_auth_required = getattr(web_server.app.state, "auth_required", None)
     previous_bound_host = getattr(web_server.app.state, "bound_host", None)
     web_server.app.state.auth_required = False
@@ -71,13 +71,13 @@ def test_console_ws_rejects_missing_or_bad_token(console_client):
 
 
 def test_console_ws_cancel_returns_to_prompt(console_client, monkeypatch):
-    from ev0_cli.console_engine import ConsoleResult, HermesConsoleEngine
+    from ev0_cli.console_engine import ConsoleResult, Ev0ConsoleEngine
 
     def slow_execute(self, line: str, *, confirmed: bool = False):
         time.sleep(0.2)
         return ConsoleResult("ok", output="late", command=line)
 
-    monkeypatch.setattr(HermesConsoleEngine, "execute", slow_execute)
+    monkeypatch.setattr(Ev0ConsoleEngine, "execute", slow_execute)
 
     with console_client.websocket_connect(_url()) as conn:
         assert conn.receive_json()["type"] == "ready"
@@ -85,4 +85,4 @@ def test_console_ws_cancel_returns_to_prompt(console_client, monkeypatch):
         conn.send_json({"type": "cancel"})
 
         complete = _recv_until(conn, "complete", status="cancelled")
-        assert complete["prompt"] == "hermes> "
+        assert complete["prompt"] == "3v0> "

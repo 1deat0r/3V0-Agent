@@ -224,7 +224,7 @@ def auth_add_command(args) -> None:
     if provider == "anthropic":
         from agent import anthropic_adapter as anthropic_mod
 
-        creds = anthropic_mod.run_hermes_oauth_login_pure()
+        creds = anthropic_mod.run_ev0_oauth_login_pure()
         if not creds:
             raise SystemExit("Anthropic OAuth login did not return credentials.")
         label = (getattr(args, "label", None) or "").strip() or label_from_token(
@@ -237,7 +237,7 @@ def auth_add_command(args) -> None:
             label=label,
             auth_type=AUTH_TYPE_OAUTH,
             priority=0,
-            source=f"{SOURCE_MANUAL}:hermes_pkce",
+            source=f"{SOURCE_MANUAL}:ev0_pkce",
             access_token=creds["access_token"],
             refresh_token=creds.get("refresh_token"),
             expires_at_ms=creds.get("expires_at_ms"),
@@ -249,9 +249,9 @@ def auth_add_command(args) -> None:
 
     if provider == "nous":
         # Codex-style auto-import: if a shared Nous credential lives at
-        # <hermes-root>/shared/nous_auth.json (written by any previous
+        # <3v0-root>/shared/nous_auth.json (written by any previous
         # successful login), offer to import it instead of running the
-        # full device-code flow. This makes `hermes --profile <name>
+        # full device-code flow. This makes `3v0 --profile <name>
         # auth add nous --type oauth` a one-tap operation for users who
         # run multiple profiles.
         shared = auth_mod._read_shared_nous_state()
@@ -318,7 +318,7 @@ def auth_add_command(args) -> None:
         # xai-oauth path below) instead of routing through the singleton
         # ``_save_codex_tokens`` save path.
         # The singleton round-trip collapsed every added account into the
-        # latest login: a second ``hermes auth add openai-codex`` overwrote
+        # latest login: a second ``3v0 auth add openai-codex`` overwrote
         # the first account's singleton-mirrored ``device_code`` entry rather
         # than creating an independent one (#39236). ``manual:device_code``
         # entries refresh from their own token pair, so they need no singleton
@@ -358,7 +358,7 @@ def auth_add_command(args) -> None:
         # openai-codex / qwen-oauth / minimax-oauth patterns) instead of
         # routing through the singleton ``_save_xai_oauth_tokens`` save path.
         # The singleton round-trip collapsed every added account into the
-        # latest login: a second ``hermes auth add xai-oauth`` overwrote the
+        # latest login: a second ``3v0 auth add xai-oauth`` overwrote the
         # first account's singleton-mirrored ``device_code`` entry rather than
         # creating an independent one. ``manual:device_code`` entries refresh
         # from their own token pair (``_sync_xai_oauth_entry_from_auth_store``
@@ -431,7 +431,7 @@ def auth_add_command(args) -> None:
         print(f'Added {provider} OAuth credential #{len(pool.entries())}: "{entry.label}"')
         return
 
-    raise SystemExit(f"`hermes auth add {provider}` is not implemented for auth type {requested_type} yet.")
+    raise SystemExit(f"`3v0 auth add {provider}` is not implemented for auth type {requested_type} yet.")
 
 
 def auth_list_command(args) -> None:
@@ -475,7 +475,7 @@ def auth_remove_command(args) -> None:
         raise SystemExit(f'No credential matching "{target}" for provider {provider}.')
     print(f"Removed {provider} credential #{index} ({removed.label})")
 
-    # Unified removal dispatch.  Every credential source Hermes reads from
+    # Unified removal dispatch.  Every credential source 3V0 reads from
     # (env vars, external OAuth files, auth.json blocks, custom config)
     # has a RemovalStep registered in agent.credential_sources.  The step
     # handles its source-specific cleanup and we centralise suppression +
@@ -509,7 +509,7 @@ def auth_reset_command(args) -> None:
 def auth_status_command(args) -> None:
     provider = _normalize_provider(getattr(args, "provider", "") or "")
     if not provider:
-        raise SystemExit("Provider is required. Example: `hermes auth status spotify`.")
+        raise SystemExit("Provider is required. Example: `3v0 auth status spotify`.")
     status = auth_mod.get_auth_status(provider)
     if not status.get("logged_in"):
         reason = status.get("error")
@@ -545,7 +545,7 @@ def auth_spotify_command(args) -> None:
 
 
 def _interactive_auth() -> None:
-    """Interactive credential pool management when `hermes auth` is called bare."""
+    """Interactive credential pool management when `3v0 auth` is called bare."""
     # Show current pool status first
     print("Credential Pool Status")
     print("=" * 50)

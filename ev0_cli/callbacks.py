@@ -1,7 +1,7 @@
 """Interactive prompt callbacks for terminal_tool integration.
 
 These bridge terminal_tool's interactive prompts (clarify, sudo, approval)
-into prompt_toolkit's event loop. Each function takes the HermesCLI instance
+into prompt_toolkit's event loop. Each function takes the Ev0CLI instance
 as its first argument and uses its state (queues, app reference) to coordinate
 with the TUI.
 """
@@ -12,7 +12,7 @@ import time as _time
 from ev0_cli.banner import cprint, _DIM, _RST
 from ev0_cli.config import save_env_value_secure
 from ev0_cli.secret_prompt import masked_secret_prompt
-from ev0_constants import display_hermes_home
+from ev0_constants import display_ev0_home
 
 
 def clarify_callback(cli, question, choices, multi_select=False):
@@ -78,7 +78,7 @@ def prompt_for_secret(cli, var_name: str, prompt: str, metadata=None) -> dict:
     """Prompt for a secret value through the TUI (e.g. API keys for skills).
 
     Returns a dict with keys: success, stored_as, validated, skipped, message.
-    The secret is stored in ~/.hermes/.env and never exposed to the model.
+    The secret is stored in ~/.3V0/.env and never exposed to the model.
     """
     if not getattr(cli, "_app", None):
         if not hasattr(cli, "_secret_state"):
@@ -102,7 +102,7 @@ def prompt_for_secret(cli, var_name: str, prompt: str, metadata=None) -> dict:
             }
 
         stored = save_env_value_secure(var_name, value)
-        _dhh = display_hermes_home()
+        _dhh = display_ev0_home()
         cprint(f"\n{_DIM}  ✓ Stored secret in {_dhh}/.env as {var_name}{_RST}")
         return {
             **stored,
@@ -155,7 +155,7 @@ def prompt_for_secret(cli, var_name: str, prompt: str, metadata=None) -> dict:
                 }
 
             stored = save_env_value_secure(var_name, value)
-            _dhh = display_hermes_home()
+            _dhh = display_ev0_home()
             cprint(f"\n{_DIM}  ✓ Stored secret in {_dhh}/.env as {var_name}{_RST}")
             return {
                 **stored,

@@ -76,7 +76,7 @@ class TestGmiConfigRegistry:
         assert OPTIONAL_ENV_VARS["GMI_BASE_URL"]["password"] is False
         # ENV_VARS_BY_VERSION entries are not needed for providers added after
         # _config_version 22 (the current baseline) — users discover GMI via
-        # hermes model, not via upgrade prompts.
+        # 3v0 model, not via upgrade prompts.
 
 
 class TestGmiModelCatalog:
@@ -110,10 +110,10 @@ class TestGmiModelCatalog:
 
 class TestGmiProvidersModule:
     def test_overlay_exists(self):
-        from ev0_cli.providers import HERMES_OVERLAYS
+        from ev0_cli.providers import EV0_OVERLAYS
 
-        assert "gmi" in HERMES_OVERLAYS
-        overlay = HERMES_OVERLAYS["gmi"]
+        assert "gmi" in EV0_OVERLAYS
+        overlay = EV0_OVERLAYS["gmi"]
         assert overlay.transport == "openai_chat"
         assert overlay.extra_env_vars == ("GMI_API_KEY",)
         assert overlay.base_url_override == "https://api.gmi-serving.com/v1"
@@ -133,14 +133,14 @@ class TestGmiDoctor:
     def test_run_doctor_checks_gmi_models_endpoint(self, monkeypatch, tmp_path):
         from ev0_cli import doctor as doctor_mod
 
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".3V0"
         home.mkdir(parents=True, exist_ok=True)
         (home / "config.yaml").write_text("memory: {}\n", encoding="utf-8")
         (home / ".env").write_text("GMI_API_KEY=***\n", encoding="utf-8")
         project = tmp_path / "project"
         project.mkdir(exist_ok=True)
 
-        monkeypatch.setattr(doctor_mod, "HERMES_HOME", home)
+        monkeypatch.setattr(doctor_mod, "EV0_HOME", home)
         monkeypatch.setattr(doctor_mod, "PROJECT_ROOT", project)
         monkeypatch.setattr(doctor_mod, "_DHH", str(home))
         monkeypatch.setenv("GMI_API_KEY", "gmi-test-key")
@@ -246,21 +246,21 @@ class TestGmiAuxiliary:
         assert model == "google/gemini-3.1-flash-lite-preview"
         assert mock_openai.call_args.kwargs["api_key"] == "gmi-test-key"
         assert mock_openai.call_args.kwargs["base_url"] == "https://api.gmi-serving.com/v1"
-        # GMI profile declares default_headers with a HermesAgent User-Agent
+        # GMI profile declares default_headers with a Ev0Agent User-Agent
         # for traffic attribution. The generic profile-fallback branch in
         # resolve_provider_client should carry it through to the OpenAI client.
         headers = mock_openai.call_args.kwargs.get("default_headers", {})
-        assert headers.get("User-Agent", "").startswith("HermesAgent/")
+        assert headers.get("User-Agent", "").startswith("Ev0Agent/")
 
-    def test_gmi_profile_declares_hermes_user_agent(self):
-        """The GMI plugin sets a HermesAgent/<ver> User-Agent on its profile."""
+    def test_gmi_profile_declares_ev0_user_agent(self):
+        """The GMI plugin sets a Ev0Agent/<ver> User-Agent on its profile."""
         from providers import get_provider_profile
 
         profile = get_provider_profile("gmi")
         assert profile is not None
         ua = profile.default_headers.get("User-Agent", "")
-        assert ua.startswith("HermesAgent/"), (
-            f"expected GMI profile User-Agent to start with 'HermesAgent/', got {ua!r}"
+        assert ua.startswith("Ev0Agent/"), (
+            f"expected GMI profile User-Agent to start with 'Ev0Agent/', got {ua!r}"
         )
 
 
@@ -273,7 +273,7 @@ class TestGmiMainFlow:
             "ev0_cli.main.cmd_chat",
             lambda args: recorded.setdefault("provider", args.provider),
         )
-        monkeypatch.setattr(sys, "argv", ["hermes", "chat", "--provider", "gmi"])
+        monkeypatch.setattr(sys, "argv", ["3v0", "chat", "--provider", "gmi"])
 
         from ev0_cli.main import main
 
@@ -321,9 +321,9 @@ class TestGmiMainFlow:
             _model_flow_api_key_provider(load_config(), "gmi", "old-model")
 
         import yaml
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        config = yaml.safe_load((get_hermes_home() / "config.yaml").read_text()) or {}
+        config = yaml.safe_load((get_ev0_home() / "config.yaml").read_text()) or {}
         model_cfg = config.get("model")
         assert isinstance(model_cfg, dict)
         assert model_cfg["provider"] == "gmi"

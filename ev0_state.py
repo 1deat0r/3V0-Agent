@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SQLite State Store for Hermes Agent.
+SQLite State Store for 3V0 Agent.
 
 Provides persistent session storage with FTS5 full-text search, replacing
 the per-session JSONL file approach. Stores session metadata, full message
@@ -42,7 +42,7 @@ from agent.skill_commands import (
     SKILL_SCAFFOLD_SQL_LIKE,
     describe_skill_invocation,
 )
-from ev0_constants import get_hermes_home
+from ev0_constants import get_ev0_home
 from ev0_cli.sqlite_runtime import (
     is_sqlite_wal_reset_vulnerable as _is_sqlite_wal_reset_vulnerable,
 )
@@ -287,7 +287,7 @@ def _workspace_key_clause(key: str) -> Tuple[str, List[str]]:
     when its recorded ``git_repo_root`` equals ``key``, or — for rows that
     predate per-session git metadata — when its ``cwd`` is at or under
     ``key`` (so a session started in ``repo/src`` still groups with ``repo``).
-    Used by ``hermes -c``/``--resume`` to continue the most recent session in
+    Used by ``3v0 -c``/``--resume`` to continue the most recent session in
     the *current* workspace rather than the global MRU.
     """
     prefix = key.rstrip("/\\") or key
@@ -346,7 +346,7 @@ def _delete_delegate_children(conn, parent_ids: List[str]) -> List[str]:
 
 T = TypeVar("T")
 
-DEFAULT_DB_PATH = get_hermes_home() / "state.db"
+DEFAULT_DB_PATH = get_ev0_home() / "state.db"
 
 # How long SessionDB stops attempting read-only opens after one fails, before
 # probing again. Long enough that a genuinely unreadable file isn't retried per
@@ -380,35 +380,35 @@ def _default_db_path() -> Path:
     """Resolve the default state DB path at call time.
 
     ``DEFAULT_DB_PATH`` is computed when this module is first imported, which
-    freezes the developer's real ``~/.hermes`` even when a test fixture later
-    redirects ``HERMES_HOME`` — importing this module during collection was
+    freezes the developer's real ``~/.3V0`` even when a test fixture later
+    redirects ``EV0_HOME`` — importing this module during collection was
     enough to point every default ``SessionDB()`` at the real state.db.
 
     Precedence:
 
     1. A deliberately re-pointed ``DEFAULT_DB_PATH`` (differs from the
        import-time snapshot — the established test escape hatch) wins.
-    2. Otherwise resolve ``get_hermes_home()`` fresh so a runtime
-       ``HERMES_HOME`` redirect takes effect regardless of import order.
+    2. Otherwise resolve ``get_ev0_home()`` fresh so a runtime
+       ``EV0_HOME`` redirect takes effect regardless of import order.
     """
     if DEFAULT_DB_PATH != _IMPORT_DEFAULT_DB_PATH:
         return DEFAULT_DB_PATH
-    return get_hermes_home() / "state.db"
+    return get_ev0_home() / "state.db"
 
 
 # ---------------------------------------------------------------------------
 # Live-DB test-isolation guard
 # ---------------------------------------------------------------------------
 # Forensic evidence (Aug 2026, live developer machine): the production
-# ~/.hermes/state.db accumulated pytest fixture rows — sessions with
+# ~/.3V0/state.db accumulated pytest fixture rows — sessions with
 # chat_id='chat-1'/'123'/'wx-chat' and gateway_routing scopes literally under
 # /tmp/pytest-of-*/ — and a pytest-spawned process flipped the journal mode
 # out from under the WAL-mode gateway writer, destroying committed
 # transcripts ("Persisted transcript lagged live cached history ... possible
-# FTS write corruption").  The hermetic conftest redirects HERMES_HOME per
+# FTS write corruption").  The hermetic conftest redirects EV0_HOME per
 # test, but any escape (a session-scoped fixture running before the autouse
-# fixture, a subprocess child launched without HERMES_HOME, a stale worktree
-# without the re-pin, or a developer shell that exports HERMES_HOME to the
+# fixture, a subprocess child launched without EV0_HOME, a stale worktree
+# without the re-pin, or a developer shell that exports EV0_HOME to the
 # real home so the conftest session sandbox is skipped) silently fell
 # through to the real database.
 #
@@ -428,16 +428,16 @@ _STATE_DB_GUARD_BYPASS = False
 #: cross a process boundary, so a test that deliberately points a *child* at
 #: the live DB has no way to opt out once ancestry arms the guard there.
 #: Export this in the child's env instead.
-_STATE_DB_GUARD_BYPASS_ENV = "HERMES_STATE_DB_GUARD_BYPASS"
+_STATE_DB_GUARD_BYPASS_ENV = "EV0_STATE_DB_GUARD_BYPASS"
 
 #: Additional production roots to refuse (beyond the platform default
-#: ``~/.hermes``).  The test conftest injects the pre-sandbox production
-#: root here so custom-``HERMES_HOME`` deployments are covered too.
+#: ``~/.3V0``).  The test conftest injects the pre-sandbox production
+#: root here so custom-``EV0_HOME`` deployments are covered too.
 _STATE_DB_GUARD_EXTRA_DENY_ROOTS: Tuple[Path, ...] = ()
 
 
 def _real_platform_state_root() -> Optional[Path]:
-    """Resolve the REAL platform-default Hermes root for the guard.
+    """Resolve the REAL platform-default 3V0 root for the guard.
 
     Deliberately avoids ``Path.home()`` / ``ev0_constants``: tests
     routinely monkeypatch ``Path.home`` to a tempdir, and ``ev0_state``
@@ -451,27 +451,27 @@ def _real_platform_state_root() -> Optional[Path]:
         if sys.platform == "win32":
             base = os.environ.get("LOCALAPPDATA", "").strip()
             root = (
-                Path(base) / "hermes"
+                Path(base) / "3v0"
                 if base
-                else Path(os.path.expanduser("~")) / "AppData" / "Local" / "hermes"
+                else Path(os.path.expanduser("~")) / "AppData" / "Local" / "3v0"
             )
         else:
-            root = Path(os.path.expanduser("~")) / ".hermes"
+            root = Path(os.path.expanduser("~")) / ".3V0"
         return root.resolve()
     except Exception:
         return None
 
 
 #: Env marker exported by the hermetic test conftest at the same moment it
-#: redirects ``HERMES_HOME`` to the per-session tmp isolation root.  Its
+#: redirects ``EV0_HOME`` to the per-session tmp isolation root.  Its
 #: value is that isolation root.  Unlike ``PYTEST_*`` (owned by pytest, and
 #: routinely scrubbed by tests that rebuild a child environment), this marker
-#: is OURS: it declares "this process tree is running under Hermes test
+#: is OURS: it declares "this process tree is running under 3V0 test
 #: isolation", and it inherits into subprocess children by default — so a
-#: child that received the patched ``HERMES_HOME`` also received the marker,
+#: child that received the patched ``EV0_HOME`` also received the marker,
 #: and a child that resolves a production DB while carrying it is, by
 #: definition, an isolation escape (#82770).
-_TEST_ISOLATION_MARKER_ENV = "HERMES_TEST_ISOLATION"
+_TEST_ISOLATION_MARKER_ENV = "EV0_TEST_ISOLATION"
 
 
 def _running_under_pytest() -> bool:
@@ -526,7 +526,7 @@ def _has_pytest_ancestor() -> bool:
 
     ``_running_under_pytest`` reads ``PYTEST_*`` env vars, which a child
     spawned with a rebuilt environment loses at the same moment it loses the
-    ``HERMES_HOME`` redirect: that child aims at the production DB *and*
+    ``EV0_HOME`` redirect: that child aims at the production DB *and*
     disarms the guard in one step (#82770).  Ancestry is the one test-context
     signal that survives an env rebuild, so it backs the env check up.
 
@@ -556,7 +556,7 @@ def _in_test_context() -> bool:
     Order matters for cost: the env probe is two dict lookups and covers the
     common in-process case, so the ancestry walk only runs for processes the
     environment claims are ordinary user runs — and its answer is memoised,
-    so a real ``hermes`` invocation pays for at most one walk.
+    so a real ``3v0`` invocation pays for at most one walk.
     """
     if _running_under_pytest():
         return True
@@ -577,12 +577,12 @@ def _production_state_roots() -> List[Path]:
 
 
 def _is_production_state_db(resolved: Path, root: Path) -> bool:
-    """True when *resolved* is a DB file of the real Hermes home *root*.
+    """True when *resolved* is a DB file of the real 3V0 home *root*.
 
     Matches files directly in the root (``<root>/state.db``) and profile
     homes (``<root>/profiles/<name>/state.db``).  Deliberately does NOT
     match deeper scratch paths (e.g. repo worktrees that happen to live
-    under ``~/.hermes/hermes-agent/...``) so hermetic tests using unusual
+    under ``~/.3V0/3v0-agent/...``) so hermetic tests using unusual
     tempdirs cannot false-positive.
     """
     if resolved.parent == root:
@@ -600,11 +600,11 @@ def _ensure_test_isolation(db_path: Path) -> None:
 
     Raises ``RuntimeError`` before any connection, mkdir, journal-mode
     pragma, or byte probe can touch the live database.  No-op outside
-    pytest and for hermetic (tmp ``HERMES_HOME``) paths.
+    pytest and for hermetic (tmp ``EV0_HOME``) paths.
 
     "pytest context" means environment *or* process ancestry — see
     :func:`_in_test_context`.  Env alone is not enough: a child spawned with
-    a rebuilt environment loses ``PYTEST_*`` and ``HERMES_HOME`` together,
+    a rebuilt environment loses ``PYTEST_*`` and ``EV0_HOME`` together,
     which is precisely the state in which it writes to production (#82770).
     """
     if _STATE_DB_GUARD_BYPASS or os.environ.get(_STATE_DB_GUARD_BYPASS_ENV):
@@ -619,10 +619,10 @@ def _ensure_test_isolation(db_path: Path) -> None:
         if _is_production_state_db(resolved, root):
             raise RuntimeError(
                 "live-system guard: test attempted to open production "
-                f"state.db at {resolved} (under real Hermes root {root}). "
-                "Tests must run against a temporary HERMES_HOME — pass an "
+                f"state.db at {resolved} (under real 3V0 root {root}). "
+                "Tests must run against a temporary EV0_HOME — pass an "
                 "explicit tmp db_path or let the hermetic conftest redirect "
-                "HERMES_HOME. If this test genuinely needs the live "
+                "EV0_HOME. If this test genuinely needs the live "
                 "database, mark it with "
                 "@pytest.mark.live_system_guard_bypass — or, for a spawned "
                 f"child process, export {_STATE_DB_GUARD_BYPASS_ENV}=1 in "
@@ -896,7 +896,7 @@ def _apply_wal_size_limit(conn: sqlite3.Connection) -> None:
     transaction ever run against it.
 
     A single bulk operation is enough to strand gigabytes. Observed on a
-    3.0 GB ``state.db``: ``hermes sessions optimize`` (FTS merge + VACUUM)
+    3.0 GB ``state.db``: ``3v0 sessions optimize`` (FTS merge + VACUUM)
     rewrites every page through the WAL, leaving a **3.07 GB**
     ``state.db-wal`` sitting next to the database indefinitely — the host
     went from 6.9 GB free to 772 MB (100% full) and stayed there, because
@@ -1349,7 +1349,7 @@ def _wal_reset_repair_hint() -> str:
     """Return a context-appropriate hint for repairing the SQLite runtime.
 
     Uses the codebase's install-type detection so the hint matches what
-    ``hermes update`` can actually do for this install (#75153).
+    ``3v0 update`` can actually do for this install (#75153).
     """
     try:
         from ev0_cli.config import (
@@ -1360,7 +1360,7 @@ def _wal_reset_repair_hint() -> str:
         method = detect_install_method(get_project_root())
         cmd = recommended_update_command_for_method(method)
         if method in {"git", "unknown"}:
-            return f"Hermes-managed installs can repair the embedded runtime with `{cmd}`"
+            return f"3V0-managed installs can repair the embedded runtime with `{cmd}`"
         if method == "docker":
             return f"update the container image with `{cmd}`"
         # nix/nixos
@@ -1369,7 +1369,7 @@ def _wal_reset_repair_hint() -> str:
         pass
     return (
         "install a Python build bundled with SQLite 3.51.3+ "
-        "(or backports 3.50.7 / 3.44.6) and restart Hermes"
+        "(or backports 3.50.7 / 3.44.6) and restart 3V0"
     )
 
 
@@ -1398,7 +1398,7 @@ def _log_wal_reset_bug_once(
         )
     else:
         action = "using journal_mode=DELETE instead of enabling WAL"
-    # Check whether this is a Hermes-managed install (uv-managed venv)
+    # Check whether this is a 3V0-managed install (uv-managed venv)
     # so the warning doesn't promise a repair path that doesn't exist
     # for git/pip/system Python installs (#75153).
     repair_hint = _wal_reset_repair_hint()
@@ -1406,7 +1406,7 @@ def _log_wal_reset_bug_once(
         "%s: linked SQLite %s is vulnerable to the WAL-reset corruption "
         "bug (https://sqlite.org/wal.html#walresetbug) — %s. "
         "Upgrade to SQLite 3.51.3+ (or backports 3.50.7 / 3.44.6); "
-        "%s. See `hermes doctor`. This warning fires once per "
+        "%s. See `3v0 doctor`. This warning fires once per "
         "process per database.",
         db_label,
         sqlite3.sqlite_version,
@@ -1651,7 +1651,7 @@ def classify_persistence_error(exc_or_str) -> str:
     * ``"corrupt"`` — the database file itself is structurally damaged
       (``database disk image is malformed`` / SQLITE_NOTADB).  Distinct from
       ``"disk"``: freeing space cannot help, the user needs the repair path
-      (``hermes doctor`` / automatic schema surgery).
+      (``3v0 doctor`` / automatic schema surgery).
     * ``"disk"``    — disk full / read-only / permission-shaped failures
       (delegates the disk-full patterns to :func:`is_disk_full_error` so the
       two classifiers can never drift apart — e.g. ENOSPC).
@@ -1715,9 +1715,9 @@ def _claim_repair_attempt(db_path: Path) -> bool:
 
 # Cross-process serialisation for the schema-surgery paths below.  The
 # ``_repair_attempt_lock`` above is a ``threading.Lock`` — it only covers
-# threads inside ONE interpreter, yet a normal Hermes host runs several
+# threads inside ONE interpreter, yet a normal 3V0 host runs several
 # independent processes against the same ``state.db``: the gateway service,
-# the Desktop app's own ``hermes serve`` backend, interactive CLI sessions,
+# the Desktop app's own ``3v0 serve`` backend, interactive CLI sessions,
 # and the TUI slash worker.  Two of those hitting a malformed DB at once each
 # ran the full ``writable_schema`` surgery + ``VACUUM`` on their own private
 # connection, with nothing serialising them.
@@ -2062,8 +2062,8 @@ def preflight_db_writability(
     transactions. This preflight:
 
     - **Repairs** permissions with ``chmod u+rw`` when the file lives inside
-      the Hermes home tree (``get_hermes_home()``) — the safe repair scope:
-      Hermes owns those files, and the OS makes ``chmod`` fail on files the
+      the 3V0 home tree (``get_ev0_home()``) — the safe repair scope:
+      3V0 owns those files, and the OS makes ``chmod`` fail on files the
       user doesn't own, which bounds the repair exactly.
     - **Fails fast with an actionable error** naming the exact file and the
       exact ``chmod`` command for anything else (root-owned files, read-only
@@ -2079,7 +2079,7 @@ def preflight_db_writability(
         return
 
     try:
-        home: Optional[Path] = Path(get_hermes_home()).resolve()
+        home: Optional[Path] = Path(get_ev0_home()).resolve()
     except Exception:  # pragma: no cover - defensive
         home = None
 
@@ -2119,7 +2119,7 @@ def preflight_db_writability(
         )
         raise sqlite3.OperationalError(
             f"{db_label} is not writable: {kind} {p} is read-only for this "
-            f"user. Hermes needs read-write access to open the database. "
+            f"user. 3V0 needs read-write access to open the database. "
             f"Fix with: chmod u+rw{'x' if is_dir else ''} '{p}'"
             f" (files owned by another user may need sudo/chown).{wal_note}"
         )
@@ -2201,7 +2201,7 @@ def _db_opens_cleanly(db_path: Path) -> Optional[str]:
                 # final fallback deletes the messages_fts% schema
                 # (ev0_state.py:645-723). The supported degraded-runtime
                 # path (SessionDB._is_fts5_unavailable_error + the
-                # regression suite in tests/test_hermes_state.py:600-632)
+                # regression suite in tests/test_ev0_state.py:600-632)
                 # treats both "no such module: fts5" and
                 # "no such tokenizer: trigram" as the capability error.
                 if SessionDB._is_fts5_unavailable_error(exc):
@@ -2226,7 +2226,7 @@ def _db_opens_cleanly(db_path: Path) -> Optional[str]:
         # best-effort — if the messages/sessions tables don't exist yet (brand
         # new file mid-init) the OperationalError is treated as "not yet a
         # populated DB", not corruption.
-        probe_session_id = f"_hermes_fts_health_probe_{time.time_ns()}"
+        probe_session_id = f"_ev0_fts_health_probe_{time.time_ns()}"
         try:
             conn.execute("BEGIN IMMEDIATE")
             conn.execute(
@@ -2531,10 +2531,10 @@ def _repair_state_db_schema_locked(
 # complete ``messages_fts`` index's triggers.
 #
 # The table exists ONLY when the loadable tokenizer is available
-# (``~/.hermes/lib/libfts5_cjk.so``, built by ``native/fts5_cjk/build.sh``).
+# (``~/.3V0/lib/libfts5_cjk.so``, built by ``native/fts5_cjk/build.sh``).
 # A process that cannot load it self-heals by dropping the cjk triggers
 # (message writes keep working; the index goes stale and is rebuilt by the
-# next ``hermes sessions optimize-storage`` on a capable host).
+# next ``3v0 sessions optimize-storage`` on a capable host).
 #
 # Split DDL: the table/view part is safe to ensure any time; the triggers
 # are created ONLY while the index is complete-or-marker-gated. A stale
@@ -2603,15 +2603,15 @@ END;
 
 def fts5_cjk_so_path() -> Path:
     """Location of the cjk_unicode61 loadable extension."""
-    env = os.getenv("HERMES_FTS5_CJK_SO")
+    env = os.getenv("EV0_FTS5_CJK_SO")
     if env:
         return Path(env).expanduser()
-    return get_hermes_home() / "lib" / "libfts5_cjk.so"
+    return get_ev0_home() / "lib" / "libfts5_cjk.so"
 
 
 def _cjk_fts_config_enabled() -> bool:
     """config.yaml ``sessions.cjk_fts`` (default on), via its env bridge."""
-    return os.getenv("HERMES_CJK_FTS", "1").strip().lower() not in (
+    return os.getenv("EV0_CJK_FTS", "1").strip().lower() not in (
         "0", "false", "off", "no",
     )
 
@@ -2803,8 +2803,8 @@ def quarantine_zeroed_state_db(path: Path) -> Optional[Path]:
                 "quarantine lock for %s not acquired within 5s — refusing to "
                 "quarantine without the cross-process lock. The zeroed file "
                 "is left in place. If sessions fail to load, restore from "
-                "state-snapshots via `hermes snapshot list` / "
-                "`hermes snapshot restore <id>`.",
+                "state-snapshots via `3v0 snapshot list` / "
+                "`3v0 snapshot restore <id>`.",
                 path,
             )
             return None
@@ -2870,7 +2870,7 @@ def quarantine_zeroed_state_db(path: Path) -> Optional[Path]:
             handle.close()
 
 
-# ── Read-only health/stats probes (hermes doctor, dashboards) ──────────
+# ── Read-only health/stats probes (3v0 doctor, dashboards) ──────────
 
 
 def collect_state_db_stats(db_path: Path) -> Dict[str, Any]:
@@ -3099,7 +3099,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
     """
 
     # ── Write-contention tuning ──
-    # With multiple hermes processes (gateway + CLI sessions + worktree agents)
+    # With multiple 3v0 processes (gateway + CLI sessions + worktree agents)
     # all sharing one state.db, WAL write-lock contention causes visible TUI
     # freezes.  SQLite's built-in busy handler uses a deterministic sleep
     # schedule that causes convoy effects under high concurrency.
@@ -3109,11 +3109,11 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
     # writers and avoids the convoy.
     #
     # Patience is TIME-based, not attempt-based.  A shared state.db is
-    # legitimately held for multi-second stretches by sibling Hermes
+    # legitimately held for multi-second stretches by sibling 3V0
     # processes: a TRUNCATE checkpoint at close on a large WAL, VACUUM after
     # an auto-prune, offline recovery, or an older still-running process
     # whose FTS maintenance predates the bounded-merge protocol (every
-    # `hermes update` leaves mixed-version processes sharing the DB until
+    # `3v0 update` leaves mixed-version processes sharing the DB until
     # the old ones exit).  An attempt-counted budget (~15s incidental worst
     # case) silently loses that race and surfaces as
     # session_persistence_failed — a destroyed turn — even though the store
@@ -3398,8 +3398,8 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
                 msg = (
                     f"state.db looks ZEROED ({zsize} bytes, no SQLite header). "
                     f"Preserved at {qpath or '(quarantine failed — file left in place)'}. "
-                    f"Restore from {snaps} via `hermes snapshot list` / "
-                    f"`hermes snapshot restore <id>` if available. "
+                    f"Restore from {snaps} via `3v0 snapshot list` / "
+                    f"`3v0 snapshot restore <id>` if available. "
                     "Opening a fresh empty database so the agent can start."
                 )
                 logger.error(msg)
@@ -3495,7 +3495,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
                     raise
                 _connect_and_init_with_lock_patience()
 
-            # NOTE: the v23 FTS optimization is OPT-IN (`hermes db optimize`),
+            # NOTE: the v23 FTS optimization is OPT-IN (`3v0 db optimize`),
             # never auto-started on open. Legacy installs keep their working
             # v22 inline FTS untouched here; only the explicit foreground
             # command demotes + rebuilds. This avoids a background worker
@@ -3804,7 +3804,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
         self._fts_unavailable_warned = True
         logger.warning(
             "SQLite FTS5 unavailable for %s; full-text session search "
-            "disabled. Run `hermes update` to rebuild the venv with a "
+            "disabled. Run `3v0 update` to rebuild the venv with a "
             "current Python (managed uv guarantees FTS5). "
             "(underlying error: %s)",
             self.db_path,
@@ -3858,7 +3858,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
                         "cjk_unicode61 tokenizer is unavailable (%s) — "
                         "dropping the cjk triggers so message writes keep "
                         "working. CJK search falls back to trigram/LIKE; "
-                        "run `hermes sessions optimize-storage` on a host "
+                        "run `3v0 sessions optimize-storage` on a host "
                         "with the extension to rebuild.",
                         fts5_cjk_so_path(),
                     )
@@ -4059,7 +4059,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
                     # Patience exhausted — say what actually happened so the
                     # surfaced error doesn't read as disk/permission damage.
                     raise sqlite3.OperationalError(
-                        f"database is locked (another Hermes process held the "
+                        f"database is locked (another 3V0 process held the "
                         f"state.db write lock for over {patience_s:.0f}s — "
                         "likely a long maintenance operation such as VACUUM, "
                         "a large WAL checkpoint, or an older pre-update "
@@ -4449,7 +4449,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
 
     # ── Chunked FTS rebuild engine (v23 opt-in optimize) ──
     #
-    # `optimize_fts_storage()` (the `hermes sessions optimize-storage`
+    # `optimize_fts_storage()` (the `3v0 sessions optimize-storage`
     # command) drops the legacy inline FTS indexes and backfills the new
     # external-content ones. A single blocking rebuild measured ~16 minutes
     # of held write lock on a real 25 GB DB, so the backfill runs in small
@@ -4495,7 +4495,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
     # an already-optimized v23 DB gaining the cjk index) never gates the
     # complete ``messages_fts`` / trigram triggers.
 
-    # ── Opt-in v23 FTS storage optimization (`hermes sessions optimize-storage`) ──
+    # ── Opt-in v23 FTS storage optimization (`3v0 sessions optimize-storage`) ──
     #
     # This is the ONLY path that migrates an existing legacy (v22 inline) DB
     # to the v23 external-content schema. It is deliberately foreground and
@@ -5272,7 +5272,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
     # recovery: the chat resolves to the last keyed row instead — days older
     # — and the conversation time-travels. Hardening the write side cannot
     # reach a row that is *already* damaged; these two methods are the
-    # offline repair path behind ``hermes sessions repair-routing``.
+    # offline repair path behind ``3v0 sessions repair-routing``.
 
     # Widest plausible gap between a keyed predecessor going quiet and its
     # unkeyed successor being minted. The reported incident gap was ~60s;
@@ -7068,7 +7068,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
         merge discipline as ``update_session_runtime_lock`` so lineage
         markers like ``_branched_from`` / ``_delegate_from`` survive). The
         CLI resume paths read this flag back so a ``/yolo ON`` toggle — or a
-        ``--yolo`` launch — survives ``hermes --resume`` into a fresh
+        ``--yolo`` launch — survives ``3v0 --resume`` into a fresh
         process. No-op when the session row doesn't exist yet; the
         creation-time ``model_config`` carries the flag for ``--yolo``
         launches.
@@ -11058,7 +11058,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
 
         Pass ``workspace_key`` to scope rows to one workspace - matching
         :func:`workspace_key` semantics (git repo root, else cwd). Used by
-        ``hermes -c``/``--resume`` so the "last" session is the last one in
+        ``3v0 -c``/``--resume`` so the "last" session is the last one in
         the *current* workspace, not the global MRU.
         """
         select_with_last_active = (
@@ -11454,7 +11454,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
         A session is considered empty when it has no messages and no
         user-assigned title. Used by CLI exit / session-rotation paths so
         immediately-started-and-quit sessions don't pile up in ``/resume``
-        and ``hermes sessions list`` output. (Pattern ported from
+        and ``3v0 sessions list`` output. (Pattern ported from
         google-gemini/gemini-cli#27770.)
 
         The emptiness check and delete run in one transaction, so a message
@@ -12177,7 +12177,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
     def retag_kanban_worker_sessions(self, workspaces_root: str) -> int:
         """Retag legacy kanban worker rows from ``cli`` to ``kanban``.
 
-        Workers used to spawn without ``HERMES_SESSION_SOURCE``, so their runs
+        Workers used to spawn without ``EV0_SESSION_SOURCE``, so their runs
         landed as untitled ``cli`` rows and the sidebar rendered one per attempt
         labeled with the worker's own prompt. New workers tag themselves; this
         reclaims the rows already on disk so they drop out of the session lists
@@ -12231,7 +12231,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
         """Create Telegram DM topic-mode tables on explicit /topic opt-in.
 
         This migration is deliberately not part of automatic SessionDB startup
-        reconciliation. Operators must be able to upgrade Hermes, keep the old
+        reconciliation. Operators must be able to upgrade 3V0, keep the old
         Telegram bot behavior running, and only mutate topic-mode state when the
         user executes /topic to opt into the feature.
 
@@ -12579,9 +12579,9 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
         session_id: str,
         managed_mode: str = "auto",
     ) -> None:
-        """Bind one Telegram DM topic thread to one Hermes session.
+        """Bind one Telegram DM topic thread to one 3V0 session.
 
-        A Hermes session may only be linked to one Telegram topic in MVP.
+        A 3V0 session may only be linked to one Telegram topic in MVP.
         Rebinding the same topic to the same session is idempotent; trying to
         link the same session to a different topic raises ValueError.
         """
@@ -12634,7 +12634,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
         self._execute_write(_do)
 
     def is_telegram_session_linked_to_topic(self, *, session_id: str) -> bool:
-        """Return True if a Hermes session is already bound to any Telegram DM topic.
+        """Return True if a 3V0 session is already bound to any Telegram DM topic.
 
         Read-only: does NOT trigger the telegram-topic migration. If the
         topic-mode tables have not been created yet (i.e. nobody has run
@@ -12799,7 +12799,7 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
         # VACUUM cannot be executed inside a transaction.
         with self._lock:
             # Best-effort WAL checkpoint first, then VACUUM. PASSIVE, not
-            # TRUNCATE: a manual `hermes sessions vacuum` runs in a transient
+            # TRUNCATE: a manual `3v0 sessions vacuum` runs in a transient
             # CLI process, and a TRUNCATE reset here would race a live gateway
             # writer and tear B-tree pages (#45383). VACUUM folds the WAL back
             # itself; journal_size_limit bounds the file.

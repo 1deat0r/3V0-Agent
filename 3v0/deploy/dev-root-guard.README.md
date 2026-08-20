@@ -6,12 +6,12 @@ Structural enforcement that 3V0 **never develops in the wrong folder**.
 - Code is developed **only** in `/home/mustbearn/Projects/AI Agents/3V0 Agent`.
 - The following trees are **READ-ONLY references** — never write, never commit
   into them:
-  - `~/.hermes/hermes-agent` (old pre-cutover runtime checkout)
-  - `~/.3V0/hermes-agent` (copy of the old runtime inside the new home)
-  - `~/Projects/Research/hermes-agent-repo` (pristine upstream clone)
+  - `~/.3V0/3v0-agent` (old pre-cutover runtime checkout)
+  - `~/.3V0/3v0-agent` (copy of the old runtime inside the new home)
+  - `~/Projects/Research/3v0-agent-repo` (pristine upstream clone)
 
 ## How it's enforced
-Installed as a Hermes `pre_tool_call` shell hook (`fail_closed: true`) so it
+Installed as a 3V0 `pre_tool_call` shell hook (`fail_closed: true`) so it
 fires on every tool call in the live profile:
 
 ```yaml
@@ -36,11 +36,11 @@ lives there) is not a write and passes.
 ```bash
 cp 3v0/deploy/dev-root-guard.py ~/.3V0/profiles/3v0/hooks/dev-root-guard.py
 ```
-(Config wiring lives in the profile's `config.yaml`; use `hermes config set`
+(Config wiring lives in the profile's `config.yaml`; use `3v0 config set`
 per the repo invariant.)
 
 ## Test
 ```bash
-python3 3v0/deploy/dev-root-guard.py <<< '{"tool_name":"write_file","tool_input":{"path":"/home/mustbearn/.hermes/hermes-agent/x.py"}}'
+python3 3v0/deploy/dev-root-guard.py <<< '{"tool_name":"write_file","tool_input":{"path":"/home/mustbearn/.3V0/3v0-agent/x.py"}}'
 # → exits 2 (blocked). Good.
 ```

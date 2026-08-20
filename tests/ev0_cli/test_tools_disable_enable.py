@@ -1,4 +1,4 @@
-"""Tests for hermes tools disable/enable/list command (backend)."""
+"""Tests for 3v0 tools disable/enable/list command (backend)."""
 from argparse import Namespace
 from unittest.mock import MagicMock, patch
 

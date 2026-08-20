@@ -28,9 +28,9 @@ SECOND_VALID_TOKEN = "987654321:abcdefghijklmnopqrstuvwxyzABCDEF"
 class TestGenerateBotUsername:
     def test_secure_default_format(self):
         name = generate_bot_username()
-        assert name.startswith("hermes_")
+        assert name.startswith("ev0_")
         assert name.endswith("_bot")
-        assert len(name) == len("hermes_") + 16 + len("_bot")
+        assert len(name) == len("ev0_") + 16 + len("_bot")
         assert len(name) <= 32
 
 
@@ -52,9 +52,9 @@ class TestGenerateDeepLink:
         link = generate_deep_link(
             manager_bot="Bot",
             suggested_username="test_bot",
-            suggested_name="Hermes & Friends",
+            suggested_name="3V0 & Friends",
         )
-        assert "Hermes+%26+Friends" in link
+        assert "3V0+%26+Friends" in link
 
 
 class TestPairingNonce:
@@ -88,28 +88,28 @@ class TestCreatePairing:
         mock_resp.json.return_value = {
             "pairing_id": "abcdefghijklmnop",
             "poll_token": "secret-token",
-            "suggested_username": "hermes_abcdefghijklmnop_bot",
-            "deep_link": "https://t.me/newbot/HermesSetupBot/hermes_abcdefghijklmnop_bot?name=Hermes+Agent",
-            "qr_payload": "https://t.me/newbot/HermesSetupBot/hermes_abcdefghijklmnop_bot?name=Hermes+Agent",
+            "suggested_username": "ev0_abcdefghijklmnop_bot",
+            "deep_link": "https://t.me/newbot/Ev0SetupBot/ev0_abcdefghijklmnop_bot?name=3V0+Agent",
+            "qr_payload": "https://t.me/newbot/Ev0SetupBot/ev0_abcdefghijklmnop_bot?name=3V0+Agent",
             "expires_at": "2026-05-18T00:00:00.000Z",
         }
 
         with patch(
             "ev0_cli.telegram_managed_bot.httpx.post", return_value=mock_resp
         ) as post:
-            pairing = create_pairing("https://api.example.com", bot_name="Hermes Agent")
+            pairing = create_pairing("https://api.example.com", bot_name="3V0 Agent")
 
         assert pairing == TelegramPairing(
             pairing_id="abcdefghijklmnop",
             poll_token="secret-token",
-            suggested_username="hermes_abcdefghijklmnop_bot",
-            deep_link="https://t.me/newbot/HermesSetupBot/hermes_abcdefghijklmnop_bot?name=Hermes+Agent",
-            qr_payload="https://t.me/newbot/HermesSetupBot/hermes_abcdefghijklmnop_bot?name=Hermes+Agent",
+            suggested_username="ev0_abcdefghijklmnop_bot",
+            deep_link="https://t.me/newbot/Ev0SetupBot/ev0_abcdefghijklmnop_bot?name=3V0+Agent",
+            qr_payload="https://t.me/newbot/Ev0SetupBot/ev0_abcdefghijklmnop_bot?name=3V0+Agent",
             expires_at="2026-05-18T00:00:00.000Z",
         )
         post.assert_called_once_with(
             "https://api.example.com/v1/telegram/pairings",
-            json={"bot_name": "Hermes Agent"},
+            json={"bot_name": "3V0 Agent"},
             timeout=10.0,
         )
 
@@ -138,16 +138,16 @@ class TestPollForToken:
         return TelegramPairing(
             pairing_id="abcdefghijklmnop",
             poll_token="secret-token",
-            suggested_username="hermes_abcdefghijklmnop_bot",
-            deep_link="https://t.me/newbot/HermesSetupBot/hermes_abcdefghijklmnop_bot",
-            qr_payload="https://t.me/newbot/HermesSetupBot/hermes_abcdefghijklmnop_bot",
+            suggested_username="ev0_abcdefghijklmnop_bot",
+            deep_link="https://t.me/newbot/Ev0SetupBot/ev0_abcdefghijklmnop_bot",
+            qr_payload="https://t.me/newbot/Ev0SetupBot/ev0_abcdefghijklmnop_bot",
         )
 
     def test_immediate_success(self):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
         mock_resp.json.return_value = {
-            "bot_username": "hermes_abcdefghijklmnop_bot",
+            "bot_username": "ev0_abcdefghijklmnop_bot",
             "owner_user_id": 42,
             "status": "ready",
             "token": VALID_TOKEN,
@@ -209,10 +209,10 @@ class TestSetupTelegramAuto:
         from ev0_cli import setup
 
         seen = {}
-        profile_home = tmp_path / ".hermes" / "profiles" / "oracle"
+        profile_home = tmp_path / ".3V0" / "profiles" / "oracle"
         profile_home.mkdir(parents=True)
 
-        monkeypatch.setattr(setup, "get_hermes_home", lambda: profile_home)
+        monkeypatch.setattr(setup, "get_ev0_home", lambda: profile_home)
 
         def fake_auto_setup_telegram_bot_result(*, profile_name=None):
             seen["profile_name"] = profile_name
@@ -227,11 +227,11 @@ class TestSetupTelegramAuto:
         assert seen["profile_name"] == "oracle"
 
     def test_profile_name_from_home_path_handles_windows_separators(self):
-        from ev0_cli.setup import _profile_name_from_hermes_home
+        from ev0_cli.setup import _profile_name_from_ev0_home
 
         assert (
-            _profile_name_from_hermes_home(
-                PureWindowsPath(r"C:\Users\test\AppData\Local\hermes\profiles\oracle")
+            _profile_name_from_ev0_home(
+                PureWindowsPath(r"C:\Users\test\AppData\Local\3v0\profiles\oracle")
             )
             == "oracle"
         )

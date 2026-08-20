@@ -34,13 +34,13 @@ class DenyTest(unittest.TestCase):
     def test_blocks_gateway_lifecycle(self):
         for cmd in (
             "systemctl --user restart 3v0-gateway.service",
-            "hermes gateway restart",
-            "systemctl --user stop hermes-gateway",
+            "3v0 gateway restart",
+            "systemctl --user stop 3v0-gateway",
         ):
             self.assertIsNotNone(tools._denied(cmd), msg=cmd)
 
     def test_blocks_self_kill(self):
-        for cmd in ("pkill -f hermes", "kill -9 $(pgrep -f gateway)"):
+        for cmd in ("pkill -f 3v0", "kill -9 $(pgrep -f gateway)"):
             self.assertIsNotNone(tools._denied(cmd), msg=cmd)
 
     def test_blocks_destroy_root(self):
@@ -59,7 +59,7 @@ class ExecuteTest(unittest.TestCase):
 
     def test_blocked_terminal_no_subprocess(self):
         with mock.patch.object(tools.subprocess, "run", side_effect=AssertionError("must not run")):
-            r = tools.execute("run_terminal", {"command": "pkill -f hermes"})
+            r = tools.execute("run_terminal", {"command": "pkill -f 3v0"})
         self.assertTrue(r.get("blocked"))
         self.assertIn("denylist", r["error"])
 

@@ -1,5 +1,5 @@
 """
-Tests for mcp_serve — Hermes MCP server.
+Tests for mcp_serve — 3V0 MCP server.
 
 Three layers of tests:
 1. Unit tests — helpers, content extraction, attachment parsing
@@ -25,12 +25,12 @@ import pytest
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(autouse=True)
-def _isolate_hermes_home(tmp_path, monkeypatch):
-    """Redirect HERMES_HOME to a temp directory."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+def _isolate_ev0_home(tmp_path, monkeypatch):
+    """Redirect EV0_HOME to a temp directory."""
+    monkeypatch.setenv("EV0_HOME", str(tmp_path))
     try:
         import ev0_constants
-        monkeypatch.setattr(ev0_constants, "get_hermes_home", lambda: tmp_path)
+        monkeypatch.setattr(ev0_constants, "get_ev0_home", lambda: tmp_path)
     except (ImportError, AttributeError):
         pass
     return tmp_path
@@ -1017,7 +1017,7 @@ class TestCliIntegration:
         assert args.verbose is True
 
     def test_dispatcher_routes_serve(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         mock_run = MagicMock()
         monkeypatch.setattr("mcp_serve.run_mcp_server", mock_run)
 
@@ -1265,8 +1265,8 @@ class TestEventBridgePollE2E:
         sessions_dir.mkdir()
         monkeypatch.setattr(mcp_serve, "_get_sessions_dir", lambda: sessions_dir)
 
-        # _poll_once reads <HERMES_HOME>/state.db for its mtime gate; the autouse
-        # fixture points HERMES_HOME at tmp_path.
+        # _poll_once reads <EV0_HOME>/state.db for its mtime gate; the autouse
+        # fixture points EV0_HOME at tmp_path.
         db_path = tmp_path / "state.db"
         db_path.write_text("placeholder")
 

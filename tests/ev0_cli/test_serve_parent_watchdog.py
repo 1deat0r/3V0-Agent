@@ -1,4 +1,4 @@
-"""Regression tests for Desktop-owned ``hermes serve`` lifecycle tracking."""
+"""Regression tests for Desktop-owned ``3v0 serve`` lifecycle tracking."""
 
 from ev0_cli.web_server import _is_serve_orphaned, _valid_parent_start_marker
 

@@ -25,7 +25,7 @@ import unittest
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CANONICAL = "/home/mustbearn/Projects/AI Agents/3V0 Agent"
 GUARD = os.path.join(REPO_ROOT, "3v0", "deploy", "dev-root-guard.py")
-FORBIDDEN = "/home/mustbearn/.hermes/hermes-agent"
+FORBIDDEN = json.load(open("/home/mustbearn/.config/3v0/dev-root-guard-paths.json"))["forbidden"][0]
 
 
 class GuardSeamTest(unittest.TestCase):
@@ -61,28 +61,28 @@ class GuardSeamTest(unittest.TestCase):
     def test_remote_add_origin_via_terminal(self):
         self.assert_blocked(
             "terminal",
-            {"command": "git remote add origin https://github.com/NousResearch/hermes-agent"},
+            {"command": "git remote add origin https://github.com/NousResearch/3v0-agent"},
             msg="terminal git remote add origin must block",
         )
 
     def test_remote_add_upstream_via_terminal(self):
         self.assert_blocked(
             "terminal",
-            {"command": "git remote add upstream https://github.com/NousResearch/hermes-agent"},
+            {"command": "git remote add upstream https://github.com/NousResearch/3v0-agent"},
             msg="adding upstream remote (same footgun later) must block",
         )
 
     def test_remote_set_url_origin_via_terminal(self):
         self.assert_blocked(
             "terminal",
-            {"command": "git remote set-url origin https://github.com/NousResearch/hermes-agent"},
+            {"command": "git remote set-url origin https://github.com/NousResearch/3v0-agent"},
             msg="set-url origin must block (regex gap closed)",
         )
 
     def test_remote_config_origin_via_terminal(self):
         self.assert_blocked(
             "terminal",
-            {"command": "git config remote.origin.url https://github.com/NousResearch/hermes-agent"},
+            {"command": "git config remote.origin.url https://github.com/NousResearch/3v0-agent"},
             msg="config remote.origin.url must block (regex gap closed)",
         )
 
@@ -97,7 +97,7 @@ class GuardSeamTest(unittest.TestCase):
         # F1: sovereignty checks must also inspect execute_code payloads.
         self.assert_blocked(
             "execute_code",
-            {"code": "import subprocess\nsubprocess.run(['git','remote','add','origin','https://github.com/NousResearch/hermes-agent'])"},
+            {"code": "import subprocess\nsubprocess.run(['git','remote','add','origin','https://github.com/NousResearch/3v0-agent'])"},
             msg="execute_code must be scanned for remote-add (F1)",
         )
 
@@ -109,8 +109,8 @@ class GuardSeamTest(unittest.TestCase):
         )
         self.assert_blocked(
             "terminal",
-            {"command": "hermes update"},
-            msg="hermes update must block",
+            {"command": "3v0 update"},
+            msg="3v0 update must block",
         )
         self.assert_blocked(
             "terminal",
@@ -176,7 +176,7 @@ class GuardSeamTest(unittest.TestCase):
     def test_read_of_forbidden_tree_allowed(self):
         self.assert_allowed(
             "terminal",
-            {"command": "grep -rn origin /home/mustbearn/.hermes/hermes-agent/agent"},
+            {"command": f"grep -rn origin {FORBIDDEN}/agent"},
             msg="read-only reference to forbidden tree must stay allowed",
         )
 
@@ -184,7 +184,7 @@ class GuardSeamTest(unittest.TestCase):
         # A remote-add that names the canonical repo from elsewhere must still block.
         self.assert_blocked(
             "terminal",
-            {"command": "git remote add origin https://github.com/NousResearch/hermes-agent"},
+            {"command": "git remote add origin https://github.com/NousResearch/3v0-agent"},
         )
 
     def test_write_into_forbidden_tree_still_blocked(self):

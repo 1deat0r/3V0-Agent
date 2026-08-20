@@ -1,4 +1,4 @@
-"""``hermes backup`` subcommand parser.
+"""``3v0 backup`` subcommand parser.
 
 Extracted verbatim from ``ev0_cli/main.py:main()`` (god-file Phase 2).
 Handler injected to avoid importing ``main``.
@@ -16,15 +16,15 @@ def build_backup_parser(subparsers, *, cmd_backup: Callable) -> None:
     # =========================================================================
     backup_parser = subparsers.add_parser(
         "backup",
-        help="Back up Hermes home directory to a zip file",
-        description="Create a zip archive of your entire Hermes configuration, "
-        "skills, sessions, and data (excludes the hermes-agent codebase). "
+        help="Back up 3V0 home directory to a zip file",
+        description="Create a zip archive of your entire 3V0 configuration, "
+        "skills, sessions, and data (excludes the 3v0-agent codebase). "
         "Use --quick for a fast snapshot of just critical state files.",
     )
     backup_parser.add_argument(
         "-o",
         "--output",
-        help="Output path for the zip file (default: ~/hermes-backup-<timestamp>.zip)",
+        help="Output path for the zip file (default: ~/3v0-backup-<timestamp>.zip)",
     )
     backup_parser.add_argument(
         "-q",

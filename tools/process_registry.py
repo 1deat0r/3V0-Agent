@@ -48,7 +48,7 @@ from ev0_cli._subprocess_compat import windows_hide_flags
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from ev0_cli.config import get_hermes_home
+from ev0_cli.config import get_ev0_home
 
 from agent.redact import redact_sensitive_text
 
@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 
 # Checkpoint file for crash recovery (gateway only)
-CHECKPOINT_PATH = get_hermes_home() / "processes.json"
+CHECKPOINT_PATH = get_ev0_home() / "processes.json"
 
 # Limits
 MAX_OUTPUT_CHARS = 200_000      # 200KB rolling output buffer
@@ -83,13 +83,13 @@ WATCH_GLOBAL_COOLDOWN_SECONDS = 30
 # ---------------------------------------------------------------------------
 # systemd cgroup isolation for gateway-spawned local executors (#70716)
 # ---------------------------------------------------------------------------
-# When Hermes runs as a systemd gateway with MemoryHigh/MemoryMax limits,
+# When 3V0 runs as a systemd gateway with MemoryHigh/MemoryMax limits,
 # local background terminal commands inherit the gateway's cgroup.  A
 # memory-heavy executor (Codex, tests, Node) can push the whole cgroup past
 # MemoryMax and trigger systemd-oomd to kill the ENTIRE gateway — taking down
 # the messaging control plane and silently losing the active turn.
 #
-# Wrapping the spawn in ``systemd-run --user --scope --unit=hermes-worker-<pid>``
+# Wrapping the spawn in ``systemd-run --user --scope --unit=3v0-worker-<pid>``
 # places the worker in its own transient cgroup so an OOM in the worker kills
 # only the worker, not the gateway.  We probe *once* whether
 # ``systemd-run --user --scope`` is actually usable (the binary can exist on
@@ -213,7 +213,7 @@ def _systemd_run_user_scope_available() -> bool:
                 if binary:
                     # Probe: create a transient scope that immediately exits.
                     # A unique unit avoids collisions; timeout bounds D-Bus.
-                    probe_unit = f"hermes-probe-scope-{os.getpid()}-{uuid.uuid4().hex[:8]}"
+                    probe_unit = f"3v0-probe-scope-{os.getpid()}-{uuid.uuid4().hex[:8]}"
                     result = subprocess.run(
                         [
                             binary, "--user", "--scope", "--quiet",
@@ -246,15 +246,15 @@ def _systemd_run_user_scope_available() -> bool:
 
 
 def _is_supervised_gateway_process() -> bool:
-    """Return whether this process is in a supervised Hermes gateway runtime.
+    """Return whether this process is in a supervised 3V0 gateway runtime.
 
-    Both supervisor markers and ``_HERMES_GATEWAY`` are inherited by every
+    Both supervisor markers and ``_EV0_GATEWAY`` are inherited by every
     descendant, and importing ``gateway.run`` also sets the latter. Require
     this process to own the live gateway PID file as well. That keeps transient
     systemd scopes limited to the gateway itself instead of terminal children
     or unrelated interactive CLIs in the same supervised process tree.
     """
-    if os.environ.get("_HERMES_GATEWAY") != "1":
+    if os.environ.get("_EV0_GATEWAY") != "1":
         return False
 
     try:
@@ -288,7 +288,7 @@ def _build_systemd_scope_argv(
         # Caller should have checked _systemd_run_user_scope_available();
         # guard anyway so we never pass None into Popen.
         return shell_argv
-    unit_name = f"hermes-worker-{unit_suffix}"
+    unit_name = f"3v0-worker-{unit_suffix}"
     memory_max = _worker_memory_max_bytes()
     return [
         binary,
@@ -1035,7 +1035,7 @@ class ProcessRegistry:
                         pty_argv,
                         unit_suffix=session.id,
                     )
-                    session.systemd_unit = f"hermes-worker-{session.id}.scope"
+                    session.systemd_unit = f"3v0-worker-{session.id}.scope"
                     pty_scope_attempted = True
                 elif pty_in_supervised_gateway:
                     logger.debug(
@@ -1115,7 +1115,7 @@ class ProcessRegistry:
                 shell_argv,
                 unit_suffix=unit_suffix,
             )
-            session.systemd_unit = f"hermes-worker-{unit_suffix}.scope"
+            session.systemd_unit = f"3v0-worker-{unit_suffix}.scope"
             # CRITICAL (#70716 regression): systemd-run --scope does NOT give
             # the worker a new session — the invoked process keeps the
             # parent's session and inherits its controlling terminal.  From an
@@ -1241,9 +1241,9 @@ class ProcessRegistry:
 
         # Run the command in the sandbox with output capture
         temp_dir = self._env_temp_dir(env)
-        log_path = f"{temp_dir}/hermes_bg_{session.id}.log"
-        pid_path = f"{temp_dir}/hermes_bg_{session.id}.pid"
-        exit_path = f"{temp_dir}/hermes_bg_{session.id}.exit"
+        log_path = f"{temp_dir}/ev0_bg_{session.id}.log"
+        pid_path = f"{temp_dir}/ev0_bg_{session.id}.pid"
+        exit_path = f"{temp_dir}/ev0_bg_{session.id}.exit"
         quoted_command = shlex.quote(command)
         quoted_temp_dir = shlex.quote(temp_dir)
         quoted_log_path = shlex.quote(log_path)
@@ -1745,7 +1745,7 @@ class ProcessRegistry:
         The reader thread (`_reader_loop`) sets `session.exited = True` only
         in its `finally` block, which runs when `stdout.read()` returns EOF.
         If the direct `Popen` child has exited but a descendant process (e.g.
-        a daemon spawned by `hermes update` restarting the gateway) is still
+        a daemon spawned by `3v0 update` restarting the gateway) is still
         holding the stdout pipe open, the reader blocks forever and poll()
         keeps returning "running" indefinitely (issue #17327 — 74 polls over
         7 minutes on Feishu).
@@ -2211,7 +2211,7 @@ class ProcessRegistry:
         if sink is None:
             return {
                 "status": "error",
-                "error": "close_terminal is only available in the Hermes desktop app.",
+                "error": "close_terminal is only available in the 3V0 desktop app.",
             }
         # The session may already be finished (or pruned) — the tab can still
         # linger and be closed, so a missing session is not an error here.
@@ -2505,7 +2505,7 @@ class ProcessRegistry:
                             "session_id": s.id,
                             # Redact inline credentials before persisting to
                             # disk — the checkpoint file lives under
-                            # ~/.hermes/processes.json with the raw command
+                            # ~/.3V0/processes.json with the raw command
                             # (issue #77484). Recovery only uses command for
                             # display/logging (the process is already running;
                             # adoption re-validates the PID, never re-runs the
@@ -2873,7 +2873,7 @@ def format_process_notification(evt: dict) -> "str | None":
     if _exit in {-15, 143, "-15", "143"}:
         _signal = ", SIGTERM"
     if _reason == "killed":
-        _status = f"terminated by {_source or 'Hermes'}"
+        _status = f"terminated by {_source or '3V0'}"
     elif _reason == "lost":
         _status = "marked lost because the process backend disappeared"
     elif _reason == "failed_start":

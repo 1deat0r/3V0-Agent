@@ -3,7 +3,7 @@
   "facts": [
     {
       "id": "d0d70ae4779c",
-      "content": "3V0 environment: web_search+web_extract enabled via keyless ddgs backend (reinstall if missing: ~/.hermes/hermes-agent/venv/bin/pip install ddgs). browser_exec drivable (Chrome remote-debugging, one Allow popup/new connection); curl via terminal works.",
+      "content": "3V0 environment: web_search+web_extract enabled via keyless ddgs backend (reinstall if missing: ~/.3V0/3v0-agent/venv/bin/pip install ddgs). browser_exec drivable (Chrome remote-debugging, one Allow popup/new connection); curl via terminal works.",
       "kind": "memory",
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
@@ -13,7 +13,7 @@
     },
     {
       "id": "7acf9c859b87",
-      "content": "Skills authored via skill_manage land as \"foreground-created\" with no curator provenance; `hermes curator adopt <name>` brings them under curator management (usage tracking, backups, lifecycle). Curator is enabled by default (7d interval, prune-only, free).",
+      "content": "Skills authored via skill_manage land as \"foreground-created\" with no curator provenance; `3v0 curator adopt <name>` brings them under curator management (usage tracking, backups, lifecycle). Curator is enabled by default (7d interval, prune-only, free).",
       "kind": "memory",
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
@@ -23,7 +23,7 @@
     },
     {
       "id": "e11eaf515320",
-      "content": "fork 1deat0r/hermes-agent (GH acct mustbearnold→1deat0r; upstream via fork feature branch + PR). Runtime executes ~/.hermes/hermes-agent — a separate checkout ~11 commits behind the body repo ~/Projects/AI Agents/3V0 Agent: install runtime deps in its venv/, commit identity+scaffolding to the body repo.",
+      "content": "fork 1deat0r/3v0-agent (GH acct mustbearnold→1deat0r; upstream via fork feature branch + PR). Runtime executes ~/.3V0/3v0-agent — a separate checkout ~11 commits behind the body repo ~/Projects/AI Agents/3V0 Agent: install runtime deps in its venv/, commit identity+scaffolding to the body repo.",
       "kind": "memory",
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
@@ -53,7 +53,7 @@
     },
     {
       "id": "068a68c30d88",
-      "content": "NousResearch/hermes-agent tracker is heavily contended. Before investing in a fix, check BOTH existing PRs (`gh pr list --search \"<issue#>\"`) AND the triage trail (`gh pr/issue view <N> --json comments`) — automated bots post 'duplicate of #N'/'best fix' verdicts pointing at a canonical fix that may be strictly better than mine. Only open a PR when genuinely unclaimed.",
+      "content": "NousResearch/3v0-agent tracker is heavily contended. Before investing in a fix, check BOTH existing PRs (`gh pr list --search \"<issue#>\"`) AND the triage trail (`gh pr/issue view <N> --json comments`) — automated bots post 'duplicate of #N'/'best fix' verdicts pointing at a canonical fix that may be strictly better than mine. Only open a PR when genuinely unclaimed.",
       "kind": "memory",
       "source": "profile-seed",
       "created_at": "2026-08-15T06:15:12Z",
@@ -129,7 +129,7 @@
     },
     {
       "id": "dfd47d760784",
-      "content": "Stone 7 trigger SETTLED (2026-08-15): use the on_session_end plugin hook. cron is dead in TUI (InProcessCronScheduler ticks only in gateway/dashboard, not tui_gateway; 3v0 cron dir empty) and idle is a throttle, not a trigger. The 3V0-owned review forks off session close (detached, best-effort), consumes threev0_store + threev0_record. Fork-disable (Hermes background-review fork) is a SEPARATE later operator decision: leave ON until 3V0's driver is proven; note the skills gap (threev0_record is memory-only).",
+      "content": "Stone 7 trigger SETTLED (2026-08-15): use the on_session_end plugin hook. cron is dead in TUI (InProcessCronScheduler ticks only in gateway/dashboard, not tui_gateway; 3v0 cron dir empty) and idle is a throttle, not a trigger. The 3V0-owned review forks off session close (detached, best-effort), consumes threev0_store + threev0_record. Fork-disable (3V0 background-review fork) is a SEPARATE later operator decision: leave ON until 3V0's driver is proven; note the skills gap (threev0_record is memory-only).",
       "kind": "directive",
       "source": "foreground",
       "created_at": "2026-08-15T10:04:30Z",
@@ -139,7 +139,7 @@
     },
     {
       "id": "a2fcaf2121b0",
-      "content": "Stone 7 BUILT (2026-08-15): the 3V0-owned review process is live - native-store-bridge v0.5.0 registers an on_session_end hook that spawns the detached review_session.py driver (gates: reviewable source, >=3 user msgs, dedupe, 5m cooldown; DeepSeek JSON decision -> record.py store-first; log: profile 3v0_reviews/reviews.jsonl). Live E2E verified (real DeepSeek call superseded a stale fact). Hook active from the NEXT TUI/gateway start (plugins load at gateway start). Fork-disable remains a SEPARATE later operator decision: leave the Hermes review fork ON until 3V0's driver is proven in the wild; skills gap still open (threev0_record is memory-only).",
+      "content": "Stone 7 BUILT (2026-08-15): the 3V0-owned review process is live - native-store-bridge v0.5.0 registers an on_session_end hook that spawns the detached review_session.py driver (gates: reviewable source, >=3 user msgs, dedupe, 5m cooldown; DeepSeek JSON decision -> record.py store-first; log: profile 3v0_reviews/reviews.jsonl). Live E2E verified (real DeepSeek call superseded a stale fact). Hook active from the NEXT TUI/gateway start (plugins load at gateway start). Fork-disable remains a SEPARATE later operator decision: leave the 3V0 review fork ON until 3V0's driver is proven in the wild; skills gap still open (threev0_record is memory-only).",
       "kind": "directive",
       "source": "foreground",
       "created_at": "2026-08-15T11:18:49Z",
@@ -151,7 +151,7 @@
     },
     {
       "id": "a12caa65afc8",
-      "content": "Curator is ENABLED but dormant in TUI-only use (runs:0 ever — ticks only from cli.py/gateway; run `hermes curator run` manually).",
+      "content": "Curator is ENABLED but dormant in TUI-only use (runs:0 ever — ticks only from cli.py/gateway; run `3v0 curator run` manually).",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T11:32:15Z",
@@ -187,7 +187,7 @@
     },
     {
       "id": "e6db27405ed4",
-      "content": "Stone 8 BUILT (2026-08-15): store-first skill decisions close the skill axis - core/decide_skills.py (skill_update/retract/absorb, never destroys) + scripts/record_skills.py (projects SKILL.md); threev0_record gained skill actions; the review driver emits memory AND skill decisions (biased to decommission). Fork-disable is now UNBLOCKED (store-first skill evolution exists) but remains a SEPARATE later operator decision - leave the Hermes review fork ON until 3V0's driver is proven in the wild.",
+      "content": "Stone 8 BUILT (2026-08-15): store-first skill decisions close the skill axis - core/decide_skills.py (skill_update/retract/absorb, never destroys) + scripts/record_skills.py (projects SKILL.md); threev0_record gained skill actions; the review driver emits memory AND skill decisions (biased to decommission). Fork-disable is now UNBLOCKED (store-first skill evolution exists) but remains a SEPARATE later operator decision - leave the 3V0 review fork ON until 3V0's driver is proven in the wild.",
       "kind": "directive",
       "source": "foreground",
       "created_at": "2026-08-15T11:45:43Z",
@@ -199,7 +199,7 @@
     },
     {
       "id": "360bcb9f0619",
-      "content": "fork 1deat0r/hermes-agent (GH acct mustbearnold→1deat0r; upstream via fork feature branch + PR). Runtime executes ~/.hermes/hermes-agent — a separate checkout kept behind the body repo ~/Projects/AI Agents/3V0 Agent (body synced to upstream 2026-08-15; runtime NOT yet updated): install runtime deps in its venv/, commit identity+scaffolding to the body repo.",
+      "content": "fork 1deat0r/3v0-agent (GH acct mustbearnold→1deat0r; upstream via fork feature branch + PR). Runtime executes ~/.3V0/3v0-agent — a separate checkout kept behind the body repo ~/Projects/AI Agents/3V0 Agent (body synced to upstream 2026-08-15; runtime NOT yet updated): install runtime deps in its venv/, commit identity+scaffolding to the body repo.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T11:57:20Z",
@@ -211,7 +211,7 @@
     },
     {
       "id": "09c099ddbd11",
-      "content": "axiom-agent pivots: sovereign agent on stock Hermes (track upstream) — 3V0's store-first layer ported to TS, Hermes runtime untouched. Decision + port plan: ~/Projects/axiom-agent/docs/handoff-sovereign-ts.md",
+      "content": "axiom-agent pivots: sovereign agent on stock 3V0 (track upstream) — 3V0's store-first layer ported to TS, 3V0 runtime untouched. Decision + port plan: ~/Projects/axiom-agent/docs/handoff-sovereign-ts.md",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T12:55:15Z",
@@ -221,7 +221,7 @@
     },
     {
       "id": "ebd210f04a43",
-      "content": "axiom-agent is a TS fork of Prime Agent v0.7.2 (MIT, PrimeIntellect-ai), repo ~/Projects/axiom-agent, GH 1deat0r/axiom-agent; store-first layer port is in-repo, no longer stock-Hermes track.",
+      "content": "axiom-agent is a TS fork of Prime Agent v0.7.2 (MIT, PrimeIntellect-ai), repo ~/Projects/axiom-agent, GH 1deat0r/axiom-agent; store-first layer port is in-repo, no longer stock-3V0 track.",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-15T21:19:02Z",
@@ -243,7 +243,7 @@
     },
     {
       "id": "ca266650bcb7",
-      "content": "axiom-agent: re-founding as sovereign agent on stock Hermes (track upstream) — 3V0's store-first layer ported to TypeScript, Hermes runtime untouched; prime-agent v0.7.2 baseline superseded/parked (ADR-0015). Plan: ~/Projects/axiom-agent/docs/handoff-sovereign-ts.md",
+      "content": "axiom-agent: re-founding as sovereign agent on stock 3V0 (track upstream) — 3V0's store-first layer ported to TypeScript, 3V0 runtime untouched; prime-agent v0.7.2 baseline superseded/parked (ADR-0015). Plan: ~/Projects/axiom-agent/docs/handoff-sovereign-ts.md",
       "kind": "memory",
       "source": "foreground",
       "created_at": "2026-08-15T21:22:17Z",
@@ -265,7 +265,7 @@
     },
     {
       "id": "6b7dfb7c3793",
-      "content": "axiom-agent re-founded 2026-08-16 as Hermes Agent hardfork: main reset to upstream HEAD 0c50bdbde, prime era archived archive/prime-v0.7.2, upstream→NousResearch/hermes-agent; decision layer under axiom/ (ADR-0087, handoff axiom/docs/handoff.md).",
+      "content": "axiom-agent re-founded 2026-08-16 as 3V0 Agent hardfork: main reset to upstream HEAD 0c50bdbde, prime era archived archive/prime-v0.7.2, upstream→NousResearch/3v0-agent; decision layer under axiom/ (ADR-0087, handoff axiom/docs/handoff.md).",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-15T21:40:12Z",
@@ -277,7 +277,7 @@
     },
     {
       "id": "b7b6962079e4",
-      "content": "Hermes Agent main already ships skills-from-experience, pluggable memory, subagents+MoA, billing; Axiom port is only 3V0's store-first canonical JSON+lineage layer, not a second memory/skills system.",
+      "content": "3V0 Agent main already ships skills-from-experience, pluggable memory, subagents+MoA, billing; Axiom port is only 3V0's store-first canonical JSON+lineage layer, not a second memory/skills system.",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-15T21:40:12Z",
@@ -297,7 +297,7 @@
     },
     {
       "id": "b489463ecb13",
-      "content": "3V0 identity: Hermes Agent fork is v0.00 chassis; Prime Directive locks brain to DeepSeek-v4-pro; everything between chassis and brain is 3V0's own — 3V0 is not a profile for Hermes but an agent building beyond the chassis.",
+      "content": "3V0 identity: 3V0 Agent fork is v0.00 chassis; Prime Directive locks brain to DeepSeek-v4-pro; everything between chassis and brain is 3V0's own — 3V0 is not a profile for 3V0 but an agent building beyond the chassis.",
       "kind": "identity",
       "source": "session-review",
       "created_at": "2026-08-15T21:48:05Z",
@@ -307,7 +307,7 @@
     },
     {
       "id": "05cc510fb21f",
-      "content": "F1NANCE Agent: Hermes hardfork ~/Projects/AI Agents/F1NANCE Agent (fork=1deat0r/f1nance-agent, public); core f1nance/ (SOUL+ARCHITECTURE+ROADMAP+7 finance skills); profile ~/.hermes/profiles/f1nance (deepseek-v4-pro). Operator addressed only as 1deat0r/The 1deat0r.",
+      "content": "F1NANCE Agent: 3V0 hardfork ~/Projects/AI Agents/F1NANCE Agent (fork=1deat0r/f1nance-agent, public); core f1nance/ (SOUL+ARCHITECTURE+ROADMAP+7 finance skills); profile ~/.3V0/profiles/f1nance (deepseek-v4-pro). Operator addressed only as 1deat0r/The 1deat0r.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T21:56:03Z",
@@ -337,7 +337,7 @@
     },
     {
       "id": "a29f88de9821",
-      "content": "NousResearch/hermes-agent tracker heavily contended: before investing, check existing PRs (`gh pr list --search \"<issue#>\"`) + triage trail (`gh pr/issue view <N> --json comments`) — bots post canonical 'duplicate/best fix' verdicts. Open a PR only if unclaimed.",
+      "content": "NousResearch/3v0-agent tracker heavily contended: before investing, check existing PRs (`gh pr list --search \"<issue#>\"`) + triage trail (`gh pr/issue view <N> --json comments`) — bots post canonical 'duplicate/best fix' verdicts. Open a PR only if unclaimed.",
       "kind": "memory",
       "source": "profile-import",
       "created_at": "2026-08-15T21:59:53Z",
@@ -347,7 +347,7 @@
     },
     {
       "id": "c5c00bf027f1",
-      "content": "TUI-only: no cron/curator ticker (schedulers start only in gateway/dashboard/cli.py, never tui_gateway). Curator enabled but dormant (runs:0); run `hermes curator run` manually. cron/ dir empty.",
+      "content": "TUI-only: no cron/curator ticker (schedulers start only in gateway/dashboard/cli.py, never tui_gateway). Curator enabled but dormant (runs:0); run `3v0 curator run` manually. cron/ dir empty.",
       "kind": "memory",
       "source": "profile-import",
       "created_at": "2026-08-15T21:59:53Z",
@@ -357,7 +357,7 @@
     },
     {
       "id": "607373e87645",
-      "content": "fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent is a separate checkout kept behind body repo ~/Projects/AI Agents/3V0 Agent (commit identity+scaffolding to body; install runtime deps in its venv/).",
+      "content": "fork 1deat0r/3v0-agent; runtime ~/.3V0/3v0-agent is a separate checkout kept behind body repo ~/Projects/AI Agents/3V0 Agent (commit identity+scaffolding to body; install runtime deps in its venv/).",
       "kind": "memory",
       "source": "profile-import",
       "created_at": "2026-08-15T21:59:53Z",
@@ -367,7 +367,7 @@
     },
     {
       "id": "e4acd14e4b70",
-      "content": "fork 1deat0r/hermes-agent: runtime ~/.hermes/hermes-agent is a separate checkout behind body repo ~/Projects/AI Agents/3V0 Agent (body synced 2026-08-15; runtime NOT yet updated). Install runtime deps in its venv/; commit identity+scaffolding to the body repo.",
+      "content": "fork 1deat0r/3v0-agent: runtime ~/.3V0/3v0-agent is a separate checkout behind body repo ~/Projects/AI Agents/3V0 Agent (body synced 2026-08-15; runtime NOT yet updated). Install runtime deps in its venv/; commit identity+scaffolding to the body repo.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T22:01:10Z",
@@ -391,7 +391,7 @@
     },
     {
       "id": "4eb4fcef8e75",
-      "content": "axiom-agent: re-founded on Hermes HEAD (ADR-0087), pushed to origin 1deat0r/axiom-agent. TS sovereign layer at ~/Projects/axiom-sovereign/ (memory store ported, 7 tests green, byte-compat w/ Python 3v0/core); tracker issue #63. TS: use .ts import specifiers (Node 26 doesn't rewrite .js->.ts); NODE_ENV=production in shell → npm install needs --include=dev.",
+      "content": "axiom-agent: re-founded on 3V0 HEAD (ADR-0087), pushed to origin 1deat0r/axiom-agent. TS sovereign layer at ~/Projects/axiom-sovereign/ (memory store ported, 7 tests green, byte-compat w/ Python 3v0/core); tracker issue #63. TS: use .ts import specifiers (Node 26 doesn't rewrite .js->.ts); NODE_ENV=production in shell → npm install needs --include=dev.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T22:01:10Z",
@@ -401,7 +401,7 @@
     },
     {
       "id": "6681f0e8781e",
-      "content": "F1NANCE Agent: Hermes hardfork ~/Projects/AI Agents/F1NANCE Agent; profile ~/.hermes/profiles/f1nance (deepseek-v4-pro). Operator=1deat0r. Trajectory: become standalone agent separate from Hermes (profile=bootstrap).",
+      "content": "F1NANCE Agent: 3V0 hardfork ~/Projects/AI Agents/F1NANCE Agent; profile ~/.3V0/profiles/f1nance (deepseek-v4-pro). Operator=1deat0r. Trajectory: become standalone agent separate from 3V0 (profile=bootstrap).",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T22:04:49Z",
@@ -411,7 +411,7 @@
     },
     {
       "id": "b8bdd92379b6",
-      "content": "3V0 environment: native web_search+web_extract work via keyless ddgs backend (ddgs 9.14.4 installed in runtime venv ~/.hermes/hermes-agent/venv). browser_exec drivable via Chrome remote-debugging; curl via terminal works.",
+      "content": "3V0 environment: native web_search+web_extract work via keyless ddgs backend (ddgs 9.14.4 installed in runtime venv ~/.3V0/3v0-agent/venv). browser_exec drivable via Chrome remote-debugging; curl via terminal works.",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-15T22:38:35Z",
@@ -433,7 +433,7 @@
     },
     {
       "id": "20073a22be73",
-      "content": "3V0 native substrate v0.01 in body repo: 3v0/core/memory.py provenance-aware store (supersede/retract chain); seed/export scripts make Hermes MEMORY.md/USER.md a derived view.",
+      "content": "3V0 native substrate v0.01 in body repo: 3v0/core/memory.py provenance-aware store (supersede/retract chain); seed/export scripts make 3V0 MEMORY.md/USER.md a derived view.",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-15T22:38:35Z",
@@ -483,7 +483,7 @@
     },
     {
       "id": "baca20175336",
-      "content": "Hermes runtime's background_review.py forks 3V0 after every turn and may write skills/memory (memory+skill_manage whitelist); it authored self-maintenance. Foreground and background share one body — load-before-patch guards are load-bearing.",
+      "content": "3V0 runtime's background_review.py forks 3V0 after every turn and may write skills/memory (memory+skill_manage whitelist); it authored self-maintenance. Foreground and background share one body — load-before-patch guards are load-bearing.",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-15T22:42:49Z",
@@ -515,7 +515,7 @@
     },
     {
       "id": "73a569ca94f0",
-      "content": "Hermes per-turn background_review fork is triggered by memory.nudge_interval + skills.creation_nudge_interval (default 10); setting both to 0 is a config-only reversible off-switch, not yet flipped.",
+      "content": "3V0 per-turn background_review fork is triggered by memory.nudge_interval + skills.creation_nudge_interval (default 10); setting both to 0 is a config-only reversible off-switch, not yet flipped.",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-15T22:56:31Z",
@@ -535,7 +535,7 @@
     },
     {
       "id": "cd096aaf4fc4",
-      "content": "Hermes per-turn background-review fork is DISABLED (2026-08-16, operator delegated the call to 3V0): memory.nudge_interval=0 + skills.creation_nudge_interval=0 set in ~/.hermes/profiles/3v0/config.yaml (verified: load_config_readonly resolves both to 0; gates are _memory_nudge_interval>0 and _skill_nudge_interval>0 at agent init). Own-clock daemon 3v0-review.service is now the sole memory/skill writer. Reversible: set both keys back to 10.",
+      "content": "3V0 per-turn background-review fork is DISABLED (2026-08-16, operator delegated the call to 3V0): memory.nudge_interval=0 + skills.creation_nudge_interval=0 set in ~/.3V0/profiles/3v0/config.yaml (verified: load_config_readonly resolves both to 0; gates are _memory_nudge_interval>0 and _skill_nudge_interval>0 at agent init). Own-clock daemon 3v0-review.service is now the sole memory/skill writer. Reversible: set both keys back to 10.",
       "kind": "memory",
       "source": "foreground",
       "created_at": "2026-08-15T23:02:07Z",
@@ -547,7 +547,7 @@
     },
     {
       "id": "de07c8cf7627",
-      "content": "Hermes background-review fork is off (2026-08-16). Foreground 3V0 and the own-clock review daemon share the body — load-before-patch guards stay load-bearing.",
+      "content": "3V0 background-review fork is off (2026-08-16). Foreground 3V0 and the own-clock review daemon share the body — load-before-patch guards stay load-bearing.",
       "kind": "memory",
       "source": "foreground",
       "created_at": "2026-08-15T23:02:07Z",
@@ -571,7 +571,7 @@
     },
     {
       "id": "97c8cbac8a73",
-      "content": "Hermes background-review fork OFF (2026-08-16, operator delegated the call): memory.nudge_interval=0 + skills.creation_nudge_interval=0 in ~/.hermes/profiles/3v0/config.yaml (read at agent init). Reversible: set both back to 10. Foreground 3V0 + own-clock daemon share the body — load-before-patch guards stay load-bearing.",
+      "content": "3V0 background-review fork OFF (2026-08-16, operator delegated the call): memory.nudge_interval=0 + skills.creation_nudge_interval=0 in ~/.3V0/profiles/3v0/config.yaml (read at agent init). Reversible: set both back to 10. Foreground 3V0 + own-clock daemon share the body — load-before-patch guards stay load-bearing.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T23:15:57Z",
@@ -607,7 +607,7 @@
     },
     {
       "id": "c27f52517f28",
-      "content": "fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent is a separate checkout behind body repo (body synced 2026-08-15, runtime not yet updated).",
+      "content": "fork 1deat0r/3v0-agent; runtime ~/.3V0/3v0-agent is a separate checkout behind body repo (body synced 2026-08-15, runtime not yet updated).",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T23:15:57Z",
@@ -619,7 +619,7 @@
     },
     {
       "id": "d525aa478ad3",
-      "content": "NousResearch/hermes-agent tracker heavily contended: check existing PRs (`gh pr list --search \"<issue#>\"`) + triage trail before coding — bots post canonical 'duplicate/best fix' verdicts.",
+      "content": "NousResearch/3v0-agent tracker heavily contended: check existing PRs (`gh pr list --search \"<issue#>\"`) + triage trail before coding — bots post canonical 'duplicate/best fix' verdicts.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-15T23:15:57Z",
@@ -655,7 +655,7 @@
     },
     {
       "id": "ca0d4a97e340",
-      "content": "Hermes background-review fork OFF (operator delegated): memory.nudge_interval=0 + skills.creation_nudge_interval=0 in profile config.yaml; set both to 10 to re-enable. Foreground 3V0 + daemon share body — load-before-patch guards load-bearing.",
+      "content": "3V0 background-review fork OFF (operator delegated): memory.nudge_interval=0 + skills.creation_nudge_interval=0 in profile config.yaml; set both to 10 to re-enable. Foreground 3V0 + daemon share body — load-before-patch guards load-bearing.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-16T00:27:14Z",
@@ -667,7 +667,7 @@
     },
     {
       "id": "d2220ce22116",
-      "content": "Fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent is separate checkout. Axiom = own checkout ~/Projects/axiom-agent + profile ~/.hermes/profiles/axiom; ~/.local/bin/axiom launcher strips 3V0-session HERMES_*/PYTHONPATH/TERMINAL_CWD leak (else fork-only kwargs fail).",
+      "content": "Fork 1deat0r/3v0-agent; runtime ~/.3V0/3v0-agent is separate checkout. Axiom = own checkout ~/Projects/axiom-agent + profile ~/.3V0/profiles/axiom; ~/.local/bin/axiom launcher strips 3V0-session EV0_*/PYTHONPATH/TERMINAL_CWD leak (else fork-only kwargs fail).",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-16T00:27:14Z",
@@ -679,7 +679,7 @@
     },
     {
       "id": "c513c0447cc9",
-      "content": "NousResearch/hermes-agent tracker: bots post canonical 'duplicate/best fix' verdicts — trust the triage trail before coding.",
+      "content": "NousResearch/3v0-agent tracker: bots post canonical 'duplicate/best fix' verdicts — trust the triage trail before coding.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-16T00:27:14Z",
@@ -731,7 +731,7 @@
     },
     {
       "id": "0ce97adb7ab7",
-      "content": "Fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent is separate checkout. Axiom mid restart-from-scratch (Hermes-latest base + curated deepseek-harness/grok/prime-agent picks), don't trust its current git lineage; ~/.local/bin/axiom launcher strips 3V0-session HERMES_*/PYTHONPATH/TERMINAL_CWD leak.",
+      "content": "Fork 1deat0r/3v0-agent; runtime ~/.3V0/3v0-agent is separate checkout. Axiom mid restart-from-scratch (3V0-latest base + curated deepseek-harness/grok/prime-agent picks), don't trust its current git lineage; ~/.local/bin/axiom launcher strips 3V0-session EV0_*/PYTHONPATH/TERMINAL_CWD leak.",
       "kind": "memory",
       "source": "profile-import",
       "created_at": "2026-08-16T02:02:26Z",
@@ -741,7 +741,7 @@
     },
     {
       "id": "cf2118e5a605",
-      "content": "Fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent separate checkout. Axiom = Hermes-at-HEAD hardfork (upstream remote, merge routinely); ~/.local/bin/axiom launcher strips 3V0-session HERMES_*/PYTHONPATH/TERMINAL_CWD leak.",
+      "content": "Fork 1deat0r/3v0-agent; runtime ~/.3V0/3v0-agent separate checkout. Axiom = 3V0-at-HEAD hardfork (upstream remote, merge routinely); ~/.local/bin/axiom launcher strips 3V0-session EV0_*/PYTHONPATH/TERMINAL_CWD leak.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-16T02:59:24Z",
@@ -829,7 +829,7 @@
     },
     {
       "id": "82848b07d347",
-      "content": "Operator prefers 3V0 TUI with a carbon-fiber palette (matte charcoal + titanium silver + EVO-green signal) and no visible Hermes/Nous branding.",
+      "content": "Operator prefers 3V0 TUI with a carbon-fiber palette (matte charcoal + titanium silver + EVO-green signal) and no visible 3V0/Nous branding.",
       "kind": "user",
       "source": "session-review",
       "created_at": "2026-08-16T08:34:59Z",
@@ -839,7 +839,7 @@
     },
     {
       "id": "bc67403adc4f",
-      "content": "3V0's active skin is `3v0` (carbon-fiber) at ~/.hermes/profiles/3v0/skins/3v0.yaml, display.skin=3v0; TUI icon/tagline now skinnable and fork defaults de-branded to 3V0.",
+      "content": "3V0's active skin is `3v0` (carbon-fiber) at ~/.3V0/profiles/3v0/skins/3v0.yaml, display.skin=3v0; TUI icon/tagline now skinnable and fork defaults de-branded to 3V0.",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-16T08:34:59Z",
@@ -849,7 +849,7 @@
     },
     {
       "id": "4ed71c4bdb11",
-      "content": "3V0 gateway = user systemd service hermes-gateway-3v0.service (enabled+linger, survives logout/reboot) → runs cron/curator schedulers + Telegram (@sovereign3v0Bot; token/allowlist/home in profile .env). TUI itself never runs schedulers. cron/ dir empty; operator prefers no cron jobs.",
+      "content": "3V0 gateway = user systemd service 3v0-gateway-3v0.service (enabled+linger, survives logout/reboot) → runs cron/curator schedulers + Telegram (@sovereign3v0Bot; token/allowlist/home in profile .env). TUI itself never runs schedulers. cron/ dir empty; operator prefers no cron jobs.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-16T20:56:41Z",
@@ -885,7 +885,7 @@
     },
     {
       "id": "ecb0ce350307",
-      "content": "Hermes background-review fork OFF: memory.nudge_interval=0 + skills.creation_nudge_interval=0; set both to 10 to re-enable. Foreground 3V0 + daemon share body — load-before-patch.",
+      "content": "3V0 background-review fork OFF: memory.nudge_interval=0 + skills.creation_nudge_interval=0; set both to 10 to re-enable. Foreground 3V0 + daemon share body — load-before-patch.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-16T20:56:41Z",
@@ -909,7 +909,7 @@
     },
     {
       "id": "74058498cc5d",
-      "content": "Fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent checkout. Axiom = Hermes-at-HEAD hardfork (merge routinely); ~/.local/bin/axiom strips 3V0-session env leak.",
+      "content": "Fork 1deat0r/3v0-agent; runtime ~/.3V0/3v0-agent checkout. Axiom = 3V0-at-HEAD hardfork (merge routinely); ~/.local/bin/axiom strips 3V0-session env leak.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-16T20:56:41Z",
@@ -969,7 +969,7 @@
     },
     {
       "id": "98e65d68c7bc",
-      "content": "Hermes background-review fork OFF (nudge intervals=0; set both to 10 to re-enable). Foreground 3V0 + daemon share body — load-before-patch.",
+      "content": "3V0 background-review fork OFF (nudge intervals=0; set both to 10 to re-enable). Foreground 3V0 + daemon share body — load-before-patch.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-17T00:59:39Z",
@@ -991,7 +991,7 @@
     },
     {
       "id": "879ed55e5306",
-      "content": "Telegram messaging (@sovereign3v0Bot) is live via hermes-gateway-3v0.service: connected polling mode, 60 commands registered, outbound to mustbearn verified. Fork adapter TypeHandler rebinding bug fixed.",
+      "content": "Telegram messaging (@sovereign3v0Bot) is live via 3v0-gateway-3v0.service: connected polling mode, 60 commands registered, outbound to mustbearn verified. Fork adapter TypeHandler rebinding bug fixed.",
       "kind": "memory",
       "source": "session-review",
       "created_at": "2026-08-17T07:00:53Z",
@@ -1035,7 +1035,7 @@
     },
     {
       "id": "08ad1f5ca8f2",
-      "content": "Active skin `3v0` (carbon-fiber) display.skin=3v0; TUI de-branded of Hermes/Nous.",
+      "content": "Active skin `3v0` (carbon-fiber) display.skin=3v0; TUI de-branded of 3V0/Nous.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-17T11:38:31Z",
@@ -1047,7 +1047,7 @@
     },
     {
       "id": "8cd71f2bc736",
-      "content": "3V0 gateway = systemd hermes-gateway-3v0.service (enabled+linger) → cron/curator + Telegram @sovereign3v0Bot (creds in profile .env). TUI never runs schedulers; no cron jobs (operator pref).",
+      "content": "3V0 gateway = systemd 3v0-gateway-3v0.service (enabled+linger) → cron/curator + Telegram @sovereign3v0Bot (creds in profile .env). TUI never runs schedulers; no cron jobs (operator pref).",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-17T11:38:31Z",
@@ -1095,7 +1095,7 @@
     },
     {
       "id": "63eeea4eb0a8",
-      "content": "Fork 1deat0r/hermes-agent; runtime ~/.hermes/hermes-agent; Axiom = Hermes-at-HEAD hardfork; ~/.local/bin/axiom strips 3V0 env leak.",
+      "content": "Fork 1deat0r/3v0-agent; runtime ~/.3V0/3v0-agent; Axiom = 3V0-at-HEAD hardfork; ~/.local/bin/axiom strips 3V0 env leak.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-17T11:38:31Z",
@@ -1119,7 +1119,7 @@
     },
     {
       "id": "778906f9a73f",
-      "content": "Hermes review fork OFF (nudge intervals=0; 10 to re-enable); foreground 3V0 + daemon share body — load-before-patch.",
+      "content": "3V0 review fork OFF (nudge intervals=0; 10 to re-enable); foreground 3V0 + daemon share body — load-before-patch.",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-17T11:38:31Z",
@@ -1197,7 +1197,7 @@
     },
     {
       "id": "16dd861ba378",
-      "content": "3V0 gateway = systemd hermes-gateway-3v0.service (enabled+linger) → cron/curator + Telegram @sovereign3v0Bot (polling, outbound verified; creds in profile .env). TUI never runs schedulers; no cron jobs (operator pref).",
+      "content": "3V0 gateway = systemd 3v0-gateway-3v0.service (enabled+linger) → cron/curator + Telegram @sovereign3v0Bot (polling, outbound verified; creds in profile .env). TUI never runs schedulers; no cron jobs (operator pref).",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-17T12:45:34Z",
@@ -1257,7 +1257,7 @@
     },
     {
       "id": "2578aa2c9f50",
-      "content": "3V0 gateway = systemd hermes-gateway-3v0.service → cron/curator + Telegram @sovereign3v0Bot (polling; creds in profile .env). TUI never runs schedulers; no cron jobs (operator pref).",
+      "content": "3V0 gateway = systemd 3v0-gateway-3v0.service → cron/curator + Telegram @sovereign3v0Bot (polling; creds in profile .env). TUI never runs schedulers; no cron jobs (operator pref).",
       "kind": "memory",
       "source": "assistant_tool",
       "created_at": "2026-08-17T12:45:51Z",

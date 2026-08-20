@@ -60,12 +60,12 @@ def test_discover_all_plugins_includes_entrypoint_plugins(monkeypatch, tmp_path)
 
     dist = SimpleNamespace(
         version="0.1.0",
-        metadata={"Summary": "Karpathy-style LLM Wikis for Hermes"},
+        metadata={"Summary": "Karpathy-style LLM Wikis for 3V0"},
     )
     entry_point = SimpleNamespace(
         name="wiki",
-        value="adapters.hermes.cli_plugin",
-        group="hermes_agent.plugins",
+        value="adapters.3v0.cli_plugin",
+        group="ev0_agent.plugins",
         dist=dist,
     )
 
@@ -86,9 +86,9 @@ def test_discover_all_plugins_includes_entrypoint_plugins(monkeypatch, tmp_path)
         (
             "wiki",
             "0.1.0",
-            "Karpathy-style LLM Wikis for Hermes",
+            "Karpathy-style LLM Wikis for 3V0",
             "entrypoint",
-            "adapters.hermes.cli_plugin",
+            "adapters.3v0.cli_plugin",
             "wiki",
         )
     ]
@@ -104,13 +104,13 @@ def test_declared_capabilities_for_entrypoint_uses_distribution_metadata(
     plugin_ep = SimpleNamespace(
         name="thread-namer",
         value="thread_namer.plugin:register",
-        group="hermes_agent.plugins",
+        group="ev0_agent.plugins",
         dist=SimpleNamespace(version="1.0", metadata={"Summary": ""}),
     )
     capability_ep = SimpleNamespace(
         name="thread-namer.gateway.platform_actions",
         value="thread_namer.plugin:register",
-        group="hermes_agent.plugin_capabilities",
+        group="ev0_agent.plugin_capabilities",
     )
     monkeypatch.setattr(plugins_cmd, "_plugins_dir", lambda: user_dir)
     monkeypatch.setattr(

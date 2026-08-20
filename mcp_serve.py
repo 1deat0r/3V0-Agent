@@ -1,5 +1,5 @@
 """
-Hermes MCP Server — expose messaging conversations as MCP tools.
+3V0 MCP Server — expose messaging conversations as MCP tools.
 
 Starts a stdio MCP server that lets any MCP client (Claude Code, Cursor, Codex,
 etc.) list conversations, read message history, send messages, poll for live
@@ -10,17 +10,17 @@ Matches OpenClaw's 9-tool MCP channel bridge surface:
   events_poll, events_wait, messages_send, permissions_list_open,
   permissions_respond
 
-Plus: channels_list (Hermes-specific extra)
+Plus: channels_list (3V0-specific extra)
 
 Usage:
-    hermes mcp serve
-    hermes mcp serve --verbose
+    3v0 mcp serve
+    3v0 mcp serve --verbose
 
 MCP client config (e.g. claude_desktop_config.json):
     {
         "mcpServers": {
-            "hermes": {
-                "command": "hermes",
+            "3v0": {
+                "command": "3v0",
                 "args": ["mcp", "serve"]
             }
         }
@@ -41,7 +41,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
-logger = logging.getLogger("hermes.mcp_serve")
+logger = logging.getLogger("3v0.mcp_serve")
 
 # ---------------------------------------------------------------------------
 # Lazy MCP SDK import
@@ -61,12 +61,12 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 def _get_sessions_dir() -> Path:
-    """Return the sessions directory using HERMES_HOME."""
+    """Return the sessions directory using EV0_HOME."""
     try:
-        from ev0_constants import get_hermes_home
-        return get_hermes_home() / "sessions"
+        from ev0_constants import get_ev0_home
+        return get_ev0_home() / "sessions"
     except ImportError:
-        return Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes")) / "sessions"
+        return Path(os.environ.get("EV0_HOME", Path.home() / ".3V0")) / "sessions"
 
 
 def _get_session_db():
@@ -211,11 +211,11 @@ def _load_sessions_index_from_json() -> dict:
 def _load_channel_directory() -> dict:
     """Load the cached channel directory for available targets."""
     try:
-        from ev0_constants import get_hermes_home
-        directory_file = get_hermes_home() / "channel_directory.json"
+        from ev0_constants import get_ev0_home
+        directory_file = get_ev0_home() / "channel_directory.json"
     except ImportError:
         directory_file = Path(
-            os.environ.get("HERMES_HOME", Path.home() / ".hermes")
+            os.environ.get("EV0_HOME", Path.home() / ".3V0")
         ) / "channel_directory.json"
 
     if not directory_file.exists():
@@ -333,7 +333,7 @@ class EventBridge:
     """Background poller that watches SessionDB for new messages and
     maintains an in-memory event queue with waiter support.
 
-    This is the Hermes equivalent of OpenClaw's WebSocket gateway bridge.
+    This is the 3V0 equivalent of OpenClaw's WebSocket gateway bridge.
     Instead of WebSocket events, we poll the SQLite database for changes.
     """
 
@@ -486,10 +486,10 @@ class EventBridge:
         message is still delivered on its state.db-change tick.
         """
         try:
-            from ev0_constants import get_hermes_home
-            db_file = get_hermes_home() / "state.db"
+            from ev0_constants import get_ev0_home
+            db_file = get_ev0_home() / "state.db"
         except ImportError:
-            db_file = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes")) / "state.db"
+            db_file = Path(os.environ.get("EV0_HOME", Path.home() / ".3V0")) / "state.db"
         try:
             self._state_db_mtime = db_file.stat().st_mtime if db_file.exists() else 0.0
         except OSError:
@@ -543,10 +543,10 @@ class EventBridge:
         could drop brand-new conversations (#8925).
         """
         try:
-            from ev0_constants import get_hermes_home
-            db_file = get_hermes_home() / "state.db"
+            from ev0_constants import get_ev0_home
+            db_file = get_ev0_home() / "state.db"
         except ImportError:
-            db_file = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes")) / "state.db"
+            db_file = Path(os.environ.get("EV0_HOME", Path.home() / ".3V0")) / "state.db"
 
         try:
             db_mtime = db_file.stat().st_mtime if db_file.exists() else 0.0
@@ -618,7 +618,7 @@ class EventBridge:
 # ---------------------------------------------------------------------------
 
 def create_mcp_server(event_bridge: Optional[EventBridge] = None) -> "FastMCP":
-    """Create and return the Hermes MCP server with all tools registered."""
+    """Create and return the 3V0 MCP server with all tools registered."""
     if not _MCP_SERVER_AVAILABLE:
         raise ImportError(
             "MCP server requires the 'mcp' package. "
@@ -626,9 +626,9 @@ def create_mcp_server(event_bridge: Optional[EventBridge] = None) -> "FastMCP":
         )
 
     mcp = FastMCP(
-        "hermes",
+        "3v0",
         instructions=(
-            "Hermes Agent messaging bridge. Use these tools to interact with "
+            "3V0 Agent messaging bridge. Use these tools to interact with "
             "conversations across Telegram, Discord, Slack, WhatsApp, Signal, "
             "Matrix, and other connected platforms."
         ),
@@ -1024,7 +1024,7 @@ def create_mcp_server(event_bridge: Optional[EventBridge] = None) -> "FastMCP":
 # ---------------------------------------------------------------------------
 
 def run_mcp_server(verbose: bool = False) -> None:
-    """Start the Hermes MCP server on stdio."""
+    """Start the 3V0 MCP server on stdio."""
     if not _MCP_SERVER_AVAILABLE:
         print(
             "Error: MCP server requires the 'mcp' package.\n"

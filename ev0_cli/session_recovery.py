@@ -1,4 +1,4 @@
-"""Offline, non-destructive recovery for a damaged Hermes session database.
+"""Offline, non-destructive recovery for a damaged 3V0 session database.
 
 The recovery path deliberately avoids in-place repair:
 
@@ -324,7 +324,7 @@ def _snapshot_and_inspect(
 ) -> tuple[tempfile.TemporaryDirectory[str], Path, dict[str, Any]]:
     before = _source_fingerprint(source)
     temp_dir = tempfile.TemporaryDirectory(
-        prefix="hermes-session-recovery-",
+        prefix="3v0-session-recovery-",
         dir=str(work_root),
     )
     snapshot_dir = Path(temp_dir.name)
@@ -334,13 +334,13 @@ def _snapshot_and_inspect(
         if before != after:
             raise SessionRecoverySafetyError(
                 "The source database bundle changed while it was being copied. "
-                "Stop every Hermes process using this profile and retry. "
-                "This includes the interactive `hermes` CLI session this "
+                "Stop every 3V0 process using this profile and retry. "
+                "This includes the interactive `3v0` CLI session this "
                 "command may have been launched from: a running parent CLI "
                 "writes session bookkeeping (compression ticks, context "
                 "tracking) to state.db in the background and counts as a "
-                "Hermes process even after the gateway is stopped. Run the "
-                "recovery from a fresh shell with no `hermes` session open, "
+                "3V0 process even after the gateway is stopped. Run the "
+                "recovery from a fresh shell with no `3v0` session open, "
                 "or point --source at an immutable snapshot copy of the "
                 "database."
             )

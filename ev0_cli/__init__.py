@@ -1,14 +1,14 @@
 """
-Hermes CLI - Unified command-line interface for Hermes Agent.
+3V0 CLI - Unified command-line interface for 3V0 Agent.
 
 Provides subcommands for:
-- hermes chat          - Interactive chat (same as ./hermes)
-- hermes gateway       - Run gateway in foreground
-- hermes gateway start - Start gateway service
-- hermes gateway stop  - Stop gateway service
-- hermes setup         - Interactive setup wizard
-- hermes status        - Show status of all components
-- hermes cron          - Manage cron jobs
+- 3v0 chat          - Interactive chat (same as ./3v0)
+- 3v0 gateway       - Run gateway in foreground
+- 3v0 gateway start - Start gateway service
+- 3v0 gateway stop  - Stop gateway service
+- 3v0 setup         - Interactive setup wizard
+- 3v0 status        - Show status of all components
+- 3v0 cron          - Manage cron jobs
 """
 
 import os
@@ -31,7 +31,7 @@ def _ensure_utf8():
     The CLI prints box-drawing characters (┌│├└─) and the ⚕ glyph in the setup
     wizard, doctor, and status banners. Encoding those under a non-UTF-8 codec
     raises an unhandled UnicodeEncodeError that crashes the command before it
-    can even start — e.g. `hermes setup` on a fresh Pi.
+    can even start — e.g. `3v0 setup` on a fresh Pi.
 
     This runs at import time so it protects every CLI subcommand, on any
     platform. It re-wraps stdout/stderr as UTF-8 when their encoding is not

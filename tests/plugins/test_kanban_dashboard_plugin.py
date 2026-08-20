@@ -34,7 +34,7 @@ def _load_plugin_router():
     assert plugin_file.exists(), f"plugin file missing: {plugin_file}"
 
     spec = importlib.util.spec_from_file_location(
-        "hermes_dashboard_plugin_kanban_test", plugin_file,
+        "ev0_dashboard_plugin_kanban_test", plugin_file,
     )
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
@@ -45,10 +45,10 @@ def _load_plugin_router():
 
 @pytest.fixture
 def kanban_home(tmp_path, monkeypatch):
-    """Isolated HERMES_HOME with an empty kanban DB."""
-    home = tmp_path / ".hermes"
+    """Isolated EV0_HOME with an empty kanban DB."""
+    home = tmp_path / ".3V0"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("EV0_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     kb.init_db()
     return home
@@ -541,9 +541,9 @@ def test_ws_events_rejects_when_token_required(tmp_path, monkeypatch):
     delegates to web_server._ws_auth_ok, so we stub that with the real
     loopback-token semantics (auth_required False → constant-time token
     compare)."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".3V0"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("EV0_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     kb.init_db()
 
@@ -949,7 +949,7 @@ def test_bulk_empty_ids_400(client):
 
 
 def test_config_reads_dashboard_kanban_section(tmp_path, monkeypatch, client):
-    home = Path(os.environ["HERMES_HOME"])
+    home = Path(os.environ["EV0_HOME"])
     (home / "config.yaml").write_text(
         "dashboard:\n"
         "  kanban:\n"

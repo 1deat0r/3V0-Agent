@@ -49,7 +49,7 @@ import time
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional
 
-from ev0_constants import get_hermes_home
+from ev0_constants import get_ev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ RECOVERED_MARKER = (
 
 
 def _db_path():
-    return get_hermes_home() / "state.db"
+    return get_ev0_home() / "state.db"
 
 
 def _connect() -> sqlite3.Connection:

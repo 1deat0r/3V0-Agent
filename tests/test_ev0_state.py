@@ -429,7 +429,7 @@ class TestSessionLifecycle:
         """A later /model switch must replace, not compete with, a Browser lock."""
         db.create_session(
             session_id="s1",
-            source="hermes_browser",
+            source="ev0_browser",
             model="x-ai/grok-4.5",
             model_config={
                 "_branched_from": "parent-session",
@@ -2990,7 +2990,7 @@ class TestFTS5ToolCallMigration:
         try:
             assert session_db.fts_optimize_available() is True
 
-            # `hermes db optimize` performs the v23 transition; afterwards the
+            # `3v0 db optimize` performs the v23 transition; afterwards the
             # tool fields are searchable.
             result = session_db.optimize_fts_storage(vacuum=False)
             assert result["ok"] is True
@@ -4527,13 +4527,13 @@ class TestGatewayRoutingPkHeal:
 
     def test_legacy_pk_rebuilt_to_composite(self, tmp_path):
         db_path = self._make_legacy_db(
-            tmp_path, rows=[("/home/u/.hermes/sessions", "agent:main:telegram:dm:1", "{}", 1.0)]
+            tmp_path, rows=[("/home/u/.3V0/sessions", "agent:main:telegram:dm:1", "{}", 1.0)]
         )
         db = SessionDB(db_path=db_path)
         try:
             assert self._pk_cols(db) == ["scope", "session_key"]
             # Existing rows survive the rebuild.
-            entries = db.load_gateway_routing_entries(scope="/home/u/.hermes/sessions")
+            entries = db.load_gateway_routing_entries(scope="/home/u/.3V0/sessions")
             assert entries == {"agent:main:telegram:dm:1": "{}"}
         finally:
             db.close()
@@ -4897,9 +4897,9 @@ class TestPerformancePragmasEndToEnd:
             "is_sqlite_wal_reset_vulnerable",
             lambda version_info=None: False,
         )
-        home = tmp_path / "hermes_home"
+        home = tmp_path / "ev0_home"
         home.mkdir()
-        monkeypatch.setenv("HERMES_HOME", str(home))
+        monkeypatch.setenv("EV0_HOME", str(home))
         if config_text is not None:
             (home / "config.yaml").write_text(config_text)
         return home

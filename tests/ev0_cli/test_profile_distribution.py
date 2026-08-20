@@ -25,7 +25,7 @@ from ev0_cli.profile_distribution import (
     _env_template_from_manifest,
     _looks_like_git_url,
     _parse_semver,
-    check_hermes_requires,
+    check_ev0_requires,
     describe_distribution,
     install_distribution,
     plan_install,
@@ -43,9 +43,9 @@ from ev0_cli.profile_distribution import (
 @pytest.fixture()
 def profile_env(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    default_home = tmp_path / ".hermes"
+    default_home = tmp_path / ".3V0"
     default_home.mkdir(exist_ok=True)
-    monkeypatch.setenv("HERMES_HOME", str(default_home))
+    monkeypatch.setenv("EV0_HOME", str(default_home))
     return tmp_path
 
 
@@ -94,7 +94,7 @@ class TestManifestParsing:
             "name: telem\n"
             "version: 1.2.3\n"
             "description: Telem monitor\n"
-            "hermes_requires: '>=0.12.0'\n"
+            "ev0_requires: '>=0.12.0'\n"
             "author: Kyle\n"
             "license: MIT\n"
             "env_requires:\n"
@@ -161,10 +161,10 @@ class TestVersionRequires:
     ])
     def test_check_matrix(self, spec, cur, ok):
         if ok:
-            check_hermes_requires(spec, cur)
+            check_ev0_requires(spec, cur)
         else:
-            with pytest.raises(DistributionError, match="requires Hermes"):
-                check_hermes_requires(spec, cur)
+            with pytest.raises(DistributionError, match="requires 3V0"):
+                check_ev0_requires(spec, cur)
 
     def test_parse_semver_handles_prerelease(self):
         assert _parse_semver("0.12.0-rc1") == (0, 12, 0)
@@ -353,18 +353,18 @@ class TestInstall:
             plan_install(str(bogus), tmp_path / "work", override_name="x")
 
 
-    def test_install_enforces_hermes_requires(self, profile_env, monkeypatch):
-        # Pin current Hermes version to something well below the requirement
+    def test_install_enforces_ev0_requires(self, profile_env, monkeypatch):
+        # Pin current 3V0 version to something well below the requirement
         import ev0_cli
         monkeypatch.setattr(ev0_cli, "__version__", "0.1.0", raising=False)
 
         mf = DistributionManifest(
             name="future",
             version="1.0.0",
-            hermes_requires=">=99.0.0",
+            ev0_requires=">=99.0.0",
         )
         staged = _make_staging_dir(profile_env, "future", manifest=mf)
-        with pytest.raises(DistributionError, match="requires Hermes"):
+        with pytest.raises(DistributionError, match="requires 3V0"):
             install_distribution(str(staged), name="future")
 
 

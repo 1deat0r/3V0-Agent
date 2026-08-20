@@ -79,14 +79,14 @@ async def test_plugin_context_routes_through_live_gateway_to_existing_session(
     tmp_path,
     monkeypatch,
 ):
-    hermes_home = tmp_path / "hermes"
-    hermes_home.mkdir()
-    (hermes_home / "config.yaml").write_text(
+    ev0_home = tmp_path / "3v0"
+    ev0_home.mkdir()
+    (ev0_home / "config.yaml").write_text(
         yaml.safe_dump({
             "plugins": {"entries": {"notify-plugin": {"allow_gateway_injection": True}}}
         })
     )
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
     store = SessionStore(sessions_dir=tmp_path / "sessions", config=GatewayConfig())
     source = _entry().origin
@@ -174,8 +174,8 @@ async def test_dispatch_uses_stored_origin_and_adapter_message_path():
         allow_adapter_delegation=False,
     )
     assert event.metadata == {
-        "hermes_plugin_id": "notify-plugin",
-        "hermes_plugin_injection": True,
+        "ev0_plugin_id": "notify-plugin",
+        "ev0_plugin_injection": True,
         "gateway_session_key": entry.session_key,
         "gateway_session_id": entry.session_id,
         "gateway_session_strict": True,

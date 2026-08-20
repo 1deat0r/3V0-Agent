@@ -30,9 +30,9 @@ RUN_DURATION_S = 30
 WT = str(Path(__file__).resolve().parents[2])
 
 
-def worker_loop(worker_id: int, hermes_home: str, result_file: str) -> None:
-    os.environ["HERMES_HOME"] = hermes_home
-    os.environ["HOME"] = hermes_home
+def worker_loop(worker_id: int, ev0_home: str, result_file: str) -> None:
+    os.environ["EV0_HOME"] = ev0_home
+    os.environ["HOME"] = ev0_home
     sys.path.insert(0, WT)
     from ev0_cli import kanban_db as kb
 
@@ -141,10 +141,10 @@ def worker_loop(worker_id: int, hermes_home: str, result_file: str) -> None:
         json.dump(events, f)
 
 
-def reclaimer_loop(hermes_home: str, result_file: str) -> None:
+def reclaimer_loop(ev0_home: str, result_file: str) -> None:
     """Background dispatcher-like loop that reclaims stale tasks."""
-    os.environ["HERMES_HOME"] = hermes_home
-    os.environ["HOME"] = hermes_home
+    os.environ["EV0_HOME"] = ev0_home
+    os.environ["HOME"] = ev0_home
     sys.path.insert(0, WT)
     from ev0_cli import kanban_db as kb
 
@@ -170,10 +170,10 @@ def reclaimer_loop(hermes_home: str, result_file: str) -> None:
 
 
 def main():
-    home = tempfile.mkdtemp(prefix="hermes_mixed_stress_")
-    print(f"HERMES_HOME = {home}")
+    home = tempfile.mkdtemp(prefix="ev0_mixed_stress_")
+    print(f"EV0_HOME = {home}")
 
-    os.environ["HERMES_HOME"] = home
+    os.environ["EV0_HOME"] = home
     os.environ["HOME"] = home
     sys.path.insert(0, WT)
     from ev0_cli import kanban_db as kb

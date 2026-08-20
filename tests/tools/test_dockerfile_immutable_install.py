@@ -1,4 +1,4 @@
-"""Contract tests for the Docker image's immutable /opt/hermes install tree."""
+"""Contract tests for the Docker image's immutable /opt/3v0 install tree."""
 from __future__ import annotations
 
 import re
@@ -12,29 +12,29 @@ def _dockerfile_text() -> str:
     return DOCKERFILE.read_text()
 
 
-def test_dockerfile_makes_opt_hermes_readonly_for_hermes_user() -> None:
+def test_dockerfile_makes_opt_ev0_readonly_for_ev0_user() -> None:
     text = _dockerfile_text()
 
     # --chmod on the source COPY bakes read-only perms at copy time instead
     # of a separate chmod -R pass (which walked ~30k files — #49113).
     assert "COPY --link --chmod=a+rX,go-w . ." in text
     # The old tree-walking passes must not be present.
-    assert "chown -R root:root /opt/hermes" not in text
-    assert "chmod -R a+rX /opt/hermes" not in text
-    assert "chmod -R a-w /opt/hermes" not in text
+    assert "chown -R root:root /opt/3v0" not in text
+    assert "chmod -R a+rX /opt/3v0" not in text
+    assert "chmod -R a-w /opt/3v0" not in text
 
 
-def test_dockerfile_does_not_chown_install_trees_to_hermes() -> None:
+def test_dockerfile_does_not_chown_install_trees_to_ev0() -> None:
     text = _dockerfile_text()
     forbidden_patterns = (
-        r"chown\s+-R\s+hermes:hermes\s+/opt/hermes/\.venv",
-        r"chown\s+-R\s+hermes:hermes\s+/opt/hermes/ui-tui",
-        r"chown\s+-R\s+hermes:hermes\s+/opt/hermes/gateway",
-        r"chown\s+-R\s+hermes:hermes\s+/opt/hermes/node_modules",
+        r"chown\s+-R\s+3v0:3v0\s+/opt/3v0/\.venv",
+        r"chown\s+-R\s+3v0:3v0\s+/opt/3v0/ui-tui",
+        r"chown\s+-R\s+3v0:3v0\s+/opt/3v0/gateway",
+        r"chown\s+-R\s+3v0:3v0\s+/opt/3v0/node_modules",
     )
     for pattern in forbidden_patterns:
         assert not re.search(pattern, text), (
-            "runtime install trees under /opt/hermes must stay immutable; "
+            "runtime install trees under /opt/3v0 must stay immutable; "
             f"found forbidden pattern {pattern!r}"
         )
 
@@ -43,20 +43,20 @@ def test_dockerfile_bakes_code_scoped_install_method_stamp() -> None:
     """The 'docker' install-method stamp is baked next to the code.
 
     detect_install_method() reads the code-scoped stamp
-    (/opt/hermes/.install_method) first; baking it at build time keeps the
+    (/opt/3v0/.install_method) first; baking it at build time keeps the
     published image self-identifying as 'docker' WITHOUT writing into the
-    shared $HERMES_HOME data volume (which a host install may also use).
-    The stamp is created by root in the shim-wiring RUN block; the hermes
+    shared $EV0_HOME data volume (which a host install may also use).
+    The stamp is created by root in the shim-wiring RUN block; the 3v0
     user can't modify it (go-w from the --chmod on the source COPY).
     """
     text = _dockerfile_text()
-    assert "printf 'docker\\n' > /opt/hermes/.install_method" in text
+    assert "printf 'docker\\n' > /opt/3v0/.install_method" in text
 
     # The stamp must be in the RUN block that wires the exec shim.
     shim_block = re.search(
-        r"RUN mkdir -p /opt/hermes/bin && \\\n"
+        r"RUN mkdir -p /opt/3v0/bin && \\\n"
         r"(?:.*\\\n)+?"
-        r"\s+printf 'docker\\n' > /opt/hermes/\.install_method",
+        r"\s+printf 'docker\\n' > /opt/3v0/\.install_method",
         text,
     )
     assert shim_block, "install-method stamp must be in the shim-wiring RUN block"
@@ -74,24 +74,24 @@ def test_dockerfile_redirects_lazy_installs_to_durable_target() -> None:
     target = "/opt/data/lazy-packages"
 
     # The redirect target must be set AND must live under the data volume,
-    # never under the immutable /opt/hermes tree.
-    assert f"ENV HERMES_LAZY_INSTALL_TARGET={target}" in text
+    # never under the immutable /opt/3v0 tree.
+    assert f"ENV EV0_LAZY_INSTALL_TARGET={target}" in text
     assert target.startswith("/opt/data/"), "target must be on the durable volume"
-    assert "ENV HERMES_LAZY_INSTALL_TARGET=/opt/hermes" not in text
+    assert "ENV EV0_LAZY_INSTALL_TARGET=/opt/3v0" not in text
 
     # The seal flag must still be present — the redirect rides on top of it,
     # it does not replace it.
-    assert "ENV HERMES_DISABLE_LAZY_INSTALLS=1" in text
+    assert "ENV EV0_DISABLE_LAZY_INSTALLS=1" in text
 
     # stage2-hook must seed + chown the target dir so first-use installs
-    # succeed as the unprivileged hermes runtime user.
+    # succeed as the unprivileged 3v0 runtime user.
     stage2 = (REPO_ROOT / "docker" / "stage2-hook.sh").read_text()
-    assert '"$HERMES_HOME/lazy-packages"' in stage2, (
+    assert '"$EV0_HOME/lazy-packages"' in stage2, (
         "stage2-hook.sh must create the lazy-packages dir on the data volume"
     )
     assert "lazy-packages" in stage2.split("for sub in", 1)[1].split(";", 1)[0], (
         "lazy-packages must be in the per-boot chown subdir list so it stays "
-        "hermes-owned"
+        "3v0-owned"
     )
 
 
@@ -113,5 +113,5 @@ def test_dockerfile_bakes_photon_sidecar_deps() -> None:
     ), "sidecar deps must be installed with `npm ci` (deterministic, runs postinstall patch)"
     # Immutability contract: never chown the sidecar tree to the runtime user.
     assert not re.search(
-        r"chown\s+-R\s+hermes:hermes\s+/opt/hermes/plugins", text
+        r"chown\s+-R\s+3v0:3v0\s+/opt/3v0/plugins", text
     )

@@ -13,7 +13,7 @@ from agent.prompt_builder import (
     _truncate_content,
     _parse_skill_file,
     _skill_should_show,
-    _find_hermes_md,
+    _find_ev0_md,
     _find_git_root,
     _strip_yaml_frontmatter,
     build_skills_system_prompt,
@@ -284,7 +284,7 @@ class TestBuildSkillsSystemPrompt:
 
 
     def test_deduplicates_skills(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         cat_dir = tmp_path / "skills" / "tools"
         for subdir in ["search", "search"]:
             d = cat_dir / subdir
@@ -298,7 +298,7 @@ class TestBuildSkillsSystemPrompt:
     def test_compact_categories_demote_nested_and_miss_cache_separately(
         self, monkeypatch, tmp_path
     ):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         d = tmp_path / "skills" / "social-media" / "twitter" / "thread-writer"
         d.mkdir(parents=True)
         (d / "SKILL.md").write_text(
@@ -319,7 +319,7 @@ class TestBuildSkillsSystemPrompt:
 
     def test_excludes_disabled_skills(self, monkeypatch, tmp_path):
         """Skills in the user's disabled list should not appear in the system prompt."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         skills_dir = tmp_path / "skills" / "tools"
         skills_dir.mkdir(parents=True)
 
@@ -347,7 +347,7 @@ class TestBuildSkillsSystemPrompt:
         assert "old-tool" not in result
 
     def test_rebuilds_prompt_when_disabled_skills_change(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         skill_dir = tmp_path / "skills" / "tools" / "cached-skill"
         skill_dir.mkdir(parents=True)
         (skill_dir / "SKILL.md").write_text(
@@ -442,7 +442,7 @@ class TestBuildContextFilesPrompt:
         with patch("pathlib.Path.home", return_value=fake_home):
             result = build_context_files_prompt(cwd=str(tmp_path))
         assert "Project Context" in result
-        assert "Hermes Agent" in result
+        assert "3V0 Agent" in result
 
     def test_loads_agents_md(self, tmp_path):
         (tmp_path / "AGENTS.md").write_text("Use Ruff for linting.")
@@ -535,17 +535,17 @@ class TestBuildContextFilesPrompt:
 
 
     def test_empty_soul_md_adds_nothing(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_home"))
-        hermes_home = tmp_path / "hermes_home"
-        hermes_home.mkdir()
-        (hermes_home / "SOUL.md").write_text("\n\n", encoding="utf-8")
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_home"))
+        ev0_home = tmp_path / "ev0_home"
+        ev0_home.mkdir()
+        (ev0_home / "SOUL.md").write_text("\n\n", encoding="utf-8")
         result = build_context_files_prompt(cwd=str(tmp_path))
         assert result == ""
 
 
 
 
-    # --- .hermes.md / HERMES.md discovery ---
+    # --- .3v0.md / EV0.md discovery ---
 
 
 
@@ -585,23 +585,23 @@ class TestBuildContextFilesPrompt:
 
 
 # =========================================================================
-# .hermes.md helper functions
+# .3v0.md helper functions
 # =========================================================================
 
 
-class TestFindHermesMd:
+class TestFindEv0Md:
     def test_finds_in_cwd(self, tmp_path):
-        (tmp_path / ".hermes.md").write_text("rules")
-        assert _find_hermes_md(tmp_path) == tmp_path / ".hermes.md"
+        (tmp_path / ".3v0.md").write_text("rules")
+        assert _find_ev0_md(tmp_path) == tmp_path / ".3v0.md"
 
 
 
     def test_walks_to_git_root(self, tmp_path):
         (tmp_path / ".git").mkdir()
-        (tmp_path / ".hermes.md").write_text("root rules")
+        (tmp_path / ".3v0.md").write_text("root rules")
         sub = tmp_path / "a" / "b"
         sub.mkdir(parents=True)
-        assert _find_hermes_md(sub) == tmp_path / ".hermes.md"
+        assert _find_ev0_md(sub) == tmp_path / ".3v0.md"
 
 
 
@@ -609,19 +609,19 @@ class TestFindHermesMd:
         """Outside a git repo, only cwd is checked — parents are NOT walked.
 
         Walking parents with no git root to stop the loop would climb all
-        the way to / and pick up a .hermes.md planted in /tmp, /home, or /
+        the way to / and pick up a .3v0.md planted in /tmp, /home, or /
         on a shared system — a cross-user prompt-injection vector.
         """
         from unittest.mock import patch
 
         parent = tmp_path / "parent"
         parent.mkdir()
-        (parent / ".hermes.md").write_text("planted by another user")
+        (parent / ".3v0.md").write_text("planted by another user")
         cwd = parent / "work"
         cwd.mkdir()
         # No git root anywhere up the tree.
         with patch("agent.prompt_builder._find_git_root", return_value=None):
-            assert _find_hermes_md(cwd) is None
+            assert _find_ev0_md(cwd) is None
 
 
 
@@ -837,11 +837,11 @@ class TestEnvironmentHints:
 
 
     def test_environment_hint_from_env_var_is_appended(self, monkeypatch):
-        """HERMES_ENVIRONMENT_HINT lets an embedder describe the runtime env."""
+        """EV0_ENVIRONMENT_HINT lets an embedder describe the runtime env."""
         import agent.prompt_builder as _pb
         monkeypatch.setattr(_pb, "is_wsl", lambda: False)
         monkeypatch.delenv("TERMINAL_ENV", raising=False)
-        monkeypatch.setenv("HERMES_ENVIRONMENT_HINT", "Running inside an OpenShell sandbox.")
+        monkeypatch.setenv("EV0_ENVIRONMENT_HINT", "Running inside an OpenShell sandbox.")
         _pb._clear_backend_probe_cache()
         result = _pb.build_environment_hints()
         assert "Running inside an OpenShell sandbox." in result
@@ -899,11 +899,11 @@ class TestBuildSkillsSystemPromptConditional:
 
 
     def test_requires_skill_hidden_when_toolset_missing(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         skill_dir = tmp_path / "skills" / "iot" / "openhue"
         skill_dir.mkdir(parents=True)
         (skill_dir / "SKILL.md").write_text(
-            "---\nname: openhue\ndescription: Hue lights\nmetadata:\n  hermes:\n    requires_toolsets: [terminal]\n---\n"
+            "---\nname: openhue\ndescription: Hue lights\nmetadata:\n  3v0:\n    requires_toolsets: [terminal]\n---\n"
         )
         result = build_skills_system_prompt(
             available_tools=set(),
@@ -915,11 +915,11 @@ class TestBuildSkillsSystemPromptConditional:
 
     def test_no_args_shows_all_skills(self, monkeypatch, tmp_path):
         """Backward compat: calling with no args shows everything."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         skill_dir = tmp_path / "skills" / "search" / "duckduckgo"
         skill_dir.mkdir(parents=True)
         (skill_dir / "SKILL.md").write_text(
-            "---\nname: duckduckgo\ndescription: Free web search\nmetadata:\n  hermes:\n    fallback_for_toolsets: [web]\n---\n"
+            "---\nname: duckduckgo\ndescription: Free web search\nmetadata:\n  3v0:\n    fallback_for_toolsets: [web]\n---\n"
         )
         result = build_skills_system_prompt()
         assert "duckduckgo" in result

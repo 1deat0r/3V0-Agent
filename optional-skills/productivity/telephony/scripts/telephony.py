@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Telephony helper for the Hermes optional telephony skill.
+"""Telephony helper for the 3V0 optional telephony skill.
 
 Capabilities:
-- Persist telephony provider credentials to the Hermes .env file ($HERMES_HOME/.env)
+- Persist telephony provider credentials to the 3V0 .env file ($EV0_HOME/.env)
 - Search for, buy, and remember Twilio phone numbers
 - Make direct Twilio calls (TwiML <Say> or <Play>)
 - Send SMS / MMS via Twilio
@@ -68,20 +68,20 @@ class OwnedTwilioNumber:
     capabilities: dict[str, Any]
 
 
-def _hermes_home() -> Path:
-    return Path(os.environ.get("HERMES_HOME", "~/.hermes")).expanduser()
+def _ev0_home() -> Path:
+    return Path(os.environ.get("EV0_HOME", "~/.3V0")).expanduser()
 
 
 def _env_path() -> Path:
-    return _hermes_home() / ".env"
+    return _ev0_home() / ".env"
 
 
 def _config_path() -> Path:
-    return _hermes_home() / "config.yaml"
+    return _ev0_home() / "config.yaml"
 
 
 def _state_path() -> Path:
-    return _hermes_home() / "telephony_state.json"
+    return _ev0_home() / "telephony_state.json"
 
 
 def _load_root_config() -> dict[str, Any]:
@@ -89,7 +89,7 @@ def _load_root_config() -> dict[str, Any]:
     if not path.exists():
         return {}
     try:
-        import yaml  # optional dependency; Hermes already ships PyYAML
+        import yaml  # optional dependency; 3V0 already ships PyYAML
     except Exception:
         return {}
     try:
@@ -1146,22 +1146,22 @@ def save_vapi(
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Hermes telephony helper")
+    parser = argparse.ArgumentParser(description="3V0 telephony helper")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("diagnose", help="Show saved telephony state and provider readiness")
 
-    p = sub.add_parser("save-twilio", help="Save Twilio credentials to the Hermes .env file")
+    p = sub.add_parser("save-twilio", help="Save Twilio credentials to the 3V0 .env file")
     p.add_argument("account_sid")
     p.add_argument("auth_token")
     p.add_argument("--phone-number", default="")
     p.add_argument("--phone-sid", default="")
 
-    p = sub.add_parser("save-bland", help="Save Bland.ai settings to the Hermes .env file")
+    p = sub.add_parser("save-bland", help="Save Bland.ai settings to the 3V0 .env file")
     p.add_argument("api_key")
     p.add_argument("--voice", default=BLAND_DEFAULT_VOICE)
 
-    p = sub.add_parser("save-vapi", help="Save Vapi settings to the Hermes .env file")
+    p = sub.add_parser("save-vapi", help="Save Vapi settings to the 3V0 .env file")
     p.add_argument("api_key")
     p.add_argument("--phone-number-id", default="")
     p.add_argument("--voice-provider", default=VAPI_DEFAULT_VOICE_PROVIDER)

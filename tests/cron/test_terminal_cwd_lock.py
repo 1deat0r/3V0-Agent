@@ -188,9 +188,9 @@ def test_run_job_releases_cwd_lock_when_body_raises(tmp_path):
             raise RuntimeError("boom")
         return real_info(msg, *args, **kwargs)
 
-    with patch("cron.scheduler._hermes_home", tmp_path), \
+    with patch("cron.scheduler._ev0_home", tmp_path), \
          patch("cron.scheduler._resolve_origin", return_value=None), \
-         patch("ev0_cli.env_loader.load_hermes_dotenv"), \
+         patch("ev0_cli.env_loader.load_ev0_dotenv"), \
          patch("ev0_cli.env_loader.reset_secret_source_cache"), \
          patch.object(sched.logger, "info", side_effect=_raise_on_workdir_log), \
          patch("ev0_state.SessionDB", return_value=MagicMock()):
@@ -284,17 +284,17 @@ def test_lock_wait_shorter_than_bound_still_succeeds(monkeypatch, tmp_path):
 
 
 def test_cwd_lock_timeout_derivation(monkeypatch):
-    """The bound tracks HERMES_CRON_TIMEOUT (+margin) with a floor, and
+    """The bound tracks EV0_CRON_TIMEOUT (+margin) with a floor, and
     stays finite when the job runtime is unlimited (0)."""
     import cron.scheduler as sched
 
-    monkeypatch.delenv("HERMES_CRON_TIMEOUT", raising=False)
+    monkeypatch.delenv("EV0_CRON_TIMEOUT", raising=False)
     assert sched._cwd_lock_timeout_seconds() == 660.0
-    monkeypatch.setenv("HERMES_CRON_TIMEOUT", "1800")
+    monkeypatch.setenv("EV0_CRON_TIMEOUT", "1800")
     assert sched._cwd_lock_timeout_seconds() == 1860.0
-    monkeypatch.setenv("HERMES_CRON_TIMEOUT", "30")
+    monkeypatch.setenv("EV0_CRON_TIMEOUT", "30")
     assert sched._cwd_lock_timeout_seconds() == 180.0
-    monkeypatch.setenv("HERMES_CRON_TIMEOUT", "0")
+    monkeypatch.setenv("EV0_CRON_TIMEOUT", "0")
     assert sched._cwd_lock_timeout_seconds() == 660.0
-    monkeypatch.setenv("HERMES_CRON_TIMEOUT", "bogus")
+    monkeypatch.setenv("EV0_CRON_TIMEOUT", "bogus")
     assert sched._cwd_lock_timeout_seconds() == 660.0

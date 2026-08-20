@@ -39,7 +39,7 @@ Design notes / invariants (same contract as ``ev0_cli/goals.py``):
   continuation queued (or the goal judge is mid-flight), the /loop tick
   defers to the next interval instead of racing a second synthetic turn.
   Goal-continuation turns never count as loop ticks and vice versa.
-- This module has zero hard dependency on ``cli.HermesCLI``, the gateway
+- This module has zero hard dependency on ``cli.Ev0CLI``, the gateway
   runner, or the TUI gateway — all three drive the same ``LoopManager``.
 """
 
@@ -373,12 +373,12 @@ _DB_CACHE: Dict[str, Any] = {}
 
 
 def _get_session_db() -> Optional[Any]:
-    """One SessionDB per HERMES_HOME (same pattern as goals._get_session_db)."""
+    """One SessionDB per EV0_HOME (same pattern as goals._get_session_db)."""
     try:
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
         from ev0_state import SessionDB
 
-        home = str(get_hermes_home())
+        home = str(get_ev0_home())
     except Exception as exc:  # pragma: no cover
         logger.debug("LoopManager: SessionDB bootstrap failed (%s)", exc)
         return None

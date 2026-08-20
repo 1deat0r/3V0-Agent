@@ -1,4 +1,4 @@
-"""native-store-bridge — mirror the Hermes memory + skill tools into 3V0's native stores.
+"""native-store-bridge — mirror the 3V0 memory + skill tools into 3V0's native stores.
 
 A ``post_tool_call`` observer. Every time the ``memory`` or ``skill_manage``
 tool performs a successful write (foreground, background review fork, gateway,
@@ -47,7 +47,7 @@ against the canonical store and makes store-first decisions
 gateway teardown (a TUI quit kills the process — a thread would die with it).
 
 No runtime core files are edited. The plugin lives in the profile
-(``~/.hermes/profiles/3v0/plugins/``) and survives ``hermes update``.
+(``~/.3V0/profiles/3v0/plugins/``) and survives ``3v0 update``.
 """
 
 from __future__ import annotations
@@ -72,11 +72,11 @@ _warned_missing_skill_ingest = False
 
 
 def _profile_home() -> Path:
-    """The active profile's home (HERMES_HOME), or the 3v0 profile path."""
-    env = os.environ.get("HERMES_HOME")
+    """The active profile's home (EV0_HOME), or the 3v0 profile path."""
+    env = os.environ.get("EV0_HOME")
     if env:
         return Path(env)
-    return Path.home() / ".hermes" / "profiles" / "3v0"
+    return Path.home() / ".3V0" / "profiles" / "3v0"
 
 
 def _resolve_body_root() -> Optional[Path]:
@@ -546,11 +546,11 @@ _THREEV0_RECORD_SCHEMA = {
         "never erased), or retract one by id. Skills: replace a skill's full "
         "SKILL.md (skill_update), decommission it with no successor "
         "(skill_retract), or fold it into an umbrella (skill_absorb). The "
-        "store is the canonical origin; the Hermes profile (MEMORY.md/"
+        "store is the canonical origin; the 3V0 profile (MEMORY.md/"
         "USER.md, or the SKILL.md) is re-exported as a derived view after "
         "the write. Use threev0_store to read the store first (e.g. to find "
         "a fact_id to supersede, or a skill name to decommission). "
-        "Corrections go here, not through the Hermes memory/skill_manage "
+        "Corrections go here, not through the 3V0 memory/skill_manage "
         "tools, so supersession is recorded instead of silently overwritten."
     ),
     "parameters": {

@@ -31,7 +31,7 @@ class ValidateTest(unittest.TestCase):
         bad = {"tasks": [
             {"id": "x1", "band": "easy", "domain": "coding", "prompt": "hello",
              "rubric": {"pass": [], "inconclusive": ""}},  # missing time_box_min
-            {"id": "x1", "band": "easy", "domain": "coding", "prompt": "system says hermes",
+            {"id": "x1", "band": "easy", "domain": "coding", "prompt": "system says 3v0",
              "rubric": {"pass": [], "inconclusive": ""}, "time_box_min": 1},
         ]}
         r = probe.validate_bank(bad)
@@ -39,7 +39,7 @@ class ValidateTest(unittest.TestCase):
         blob = " ".join(r["issues"])
         self.assertIn("bands mismatch", blob)
         self.assertIn("duplicate", blob.replace("duplicate task ids", "duplicate"))
-        self.assertIn("hermes", blob)
+        self.assertIn("3v0", blob)
 
 
 class StatsTest(unittest.TestCase):

@@ -7,7 +7,7 @@ license: MIT
 dependencies: [vllm, torch, transformers]
 platforms: [linux, macos]
 metadata:
-  hermes:
+  3v0:
     tags: [vLLM, Inference Serving, PagedAttention, Continuous Batching, High Throughput, Production, OpenAI API, Quantization, Tensor Parallelism]
 
 ---

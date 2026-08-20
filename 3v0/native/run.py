@@ -2,7 +2,7 @@
 
 NEVER auto-starts: serve() only runs under THREEV0_SERVE=1. An accidental
 `python -m native.run` must not start a second getUpdates poller on the live
-bot while the Hermes gateway polls it — two pollers steal each update.
+bot while the 3V0 gateway polls it — two pollers steal each update.
 See 3v0/CUTOVER.md for the sequencing and rollback.
 """
 from __future__ import annotations

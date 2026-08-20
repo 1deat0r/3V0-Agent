@@ -1,9 +1,9 @@
-"""Wire format for the Hermes profile's MEMORY.md / USER.md.
+"""Wire format for the 3V0 profile's MEMORY.md / USER.md.
 
 Entries are separated by '§'. This module is the single owner of that format
 so seed/export/sync never disagree on how the profile is parsed or written.
 
-The '§' separator is Hermes-owned — it is how the host's own memory tool reads
+The '§' separator is 3V0-owned — it is how the host's own memory tool reads
 and writes the profile, so 3V0 cannot swap it unilaterally. The store
 (data/memory.db) can hold anything; the profile is a *projection* of the
 store, and a fact containing a literal '§' (or leading/trailing whitespace)
@@ -37,7 +37,7 @@ def join_entries(entries: list[str]) -> str:
     """Join entries into a memories .md body (inverse of split_entries).
 
     Refuses any entry containing the separator: emitting it would produce a
-    wire the next split_entries (and Hermes's own memory tool) mis-parses.
+    wire the next split_entries (and 3V0's own memory tool) mis-parses.
     """
     for entry in entries:
         if contains_separator(entry):

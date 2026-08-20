@@ -1,4 +1,4 @@
-"""``hermes pairing`` subcommand parser.
+"""``3v0 pairing`` subcommand parser.
 
 Extracted from ``ev0_cli/main.py:main()`` (god-file Phase 2 follow-up).
 Handler injected to avoid importing ``main``.

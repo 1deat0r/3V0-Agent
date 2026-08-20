@@ -1,4 +1,4 @@
-"""Tests for ev0_cli.plugins_cmd — the ``hermes plugins`` CLI subcommand."""
+"""Tests for ev0_cli.plugins_cmd — the ``3v0 plugins`` CLI subcommand."""
 
 from __future__ import annotations
 
@@ -263,7 +263,7 @@ class TestGitPullPluginDirAutostash:
         assert "preserved in git stash" in msg
         # The local edit is recoverable from the kept stash entry.
         stash_list = git(checkout, "stash", "list")
-        assert "hermes-plugin-update-autostash" in stash_list
+        assert "3v0-plugin-update-autostash" in stash_list
         stash_diff = git(checkout, "stash", "show", "-p", "stash@{0}")
         assert "VALUE = 99" in stash_diff
 
@@ -633,7 +633,7 @@ class TestProviderDiscovery:
 
     def test_save_context_engine(self, tmp_path, monkeypatch):
         """Saving a context engine persists to config.yaml."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         config_file = tmp_path / "config.yaml"
         config_file.write_text("context:\n  engine: compressor\n", encoding="utf-8")
         from ev0_cli.plugins_cmd import _save_context_engine

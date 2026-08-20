@@ -60,7 +60,7 @@ class TestAddAndValid(MemDBTest):
 class TestMigrate(MemDBTest):
     def test_migrate_tolerant(self):
         legacy = [
-            {"content": "Fork 1deat0r/hermes-agent", "source": "session-1"},
+            {"content": "Fork 1deat0r/3v0-agent", "source": "session-1"},
             {"text": "DeepSeek V4-Pro", "source": "session-2", "domain": "env"},
         ]
         self.assertEqual(migrate_from_json(self.conn, legacy, now=NOW), 2)

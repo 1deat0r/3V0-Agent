@@ -19,7 +19,7 @@ It is best-effort by construction: any failure degrades to a log entry and a
 non-zero exit that the hook swallows. The wake-time ``sync.py --write`` remains
 the backstop reconciler.
 
-The Hermes background-review fork still owns per-turn memory + in-session
+The 3V0 background-review fork still owns per-turn memory + in-session
 skill capture (via ``skill_manage`` + the bridge). This driver now also emits
 store-first *skill* decisions (Stone 8) — decommission a skill the session
 proved obsolete (``skill_retract`` / ``skill_absorb``) or, rarely, replace a
@@ -39,7 +39,7 @@ of the hook: three mutually-exclusive modes —
   ``CONFIG.max_per_pass``);
 - ``--daemon [--interval N]``  own-clock loop (reconcile + drain every N
   seconds, default 600), surviving transient failures — 3V0's first
-  Hermes-independent autonomous process. Stone 14 folded the wake-time
+  3V0-independent autonomous process. Stone 14 folded the wake-time
   reconcilers into the tick, so the daemon is now a full maintenance clock:
   it heals drift between sessions, not just at wake. Stone 16 added the
   multi-project drift check (``_drift()``); Stone 17 added the continuity
@@ -127,7 +127,7 @@ def _build_transcript(messages: List[Dict[str, str]], cap: Optional[int] = None)
 
 PROFILE_HOME = Path(
     os.environ.get("THREEV0_PROFILE_HOME")
-    or (Path.home() / ".hermes" / "profiles" / "3v0")
+    or (Path.home() / ".3V0" / "profiles" / "3v0")
 )
 STATE_DB = Path(os.environ.get("THREEV0_REVIEW_STATE_DB") or (PROFILE_HOME / "state.db"))
 RECORD_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "record.py"
@@ -245,7 +245,7 @@ store-first corrections to make.
 
 The store is append-only and provenance-aware. Corrections SUPERSEDE (the old \
 fact stays recoverable via history) or RETRACT (marked removed, recoverable). \
-Never erased. The Hermes profile (MEMORY.md/USER.md) is a derived view.
+Never erased. The 3V0 profile (MEMORY.md/USER.md) is a derived view.
 
 Your job is the store-first capture layer — the durable-memory writer for a
 session. Capture everything durable the session revealed, and do NOT duplicate
@@ -793,7 +793,7 @@ def _sync() -> str:
     """Heal store<->profile drift (memory + skills) by running the wake-time
     reconcilers, best-effort.
 
-    Stone 14 (the wake-sync fold): with the Hermes background-review fork cut,
+    Stone 14 (the wake-sync fold): with the 3V0 background-review fork cut,
     the own clock is the sole autonomous writer — so it must also heal drift,
     not just review. The reconcilers are idempotent, ``flock``-locked (via
     ``mutate()``), and cheap (no LLM). Returns ``"synced"`` or
@@ -803,7 +803,7 @@ def _sync() -> str:
     This runs only on the own-clock paths (``--latest`` / ``--daemon``), not
     the per-turn ``--session-id`` hook — sync there would be redundant churn.
 
-    Store-only projects (siblings) have no Hermes profile projection to
+    Store-only projects (siblings) have no 3V0 profile projection to
     reconcile, so their sync pass is a clean no-op (``skipped:store-only``).
     """
     if STORE_ONLY:

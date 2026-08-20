@@ -4,7 +4,7 @@ Pure helpers (files passed in, nothing touched) PLUS the retrieval-chosen
 injection path (ADR-0004): the runtime's working set comes out of the canonical
 SQLite store (memory.db) behind ONE seam, core/retrieval.inject — ranked by
 keyword+recency+feedback, budget-shaped, spelling feedback back so injection
-learns. No Hermes import.
+learns. No 3V0 import.
 """
 from __future__ import annotations
 

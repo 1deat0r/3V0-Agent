@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed 3V0's native memory store from the Hermes profile.
+"""Seed 3V0's native memory store from the 3V0 profile.
 
 Reads the profile's MEMORY.md (entries split on '§') and USER.md and writes
 them as provenance-carrying facts into 3v0/data/memory.json. Refuses to run
@@ -22,7 +22,7 @@ sys.path.insert(0, str(REPO_ROOT / "3v0"))
 from core.store import open_store  # noqa: E402
 from core.profile_io import split_entries  # noqa: E402
 
-PROFILE = Path.home() / ".hermes" / "profiles" / "3v0"
+PROFILE = Path.home() / ".3V0" / "profiles" / "3v0"
 STORE_PATH = REPO_ROOT / "3v0" / "data" / "memory.db"
 
 

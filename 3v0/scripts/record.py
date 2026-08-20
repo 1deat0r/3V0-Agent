@@ -3,7 +3,7 @@
 
 The store-first decision path: supersede an old fact (recoverable via history)
 instead of silently rewriting the profile, or retract a fact (mark it removed),
-then re-export so the Hermes profile stays a derived view of the store.
+then re-export so the 3V0 profile stays a derived view of the store.
 
 This CLI backs the ``threev0_record`` tool (``--json``) and is also the manual
 store-first path (human text by default).
@@ -49,7 +49,7 @@ STORE_PATH = Path(
 )
 PROFILE_MEM = Path(
     os.environ.get("THREEV0_PROFILE_MEM")
-    or (Path.home() / ".hermes" / "profiles" / "3v0" / "memories")
+    or (Path.home() / ".3V0" / "profiles" / "3v0" / "memories")
 )
 
 

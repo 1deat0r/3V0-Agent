@@ -1,6 +1,6 @@
 """Dependency-light venv recovery that runs BEFORE ev0_cli.main's imports.
 
-The ``hermes`` console entry point is ``ev0_cli.main:main``.  Importing
+The ``3v0`` console entry point is ``ev0_cli.main:main``.  Importing
 ``ev0_cli.main`` pulls in third-party packages at module level (``dotenv``
 via ``ev0_cli.env_loader``, ``yaml`` via ``ev0_cli.config``, ...).  In
 the exact failure state the update-recovery markers exist for — a failed lazy
@@ -219,12 +219,12 @@ def _find_uv_binary() -> str | None:
 
     uv-managed base interpreters carry an ``EXTERNALLY-MANAGED`` marker, so
     the stdlib ``pip`` fallback below refuses to touch them.  In that state
-    the only sanctioned installer is uv itself, which Hermes already vendors
-    (``~/.hermes/bin/uv.exe``) or the user has on PATH.  Stdlib-only.
+    the only sanctioned installer is uv itself, which 3V0 already vendors
+    (``~/.3V0/bin/uv.exe``) or the user has on PATH.  Stdlib-only.
     """
     exe = "uv.exe" if sys.platform == "win32" else "uv"
     candidates = [
-        Path.home() / ".hermes" / "bin" / exe,
+        Path.home() / ".3V0" / "bin" / exe,
         Path.home() / ".local" / "bin" / exe,
         Path.home() / ".cargo" / "bin" / exe,
     ]
@@ -260,7 +260,7 @@ def _base_interpreter_is_externally_managed() -> bool:
 def _run_repair_install(specs: list[str], project_root: Path) -> bool:
     """``uv pip`` (or stdlib ``pip``) force-reinstall of the given specs.
 
-    Streams nothing to stdout (``hermes acp`` speaks JSON-RPC on stdout);
+    Streams nothing to stdout (``3v0 acp`` speaks JSON-RPC on stdout);
     output is captured and replayed to stderr only on failure.  Never raises.
 
     Two installer paths, in priority order:
@@ -357,7 +357,7 @@ def recover_if_needed(
     """Repair wiped core packages so ``ev0_cli.main`` can import at all.
 
     Fast path (no marker present) is two ``lstat`` calls.  Only acts when a
-    recovery marker from a prior ``hermes update`` exists AND an import probe
+    recovery marker from a prior ``3v0 update`` exists AND an import probe
     confirms a core package is actually broken.  Markers are intentionally
     NOT cleared here — ``_recover_from_interrupted_install()`` in main.py owns
     the confirmed marker lifecycle and runs immediately after import succeeds.
@@ -394,7 +394,7 @@ def recover_if_needed(
         # A live marker owner means another updater is currently inside the
         # marker-to-install window.  Never race it.  A dead owner means this is
         # a prior deferral/interruption and MUST be recovered even when this
-        # launch is itself `hermes update`: CLI and Desktop retries preserve
+        # launch is itself `3v0 update`: CLI and Desktop retries preserve
         # that argv, and skipping solely on argv recreates the self-lock loop.
         if core_marker.exists():
             if _marker_owner_is_live(core_marker):
@@ -463,7 +463,7 @@ def recover_if_needed(
 
 # Cap on automatic early-pass install retries.  A persistently failing
 # install (e.g. network down, index unreachable) must not reinstall-hammer
-# every `hermes` launch: past this many attempts the early pass hands the
+# every `3v0` launch: past this many attempts the early pass hands the
 # marker to main.py's post-import recovery, which presents the manual
 # recovery command.  The counter lives inside the marker file itself (JSON
 # body) and is bumped on each failed attempt.
@@ -503,7 +503,7 @@ def _complete_pending_core_install(root: Path, core_marker: Path) -> bool:
     """Run the pending core install BEFORE main.py can import native modules.
 
     ``recover_if_needed`` invokes this when ``.update-incomplete`` exists —
-    a prior ``hermes update`` (or the self-lock preflight, #83569) left the
+    a prior ``3v0 update`` (or the self-lock preflight, #83569) left the
     dependency sync deliberately unfinished.  Completing it here matters on
     Windows: the deferral exists precisely because the process that wrote the
     marker had a native venv extension mapped; this process, running before
@@ -513,7 +513,7 @@ def _complete_pending_core_install(root: Path, core_marker: Path) -> bool:
     Marker lifecycle: cleared on success; kept (attempts counter bumped) on
     failure for the next launch or main.py's post-import recovery.  An
     attempts ceiling caps automatic retries so a persistent installer
-    failure does not block every launch (``hermes acp`` included).
+    failure does not block every launch (``3v0 acp`` included).
 
     Never raises: any failure leaves the marker for the post-import path and
     returns ``False``.  Returns ``True`` only after the install succeeds.
@@ -551,7 +551,7 @@ def _complete_pending_core_install(root: Path, core_marker: Path) -> bool:
 
         try:
             print(
-                "⚠ A previous `hermes update` was interrupted mid-install — "
+                "⚠ A previous `3v0 update` was interrupted mid-install — "
                 "finishing dependency installation now (before any native "
                 "extensions load)...",
                 file=sys.stderr,
@@ -565,7 +565,7 @@ def _complete_pending_core_install(root: Path, core_marker: Path) -> bool:
                 file=sys.stderr,
             )
             print(
-                "  The next launch will retry; hermes will keep working from "
+                "  The next launch will retry; 3v0 will keep working from "
                 "the current venv in the meantime.",
                 file=sys.stderr,
             )

@@ -1,6 +1,6 @@
 """3V0 core memory — a provenance-aware, versioned identity/memory store.
 
-This is the first native subsystem of 3V0, distinct from the Hermes fork that
+This is the first native subsystem of 3V0, distinct from the 3V0 fork that
 is its v0.00 chassis. It applies one lesson from the "context engineering"
 cluster (semantica, OpenViking): facts carry provenance, and conflicts are
 FLAGGED and linked, never silently overwritten.
@@ -16,7 +16,7 @@ Design:
   JSON store remains the substrate for sibling projects until their rewire.)
 
 Deliberately small. This is the seed of 3V0's own memory — not a
-reimplementation of Hermes's MEMORY.md mechanism, but the first piece of the
+reimplementation of 3V0's MEMORY.md mechanism, but the first piece of the
 substrate that will eventually host identity, memory, and evolution.
 
 Lineage semantics (kind validity, retraction tagging, the supersession walk,
@@ -53,7 +53,7 @@ try:
 except ImportError:  # pragma: no cover - Windows
     fcntl = None
 
-PROFILE_KINDS = ("memory", "user")  # the kinds that project to the Hermes profile
+PROFILE_KINDS = ("memory", "user")  # the kinds that project to the 3V0 profile
 
 
 @contextmanager

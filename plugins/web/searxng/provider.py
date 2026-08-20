@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 def _searxng_url() -> str:
-    """Return SEARXNG_URL from Hermes config-aware env, falling back to process env."""
+    """Return SEARXNG_URL from 3V0 config-aware env, falling back to process env."""
     try:
         from ev0_cli.config import get_env_value
 

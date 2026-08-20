@@ -1,6 +1,6 @@
 """Audit log for dashboard-auth events.
 
-Profile-aware location: ``$HERMES_HOME/logs/dashboard-auth.log``.
+Profile-aware location: ``$EV0_HOME/logs/dashboard-auth.log``.
 Format: one JSON object per line. Token-like fields are stripped before
 serialisation to avoid leaking refresh tokens or JWTs to disk.
 
@@ -57,15 +57,15 @@ class AuditEvent(enum.Enum):
 
 
 def _resolve_log_path() -> Path:
-    """``$HERMES_HOME/logs/dashboard-auth.log``.
+    """``$EV0_HOME/logs/dashboard-auth.log``.
 
-    Uses ``ev0_constants.get_hermes_home()`` (a leaf module — no import
+    Uses ``ev0_constants.get_ev0_home()`` (a leaf module — no import
     cycle) so profile overrides and the native-Windows ``%LOCALAPPDATA%``
     fallback are honored.
     """
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
 
-    return get_hermes_home() / "logs" / "dashboard-auth.log"
+    return get_ev0_home() / "logs" / "dashboard-auth.log"
 
 
 def audit_log(event: AuditEvent, **fields: Any) -> None:

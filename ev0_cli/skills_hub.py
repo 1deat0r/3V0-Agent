@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Skills Hub CLI — Unified interface for the Hermes Skills Hub.
+Skills Hub CLI — Unified interface for the 3V0 Skills Hub.
 
 Powers both:
-  - `hermes skills <subcommand>` (CLI argparse entry point)
+  - `3v0 skills <subcommand>` (CLI argparse entry point)
   - `/skills <subcommand>` (slash command in the interactive chat)
 
 All logic lives in shared do_* functions. The CLI entry point and slash command
@@ -22,7 +22,7 @@ from rich.table import Table
 
 # Lazy imports to avoid circular dependencies and slow startup.
 # tools.skills_hub and tools.skills_guard are imported inside functions.
-from ev0_constants import display_hermes_home
+from ev0_constants import display_ev0_home
 
 _console = Console()
 
@@ -72,7 +72,7 @@ def _resolve_short_name(name: str, sources, console: Console) -> str:
         table.add_column("Source", style="dim")
         table.add_column("Trust", style="dim")
         # overflow="fold" keeps the full slug visible (wraps instead of ellipsis-truncating)
-        # so users can copy it for `hermes skills install`.
+        # so users can copy it for `3v0 skills install`.
         table.add_column("Identifier", style="bold cyan", overflow="fold", no_wrap=False)
         for r in exact:
             trust_style = {"builtin": "bright_cyan", "trusted": "green", "community": "yellow"}.get(r.trust_level, "dim")
@@ -177,7 +177,7 @@ def _is_valid_installed_skill_name(name: str) -> bool:
 
 
 def _existing_categories() -> List[str]:
-    """Return sorted subdirectory names under ``~/.hermes/skills/`` that look
+    """Return sorted subdirectory names under ``~/.3V0/skills/`` that look
     like category buckets (contain at least one ``SKILL.md`` somewhere below).
 
     Used to suggest reusable categories when interactively installing from a
@@ -233,7 +233,7 @@ def _prompt_for_category(c: Console, existing: List[str]) -> str:
         c.print(f"[dim]Existing: {', '.join(existing)}[/]")
     else:
         c.print(
-            "[bold]Category[/] [dim](optional — press Enter to install flat at ~/.hermes/skills/<name>/)[/]"
+            "[bold]Category[/] [dim](optional — press Enter to install flat at ~/.3V0/skills/<name>/)[/]"
         )
     try:
         answer = input("Category: ").strip()
@@ -296,7 +296,7 @@ def do_search(query: str, source: str = "all", limit: int = 10,
     # overflow="fold" keeps the full slug visible (wraps instead of
     # ellipsis-truncating). Browse.sh slugs end in a `-XXXXXX` hash that
     # is part of the actual identifier — truncating it makes copy-paste
-    # into `hermes skills install` fail.
+    # into `3v0 skills install` fail.
     table.add_column("Identifier", style="dim", overflow="fold", no_wrap=False)
 
     for r in results:
@@ -311,8 +311,8 @@ def do_search(query: str, source: str = "all", limit: int = 10,
         )
 
     c.print(table)
-    c.print("[dim]Use: hermes skills inspect <identifier> to preview, "
-            "hermes skills install <identifier> to install "
+    c.print("[dim]Use: 3v0 skills inspect <identifier> to preview, "
+            "3v0 skills install <identifier> to install "
             "(--json for scripting)[/]\n")
 
 
@@ -338,7 +338,7 @@ def do_browse(page: int = 1, page_size: int = 20, source: str = "all",
     # Per-source limits are generous — parallelism + 30s timeout cap prevents hangs.
     _TRUST_RANK = {"builtin": 3, "trusted": 2, "community": 1}
     # NOTE: when the centralized index is available, parallel_search_sources
-    # skips the external API sources and serves everything from "hermes-index".
+    # skips the external API sources and serves everything from "3v0-index".
     # That source MUST therefore carry a limit large enough to cover the whole
     # catalog, or browse silently caps the hub — it shipped at 50 (surfaced
     # ~136 of 88k skills), then 5000 (surfaced ~5.4k of 90k). The index is
@@ -347,7 +347,7 @@ def do_browse(page: int = 1, page_size: int = 20, source: str = "all",
     # only apply when the index is unavailable (offline / first run before the
     # cache populates).
     _PER_SOURCE_LIMIT = {
-        "hermes-index": 1000000,
+        "3v0-index": 1000000,
         "official": 200, "skills-sh": 200, "well-known": 50,
         "github": 200, "clawhub": 500,
         "lobehub": 500, "browse-sh": 500,
@@ -438,7 +438,7 @@ def do_browse(page: int = 1, page_size: int = 20, source: str = "all",
     table.add_column("Description", max_width=44)
     table.add_column("Source", style="dim", width=12)
     table.add_column("Trust", width=10)
-    # The identifier is what you pass to `hermes skills install`. Browse used
+    # The identifier is what you pass to `3v0 skills install`. Browse used
     # to omit it entirely, so users couldn't act on what they saw without a
     # second `search`. overflow="fold" keeps long slugs copy-pasteable.
     table.add_column("Identifier", style="dim", overflow="fold", no_wrap=False)
@@ -482,9 +482,9 @@ def do_browse(page: int = 1, page_size: int = 20, source: str = "all",
         c.print(f"  [yellow]⚡ Slow sources skipped: {', '.join(timed_out)} "
                 f"— run again for cached results[/]")
 
-    c.print("[dim]Tip: 'hermes skills inspect <identifier>' to preview, "
-            "'hermes skills install <identifier>' to install, "
-            "'hermes skills search <query>' to search deeper[/]\n")
+    c.print("[dim]Tip: '3v0 skills inspect <identifier>' to preview, "
+            "'3v0 skills install <identifier>' to install, "
+            "'3v0 skills search <query>' to search deeper[/]\n")
 
 
 def do_install(identifier: str, category: str = "", force: bool = False,
@@ -590,7 +590,7 @@ def do_install(identifier: str, category: str = "", force: bool = False,
                 "and the URL path doesn't produce a valid identifier.[/]\n\n"
                 "Retry with an explicit name:\n"
                 f"  [bold]/skills install {url} --name <your-name>[/]\n"
-                f"  [bold]hermes skills install {url} --name <your-name>[/]\n\n"
+                f"  [bold]3v0 skills install {url} --name <your-name>[/]\n\n"
                 "[dim]Or ask the SKILL.md's author to add a `name:` field to "
                 "its YAML frontmatter.[/]\n"
             )
@@ -700,9 +700,9 @@ def do_install(identifier: str, category: str = "", force: bool = False,
         if bundle.source == "official":
             c.print(Panel(
                 "[bold bright_cyan]This is an official optional skill maintained by Nous Research.[/]\n\n"
-                "It ships with hermes-agent but is not activated by default.\n"
+                "It ships with 3v0-agent but is not activated by default.\n"
                 "Installing will copy it to your skills directory where the agent can use it.\n\n"
-                f"Files will be at: [cyan]{display_hermes_home()}/skills/{category + '/' if category else ''}{bundle.name}/[/]",
+                f"Files will be at: [cyan]{display_ev0_home()}/skills/{category + '/' if category else ''}{bundle.name}/[/]",
                 title="Official Skill",
                 border_style="bright_cyan",
             ))
@@ -712,7 +712,7 @@ def do_install(identifier: str, category: str = "", force: bool = False,
                 "External skills can contain instructions that influence agent behavior,\n"
                 "shell commands, and scripts. Even after automated scanning, you should\n"
                 "review the installed files before use.\n\n"
-                f"Files will be at: [cyan]{display_hermes_home()}/skills/{category + '/' if category else ''}{bundle.name}/[/]",
+                f"Files will be at: [cyan]{display_ev0_home()}/skills/{category + '/' if category else ''}{bundle.name}/[/]",
                 title="Disclaimer",
                 border_style="yellow",
             ))
@@ -741,7 +741,7 @@ def do_install(identifier: str, category: str = "", force: bool = False,
     c.print(f"[dim]Files: {', '.join(bundle.files.keys())}[/]\n")
 
     # Blueprint detection: if the installed skill declares a
-    # metadata.hermes.blueprint block, it is a runnable automation. Register it as
+    # metadata.3v0.blueprint block, it is a runnable automation. Register it as
     # a Suggested Cron Job rather than auto-scheduling — installing never
     # silently creates a recurring job; the user accepts it via /suggestions.
     # This is the single surface every automation proposal flows through.
@@ -776,7 +776,7 @@ def do_install(identifier: str, category: str = "", force: bool = False,
                 )
                 c.print(
                     "[dim]You can still schedule it any time by asking the agent "
-                    "or via[/] [bold]hermes cron add[/][dim].[/]\n"
+                    "or via[/] [bold]3v0 cron add[/][dim].[/]\n"
                 )
     except Exception:  # pragma: no cover - blueprint detection is best-effort
         pass
@@ -838,7 +838,7 @@ def do_inspect(identifier: str, console: Optional[Console] = None) -> None:
         preview = "\n".join(lines[:50])
         if len(lines) > 50:
             preview += f"\n\n... ({len(lines) - 50} more lines)"
-        c.print(Panel(preview, title="SKILL.md Preview", subtitle="hermes skills install <id> to install"))
+        c.print(Panel(preview, title="SKILL.md Preview", subtitle="3v0 skills install <id> to install"))
 
     c.print()
 
@@ -854,16 +854,16 @@ def browse_skills(page: int = 1, page_size: int = 20, source: str = "all") -> di
 
     page_size = max(1, min(page_size, 100))
     _TRUST_RANK = {"builtin": 3, "trusted": 2, "community": 1}
-    # "hermes-index" must carry a high limit: when the index is available the
+    # "3v0-index" must carry a high limit: when the index is available the
     # router skips external API sources and serves everything from it, so a
     # low cap here silently truncates the whole hub (see do_browse note).
-    _PER_SOURCE_LIMIT = {"hermes-index": 5000, "official": 100, "skills-sh": 100,
+    _PER_SOURCE_LIMIT = {"3v0-index": 5000, "official": 100, "skills-sh": 100,
                          "well-known": 25, "github": 100, "clawhub": 50,
                          "lobehub": 50, "browse-sh": 500}
     auth = GitHubAuth()
     sources = create_source_router(auth)
     # Delegate to the shared parallel walker so this inherits the index-aware
-    # source-skip logic — querying hermes-index AND the external APIs at once
+    # source-skip logic — querying 3v0-index AND the external APIs at once
     # would double-count every skill.
     all_results, _counts, _timed_out = parallel_search_sources(
         sources, query="", per_source_limits=_PER_SOURCE_LIMIT,
@@ -940,8 +940,8 @@ def do_list(source_filter: str = "all",
         enabled_only: If True, hide disabled skills from the output.
 
     Enabled/disabled state is resolved against the currently active profile's
-    config — ``hermes -p <profile> skills list`` reads that profile's
-    ``skills.disabled`` list because ``-p`` swaps ``HERMES_HOME`` at process
+    config — ``3v0 -p <profile> skills list`` reads that profile's
+    ``skills.disabled`` list because ``-p`` swaps ``EV0_HOME`` at process
     start.  No explicit profile flag needed here.
     """
     from tools.skills_hub import HubLockFile, ensure_hub_dirs
@@ -1213,7 +1213,7 @@ def do_reset(name: str, restore: bool = False,
 
 def do_list_modified(console: Optional[Console] = None,
                      as_json: bool = False) -> None:
-    """List bundled skills the user has edited (which `hermes update` keeps)."""
+    """List bundled skills the user has edited (which `3v0 update` keeps)."""
     from tools.skills_sync import list_user_modified_bundled_skills
 
     c = console or _console
@@ -1230,13 +1230,13 @@ def do_list_modified(console: Optional[Console] = None,
         return
 
     c.print(f"\n[bold]{len(modified)} user-modified bundled skill(s)[/] "
-            "[dim](kept as-is by `hermes update`):[/]")
+            "[dim](kept as-is by `3v0 update`):[/]")
     for entry in modified:
         c.print(f"  [yellow]~[/] {entry['name']}")
     c.print()
-    c.print("[dim]See changes:   hermes skills diff <name>[/]")
-    c.print("[dim]Resume updates: hermes skills reset <name>          (keep your copy, re-baseline)[/]")
-    c.print("[dim]Revert to stock: hermes skills reset <name> --restore[/]\n")
+    c.print("[dim]See changes:   3v0 skills diff <name>[/]")
+    c.print("[dim]Resume updates: 3v0 skills reset <name>          (keep your copy, re-baseline)[/]")
+    c.print("[dim]Revert to stock: 3v0 skills reset <name> --restore[/]\n")
 
 
 def do_diff(name: str, console: Optional[Console] = None) -> None:
@@ -1275,7 +1275,7 @@ def do_diff(name: str, console: Optional[Console] = None) -> None:
         else:  # binary
             c.print(f"[yellow]~ {entry['path']}:[/] binary file differs")
     c.print()
-    c.print(f"[dim]Revert with: hermes skills reset {name} --restore[/]\n")
+    c.print(f"[dim]Revert with: 3v0 skills reset {name} --restore[/]\n")
 
 
 def do_opt_out(remove: bool = False,
@@ -1354,7 +1354,7 @@ def do_opt_in(sync: bool = False,
     """Remove the opt-out marker so bundled-skill seeding resumes.
 
     With ``sync``, immediately re-seed bundled skills instead of waiting for
-    the next ``hermes update``.
+    the next ``3v0 update``.
     """
     from tools.skills_sync import set_bundled_skills_opt_out, sync_skills
 
@@ -1444,7 +1444,7 @@ def do_tap(action: str, repo: str = "", console: Optional[Console] = None) -> No
 
     elif action == "add":
         if not repo:
-            c.print("[bold red]Error:[/] Repo required. Usage: hermes skills tap add owner/repo\n")
+            c.print("[bold red]Error:[/] Repo required. Usage: 3v0 skills tap add owner/repo\n")
             return
         if mgr.add(repo):
             c.print(f"[bold green]Added tap:[/] {repo}\n")
@@ -1453,7 +1453,7 @@ def do_tap(action: str, repo: str = "", console: Optional[Console] = None) -> No
 
     elif action == "remove":
         if not repo:
-            c.print("[bold red]Error:[/] Repo required. Usage: hermes skills tap remove owner/repo\n")
+            c.print("[bold red]Error:[/] Repo required. Usage: 3v0 skills tap remove owner/repo\n")
             return
         if mgr.remove(repo):
             c.print(f"[bold green]Removed tap:[/] {repo}\n")
@@ -1511,13 +1511,13 @@ def do_publish(skill_path: str, target: str = "github", repo: str = "",
     if target == "github":
         if not repo:
             c.print("[bold red]Error:[/] --repo required for GitHub publish.\n"
-                    "Usage: hermes skills publish <path> --to github --repo owner/repo\n")
+                    "Usage: 3v0 skills publish <path> --to github --repo owner/repo\n")
             return
 
         auth = GitHubAuth()
         if not auth.is_authenticated():
             c.print("[bold red]Error:[/] GitHub authentication required.\n"
-                    f"Set GITHUB_TOKEN in {display_hermes_home()}/.env or run 'gh auth login'.\n")
+                    f"Set GITHUB_TOKEN in {display_ev0_home()}/.env or run 'gh auth login'.\n")
             return
 
         c.print(f"[bold]Publishing '{name}' to {repo}...[/]")
@@ -1616,8 +1616,8 @@ def _github_publish(skill_path: Path, skill_name: str, target_repo: str,
             headers=headers, timeout=15,
             json={
                 "title": f"Add skill: {skill_name}",
-                "body": f"Submitting the `{skill_name}` skill via Hermes Skills Hub.\n\n"
-                        f"This skill was scanned by the Hermes Skills Guard before submission.",
+                "body": f"Submitting the `{skill_name}` skill via 3V0 Skills Hub.\n\n"
+                        f"This skill was scanned by the 3V0 Skills Guard before submission.",
                 "head": f"{fork_repo.split('/')[0]}:{branch_name}",
                 "base": default_branch,
             },
@@ -1643,7 +1643,7 @@ def do_snapshot_export(output_path: str, console: Optional[Console] = None) -> N
     tap_list = taps.list_taps()
 
     snapshot = {
-        "hermes_version": "0.1.0",
+        "ev0_version": "0.1.0",
         "exported_at": __import__("datetime").datetime.now(
             __import__("datetime").timezone.utc
         ).isoformat(),
@@ -1723,7 +1723,7 @@ def do_snapshot_import(input_path: str, force: bool = False,
 # ---------------------------------------------------------------------------
 
 def skills_command(args) -> None:
-    """Router for `hermes skills <subcommand>` — called from ev0_cli/main.py."""
+    """Router for `3v0 skills <subcommand>` — called from ev0_cli/main.py."""
     action = getattr(args, "skills_action", None)
 
     if action == "browse":
@@ -1779,17 +1779,17 @@ def skills_command(args) -> None:
         elif snap_action == "import":
             do_snapshot_import(args.input, force=getattr(args, "force", False))
         else:
-            _console.print("Usage: hermes skills snapshot [export|import]\n")
+            _console.print("Usage: 3v0 skills snapshot [export|import]\n")
     elif action == "tap":
         tap_action = getattr(args, "tap_action", None)
         repo = getattr(args, "repo", "") or getattr(args, "name", "")
         if not tap_action:
-            _console.print("Usage: hermes skills tap [list|add|remove]\n")
+            _console.print("Usage: 3v0 skills tap [list|add|remove]\n")
             return
         do_tap(tap_action, repo=repo)
     else:
-        _console.print("Usage: hermes skills [browse|search|install|inspect|list|list-modified|diff|check|update|audit|uninstall|reset|opt-out|opt-in|publish|snapshot|tap]\n")
-        _console.print("Run 'hermes skills <command> --help' for details.\n")
+        _console.print("Usage: 3v0 skills [browse|search|install|inspect|list|list-modified|diff|check|update|audit|uninstall|reset|opt-out|opt-in|publish|snapshot|tap]\n")
+        _console.print("Run '3v0 skills <command> --help' for details.\n")
 
 
 # ---------------------------------------------------------------------------

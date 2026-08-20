@@ -3,7 +3,7 @@
 from queue import Queue
 from unittest.mock import patch
 
-from cli import HermesCLI
+from cli import Ev0CLI
 
 
 def test_queue_expands_collapsed_paste_reference(tmp_path):
@@ -11,7 +11,7 @@ def test_queue_expands_collapsed_paste_reference(tmp_path):
     paste_file = tmp_path / "paste.txt"
     paste_file.write_text(pasted, encoding="utf-8")
     placeholder = f"[Pasted text #1: 3 lines → {paste_file}]"
-    cli_obj = HermesCLI.__new__(HermesCLI)
+    cli_obj = Ev0CLI.__new__(Ev0CLI)
     cli_obj._agent_running = False
     cli_obj._pending_input = Queue()
     cli_obj._pending_resume_sessions = None

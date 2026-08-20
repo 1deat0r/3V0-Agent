@@ -2,7 +2,7 @@
 
 Complements ``tests/tools/test_windows_compat.py`` (which does source-level
 pattern linting) with cross-platform-mocked tests that exercise the actual
-code paths Hermes takes on native Windows.
+code paths 3V0 takes on native Windows.
 
 Runs on Linux CI — every test mocks ``sys.platform``, ``subprocess.run``,
 and ``os.kill`` as needed to simulate Windows behavior without requiring a
@@ -37,7 +37,7 @@ class TestConfigureWindowsStdio:
     - set PYTHONIOENCODING / PYTHONUTF8 without overriding explicit user settings
     - reconfigure sys.stdout/stderr/stdin to UTF-8 on Windows
     - flip the console code page to CP_UTF8 (65001) via ctypes
-    - respect HERMES_DISABLE_WINDOWS_UTF8 opt-out
+    - respect EV0_DISABLE_WINDOWS_UTF8 opt-out
     """
 
     @pytest.fixture(autouse=True)
@@ -455,8 +455,8 @@ class TestSubprocessCompatHelpers:
     def test_windows_detach_flags_includes_breakaway_from_job(self):
         """CREATE_BREAKAWAY_FROM_JOB is load-bearing for the GUI-driven update path.
 
-        Without it, the gateway-respawn watcher spawned by ``hermes update``
-        (which runs under hermes-setup.exe, itself a grandchild of the
+        Without it, the gateway-respawn watcher spawned by ``3v0 update``
+        (which runs under 3v0-setup.exe, itself a grandchild of the
         Electron Desktop app) gets reaped when Electron exits and its
         Win32 job object is torn down by the OS.  Result: gateway dies
         during update and never comes back.
@@ -580,7 +580,7 @@ class TestCodeExecutionTransportTcpFallback:
 
     We can't easily execute the sandbox on Linux CI in Windows mode, but we
     CAN assert that the generated client module supports both AF_UNIX and
-    AF_INET endpoints based on the HERMES_RPC_SOCKET format.
+    AF_INET endpoints based on the EV0_RPC_SOCKET format.
     """
 
     def test_generated_client_handles_tcp_endpoint(self):
@@ -710,12 +710,12 @@ class TestLocalEnvironmentWindowsTempDir:
                 f"POSIX temp dir must start with '/'; got {tmp_dir!r}"
             )
 
-    def test_source_has_windows_branch_using_hermes_home(self):
+    def test_source_has_windows_branch_using_ev0_home(self):
         root = Path(__file__).resolve().parents[2]
         source = (root / "tools" / "environments" / "local.py").read_text(encoding="utf-8")
         assert "if _IS_WINDOWS:" in source
-        assert "get_hermes_home" in source
-        assert 'cache_dir = get_hermes_home() / "cache" / "terminal"' in source
+        assert "get_ev0_home" in source
+        assert 'cache_dir = get_ev0_home() / "cache" / "terminal"' in source
 
 
 class TestLocalEnvironmentPathInjectionGated:
@@ -797,7 +797,7 @@ class TestGatewayDetachedWatcherWindowsFlags:
     launcher must use CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS on
     Windows, not silent start_new_session=True."""
 
-    def test_hermes_cli_gateway_uses_compat_kwargs(self):
+    def test_ev0_cli_gateway_uses_compat_kwargs(self):
         root = Path(__file__).resolve().parents[2]
         source = (root / "ev0_cli" / "gateway.py").read_text(encoding="utf-8")
         assert "windows_detach_popen_kwargs" in source, (
@@ -888,7 +888,7 @@ class TestGatewayDetachedWatcherWindowsFlags:
         """The post-update respawn must route through
         ``gateway_windows.windowless_gateway_restart_spec``.
 
-        The spec supplies the stable cwd + env overlay (HERMES_HOME,
+        The spec supplies the stable cwd + env overlay (EV0_HOME,
         VIRTUAL_ENV, PYTHONPATH) so the respawned gateway doesn't depend on
         the watcher's transient working directory. (The interpreter itself
         stays the venv's console ``python.exe``, launched hidden via
@@ -919,7 +919,7 @@ class TestGatewayDetachedWatcherWindowsFlags:
         )
         assert '_popen_kwargs["env"]' in block, (
             "Inlined respawn must overlay env (VIRTUAL_ENV / PYTHONPATH / "
-            "HERMES_HOME) from the restart spec."
+            "EV0_HOME) from the restart spec."
         )
 
 
@@ -954,7 +954,7 @@ class TestWindowlessGatewayRestartSpec:
         ``windows_only``: faking this on Linux needed two more fakes to hold
         it up — a pre-import so the lazy ``ev0_cli.gateway`` import didn't
         re-run ``gateway/status``'s ``import msvcrt`` branch, and a mock of
-        ``get_hermes_home`` because the real one's ``Path.resolve()`` consults
+        ``get_ev0_home`` because the real one's ``Path.resolve()`` consults
         sysconfig and blew up under the platform patch. Both workarounds were
         symptoms of testing Windows on a host that isn't Windows; on the
         Windows runner neither is needed.
@@ -975,9 +975,9 @@ class TestWindowlessGatewayRestartSpec:
         # Only the environment-dependent lookups are stubbed — the host is
         # genuinely Windows here.
         with mock.patch.object(
-            gw, "_stable_gateway_working_dir", return_value="C:/hermes"
+            gw, "_stable_gateway_working_dir", return_value="C:/3v0"
         ), mock.patch(
-            "ev0_cli.config.get_hermes_home", return_value="C:/hermes"
+            "ev0_cli.config.get_ev0_home", return_value="C:/3v0"
         ):
             new_argv, cwd, env = gw.windowless_gateway_restart_spec(list(argv))
 
@@ -986,7 +986,7 @@ class TestWindowlessGatewayRestartSpec:
         assert new_argv[0] == "C:/venv/Scripts/python.exe"
         # Everything after the interpreter is byte-for-byte preserved.
         assert new_argv[1:] == argv[1:]
-        assert cwd == "C:/hermes"
+        assert cwd == "C:/3v0"
         assert env["VIRTUAL_ENV"] == str(Path("C:/venv"))
         assert "PYTHONPATH" in env
 
@@ -1040,7 +1040,7 @@ class TestGatewayRunRestartWatcherOuterPopenFallback:
             windows_detach_popen_kwargs,
         )
 
-        monkeypatch.setattr(gr, "_resolve_hermes_bin", lambda: ["hermes"])
+        monkeypatch.setattr(gr, "_resolve_ev0_bin", lambda: ["3v0"])
 
         calls = []
 
@@ -1068,7 +1068,7 @@ class TestGatewayRunRestartWatcherOuterPopenFallback:
 
         # Scrubbed env preserved and identical on both calls.
         assert kw1["env"] is kw2["env"]
-        assert "_HERMES_GATEWAY" not in kw1["env"]
+        assert "_EV0_GATEWAY" not in kw1["env"]
 
         # Stable, non-flag spawn configuration preserved across both attempts.
         assert kw1["stdout"] is subprocess.DEVNULL
@@ -1099,7 +1099,7 @@ class TestGatewayRunRestartWatcherOuterPopenFallback:
     def test_outer_watcher_happy_path_spawns_once(self, monkeypatch):
         import gateway.run as gr
 
-        monkeypatch.setattr(gr, "_resolve_hermes_bin", lambda: ["hermes"])
+        monkeypatch.setattr(gr, "_resolve_ev0_bin", lambda: ["3v0"])
 
         calls = []
         monkeypatch.setattr(
@@ -1119,7 +1119,7 @@ class TestGatewayRunRestartWatcherOuterPopenFallback:
     ):
         import gateway.run as gr
 
-        monkeypatch.setattr(gr, "_resolve_hermes_bin", lambda: ["hermes"])
+        monkeypatch.setattr(gr, "_resolve_ev0_bin", lambda: ["3v0"])
 
         calls = []
 
@@ -1134,7 +1134,7 @@ class TestGatewayRunRestartWatcherOuterPopenFallback:
         # Deterministic sentinel in the environment the watcher inherits
         # (watcher_env = os.environ.copy()); the warning must never echo it.
         secret = "maxwell-do-not-log-this-secret-42993"
-        monkeypatch.setenv("HERMES_TEST_SECRET", secret)
+        monkeypatch.setenv("EV0_TEST_SECRET", secret)
 
         # Dual failure must NOT propagate — the user's CLI still exits cleanly.
         self._drive(gr)
@@ -1156,7 +1156,7 @@ class TestGatewayRunRestartWatcherOuterPopenFallback:
             assert not isinstance(arg, (OSError, list, dict))
 
         # The watcher's env carried the sentinel; the rendered warning must not.
-        assert secret in (kwargs_used.get("env") or {}).get("HERMES_TEST_SECRET", "")
+        assert secret in (kwargs_used.get("env") or {}).get("EV0_TEST_SECRET", "")
         rendered = fmt % tuple(log_args)
         assert secret not in rendered
         assert argv_used[2] not in rendered  # watcher script body

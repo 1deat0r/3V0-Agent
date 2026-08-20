@@ -21,7 +21,7 @@ method = _registry.method
 
 @method("profiles.list")
 def _(rid, params: dict) -> dict:
-    """List Hermes profiles (name, path, model, description, skill count).
+    """List 3V0 profiles (name, path, model, description, skill count).
 
     ``include_sessions`` (default true) additionally reports each profile's
     most recent conversation as ``last_session`` so a roster UI can paint
@@ -162,7 +162,7 @@ def _(rid, params: dict) -> dict:
         # Capability flag: this backend's prompt builder injects the Bot Mode
         # teammate-messaging protocol (tools/bot_mode_probe.py) into every
         # session of Bot-Mode-managed installs. Clients that would otherwise
-        # append the protocol to SOUL.md (the desktop's hermes-bots plugin)
+        # append the protocol to SOUL.md (the desktop's 3v0-bots plugin)
         # must skip their SOUL writes when this is present.
         return _ok(rid, {"profiles": out, "bot_mode_protocol": True})
     except Exception as e:
@@ -186,7 +186,7 @@ def _(rid, params: dict) -> dict:
     tokens / credential pools), so a profile created headlessly from a
     plugin was born with NO inference provider — the first message failed
     with "No inference provider configured" and there is no interactive
-    ``hermes setup`` in that flow to recover. A profile spawned as an
+    ``3v0 setup`` in that flow to recover. A profile spawned as an
     always-available teammate must be able to think out of the box; callers
     that want an isolated/credential-free profile pass
     ``mirror_credentials: false``.
@@ -267,9 +267,9 @@ def _(rid, params: dict) -> dict:
     if is_truthy_value(params.get("mirror_credentials", True)):
         import shutil
 
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        launch_home = get_hermes_home()
+        launch_home = get_ev0_home()
         try:
             src_env = launch_home / ".env"
             dst_env = path / ".env"
@@ -309,7 +309,7 @@ def _(rid, params: dict) -> dict:
         "didn't work in bot mode" while working on the primary profile.
 
         Reads/writes go through the canonical loaders scoped to the target
-        profile via the context-local HERMES_HOME override — the same
+        profile via the context-local EV0_HOME override — the same
         mechanism as ``_write_profile_model`` (config-read-guard: no raw
         yaml on config.yaml).
         """
@@ -320,8 +320,8 @@ def _(rid, params: dict) -> dict:
                 save_config,
             )
             from ev0_constants import (
-                reset_hermes_home_override,
-                set_hermes_home_override,
+                reset_ev0_home_override,
+                set_ev0_home_override,
             )
 
             src_cfg = load_config_readonly() or {}
@@ -331,7 +331,7 @@ def _(rid, params: dict) -> dict:
             if not sections:
                 return False
 
-            token = set_hermes_home_override(str(path))
+            token = set_ev0_home_override(str(path))
             try:
                 # Write-back round-trip on the raw file: load_config() would
                 # merge DEFAULT_CONFIG, making every section look present and
@@ -346,7 +346,7 @@ def _(rid, params: dict) -> dict:
                 if changed:
                     save_config(dst_cfg)
             finally:
-                reset_hermes_home_override(token)
+                reset_ev0_home_override(token)
             return changed
         except Exception:
             return False
@@ -374,15 +374,15 @@ def _(rid, params: dict) -> dict:
             from ev0_cli.config import load_config_readonly, read_user_config_raw
             from ev0_cli.web_routers.profiles import _write_profile_model
             from ev0_constants import (
-                reset_hermes_home_override,
-                set_hermes_home_override,
+                reset_ev0_home_override,
+                set_ev0_home_override,
             )
 
-            token = set_hermes_home_override(str(path))
+            token = set_ev0_home_override(str(path))
             try:
                 dst_model = (read_user_config_raw() or {}).get("model") or {}
             finally:
-                reset_hermes_home_override(token)
+                reset_ev0_home_override(token)
 
             if not (dst_model.get("provider") and dst_model.get("default")):
                 cfg = load_config_readonly() or {}
@@ -419,7 +419,7 @@ def _(rid, params: dict) -> dict:
     Skill enablement mirrors the disabled-list model (installed = enabled
     unless in ``skills.disabled``). Toolset enablement reports the profile's
     ``tools.enabled_toolsets`` pin, or every toolset enabled when unpinned.
-    All reads are scoped to the profile via the HERMES_HOME override.
+    All reads are scoped to the profile via the EV0_HOME override.
     """
     name = str(params.get("name") or "").strip()
     if not name:
@@ -428,13 +428,13 @@ def _(rid, params: dict) -> dict:
         from pathlib import Path
 
         from ev0_cli.profiles import get_profile_dir
-        from ev0_constants import reset_hermes_home_override, set_hermes_home_override
+        from ev0_constants import reset_ev0_home_override, set_ev0_home_override
 
         profile_dir = Path(get_profile_dir(name))
         if not profile_dir.is_dir():
             return _err(rid, 4064, f"profile '{name}' not found")
 
-        token = set_hermes_home_override(str(profile_dir))
+        token = set_ev0_home_override(str(profile_dir))
         try:
             from ev0_cli.config import load_config
             from ev0_cli.skills_config import get_disabled_skills
@@ -451,12 +451,12 @@ def _(rid, params: dict) -> dict:
                         {"name": skill_name, "enabled": skill_name.lower() not in disabled}
                     )
 
-            # Toolsets: the same filtered universe the `hermes tools`
+            # Toolsets: the same filtered universe the `3v0 tools`
             # checklist offers — configurable toolsets (built-in + plugin),
             # minus platform-restricted ones that don't apply here — with
             # enablement resolved the way the runtime actually resolves it.
             # The raw registry (get_all_toolsets) leaks internal platform
-            # composites (hermes-discord, feishu_drive, ...) and reports
+            # composites (3v0-discord, feishu_drive, ...) and reports
             # everything "enabled" whenever the profile has no pin, which a
             # capabilities UI then faithfully mis-renders (tester report).
             from ev0_cli.tools_config import (
@@ -494,7 +494,7 @@ def _(rid, params: dict) -> dict:
                 )
                 # Default-off integrations (a2a, yuanbao, spotify, ...) are
                 # opt-ins; when the profile hasn't opted in they're noise in
-                # a per-profile editor — `hermes tools` / Settings is where
+                # a per-profile editor — `3v0 tools` / Settings is where
                 # you turn them on globally first. Enabled ones still show.
                 # yuanbao rides the same rule: a region-specific integration
                 # that isn't in _DEFAULT_OFF_TOOLSETS but is equally opt-in.
@@ -574,7 +574,7 @@ def _(rid, params: dict) -> dict:
                 },
             )
         finally:
-            reset_hermes_home_override(token)
+            reset_ev0_home_override(token)
     except Exception as e:
         return _err(rid, 5063, str(e))
 
@@ -600,7 +600,7 @@ def _(rid, params: dict) -> dict:
         from pathlib import Path
 
         from ev0_cli.profiles import get_profile_dir
-        from ev0_constants import reset_hermes_home_override, set_hermes_home_override
+        from ev0_constants import reset_ev0_home_override, set_ev0_home_override
 
         profile_dir = Path(get_profile_dir(name))
         if not profile_dir.is_dir():
@@ -702,7 +702,7 @@ def _(rid, params: dict) -> dict:
                 except Exception:
                     launch_mcp = {}
 
-            token = set_hermes_home_override(str(profile_dir))
+            token = set_ev0_home_override(str(profile_dir))
             try:
                 from ev0_cli.config import load_config, save_config
 
@@ -775,7 +775,7 @@ def _(rid, params: dict) -> dict:
                     except Exception:
                         applied["mcp_servers"] = False
             finally:
-                reset_hermes_home_override(token)
+                reset_ev0_home_override(token)
 
         return _ok(rid, {"ok": all(applied.values()) if applied else True, "applied": applied})
     except Exception as e:

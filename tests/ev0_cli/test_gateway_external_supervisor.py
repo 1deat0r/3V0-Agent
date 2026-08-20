@@ -9,7 +9,7 @@ import ev0_cli.gateway as gateway
 
 def _clear_native_supervisor_markers(monkeypatch):
     monkeypatch.delenv("INVOCATION_ID", raising=False)
-    monkeypatch.delenv("HERMES_S6_SUPERVISED_CHILD", raising=False)
+    monkeypatch.delenv("EV0_S6_SUPERVISED_CHILD", raising=False)
     monkeypatch.setenv("XPC_SERVICE_NAME", "0")
 
 
@@ -106,7 +106,7 @@ def test_update_follows_wrapper_upgrade_of_stale_plist_argv(monkeypatch):
         "--replace",
     ]
     upgraded = _prepare_child_command(
-        stale, {"XPC_SERVICE_NAME": "ai.hermes.gateway-work"}
+        stale, {"XPC_SERVICE_NAME": "ai.3v0.gateway-work"}
     )
     assert upgraded[-1] == "--external-supervisor"
 

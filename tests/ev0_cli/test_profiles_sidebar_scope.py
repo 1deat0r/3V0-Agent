@@ -15,12 +15,12 @@ import pytest
 
 
 @pytest.fixture
-def profiles_on_disk(tmp_path, monkeypatch, _isolate_hermes_home):
+def profiles_on_disk(tmp_path, monkeypatch, _isolate_ev0_home):
     """An isolated default home plus one named profile, each with a state.db."""
     from ev0_cli import profiles
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
 
-    default_home = get_hermes_home()
+    default_home = get_ev0_home()
     profiles_root = default_home / "profiles"
     worker_home = profiles_root / "worker"
 
@@ -28,7 +28,7 @@ def profiles_on_disk(tmp_path, monkeypatch, _isolate_hermes_home):
         home.mkdir(parents=True, exist_ok=True)
         (home / "config.yaml").write_text("{}\n", encoding="utf-8")
 
-    monkeypatch.setattr(profiles, "_get_default_hermes_home", lambda: default_home)
+    monkeypatch.setattr(profiles, "_get_default_ev0_home", lambda: default_home)
     monkeypatch.setattr(profiles, "_get_profiles_root", lambda: profiles_root)
 
     return {"default": default_home, "worker": worker_home}
@@ -43,9 +43,9 @@ def client(monkeypatch, profiles_on_disk):
 
     import ev0_state
     from ev0_cli.web_server import _SESSION_HEADER_NAME, _SESSION_TOKEN, app
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
 
-    monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db")
+    monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
     c = TestClient(app)
     c.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
 
@@ -202,7 +202,7 @@ class TestCrossProfileProjectTree:
         """Proves the per-profile scoping, not just that two trees got merged.
 
         The builder reads projects.db, the repo-scan policy and the junk
-        filters through ``get_hermes_home()``. If the fan-out failed to rebind
+        filters through ``get_ev0_home()``. If the fan-out failed to rebind
         it per profile, every tree would come back describing whichever home
         the process happens to be running as.
         """
@@ -231,9 +231,9 @@ class TestCrossProfileProjectTree:
         real_build = gateway_server._build_project_tree
 
         def explode_for_worker(db, **kwargs):
-            from ev0_constants import get_hermes_home
+            from ev0_constants import get_ev0_home
 
-            if get_hermes_home().name == "worker":
+            if get_ev0_home().name == "worker":
                 raise RuntimeError("worker store is unreadable")
 
             return real_build(db, **kwargs)

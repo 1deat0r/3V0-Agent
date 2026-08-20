@@ -14,18 +14,18 @@ class TestSaveConfigValueAtomic:
     @pytest.fixture
     def config_env(self, tmp_path, monkeypatch):
         """Isolated config environment with a writable config.yaml."""
-        hermes_home = tmp_path / ".hermes"
-        hermes_home.mkdir()
-        config_path = hermes_home / "config.yaml"
+        ev0_home = tmp_path / ".3V0"
+        ev0_home.mkdir()
+        config_path = ev0_home / "config.yaml"
         config_path.write_text(yaml.dump({
             "model": {"default": "test-model", "provider": "openrouter"},
             "display": {"skin": "default"},
         }))
-        # save_config_value resolves the target live via get_hermes_home(), so
-        # point HERMES_HOME at the temp dir (the _hermes_home import-time
+        # save_config_value resolves the target live via get_ev0_home(), so
+        # point EV0_HOME at the temp dir (the _ev0_home import-time
         # constant is no longer consulted).
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
-        monkeypatch.setattr("cli._hermes_home", hermes_home)
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setattr("cli._ev0_home", ev0_home)
         return config_path
 
     def test_calls_roundtrip_yaml_update(self, config_env, monkeypatch):
@@ -80,25 +80,25 @@ class TestSaveConfigValueAtomic:
 
 
 class TestSaveConfigValueTargetsUserConfig:
-    """Regression: persisted runtime settings must land in HERMES_HOME/config.yaml
+    """Regression: persisted runtime settings must land in EV0_HOME/config.yaml
     (which config readers actually read), never the repo's cli-config.yaml.
 
     This was the "wake-word ear reverts to disabled after restart" bug: on an
-    install whose HERMES_HOME/config.yaml did not exist yet, save_config_value
+    install whose EV0_HOME/config.yaml did not exist yet, save_config_value
     fell back to the checked-in cli-config.yaml. The toggle reported success, but
-    startup read HERMES_HOME/config.yaml and never saw the setting."""
+    startup read EV0_HOME/config.yaml and never saw the setting."""
 
     def test_creates_user_config_when_absent(self, tmp_path, monkeypatch):
-        # Fresh HERMES_HOME with NO config.yaml (managed/desktop first launch).
-        hermes_home = tmp_path / ".hermes"
-        hermes_home.mkdir()
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        # Fresh EV0_HOME with NO config.yaml (managed/desktop first launch).
+        ev0_home = tmp_path / ".3V0"
+        ev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
         from cli import save_config_value
 
         assert save_config_value("wake_word.enabled", True) is True
 
-        config_path = hermes_home / "config.yaml"
+        config_path = ev0_home / "config.yaml"
         assert config_path.exists(), "user config.yaml must be created, not skipped"
         result = yaml.safe_load(config_path.read_text())
         assert result["wake_word"]["enabled"] is True
@@ -111,9 +111,9 @@ class TestSaveConfigValueTargetsUserConfig:
         repo_cli_config = Path(cli_module.__file__).parent / "cli-config.yaml"
         before = repo_cli_config.read_text() if repo_cli_config.exists() else None
 
-        hermes_home = tmp_path / ".hermes"
-        hermes_home.mkdir()
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        ev0_home = tmp_path / ".3V0"
+        ev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
         from cli import save_config_value
 
@@ -123,5 +123,5 @@ class TestSaveConfigValueTargetsUserConfig:
         after = repo_cli_config.read_text() if repo_cli_config.exists() else None
         assert after == before
         # …and the value landed in the user config.
-        result = yaml.safe_load((hermes_home / "config.yaml").read_text())
+        result = yaml.safe_load((ev0_home / "config.yaml").read_text())
         assert result["wake_word"]["enabled"] is True

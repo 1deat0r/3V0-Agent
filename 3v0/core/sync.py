@@ -1,4 +1,4 @@
-"""Reconcile the native store with the Hermes profile (store is canonical).
+"""Reconcile the native store with the 3V0 profile (store is canonical).
 
 The store is the origin; the profile is a derived view. `sync_kind` converges
 the two without ever destroying store history:

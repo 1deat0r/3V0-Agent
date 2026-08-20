@@ -282,10 +282,10 @@ _MATRIX_BANG_COMMAND_RE = re.compile(
 
 
 def _resolve_matrix_bang_command(name: str) -> str | None:
-    """Resolve a ``!command`` token to a dispatchable Hermes command token.
+    """Resolve a ``!command`` token to a dispatchable 3V0 command token.
 
     Matrix clients often reserve leading ``/`` for local client commands.
-    Hermes accepts ``!command`` as a Matrix-friendly alias, but only for
+    3V0 accepts ``!command`` as a Matrix-friendly alias, but only for
     commands that the gateway can actually dispatch so ordinary exclamations
     remain normal chat text.
 
@@ -333,7 +333,7 @@ def _resolve_matrix_bang_command(name: str) -> str | None:
 
 
 def _normalize_matrix_bang_command(text: str) -> str:
-    """Convert Matrix ``!command`` aliases to normal Hermes ``/command`` text."""
+    """Convert Matrix ``!command`` aliases to normal 3V0 ``/command`` text."""
     if not text or not text.startswith("!"):
         return text
     match = _MATRIX_BANG_COMMAND_RE.match(text)
@@ -594,10 +594,10 @@ def _resolve_max_message_length(config) -> int:
 MAX_MESSAGE_LENGTH = DEFAULT_MAX_MESSAGE_LENGTH
 
 # Store directory for E2EE keys and sync state.
-# Uses get_hermes_home() so each profile gets its own Matrix store.
-from ev0_constants import get_hermes_dir as _get_hermes_dir
+# Uses get_ev0_home() so each profile gets its own Matrix store.
+from ev0_constants import get_ev0_dir as _get_ev0_dir
 
-_STORE_DIR = _get_hermes_dir("platforms/matrix/store", "matrix/store")
+_STORE_DIR = _get_ev0_dir("platforms/matrix/store", "matrix/store")
 _CRYPTO_DB_PATH = _STORE_DIR / "crypto.db"
 
 # Grace period: ignore messages older than this many seconds before startup.
@@ -1140,7 +1140,7 @@ class MatrixAdapter(BasePlatformAdapter):
     splits_long_messages = True  # send() chunks via truncate_message(max_message_length)
 
     # Matrix clients commonly reserve typed "/" for client-local commands;
-    # the adapter accepts "!command" as the alias that always reaches Hermes
+    # the adapter accepts "!command" as the alias that always reaches 3V0
     # (see _normalize_matrix_bang_command), so instruction text shows "!".
     typed_command_prefix = "!"
 
@@ -1294,10 +1294,10 @@ class MatrixAdapter(BasePlatformAdapter):
         # Text batching: merge rapid successive messages (Telegram-style).
         # Matrix clients split long messages around 4000 chars.
         self._text_batch_delay_seconds = float(
-            os.getenv("HERMES_MATRIX_TEXT_BATCH_DELAY_SECONDS", "0.6")
+            os.getenv("EV0_MATRIX_TEXT_BATCH_DELAY_SECONDS", "0.6")
         )
         self._text_batch_split_delay_seconds = float(
-            os.getenv("HERMES_MATRIX_TEXT_BATCH_SPLIT_DELAY_SECONDS", "2.0")
+            os.getenv("EV0_MATRIX_TEXT_BATCH_SPLIT_DELAY_SECONDS", "2.0")
         )
         self._pending_text_batches: Dict[str, MessageEvent] = {}
         self._pending_text_batch_tasks: Dict[str, asyncio.Task] = {}
@@ -1806,7 +1806,7 @@ class MatrixAdapter(BasePlatformAdapter):
                 resp = await client.login(
                     identifier=self._user_id,
                     password=self._password,
-                    device_name="Hermes Agent",
+                    device_name="3V0 Agent",
                     device_id=self._device_id or None,
                 )
                 if resp and hasattr(resp, "device_id"):
@@ -1884,7 +1884,7 @@ class MatrixAdapter(BasePlatformAdapter):
                     await crypto_db.start()
                     self._crypto_db = crypto_db
 
-                    _acct_id = self._user_id or "hermes"
+                    _acct_id = self._user_id or "3v0"
                     # Use the resolved client.device_id (from whoami or password
                     # login), not self._device_id (the configured value), because
                     # #71543 makes the token's real device win over a stale
@@ -4912,7 +4912,7 @@ class MatrixAdapter(BasePlatformAdapter):
 
         Important: only strip explicit mention tokens (``@user:server`` or
         ``@localpart``). Do NOT strip bare words matching the bot localpart,
-        otherwise normal phrases like "Hermes Agent" become "Agent".
+        otherwise normal phrases like "3V0 Agent" become "Agent".
         """
         if not body:
             return ""
@@ -5193,7 +5193,7 @@ async def _standalone_send(
         token = token or get_secret("MATRIX_ACCESS_TOKEN", "") or ""
         if not homeserver or not token:
             return {"error": "Matrix not configured (MATRIX_HOMESERVER, MATRIX_ACCESS_TOKEN required)"}
-        txn_id = f"hermes_{int(time.time() * 1000)}_{os.urandom(4).hex()}"
+        txn_id = f"ev0_{int(time.time() * 1000)}_{os.urandom(4).hex()}"
         from urllib.parse import quote
         encoded_room = quote(chat_id, safe="")
         url = f"{homeserver}/_matrix/client/v3/rooms/{encoded_room}/send/m.room.message/{txn_id}"
@@ -5320,7 +5320,7 @@ def interactive_setup() -> None:
         else:
             print_info("⚠️  No allowlist set - anyone who can message the bot can use it!")
 
-        print_info("📬 Home Room: where Hermes delivers cron job results and notifications.")
+        print_info("📬 Home Room: where 3V0 delivers cron job results and notifications.")
         print_info("   Room IDs look like !abc123:server (shown in Element room settings)")
         print_info("   You can also set this later by typing /set-home in a Matrix room.")
         print_info("Leave blank to clear a previously saved home room (cron / notifications).")
@@ -5401,7 +5401,7 @@ def _build_adapter(config):
 
 
 def register(ctx) -> None:
-    """Plugin entry point — called by the Hermes plugin system."""
+    """Plugin entry point — called by the 3V0 plugin system."""
     ctx.register_platform(
         name="matrix",
         label="Matrix",

@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from ev0_cli.auth import AuthError
-from ev0_cli import main as hermes_main
+from ev0_cli import main as ev0_main
 
 
 # ---------------------------------------------------------------------------
@@ -145,7 +145,7 @@ def test_provider_flag_uses_named_custom_default_model(monkeypatch):
     monkeypatch.setattr("ev0_cli.config.load_config", lambda: config)
     monkeypatch.setattr("ev0_cli.runtime_provider.load_config", lambda: config)
 
-    shell = cli.HermesCLI(provider="gmk-lan", compact=True, max_turns=1)
+    shell = cli.Ev0CLI(provider="gmk-lan", compact=True, max_turns=1)
 
     assert shell.model == "/models/gemma.gguf"
     assert shell.requested_provider == "gmk-lan"
@@ -173,7 +173,7 @@ def test_explicit_model_wins_over_provider_default_model(monkeypatch):
     monkeypatch.setattr("ev0_cli.config.load_config", lambda: config)
     monkeypatch.setattr("ev0_cli.runtime_provider.load_config", lambda: config)
 
-    shell = cli.HermesCLI(
+    shell = cli.Ev0CLI(
         provider="gmk-lan",
         model="explicit-id",
         compact=True,
@@ -201,7 +201,7 @@ def test_provider_flag_logs_when_custom_default_model_cannot_resolve(monkeypatch
     )
 
     with caplog.at_level("WARNING"):
-        shell = cli.HermesCLI(provider="gmk-lan", compact=True, max_turns=1)
+        shell = cli.Ev0CLI(provider="gmk-lan", compact=True, max_turns=1)
 
     assert shell.model == "tencent/hy3:free"
     assert any(
@@ -210,18 +210,18 @@ def test_provider_flag_logs_when_custom_default_model_cannot_resolve(monkeypatch
     )
 
 
-def test_hermes_cli_init_does_not_eagerly_resolve_runtime_provider(monkeypatch):
+def test_ev0_cli_init_does_not_eagerly_resolve_runtime_provider(monkeypatch):
     cli = _import_cli()
     calls = {"count": 0}
 
     def _unexpected_runtime_resolve(**kwargs):
         calls["count"] += 1
-        raise AssertionError("resolve_runtime_provider should not be called in HermesCLI.__init__")
+        raise AssertionError("resolve_runtime_provider should not be called in Ev0CLI.__init__")
 
     monkeypatch.setattr("ev0_cli.runtime_provider.resolve_runtime_provider", _unexpected_runtime_resolve)
     monkeypatch.setattr("ev0_cli.runtime_provider.format_runtime_provider_error", lambda exc: str(exc))
 
-    shell = cli.HermesCLI(model="gpt-5", compact=True, max_turns=1)
+    shell = cli.Ev0CLI(model="gpt-5", compact=True, max_turns=1)
 
     assert shell is not None
     assert calls["count"] == 0
@@ -251,7 +251,7 @@ def test_runtime_resolution_failure_is_not_sticky(monkeypatch):
     monkeypatch.setattr("ev0_cli.runtime_provider.format_runtime_provider_error", lambda exc: str(exc))
     monkeypatch.setattr(cli, "AIAgent", _DummyAgent)
 
-    shell = cli.HermesCLI(model="gpt-5", compact=True, max_turns=1)
+    shell = cli.Ev0CLI(model="gpt-5", compact=True, max_turns=1)
 
     assert shell._init_agent() is False
     assert shell._init_agent() is True
@@ -263,7 +263,7 @@ def test_runtime_resolution_failure_is_not_sticky(monkeypatch):
 
 def test_cli_turn_routing_uses_primary_when_disabled(monkeypatch):
     cli = _import_cli()
-    shell = cli.HermesCLI(model="gpt-5", compact=True, max_turns=1)
+    shell = cli.Ev0CLI(model="gpt-5", compact=True, max_turns=1)
     shell.provider = "openrouter"
     shell.api_mode = "chat_completions"
     shell.base_url = "https://openrouter.ai/api/v1"
@@ -288,9 +288,9 @@ def test_cli_turn_routing_uses_primary_when_disabled(monkeypatch):
 def test_model_flow_nous_does_not_restore_stale_custom_api_key(tmp_path, monkeypatch):
     import yaml
 
-    config_home = tmp_path / "hermes"
+    config_home = tmp_path / "3v0"
     config_home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(config_home))
+    monkeypatch.setenv("EV0_HOME", str(config_home))
 
     config_path = config_home / "config.yaml"
     config_path.write_text(
@@ -344,7 +344,7 @@ def test_model_flow_nous_does_not_restore_stale_custom_api_key(tmp_path, monkeyp
         lambda config: None,
     )
 
-    hermes_main._model_flow_nous(stale_config, current_model="glm-5.2")
+    ev0_main._model_flow_nous(stale_config, current_model="glm-5.2")
 
     config = yaml.safe_load(config_path.read_text()) or {}
     model = config.get("model")
@@ -358,9 +358,9 @@ def test_model_flow_nous_does_not_restore_stale_custom_api_key(tmp_path, monkeyp
 def _seed_stale_custom_model(tmp_path, monkeypatch):
     import yaml
 
-    config_home = tmp_path / "hermes"
+    config_home = tmp_path / "3v0"
     config_home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(config_home))
+    monkeypatch.setenv("EV0_HOME", str(config_home))
     config_path = config_home / "config.yaml"
     config_path.write_text(
         yaml.safe_dump(
@@ -420,7 +420,7 @@ def test_codex_provider_uses_config_model(monkeypatch):
         lambda access_token=None: ["gpt-5.2-codex"],
     )
 
-    shell = cli.HermesCLI(compact=True, max_turns=1)
+    shell = cli.Ev0CLI(compact=True, max_turns=1)
 
     assert shell._ensure_runtime_credentials() is True
     assert shell.provider == "openai-codex"
@@ -471,7 +471,7 @@ def test_model_flow_custom_saves_verified_v1_base_url(monkeypatch, capsys):
     monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
     monkeypatch.setattr("ev0_cli.secret_prompt.masked_secret_prompt", lambda _prompt="": next(answers))
 
-    hermes_main._model_flow_custom({})
+    ev0_main._model_flow_custom({})
     output = capsys.readouterr().out
 
     assert "Saving the working base URL instead" in output
@@ -535,7 +535,7 @@ def test_model_flow_custom_persists_selected_api_mode(monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
     monkeypatch.setattr("ev0_cli.secret_prompt.masked_secret_prompt", lambda _prompt="": "test-key")
 
-    hermes_main._model_flow_custom({"model": {"provider": "custom"}})
+    ev0_main._model_flow_custom({"model": {"provider": "custom"}})
 
     assert saved_cfg["model"]["provider"] == "custom"
     assert saved_cfg["model"]["base_url"] == "https://codex.example.com/v1"
@@ -549,7 +549,7 @@ def test_model_flow_custom_persists_selected_api_mode(monkeypatch):
 
 
 def test_cmd_model_forwards_nous_login_tls_options(monkeypatch):
-    monkeypatch.setattr(hermes_main, "_require_tty", lambda *a: None)
+    monkeypatch.setattr(ev0_main, "_require_tty", lambda *a: None)
     monkeypatch.setattr(
         "ev0_cli.config.load_config",
         lambda: {"model": {"default": "gpt-5", "provider": "nous"}},
@@ -559,7 +559,7 @@ def test_cmd_model_forwards_nous_login_tls_options(monkeypatch):
     monkeypatch.setattr("ev0_cli.config.save_env_value", lambda key, value: None)
     monkeypatch.setattr("ev0_cli.auth.resolve_provider", lambda requested, **kwargs: "nous")
     monkeypatch.setattr("ev0_cli.auth.get_provider_auth_state", lambda provider_id: None)
-    monkeypatch.setattr(hermes_main, "_prompt_provider_choice", lambda choices, **kwargs: 0)
+    monkeypatch.setattr(ev0_main, "_prompt_provider_choice", lambda choices, **kwargs: 0)
 
     captured = {}
 
@@ -575,11 +575,11 @@ def test_cmd_model_forwards_nous_login_tls_options(monkeypatch):
 
     monkeypatch.setattr("ev0_cli.auth._login_nous", _fake_login)
 
-    hermes_main.cmd_model(
+    ev0_main.cmd_model(
         SimpleNamespace(
             portal_url="https://portal.nousresearch.com",
             inference_url="https://inference.nousresearch.com/v1",
-            client_id="hermes-local",
+            client_id="3v0-local",
             scope="openid profile",
             no_browser=True,
             timeout=7.5,
@@ -591,7 +591,7 @@ def test_cmd_model_forwards_nous_login_tls_options(monkeypatch):
     assert captured == {
         "portal_url": "https://portal.nousresearch.com",
         "inference_url": "https://inference.nousresearch.com/v1",
-        "client_id": "hermes-local",
+        "client_id": "3v0-local",
         "scope": "openid profile",
         "no_browser": True,
         "timeout": 7.5,
@@ -653,11 +653,11 @@ def test_save_custom_provider_references_the_key_instead_of_inlining_it(monkeypa
         "http://localhost:11434/v1",
         api_key="sk-secret",
         name="Ollama",
-        key_env="HERMES_CUSTOM_LOCALHOST_11434_API_KEY",
+        key_env="EV0_CUSTOM_LOCALHOST_11434_API_KEY",
     )
 
     entry = saved["custom_providers"][0]
-    assert entry["key_env"] == "HERMES_CUSTOM_LOCALHOST_11434_API_KEY"
+    assert entry["key_env"] == "EV0_CUSTOM_LOCALHOST_11434_API_KEY"
     assert "api_key" not in entry
     assert "sk-secret" not in yaml.safe_dump(saved)
 

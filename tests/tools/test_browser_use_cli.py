@@ -3,7 +3,7 @@
 Covers the three seams the integration relies on:
 
 * Mode detection — ``browser.backend: browser-use`` in config (set via the
-  ``hermes tools`` picker); off by default.
+  ``3v0 tools`` picker); off by default.
 * Tool-surface swap — when the mode is on, ``check_browser_requirements``
   returns False so every legacy ``browser_*`` tool (including
   browser_cdp/browser_dialog, whose check_fns funnel through it) is hidden,
@@ -103,7 +103,7 @@ class TestSubprocessEnvironment:
 
     def test_subprocess_env_strips_parent_python_import_paths(self, monkeypatch):
         """#83427/#84841/#86006/#86104: the browser-use CLI runs under its
-        own Python — inherited PYTHONPATH/PYTHONHOME pointing at Hermes's
+        own Python — inherited PYTHONPATH/PYTHONHOME pointing at 3V0's
         venv make it import wrong-ABI C-extensions (pydantic_core) and
         crash. Both must be stripped; unrelated vars survive."""
         import sys
@@ -111,8 +111,8 @@ class TestSubprocessEnvironment:
 
         browser_tool = ModuleType("tools.browser_tool")
         browser_tool._build_browser_env = lambda: {
-            "PYTHONPATH": "/hermes:/hermes/venv/lib/site-packages",
-            "PYTHONHOME": "/hermes/venv",
+            "PYTHONPATH": "/3v0:/3v0/venv/lib/site-packages",
+            "PYTHONHOME": "/3v0/venv",
             "KEEP_ME": "yes",
         }
         monkeypatch.setitem(sys.modules, "tools.browser_tool", browser_tool)
@@ -141,9 +141,9 @@ class TestToolSurfaceSwap:
         assert entry.toolset == "browser-use"
 
     def test_browser_exec_in_browser_toolsets(self):
-        from toolsets import TOOLSETS, _HERMES_CORE_TOOLS
+        from toolsets import TOOLSETS, _EV0_CORE_TOOLS
 
-        assert "browser_exec" in _HERMES_CORE_TOOLS
+        assert "browser_exec" in _EV0_CORE_TOOLS
         assert "browser_exec" in TOOLSETS["browser"]["tools"]
         assert "browser_exec" in TOOLSETS["coding"]["tools"]
 
@@ -483,20 +483,20 @@ class TestOwnTabPreamble:
     def test_named_shared_browser_gets_preamble(self, tmp_path, monkeypatch):
         result = self._run(tmp_path, monkeypatch, session="r7k2")
         assert result["success"] is True
-        assert "_hermes_ensure_own_tab" in result["output"]
+        assert "_ev0_ensure_own_tab" in result["output"]
         # model code still present, after the preamble
-        assert result["output"].index("_hermes_ensure_own_tab") < result["output"].index("print('payload')")
+        assert result["output"].index("_ev0_ensure_own_tab") < result["output"].index("print('payload')")
 
     def test_unnamed_session_gets_no_preamble(self, tmp_path, monkeypatch):
         result = self._run(tmp_path, monkeypatch, session="")
         assert result["success"] is True
-        assert "_hermes_ensure_own_tab" not in result["output"]
+        assert "_ev0_ensure_own_tab" not in result["output"]
 
     def test_named_provider_browser_skips_preamble(self, tmp_path, monkeypatch):
         """Per-name provider browsers are private — preamble would leak a tab."""
         result = self._run(tmp_path, monkeypatch, session="r7k2", provider=True)
         assert result["success"] is True
-        assert "_hermes_ensure_own_tab" not in result["output"]
+        assert "_ev0_ensure_own_tab" not in result["output"]
 
     def test_sentinel_never_reaches_subprocess_env(self, tmp_path, monkeypatch):
         import tools.browser_tool as bt
@@ -507,7 +507,7 @@ class TestOwnTabPreamble:
             bt, "_get_session_info",
             lambda key: {"cdp_url": "wss://browser.example/cdp/" + key},
         )
-        cli = _fake_cli(tmp_path, 'cat > /dev/null\necho "sentinel:${_HERMES_BU_PRIVATE_BROWSER:-unset}"\n')
+        cli = _fake_cli(tmp_path, 'cat > /dev/null\necho "sentinel:${_EV0_BU_PRIVATE_BROWSER:-unset}"\n')
         monkeypatch.setattr(bu_cli, "_find_cli", lambda: [cli])
         result = json.loads(bu_cli.browser_exec("print(1)", session="r7k2"))
         assert "sentinel:unset" in result["output"]
@@ -521,7 +521,7 @@ class TestOwnTabPreamble:
 
 
 class TestProviderPickerIntegration:
-    """The `hermes tools` Browser Automation picker row (browser_backend
+    """The `3v0 tools` Browser Automation picker row (browser_backend
     marker) must enter/leave CLI mode cleanly and highlight correctly."""
 
     def _rows(self):
@@ -837,15 +837,15 @@ class TestBrowserExec:
 
 
 class TestFindCliManagedBin:
-    """MANAGED-FIRST: _find_cli probes $HERMES_HOME/bin before PATH and
-    ~/.local/bin, so the Hermes-installed copy always wins."""
+    """MANAGED-FIRST: _find_cli probes $EV0_HOME/bin before PATH and
+    ~/.local/bin, so the 3V0-installed copy always wins."""
 
     @pytest.fixture(autouse=True)
     def _hermetic_home(self, tmp_path, monkeypatch):
         """Pin HOME so the ~/.local/bin probe can't leak the host's real
         user-level installs into these real-PATH-probing tests."""
         monkeypatch.setenv("HOME", str(tmp_path / "userhome"))
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "home"))
         monkeypatch.setenv("PATH", str(tmp_path / "empty"))
 
     def test_managed_bin_browser_use_found(self, tmp_path, monkeypatch):
@@ -879,7 +879,7 @@ class TestFindCliManagedBin:
         assert bu_cli._find_cli_unpatched() == [str(cli)]
 
     def test_managed_bin_precedes_user_local_bin(self, tmp_path, monkeypatch):
-        """MANAGED-FIRST: Hermes' managed copy wins over a user-level side
+        """MANAGED-FIRST: 3V0' managed copy wins over a user-level side
         install — every backend selection provisions/updates the managed
         copy, so resolution must land on the binary we control (no version
         drift from stray `uv tool install` runs)."""
@@ -923,9 +923,9 @@ class TestInstallCli:
     def test_path_install_does_not_short_circuit(self, tmp_path, monkeypatch):
         """MANAGED-FIRST: a browser-use on PATH is a user-level side install
         and must NOT satisfy install_cli() — only the managed copy does,
-        otherwise resolution stays pinned to a binary Hermes can't update."""
+        otherwise resolution stays pinned to a binary 3V0 can't update."""
         cli = _fake_cli(tmp_path, "")
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "home"))
         monkeypatch.setattr(bu_cli.shutil, "which", lambda name, path=None: cli if name == "browser-use" and path is None else None)
         import sys as _sys
         import types as _types
@@ -944,14 +944,14 @@ class TestInstallCli:
         cli = bin_dir / "browser-use"
         cli.write_text("#!/bin/sh\n")
         cli.chmod(cli.stat().st_mode | stat.S_IXUSR)
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "home"))
         monkeypatch.setenv("PATH", str(tmp_path / "empty"))
         ok, msg = bu_cli.install_cli()
         assert ok is True
         assert "already installed" in msg
 
     def test_no_uv_anywhere_fails_with_guidance(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "home"))
         monkeypatch.setenv("PATH", str(tmp_path / "empty"))
         import sys as _sys
         import types as _types
@@ -966,7 +966,7 @@ class TestInstallCli:
         home = tmp_path / "home"
         bin_dir = home / "bin"
         bin_dir.mkdir(parents=True)
-        monkeypatch.setenv("HERMES_HOME", str(home))
+        monkeypatch.setenv("EV0_HOME", str(home))
         monkeypatch.setenv("PATH", str(tmp_path / "empty"))
         # install_cli verifies via _find_cli(), which the tests/tools conftest
         # pins to None — restore the real resolver for this test.
@@ -992,7 +992,7 @@ class TestInstallCli:
 
     def test_failed_install_surfaces_stderr_tail(self, tmp_path, monkeypatch):
         home = tmp_path / "home"
-        monkeypatch.setenv("HERMES_HOME", str(home))
+        monkeypatch.setenv("EV0_HOME", str(home))
         monkeypatch.setenv("PATH", str(tmp_path / "empty"))
         uv = tmp_path / "uv"
         uv.write_text('#!/bin/sh\necho "no network" >&2\nexit 1\n')
@@ -1009,7 +1009,7 @@ class TestInstallCli:
 
 class TestDefaultDowngradeNotice:
     def _isolate(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "home"))
         monkeypatch.setattr("ev0_cli.config.read_raw_config", lambda: {})
 
     def test_notice_when_default_and_cli_missing(self, tmp_path, monkeypatch):
@@ -1017,7 +1017,7 @@ class TestDefaultDowngradeNotice:
         monkeypatch.setattr(bu_cli, "_find_cli", lambda: None)
         notice = bu_cli.default_downgrade_notice()
         assert notice is not None
-        assert "hermes tools" in notice
+        assert "3v0 tools" in notice
 
     def test_rate_limited_within_24h(self, tmp_path, monkeypatch):
         self._isolate(tmp_path, monkeypatch)
@@ -1031,7 +1031,7 @@ class TestDefaultDowngradeNotice:
         assert bu_cli.default_downgrade_notice() is None
 
     def test_no_notice_on_explicit_backend(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path / "home"))
         monkeypatch.setattr(
             "ev0_cli.config.read_raw_config",
             lambda: {"browser": {"backend": bu_cli.BACKEND_DISABLED}},

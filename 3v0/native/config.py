@@ -3,7 +3,7 @@
 Process env first, profile `.env` second (the precedence the old code re-implemented
 inconsistently across llm.py / gateway.py / engine.py). Small interface, memoized
 parse, dotenv-lite format: bare or `export ` NAME=value, optional inline ` # comment`,
-quote stripping. Stdlib-only, zero Hermes.
+quote stripping. Stdlib-only, zero 3V0.
 
 Interface: get(name, default=None) / require(name) / load(env_file=None) / clear_cache().
 """
@@ -13,7 +13,7 @@ import os
 import re
 from pathlib import Path
 
-_PROFILE = Path(os.environ.get("HERMES_HOME") or "~/.hermes/profiles/3v0").expanduser()
+_PROFILE = Path(os.environ.get("EV0_HOME") or "~/.3V0/profiles/3v0").expanduser()
 _DEFAULT_ENV_FILE = _PROFILE / ".env"
 
 _cache: dict[str, str] = {}

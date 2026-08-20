@@ -2,9 +2,9 @@
 
 The dashboard is ONE machine-level management surface: config, env, MCP,
 model, and chat-PTY endpoints accept an optional ``profile`` so the global
-profile switcher can target any profile's HERMES_HOME. These tests pin:
+profile switcher can target any profile's EV0_HOME. These tests pin:
 reads/writes land in the REQUESTED profile, the dashboard's own profile
-stays untouched, and the chat PTY env is scoped via HERMES_HOME.
+stays untouched, and the chat PTY env is scoped via EV0_HOME.
 """
 import json
 
@@ -13,12 +13,12 @@ import yaml
 
 
 @pytest.fixture
-def isolated_profiles(tmp_path, monkeypatch, _isolate_hermes_home):
+def isolated_profiles(tmp_path, monkeypatch, _isolate_ev0_home):
     """Isolated default home + one named profile, each with config + .env."""
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
     from ev0_cli import profiles
 
-    default_home = get_hermes_home()
+    default_home = get_ev0_home()
     profiles_root = default_home / "profiles"
     worker_home = profiles_root / "worker_beta"
     for home in (default_home, worker_home):
@@ -26,7 +26,7 @@ def isolated_profiles(tmp_path, monkeypatch, _isolate_hermes_home):
         (home / "config.yaml").write_text("{}\n", encoding="utf-8")
     (worker_home / ".env").write_text("", encoding="utf-8")
 
-    monkeypatch.setattr(profiles, "_get_default_hermes_home", lambda: default_home)
+    monkeypatch.setattr(profiles, "_get_default_ev0_home", lambda: default_home)
     monkeypatch.setattr(profiles, "_get_profiles_root", lambda: profiles_root)
     return {"default": default_home, "worker_beta": worker_home}
 
@@ -39,10 +39,10 @@ def client(monkeypatch, isolated_profiles):
         pytest.skip("fastapi/starlette not installed")
 
     import ev0_state
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
     from ev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
-    monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_hermes_home() / "state.db")
+    monkeypatch.setattr(ev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
     c = TestClient(app)
     c.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
     return c
@@ -365,7 +365,7 @@ class TestProfileScopedPostSetup:
         self, client, isolated_profiles, monkeypatch
     ):
         """Post-setup runs in a -p scoped subprocess so hooks that read
-        config / write per-profile state see the same HERMES_HOME the rest
+        config / write per-profile state see the same EV0_HOME the rest
         of the drawer's writes targeted."""
         import ev0_cli.web_server as web_server
 
@@ -376,7 +376,7 @@ class TestProfileScopedPostSetup:
 
         monkeypatch.setattr(
             web_server,
-            "_spawn_hermes_action",
+            "_spawn_ev0_action",
             lambda subcommand, name: calls.append(list(subcommand)) or _FakeProc(),
         )
         monkeypatch.setattr(
@@ -404,7 +404,7 @@ class TestProfileScopedPostSetup:
 
         monkeypatch.setattr(
             web_server,
-            "_spawn_hermes_action",
+            "_spawn_ev0_action",
             lambda subcommand, name: calls.append(list(subcommand)) or _FakeProc(),
         )
         monkeypatch.setattr(
@@ -425,14 +425,14 @@ class TestProfileScopedGateway:
         self, client, isolated_profiles, monkeypatch
     ):
         import ev0_cli.web_server as web_server
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
         seen_homes = []
 
         def fake_get_running_pid(*args, **kwargs):
             # /api/status?profile= now passes pid_path= explicitly (the TTL
             # cache would otherwise serve another profile's PID) — accept it.
-            seen_homes.append(str(get_hermes_home()))
+            seen_homes.append(str(get_ev0_home()))
             return None
 
         monkeypatch.setattr(web_server, "check_config_version", lambda: (1, 1))
@@ -450,7 +450,7 @@ class TestProfileScopedGateway:
 
         assert resp.status_code == 200
         assert seen_homes[0] == str(isolated_profiles["worker_beta"])
-        assert resp.json()["hermes_home"] == str(isolated_profiles["worker_beta"])
+        assert resp.json()["ev0_home"] == str(isolated_profiles["worker_beta"])
 
     def test_status_uses_runtime_pid_when_profile_pid_file_is_missing(
         self, client, isolated_profiles, monkeypatch
@@ -530,7 +530,7 @@ class TestProfileScopedTelegramOnboarding:
 
         monkeypatch.setattr(
             web_server,
-            "_spawn_hermes_action",
+            "_spawn_ev0_action",
             lambda subcommand, name: calls.append((list(subcommand), name)) or _FakeProc(),
         )
         web_server._ACTION_PROCS.pop("gateway-restart", None)
@@ -562,7 +562,7 @@ class TestProfileScopedTelegramOnboarding:
 
 
 class TestProfileScopedChatPty:
-    def test_chat_argv_scopes_hermes_home(self, isolated_profiles, monkeypatch):
+    def test_chat_argv_scopes_ev0_home(self, isolated_profiles, monkeypatch):
         import ev0_cli.web_server as web_server
 
         monkeypatch.setattr(
@@ -572,9 +572,9 @@ class TestProfileScopedChatPty:
         )
         argv, cwd, env = web_server._resolve_chat_argv(profile="worker_beta")
         assert env is not None
-        assert env["HERMES_HOME"] == str(isolated_profiles["worker_beta"])
+        assert env["EV0_HOME"] == str(isolated_profiles["worker_beta"])
         # Scoped chat must NOT attach to the dashboard's in-memory gateway.
-        assert "HERMES_TUI_GATEWAY_URL" not in env
+        assert "EV0_TUI_GATEWAY_URL" not in env
 
 
 class TestProfileScopedAudio:
@@ -598,9 +598,9 @@ class TestProfileScopedAudio:
         seen = {}
 
         def _fake_transcribe(path):
-            from ev0_constants import get_hermes_home
+            from ev0_constants import get_ev0_home
 
-            seen["home"] = str(get_hermes_home())
+            seen["home"] = str(get_ev0_home())
             return {"success": True, "transcript": "hi", "provider": "fake"}
 
         monkeypatch.setattr(voice_mode, "transcribe_recording", _fake_transcribe)

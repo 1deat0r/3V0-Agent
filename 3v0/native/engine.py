@@ -1,6 +1,6 @@
 """Native engine — compose context + LLM + tools + gateway into one handler.
 
-Stdlib-only, zero Hermes. N5: the piece that makes the native runtime a
+Stdlib-only, zero 3V0. N5: the piece that makes the native runtime a
 complete agent over Telegram.
 
   handler(update, send)   -- the single entry point fed by gateway.run_forever.
@@ -11,7 +11,7 @@ complete agent over Telegram.
   server() -- run_forever(handler), for the (future, deliberate) cutover.
 
 SAFETY: server() is not started here. Starting a SECOND getUpdates poller on
-the live bot while the Hermes gateway runs would steal this very conversation's
+the live bot while the 3V0 gateway runs would steal this very conversation's
 updates. The proof below is a one-shot: it captures what would be sent (no
 Telegram POST, no polling).
 """
@@ -80,7 +80,7 @@ def server(long_poll: int = 25, idle: float = 1.0) -> None:
 
 if __name__ == "__main__":
     # one-shot end-to-end proof: real LLM + context + tools, captured reply.
-    # No Telegram POST, no polling -- safe alongside the live Hermes gateway.
+    # No Telegram POST, no polling -- safe alongside the live 3V0 gateway.
     home = config.get("TELEGRAM_HOME_CHANNEL")
     chat_id = int(home) if home and home.strip().isdigit() else 0
     captured = []

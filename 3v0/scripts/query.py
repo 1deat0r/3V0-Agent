@@ -3,7 +3,7 @@
 
 The CLI half of the ``threev0_store`` tool (registered by the
 ``native-store-bridge`` profile plugin). The plugin shells out here rather than
-importing ``core.*`` into the Hermes runtime, keeping the runtime env clean and
+importing ``core.*`` into the 3V0 runtime, keeping the runtime env clean and
 matching the existing ingest pattern.
 
 Usage:

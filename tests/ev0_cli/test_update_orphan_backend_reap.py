@@ -1,15 +1,15 @@
 """Tests for the orphaned-Desktop-backend reap in the venv-holder guard.
 
 The GUI-updater handoff race (ryanc's 2026-08-09 failures): the Desktop app
-fires SIGTERM + app.quit() and spawns hermes-setup, but its Python backend
+fires SIGTERM + app.quit() and spawns 3v0-setup, but its Python backend
 (``python.exe -m ev0_cli.main serve``) survives the teardown race. The
 Desktop is gone — nothing will respawn that backend — yet the venv-holder
-guard refused on it and the update dead-ended with "Hermes is still running"
+guard refused on it and the update dead-ended with "3V0 is still running"
 while the user had zero windows open.
 
 ``_orphaned_desktop_backend_pids`` classifies holders: a ``serve``/
 ``dashboard`` backend whose supervising parent is provably dead is safe to
-reap (with its full child tree — the managed .hermes-runtime interpreter
+reap (with its full child tree — the managed .3v0-runtime interpreter
 child included, #70026); anything else keeps the refusal.
 
 All paths run on any host via a fake psutil module (same approach as
@@ -62,7 +62,7 @@ def _proc(
 
 
 _SERVE_ARGV = [
-    "C:\\hermes\\venv\\Scripts\\python.exe",
+    "C:\\3v0\\venv\\Scripts\\python.exe",
     "-m",
     "ev0_cli.main",
     "serve",
@@ -88,7 +88,7 @@ def test_orphan_backend_dead_parent_qualifies():
 
 
 def test_backend_with_live_parent_keeps_refusal():
-    parent = _proc(50, ["Hermes.exe"], create_time=10.0)
+    parent = _proc(50, ["3V0.exe"], create_time=10.0)
     backend = _proc(200, _SERVE_ARGV, ppid=50, create_time=100.0)
     fake = _fake_psutil({50: parent, 200: backend})
     with patch.dict(sys.modules, {"psutil": fake}):
@@ -124,12 +124,12 @@ def test_mixed_holders_keep_refusal():
 
 def test_orphan_root_plus_managed_runtime_descendant_qualifies():
     # helix4u's review case (#82179): the scanner returns BOTH the orphaned
-    # serve root and its .hermes-runtime interpreter child. The child's live
+    # serve root and its .3v0-runtime interpreter child. The child's live
     # parent IS the orphan root, so the set is safe — only the root is
     # returned (taskkill /T reaps the descendant with it).
     backend = _proc(200, _SERVE_ARGV, ppid=999)
     child_argv = [
-        "C:\\hermes\\.hermes-runtime\\python\\generation-1\\python.exe",
+        "C:\\3v0\\.3v0-runtime\\python\\generation-1\\python.exe",
         "worker.py",
     ]
     child = _proc(210, child_argv, ppid=200, parents=[backend])

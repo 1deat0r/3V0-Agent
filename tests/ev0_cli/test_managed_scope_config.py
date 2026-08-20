@@ -10,8 +10,8 @@ def homes(tmp_path, monkeypatch):
     home.mkdir()
     managed = tmp_path / "managed"
     managed.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
-    monkeypatch.setenv("HERMES_MANAGED_DIR", str(managed))
+    monkeypatch.setenv("EV0_HOME", str(home))
+    monkeypatch.setenv("EV0_MANAGED_DIR", str(managed))
     import ev0_cli.config as cfg
     from ev0_cli import managed_scope
 

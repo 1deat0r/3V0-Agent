@@ -57,11 +57,11 @@ Reading these gives you ~90% of the architecture in ~15 files:
 
 ## Conventions to know before editing
 
-- **Secrets live in `.env`; every behavioral setting in `config.yaml`** (`ev0_cli/config.py`). No new `HERMES_*` env vars for non-secrets.
+- **Secrets live in `.env`; every behavioral setting in `config.yaml`** (`ev0_cli/config.py`). No new `EV0_*` env vars for non-secrets.
 - **Prompt caching is sacred** — never mutate past context, toolsets, or system prompt mid-conversation (`agent/prompt_cache_boundary.py`).
 - **The core is a narrow waist** — new capability prefers CLI command + skill → service-gated tool → plugin → MCP server → new core tool, in that order (footprint ladder).
 - **Tests run only via `scripts/run_tests.sh`** (CI-parity env, per-file subprocess isolation). Direct `pytest` diverges from CI.
-- **Profile paths** — always `get_hermes_home()` from `ev0_constants`, never hardcoded `~/.hermes`.
+- **Profile paths** — always `get_ev0_home()` from `ev0_constants`, never hardcoded `~/.3V0`.
 - **Git invariant** — 3V0 always commits tracked changes; `memory.db` canonical state is versioned in git.
 - **verify.sh is the done-gate** — body changes are "done" when it passes.
 

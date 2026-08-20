@@ -14,11 +14,11 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from ev0_cli.config import get_hermes_home
+from ev0_cli.config import get_ev0_home
 
 logger = logging.getLogger(__name__)
 
-_SESSIONS_DIR = get_hermes_home() / "sessions"
+_SESSIONS_DIR = get_ev0_home() / "sessions"
 _SESSIONS_INDEX = _SESSIONS_DIR / "sessions.json"
 
 

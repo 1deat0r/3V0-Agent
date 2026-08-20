@@ -1,14 +1,14 @@
-"""hermes-memory-store — holographic memory plugin using MemoryProvider interface.
+"""3v0-memory-store — holographic memory plugin using MemoryProvider interface.
 
 Registers as a MemoryProvider plugin, giving the agent structured fact storage
 with entity resolution, trust scoring, and HRR-based compositional retrieval.
 
 Original plugin by dusterbloom (PR #2351), adapted to the MemoryProvider ABC.
 
-Config in $HERMES_HOME/config.yaml (profile-scoped):
+Config in $EV0_HOME/config.yaml (profile-scoped):
   plugins:
-    hermes-memory-store:
-      db_path: $HERMES_HOME/memory_store.db   # omit to use the default
+    3v0-memory-store:
+      db_path: $EV0_HOME/memory_store.db   # omit to use the default
       auto_extract: false
       default_trust: 0.5
       min_trust_threshold: 0.3
@@ -101,7 +101,7 @@ def _load_plugin_config() -> dict:
         # overlay + ${VAR} expansion (e.g. an api key template) too.
         from ev0_cli.config import load_config_readonly
         all_config = load_config_readonly()
-        return cfg_get(all_config, "plugins", "hermes-memory-store", default={}) or {}
+        return cfg_get(all_config, "plugins", "3v0-memory-store", default={}) or {}
     except Exception:
         return {}
 
@@ -126,10 +126,10 @@ class HolographicMemoryProvider(MemoryProvider):
     def is_available(self) -> bool:
         return True  # SQLite is always available, numpy is optional
 
-    def save_config(self, values, hermes_home):
-        """Write config to config.yaml under plugins.hermes-memory-store."""
+    def save_config(self, values, ev0_home):
+        """Write config to config.yaml under plugins.3v0-memory-store."""
         from pathlib import Path
-        config_path = Path(hermes_home) / "config.yaml"
+        config_path = Path(ev0_home) / "config.yaml"
         try:
             import yaml
             # Write-back round-trip: raw read is correct (merged defaults
@@ -137,15 +137,15 @@ class HolographicMemoryProvider(MemoryProvider):
             from ev0_cli.config import read_user_config_raw
             existing = read_user_config_raw(config_path)
             existing.setdefault("plugins", {})
-            existing["plugins"]["hermes-memory-store"] = values
+            existing["plugins"]["3v0-memory-store"] = values
             with open(config_path, "w", encoding="utf-8") as f:
                 yaml.dump(existing, f, default_flow_style=False)
         except Exception:
             pass
 
     def get_config_schema(self):
-        from ev0_constants import display_hermes_home
-        _default_db = f"{display_hermes_home()}/memory_store.db"
+        from ev0_constants import display_ev0_home
+        _default_db = f"{display_ev0_home()}/memory_store.db"
         return [
             {"key": "db_path", "description": "SQLite database path", "default": _default_db},
             {"key": "auto_extract", "description": "Auto-extract facts at session end", "default": "false", "choices": ["true", "false"]},
@@ -154,16 +154,16 @@ class HolographicMemoryProvider(MemoryProvider):
         ]
 
     def initialize(self, session_id: str, **kwargs) -> None:
-        from ev0_constants import get_hermes_home
-        _hermes_home = str(get_hermes_home())
-        _default_db = _hermes_home + "/memory_store.db"
+        from ev0_constants import get_ev0_home
+        _ev0_home = str(get_ev0_home())
+        _default_db = _ev0_home + "/memory_store.db"
         db_path = self._config.get("db_path", _default_db)
-        # Expand $HERMES_HOME in user-supplied paths so config values like
-        # "$HERMES_HOME/memory_store.db" or "~/.hermes/memory_store.db" both
+        # Expand $EV0_HOME in user-supplied paths so config values like
+        # "$EV0_HOME/memory_store.db" or "~/.3V0/memory_store.db" both
         # resolve to the active profile's directory.
         if isinstance(db_path, str):
-            db_path = db_path.replace("$HERMES_HOME", _hermes_home)
-            db_path = db_path.replace("${HERMES_HOME}", _hermes_home)
+            db_path = db_path.replace("$EV0_HOME", _ev0_home)
+            db_path = db_path.replace("${EV0_HOME}", _ev0_home)
         default_trust = float(self._config.get("default_trust", 0.5))
         hrr_dim = int(self._config.get("hrr_dim", 1024))
         hrr_weight = float(self._config.get("hrr_weight", 0.3))

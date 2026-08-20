@@ -80,7 +80,7 @@ class LedgerEntry:
     delta: str = ""                   # the deliberate, named divergence
     track_upstream: bool = True       # False = deliberate hardfork (behind/ahead
                                       #   is informational, not drift)
-    profile: Optional[str] = None     # the Hermes profile the project runs under
+    profile: Optional[str] = None     # the 3V0 profile the project runs under
     store: Optional[Path] = None      # canonical memory store (None -> not reviewed)
     skill_store: Optional[Path] = None  # None -> memory-only
     primary: bool = False             # fail-open cwd + project to the 3v0 profile

@@ -78,7 +78,7 @@ _open_session_db_at_path = late("_open_session_db_at_path")
 _profile_setup_command = late("_profile_setup_command")
 _profile_to_dict = late("_profile_to_dict")
 _resolve_profile_dir = late("_resolve_profile_dir")
-_spawn_hermes_action = late("_spawn_hermes_action")
+_spawn_ev0_action = late("_spawn_ev0_action")
 _strip_session_list_rows = late("_strip_session_list_rows")
 _write_profile_mcp_servers = late("_write_profile_mcp_servers")
 _write_profile_model = late("_write_profile_model")
@@ -625,7 +625,7 @@ def get_profiles_projects_tree(preview_limit: int = 3, session_limit: int = 2000
     the grouped sidebar had nothing to draw once the user asked for all of
     them. This runs the same authoritative builder once per profile against
     that profile's ``state.db``, scoping the rest of its inputs — projects.db,
-    the repo-scan policy, the HERMES_HOME junk filters — through the
+    the repo-scan policy, the EV0_HOME junk filters — through the
     context-local home override the profile-scoped writers already use.
 
     Projects merge by id across profiles, so a group stands for a checkout
@@ -639,7 +639,7 @@ def get_profiles_projects_tree(preview_limit: int = 3, session_limit: int = 2000
     profile the user is not driving.
     """
     from ev0_cli import profiles as profiles_mod
-    from ev0_constants import reset_hermes_home_override, set_hermes_home_override
+    from ev0_constants import reset_ev0_home_override, set_ev0_home_override
     from tui_gateway import server as gateway_server
 
     try:
@@ -667,7 +667,7 @@ def get_profiles_projects_tree(preview_limit: int = 3, session_limit: int = 2000
             errors.append({"profile": name, "error": str(exc)})
             continue
 
-        token = set_hermes_home_override(str(home))
+        token = set_ev0_home_override(str(home))
         try:
             tree, _active_id = gateway_server._build_project_tree(
                 db,
@@ -682,7 +682,7 @@ def get_profiles_projects_tree(preview_limit: int = 3, session_limit: int = 2000
             _warn_profile_read_error(name, exc)
             errors.append({"profile": name, "error": str(exc)})
         finally:
-            reset_hermes_home_override(token)
+            reset_ev0_home_override(token)
             db.close()
 
     projects = sorted(merged.values(), key=lambda p: p.get("lastActive") or 0, reverse=True)
@@ -867,14 +867,14 @@ async def create_profile_endpoint(body: ProfileCreate):
 
     # Optional skills-hub installs. Spawned async, scoped to the new profile
     # via `-p <name>` (a fresh subprocess re-binds skills_hub.SKILLS_DIR to the
-    # profile's HERMES_HOME at import). Returns PIDs for the UI to poll.
+    # profile's EV0_HOME at import). Returns PIDs for the UI to poll.
     hub_installs: List[Dict[str, Any]] = []
     for identifier in body.hub_skills:
         ident = (identifier or "").strip()
         if not ident:
             continue
         try:
-            proc = _spawn_hermes_action(
+            proc = _spawn_ev0_action(
                 ["-p", body.name, "skills", "install", ident, "--yes"],
                 _hub_action_name("install", ident),
             )
@@ -903,9 +903,9 @@ async def get_active_profile_endpoint():
     """Return the sticky active profile and the profile this dashboard
     process is currently running as.
 
-    ``active`` is the sticky default written by ``hermes profile use`` —
+    ``active`` is the sticky default written by ``3v0 profile use`` —
     the profile new CLI invocations pick up. ``current`` is the profile
-    the running dashboard/gateway is scoped to (derived from HERMES_HOME).
+    the running dashboard/gateway is scoped to (derived from EV0_HOME).
     """
     from ev0_cli import profiles as profiles_mod
     try:
@@ -921,7 +921,7 @@ async def get_active_profile_endpoint():
 
 @router.post("/api/profiles/active")
 async def set_active_profile_endpoint(body: ProfileActiveUpdate):
-    """Set the sticky active profile (mirrors ``hermes profile use``).
+    """Set the sticky active profile (mirrors ``3v0 profile use``).
 
     Note: this does not retarget the already-running dashboard process —
     it changes which profile subsequent CLI commands and gateways use.
@@ -1099,7 +1099,7 @@ async def update_profile_model_endpoint(name: str, body: ProfileModelUpdate):
     """Set the main model (``model.default`` + ``model.provider``) for a
     specific profile's config.yaml, without touching the dashboard's own
     active profile. Mirrors ``POST /api/model/set`` (main scope) but scoped
-    to the named profile via the HERMES_HOME override.
+    to the named profile via the EV0_HOME override.
     """
     profile_dir = _resolve_profile_dir(name)
     provider = (body.provider or "").strip()
@@ -1117,7 +1117,7 @@ async def update_profile_model_endpoint(name: str, body: ProfileModelUpdate):
 @router.post("/api/profiles/{name}/describe-auto")
 async def describe_profile_auto_endpoint(name: str, body: ProfileDescribeAuto):
     """Auto-generate a profile's description via the auxiliary LLM
-    (``auxiliary.profile_describer``). Mirrors ``hermes profile describe
+    (``auxiliary.profile_describer``). Mirrors ``3v0 profile describe
     <name> --auto``.
 
     A failed generation (no aux client, LLM error, …) is returned as
@@ -1144,7 +1144,7 @@ async def describe_profile_auto_endpoint(name: str, body: ProfileDescribeAuto):
 
 # ── Export / Import ──────────────────────────────────────────────────────────
 # Profile sharing for the desktop: wraps ev0_cli.profiles.export_profile /
-# import_profile (the same machinery behind `hermes profile export|import`).
+# import_profile (the same machinery behind `3v0 profile export|import`).
 # Paths are exchanged, not bytes — the desktop's local and pooled backends
 # share the filesystem with the native save/open dialogs that produce them.
 
@@ -1155,8 +1155,8 @@ async def export_profile_endpoint(name: str, body: ProfileExport):
 
     output = (body.output or "").strip()
     if not output:
-        from ev0_constants import get_hermes_home
-        staging = get_hermes_home() / "profile-exports"
+        from ev0_constants import get_ev0_home
+        staging = get_ev0_home() / "profile-exports"
         try:
             staging.mkdir(parents=True, exist_ok=True)
         except OSError as exc:

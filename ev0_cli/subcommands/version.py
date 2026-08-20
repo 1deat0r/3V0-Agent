@@ -1,4 +1,4 @@
-"""``hermes version`` subcommand parser.
+"""``3v0 version`` subcommand parser.
 
 Extracted verbatim from ``ev0_cli/main.py:main()`` (god-file Phase 2).
 Handler injected to avoid importing ``main``.

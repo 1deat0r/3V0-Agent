@@ -1,6 +1,6 @@
 """Welcome banner, ASCII art, skills summary, and update check for the CLI.
 
-Pure display functions with no HermesCLI state dependency.
+Pure display functions with no Ev0CLI state dependency.
 """
 import json
 import logging
@@ -11,7 +11,7 @@ import threading
 import time
 from pathlib import Path
 from urllib.parse import urlparse
-from ev0_constants import get_hermes_home
+from ev0_constants import get_ev0_home
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 # rich and prompt_toolkit are imported lazily (inside the functions that use
@@ -44,7 +44,7 @@ def cprint(text: str):
         _pt_print(_PT_ANSI(text))
     except Exception:
         # prompt_toolkit needs a real console. On Windows, a redirected or
-        # absent stdout (pythonw.exe, CI, `hermes ... > file`) raises
+        # absent stdout (pythonw.exe, CI, `3v0 ... > file`) raises
         # NoConsoleScreenBufferError from its Win32Output — display helpers
         # must never crash the caller over that, so degrade to plain print.
         print(text)
@@ -67,14 +67,14 @@ def _skin_color(key: str, fallback: str) -> str:
 
 from ev0_cli import __version__ as VERSION, __release_date__ as RELEASE_DATE
 
-HERMES_AGENT_LOGO = """[bold #FFD700]██╗  ██╗███████╗██████╗ ███╗   ███╗███████╗███████╗       █████╗  ██████╗ ███████╗███╗   ██╗████████╗[/]
+EV0_AGENT_LOGO = """[bold #FFD700]██╗  ██╗███████╗██████╗ ███╗   ███╗███████╗███████╗       █████╗  ██████╗ ███████╗███╗   ██╗████████╗[/]
 [bold #FFD700]██║  ██║██╔════╝██╔══██╗████╗ ████║██╔════╝██╔════╝      ██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝[/]
 [#FFBF00]███████║█████╗  ██████╔╝██╔████╔██║█████╗  ███████╗█████╗███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║[/]
 [#FFBF00]██╔══██║██╔══╝  ██╔══██╗██║╚██╔╝██║██╔══╝  ╚════██║╚════╝██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║[/]
 [#CD7F32]██║  ██║███████╗██║  ██║██║ ╚═╝ ██║███████╗███████║      ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║[/]
 [#CD7F32]╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝      ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝[/]"""
 
-HERMES_CADUCEUS = """[#CD7F32]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⣀⣀⠀⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
+EV0_CADUCEUS = """[#CD7F32]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⣀⣀⠀⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
 [#CD7F32]⠀⠀⠀⠀⠀⠀⢀⣠⣴⣾⣿⣿⣇⠸⣿⣿⠇⣸⣿⣿⣷⣦⣄⡀⠀⠀⠀⠀⠀⠀[/]
 [#FFBF00]⠀⢀⣠⣴⣶⠿⠋⣩⡿⣿⡿⠻⣿⡇⢠⡄⢸⣿⠟⢿⣿⢿⣍⠙⠿⣶⣦⣄⡀⠀[/]
 [#FFBF00]⠀⠀⠉⠉⠁⠶⠟⠋⠀⠉⠀⢀⣈⣁⡈⢁⣈⣁⡀⠀⠉⠀⠙⠻⠶⠈⠉⠉⠀⠀[/]
@@ -135,11 +135,11 @@ def get_available_skills() -> Dict[str, List[str]]:
 _UPDATE_CHECK_CACHE_SECONDS = 6 * 3600
 
 # Sentinel returned when we know an update exists but can't count commits
-# (e.g. nix-built hermes — no local git history to count against).
+# (e.g. nix-built 3v0 — no local git history to count against).
 UPDATE_AVAILABLE_NO_COUNT = -1
 
-_UPSTREAM_REPO_URL = "https://github.com/NousResearch/hermes-agent.git"
-_OFFICIAL_REPO_CANONICAL = "github.com/nousresearch/hermes-agent"
+_UPSTREAM_REPO_URL = "https://github.com/NousResearch/3v0-agent.git"
+_OFFICIAL_REPO_CANONICAL = "github.com/nousresearch/3v0-agent"
 
 
 def _canonical_github_remote(url: str | None) -> str:
@@ -207,7 +207,7 @@ def _github_compare_behind(current_rev: str, target_rev: str) -> Optional[int]:
     if not (_is_full_sha(current_rev) and _is_full_sha(target_rev)):
         return None
     url = (
-        "https://api.github.com/repos/nousresearch/hermes-agent/"
+        "https://api.github.com/repos/nousresearch/3v0-agent/"
         f"compare/{current_rev}...{target_rev}"
     )
     try:
@@ -218,7 +218,7 @@ def _github_compare_behind(current_rev: str, target_rev: str) -> Optional[int]:
             headers={
                 "Accept": "application/vnd.github+json",
                 # api.github.com 403s requests without a User-Agent.
-                "User-Agent": "hermes-cli-update-check",
+                "User-Agent": "3v0-cli-update-check",
             },
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
@@ -285,7 +285,7 @@ def _check_via_local_git(repo_dir: Path) -> Optional[int]:
         # Passive probe via HTTPS ls-remote (never SSH — no hardware-key
         # prompts). Tip SHAs alone can't distinguish "behind" from a local
         # carried commit sitting AHEAD of origin/main, and misreporting an
-        # ahead checkout as behind nudges the user into `hermes update`,
+        # ahead checkout as behind nudges the user into `3v0 update`,
         # which can wipe their carried work.
         upstream_rev = _upstream_main_sha()
         if upstream_rev is None:
@@ -383,9 +383,9 @@ def _check_via_local_git(repo_dir: Path) -> Optional[int]:
 
 
 def check_for_updates() -> Optional[int]:
-    """Check whether a Hermes update is available.
+    """Check whether a 3V0 update is available.
 
-    Two paths: if ``HERMES_REVISION`` is set (nix builds embed it), compare
+    Two paths: if ``EV0_REVISION`` is set (nix builds embed it), compare
     it to upstream main via ``git ls-remote``. Otherwise look for a local
     git checkout and count commits behind ``origin/main``.
 
@@ -393,16 +393,16 @@ def check_for_updates() -> Optional[int]:
     if behind but the count is unknown, ``0`` if up-to-date, or ``None`` if
     the check failed or doesn't apply. Cached for 6 hours.
     """
-    hermes_home = get_hermes_home()
-    cache_file = hermes_home / ".update_check"
-    embedded_rev = os.environ.get("HERMES_REVISION") or None
+    ev0_home = get_ev0_home()
+    cache_file = ev0_home / ".update_check"
+    embedded_rev = os.environ.get("EV0_REVISION") or None
 
     # Docker images have no working tree to count commits against — the
     # published image excludes `.git` (see .dockerignore) and sets no
-    # HERMES_REVISION (that's nix-only). Returning None makes both the Rich
+    # EV0_REVISION (that's nix-only). Returning None makes both the Rich
     # banner (build_welcome_banner) and the Ink badge (branding.tsx, guarded
     # on `typeof === 'number' && > 0`) show nothing. The dashboard's REST
-    # `/api/hermes/update/check` endpoint short-circuits docker the same way
+    # `/api/3v0/update/check` endpoint short-circuits docker the same way
     # (web_server.py); mirror that here so the banner/TUI surfaces agree.
     try:
         from ev0_cli.config import detect_install_method, get_project_root
@@ -430,11 +430,11 @@ def check_for_updates() -> Optional[int]:
         behind = _check_via_rev(embedded_rev)
     else:
         # Prefer the running code's location over the profile-scoped path.
-        # $HERMES_HOME/hermes-agent/ may be a stale copy from --clone-all;
+        # $EV0_HOME/3v0-agent/ may be a stale copy from --clone-all;
         # Path(__file__) always resolves to the actual installed checkout.
         repo_dir = Path(__file__).parent.parent.resolve()
         if not (repo_dir / ".git").exists():
-            repo_dir = hermes_home / "hermes-agent"
+            repo_dir = ev0_home / "3v0-agent"
         if not (repo_dir / ".git").exists():
             # No git checkout and no embedded revision — can't determine
             # update status. This is the Docker path (already short-circuited
@@ -455,16 +455,16 @@ def check_for_updates() -> Optional[int]:
 
 
 def _resolve_repo_dir() -> Optional[Path]:
-    """Return the active Hermes git checkout, or None if this isn't a git install.
+    """Return the active 3V0 git checkout, or None if this isn't a git install.
 
     Prefers the running code's location over the profile-scoped path
-    because ``$HERMES_HOME/hermes-agent/`` may be a stale copy carried
+    because ``$EV0_HOME/3v0-agent/`` may be a stale copy carried
     over by ``--clone-all``.
     """
     repo_dir = Path(__file__).parent.parent.resolve()
     if not (repo_dir / ".git").exists():
-        hermes_home = get_hermes_home()
-        repo_dir = hermes_home / "hermes-agent"
+        ev0_home = get_ev0_home()
+        repo_dir = ev0_home / "3v0-agent"
     return repo_dir if (repo_dir / ".git").exists() else None
 
 
@@ -565,7 +565,7 @@ def _compute_git_banner_state(repo_dir: Optional[Path] = None) -> Optional[dict]
     return {"upstream": upstream, "local": local, "ahead": max(ahead, 0)}
 
 
-_RELEASE_URL_BASE = "https://github.com/NousResearch/hermes-agent/releases/tag"
+_RELEASE_URL_BASE = "https://github.com/NousResearch/3v0-agent/releases/tag"
 _latest_release_cache: Optional[tuple] = None  # (tag, url) once resolved
 
 
@@ -573,8 +573,8 @@ def get_latest_release_tag(repo_dir: Optional[Path] = None) -> Optional[tuple]:
     """Return ``(tag, release_url)`` for the latest git tag, or None.
 
     Local-only — runs ``git describe --tags --abbrev=0`` against the
-    Hermes checkout. Cached per-process. Release URL always points at the
-    canonical NousResearch/hermes-agent repo (forks don't get a link).
+    3V0 checkout. Cached per-process. Release URL always points at the
+    canonical NousResearch/3v0-agent repo (forks don't get a link).
     """
     global _latest_release_cache
     if _latest_release_cache is not None:
@@ -700,7 +700,7 @@ def _format_update_notice(behind: int) -> str:
             f"[bold yellow]⚠ {behind} {commits_word} behind[/]"
             f"[dim yellow] — run [bold]{recommended_update_command()}[/bold] to update[/]"
         )
-    # UPDATE_AVAILABLE_NO_COUNT: nix-built hermes; we know an update
+    # UPDATE_AVAILABLE_NO_COUNT: nix-built 3v0; we know an update
     # exists but not by how much, and we don't know how the user
     # installed it (nix run, profile, system flake, home-manager).
     managed_cmd = get_managed_update_command()
@@ -790,7 +790,7 @@ _BANNER_SNAPSHOT_VERSION = 1
 
 
 def _banner_snapshot_path() -> Path:
-    return get_hermes_home() / "cache" / "banner_snapshot.json"
+    return get_ev0_home() / "cache" / "banner_snapshot.json"
 
 
 def banner_snapshot_fingerprint() -> Optional[str]:
@@ -799,7 +799,7 @@ def banner_snapshot_fingerprint() -> Optional[str]:
     parts = [f"v{_BANNER_SNAPSHOT_VERSION}"]
     try:
         from ev0_cli.config import get_config_path
-        for p in (get_config_path(), get_hermes_home() / ".env"):
+        for p in (get_config_path(), get_ev0_home() / ".env"):
             try:
                 st = p.stat()
                 parts.append(f"{p.name}:{st.st_mtime_ns}:{st.st_size}")
@@ -980,10 +980,10 @@ def build_welcome_banner(console: "Console", model: str, cwd: str,
     try:
         from ev0_cli.skin_engine import get_active_skin
         _bskin = get_active_skin()
-        _hero = _bskin.banner_hero if hasattr(_bskin, 'banner_hero') and _bskin.banner_hero else HERMES_CADUCEUS
+        _hero = _bskin.banner_hero if hasattr(_bskin, 'banner_hero') and _bskin.banner_hero else EV0_CADUCEUS
     except Exception:
         _bskin = None
-        _hero = HERMES_CADUCEUS
+        _hero = EV0_CADUCEUS
     left_lines = ["", _hero, ""]
     if (provider or "").strip().lower() == "moa":
         # MoA virtual provider: ``model`` is a preset name. Show the preset and
@@ -1014,7 +1014,7 @@ def build_welcome_banner(console: "Console", model: str, cwd: str,
             # is wrong and how to fix it.
             left_lines.append(
                 f"[bold red]no model configured[/] "
-                f"[dim {dim}]— run /model or hermes setup[/]"
+                f"[dim {dim}]— run /model or 3v0 setup[/]"
             )
         else:
             model_short = model.split("/")[-1] if "/" in model else model
@@ -1025,7 +1025,7 @@ def build_welcome_banner(console: "Console", model: str, cwd: str,
             ctx_str = f" [dim {dim}]·[/] [dim {dim}]{_format_context_length(context_length)} context[/]" if context_length else ""
             left_lines.append(f"[{accent}]{model_short}[/]{ctx_str} [dim {dim}]·[/] [dim {dim}]Nous Research[/]")
 
-    if os.getenv("HERMES_YOLO_MODE"):
+    if os.getenv("EV0_YOLO_MODE"):
         left_lines.append(f"[bold red]⚠ YOLO mode[/] [dim {dim}]— all approval prompts bypassed[/]")
     left_lines.append(f"[dim {dim}]{cwd}[/]")
     if session_id:
@@ -1262,7 +1262,7 @@ def build_welcome_banner(console: "Console", model: str, cwd: str,
     console.print()
     term_width = shutil.get_terminal_size().columns
     if term_width >= 95:
-        _logo = _bskin.banner_logo if _bskin and hasattr(_bskin, 'banner_logo') and _bskin.banner_logo else HERMES_AGENT_LOGO
+        _logo = _bskin.banner_logo if _bskin and hasattr(_bskin, 'banner_logo') and _bskin.banner_logo else EV0_AGENT_LOGO
         console.print(_logo)
         console.print()
     console.print(outer_panel)

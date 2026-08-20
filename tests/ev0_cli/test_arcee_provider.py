@@ -145,9 +145,9 @@ class TestArceeURLMapping:
 
 class TestArceeProvidersModule:
     def test_overlay_exists(self):
-        from ev0_cli.providers import HERMES_OVERLAYS
-        assert "arcee" in HERMES_OVERLAYS
-        overlay = HERMES_OVERLAYS["arcee"]
+        from ev0_cli.providers import EV0_OVERLAYS
+        assert "arcee" in EV0_OVERLAYS
+        overlay = EV0_OVERLAYS["arcee"]
         assert overlay.transport == "openai_chat"
         assert overlay.base_url_env_var == "ARCEE_BASE_URL"
         assert not overlay.is_aggregator

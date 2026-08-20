@@ -1,6 +1,6 @@
-"""Tests for ``hermes approvals suggest`` (ev0_cli/approvals_suggest.py).
+"""Tests for ``3v0 approvals suggest`` (ev0_cli/approvals_suggest.py).
 
-Approval history in Hermes is implied, not ledgered: the session DB
+Approval history in 3V0 is implied, not ledgered: the session DB
 (state.db) stores every assistant ``terminal`` tool call plus its paired
 ``role='tool'`` result. A dangerous-classified command whose result is not a
 BLOCKED/denied/pending marker ran with user consent. These tests build

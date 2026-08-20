@@ -92,9 +92,9 @@ def is_container_startup_environment() -> bool:
     return "docker" in cgroup or "podman" in cgroup or "/lxc/" in cgroup
 
 
-def active_profile_may_override_home(hermes_root: str) -> bool:
-    """Cheap probe: does an active non-default profile redirect HERMES_HOME?"""
-    active_profile = os.path.join(hermes_root, "active_profile")
+def active_profile_may_override_home(ev0_root: str) -> bool:
+    """Cheap probe: does an active non-default profile redirect EV0_HOME?"""
+    active_profile = os.path.join(ev0_root, "active_profile")
     try:
         if os.path.exists(active_profile):
             with open(active_profile, encoding="utf-8") as handle:
@@ -106,10 +106,10 @@ def active_profile_may_override_home(hermes_root: str) -> bool:
 
 
 def _resolved_home() -> str:
-    hermes_home = os.environ.get("HERMES_HOME", "").strip()
-    if hermes_home:
-        return hermes_home
-    return os.path.join(os.path.expanduser("~"), ".hermes")
+    ev0_home = os.environ.get("EV0_HOME", "").strip()
+    if ev0_home:
+        return ev0_home
+    return os.path.join(os.path.expanduser("~"), ".3V0")
 
 
 def container_mode_may_be_active() -> bool:
@@ -121,22 +121,22 @@ def container_mode_may_be_active() -> bool:
     host's version instead of the container's. Hence: any profile
     ambiguity → assume container mode may be active.
     """
-    if os.environ.get("HERMES_DEV") == "1":
+    if os.environ.get("EV0_DEV") == "1":
         return False
     if is_container_startup_environment():
         return False
 
-    hermes_home = os.environ.get("HERMES_HOME", "").strip()
-    if hermes_home:
-        if os.path.exists(os.path.join(hermes_home, ".container-mode")):
+    ev0_home = os.environ.get("EV0_HOME", "").strip()
+    if ev0_home:
+        if os.path.exists(os.path.join(ev0_home, ".container-mode")):
             return True
-        parent_name = os.path.basename(os.path.dirname(os.path.normpath(hermes_home)))
+        parent_name = os.path.basename(os.path.dirname(os.path.normpath(ev0_home)))
         return (
             parent_name != "profiles"
-            and active_profile_may_override_home(hermes_home)
+            and active_profile_may_override_home(ev0_home)
         )
 
-    default_home = os.path.join(os.path.expanduser("~"), ".hermes")
+    default_home = os.path.join(os.path.expanduser("~"), ".3V0")
     if active_profile_may_override_home(default_home):
         return True
     return os.path.exists(os.path.join(default_home, ".container-mode"))
@@ -169,7 +169,7 @@ def read_install_method() -> str | None:
     order) — the managed/git/pip fallbacks need heavier imports and stay on
     the slow path. On the fast path home ambiguity is already excluded:
     ``container_mode_may_be_active()`` bails to the slow path whenever a
-    non-default profile might redirect HERMES_HOME.
+    non-default profile might redirect EV0_HOME.
     """
     stamp = os.path.join(_resolved_home(), ".install_method")
     try:
@@ -193,14 +193,14 @@ def print_fast_version_info() -> None:
 
     openai_version = read_openai_version()
     print(f"OpenAI SDK: {openai_version}" if openai_version else "OpenAI SDK: Not installed")
-    print("Run 'hermes version' for update status.")
+    print("Run '3v0 version' for update status.")
 
 
 def try_fast_version(argv: list[str] | None = None) -> bool:
-    """Handle ``hermes --version`` before the heavy import wall.
+    """Handle ``3v0 --version`` before the heavy import wall.
 
     Termux keeps its historical contract (also accepts the ``version``
-    subcommand + the HERMES_TERMUX_DISABLE_FAST_CLI escape hatch). Everywhere
+    subcommand + the EV0_TERMUX_DISABLE_FAST_CLI escape hatch). Everywhere
     else: only ``--version``/``-V`` (the ``version`` subcommand stays on the
     slow path for full output incl. update check), and never when container
     mode may need to route the command into the container.
@@ -208,7 +208,7 @@ def try_fast_version(argv: list[str] | None = None) -> bool:
     if argv is None:
         argv = sys.argv[1:]
     is_termux = is_termux_env()
-    if is_termux and os.environ.get("HERMES_TERMUX_DISABLE_FAST_CLI") == "1":
+    if is_termux and os.environ.get("EV0_TERMUX_DISABLE_FAST_CLI") == "1":
         return False
     if is_termux:
         if not is_termux_fast_version_argv(argv):

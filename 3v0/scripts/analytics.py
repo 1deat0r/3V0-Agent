@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """3V0 self-analytics — aggregate the session DB into an owned report.
 
-Reads Hermes's state.db (sessions, messages, session_model_usage) and turns
+Reads 3V0's state.db (sessions, messages, session_model_usage) and turns
 it into a self-owned analytics report: per-tool frequency / latency / success,
 per-model tokens / cost, per-day burn, and body-health signals.
 
@@ -31,7 +31,7 @@ from core.analytics_collect import build_events, load_sessions, load_usage  # no
 
 DEFAULT_DB = Path(os.environ.get(
     "THREEV0_STATE_DB",
-    os.path.expanduser("~/.hermes/profiles/3v0/state.db"),
+    os.path.expanduser("~/.3V0/profiles/3v0/state.db"),
 ))
 DEFAULT_REPORT = REPO_ROOT / "3v0" / "data" / "analytics" / "report.json"
 

@@ -84,7 +84,7 @@ def _credential_headers() -> dict[str, str]:
         "CF-Access-Client-Secret": "cloudflare-secret",
         "X-Custom-Auth": "tenant-secret",
         "Accept": "application/json",
-        "User-Agent": "hermes-test",
+        "User-Agent": "3v0-test",
     }
 
 
@@ -108,7 +108,7 @@ def test_cross_host_redirect_drops_arbitrary_credentials_on_wire():
     method, headers = _RecordingHandler.requests[-1]
     assert method == "GET"
     assert headers["accept"] == "application/json"
-    assert headers["user-agent"] == "hermes-test"
+    assert headers["user-agent"] == "3v0-test"
     for name in (
         "authorization",
         "cookie",
@@ -383,7 +383,7 @@ def test_azure_anthropic_probe_drops_api_key_and_bearer_on_redirect():
 
 def _clear_ca_bundle_env(monkeypatch) -> None:
     for name in (
-        "HERMES_CA_BUNDLE",
+        "EV0_CA_BUNDLE",
         "SSL_CERT_FILE",
         "REQUESTS_CA_BUNDLE",
         "CURL_CA_BUNDLE",
@@ -391,7 +391,7 @@ def _clear_ca_bundle_env(monkeypatch) -> None:
         monkeypatch.delenv(name, raising=False)
 
 
-def test_hermes_owned_opener_uses_resolved_https_context(monkeypatch):
+def test_ev0_owned_opener_uses_resolved_https_context(monkeypatch):
     import ev0_cli.urllib_security as urllib_security
 
     context = ssl.create_default_context()
@@ -424,7 +424,7 @@ def test_resolved_https_context_prefers_configured_ca_bundle(monkeypatch, tmp_pa
         seen.append(cafile)
         return expected_context
 
-    monkeypatch.setenv("HERMES_CA_BUNDLE", str(ca_bundle))
+    monkeypatch.setenv("EV0_CA_BUNDLE", str(ca_bundle))
     monkeypatch.setattr(ssl, "create_default_context", create_default_context)
 
     assert urllib_security._resolved_https_context() is expected_context
@@ -464,7 +464,7 @@ def test_invalid_ca_bundle_falls_back_to_certifi_on_macos(monkeypatch, tmp_path)
         seen.append(cafile)
         return expected_context
 
-    monkeypatch.setenv("HERMES_CA_BUNDLE", str(missing_bundle))
+    monkeypatch.setenv("EV0_CA_BUNDLE", str(missing_bundle))
     monkeypatch.setattr(urllib_security.sys, "platform", "darwin")
     monkeypatch.setattr(certifi, "where", lambda: "/certifi/cacert.pem")
     monkeypatch.setattr(ssl, "create_default_context", create_default_context)

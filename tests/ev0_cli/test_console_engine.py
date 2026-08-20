@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ev0_cli.console_engine import HermesConsoleEngine, run_console_repl
+from ev0_cli.console_engine import Ev0ConsoleEngine, run_console_repl
 
 
 EXPECTED_CONSOLE_COMMANDS = {
@@ -214,8 +214,8 @@ MUTATING_CONFIRMATION_SMOKE_COMMANDS = [
     "mcp add demo --url https://example.com/sse",
     "mcp configure github",
     "mcp picker",
-    "backup --quick -o /tmp/hermes-console-test.zip",
-    "import /tmp/hermes-console-test.zip",
+    "backup --quick -o /tmp/3v0-console-test.zip",
+    "import /tmp/3v0-console-test.zip",
     "send --to telegram hello",
     "memory reset --target memory",
     "auth remove openrouter 1",
@@ -241,7 +241,7 @@ MUTATING_CONFIRMATION_SMOKE_COMMANDS = [
 
 
 
-def test_sessions_list_and_stats_use_isolated_session_store(_isolate_hermes_home):
+def test_sessions_list_and_stats_use_isolated_session_store(_isolate_ev0_home):
     from ev0_state import SessionDB
 
     db = SessionDB()
@@ -251,7 +251,7 @@ def test_sessions_list_and_stats_use_isolated_session_store(_isolate_hermes_home
     finally:
         db.close()
 
-    engine = HermesConsoleEngine()
+    engine = Ev0ConsoleEngine()
     listed = engine.execute("sessions list --limit 10")
     stats = engine.execute("sessions stats")
 
@@ -263,7 +263,7 @@ def test_sessions_list_and_stats_use_isolated_session_store(_isolate_hermes_home
 
 
 def test_sessions_export_rejects_oversized_single_before_touching_output(
-    _isolate_hermes_home,
+    _isolate_ev0_home,
     monkeypatch,
     tmp_path,
 ):
@@ -292,7 +292,7 @@ def test_sessions_export_rejects_oversized_single_before_touching_output(
     output = tmp_path / "sessions.jsonl"
     output.write_text("keep me\n", encoding="utf-8")
 
-    result = HermesConsoleEngine().execute(
+    result = Ev0ConsoleEngine().execute(
         f"sessions export {output} --session-id too-large",
         confirmed=True,
     )
@@ -306,7 +306,7 @@ def test_sessions_export_rejects_oversized_single_before_touching_output(
 
 
 def test_sessions_export_all_uses_per_session_budget(
-    _isolate_hermes_home,
+    _isolate_ev0_home,
     monkeypatch,
     tmp_path,
 ):
@@ -336,7 +336,7 @@ def test_sessions_export_all_uses_per_session_budget(
 
     # 3 sessions x 2 messages = 6 total > 3, but each session is under the
     # per-session limit, so the full-DB export succeeds.
-    result = HermesConsoleEngine().execute(
+    result = Ev0ConsoleEngine().execute(
         f"sessions export {output}",
         confirmed=True,
     )
@@ -354,7 +354,7 @@ def test_sessions_export_all_uses_per_session_budget(
 
 
 def test_sessions_export_all_rejects_single_oversized_session(
-    _isolate_hermes_home,
+    _isolate_ev0_home,
     monkeypatch,
     tmp_path,
 ):
@@ -386,7 +386,7 @@ def test_sessions_export_all_rejects_single_oversized_session(
     monkeypatch.setattr(SessionDB, "export_all", tracked_export_all)
     output = tmp_path / "all-sessions.jsonl"
 
-    result = HermesConsoleEngine().execute(
+    result = Ev0ConsoleEngine().execute(
         f"sessions export {output}",
         confirmed=True,
     )
@@ -401,7 +401,7 @@ def test_sessions_export_all_rejects_single_oversized_session(
 
 
 def test_sessions_export_zero_limit_disables_guard(
-    _isolate_hermes_home,
+    _isolate_ev0_home,
     monkeypatch,
     tmp_path,
 ):
@@ -421,7 +421,7 @@ def test_sessions_export_zero_limit_disables_guard(
     monkeypatch.setattr(ev0_state, "resolved_max_export_messages", lambda: 0)
     output = tmp_path / "huge.jsonl"
 
-    result = HermesConsoleEngine().execute(
+    result = Ev0ConsoleEngine().execute(
         f"sessions export {output} --session-id huge",
         confirmed=True,
     )
@@ -429,11 +429,11 @@ def test_sessions_export_zero_limit_disables_guard(
     assert output.exists()
 
 
-def test_cron_pause_resume_and_run_require_confirmation(_isolate_hermes_home):
+def test_cron_pause_resume_and_run_require_confirmation(_isolate_ev0_home):
     from cron.jobs import create_job, get_job
 
     job = create_job(prompt="say hello", schedule="every 1h", name="alpha")
-    engine = HermesConsoleEngine()
+    engine = Ev0ConsoleEngine()
 
     pending = engine.execute(f"cron pause {job['id']}")
     assert pending.status == "confirm_required"
@@ -458,7 +458,7 @@ def test_cron_pause_resume_and_run_require_confirmation(_isolate_hermes_home):
     assert "Triggered job" in triggered.output
 
 
-def test_repl_runs_non_interactive_lines_without_prompts(_isolate_hermes_home):
+def test_repl_runs_non_interactive_lines_without_prompts(_isolate_ev0_home):
     stdin = io.StringIO("help\nexit\n")
     stdout = io.StringIO()
     stderr = io.StringIO()
@@ -471,8 +471,8 @@ def test_repl_runs_non_interactive_lines_without_prompts(_isolate_hermes_home):
     )
 
     assert code == 0
-    assert "Hermes Console" in stdout.getvalue()
-    assert "hermes>" not in stdout.getvalue()
+    assert "3V0 Console" in stdout.getvalue()
+    assert "3v0>" not in stdout.getvalue()
     assert stderr.getvalue() == ""
 
 
@@ -497,8 +497,8 @@ def test_capture_output_preserves_integer_exit_code_message():
     assert "status 3" in str(exc_info.value)
 
 
-def test_execute_handler_string_exit_returns_error_not_crash(_isolate_hermes_home):
-    result = HermesConsoleEngine().execute(
+def test_execute_handler_string_exit_returns_error_not_crash(_isolate_ev0_home):
+    result = Ev0ConsoleEngine().execute(
         "auth remove openrouter __no_such_credential__", confirmed=True
     )
 
@@ -534,7 +534,7 @@ def _patch_checkpoint_manager(monkeypatch, prune_calls: list) -> None:
 
 
 def test_console_checkpoints_prune_does_not_reprompt_for_orphans(
-    _isolate_hermes_home, monkeypatch
+    _isolate_ev0_home, monkeypatch
 ):
     """`checkpoints prune` is console-mutating, so the nested prompt must be skipped.
 
@@ -553,7 +553,7 @@ def test_console_checkpoints_prune_does_not_reprompt_for_orphans(
 
     monkeypatch.setattr("builtins.input", _unexpected_input)
 
-    result = HermesConsoleEngine().execute("checkpoints prune", confirmed=True)
+    result = Ev0ConsoleEngine().execute("checkpoints prune", confirmed=True)
 
     assert result.status == "ok"
     assert len(prune_calls) == 1
@@ -564,7 +564,7 @@ def test_console_checkpoints_prune_does_not_reprompt_for_orphans(
 
 
 def test_console_checkpoints_prune_succeeds_without_a_tty(
-    _isolate_hermes_home, monkeypatch
+    _isolate_ev0_home, monkeypatch
 ):
     """The dashboard console has no stdin, so an unskipped prompt aborts the command.
 
@@ -580,7 +580,7 @@ def test_console_checkpoints_prune_succeeds_without_a_tty(
 
     monkeypatch.setattr("builtins.input", _eof_input)
 
-    result = HermesConsoleEngine().execute("checkpoints prune", confirmed=True)
+    result = Ev0ConsoleEngine().execute("checkpoints prune", confirmed=True)
 
     assert result.status == "ok"
     assert "Aborted." not in result.output

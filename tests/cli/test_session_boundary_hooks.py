@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 from types import SimpleNamespace
 from ev0_cli.plugins import VALID_HOOKS, PluginManager
-from cli import HermesCLI
+from cli import Ev0CLI
 
 
 def test_session_hooks_in_valid_hooks():
@@ -17,7 +17,7 @@ def test_session_hooks_in_valid_hooks():
 @patch("ev0_cli.lifecycle.finalize_session")
 def test_session_finalize_on_reset(mock_finalize_session, mock_invoke_hook):
     """Verify on_session_finalize fires when /new or /reset is used."""
-    cli = HermesCLI()
+    cli = Ev0CLI()
     cli.agent = MagicMock()
     cli.agent.session_id = "test-session-id"
 

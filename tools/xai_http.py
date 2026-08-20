@@ -17,7 +17,7 @@ def has_xai_credentials() -> bool:
     """Cheap probe — return True when xAI credentials are *likely* usable.
 
     Deliberately avoids :func:`resolve_xai_http_credentials` so callers in
-    hot-paint paths (``hermes tools`` repaint, tool-registration scans,
+    hot-paint paths (``3v0 tools`` repaint, tool-registration scans,
     ``WebSearchProvider.is_available()``) don't incur disk locks or — in
     the OAuth path — a network token refresh. The ABC contract on
     :meth:`agent.web_search_provider.WebSearchProvider.is_available`
@@ -26,10 +26,10 @@ def has_xai_credentials() -> bool:
     Resolution order, fast-to-slow:
 
     1. ``XAI_API_KEY`` env var (cheapest; covers explicit-key users).
-    2. ``~/.hermes/auth.json`` has a non-empty ``providers.xai-oauth.tokens.access_token``
+    2. ``~/.3V0/auth.json`` has a non-empty ``providers.xai-oauth.tokens.access_token``
        (single file read, no expiry check, no refresh).
     3. ``credential_pool.xai-oauth`` has any entry with a non-empty
-       ``access_token`` (covers multi-account ``hermes auth add xai-oauth``
+       ``access_token`` (covers multi-account ``3v0 auth add xai-oauth``
        grants that are pool-only / ``manual:device_code``).
 
     Returns False on any exception so a corrupted auth store can't block
@@ -45,9 +45,9 @@ def has_xai_credentials() -> bool:
         if (get_secret("XAI_API_KEY", "") or "").strip():
             return True
     try:
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        auth_path = get_hermes_home() / "auth.json"
+        auth_path = get_ev0_home() / "auth.json"
         if not auth_path.exists():
             return False
         store = json.loads(auth_path.read_text(encoding="utf-8-sig"))
@@ -77,42 +77,42 @@ def has_xai_credentials() -> bool:
 
 
 def get_env_value(name: str, default=None):
-    """Read ``name`` from ``~/.hermes/.env`` first, then ``os.environ``.
+    """Read ``name`` from ``~/.3V0/.env`` first, then ``os.environ``.
 
     Wraps :func:`ev0_cli.config.get_env_value` so tests can patch
     ``tools.xai_http.get_env_value`` to inject dotenv-only secrets into the
     xAI credential resolver.
     """
     try:
-        from ev0_cli.config import get_env_value as _hermes_get_env_value
+        from ev0_cli.config import get_env_value as _ev0_get_env_value
     except ImportError:
         return os.environ.get(name, default)
 
-    value = _hermes_get_env_value(name)
+    value = _ev0_get_env_value(name)
     return value if value is not None else default
 
 
-def hermes_xai_user_agent() -> str:
-    """Return a stable Hermes-specific User-Agent for xAI HTTP calls."""
+def ev0_xai_user_agent() -> str:
+    """Return a stable 3V0-specific User-Agent for xAI HTTP calls."""
     try:
         from ev0_cli import __version__
     except Exception:
         __version__ = "unknown"
-    return f"Hermes-Agent/{__version__}"
+    return f"3V0-Agent/{__version__}"
 
 
-def hermes_xai_default_headers() -> Dict[str, str]:
+def ev0_xai_default_headers() -> Dict[str, str]:
     """Default headers for OpenAI-SDK and raw HTTP clients talking to xAI.
 
     Replaces the OpenAI Python SDK's identifying ``User-Agent: OpenAI/Python …``
-    so chat/completions and Responses traffic is attributed as Hermes Agent,
+    so chat/completions and Responses traffic is attributed as 3V0 Agent,
     matching the direct HTTP integrations (search, TTS, STT, image, video).
     """
-    return {"User-Agent": hermes_xai_user_agent()}
+    return {"User-Agent": ev0_xai_user_agent()}
 
 
 def _load_config_section(section_name: str) -> Dict[str, Any]:
-    """Return a top-level Hermes config section as a dict, or empty."""
+    """Return a top-level 3V0 config section as a dict, or empty."""
     try:
         from ev0_cli.config import load_config
 
@@ -236,14 +236,14 @@ def xai_storage_notice_text(section_name: str) -> str:
 
 
 def maybe_mark_xai_storage_notice_seen(section_name: str) -> Optional[str]:
-    """Return the storage notice once per Hermes home, then mark it seen."""
+    """Return the storage notice once per 3V0 home, then mark it seen."""
     notice = xai_storage_notice_text(section_name)
     if not notice:
         return None
     try:
-        from ev0_constants import get_hermes_home
+        from ev0_constants import get_ev0_home
 
-        marker_dir = get_hermes_home() / "state"
+        marker_dir = get_ev0_home() / "state"
         marker_dir.mkdir(parents=True, exist_ok=True)
         marker = marker_dir / f"{section_name}_xai_storage_notice_seen"
         if marker.exists():
@@ -261,9 +261,9 @@ def resolve_xai_http_credentials(
 ) -> Dict[str, str]:
     """Resolve bearer credentials for direct xAI HTTP endpoints.
 
-    Prefers Hermes-managed xAI OAuth credentials when available, then falls back
+    Prefers 3V0-managed xAI OAuth credentials when available, then falls back
     to ``XAI_API_KEY`` resolved via ``ev0_cli.config.get_env_value`` so keys
-    stored in ``~/.hermes/.env`` (the standard Hermes location) are honored —
+    stored in ``~/.3V0/.env`` (the standard 3V0 location) are honored —
     not just ones already exported into ``os.environ``. This keeps direct xAI
     endpoints (images, TTS, STT, etc.) aligned with the main runtime auth model
     and preserves the regression contract from PR #17140 / #17163.
@@ -298,7 +298,7 @@ def resolve_xai_http_credentials(
             or auth_mod.DEFAULT_XAI_OAUTH_BASE_URL
         ).strip().rstrip("/")
         override_base_url = str(
-            get_env_value("HERMES_XAI_BASE_URL")
+            get_env_value("EV0_XAI_BASE_URL")
             or get_env_value("XAI_BASE_URL")
             or ""
         ).strip().rstrip("/")

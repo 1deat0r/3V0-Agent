@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 3V0 handoff/startup audit — run from repo root.
 #
-# Audits the body (git), converges the native store onto the Hermes profile
+# Audits the body (git), converges the native store onto the 3V0 profile
 # (store is canonical, profile is a derived view), re-checks the tracked open
 # loops against live GitHub, and regenerates the mechanical handoff draft
 # (HANDOFF.generated.md) — instead of the manual multi-command dance.
@@ -12,7 +12,7 @@
 # `python3 3v0/scripts/continuity_check.py --accept` to re-record its state;
 # the "Open loops" section and the generated draft both follow automatically.
 set -uo pipefail
-REPO="NousResearch/hermes-agent"
+REPO="NousResearch/3v0-agent"
 
 echo "== BODY =="
 git status --short --branch

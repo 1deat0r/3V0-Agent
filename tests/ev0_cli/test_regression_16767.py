@@ -30,7 +30,7 @@ def test_chat_provider_argparse_acceptance(monkeypatch):
         recorded["provider"] = args.provider
 
     monkeypatch.setattr("ev0_cli.main.cmd_chat", mock_cmd_chat)
-    monkeypatch.setattr(sys, "argv", ["hermes", "chat", "--provider", "my-custom-key"])
+    monkeypatch.setattr(sys, "argv", ["3v0", "chat", "--provider", "my-custom-key"])
 
     from ev0_cli.main import main
     main()

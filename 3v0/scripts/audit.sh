@@ -16,5 +16,5 @@ echo "== skills.json valid? $(python3 -c "import json;_=json.load(open('$D/skill
 echo "== root cruft count: $(cd "$R" && ls 2>/dev/null | grep -cE 'log\.txt|sqlite_leak|test_durations|egg-info' || echo 0)"
 echo "== .env tracked in git? $(cd "$R" && git ls-files 2>/dev/null | grep -c '\.env$' || echo 0) (must be 0)"
 echo "== token health:"
-python3 "$R/3v0/scripts/analytics.py" --db "$HOME/.hermes/profiles/3v0/state.db" 2>/dev/null | head -3 || echo "analytics n/a"
+python3 "$R/3v0/scripts/analytics.py" --db "$HOME/.3V0/profiles/3v0/state.db" 2>/dev/null | head -3 || echo "analytics n/a"
 echo "== 3v0-review daemon: $(systemctl --user is-active 3v0-review 2>/dev/null || echo '?')"

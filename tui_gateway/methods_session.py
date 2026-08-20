@@ -38,7 +38,7 @@ def _(rid, params: dict) -> dict:
     # ``profile`` (app-global remote mode): a new chat started under a non-launch
     # profile must build its agent + persist against THAT profile's home/state.db,
     # not the dashboard's launch profile. Stored on the session so _start_agent_build
-    # and each turn re-bind HERMES_HOME. None/own profile → launch (unchanged).
+    # and each turn re-bind EV0_HOME. None/own profile → launch (unchanged).
     profile = (params.get("profile") or "").strip() or None
     profile_home = _profile_home(profile)
 
@@ -169,7 +169,7 @@ def _(rid, params: dict) -> dict:
             # Resume picker should surface human conversation sessions from every
             # user-facing surface — CLI, TUI, all gateway platforms (including new
             # ones not enumerated here), ACP adapter clients, webhook sessions,
-            # custom `HERMES_SESSION_SOURCE` values, and older installs with
+            # custom `EV0_SESSION_SOURCE` values, and older installs with
             # different source labels. We deny-list only the noisy internal
             # sources (``tool`` sub-agent runs and ``kanban`` dispatcher
             # workers) rather than allow-listing a fixed set of platform names
@@ -686,7 +686,7 @@ def _(rid, params: dict) -> dict:
         lease = None  # claimed lazily on the first turn (_ensure_active_session_slot)
         _enable_gateway_prompts()
         home_token = (
-            set_hermes_home_override(str(profile_home)) if profile_home is not None else None
+            set_ev0_home_override(str(profile_home)) if profile_home is not None else None
         )
         secret_token = (
             set_secret_scope(build_profile_secret_scope(Path(str(profile_home))))
@@ -741,7 +741,7 @@ def _(rid, params: dict) -> dict:
             return _err(rid, 5000, f"resume failed: {e}")
         finally:
             if home_token is not None:
-                reset_hermes_home_override(home_token)
+                reset_ev0_home_override(home_token)
             if secret_token is not None:
                 reset_secret_scope(secret_token)
 
@@ -771,7 +771,7 @@ def _(rid, params: dict) -> dict:
                 return _ok(rid, payload)
             try:
                 init_home_token = (
-                    set_hermes_home_override(str(profile_home))
+                    set_ev0_home_override(str(profile_home))
                     if profile_home is not None
                     else None
                 )
@@ -816,7 +816,7 @@ def _(rid, params: dict) -> dict:
                     owns_db = False
                 finally:
                     if init_home_token is not None:
-                        reset_hermes_home_override(init_home_token)
+                        reset_ev0_home_override(init_home_token)
                     if init_secret_token is not None:
                         reset_secret_scope(init_secret_token)
                 if sid in _sessions:
@@ -825,7 +825,7 @@ def _(rid, params: dict) -> dict:
                             "model_override"
                         ]
                     _sessions[sid]["display_history_prefix"] = display_history_prefix
-                    # Remember the profile home so each turn re-binds HERMES_HOME (the
+                    # Remember the profile home so each turn re-binds EV0_HOME (the
                     # agent persists to its own db, but mid-turn home reads — memory,
                     # skills — must resolve to the resumed profile too).
                     if profile_home is not None:
@@ -1008,7 +1008,7 @@ def _(rid, params: dict) -> dict:
     # filter on ``transport is _detached_ws_transport`` (the WS-detached drop
     # sentinel): a detached session is still attachable via a quick reconnect /
     # session.resume until the grace-reap finalizes it, and a standalone
-    # ``hermes --tui`` session legitimately rides the real stdio transport and
+    # ``3v0 --tui`` session legitimately rides the real stdio transport and
     # must stay visible.
     # Keep the natural creation/insertion order from ``_sessions``.  The
     # frontend marks the focused session with ``current``; it should not jump to
@@ -1086,7 +1086,7 @@ def _(rid, params: dict) -> dict:
         if profile_home is not None:
             sessions_dir = Path(profile_home) / "sessions"
         else:
-            sessions_dir = get_hermes_home() / "sessions"
+            sessions_dir = get_ev0_home() / "sessions"
         try:
             deleted = db.delete_session(target, sessions_dir=sessions_dir)
         except Exception as e:
@@ -1329,7 +1329,7 @@ def _(rid, params: dict) -> dict:
 
     Desktop parity with the CLI ``/handoff`` command: we only write
     ``handoff_state='pending'`` onto the persisted session row. The actual
-    transfer is performed by the separate ``hermes gateway`` process, whose
+    transfer is performed by the separate ``3v0 gateway`` process, whose
     ``_handoff_watcher`` claims the row, re-binds the session to the platform's
     home channel, and forges a synthetic turn. The desktop then polls
     ``handoff.state`` for the terminal result.
@@ -2487,7 +2487,7 @@ def _(rid, params: dict) -> dict:
     if err:
         return err
 
-    from ev0_constants import display_hermes_home
+    from ev0_constants import display_ev0_home
 
     key = session.get("session_key") or params.get("session_id") or ""
     agent = session.get("agent")
@@ -2535,10 +2535,10 @@ def _(rid, params: dict) -> dict:
     model = getattr(agent, "model", None) or mirror.get("model") or "(unknown)"
     project = _project_info_for_cwd(_display_session_cwd(session))
     lines = [
-        "Hermes TUI Status",
+        "3V0 TUI Status",
         "",
         f"Session ID: {key}",
-        f"Path: {display_hermes_home()}",
+        f"Path: {display_ev0_home()}",
     ]
     if project:
         lines.append(f"Project: {project['name']}")
@@ -2823,17 +2823,17 @@ def _(rid, params: dict) -> dict:
         return _ok(rid, result)
 
     agent = session["agent"]
-    # Mirror the classic CLI /save: snapshot under the Hermes profile home
-    # (~/.hermes/sessions/saved/) rather than the project/workspace CWD, and
+    # Mirror the classic CLI /save: snapshot under the 3V0 profile home
+    # (~/.3V0/sessions/saved/) rather than the project/workspace CWD, and
     # include the system prompt so the export matches the dashboard save.
-    saved_dir = get_hermes_home() / "sessions" / "saved"
+    saved_dir = get_ev0_home() / "sessions" / "saved"
     try:
         saved_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
         return _err(rid, 5011, f"failed to create save directory {saved_dir}: {e}")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    path = saved_dir / f"hermes_conversation_{timestamp}.json"
+    path = saved_dir / f"ev0_conversation_{timestamp}.json"
 
     with session["history_lock"]:
         messages = list(session.get("history", []))
@@ -3027,7 +3027,7 @@ def _(rid, params: dict) -> dict:
             branch_db = SessionDB(db_path=Path(parent_home) / "state.db")
             branch_owns_db = True
         home_token = (
-            set_hermes_home_override(parent_home) if parent_home else None
+            set_ev0_home_override(parent_home) if parent_home else None
         )
         # The home override alone only moves config/skills/memory; credentials
         # resolve through get_secret(), which without a scope falls through to
@@ -3073,7 +3073,7 @@ def _(rid, params: dict) -> dict:
             if secret_token is not None:
                 reset_secret_scope(secret_token)
             if home_token is not None:
-                reset_hermes_home_override(home_token)
+                reset_ev0_home_override(home_token)
         if new_sid in _sessions:
             _sessions[new_sid]["active_session_lease"] = lease
     except Exception as e:

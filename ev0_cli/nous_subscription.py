@@ -26,12 +26,12 @@ from tools.tool_backend_helpers import (
 
 
 _DEFAULT_PLATFORM_TOOLSETS = {
-    "cli": "hermes-cli",
+    "cli": "3v0-cli",
 }
 
 # Maps a tools_config provider's ``managed_nous_feature`` to the tool-pool
 # coverage category (ev0_cli.nous_account.TOOL_COVERAGE_CATEGORIES). Lets the
-# `hermes tools` picker scope its entitlement gate to the selected backend, so a
+# `3v0 tools` picker scope its entitlement gate to the selected backend, so a
 # free-tool-pool user is allowed image gen but denied video gen at select time —
 # consistent with the per-category feature gates in get_nous_subscription_features.
 MANAGED_FEATURE_COVERAGE_CATEGORY: Dict[str, str] = {
@@ -181,12 +181,12 @@ def _has_agent_browser() -> bool:
         if agent_browser_runnable(shutil.which("agent-browser")):
             return True
 
-        # Hermes-managed Node dirs (Windows installer / POSIX $HERMES_HOME/node)
+        # 3V0-managed Node dirs (Windows installer / POSIX $EV0_HOME/node)
         # are prepended to PATH at runtime but usually absent from the *probe*
         # process's PATH. Without this rung a successful install keeps
         # reporting "needs setup" on Windows.
-        from ev0_constants import with_hermes_node_path
-        managed_path = with_hermes_node_path().get("PATH", "")
+        from ev0_constants import with_ev0_node_path
+        managed_path = with_ev0_node_path().get("PATH", "")
         if managed_path:
             managed_hit = shutil.which("agent-browser", path=managed_path)
             if managed_hit and agent_browser_runnable(managed_hit):
@@ -282,7 +282,7 @@ def _local_stt_backend_available() -> bool:
     ``apply_nous_managed_defaults`` from flipping a working local setup
     to the managed gateway.
     """
-    if get_env_value("HERMES_LOCAL_STT_COMMAND"):
+    if get_env_value("EV0_LOCAL_STT_COMMAND"):
         return True
     try:
         from tools.transcription_tools import _HAS_FASTER_WHISPER
@@ -436,7 +436,7 @@ def get_nous_subscription_features(
     )
 
     # use_gateway flags — when True, the user explicitly opted into the
-    # Tool Gateway via `hermes model`, so direct credentials should NOT
+    # Tool Gateway via `3v0 model`, so direct credentials should NOT
     # prevent gateway routing.
     web_use_gateway = _uses_gateway(web_cfg)
     tts_use_gateway = _uses_gateway(tts_cfg)
@@ -472,10 +472,10 @@ def get_nous_subscription_features(
     try:
         from tools.transcription_tools import _HAS_FASTER_WHISPER
         local_stt_available = bool(_HAS_FASTER_WHISPER) or bool(
-            get_env_value("HERMES_LOCAL_STT_COMMAND")
+            get_env_value("EV0_LOCAL_STT_COMMAND")
         )
     except Exception:
-        local_stt_available = bool(get_env_value("HERMES_LOCAL_STT_COMMAND"))
+        local_stt_available = bool(get_env_value("EV0_LOCAL_STT_COMMAND"))
 
     # When use_gateway is set, suppress direct credentials for managed detection
     if web_use_gateway:
@@ -1172,7 +1172,7 @@ def prompt_enable_tool_gateway(
 
 
 # ---------------------------------------------------------------------------
-# Inline Nous Portal login for the Tool Gateway picker (`hermes tools`)
+# Inline Nous Portal login for the Tool Gateway picker (`3v0 tools`)
 # ---------------------------------------------------------------------------
 
 
@@ -1184,8 +1184,8 @@ def ensure_nous_portal_access(
     """Make sure the user is entitled to the Nous Tool Gateway, logging in if
     needed.
 
-    Used by ``hermes tools`` when a user selects a Nous-managed Tool Gateway
-    backend (e.g. "Firecrawl (Nous Portal)").  Unlike ``hermes model``'s Nous
+    Used by ``3v0 tools`` when a user selects a Nous-managed Tool Gateway
+    backend (e.g. "Firecrawl (Nous Portal)").  Unlike ``3v0 model``'s Nous
     login, this:
 
     - does NOT change the inference provider (``model.provider`` is untouched),

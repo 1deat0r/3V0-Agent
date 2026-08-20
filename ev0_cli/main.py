@@ -1,46 +1,46 @@
 #!/usr/bin/env python3
 """
-Hermes CLI - Main entry point.
+3V0 CLI - Main entry point.
 
 Usage:
-    hermes                     # Interactive chat (default)
-    hermes chat                # Interactive chat
-    hermes gateway             # Run gateway in foreground
-    hermes gateway start       # Start gateway as service
-    hermes gateway stop        # Stop gateway service
-    hermes gateway status      # Show gateway status
-    hermes gateway install     # Install gateway service
-    hermes gateway uninstall   # Uninstall gateway service
-    hermes setup               # Interactive setup wizard
-    hermes logout              # Clear stored authentication
-    hermes status              # Show status of all components
-    hermes cron                # Manage cron jobs
-    hermes cron list           # List cron jobs
-    hermes cron status         # Check if cron scheduler is running
-    hermes doctor              # Check configuration and dependencies
-    hermes honcho setup                    # Configure Honcho AI memory integration
-    hermes honcho status                   # Show Honcho config and connection status
-    hermes honcho sessions                 # List directory → session name mappings
-    hermes honcho map <name>               # Map current directory to a session name
-    hermes honcho peer                     # Show peer names and dialectic settings
-    hermes honcho peer --user NAME         # Set user peer name
-    hermes honcho peer --ai NAME           # Set AI peer name
-    hermes honcho peer --reasoning LEVEL   # Set dialectic reasoning level
-    hermes honcho mode                     # Show current memory mode
-    hermes honcho mode [hybrid|honcho|local]  # Set memory mode
-    hermes honcho tokens                   # Show token budget settings
-    hermes honcho tokens --context N       # Set session.context() token cap
-    hermes honcho tokens --dialectic N     # Set dialectic result char cap
-    hermes honcho identity                 # Show AI peer identity representation
-    hermes honcho identity <file>          # Seed AI peer identity from a file (SOUL.md etc.)
-    hermes honcho migrate                  # Step-by-step migration guide: OpenClaw native → Hermes + Honcho
-    hermes version             Show version
-    hermes update              Update to latest version
-    hermes uninstall           Uninstall Hermes Agent
-    hermes acp                 Run as an ACP server for editor integration
-    hermes sessions browse     Interactive session picker with search
+    3v0                     # Interactive chat (default)
+    3v0 chat                # Interactive chat
+    3v0 gateway             # Run gateway in foreground
+    3v0 gateway start       # Start gateway as service
+    3v0 gateway stop        # Stop gateway service
+    3v0 gateway status      # Show gateway status
+    3v0 gateway install     # Install gateway service
+    3v0 gateway uninstall   # Uninstall gateway service
+    3v0 setup               # Interactive setup wizard
+    3v0 logout              # Clear stored authentication
+    3v0 status              # Show status of all components
+    3v0 cron                # Manage cron jobs
+    3v0 cron list           # List cron jobs
+    3v0 cron status         # Check if cron scheduler is running
+    3v0 doctor              # Check configuration and dependencies
+    3v0 honcho setup                    # Configure Honcho AI memory integration
+    3v0 honcho status                   # Show Honcho config and connection status
+    3v0 honcho sessions                 # List directory → session name mappings
+    3v0 honcho map <name>               # Map current directory to a session name
+    3v0 honcho peer                     # Show peer names and dialectic settings
+    3v0 honcho peer --user NAME         # Set user peer name
+    3v0 honcho peer --ai NAME           # Set AI peer name
+    3v0 honcho peer --reasoning LEVEL   # Set dialectic reasoning level
+    3v0 honcho mode                     # Show current memory mode
+    3v0 honcho mode [hybrid|honcho|local]  # Set memory mode
+    3v0 honcho tokens                   # Show token budget settings
+    3v0 honcho tokens --context N       # Set session.context() token cap
+    3v0 honcho tokens --dialectic N     # Set dialectic result char cap
+    3v0 honcho identity                 # Show AI peer identity representation
+    3v0 honcho identity <file>          # Seed AI peer identity from a file (SOUL.md etc.)
+    3v0 honcho migrate                  # Step-by-step migration guide: OpenClaw native → 3V0 + Honcho
+    3v0 version             Show version
+    3v0 update              Update to latest version
+    3v0 uninstall           Uninstall 3V0 Agent
+    3v0 acp                 Run as an ACP server for editor integration
+    3v0 sessions browse     Interactive session picker with search
 
-    hermes claw migrate --dry-run  # Preview migration without changes
+    3v0 claw migrate --dry-run  # Preview migration without changes
 """
 
 # IMPORTANT: ev0_bootstrap must be the very first import — it sets up
@@ -49,12 +49,12 @@ Usage:
 #
 # Guarded against ModuleNotFoundError because ``ev0_bootstrap`` is a
 # top-level module registered via pyproject.toml's ``py-modules`` list.
-# When the user upgrades code via ``git pull`` (or ``hermes update``
+# When the user upgrades code via ``git pull`` (or ``3v0 update``
 # crashes between ``git reset --hard`` and ``uv pip install -e .``), the
 # new code references ``ev0_bootstrap`` but the editable install's
 # ``.pth`` file still points at the old set of top-level modules.  Without
-# this guard, hermes crashes on import and the user can't run
-# ``hermes update`` to recover.  Missing the bootstrap means UTF-8 stdio
+# this guard, 3v0 crashes on import and the user can't run
+# ``3v0 update`` to recover.  Missing the bootstrap means UTF-8 stdio
 # setup is skipped on Windows — degraded, not broken.  POSIX is unaffected.
 try:
     import ev0_bootstrap  # noqa: F401
@@ -83,7 +83,7 @@ if _bootstrap_root not in sys.path:
 from ev0_cli import _startup_fast  # noqa: E402
 
 # Early venv self-heal — MUST run before any third-party import below.  When
-# a prior ``hermes update`` left a recovery marker and a core package's import
+# a prior ``3v0 update`` left a recovery marker and a core package's import
 # files were wiped (#57828 — failed lazy backend refresh), the module-level
 # ``from ev0_cli.env_loader import ...`` / ``from ev0_cli.config import
 # ...`` imports further down would crash before ``main()`` ever reaches
@@ -230,24 +230,24 @@ def _ensure_project_root_on_path_fast() -> None:
 
 
 def _set_process_title() -> None:
-    """Set the process title to 'hermes' so tools like 'ps', 'top', and
+    """Set the process title to '3v0' so tools like 'ps', 'top', and
     'htop' show the app name instead of 'python3.xx'.
 
     Purely cosmetic — non-fatal on any platform.
 
     Strategy (try in order):
-      1. ``setproctitle`` (opt-in dep — installed via ``hermes tools`` or
+      1. ``setproctitle`` (opt-in dep — installed via ``3v0 tools`` or
          ``pip install setproctitle``, or bundled in a future release).
       2. ctypes ``prctl(PR_SET_NAME)`` (Linux only, 15-char limit).
       3. ctypes ``pthread_setname_np`` (macOS only, kernel thread name —
          changes lldb/top but not ``ps aux``).
-      4. No-op on Windows (the .exe name is already ``hermes.exe``).
+      4. No-op on Windows (the .exe name is already ``3v0.exe``).
     """
     # Strategy 1: setproctitle (best — works on macOS, Linux, BSD)
     try:
         import setproctitle  # type: ignore[import-untyped]
 
-        setproctitle.setproctitle("hermes")
+        setproctitle.setproctitle("3v0")
         return
     except ImportError:
         pass
@@ -260,11 +260,11 @@ def _set_process_title() -> None:
         system = platform.system()
         if system == "Linux":
             libc = ctypes.CDLL("libc.so.6", use_errno=True)
-            libc.prctl(15, b"hermes", 0, 0, 0)  # PR_SET_NAME = 15
+            libc.prctl(15, b"3v0", 0, 0, 0)  # PR_SET_NAME = 15
         elif system == "Darwin":
             libc = ctypes.CDLL("libc.dylib", use_errno=True)
-            libc.pthread_setname_np(b"hermes")
-        # Windows: the .exe name is already ``hermes.exe`` — nothing to do.
+            libc.pthread_setname_np(b"3v0")
+        # Windows: the .exe name is already ``3v0.exe`` — nothing to do.
     except Exception:
         pass
 
@@ -285,11 +285,11 @@ def _config_default_interface_early() -> str:
         return _EARLY_INTERFACE_CACHE[0]
     value = "cli"
     try:
-        home = os.environ.get("HERMES_HOME")
+        home = os.environ.get("EV0_HOME")
         if home:
             cfg_path = os.path.join(home, "config.yaml")
         else:
-            cfg_path = os.path.join(os.path.expanduser("~"), ".hermes", "config.yaml")
+            cfg_path = os.path.join(os.path.expanduser("~"), ".3V0", "config.yaml")
         if os.path.exists(cfg_path):
             import yaml as _yaml_iface
 
@@ -312,12 +312,12 @@ def _wants_tui_early(argv: "list[str] | None" = None) -> bool:
     """Earliest TUI decision, usable before argparse/config imports.
 
     Precedence: explicit ``--cli`` wins (forces classic REPL), then
-    explicit ``--tui``/``HERMES_TUI=1``, then a real-TTY gate (a
+    explicit ``--tui``/``EV0_TUI=1``, then a real-TTY gate (a
     non-interactive stdio can't host the Ink UI, so ambient config never
     boots it there), then ``display.interface`` in config.
 
     The TTY gate is load-bearing for headless spawners — kanban workers,
-    cron jobs, pipes run ``hermes … chat -q`` with stdio on a pipe. This
+    cron jobs, pipes run ``3v0 … chat -q`` with stdio on a pipe. This
     is the earliest launch decision (it runs before ``cmd_chat`` /
     ``_resolve_use_tui``), so a ``display.interface: tui`` default used to
     boot the TUI here — whose no-TTY bail-out exits 0 without doing the
@@ -328,7 +328,7 @@ def _wants_tui_early(argv: "list[str] | None" = None) -> bool:
         argv = sys.argv[1:]
     if "--cli" in argv:
         return False
-    if os.environ.get("HERMES_TUI") == "1" or "--tui" in argv:
+    if os.environ.get("EV0_TUI") == "1" or "--tui" in argv:
         return True
     try:
         if not (sys.stdin.isatty() and sys.stdout.isatty()):
@@ -344,15 +344,15 @@ def _wants_tui_early(argv: "list[str] | None" = None) -> bool:
 # before the Node TUI takes stdin into raw mode). During that window any
 # incoming bytes are echoed straight back to the user's shell scrollback as
 # ``^[[<…M`` text. The TUI itself runs `resetTerminalModes()` again in
-# `entry.tsx`; this is just the earlier cousin. ``HERMES_TUI_NO_EARLY_DISABLE``
+# `entry.tsx`; this is just the earlier cousin. ``EV0_TUI_NO_EARLY_DISABLE``
 # escapes the behaviour for diagnostics.
 def _suppress_mouse_residue_early() -> None:
-    if os.environ.get("HERMES_TUI_NO_EARLY_DISABLE") == "1":
+    if os.environ.get("EV0_TUI_NO_EARLY_DISABLE") == "1":
         return
     if not _wants_tui_early():
         return
     try:
-        # Skip when stdout is redirected (`hermes --tui … >log`, CI capture):
+        # Skip when stdout is redirected (`3v0 --tui … >log`, CI capture):
         # the bytes can't reach the terminal anyway and would just pollute
         # the log with raw CSI.
         if not os.isatty(1):
@@ -388,8 +388,8 @@ def _is_container_startup_environment_fast() -> bool:
     return _startup_fast.is_container_startup_environment()
 
 
-def _active_profile_may_override_home_fast(hermes_root: str) -> bool:
-    return _startup_fast.active_profile_may_override_home(hermes_root)
+def _active_profile_may_override_home_fast(ev0_root: str) -> bool:
+    return _startup_fast.active_profile_may_override_home(ev0_root)
 
 
 def _container_mode_may_be_active_fast() -> bool:
@@ -406,7 +406,7 @@ def _print_fast_version_info() -> None:
 
 
 def _try_ultrafast_version() -> bool:
-    """Handle ``hermes --version`` before config/logging imports."""
+    """Handle ``3v0 --version`` before config/logging imports."""
     return _startup_fast.try_fast_version()
 
 
@@ -486,13 +486,13 @@ from ev0_cli.subcommands.claw import build_claw_parser
 def _require_tty(command_name: str) -> None:
     """Exit with a clear error if stdin is not a terminal.
 
-    Interactive TUI commands (hermes tools, hermes setup, hermes model) use
+    Interactive TUI commands (3v0 tools, 3v0 setup, 3v0 model) use
     curses or input() prompts that spin at 100% CPU when stdin is a pipe.
     This guard prevents accidental non-interactive invocation.
     """
     if not sys.stdin.isatty():
         print(
-            f"Error: 'hermes {command_name}' requires an interactive terminal.\n"
+            f"Error: '3v0 {command_name}' requires an interactive terminal.\n"
             f"It cannot be run through a pipe or non-interactive subprocess.\n"
             f"Run it directly in your terminal instead.",
             file=sys.stderr,
@@ -506,27 +506,27 @@ _ensure_project_root_on_path_fast()
 
 
 # ---------------------------------------------------------------------------
-# Profile override — MUST happen before any hermes module import.
+# Profile override — MUST happen before any 3v0 module import.
 #
-# Many modules cache HERMES_HOME at import time (module-level constants).
+# Many modules cache EV0_HOME at import time (module-level constants).
 # We intercept --profile/-p from sys.argv here and set the env var so that
-# every subsequent ``os.getenv("HERMES_HOME", ...)`` resolves correctly.
+# every subsequent ``os.getenv("EV0_HOME", ...)`` resolves correctly.
 # The flag is stripped from sys.argv so argparse never sees it.
-# Falls back to ~/.hermes/active_profile for sticky default.
+# Falls back to ~/.3V0/active_profile for sticky default.
 # ---------------------------------------------------------------------------
 def _apply_profile_override() -> None:
-    """Pre-parse --profile/-p and set HERMES_HOME before imports."""
+    """Pre-parse --profile/-p and set EV0_HOME before imports."""
     argv = sys.argv[1:]
     profile_name = None
     consume = 0
     profile_index = None
 
     def _inside_mcp_add_args(index: int) -> bool:
-        """True once argv reaches `hermes mcp add ... --args <command argv>`.
+        """True once argv reaches `3v0 mcp add ... --args <command argv>`.
 
         ``mcp add --args`` is command-argv passthrough. Flags after that point
         belong to the child MCP command (for example Docker MCP Toolkit's
-        ``--profile``), not to Hermes' own profile selector.
+        ``--profile``), not to 3V0' own profile selector.
         """
         try:
             mcp_index = argv.index("mcp", 0, index)
@@ -536,7 +536,7 @@ def _apply_profile_override() -> None:
         return True
 
     def _resolve_sudo_user_profile_env(name: str) -> str | None:
-        """Resolve `sudo hermes -p <name>` against the invoking user's home.
+        """Resolve `sudo 3v0 -p <name>` against the invoking user's home.
 
         `_apply_profile_override()` runs before argparse, so `--run-as-user`
         is not available yet. For sudo invocations, the best available signal
@@ -558,7 +558,7 @@ def _apply_profile_override() -> None:
         except Exception:
             return None
 
-        candidate = home / ".hermes" / "profiles" / name
+        candidate = home / ".3V0" / "profiles" / name
         try:
             if candidate.is_dir():
                 return str(candidate)
@@ -567,7 +567,7 @@ def _apply_profile_override() -> None:
         return None
 
     # 1. Check for explicit -p / --profile flag. Historically this worked even
-    # after the subcommand (`hermes chat -p coder`), so keep scanning broadly.
+    # after the subcommand (`3v0 chat -p coder`), so keep scanning broadly.
     # The exception is command-argv passthrough regions such as `mcp add --args`.
     value_flags = {
         "-z", "--oneshot",
@@ -621,37 +621,37 @@ def _apply_profile_override() -> None:
             consume = 0
             profile_index = None
 
-    # 1.5 If HERMES_HOME is already set and no explicit flag was given, trust it
+    # 1.5 If EV0_HOME is already set and no explicit flag was given, trust it
     # only when it already points to a specific profile directory.  The
     # distinguishing heuristic: a profile path has "profiles" as its immediate
-    # parent directory name (e.g. ~/.hermes/profiles/coder or
-    # /opt/data/profiles/coder).  If HERMES_HOME points to the hermes root
-    # instead (e.g. systemd hardcodes HERMES_HOME=/root/.hermes), we must
+    # parent directory name (e.g. ~/.3V0/profiles/coder or
+    # /opt/data/profiles/coder).  If EV0_HOME points to the 3v0 root
+    # instead (e.g. systemd hardcodes EV0_HOME=/root/.3V0), we must
     # still read active_profile — the user may have switched profiles via
-    # `hermes profile use` and the gateway should honour that choice.
+    # `3v0 profile use` and the gateway should honour that choice.
     # See issue #22502.
-    hermes_home_env = os.environ.get("HERMES_HOME", "")
-    if profile_name is None and hermes_home_env:
-        if Path(hermes_home_env).parent.name == "profiles":
+    ev0_home_env = os.environ.get("EV0_HOME", "")
+    if profile_name is None and ev0_home_env:
+        if Path(ev0_home_env).parent.name == "profiles":
             return
 
-    # 2. If no flag, check active_profile in the hermes root.
+    # 2. If no flag, check active_profile in the 3v0 root.
     #
     # EXCEPTION: a supervised s6 gateway child (exported by the container
-    # run-script as HERMES_S6_SUPERVISED_CHILD=1) must NOT follow the sticky
+    # run-script as EV0_S6_SUPERVISED_CHILD=1) must NOT follow the sticky
     # active_profile. Each supervised slot has a fixed profile identity: named
     # slots pass ``-p <name>`` explicitly (handled in step 1 above), and the
-    # reserved ``gateway-default`` slot runs bare ``hermes gateway run`` to mean
-    # "the root HERMES_HOME profile". If the reserved default child read
+    # reserved ``gateway-default`` slot runs bare ``3v0 gateway run`` to mean
+    # "the root EV0_HOME profile". If the reserved default child read
     # active_profile here, switching the active profile (e.g. via the dashboard)
     # would silently redirect the default gateway into that profile — yielding a
     # duplicate gateway for the active profile and no real default gateway. See
     # the "Docker & Profiles & Dashboard" report.
-    if profile_name is None and not os.environ.get("HERMES_S6_SUPERVISED_CHILD"):
+    if profile_name is None and not os.environ.get("EV0_S6_SUPERVISED_CHILD"):
         try:
-            from ev0_constants import get_default_hermes_root
+            from ev0_constants import get_default_ev0_root
 
-            active_path = get_default_hermes_root() / "active_profile"
+            active_path = get_default_ev0_root() / "active_profile"
             if active_path.exists():
                 name = active_path.read_text(encoding="utf-8").strip()
                 if name and name != "default":
@@ -660,28 +660,28 @@ def _apply_profile_override() -> None:
         except (UnicodeDecodeError, OSError):
             pass  # corrupted file, skip
 
-    # 3. If we found a profile, resolve and set HERMES_HOME
+    # 3. If we found a profile, resolve and set EV0_HOME
     if profile_name is not None:
         try:
             from ev0_cli.profiles import resolve_profile_env
 
-            hermes_home = resolve_profile_env(profile_name)
+            ev0_home = resolve_profile_env(profile_name)
         except FileNotFoundError as exc:
-            hermes_home = _resolve_sudo_user_profile_env(profile_name)
-            if not hermes_home:
+            ev0_home = _resolve_sudo_user_profile_env(profile_name)
+            if not ev0_home:
                 print(f"Error: {exc}", file=sys.stderr)
                 sys.exit(1)
         except ValueError as exc:
             print(f"Error: {exc}", file=sys.stderr)
             sys.exit(1)
         except Exception as exc:
-            # A bug in profiles.py must NEVER prevent hermes from starting
+            # A bug in profiles.py must NEVER prevent 3v0 from starting
             print(
                 f"Warning: profile override failed ({exc}), using default",
                 file=sys.stderr,
             )
             return
-        os.environ["HERMES_HOME"] = hermes_home
+        os.environ["EV0_HOME"] = ev0_home
         # Strip the flag from argv so argparse doesn't choke
         if consume > 0 and profile_index is not None:
             start = profile_index + 1  # +1 because argv is sys.argv[1:]
@@ -690,10 +690,10 @@ def _apply_profile_override() -> None:
 
 _apply_profile_override()
 
-# Load .env from ~/.hermes/.env first, then project root as dev fallback.
+# Load .env from ~/.3V0/.env first, then project root as dev fallback.
 # User-managed env files should override stale shell exports on restart.
-from ev0_cli.config import get_hermes_home
-from ev0_cli.env_loader import load_hermes_dotenv
+from ev0_cli.config import get_ev0_home
+from ev0_cli.env_loader import load_ev0_dotenv
 
 # Updating dependencies must not import optional secret-manager libraries into
 # the updater process before ``uv`` replaces the environment.  On Windows,
@@ -702,12 +702,12 @@ from ev0_cli.env_loader import load_hermes_dotenv
 # flags have already been stripped above, so the first remaining argument is
 # the authoritative argparse subcommand.  Dotenv/managed config still loads;
 # only external secret fetches are unnecessary for installation maintenance.
-load_hermes_dotenv(
+load_ev0_dotenv(
     project_env=PROJECT_ROOT / ".env",
     load_external_secrets=sys.argv[1:2] != ["update"],
 )
 
-# Bridge security.redact_secrets from config.yaml → HERMES_REDACT_SECRETS env
+# Bridge security.redact_secrets from config.yaml → EV0_REDACT_SECRETS env
 # var BEFORE ev0_logging imports agent.redact (which snapshots the flag at
 # module-import time). Without this, config.yaml's toggle is ignored because
 # the setup_logging() call below imports agent.redact, which reads the env var
@@ -724,7 +724,7 @@ try:
     # 3-4 config.yaml parses per invocation into one.
     from ev0_cli.config import read_raw_config as _read_raw_early
 
-    _cfg_path = get_hermes_home() / "config.yaml"
+    _cfg_path = get_ev0_home() / "config.yaml"
     if _cfg_path.exists():
         _early_cfg_raw = _read_raw_early() or {}
         # Managed scope: overlay administrator-pinned values so a managed
@@ -737,12 +737,12 @@ try:
             _early_cfg_raw = managed_scope.apply_managed_overlay(_early_cfg_raw)
         except Exception:
             pass
-        if "HERMES_REDACT_SECRETS" not in os.environ:
+        if "EV0_REDACT_SECRETS" not in os.environ:
             _early_sec_cfg = _early_cfg_raw.get("security", {})
             if isinstance(_early_sec_cfg, dict):
                 _early_redact = _early_sec_cfg.get("redact_secrets")
                 if _early_redact is not None:
-                    os.environ["HERMES_REDACT_SECRETS"] = str(_early_redact).lower()
+                    os.environ["EV0_REDACT_SECRETS"] = str(_early_redact).lower()
         _early_net_cfg = _early_cfg_raw.get("network", {})
         if isinstance(_early_net_cfg, dict) and _early_net_cfg.get("force_ipv4"):
             _FORCE_IPV4_EARLY = True
@@ -751,7 +751,7 @@ try:
 except Exception:
     pass  # best-effort — redaction stays at default (enabled) on config errors
 
-# Initialize centralized file logging early — all `hermes` subcommands
+# Initialize centralized file logging early — all `3v0` subcommands
 # (chat, setup, gateway, config, etc.) write to agent.log + errors.log.
 # Dashboard entrypoints bootstrap with GUI mode so gui.log is always present
 # during GUI testing, including pre-dispatch startup failures.
@@ -884,7 +884,7 @@ def _read_git_revision_fingerprint(repo_root: Path) -> str | None:
                 return f"git:{ref}:{packed_sha}"
             # Ref name is known but unresolved — still stable across launches,
             # and the version/release fallback in the caller will invalidate
-            # after `hermes update`.
+            # after `3v0 update`.
             return f"git:{ref}:unresolved"
         return f"git:HEAD:{head}"
     except OSError:
@@ -905,13 +905,13 @@ def _termux_bundled_skills_fingerprint() -> str:
 
 
 def _termux_bundled_skills_stamp_path() -> Path:
-    return get_hermes_home() / "skills" / ".termux_bundled_sync_stamp"
+    return get_ev0_home() / "skills" / ".termux_bundled_sync_stamp"
 
 
 def _termux_bundled_skills_sync_needed() -> bool:
     if not _is_termux_startup_environment():
         return True
-    if os.environ.get("HERMES_TERMUX_FORCE_SKILLS_SYNC") == "1":
+    if os.environ.get("EV0_TERMUX_FORCE_SKILLS_SYNC") == "1":
         return True
     try:
         stamp = _termux_bundled_skills_stamp_path()
@@ -951,7 +951,7 @@ def _sync_bundled_skills_for_startup() -> bool:
 def _termux_should_prefetch_update_check() -> bool:
     if not _is_termux_startup_environment():
         return True
-    return os.environ.get("HERMES_TERMUX_PREFETCH_UPDATES") == "1"
+    return os.environ.get("EV0_TERMUX_PREFETCH_UPDATES") == "1"
 
 
 def _relative_time(ts) -> str:
@@ -968,10 +968,10 @@ def _relative_time(ts) -> str:
 
 def _has_any_provider_configured() -> bool:
     """Check if at least one inference provider is usable."""
-    from ev0_cli.config import get_env_path, get_hermes_home, load_config
+    from ev0_cli.config import get_env_path, get_ev0_home, load_config
     from ev0_cli.auth import get_auth_status
 
-    # Determine whether Hermes itself has been explicitly configured (model
+    # Determine whether 3V0 itself has been explicitly configured (model
     # in config that isn't the hardcoded default). Used below to gate external
     # tool credentials (Claude Code, Codex CLI) that shouldn't silently skip
     # the setup wizard on a fresh install.
@@ -992,7 +992,7 @@ def _has_any_provider_configured() -> bool:
         _model_name = model_cfg.strip()
     else:
         _model_name = ""
-    _has_hermes_config = _model_name and _model_name != _DEFAULT_MODEL
+    _has_ev0_config = _model_name and _model_name != _DEFAULT_MODEL
 
     # Check env vars (may be set by .env or shell).
     # OPENAI_BASE_URL alone counts — local models (vLLM, llama.cpp, etc.)
@@ -1035,7 +1035,7 @@ def _has_any_provider_configured() -> bool:
     # take 15-20s — long enough that desktop setup.status calls time out.
 
     # Check for Nous Portal OAuth credentials
-    auth_file = get_hermes_home() / "auth.json"
+    auth_file = get_ev0_home() / "auth.json"
     if auth_file.exists():
         try:
             import json
@@ -1072,9 +1072,9 @@ def _has_any_provider_configured() -> bool:
         pass
 
     # Check for Claude Code OAuth credentials (~/.claude/.credentials.json)
-    # Only count these if Hermes has been explicitly configured — Claude Code
-    # being installed doesn't mean the user wants Hermes to use their tokens.
-    if _has_hermes_config:
+    # Only count these if 3V0 has been explicitly configured — Claude Code
+    # being installed doesn't mean the user wants 3V0 to use their tokens.
+    if _has_ev0_config:
         try:
             from agent.anthropic_adapter import (
                 read_claude_code_credentials,
@@ -1239,7 +1239,7 @@ def _session_browse_picker(sessions: list, session_db=None) -> Optional[str]:
         if session_db is None:
             return False
         try:
-            sessions_dir = get_hermes_home() / "sessions"
+            sessions_dir = get_ev0_home() / "sessions"
         except Exception:
             sessions_dir = None
         try:
@@ -1593,7 +1593,7 @@ def _resolve_last_session(source: str = "cli") -> Optional[str]:
     """Look up the most recently-used session ID for a source.
 
     Scoped to the current workspace first (git repo root, else cwd) so
-    ``hermes -c`` from repo A continues repo A's last session rather than the
+    ``3v0 -c`` from repo A continues repo A's last session rather than the
     global MRU. Falls back to the unscoped MRU when no session matches the
     current workspace, preserving the old behaviour for fresh directories.
     """
@@ -1648,14 +1648,14 @@ def _exec_in_container(container_info: dict, cli_args: list):
     On failure, OSError propagates naturally.
 
     Args:
-        container_info: dict with backend, container_name, exec_user, hermes_bin
-        cli_args: the original CLI arguments (everything after 'hermes')
+        container_info: dict with backend, container_name, exec_user, ev0_bin
+        cli_args: the original CLI arguments (everything after '3v0')
     """
 
     backend = container_info["backend"]
     container_name = container_info["container_name"]
     exec_user = container_info["exec_user"]
-    hermes_bin = container_info["hermes_bin"]
+    ev0_bin = container_info["ev0_bin"]
 
     runtime = shutil.which(backend)
     if not runtime:
@@ -1697,14 +1697,14 @@ def _exec_in_container(container_info: dict, cli_args: list):
                     f'    commands = [{{ command = "{runtime}"; options = [ "NOPASSWD" ]; }}];\n'
                     f"  }}];\n"
                     f"\n"
-                    f"Or run: sudo hermes {' '.join(cli_args)}",
+                    f"Or run: sudo 3v0 {' '.join(cli_args)}",
                     file=sys.stderr,
                 )
                 sys.exit(1)
         else:
             print(
                 f"Error: container '{container_name}' not found via {backend}.\n"
-                f"The container may be running under root. Try: sudo hermes {' '.join(cli_args)}",
+                f"The container may be running under root. Try: sudo 3v0 {' '.join(cli_args)}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -1725,7 +1725,7 @@ def _exec_in_container(container_info: dict, cli_args: list):
         + tty_flags
         + ["-u", exec_user]
         + env_flags
-        + [container_name, hermes_bin]
+        + [container_name, ev0_bin]
         + cli_args
     )
 
@@ -1857,7 +1857,7 @@ def _resolve_continue_arg(args, *, use_tui: bool) -> None:
             else:
                 print(f"No session found matching '{continue_val}'.", file=sys.stderr)
                 print(
-                    "Use 'hermes sessions list' to see available sessions, or "
+                    "Use '3v0 sessions list' to see available sessions, or "
                     "pass --create-if-missing to start a new session with that title.",
                     file=sys.stderr,
                 )
@@ -1955,9 +1955,9 @@ def _print_tui_exit_summary(
 
     print()
     print("Resume this session with:")
-    print(f"  hermes --tui --resume {target}")
+    print(f"  3v0 --tui --resume {target}")
     if title:
-        print(f'  hermes --tui -c "{title}"')
+        print(f'  3v0 --tui -c "{title}"')
     print()
     print(f"Session:        {target}")
     if title:
@@ -2037,7 +2037,7 @@ def _termux_workspace_install_context(
 
 
 def _tui_need_npm_install(root: Path) -> bool:
-    """True when @hermes/ink is missing or node_modules is behind package-lock.json.
+    """True when @3v0/ink is missing or node_modules is behind package-lock.json.
 
     Prebuilt bundle mode: when ``dist/entry.js`` exists and there is no
     ``package-lock.json`` (nix install layout only ships ``dist/`` +
@@ -2076,7 +2076,7 @@ def _tui_need_npm_install(root: Path) -> bool:
     if entry.is_file() and not lock.is_file():
         return False
 
-    ink = ws_root / "node_modules" / "@hermes" / "ink" / "package.json"
+    ink = ws_root / "node_modules" / "@3v0" / "ink" / "package.json"
     if not ink.is_file():
         return True
     if not lock.is_file():
@@ -2119,7 +2119,7 @@ def _tui_need_npm_install(root: Path) -> bool:
 
 _TUI_BUILD_INPUT_DIRS = (
     "src",
-    "packages/hermes-ink/src",
+    "packages/3v0-ink/src",
 )
 
 _TUI_BUILD_INPUT_FILES = (
@@ -2129,9 +2129,9 @@ _TUI_BUILD_INPUT_FILES = (
     "tsconfig.build.json",
     "babel.compiler.config.cjs",
     "scripts/build.mjs",
-    "packages/hermes-ink/package.json",
-    "packages/hermes-ink/index.js",
-    "packages/hermes-ink/text-input.js",
+    "packages/3v0-ink/package.json",
+    "packages/3v0-ink/index.js",
+    "packages/3v0-ink/text-input.js",
 )
 
 _TUI_BUILD_INPUT_SUFFIXES = frozenset(
@@ -2161,9 +2161,9 @@ def _tui_need_rebuild(root: Path) -> bool:
     The TUI bundle is self-contained. Rebuilding it on every launch adds a
     visible cold-start tax on slow Termux CPUs, while a simple mtime freshness
     check still rebuilds immediately after source updates, dependency updates,
-    or local edits. Set ``HERMES_TUI_FORCE_BUILD=1`` to force the old behaviour.
+    or local edits. Set ``EV0_TUI_FORCE_BUILD=1`` to force the old behaviour.
     """
-    force = (os.environ.get("HERMES_TUI_FORCE_BUILD") or "").strip().lower()
+    force = (os.environ.get("EV0_TUI_FORCE_BUILD") or "").strip().lower()
     if force in {"1", "true", "yes", "on"}:
         return True
 
@@ -2193,20 +2193,20 @@ def _ensure_tui_node() -> None:
     was used (nvm, fnm, proto, brew, or the bundled fallback).
 
     Idempotent no-op when node+npm are already discoverable. Set
-    ``HERMES_SKIP_NODE_BOOTSTRAP=1`` to disable auto-install.
+    ``EV0_SKIP_NODE_BOOTSTRAP=1`` to disable auto-install.
     """
     if shutil.which("node") and shutil.which("npm"):
         return
-    if os.environ.get("HERMES_SKIP_NODE_BOOTSTRAP"):
+    if os.environ.get("EV0_SKIP_NODE_BOOTSTRAP"):
         return
 
     helper = PROJECT_ROOT / "scripts" / "lib" / "node-bootstrap.sh"
     if not helper.is_file():
         return
 
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
 
-    hermes_home = str(get_hermes_home())
+    ev0_home = str(get_ev0_home())
     try:
         # Helper writes logs to stderr; we ask bash to print `command -v node`
         # on stdout once ensure_node succeeds. Subshell PATH edits don't leak
@@ -2217,7 +2217,7 @@ def _ensure_tui_node() -> None:
                 "-c",
                 f'source "{helper}" >&2 && ensure_node >&2 && command -v node',
             ],
-            env={**os.environ, "HERMES_HOME": hermes_home},
+            env={**os.environ, "EV0_HOME": ev0_home},
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -2234,7 +2234,7 @@ def _ensure_tui_node() -> None:
     if resolved:
         extras.append(Path(resolved).resolve().parent)
 
-    extras.extend([Path(hermes_home) / "node" / "bin", Path.home() / ".local" / "bin"])
+    extras.extend([Path(ev0_home) / "node" / "bin", Path.home() / ".local" / "bin"])
 
     for extra in extras:
         s = str(extra)
@@ -2243,11 +2243,11 @@ def _ensure_tui_node() -> None:
     os.environ["PATH"] = os.pathsep.join(parts)
 
 
-def _find_bundled_tui(hermes_cli_dir: Path | None = None) -> Path | None:
+def _find_bundled_tui(ev0_cli_dir: Path | None = None) -> Path | None:
     """Find a pre-built TUI entry.js bundled in the wheel."""
-    if hermes_cli_dir is None:
-        hermes_cli_dir = Path(__file__).parent
-    bundled = hermes_cli_dir / "tui_dist" / "entry.js"
+    if ev0_cli_dir is None:
+        ev0_cli_dir = Path(__file__).parent
+    bundled = ev0_cli_dir / "tui_dist" / "entry.js"
     return bundled if bundled.is_file() else None
 
 
@@ -2255,7 +2255,7 @@ def _restore_tui_workspace(tui_dir: Path) -> bool:
     """Try to restore a missing ``ui-tui/`` from git, returning True on success.
 
     On Windows an antivirus / NTFS filter driver can leave tracked ``ui-tui/``
-    files deleted in the working tree after ``hermes update`` (HEAD stays
+    files deleted in the working tree after ``3v0 update`` (HEAD stays
     intact; the files just vanish — see issue #49145). Those files are tracked,
     so ``git restore`` puts them back deterministically. Best-effort: returns
     False (rather than raising) when git is unavailable, this isn't a checkout,
@@ -2291,19 +2291,19 @@ def _ensure_tui_workspace(tui_dir: Path) -> None:
         return
 
     if _restore_tui_workspace(tui_dir):
-        if not os.environ.get("HERMES_QUIET"):
+        if not os.environ.get("EV0_QUIET"):
             print(f"Restored missing TUI workspace: {tui_dir}")
         return
 
     print(
-        "Error: the TUI workspace is missing from this Hermes checkout.\n"
+        "Error: the TUI workspace is missing from this 3V0 checkout.\n"
         f"Expected directory: {tui_dir}\n"
-        "This usually means `hermes update` left tracked ui-tui files deleted.\n"
+        "This usually means `3v0 update` left tracked ui-tui files deleted.\n"
         "Recovery:\n"
-        "  1. From the Hermes checkout, run `git restore -- ui-tui`\n"
+        "  1. From the 3V0 checkout, run `git restore -- ui-tui`\n"
         "  2. Run `npm install --silent --no-fund --no-audit --progress=false`\n"
-        "  3. Retry `hermes --tui`\n"
-        "If the checkout is still inconsistent, run `hermes update --force`.",
+        "  3. Retry `3v0 --tui`\n"
+        "If the checkout is still inconsistent, run `3v0 update --force`.",
         file=sys.stderr,
     )
     sys.exit(1)
@@ -2319,17 +2319,17 @@ def _npm_lifecycle_env(env: dict[str, str] | None = None) -> dict[str, str]:
 
 
 def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
-    """TUI: --dev → tsx src; else node dist (HERMES_TUI_DIR prebuilt or esbuild)."""
+    """TUI: --dev → tsx src; else node dist (EV0_TUI_DIR prebuilt or esbuild)."""
     _ensure_tui_node()
 
     def _node_bin(bin: str) -> str:
         if bin == "node":
-            env_node = os.environ.get("HERMES_NODE")
+            env_node = os.environ.get("EV0_NODE")
             if env_node and os.path.isfile(env_node) and os.access(env_node, os.X_OK):
                 return env_node
-        # find_node_executable() prefers the managed $HERMES_HOME/node tree,
+        # find_node_executable() prefers the managed $EV0_HOME/node tree,
         # which is not on PATH — a bare which() would declare "node not found"
-        # and exit on an install whose only Node is the one Hermes installed,
+        # and exit on an install whose only Node is the one 3V0 installed,
         # and would pick a system Node over the managed one when both exist.
         from ev0_constants import find_node_executable
 
@@ -2347,12 +2347,12 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
         return path
 
     # Footgun: --dev against a prebuilt bundle that has no source/node_modules.
-    ext_dir = os.environ.get("HERMES_TUI_DIR")
+    ext_dir = os.environ.get("EV0_TUI_DIR")
     if tui_dev and ext_dir:
         print(
-            f"Error: --dev is incompatible with HERMES_TUI_DIR={ext_dir}\n"
+            f"Error: --dev is incompatible with EV0_TUI_DIR={ext_dir}\n"
             f"The prebuilt TUI has no source code to hot-reload.\n"
-            f"Unset HERMES_TUI_DIR (e.g. `unset HERMES_TUI_DIR`) to use --dev from a checkout.",
+            f"Unset EV0_TUI_DIR (e.g. `unset EV0_TUI_DIR`) to use --dev from a checkout.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -2403,7 +2403,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
         and _tui_need_npm_install(tui_dir)
     ):
         npm = _node_bin("npm")
-        if not os.environ.get("HERMES_QUIET"):
+        if not os.environ.get("EV0_QUIET"):
             print("Installing TUI dependencies…")
         npm_cwd = _workspace_root(tui_dir)
         # --workspace ui-tui avoids resolving apps/desktop (Electron + node-pty).
@@ -2435,7 +2435,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
         ]
 
         def _run_tui_install() -> subprocess.CompletedProcess:
-            from ev0_constants import with_hermes_node_path
+            from ev0_constants import with_ev0_node_path
 
             # Managed tree first on PATH: if the EBADENGINE repair below
             # provisioned a managed Node, npm's shebang/lifecycle scripts must
@@ -2448,13 +2448,13 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                env=_npm_lifecycle_env(with_hermes_node_path()),
+                env=_npm_lifecycle_env(with_ev0_node_path()),
             )
 
         result = _run_tui_install()
         if result.returncode != 0:
             # An npm outside the root package.json's `engines.npm` range fails
-            # here before doing any work; repair once (upgrade a Hermes-managed
+            # here before doing any work; repair once (upgrade a 3V0-managed
             # npm in place, or provision a managed runtime when the npm belongs
             # to the user) and retry rather than dumping EBADENGINE at the user.
             from ev0_cli.npm_engine import maybe_repair_npm_engine
@@ -2475,13 +2475,13 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
         did_install = True
 
     if tui_dev:
-        # Keep the local @hermes/ink package exports in sync with source.
-        # --dev runs src/entry.tsx directly, but @hermes/ink resolves through
-        # packages/hermes-ink/dist/entry-exports.js. If that dist bundle is
+        # Keep the local @3v0/ink package exports in sync with source.
+        # --dev runs src/entry.tsx directly, but @3v0/ink resolves through
+        # packages/3v0-ink/dist/entry-exports.js. If that dist bundle is
         # stale after a pull, newer hooks/components can exist in src while
         # being missing at runtime (e.g. useCursorAdvance). Prebuild it here.
         npm = _node_bin("npm")
-        ink_dir = tui_dir / "packages" / "hermes-ink"
+        ink_dir = tui_dir / "packages" / "3v0-ink"
         result = subprocess.run(
             [npm, "run", "build"],
             cwd=str(ink_dir),
@@ -2642,24 +2642,24 @@ def _safe_tui_cwd(env: Optional[dict] = None) -> str:
 
 def _apply_tui_python_env(env: dict) -> None:
     """Seed/repair Python-related env vars shared by CLI and dashboard TUI launches."""
-    src_root = str(env.get("HERMES_PYTHON_SRC_ROOT") or "").strip()
+    src_root = str(env.get("EV0_PYTHON_SRC_ROOT") or "").strip()
     if not src_root or not Path(src_root).is_dir():
-        env["HERMES_PYTHON_SRC_ROOT"] = str(PROJECT_ROOT)
+        env["EV0_PYTHON_SRC_ROOT"] = str(PROJECT_ROOT)
 
-    cwd = str(env.get("HERMES_CWD") or "").strip()
+    cwd = str(env.get("EV0_CWD") or "").strip()
     if not cwd or not Path(cwd).is_dir():
-        env["HERMES_CWD"] = _safe_tui_cwd(env)
+        env["EV0_CWD"] = _safe_tui_cwd(env)
 
-    python = str(env.get("HERMES_PYTHON") or "").strip()
+    python = str(env.get("EV0_PYTHON") or "").strip()
     if os.path.dirname(python):
         python_path = Path(python)
         if not python_path.is_absolute():
-            python_path = Path(env["HERMES_CWD"]) / python_path
+            python_path = Path(env["EV0_CWD"]) / python_path
         python_is_executable = python_path.is_file() and os.access(python_path, os.X_OK)
     else:
         python_is_executable = bool(shutil.which(python, path=env.get("PATH")))
     if not python_is_executable:
-        env["HERMES_PYTHON"] = sys.executable
+        env["EV0_PYTHON"] = sys.executable
 
 
 def _launch_tui(
@@ -2684,7 +2684,7 @@ def _launch_tui(
 
     import tempfile
 
-    # TUI child is a hermes process: propagate the profile-home contract via
+    # TUI child is a 3v0 process: propagate the profile-home contract via
     # the single factory; keep secrets (the TUI/agent needs provider creds).
     from tools.environments.local import build_subprocess_env
     env = build_subprocess_env(scrub_secrets=False, inherit_profile_home=True)
@@ -2694,10 +2694,10 @@ def _launch_tui(
     except Exception:
         logger.debug("Failed to apply terminal config bridge for TUI launch", exc_info=True)
     active_session_fd, active_session_file = tempfile.mkstemp(
-        prefix="hermes-tui-active-session-", suffix=".json"
+        prefix="3v0-tui-active-session-", suffix=".json"
     )
     os.close(active_session_fd)
-    env["HERMES_TUI_ACTIVE_SESSION_FILE"] = active_session_file
+    env["EV0_TUI_ACTIVE_SESSION_FILE"] = active_session_file
     env.setdefault("NODE_ENV", "development" if tui_dev else "production")
 
     wt_info = None
@@ -2719,20 +2719,20 @@ def _launch_tui(
             wt_info = None
         if not wt_info:
             sys.exit(1)
-        env["HERMES_CWD"] = wt_info["path"]
+        env["EV0_CWD"] = wt_info["path"]
         env["TERMINAL_CWD"] = wt_info["path"]
 
     _apply_tui_python_env(env)
 
     if model:
-        env["HERMES_MODEL"] = model
-        env["HERMES_INFERENCE_MODEL"] = model
+        env["EV0_MODEL"] = model
+        env["EV0_INFERENCE_MODEL"] = model
     if provider:
-        env["HERMES_TUI_PROVIDER"] = provider
-        env["HERMES_INFERENCE_PROVIDER"] = provider
+        env["EV0_TUI_PROVIDER"] = provider
+        env["EV0_INFERENCE_PROVIDER"] = provider
     tui_toolsets = _normalize_tui_toolsets(toolsets)
     if tui_toolsets:
-        env["HERMES_TUI_TOOLSETS"] = ",".join(tui_toolsets)
+        env["EV0_TUI_TOOLSETS"] = ",".join(tui_toolsets)
     if skills:
         if isinstance(skills, (list, tuple)):
             flattened = []
@@ -2741,27 +2741,27 @@ def _launch_tui(
                     part.strip() for part in str(item).split(",") if part.strip()
                 )
             if flattened:
-                env["HERMES_TUI_SKILLS"] = ",".join(flattened)
+                env["EV0_TUI_SKILLS"] = ",".join(flattened)
         else:
             value = str(skills).strip()
             if value:
-                env["HERMES_TUI_SKILLS"] = value
+                env["EV0_TUI_SKILLS"] = value
     if query:
-        env["HERMES_TUI_QUERY"] = query
+        env["EV0_TUI_QUERY"] = query
     if image:
-        env["HERMES_TUI_IMAGE"] = image
+        env["EV0_TUI_IMAGE"] = image
     if checkpoints:
-        env["HERMES_TUI_CHECKPOINTS"] = "1"
+        env["EV0_TUI_CHECKPOINTS"] = "1"
     if pass_session_id:
-        env["HERMES_TUI_PASS_SESSION_ID"] = "1"
+        env["EV0_TUI_PASS_SESSION_ID"] = "1"
     if max_turns is not None:
-        env["HERMES_TUI_MAX_TURNS"] = str(max_turns)
+        env["EV0_TUI_MAX_TURNS"] = str(max_turns)
     if verbose:
-        env["HERMES_TUI_TOOL_PROGRESS"] = "verbose"
+        env["EV0_TUI_TOOL_PROGRESS"] = "verbose"
     elif quiet:
-        env["HERMES_TUI_TOOL_PROGRESS"] = "off"
+        env["EV0_TUI_TOOL_PROGRESS"] = "off"
     if accept_hooks:
-        env["HERMES_ACCEPT_HOOKS"] = "1"
+        env["EV0_ACCEPT_HOOKS"] = "1"
     # Guarantee a generous V8 heap for the TUI. Default node cap is ~1.5–4GB
     # depending on version and can fatal-OOM on long sessions with large
     # transcripts / reasoning blobs. We target 8GB on an unconstrained host,
@@ -2780,17 +2780,17 @@ def _launch_tui(
     if not any(t.startswith("--max-old-space-size=") for t in _tokens):
         _tokens.append(f"--max-old-space-size={_resolve_tui_heap_mb()}")
     env["NODE_OPTIONS"] = " ".join(_tokens)
-    # HERMES_TUI_RESUME is an internal hand-off from the Python wrapper to the
+    # EV0_TUI_RESUME is an internal hand-off from the Python wrapper to the
     # Ink app.  Because we start from a full os.environ snapshot (via
     # build_subprocess_env), an exported/stale value
-    # in the user's shell would otherwise make a plain `hermes --tui` try to
+    # in the user's shell would otherwise make a plain `3v0 --tui` try to
     # resume a non-existent session and leave the UI at "error: session not
     # found" with no live session.  Only forward a resume id that argparse
     # resolved for this invocation; direct `node ui-tui/dist/entry.js` users can
-    # still set HERMES_TUI_RESUME themselves.
-    env.pop("HERMES_TUI_RESUME", None)
+    # still set EV0_TUI_RESUME themselves.
+    env.pop("EV0_TUI_RESUME", None)
     if resume_session_id:
-        env["HERMES_TUI_RESUME"] = resume_session_id
+        env["EV0_TUI_RESUME"] = resume_session_id
 
     argv, cwd = _make_tui_argv(tui_dir, tui_dev)
     code: Optional[int] = None
@@ -2813,7 +2813,7 @@ def _launch_tui(
             except Exception:
                 pass
 
-    # Exit code 42 = TUI requested an update. Relaunch as `hermes update` so
+    # Exit code 42 = TUI requested an update. Relaunch as `3v0 update` so
     # the user sees update output directly and gets the new version.
     # preserve_inherited=False ensures --tui and other flags are NOT carried
     # into the update subcommand.
@@ -2829,36 +2829,36 @@ def _launch_tui(
 
 
 def _pin_kanban_board_env() -> None:
-    """Pin the active kanban board into ``HERMES_KANBAN_BOARD`` for the chat session.
+    """Pin the active kanban board into ``EV0_KANBAN_BOARD`` for the chat session.
 
     Without this, in-process tools (``kanban_*``) and shelled-out CLI calls
-    (``hermes kanban …``) resolve the board on different paths: the env-pin if
+    (``3v0 kanban …``) resolve the board on different paths: the env-pin if
     set, otherwise the global ``<root>/kanban/current`` file. A concurrent
-    ``hermes kanban boards switch`` from another session can flip the file
+    ``3v0 kanban boards switch`` from another session can flip the file
     mid-turn, so the same chat sees its tool calls hit board A while its shell
     calls hit board B (#20074). Pinning at chat boot mirrors what the
     dispatcher already does for spawned workers.
     """
-    if os.environ.get("HERMES_KANBAN_BOARD"):
+    if os.environ.get("EV0_KANBAN_BOARD"):
         return
     try:
         from ev0_cli.kanban_db import get_current_board
 
-        os.environ["HERMES_KANBAN_BOARD"] = get_current_board()
+        os.environ["EV0_KANBAN_BOARD"] = get_current_board()
     except Exception:
         pass
 
 
 def _sync_bundled_skills_quietly() -> None:
-    """Seed ``~/.hermes/skills/`` with the bundled skill library on first launch.
+    """Seed ``~/.3V0/skills/`` with the bundled skill library on first launch.
 
     Called from any CLI entrypoint that the user might use as their first
-    interaction with Hermes — chat, dashboard (the desktop GUI's backend),
+    interaction with 3V0 — chat, dashboard (the desktop GUI's backend),
     and gateway. The skills_sync module is manifest-based and idempotent:
     skipped skills cost ~milliseconds, so calling this repeatedly is fine.
 
     Failures are swallowed because skills are an enhancement, not a hard
-    dependency. Hermes still functions without them; the user just sees an
+    dependency. 3V0 still functions without them; the user just sees an
     empty skills library.
     """
     try:
@@ -2876,7 +2876,7 @@ def _resolve_use_tui(args) -> bool:
       1. ``--cli`` flag         → always classic REPL
       2. ``--tui`` flag         → always TUI (explicit ask)
       3. no TTY                 → always classic (ambient prefs don't apply)
-      4. ``HERMES_TUI=1`` env   → TUI
+      4. ``EV0_TUI=1`` env   → TUI
       5. ``display.interface`` config value ("cli" | "tui")
       6. default → classic REPL
 
@@ -2885,7 +2885,7 @@ def _resolve_use_tui(args) -> bool:
 
     The TTY gate (3) is load-bearing: ambient TUI preferences (env var or
     config default) must never hijack a NON-interactive invocation. Kanban
-    workers, cron jobs, and pipelines run ``hermes … chat -q`` with stdout
+    workers, cron jobs, and pipelines run ``3v0 … chat -q`` with stdout
     on a pipe; booting the Ink TUI there hits its no-TTY bail-out, which
     prints a resume hint and exits 0 — a kanban worker then dies with
     "exited cleanly without calling kanban_complete — protocol violation"
@@ -2901,7 +2901,7 @@ def _resolve_use_tui(args) -> bool:
             return False
     except Exception:
         return False
-    if os.environ.get("HERMES_TUI") == "1":
+    if os.environ.get("EV0_TUI") == "1":
         return True
     try:
         from ev0_cli.config import load_config
@@ -2958,14 +2958,14 @@ def cmd_chat(args):
         else:
             kind = "TUI" if use_tui else "CLI"
             print(f"No previous {kind} session found to resume.")
-            print("Use 'hermes sessions list' to see available sessions.")
+            print("Use '3v0 sessions list' to see available sessions.")
             sys.exit(1)
 
     # Resolve --continue into --resume with the latest session or by name
     _resolve_continue_arg(args, use_tui=use_tui)
 
     # --resume @claude / --resume @codex: import a foreign session (Claude
-    # Code / Codex CLI) and resume the newly created Hermes session.
+    # Code / Codex CLI) and resume the newly created 3V0 session.
     _resume_foreign = getattr(args, "resume", None)
     if isinstance(_resume_foreign, str) and _resume_foreign.strip().lower() in (
         "@claude",
@@ -2986,7 +2986,7 @@ def cmd_chat(args):
             print(f"Error: {e}")
             sys.exit(1)
         print(f"✓ Imported as {_imported_id} — resuming it now.")
-        print(f"  (later: hermes --resume {_imported_id})")
+        print(f"  (later: 3v0 --resume {_imported_id})")
         args.resume = _imported_id
 
     # Resolve --resume by title if it's not a direct session ID
@@ -3046,7 +3046,7 @@ def cmd_chat(args):
             for _ref in _retired_xai_refs:
                 sys.stderr.write(f"  \033[33m⚠\033[0m {format_issue(_ref)}\n")
             sys.stderr.write(f"  \033[2mMigration guide: {MIGRATION_GUIDE_URL}\033[0m\n")
-            sys.stderr.write("  \033[2mRun 'hermes doctor' for details.\033[0m\n\n")
+            sys.stderr.write("  \033[2mRun '3v0 doctor' for details.\033[0m\n\n")
     except Exception:
         pass
 
@@ -3054,10 +3054,10 @@ def cmd_chat(args):
     if not _has_any_provider_configured():
         print()
         print(
-            "It looks like Hermes isn't configured yet -- no API keys or providers found."
+            "It looks like 3V0 isn't configured yet -- no API keys or providers found."
         )
         print()
-        print("  Run:  hermes setup")
+        print("  Run:  3v0 setup")
         print()
 
         from ev0_cli.setup import (
@@ -3079,7 +3079,7 @@ def cmd_chat(args):
             cmd_setup(args)
             return
         print()
-        print("You can run 'hermes setup' at any time to configure.")
+        print("You can run '3v0 setup' at any time to configure.")
         sys.exit(1)
 
     # Start update check in background (runs while other init happens).
@@ -3102,7 +3102,7 @@ def cmd_chat(args):
     # alone costs ~120-170ms of rglob/hashing on the startup path. Skill
     # loading happens at agent init (first message), by which point the
     # sync has long finished; a same-instant race would only matter in the
-    # rare launch right after `hermes update` changed a bundled skill.
+    # rare launch right after `3v0 update` changed a bundled skill.
     def _skills_sync_bg() -> None:
         try:
             _sync_bundled_skills_for_startup()
@@ -3119,25 +3119,25 @@ def cmd_chat(args):
     # _YOLO_MODE_FROZEN.  This redundant set is a safety net for callers
     # that invoke cmd_chat directly (e.g. subcommand dispatch).
     if getattr(args, "yolo", False):
-        os.environ["HERMES_YOLO_MODE"] = "1"
+        os.environ["EV0_YOLO_MODE"] = "1"
 
     # --ignore-user-config: make load_cli_config() / load_config() skip the
-    # user's ~/.hermes/config.yaml and return built-in defaults. Set BEFORE
+    # user's ~/.3V0/config.yaml and return built-in defaults. Set BEFORE
     # importing cli (which runs `CLI_CONFIG = load_cli_config()` at module
     # import time). Credentials in .env are still loaded — this flag only
     # ignores behavioral/config settings.
     if getattr(args, "ignore_user_config", False):
-        os.environ["HERMES_IGNORE_USER_CONFIG"] = "1"
+        os.environ["EV0_IGNORE_USER_CONFIG"] = "1"
 
     # --ignore-rules: skip auto-injection of AGENTS.md/SOUL.md/.cursorrules
     # (rules), memory entries, and any preloaded skills coming from user config.
     # Maps to AIAgent(skip_context_files=True, skip_memory=True).
     if getattr(args, "ignore_rules", False):
-        os.environ["HERMES_IGNORE_RULES"] = "1"
+        os.environ["EV0_IGNORE_RULES"] = "1"
 
     # --source: tag session source for filtering (e.g. 'tool' for third-party integrations)
     if getattr(args, "source", None):
-        os.environ["HERMES_SESSION_SOURCE"] = args.source
+        os.environ["EV0_SESSION_SOURCE"] = args.source
 
     _pin_kanban_board_env()
     _confirm_startup_expensive_model_override(args)
@@ -3218,7 +3218,7 @@ def cmd_whatsapp(args):
     """Set up WhatsApp: choose mode, configure, install bridge, pair via QR."""
     _require_tty("whatsapp")
     from ev0_cli.config import get_env_value, save_env_value
-    from ev0_constants import find_node_executable, with_hermes_node_path
+    from ev0_constants import find_node_executable, with_ev0_node_path
 
     print()
     print("⚕ WhatsApp Setup")
@@ -3228,7 +3228,7 @@ def cmd_whatsapp(args):
     current_mode = get_env_value("WHATSAPP_MODE") or ""
     if not current_mode:
         print()
-        print("How will you use WhatsApp with Hermes?")
+        print("How will you use WhatsApp with 3V0?")
         print()
         print("  1. Separate bot number (recommended)")
         print("     People message the bot's number directly — cleanest experience.")
@@ -3278,7 +3278,7 @@ def cmd_whatsapp(args):
     # We intentionally don't write WHATSAPP_ENABLED=true here.  If the user
     # aborts the wizard later (Ctrl+C, failed npm install, missed QR scan),
     # we'd otherwise leave .env claiming WhatsApp is ready when the bridge
-    # has no creds.json.  Every subsequent `hermes gateway` then paid a 30s
+    # has no creds.json.  Every subsequent `3v0 gateway` then paid a 30s
     # bridge-bootstrap timeout and queued WhatsApp for indefinite retries.
     # Now: aborted setup leaves WHATSAPP_ENABLED unset → gateway skips it.
     # Re-runs that already have WHATSAPP_ENABLED=true (from a prior
@@ -3346,7 +3346,7 @@ def cmd_whatsapp(args):
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                env=with_hermes_node_path(),
+                env=with_ev0_node_path(),
             )
         except KeyboardInterrupt:
             print("\n  ✗ Install cancelled")
@@ -3362,7 +3362,7 @@ def cmd_whatsapp(args):
         print("✓ Bridge dependencies already installed")
 
     # ── Step 5: Check for existing session ───────────────────────────────
-    session_dir = get_hermes_home() / "whatsapp" / "session"
+    session_dir = get_ev0_home() / "whatsapp" / "session"
     session_dir.mkdir(parents=True, exist_ok=True)
 
     if (session_dir / "creds.json").exists():
@@ -3385,7 +3385,7 @@ def cmd_whatsapp(args):
             if (get_env_value("WHATSAPP_ENABLED") or "").lower() != "true":
                 save_env_value("WHATSAPP_ENABLED", "true")
             print("\n✓ WhatsApp is configured and paired!")
-            print("  Start the gateway with: hermes gateway")
+            print("  Start the gateway with: 3v0 gateway")
             return
 
     # ── Step 6: QR code pairing ──────────────────────────────────────────
@@ -3411,7 +3411,7 @@ def cmd_whatsapp(args):
                 str(session_dir),
             ],
             cwd=str(bridge_dir),
-            env=with_hermes_node_path(),
+            env=with_ev0_node_path(),
         )
     except KeyboardInterrupt:
         pass
@@ -3421,30 +3421,30 @@ def cmd_whatsapp(args):
     if (session_dir / "creds.json").exists():
         # Only enable WhatsApp now that pairing actually succeeded.  If the
         # user Ctrl+C'd at any earlier step, WHATSAPP_ENABLED stays unset
-        # and `hermes gateway` skips it cleanly instead of paying a 30s
+        # and `3v0 gateway` skips it cleanly instead of paying a 30s
         # bridge timeout + queueing the platform for indefinite retries.
         save_env_value("WHATSAPP_ENABLED", "true")
         print("✓ WhatsApp paired successfully!")
         print()
         if wa_mode == "bot":
             print("  Next steps:")
-            print("    1. Start the gateway:  hermes gateway")
+            print("    1. Start the gateway:  3v0 gateway")
             print("    2. Send a message to the bot's WhatsApp number")
             print("    3. The agent will reply automatically")
             print()
-            print("  Tip: Agent responses are prefixed with '⚕ Hermes Agent'")
+            print("  Tip: Agent responses are prefixed with '⚕ 3V0 Agent'")
         else:
             print("  Next steps:")
-            print("    1. Start the gateway:  hermes gateway")
+            print("    1. Start the gateway:  3v0 gateway")
             print("    2. Open WhatsApp → Message Yourself")
             print("    3. Type a message — the agent will reply")
             print()
-            print("  Tip: Agent responses are prefixed with '⚕ Hermes Agent'")
+            print("  Tip: Agent responses are prefixed with '⚕ 3V0 Agent'")
             print("  so you can tell them apart from your own messages.")
         print()
-        print("  Or install as a service: hermes gateway install")
+        print("  Or install as a service: 3v0 gateway install")
     else:
-        print("⚠ Pairing may not have completed. Run 'hermes whatsapp' to try again.")
+        print("⚠ Pairing may not have completed. Run '3v0 whatsapp' to try again.")
 
 
 def cmd_whatsapp_cloud(args):
@@ -3456,7 +3456,7 @@ def cmd_whatsapp_cloud(args):
     common setup mistakes (e.g. pasting a phone number into the Phone
     Number ID field).
 
-    Distinct from ``hermes whatsapp`` (the Baileys bridge wizard) — the
+    Distinct from ``3v0 whatsapp`` (the Baileys bridge wizard) — the
     two adapters are complementary, not alternatives. See
     ``ev0_cli/setup_whatsapp_cloud.py``.
     """
@@ -3504,7 +3504,7 @@ def _is_profile_api_key_provider(provider_id: str) -> bool:
 def select_provider_and_model(args=None):
     """Core provider selection + model picking logic.
 
-    Shared by ``cmd_model`` (``hermes model``) and the setup wizard
+    Shared by ``cmd_model`` (``3v0 model``) and the setup wizard
     (``setup_model_provider`` in setup.py).  Handles the full flow:
     provider picker, credential prompting, model selection, and config
     persistence.
@@ -3539,7 +3539,7 @@ def select_provider_and_model(args=None):
         config_provider = model_cfg.get("provider")
 
     effective_provider = (
-        config_provider or os.getenv("HERMES_INFERENCE_PROVIDER") or "auto"
+        config_provider or os.getenv("EV0_INFERENCE_PROVIDER") or "auto"
     )
     compatible_custom_providers = get_compatible_custom_providers(config)
     def _named_custom_provider_map(cfg) -> dict[str, dict[str, str]]:
@@ -3708,8 +3708,8 @@ def select_provider_and_model(args=None):
                 active = _canonical_named_custom_key(active)
         else:
             warning = (
-                f"Unknown provider '{effective_provider}'. Check 'hermes model' for "
-                "available providers, or run 'hermes doctor' to diagnose config "
+                f"Unknown provider '{effective_provider}'. Check '3v0 model' for "
+                "available providers, or run '3v0 doctor' to diagnose config "
                 "issues."
             )
             print(f"Warning: {warning} Falling back to auto provider detection.")
@@ -3753,11 +3753,11 @@ def select_provider_and_model(args=None):
     # resolves back to a concrete slug, so the dispatch chain below is
     # unchanged. Custom providers and the trailing actions stay flat.
     canonical_descs = {p.slug: p.tui_desc for p in CANONICAL_PROVIDERS}
-    # Honor ``model_catalog.excluded_providers`` so the CLI ``hermes model``
+    # Honor ``model_catalog.excluded_providers`` so the CLI ``3v0 model``
     # picker hides the same providers the gateway/TUI pickers do. A canonical
     # provider is hidden if its slug OR any of its aliases appears in the
     # exclusion list (case-insensitive), matching list_authenticated_providers'
-    # matching against hermes_id / alias / canonical slug.
+    # matching against ev0_id / alias / canonical slug.
     _cli_excluded = {
         str(p).strip().lower()
         for p in (config.get("model_catalog", {}) or {}).get("excluded_providers") or []
@@ -3942,7 +3942,7 @@ def select_provider_and_model(args=None):
 
     # ── Post-switch cleanup: clear stale OPENAI_BASE_URL ──────────────
     # When the user switches to a named provider (anything except "custom"),
-    # a leftover OPENAI_BASE_URL in ~/.hermes/.env can poison auxiliary
+    # a leftover OPENAI_BASE_URL in ~/.3V0/.env can poison auxiliary
     # clients that use provider:auto. Clear it proactively.  (#5161)
     if selected_provider not in {
         "custom",
@@ -3953,7 +3953,7 @@ def select_provider_and_model(args=None):
 
 
 def _clear_stale_openai_base_url():
-    """Remove OPENAI_BASE_URL from ~/.hermes/.env if the active provider is not 'custom'.
+    """Remove OPENAI_BASE_URL from ~/.3V0/.env if the active provider is not 'custom'.
 
     After a provider switch, a leftover OPENAI_BASE_URL causes auxiliary
     clients (compression, vision, delegation) with provider:auto to route
@@ -3985,14 +3985,14 @@ def _clear_stale_openai_base_url():
 # ─────────────────────────────────────────────────────────────────────────────
 # Auxiliary model configuration
 #
-# Hermes uses lightweight "auxiliary" models for side tasks (vision analysis,
+# 3V0 uses lightweight "auxiliary" models for side tasks (vision analysis,
 # context compression, web extraction, session search, etc.). Each task has
 # its own provider+model pair in config.yaml under `auxiliary.<task>`.
 #
 # The UI lives behind "Configure auxiliary models..." at the bottom of the
-# `hermes model` provider picker. It does NOT re-run credential setup — it
+# `3v0 model` provider picker. It does NOT re-run credential setup — it
 # only routes already-authenticated providers to specific aux tasks. Users
-# configure new providers through the normal `hermes model` flow first.
+# configure new providers through the normal `3v0 model` flow first.
 # ─────────────────────────────────────────────────────────────────────────────
 
 # (task_key, display_name, short_description)
@@ -4134,7 +4134,7 @@ def _aux_config_menu() -> None:
         print()
         print("  Side tasks (vision, compression, web extraction, etc.) default")
         print('  to your main chat model.  "auto" means "use my main model" —')
-        print("  Hermes only falls back to a lightweight backend (OpenRouter,")
+        print("  3V0 only falls back to a lightweight backend (OpenRouter,")
         print("  Nous Portal) if the main model is unavailable.  Override a")
         print("  task below if you want it pinned to a specific provider/model.")
         print()
@@ -4185,7 +4185,7 @@ def _aux_select_for_task(task: str) -> None:
     shows: authenticated built-ins, the user's own ``providers:`` /
     ``custom_providers:`` endpoints, and providers whose credential pool is
     temporarily exhausted. Only already-configured providers appear; users set
-    up new ones through the normal ``hermes model`` flow, then route aux tasks
+    up new ones through the normal ``3v0 model`` flow, then route aux tasks
     to them here.
     """
     from ev0_cli.config import load_config
@@ -4431,7 +4431,7 @@ def _prompt_custom_api_mode_selection(base_url: str, current_api_mode: str = "")
         (
             "",
             "Auto-detect",
-            "Use Hermes URL heuristics; best for standard OpenAI-compatible endpoints.",
+            "Use 3V0 URL heuristics; best for standard OpenAI-compatible endpoints.",
         ),
         (
             "chat_completions",
@@ -4667,8 +4667,8 @@ def _remove_custom_provider(config):
 # Lazy-export the model catalog at module level. Tests and a handful of
 # downstream call sites read `ev0_cli.main._PROVIDER_MODELS` directly,
 # so the symbol needs to be reachable as a module attribute. But importing
-# the catalog eagerly costs ~55ms on every `hermes` invocation — including
-# fast paths like `hermes --version` and slash-command dispatch that never
+# the catalog eagerly costs ~55ms on every `3v0` invocation — including
+# fast paths like `3v0 --version` and slash-command dispatch that never
 # touch the catalog. PEP 562 module-level __getattr__ defers the import
 # until first attribute access, so the cost is only paid by callers that
 # actually look up the catalog. Termux already defers via the same
@@ -4681,7 +4681,7 @@ _LAZY_MODEL_EXPORTS = ("_PROVIDER_MODELS",)
 # implementations into their own modules, but main.py still re-exports their
 # surface so argparse wiring and test monkeypatches on ev0_cli.main.<name>
 # keep resolving unchanged. Importing those modules eagerly costs ~50ms on
-# every `hermes` invocation, including fast paths like `hermes --version`
+# every `3v0` invocation, including fast paths like `3v0 --version`
 # that never run a subcommand. Resolve the re-exports through the module
 # __getattr__ below instead, so each module is only imported when one of its
 # names is actually touched. Monkeypatching keeps working: patch.object sets
@@ -4691,7 +4691,7 @@ _LAZY_COMMAND_EXPORTS = {
         "cmd_sessions",
     ),
     "ev0_cli.dashboard_procs": (
-        "_detect_concurrent_hermes_instances",
+        "_detect_concurrent_ev0_instances",
         "_filter_dashboard_respawn_candidates",
         "_kill_stale_dashboard_processes",
         "_scan_dashboard_processes",
@@ -4950,11 +4950,11 @@ def _prompt_api_key(
     provider_id: str = "",
     existing_source: str = "",
 ) -> tuple:
-    """Shared API-key entry point for ``hermes setup`` / ``hermes model``.
+    """Shared API-key entry point for ``3v0 setup`` / ``3v0 model``.
 
     Handles both first-time entry and the already-configured case.  When a key
     is already present, offers [K]eep / [R]eplace / [C]lear so the user can
-    recover from a malformed paste without editing ``~/.hermes/.env`` by hand.
+    recover from a malformed paste without editing ``~/.3V0/.env`` by hand.
 
     Returns ``(resolved_key, abort)``.  ``abort=True`` means the caller should
     ``return`` immediately — the user cancelled entry, declined to replace, or
@@ -5029,7 +5029,7 @@ def _prompt_api_key(
     if choice.startswith("c") and not pool_backed:
         save_env_value(key_env, "")
         print(
-            f"  API key cleared.  Re-run `hermes setup` to configure {pconfig.name} again."
+            f"  API key cleared.  Re-run `3v0 setup` to configure {pconfig.name} again."
         )
         return "", True
 
@@ -5091,10 +5091,10 @@ def _run_anthropic_oauth_flow(save_env_value):
         ):
             use_anthropic_claude_code_credentials(save_fn=save_env_value)
             print("  ✓ Claude Code credentials linked.")
-            from ev0_constants import display_hermes_home as _dhh_fn
+            from ev0_constants import display_ev0_home as _dhh_fn
 
             print(
-                f"    Hermes will use Claude's credential store directly instead of copying a setup-token into {_dhh_fn()}/.env."
+                f"    3V0 will use Claude's credential store directly instead of copying a setup-token into {_dhh_fn()}/.env."
             )
             return True
         return False
@@ -5143,7 +5143,7 @@ def _run_anthropic_oauth_flow(save_env_value):
         print("    1. Install Claude Code:  npm install -g @anthropic-ai/claude-code")
         print("    2. Run:                  claude setup-token")
         print("    3. Follow the browser prompts to authorize")
-        print("    4. Re-run:               hermes model")
+        print("    4. Re-run:               3v0 model")
         print()
         print("  Or paste an existing setup-token now (sk-ant-oat-...):")
         print()
@@ -5165,7 +5165,7 @@ def _run_anthropic_oauth_flow(save_env_value):
 
 
 def cmd_login(args):
-    """Authenticate Hermes CLI with a provider."""
+    """Authenticate 3V0 CLI with a provider."""
     from ev0_cli.auth import login_command
 
     login_command(args)
@@ -5207,7 +5207,7 @@ def cmd_sync(args):
 
     if sub in {None, ""}:
         print(
-            "usage: hermes sync "
+            "usage: 3v0 sync "
             "<status|pull|push|now|enable|disable|device|propose>\n"
             "\n"
             "Your skills, across your devices:\n"
@@ -5276,7 +5276,7 @@ def cmd_sync(args):
             print(
                 f"'{skill}' is not sync-eligible (bundled, hub-installed, "
                 f"external, or not found). Only agent-created / user-authored "
-                f"skills under ~/.hermes/skills/ can sync.",
+                f"skills under ~/.3V0/skills/ can sync.",
                 file=sys.stderr,
             )
             return 1
@@ -5302,7 +5302,7 @@ def cmd_sync(args):
                 print(
                     f"  {len(modified)} with local edits not yet shared: "
                     f"{', '.join(modified)}\n"
-                    f"  Share them back with `hermes sync propose <skill>`. "
+                    f"  Share them back with `3v0 sync propose <skill>`. "
                     f"Org updates will not overwrite them.",
                     file=sys.stderr,
                 )
@@ -5321,14 +5321,14 @@ def cmd_sync(args):
             )
         elif not status.get("feature_enabled"):
             print(
-                "\nSync feature is off for this instance (set HERMES_SYNC_ENABLED=1 "
+                "\nSync feature is off for this instance (set EV0_SYNC_ENABLED=1 "
                 "or config.yaml sync.enabled: true). Sync is inert.",
                 file=sys.stderr,
             )
         elif not status.get("base_url"):
             print(
                 "\nNo sync base URL configured (config.yaml sync.base_url or "
-                "HERMES_SYNC_BASE_URL). Sync is inert.",
+                "EV0_SYNC_BASE_URL). Sync is inert.",
                 file=sys.stderr,
             )
         return 0
@@ -5348,7 +5348,7 @@ def cmd_sync(args):
     if not ssc.resolve_sync_base_url():
         print(
             "sync inert: no sync base URL configured (config.yaml sync.base_url "
-            "or HERMES_SYNC_BASE_URL).",
+            "or EV0_SYNC_BASE_URL).",
             file=sys.stderr,
         )
         return 1
@@ -5378,10 +5378,10 @@ def cmd_sync(args):
                         file=sys.stderr,
                     )
         elif sub == "push":
-            result = ssc.push_skills(identity=identity, message="hermes sync push")
+            result = ssc.push_skills(identity=identity, message="3v0 sync push")
         elif sub == "now":
             pull_res = ssc.pull_skills(identity=identity)
-            push_res = ssc.push_skills(identity=identity, message="hermes sync now")
+            push_res = ssc.push_skills(identity=identity, message="3v0 sync now")
             result = {"pull": pull_res, "push": push_res}
         else:
             print(f"Unknown sync subcommand: {sub}", file=sys.stderr)
@@ -5404,7 +5404,7 @@ def cmd_webhook(args):
 def cmd_slack(args):
     """Slack integration helpers.
 
-    Dispatches ``hermes slack <subcommand>``. Currently supports:
+    Dispatches ``3v0 slack <subcommand>``. Currently supports:
       manifest — print or write a Slack app manifest with every gateway
                  command registered as a first-class slash.
     """
@@ -5412,13 +5412,13 @@ def cmd_slack(args):
     if sub in {None, ""}:
         # No subcommand — print usage hint.
         print(
-            "usage: hermes slack <subcommand>\n"
+            "usage: 3v0 slack <subcommand>\n"
             "\n"
             "subcommands:\n"
             "  manifest   Generate a Slack app manifest with every gateway\n"
             "             command registered as a native slash\n"
             "\n"
-            "Run `hermes slack manifest -h` for details.",
+            "Run `3v0 slack manifest -h` for details.",
             file=sys.stderr,
         )
         return 1
@@ -5471,7 +5471,7 @@ def cmd_verify(args):
 
 
 def cmd_security(args):
-    """Dispatch `hermes security <subcmd>`."""
+    """Dispatch `3v0 security <subcmd>`."""
     sub = getattr(args, "security_command", None)
     if sub in ("audit", None):
         from ev0_cli.security_audit import cmd_security_audit
@@ -5484,7 +5484,7 @@ def cmd_security(args):
 
 
 def cmd_approvals(args):
-    """Dispatch `hermes approvals <subcmd>`."""
+    """Dispatch `3v0 approvals <subcmd>`."""
     from ev0_cli.approvals_suggest import approvals_command
 
     status = approvals_command(args)
@@ -5522,7 +5522,7 @@ def cmd_skin(args):
 
 
 def cmd_backup(args):
-    """Back up Hermes home directory to a zip file."""
+    """Back up 3V0 home directory to a zip file."""
     if getattr(args, "quick", False):
         from ev0_cli.backup import run_quick_backup
 
@@ -5534,7 +5534,7 @@ def cmd_backup(args):
 
 
 def cmd_import(args):
-    """Restore a Hermes backup from a zip file."""
+    """Restore a 3V0 backup from a zip file."""
     from ev0_cli.backup import run_import
 
     run_import(args)
@@ -5597,7 +5597,7 @@ def cmd_version(args):
 
 
 def cmd_uninstall(args):
-    """Uninstall Hermes Agent."""
+    """Uninstall 3V0 Agent."""
     # Full/keep-data uninstall. ``--yes`` runs non-interactively (the desktop
     # app's lite/full modes drive this from a detached cleanup script), so only
     # gate on a TTY when we actually need to prompt for the option + confirm.
@@ -5643,7 +5643,7 @@ def _clear_bytecode_cache(root: Path) -> int:
 # paying the update_cmd import cost on every CLI invocation.
 
 # Stamp file recording the checkout fingerprint the bytecode cache was last
-# validated against. Lives next to the checkout (NOT in HERMES_HOME) because
+# validated against. Lives next to the checkout (NOT in EV0_HOME) because
 # __pycache__ is per-checkout state shared by every profile.
 _BYTECODE_FINGERPRINT_FILE = ".bytecode-fingerprint"
 
@@ -5672,16 +5672,16 @@ def _sweep_stale_bytecode_if_checkout_changed() -> None:
     The stale-bytecode bug class (issues #6207, #60242; Dhruv's WhatsApp
     ``cannot import name 'parse_model_flags_detailed'`` report) has one
     shared shape: the checkout's ``.py`` files change (git pull inside
-    ``hermes update``, a manual ``git pull``, a ZIP update, a file-sync
+    ``3v0 update``, a manual ``git pull``, a ZIP update, a file-sync
     restore) while ``__pycache__`` retains bytecode from the previous
     revision, and a later process trusts the stale ``.pyc`` instead of the
     fresh source.
 
-    Update-time clears alone can never close this class: ``hermes update``
+    Update-time clears alone can never close this class: ``3v0 update``
     always executes the PRE-pull updater code, so any hardening added to it
     only takes effect one update late, and manual ``git pull`` never runs
     the updater at all. This launch-time guard closes the loop: every
-    ``hermes`` entry point compares the checkout fingerprint (cheap file
+    ``3v0`` entry point compares the checkout fingerprint (cheap file
     reads, no git subprocess) against the last-validated stamp and sweeps
     the bytecode cache once when they diverge.
 
@@ -5717,7 +5717,7 @@ def _web_ui_build_needed(web_dir: Path) -> bool:
 
     Uses a SHA-256 content hash of the web source tree (the same approach
     ``_desktop_build_needed()`` already uses for the Electron build), NOT
-    mtime comparison. ``git checkout`` / ``git pull`` / ``hermes update``
+    mtime comparison. ``git checkout`` / ``git pull`` / ``3v0 update``
     rewrite source mtimes without changing content, which made the old
     mtime check unreliable in both directions: it could skip a rebuild when
     source had genuinely changed (serving a stale dashboard) and force a
@@ -5807,9 +5807,9 @@ def _compute_web_ui_content_hash(project_root: Path, web_dir: Path) -> str:
 
 
 def _web_ui_stamp_path() -> Path:
-    """Return the path to the web UI build stamp file under $HERMES_HOME."""
-    from ev0_constants import get_hermes_home
-    return get_hermes_home() / "web-ui-build-stamp.json"
+    """Return the path to the web UI build stamp file under $EV0_HOME."""
+    from ev0_constants import get_ev0_home
+    return get_ev0_home() / "web-ui-build-stamp.json"
 
 
 def _write_web_ui_build_stamp(project_root: Path, web_dir: Path) -> None:
@@ -5843,7 +5843,7 @@ def _run_with_idle_timeout(
     WSL2 with the default 4 GB cap) the build can stall or sit silent for
     minutes; users see a frozen terminal, assume the update is hung, and
     reboot — leaving the editable install in a half-state with the
-    ``hermes`` launcher present but ``ev0_cli`` not importable.
+    ``3v0`` launcher present but ``ev0_cli`` not importable.
 
     This helper fixes both halves: stdout is streamed (so the user sees
     progress), and if no bytes have appeared on stdout/stderr for
@@ -5938,7 +5938,7 @@ def _nixos_build_env() -> dict[str, str] | None:
     does a bare ``PATH`` lookup — which fails on NixOS.
 
     Two-tier resolution:
-    1. Fast path — the hermes venv's python3 (present in managed installs)
+    1. Fast path — the 3v0 venv's python3 (present in managed installs)
     2. Fallback — resolves the absolute python3 path via ``nix-shell``
 
     Returns an env dict suitable for ``subprocess.run(env=...)`` or
@@ -5957,7 +5957,7 @@ def _nixos_build_env() -> dict[str, str] | None:
     if shutil.which("python3"):
         return None
 
-    # Tier 1: fast path — hermes venv python3, no nix-shell overhead
+    # Tier 1: fast path — 3v0 venv python3, no nix-shell overhead
     for venv_name in ("venv", ".venv"):
         venv_python = PROJECT_ROOT / venv_name / "bin" / "python3"
         if venv_python.exists():
@@ -5965,7 +5965,7 @@ def _nixos_build_env() -> dict[str, str] | None:
 
     # Tier 2: nix-shell fallback — resolves the absolute python3 path once.
     # Slower (~2–5 s for the nix-shell eval) but always works, even without
-    # a hermes venv (pip / non-managed / bare-git installs).  The resolved
+    # a 3v0 venv (pip / non-managed / bare-git installs).  The resolved
     # path is a self-contained Nix store binary (all deps via RPATH) so it
     # stays valid even after the nix-shell exits.
     try:
@@ -5995,7 +5995,7 @@ def _run_npm_install_deterministic(
     falls back to ``npm install`` only if ``npm ci`` fails (e.g. lockfile out of
     sync on a WIP checkout).  Without this, ``npm install`` on npm ≥ 10 silently
     rewrites committed lockfiles (stripping ``"peer": true`` etc.), which leaves
-    the working tree dirty and causes the next ``hermes update`` to stash the
+    the working tree dirty and causes the next ``3v0 update`` to stash the
     lockfile — repeatedly.
 
     ``--include=dev`` is forced on every invocation: the callers are frontend
@@ -6048,7 +6048,7 @@ def _run_npm_install_deterministic(
     # command here identically (the `npm install` fallback included), so the
     # failure is worth exactly one repair attempt. `maybe_repair_npm_engine`
     # returns the npm to retry with — the same one after an in-place upgrade
-    # of a Hermes-managed install, or a freshly provisioned managed npm when
+    # of a 3V0-managed install, or a freshly provisioned managed npm when
     # the failing npm belongs to the user's own toolchain.
     from ev0_cli.npm_engine import maybe_repair_npm_engine
 
@@ -6059,9 +6059,9 @@ def _run_npm_install_deterministic(
     # The repaired npm may be a freshly provisioned managed one whose shebang
     # and lifecycle scripts resolve `node` from PATH — put the managed tree
     # first so they find the managed Node, not the mismatched system one.
-    from ev0_constants import with_hermes_node_path
+    from ev0_constants import with_ev0_node_path
 
-    run_env["PATH"] = with_hermes_node_path(run_env)["PATH"]
+    run_env["PATH"] = with_ev0_node_path(run_env)["PATH"]
     return _attempt(repaired_npm)
 
 
@@ -6181,7 +6181,7 @@ def _do_build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
     Args:
         web_dir: Path to the dashboard frontend source directory.
         fatal: If True, print error guidance and return False on failure
-               instead of a soft warning (used by ``hermes web``).
+               instead of a soft warning (used by ``3v0 web``).
 
     Returns True if the build succeeded or was skipped (no package.json).
     """
@@ -6203,7 +6203,7 @@ def _do_build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
             encoding = getattr(sys.stdout, "encoding", None) or "ascii"
             print(text.encode(encoding, errors="replace").decode(encoding, errors="replace"))
 
-    from ev0_constants import with_hermes_node_path
+    from ev0_constants import with_ev0_node_path
 
     npm = _resolve_node_runtime_npm()
     if not npm:
@@ -6211,7 +6211,7 @@ def _do_build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
             _say("Web UI frontend not built and npm is not available.")
             _say("Install Node.js, then run:  cd web && npm install && npm run build")
         return not fatal
-    build_env = _npm_lifecycle_env(with_hermes_node_path())
+    build_env = _npm_lifecycle_env(with_ev0_node_path())
     _say("→ Building web UI...")
 
     def _relay(result: "subprocess.CompletedProcess") -> None:
@@ -6238,7 +6238,7 @@ def _do_build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
     # web_dir itself and --workspace would fail.  See #42973.
     #
     # When running from the workspace root, this must name the SAME closure
-    # as `hermes update`'s _update_node_dependencies() (ui-tui + web +
+    # as `3v0 update`'s _update_node_dependencies() (ui-tui + web +
     # --include-workspace-root): the helper prefers `npm ci`, which deletes
     # node_modules before reifying the requested tree, so a narrower closure
     # here silently prunes everything the update step just installed (root
@@ -6270,7 +6270,7 @@ def _do_build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
     if r1.returncode != 0:
         _say(
             f"  {'✗' if fatal else '⚠'} Web UI npm install failed"
-            + ("" if fatal else " (hermes web will not be available)")
+            + ("" if fatal else " (3v0 web will not be available)")
         )
         _relay(r1)
         if fatal:
@@ -6323,7 +6323,7 @@ def _do_build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
 
         _say(
             f"  {'✗' if fatal else '⚠'} Web UI build failed"
-            + ("" if fatal else " (hermes web will not be available)")
+            + ("" if fatal else " (3v0 web will not be available)")
         )
         _relay(r2)
         if fatal:
@@ -6348,12 +6348,12 @@ def _desktop_dist_exists(desktop_dir: Path) -> bool:
 # SHA-256 content hash of the source tree so that:
 #   - ``git checkout`` / ``git pull`` that touch mtimes but not content
 #     don't trigger a rebuild
-#   - ``hermes update`` can unconditionally call ``hermes desktop --build-only``
+#   - ``3v0 update`` can unconditionally call ``3v0 desktop --build-only``
 #     and it will skip if nothing actually changed
-#   - ``hermes desktop`` (interactive launch) skips the build when the
+#   - ``3v0 desktop`` (interactive launch) skips the build when the
 #     stamp matches, making repeated launches fast
 #
-# Stamp file: $HERMES_HOME/desktop-build-stamp.json
+# Stamp file: $EV0_HOME/desktop-build-stamp.json
 # Schema:
 #   {
 #     "contentHash": "<sha256 hex of source files>",
@@ -6422,9 +6422,9 @@ def _compute_desktop_content_hash(project_root: Path) -> str:
 
 
 def _desktop_stamp_path() -> Path:
-    """Return the path to the desktop build stamp file under $HERMES_HOME."""
-    from ev0_constants import get_hermes_home
-    return get_hermes_home() / "desktop-build-stamp.json"
+    """Return the path to the desktop build stamp file under $EV0_HOME."""
+    from ev0_constants import get_ev0_home
+    return get_ev0_home() / "desktop-build-stamp.json"
 
 
 def _renderer_bundle_dir(desktop_dir: Path, *, source_mode: bool) -> Optional[Path]:
@@ -6443,7 +6443,7 @@ def _renderer_bundle_dir(desktop_dir: Path, *, source_mode: bool) -> Optional[Pa
     if executable is None:
         return None
 
-    # macOS: …/Hermes.app/Contents/MacOS/Hermes → …/Contents/Resources
+    # macOS: …/3V0.app/Contents/MacOS/3V0 → …/Contents/Resources
     resources = (
         executable.parent.parent / "Resources"
         if sys.platform == "darwin"
@@ -6467,7 +6467,7 @@ def _renderer_bundle_torn(dist_dir: Path) -> bool:
     behind from different generations. The app then launches and dies on the
     first lazy import with ``Failed to fetch dynamically imported module:
     …/assets/<chunk>-<hash>.js`` — and because the content stamp still matches
-    the intact SOURCE tree, ``hermes desktop`` skips the rebuild that would fix
+    the intact SOURCE tree, ``3v0 desktop`` skips the rebuild that would fix
     it, so every relaunch reproduces the crash and reinstalling looks like the
     only way out. Detecting the tear turns it into a normal rebuild.
 
@@ -6496,7 +6496,7 @@ def _desktop_build_needed(desktop_dir: Path, project_root: Path, *, source_mode:
 
     Compares the current content hash against the saved stamp. Also returns
     True if the expected build artifact doesn't exist (e.g. first run after
-    ``hermes update`` that pulled new source but hasn't built yet).
+    ``3v0 update`` that pulled new source but hasn't built yet).
     """
     # If there's no build output at all, we definitely need to build
     if source_mode:
@@ -6557,19 +6557,19 @@ def _desktop_packaged_executable(desktop_dir: Path) -> Optional[Path]:
     """Return the current platform's unpacked Electron app executable."""
     release_dir = desktop_dir / "release"
     if sys.platform == "darwin":
-        candidates = list(release_dir.glob("mac*/Hermes.app/Contents/MacOS/Hermes"))
+        candidates = list(release_dir.glob("mac*/3V0.app/Contents/MacOS/3V0"))
     elif sys.platform == "win32":
         candidates = [
-            release_dir / "win-unpacked" / "Hermes.exe",
-            release_dir / "win-ia32-unpacked" / "Hermes.exe",
-            release_dir / "win-arm64-unpacked" / "Hermes.exe",
+            release_dir / "win-unpacked" / "3V0.exe",
+            release_dir / "win-ia32-unpacked" / "3V0.exe",
+            release_dir / "win-arm64-unpacked" / "3V0.exe",
         ]
     else:
         candidates = [
-            release_dir / "linux-unpacked" / "hermes",
-            release_dir / "linux-unpacked" / "Hermes",
-            release_dir / "linux-arm64-unpacked" / "hermes",
-            release_dir / "linux-arm64-unpacked" / "Hermes",
+            release_dir / "linux-unpacked" / "3v0",
+            release_dir / "linux-unpacked" / "3V0",
+            release_dir / "linux-arm64-unpacked" / "3v0",
+            release_dir / "linux-arm64-unpacked" / "3V0",
         ]
 
     existing = [p for p in candidates if p.exists()]
@@ -6578,7 +6578,7 @@ def _desktop_packaged_executable(desktop_dir: Path) -> Optional[Path]:
     if sys.platform == "win32" and len(existing) > 1:
         # Multiple unpacked trees can coexist (e.g. a stale win-arm64-unpacked
         # left behind by a cross-arch experiment next to the real win-unpacked).
-        # Picking purely by mtime can then hand a wrong-architecture Hermes.exe
+        # Picking purely by mtime can then hand a wrong-architecture 3V0.exe
         # to the launcher, which Windows rejects with "This app can't run on
         # your computer" (#69179). Prefer candidates whose PE machine field
         # matches the host; fall back to mtime when none can be parsed.
@@ -6591,16 +6591,16 @@ def _desktop_packaged_executable(desktop_dir: Path) -> Optional[Path]:
 
 # ─── Desktop exe integrity gate (#69179) ────────────────────────────────────
 #
-# The desktop self-update chain (Desktop → hermes-setup --update →
-# `hermes update` → `hermes desktop --build-only` → relaunch) rebuilds
-# Hermes.exe on the end user's machine and used to verify only that the file
+# The desktop self-update chain (Desktop → 3v0-setup --update →
+# `3v0 update` → `3v0 desktop --build-only` → relaunch) rebuilds
+# 3V0.exe on the end user's machine and used to verify only that the file
 # EXISTS before declaring success. A corrupt cached Electron zip whose
 # extraction produced a truncated electron.exe, an interrupted rcedit resource
 # rewrite, a disk-full pack, or a wrong-arch unpacked tree therefore shipped a
 # broken binary that Windows refuses to load ("This app can't run on your
 # computer" / 此应用无法在你的电脑上运行). These helpers parse the PE header —
 # no signature infrastructure required — so a structurally broken or
-# wrong-architecture Hermes.exe is caught BEFORE the updater replaces the
+# wrong-architecture 3V0.exe is caught BEFORE the updater replaces the
 # working app, and the previous build can be restored from the .bak tree that
 # apps/desktop/scripts/before-pack.mjs now preserves.
 
@@ -6634,7 +6634,7 @@ def _windows_native_machine_from_iswow64() -> Optional[str]:
     that makes ``IsWow64Process2`` fail with ``ERROR_INVALID_HANDLE`` (6),
     which is exactly the residual Windows-on-ARM failure after #71218: the
     gate fell through to ``PROCESSOR_ARCHITECTURE=AMD64`` (the emulated
-    process arch) and rejected a correctly-built ARM64 ``Hermes.exe``.
+    process arch) and rejected a correctly-built ARM64 ``3V0.exe``.
     Binding ``restype``/``argtypes`` to ``wintypes.HANDLE`` keeps the full
     ``0xFFFFFFFFFFFFFFFF`` pseudo-handle.
     """
@@ -6699,7 +6699,7 @@ def _windows_native_machine() -> str:
     """The Windows host OS's NATIVE machine architecture, normalized upper.
 
     ``platform.machine()`` reports the PROCESS architecture, which lies under
-    emulation: the desktop update chain runs an x64 hermes-setup.exe (and thus
+    emulation: the desktop update chain runs an x64 3v0-setup.exe (and thus
     x64 Python) on Windows-on-ARM devices, where ``platform.machine()``
     returns ``AMD64`` even though the OS is ARM64. The #71119 integrity gate
     then rejected the CORRECT ARM64 rebuild as an "architecture mismatch"
@@ -6900,7 +6900,7 @@ def _ensure_desktop_exe_launchable(
     if error is None:
         return packaged_executable, False
 
-    print(f"✗ The built Hermes.exe failed its integrity check: {error}")
+    print(f"✗ The built 3V0.exe failed its integrity check: {error}")
     print(f"    at: {packaged_executable}")
 
     # Self-heal setup for the retry: drop the (likely corrupt) cached Electron
@@ -6914,13 +6914,13 @@ def _ensure_desktop_exe_launchable(
 
     restored = _rollback_desktop_from_backup(packaged_executable)
     if restored is not None:
-        print("  ↩ Update aborted — restored the previous working Hermes.exe from backup.")
-        print("    Your existing version was kept and still works. Run `hermes desktop`")
+        print("  ↩ Update aborted — restored the previous working 3V0.exe from backup.")
+        print("    Your existing version was kept and still works. Run `3v0 desktop`")
         print("    (or the in-app update) again to retry with a fresh Electron download.")
         return restored, True
 
     print("  ✗ No usable backup was found to restore.")
-    print("    Run `hermes desktop --force-build` to rebuild, or re-run the Hermes")
+    print("    Run `3v0 desktop --force-build` to rebuild, or re-run the 3V0")
     print("    installer to repair the install.")
     return None, False
 
@@ -6967,7 +6967,7 @@ def _purge_electron_build_cache(desktop_dir: Path) -> list[Path]:
     next ``pack`` re-downloads and re-stages from scratch.
 
     Root cause of the ``ENOENT … rename '…/linux-unpacked/electron' ->
-    '…/linux-unpacked/Hermes'`` desktop build failure: a corrupt zip in the
+    '…/linux-unpacked/3V0'`` desktop build failure: a corrupt zip in the
     per-user Electron download cache (a partial download resumed into the same
     file leaves prepended/concatenated junk, or an interrupted write truncates
     it). electron-builder's ``app-builder unpack-electron`` extracts the
@@ -7098,7 +7098,7 @@ def _redownload_electron_dist(
     installer = electron_dir / "install.js"
     if not installer.is_file():
         return False
-    from ev0_constants import find_node_executable, with_hermes_node_path
+    from ev0_constants import find_node_executable, with_ev0_node_path
 
     node = find_node_executable("node")
     if not node:
@@ -7111,7 +7111,7 @@ def _redownload_electron_dist(
     except OSError:
         pass
 
-    dl_env = with_hermes_node_path(env)
+    dl_env = with_ev0_node_path(env)
     if mirror:
         dl_env["ELECTRON_MIRROR"] = mirror
     try:
@@ -7134,9 +7134,9 @@ def _stop_desktop_processes_locking_build(desktop_dir: Path) -> list[int]:
     """Terminate any running desktop app executing from this build's ``release``
     dir so a rebuild can replace its (otherwise locked) executable.
 
-    On Windows a running ``Hermes.exe`` keeps an exclusive lock on
-    ``release/win-unpacked/Hermes.exe``. electron-builder's pack then can't
-    delete the stale binary and dies with ``remove …\\Hermes.exe: Access is
+    On Windows a running ``3V0.exe`` keeps an exclusive lock on
+    ``release/win-unpacked/3V0.exe``. electron-builder's pack then can't
+    delete the stale binary and dies with ``remove …\\3V0.exe: Access is
     denied`` / ``ERR_ELECTRON_BUILDER_CANNOT_EXECUTE`` (before-pack hits the same
     EPERM cleaning the dir). The retry path repeats the failure because the lock
     is still held. POSIX lets you unlink a running binary, so this is a no-op
@@ -7144,7 +7144,7 @@ def _stop_desktop_processes_locking_build(desktop_dir: Path) -> list[int]:
 
     Scope is deliberately narrow: only processes whose executable lives *inside*
     this desktop's ``release`` tree are stopped — a packaged install elsewhere or
-    an unrelated "Hermes" process is never touched. Best-effort: never raises.
+    an unrelated "3V0" process is never touched. Best-effort: never raises.
     Returns the PIDs we asked to stop.
     """
     if sys.platform != "win32":
@@ -7344,7 +7344,7 @@ def _desktop_macos_local_codesign(
 
     # 1) Standalone Mach-O files (native modules, dylibs, crashpad handler).
     #    Compare paths relative to the app root — the absolute path always
-    #    contains the outer Hermes.app component, so an absolute-parts check
+    #    contains the outer 3V0.app component, so an absolute-parts check
     #    would skip every file.
     contents = app / "Contents"
     standalone: list[Path] = []
@@ -7394,7 +7394,7 @@ def _desktop_macos_relaunchable_fixup(
 
     An ad-hoc-signed .app has no stable Designated Requirement, so when the
     self-updater rebuilds the bundle in place (new cdhash) Gatekeeper reports
-    "Hermes is damaged and can't be opened" — and macOS TCC forgets every
+    "3V0 is damaged and can't be opened" — and macOS TCC forgets every
     permission the user granted (Full Disk Access, Desktop/Downloads/Documents,
     Accessibility, Automation, microphone), re-prompting on every launch after
     every update.
@@ -7422,7 +7422,7 @@ def _desktop_macos_relaunchable_fixup(
     exe = _desktop_packaged_executable(desktop_dir)
     if exe is None:
         return True
-    # exe = .../Hermes.app/Contents/MacOS/Hermes  ->  app bundle = .../Hermes.app
+    # exe = .../3V0.app/Contents/MacOS/3V0  ->  app bundle = .../3V0.app
     app = exe.parents[2]
     if not str(app).endswith(".app") or not app.is_dir():
         return True
@@ -7456,7 +7456,7 @@ def _force_adhoc_macos_signing(env: dict, *, source_mode: bool) -> bool:
     """Stop electron-builder grabbing a random keychain identity on self-update.
 
     The desktop self-updater rebuilds *and re-signs the .app on the end user's
-    machine* (``hermes desktop --build-only`` → electron-builder ``--dir``).
+    machine* (``3v0 desktop --build-only`` → electron-builder ``--dir``).
     With ``CSC_IDENTITY_AUTO_DISCOVERY`` on (its default), electron-builder
     signs the ``type=distribution``, hardened-runtime bundle with whatever it
     finds in that user's keychain — typically a personal "Apple Development"
@@ -7530,7 +7530,7 @@ def _desktop_linux_sandbox_fixup(packaged_executable: Path) -> bool:
 
     sandbox = packaged_executable.parent / "chrome-sandbox"
     if not sandbox.exists():
-        print(f"✗ Hermes Desktop is missing Electron's Linux sandbox helper: {sandbox}")
+        print(f"✗ 3V0 Desktop is missing Electron's Linux sandbox helper: {sandbox}")
         return False
 
     # Reject symlinks — chown/chmod must not follow an attacker-controlled
@@ -7550,7 +7550,7 @@ def _desktop_linux_sandbox_fixup(packaged_executable: Path) -> bool:
 
     sudo = shutil.which("sudo")
     if not sudo:
-        print("✗ Hermes Desktop requires sudo to configure Electron's Linux sandbox helper.")
+        print("✗ 3V0 Desktop requires sudo to configure Electron's Linux sandbox helper.")
         return False
 
     print("→ Configuring Electron Linux sandbox helper (sudo required)...")
@@ -7569,7 +7569,7 @@ def _detect_linux_password_store() -> str | None:
 
     Electron's safeStorage only reports encryption as available when Chromium
     selects the right keychain backend, and Chromium's own detection routinely
-    fails under `hermes desktop` because the launcher environment doesn't look
+    fails under `3v0 desktop` because the launcher environment doesn't look
     like a full desktop session. Probe order: KDE session env vars, GNOME
     Keyring's control socket, then a D-Bus ping of org.freedesktop.secrets
     (covers any Secret Service implementation, e.g. KeePassXC). Returns None
@@ -7609,7 +7609,7 @@ def _desktop_launch_options() -> tuple[list[str], str, str]:
 
     Returns ``(electron_flags, disable_gpu, password_store)`` where
     ``electron_flags`` is a list of extra Electron CLI flags, ``disable_gpu``
-    is one of "auto"/"1"/"0" (normalized for the HERMES_DESKTOP_DISABLE_GPU
+    is one of "auto"/"1"/"0" (normalized for the EV0_DESKTOP_DISABLE_GPU
     env var the Electron app reads), and ``password_store`` is "auto" or one
     of the Chromium password-store backends (unknown values normalize to
     "auto"). Best-effort: any config error yields the safe defaults
@@ -7673,7 +7673,7 @@ def _parse_dashboard_runtime(command: str) -> tuple[str, str, int] | None:
     if any(
         pattern in command
         for pattern in (
-            "hermes dashboard",
+            "3v0 dashboard",
             "ev0_cli.main dashboard",
             "ev0_cli/main.py dashboard",
         )
@@ -7682,7 +7682,7 @@ def _parse_dashboard_runtime(command: str) -> tuple[str, str, int] | None:
     elif any(
         pattern in command
         for pattern in (
-            "hermes serve",
+            "3v0 serve",
             "ev0_cli.main serve",
             "ev0_cli/main.py serve",
         )
@@ -7716,7 +7716,7 @@ def _dashboard_probe_host(host: str | None) -> str:
     return normalized
 
 
-_DASHBOARD_SYSTEMD_UNIT = "hermes-dashboard.service"
+_DASHBOARD_SYSTEMD_UNIT = "3v0-dashboard.service"
 
 
 def _restart_managed_dashboard_service(
@@ -7742,7 +7742,7 @@ def _restart_managed_dashboard_service(
             timeout=timeout,
         )
 
-    # Probe the user manager first: Hermes installs Linux services in the
+    # Probe the user manager first: 3V0 installs Linux services in the
     # user's systemd scope by default.  Only fall back to the system manager
     # when the unit is not present there, preserving root/system deployments.
     # Crucially, keep the selected scope for *all* probes and the restart — a
@@ -7831,7 +7831,7 @@ def _get_systemd_service_for_pid(pid: int) -> str | None:
     """If *pid* belongs to a systemd service unit, return the unit name.
 
     Reads ``/proc/<pid>/cgroup`` and extracts the service name (e.g.
-    ``hermes-serve.service``).  Returns ``None`` when the PID is not
+    ``3v0-serve.service``).  Returns ``None`` when the PID is not
     part of a systemd service, when the file is unreadable, or on
     non-Linux platforms.
     """
@@ -7842,7 +7842,7 @@ def _get_systemd_service_for_pid(pid: int) -> str | None:
         text = cgroup_path.read_text(encoding="utf-8", errors="replace")
         for line in text.splitlines():
             line = line.strip()
-            # Format: 0::/system.slice/hermes-serve.service
+            # Format: 0::/system.slice/3v0-serve.service
             #         0::/user.slice/user-1000.slice/session-42.scope
             parts = line.split("::", 1)
             if len(parts) != 2:
@@ -7939,7 +7939,7 @@ def _dashboard_cmdline_for_pid(pid: int) -> list[str] | None:
 
     Linux: reads ``/proc/<pid>/cmdline`` (NUL-separated, lossless).
     macOS: falls back to ``ps -o command=`` + shlex (best effort — quoting
-    is reconstructed, but hermes launch commands don't embed exotic args).
+    is reconstructed, but 3v0 launch commands don't embed exotic args).
     Windows: returns ``None``; taskkill /F gives no graceful window and the
     desktop app manages its own backend there.
     """
@@ -7978,7 +7978,7 @@ def _dashboard_cmdline_for_pid(pid: int) -> list[str] | None:
 
 
 def _respawn_dashboard_processes(commands: list[list[str]]) -> list[list[str]]:
-    """Best-effort respawn of manually-started dashboards after ``hermes update``.
+    """Best-effort respawn of manually-started dashboards after ``3v0 update``.
 
     Spawns each recovered argv detached (new session, output to the profile's
     ``logs/dashboard-restart.log``).  Returns the commands that failed to
@@ -7988,11 +7988,11 @@ def _respawn_dashboard_processes(commands: list[list[str]]) -> list[list[str]]:
     Desktop ``serve|dashboard --port 0`` backends are not replayed and
     duplicates are capped per profile (#78821).
     """
-    from ev0_constants import get_hermes_home
+    from ev0_constants import get_ev0_home
 
     respawned: list[list[str]] = []
     failed: list[tuple[list[str], str]] = []
-    log_path = get_hermes_home() / "logs" / "dashboard-restart.log"
+    log_path = get_ev0_home() / "logs" / "dashboard-restart.log"
     try:
         log_path.parent.mkdir(parents=True, exist_ok=True)
     except OSError:
@@ -8030,7 +8030,7 @@ def _respawn_dashboard_processes(commands: list[list[str]]) -> list[list[str]]:
 
 
 # =========================================================================
-# Fork detection and upstream management for `hermes update`
+# Fork detection and upstream management for `3v0 update`
 # =========================================================================
 
 
@@ -8063,7 +8063,7 @@ def _load_installable_optional_extras(group: str = "all") -> list[str]:
     return referenced
 
 
-# Install-scoped breadcrumbs live next to the venv (not under $HERMES_HOME)
+# Install-scoped breadcrumbs live next to the venv (not under $EV0_HOME)
 # because the venv is shared across profiles.
 #
 # ``.update-incomplete`` — generic core ``.[all]`` install was interrupted.
@@ -8118,7 +8118,7 @@ def _clear_lazy_refresh_incomplete_marker() -> None:
 
 
 def _recover_from_interrupted_install() -> None:
-    """Finish update work left half-done by a prior ``hermes update``.
+    """Finish update work left half-done by a prior ``3v0 update``.
 
     Handles two independent breadcrumbs:
 
@@ -8140,7 +8140,7 @@ def _recover_from_interrupted_install() -> None:
 
     Output: everything — our status lines AND the streamed pip/uv install
     (which inherits fd 1) — is routed to stderr.  Launches whose stdout is a
-    protocol stream (``hermes acp`` speaks JSON-RPC on stdout) must never get
+    protocol stream (``3v0 acp`` speaks JSON-RPC on stdout) must never get
     install noise on stdout.
     """
     if _pytest_owns_live_checkout(PROJECT_ROOT):
@@ -8251,19 +8251,19 @@ def _recover_core_update_marker_locked() -> None:
     would otherwise look healthy and clear the breadcrumb too early.
     """
     print(
-        "⚠ A previous `hermes update` was interrupted mid-install — "
+        "⚠ A previous `3v0 update` was interrupted mid-install — "
         "finishing dependency installation now..."
     )
 
-    # Windows: a normal ``hermes.exe`` launch always has the launcher as an
+    # Windows: a normal ``3v0.exe`` launch always has the launcher as an
     # ancestor. Full editable reinstall uses quarantine so the live shim can
     # still be replaced. Package-only import repair may help as first aid but
     # must NEVER clear this core marker on its own (#58004 review).
-    self_locked = _windows_running_hermes_launcher_locked()
+    self_locked = _windows_running_ev0_launcher_locked()
     if self_locked:
         install_prefix, install_env = _default_venv_install_target()
         print(
-            "  → Running from hermes.exe; applying package-only first aid, "
+            "  → Running from 3v0.exe; applying package-only first aid, "
             "then quarantined full reinstall (core marker stays until that "
             "succeeds)..."
         )
@@ -8295,8 +8295,8 @@ def _recover_core_update_marker_locked() -> None:
         print("✗ Could not auto-recover the interrupted install.")
         if self_locked:
             print(
-                "  Hermes is still running from the launcher that needs "
-                "replacing. Close other Hermes windows, restart from a "
+                "  3V0 is still running from the launcher that needs "
+                "replacing. Close other 3V0 windows, restart from a "
                 "different terminal, then run:"
             )
             print(f'    cd /d "{PROJECT_ROOT}"')
@@ -8310,8 +8310,8 @@ def _recover_core_update_marker_locked() -> None:
             print(f"    {sys.executable} -m pip install -e '.[all]'")
 
 
-def _windows_running_hermes_launcher_locked() -> bool:
-    """True when a venv ``hermes*.exe`` shim is this process or an ancestor.
+def _windows_running_ev0_launcher_locked() -> bool:
+    """True when a venv ``3v0*.exe`` shim is this process or an ancestor.
 
     Best-effort: returns False when psutil is unavailable or inspection fails.
     """
@@ -8320,7 +8320,7 @@ def _windows_running_hermes_launcher_locked() -> bool:
     scripts_dir = _venv_scripts_dir()
     if scripts_dir is None:
         return False
-    shims = _hermes_exe_shims(scripts_dir)
+    shims = _ev0_exe_shims(scripts_dir)
     if not shims:
         return False
     shim_set: set[str] = set()
@@ -8372,7 +8372,7 @@ def _run_install_with_heartbeat(
 
     Some resolvers/build backends (especially when compiling Rust/C extensions)
     can stay quiet for minutes. Emit a simple elapsed-time heartbeat so users
-    know ``hermes update`` is still progressing even if pip/uv itself is silent.
+    know ``3v0 update`` is still progressing even if pip/uv itself is silent.
     """
     done = threading.Event()
     start = _time.time()
@@ -8416,7 +8416,7 @@ def _venv_scripts_dir() -> Path | None:
     return scripts if scripts.is_dir() else None
 
 
-def _hermes_exe_shims(scripts_dir: Path) -> list[Path]:
+def _ev0_exe_shims(scripts_dir: Path) -> list[Path]:
     """Entry-point shims that uv may try to rewrite during ``pip install -e .``.
 
     On Windows these are .exe launchers generated by setuptools/uv. On POSIX
@@ -8426,31 +8426,31 @@ def _hermes_exe_shims(scripts_dir: Path) -> list[Path]:
     if not _is_windows():
         return []
 
-    names = set(_load_console_script_names()) or {"hermes", "hermes-agent", "hermes-acp"}
+    names = set(_load_console_script_names()) or {"3v0", "3v0-agent", "3v0-acp"}
     # The gateway shim is not a [project.scripts] entry point, but older
     # update/install paths still rewrite and quarantine it.
-    names.add("hermes-gateway")
+    names.add("3v0-gateway")
     return [scripts_dir / f"{name}.exe" for name in sorted(names)]
 
 
-def _quarantine_running_hermes_exe(
+def _quarantine_running_ev0_exe(
     scripts_dir: Path, *, max_attempts: int = 4
 ) -> list[tuple[Path, Path]]:
-    """Pre-empt Windows file lock on the running ``hermes.exe``.
+    """Pre-empt Windows file lock on the running ``3v0.exe``.
 
     Windows allows RENAMING a mapped/running executable (the kernel tracks the
     file by handle, not path), but blocks DELETE/REPLACE while it's loaded. uv
     needs to overwrite the entry-point shims during ``pip install -e .``;
-    when ``hermes update`` runs, ``hermes.exe`` IS the live process, and uv
+    when ``3v0 update`` runs, ``3v0.exe`` IS the live process, and uv
     fails with ``Access is denied. (os error 5)``.
 
-    We rename live shims to ``hermes.exe.old.<unix-ms>`` first. uv then writes
+    We rename live shims to ``3v0.exe.old.<unix-ms>`` first. uv then writes
     fresh shims at the original paths. The ``.old`` files are cleaned up on
-    the next hermes invocation by ``_cleanup_quarantined_exes``.
+    the next 3v0 invocation by ``_cleanup_quarantined_exes``.
 
     Rename can still fail when *another* process has opened the .exe without
     ``FILE_SHARE_DELETE`` — typically AV real-time scanners with transient
-    handles (recovers in <1s), or the Hermes Desktop backend child process
+    handles (recovers in <1s), or the 3V0 Desktop backend child process
     (won't recover until the user closes it). We mitigate:
 
     1. Retry up to ``max_attempts`` times with exponential backoff
@@ -8462,7 +8462,7 @@ def _quarantine_running_hermes_exe(
        update can complete; the user just needs to reboot to fully unload
        the stale image.
     3. Print a clear warning naming the most likely culprit (running
-       Hermes Desktop / gateway / REPL) and pointing to ``--force``.
+       3V0 Desktop / gateway / REPL) and pointing to ``--force``.
 
     Returns the list of (original, quarantined) pairs so the caller can roll
     back if the install itself fails before uv writes a replacement. Pairs
@@ -8481,7 +8481,7 @@ def _quarantine_running_hermes_exe(
     backoff_ms = [0, 100, 250, 500, 1000]
     attempts = max(1, min(max_attempts, len(backoff_ms)))
 
-    for shim in _hermes_exe_shims(scripts_dir):
+    for shim in _ev0_exe_shims(scripts_dir):
         if not shim.exists():
             continue
         target = shim.with_suffix(shim.suffix + f".old.{stamp}")
@@ -8529,8 +8529,8 @@ def _quarantine_running_hermes_exe(
             f"another process is holding it open)."
         )
         print(
-            "    Close Hermes Desktop, exit other `hermes` REPLs, stop the "
-            "gateway, or pause AV scanning, then re-run `hermes update`."
+            "    Close 3V0 Desktop, exit other `3v0` REPLs, stop the "
+            "gateway, or pause AV scanning, then re-run `3v0 update`."
         )
 
     return moved
@@ -8572,7 +8572,7 @@ def _schedule_replace_on_reboot(shim: Path, quarantine_target: Path) -> bool:
 
 
 def _restore_quarantined_exes(moved: list[tuple[Path, Path]]) -> None:
-    """Roll back ``_quarantine_running_hermes_exe`` if uv didn't write replacements."""
+    """Roll back ``_quarantine_running_ev0_exe`` if uv didn't write replacements."""
     for original, quarantined in moved:
         try:
             if not original.exists() and quarantined.exists():
@@ -8587,12 +8587,12 @@ def _run_quarantined_install(
     env: dict[str, str] | None = None,
     scripts_dir: Path | None = None,
 ) -> None:
-    """Run an editable install, quarantining the running ``hermes.exe`` first.
+    """Run an editable install, quarantining the running ``3v0.exe`` first.
 
     Any ``pip install -e .`` (or ``--reinstall``) rewrites the entry-point
-    shims, and on Windows the live ``hermes.exe`` is the running process —
+    shims, and on Windows the live ``3v0.exe`` is the running process —
     pip can neither delete nor overwrite it, so without quarantine the shim
-    is left missing and ``hermes`` drops off PATH. This wraps
+    is left missing and ``3v0`` drops off PATH. This wraps
     :func:`_run_install_with_heartbeat` with the same rename-out-of-the-way /
     restore-on-failure dance that the primary install path uses, so EVERY
     install that touches the shims is protected — including the
@@ -8604,7 +8604,7 @@ def _run_quarantined_install(
     """
     moved: list[tuple[Path, Path]] = []
     if scripts_dir is not None:
-        moved = _quarantine_running_hermes_exe(scripts_dir)
+        moved = _quarantine_running_ev0_exe(scripts_dir)
     try:
         _run_install_with_heartbeat(cmd, env=env)
     finally:
@@ -8612,7 +8612,7 @@ def _run_quarantined_install(
         # FAILURE (install died before the entry-points step) and on SUCCESS
         # too: uv audits an already-satisfied editable install as a no-op and
         # rewrites no entry points, which would otherwise leave the shims
-        # quarantined aside and `hermes` missing from PATH after a green
+        # quarantined aside and `3v0` missing from PATH after a green
         # install (#75584). _restore_quarantined_exes skips any shim the
         # installer actually replaced, so this never clobbers fresh output.
         # Errors are not swallowed — the finally re-raises whatever escaped.
@@ -8621,9 +8621,9 @@ def _run_quarantined_install(
 
 
 def _cleanup_quarantined_exes(scripts_dir: Path | None = None) -> None:
-    """Sweep ``hermes.exe.old.*`` left by prior updates.
+    """Sweep ``3v0.exe.old.*`` left by prior updates.
 
-    Called early on every hermes invocation. The .old files are unlocked once
+    Called early on every 3v0 invocation. The .old files are unlocked once
     their owning process exited, so deletion succeeds the next run. Silent
     no-op when nothing's there or on file-locked / permission errors.
     """
@@ -8665,7 +8665,7 @@ def _run_package_only_install(
     """Run a package-only pip/uv install without quarantining entry-point shims.
 
     ``pip install --upgrade pip`` and ``--force-reinstall <pkg>`` do not
-    rewrite ``hermes.exe``. The editable-install quarantine path would rename
+    rewrite ``3v0.exe``. The editable-install quarantine path would rename
     shims without uv recreating them on Windows (#57828).
     """
     _run_install_with_heartbeat(cmd, env=env)
@@ -8824,7 +8824,7 @@ def _repair_venv_via_import_probes(
 
     Uses real ``import`` checks (not distribution metadata) so a venv where
     METADATA remains but ``.py`` files were wiped mid-install is still
-    detected (#57828). Package-only reinstall — never rewrites ``hermes.exe``.
+    detected (#57828). Package-only reinstall — never rewrites ``3v0.exe``.
 
     Never raises. Returns one of:
       - ``"healthy"`` — probes ran and found nothing broken
@@ -8852,7 +8852,7 @@ def _repair_venv_via_import_probes(
     manual = " ".join(
         shlex.quote(s) for s in _lazy_refresh_repair_specs(broken)
     )
-    print("  ⚠ Venv repair incomplete. Run manually, then `hermes update`:")
+    print("  ⚠ Venv repair incomplete. Run manually, then `3v0 update`:")
     print(
         f"    {' '.join(install_cmd_prefix)} install --force-reinstall {manual}"
     )
@@ -8870,10 +8870,10 @@ def _install_python_dependencies_with_optional_fallback(
     By default this targets ``.[all]``; Termux callers can pass
     ``group='termux-all'`` to use the curated Android-compatible profile.
 
-    On Windows, pre-renames live ``hermes.exe`` / ``hermes-gateway.exe`` shims
+    On Windows, pre-renames live ``3v0.exe`` / ``3v0-gateway.exe`` shims
     in the venv Scripts dir before each install attempt so uv can write fresh
     copies (Windows blocks REPLACE on a running .exe but allows RENAME). See
-    ``_quarantine_running_hermes_exe`` for the rationale.
+    ``_quarantine_running_ev0_exe`` for the rationale.
     """
     scripts_dir = _venv_scripts_dir() if _is_windows() else None
 
@@ -8917,7 +8917,7 @@ def _install_python_dependencies_with_optional_fallback(
     # partial installs where a newly added base dep (e.g. ``pathspec``)
     # silently fails to land on top of a half-stale venv, and the only
     # symptom is a downstream subprocess crashing with ModuleNotFoundError
-    # hours later inside ``hermes update``'s desktop-rebuild or skill-sync
+    # hours later inside ``3v0 update``'s desktop-rebuild or skill-sync
     # stage. Reinstall with --reinstall to force resolution if anything is
     # missing, then re-verify so the failure surfaces here instead of
     # downstream.
@@ -8953,11 +8953,11 @@ def _verify_console_scripts_installed(
 ) -> None:
     """Ensure every declared console_script shim exists on disk after install.
 
-    On Windows, ``uv pip install -e .`` can register ``hermes.exe`` in the
+    On Windows, ``uv pip install -e .`` can register ``3v0.exe`` in the
     wheel RECORD while the file never lands on disk — typically when the live
-    ``hermes.exe`` shim is locked during ``hermes update``, or when uv/distlib
-    skips a launcher write. The symptom is ``hermes-agent.exe`` and
-    ``hermes-acp.exe`` present but ``hermes.exe`` missing, so ``hermes`` drops
+    ``3v0.exe`` shim is locked during ``3v0 update``, or when uv/distlib
+    skips a launcher write. The symptom is ``3v0-agent.exe`` and
+    ``3v0-acp.exe`` present but ``3v0.exe`` missing, so ``3v0`` drops
     off PATH even though the install reported success (issue #52931).
 
     If any shim is missing we reinstall with ``--reinstall -e .`` under the
@@ -9000,8 +9000,8 @@ def _verify_console_scripts_installed(
     except subprocess.CalledProcessError as e:
         logger.warning("console script verification: repair install failed: %s", e)
         print(
-            "  ⚠ Entry point repair failed; try `hermes update --force` after "
-            "closing other hermes processes."
+            "  ⚠ Entry point repair failed; try `3v0 update --force` after "
+            "closing other 3v0 processes."
         )
         return
 
@@ -9093,7 +9093,7 @@ def _verify_core_dependencies_installed(
         return
 
     # Run the check inside the venv Python — sys.executable here may be the
-    # outer Python that drove ``hermes update``, not the venv we just wrote
+    # outer Python that drove ``3v0 update``, not the venv we just wrote
     # to. The uv install_cmd_prefix encodes which environment we targeted
     # (either ``[uv, pip]`` with VIRTUAL_ENV in env, or
     # ``[sys.executable, -m, pip]`` for the in-process Python); resolve the
@@ -9140,9 +9140,9 @@ def _verify_core_dependencies_installed(
     # extras install can cost minutes and trips on whatever optional extra
     # was already broken upstream. Base is fast and is what's actually wrong.
     #
-    # Quarantine the running ``hermes.exe`` first: ``--reinstall -e .``
+    # Quarantine the running ``3v0.exe`` first: ``--reinstall -e .``
     # rewrites the entry-point shims, and on Windows pip can't overwrite the
-    # live launcher, which would leave ``hermes`` off PATH.
+    # live launcher, which would leave ``3v0`` off PATH.
     scripts_dir = _venv_scripts_dir() if _is_windows() else None
     repair_args = ["install", "--reinstall", "-e", "."]
     try:
@@ -9151,7 +9151,7 @@ def _verify_core_dependencies_installed(
         )
     except subprocess.CalledProcessError as e:
         logger.warning("dep verification: repair install failed: %s", e)
-        print("  ⚠ Repair install failed; check `hermes update` output above.")
+        print("  ⚠ Repair install failed; check `3v0 update` output above.")
         return
 
     still_missing = _missing_deps()
@@ -9184,7 +9184,7 @@ def _verify_core_dependencies_installed(
         logger.warning("dep verification: per-package repair failed: %s", e)
         print(
             f"  ⚠ Could not install: {', '.join(still_missing)}. "
-            "Run `hermes update --force` after closing other hermes processes."
+            "Run `3v0 update --force` after closing other 3v0 processes."
         )
         return
 
@@ -9192,7 +9192,7 @@ def _verify_core_dependencies_installed(
     if final_missing:
         print(
             f"  ⚠ Still missing after repair: {', '.join(final_missing)}. "
-            "Run `hermes update --force` after closing other hermes processes."
+            "Run `3v0 update --force` after closing other 3v0 processes."
         )
     else:
         print("  ✓ All declared core dependencies now installed")
@@ -9289,12 +9289,12 @@ def _resolve_node_runtime_npm() -> str | None:
 
 
 class _UpdateOutputStream:
-    """Stream wrapper used during ``hermes update`` to survive terminal loss.
+    """Stream wrapper used during ``3v0 update`` to survive terminal loss.
 
     Wraps the process's original stdout/stderr so that:
 
     * Every write is also mirrored to an append-only log file
-      (``~/.hermes/logs/update.log``) that users can inspect after the
+      (``~/.3V0/logs/update.log``) that users can inspect after the
       terminal disconnects.
     * Writes to the original stream that fail with ``BrokenPipeError`` /
       ``OSError`` / ``ValueError`` (closed file) no longer cascade into
@@ -9302,7 +9302,7 @@ class _UpdateOutputStream:
       stops.
 
     Combined with ``SIGHUP -> SIG_IGN`` installed by
-    ``_install_hangup_protection``, this makes ``hermes update`` safe to
+    ``_install_hangup_protection``, this makes ``3v0 update`` safe to
     run in a plain SSH session that might disconnect mid-install.
     """
 
@@ -9364,7 +9364,7 @@ class _UpdateOutputStream:
 def _install_hangup_protection(gateway_mode: bool = False):
     """Protect ``cmd_update`` from SIGHUP and broken terminal pipes.
 
-    Users commonly run ``hermes update`` in an SSH session or a terminal
+    Users commonly run ``3v0 update`` in an SSH session or a terminal
     that may close mid-install.  Without protection, ``SIGHUP`` from the
     terminal kills the Python process during ``pip install`` and leaves
     the venv half-installed; the documented workaround ("use screen /
@@ -9376,14 +9376,14 @@ def _install_hangup_protection(gateway_mode: bool = False):
        across ``exec()``, so pip and git subprocesses also stop dying on
        hangup.
     2. ``sys.stdout`` / ``sys.stderr`` are wrapped to mirror output to
-       ``~/.hermes/logs/update.log`` and to silently absorb
+       ``~/.3V0/logs/update.log`` and to silently absorb
        ``BrokenPipeError`` when the terminal vanishes.
 
     ``SIGINT`` (Ctrl-C) and ``SIGTERM`` (systemd shutdown) are
     **intentionally left alone** — those are legitimate cancellation
     signals the user or OS sent on purpose.
 
-    In gateway mode (``hermes update --gateway``) the update is already
+    In gateway mode (``3v0 update --gateway``) the update is already
     spawned detached from a terminal, so this function is a no-op.
 
     Returns a dict that ``cmd_update`` can pass to
@@ -9415,10 +9415,10 @@ def _install_hangup_protection(gateway_mode: bool = False):
     # tolerance.  Any failure here is non-fatal; we just skip the wrap.
     try:
         # Late-bound import so tests can monkeypatch
-        # ev0_cli.config.get_hermes_home to simulate setup failure.
-        from ev0_cli.config import get_hermes_home as _get_hermes_home
+        # ev0_cli.config.get_ev0_home to simulate setup failure.
+        from ev0_cli.config import get_ev0_home as _get_ev0_home
 
-        logs_dir = _get_hermes_home() / "logs"
+        logs_dir = _get_ev0_home() / "logs"
         logs_dir.mkdir(parents=True, exist_ok=True)
         log_path = logs_dir / "update.log"
         log_file = open(log_path, "a", buffering=1, encoding="utf-8")
@@ -9426,7 +9426,7 @@ def _install_hangup_protection(gateway_mode: bool = False):
         import datetime as _dt
 
         log_file.write(
-            f"\n=== hermes update started "
+            f"\n=== 3v0 update started "
             f"{_dt.datetime.now().isoformat(timespec='seconds')} ===\n"
         )
 
@@ -9489,7 +9489,7 @@ def _size_delta_label(saved_mb: float) -> str:
 
 
 def cmd_update(args):
-    """Update Hermes Agent to the latest version.
+    """Update 3V0 Agent to the latest version.
 
     Thin wrapper around ``_cmd_update_impl``: installs hangup protection,
     runs the update, then restores stdio on the way out (even on
@@ -9504,7 +9504,7 @@ def cmd_update(args):
     )
 
     if is_managed():
-        managed_error("update Hermes Agent")
+        managed_error("update 3V0 Agent")
         return
 
     # Docker users can't ``git pull`` — the image excludes ``.git`` from
@@ -9524,7 +9524,7 @@ def cmd_update(args):
 
     if getattr(args, "check", False):
         # --check honors --branch so the "any new commits?" answer matches
-        # what a subsequent `hermes update --branch=<x>` would actually pull.
+        # what a subsequent `3v0 update --branch=<x>` would actually pull.
         branch = _resolve_update_branch(args)
         _self()._cmd_update_check(
             branch=branch,
@@ -9566,7 +9566,7 @@ def cmd_update(args):
 def _coalesce_session_name_args(argv: list) -> list:
     """Join unquoted multi-word session names after -c/--continue and -r/--resume.
 
-    When a user types ``hermes -c Pokemon Agent Dev`` without quoting the
+    When a user types ``3v0 -c Pokemon Agent Dev`` without quoting the
     session name, argparse sees three separate tokens.  This function merges
     them into a single argument so argparse receives
     ``['-c', 'Pokemon Agent Dev']`` instead.
@@ -9657,14 +9657,14 @@ def cmd_profile(args):
         _is_wrapper_dir_in_path,
         _get_wrapper_dir,
     )
-    from ev0_constants import display_hermes_home
+    from ev0_constants import display_ev0_home
 
     action = getattr(args, "profile_action", None)
 
     if action is None:
-        # Bare `hermes profile` — show current profile status
+        # Bare `3v0 profile` — show current profile status
         profile_name = get_active_profile_name()
-        dhh = display_hermes_home()
+        dhh = display_ev0_home()
         print(f"\nActive profile: {profile_name}")
         print(f"Path:           {dhh}")
 
@@ -9682,7 +9682,7 @@ def cmd_profile(args):
                 print(f"Skills:         {p.skill_count} installed")
                 if p.alias_path:
                     alias_display = p.alias_name or p.name
-                    print(f"Alias:          {alias_display} → hermes -p {p.name}")
+                    print(f"Alias:          {alias_display} → 3v0 -p {p.name}")
                 break
         print()
         return
@@ -9730,7 +9730,7 @@ def cmd_profile(args):
         try:
             set_active_profile(name)
             if name == "default":
-                print("Switched to: default (~/.hermes)")
+                print("Switched to: default (~/.3V0)")
             else:
                 print(f"Switched to: {name}")
         except (ValueError, FileNotFoundError) as e:
@@ -9809,9 +9809,9 @@ def cmd_profile(args):
                 if collision:
                     print(f"\n⚠ Cannot create alias '{name}' — {collision}")
                     print(
-                        f"  Choose a custom alias:  hermes profile alias {name} --name <custom>"
+                        f"  Choose a custom alias:  3v0 profile alias {name} --name <custom>"
                     )
-                    print(f"  Or access via flag:     hermes -p {name} chat")
+                    print(f"  Or access via flag:     3v0 -p {name} chat")
                 else:
                     wrapper_path = create_wrapper_script(name)
                     if wrapper_path:
@@ -9893,7 +9893,7 @@ def cmd_profile(args):
         if name and not text_value and not auto_flag:
             try:
                 if _profiles_mod.normalize_profile_name(name) == "default":
-                    from ev0_constants import get_hermes_home as _hh
+                    from ev0_constants import get_ev0_home as _hh
                     profile_dir = Path(_hh())
                 else:
                     profile_dir = _profiles_mod.get_profile_dir(name)
@@ -9916,7 +9916,7 @@ def cmd_profile(args):
         if text_value:
             try:
                 if _profiles_mod.normalize_profile_name(name) == "default":
-                    from ev0_constants import get_hermes_home as _hh
+                    from ev0_constants import get_ev0_home as _hh
                     profile_dir = Path(_hh())
                 else:
                     profile_dir = _profiles_mod.get_profile_dir(name)
@@ -9998,11 +9998,11 @@ def cmd_profile(args):
             print(f"Distribution: {dist_name}@{dist_version or '?'}")
             if dist_source:
                 print(f"Installed from: {dist_source}")
-            print(f"  (run `hermes profile info {name}` for full manifest)")
+            print(f"  (run `3v0 profile info {name}` for full manifest)")
         if alias_name:
             is_windows = sys.platform == "win32"
             wrapper = _get_wrapper_dir() / (f"{alias_name}.bat" if is_windows else alias_name)
-            print(f"Alias:   {alias_name} → hermes -p {name}  ({wrapper})")
+            print(f"Alias:   {alias_name} → 3v0 -p {name}  ({wrapper})")
         print()
 
     elif action == "alias":
@@ -10098,7 +10098,7 @@ def cmd_profile(args):
             # Preview: stage the distribution into a scratch dir, show the
             # manifest, then do the real install.  The double-stage avoids
             # any side-effects if the user declines.
-            with tempfile.TemporaryDirectory(prefix="hermes_dist_preview_") as tmp:
+            with tempfile.TemporaryDirectory(prefix="ev0_dist_preview_") as tmp:
                 plan = plan_install(
                     args.source,
                     Path(tmp),
@@ -10131,9 +10131,9 @@ def cmd_profile(args):
             if plan.has_cron:
                 print(
                     "  Cron jobs were included but are NOT scheduled automatically.\n"
-                    f"  Review them with:  hermes -p {plan.manifest.name} cron list"
+                    f"  Review them with:  3v0 -p {plan.manifest.name} cron list"
                 )
-            print(f"\n  Use with:      hermes -p {plan.manifest.name} chat")
+            print(f"\n  Use with:      3v0 -p {plan.manifest.name} chat")
         except (DistributionError, ValueError) as e:
             print(f"Error: {e}")
             sys.exit(1)
@@ -10153,7 +10153,7 @@ def cmd_profile(args):
             if current is None:
                 print(
                     f"Error: Profile '{canon}' is not a distribution (no distribution.yaml). "
-                    "Only profiles installed via `hermes profile install` can be updated."
+                    "Only profiles installed via `3v0 profile install` can be updated."
                 )
                 sys.exit(1)
 
@@ -10179,7 +10179,7 @@ def cmd_profile(args):
             if plan.has_cron:
                 print(
                     "  Cron files were refreshed.  Review with:  "
-                    f"hermes -p {plan.manifest.name} cron list"
+                    f"3v0 -p {plan.manifest.name} cron list"
                 )
         except (DistributionError, ValueError) as e:
             print(f"Error: {e}")
@@ -10207,8 +10207,8 @@ def cmd_profile(args):
             print(f"Author:       {data['author']}")
         if data.get("license"):
             print(f"License:      {data['license']}")
-        if data.get("hermes_requires"):
-            print(f"Requires:     Hermes {data['hermes_requires']}")
+        if data.get("ev0_requires"):
+            print(f"Requires:     3V0 {data['ev0_requires']}")
         if data.get("source"):
             print(f"Source:       {data['source']}")
         if data.get("installed_at"):
@@ -10236,8 +10236,8 @@ def _render_distribution_plan(plan) -> None:
         print(f"  {mf.description}")
     if mf.author:
         print(f"  Author:   {mf.author}")
-    if mf.hermes_requires:
-        print(f"  Requires: Hermes {mf.hermes_requires}")
+    if mf.ev0_requires:
+        print(f"  Requires: 3V0 {mf.ev0_requires}")
     print(f"  Source:   {plan.provenance}")
     print(f"  Target:   {plan.target_dir}")
     if plan.existing:
@@ -10315,10 +10315,10 @@ def _report_dashboard_status() -> int:
         live.append((pid, command))
 
     if not live:
-        print("No hermes dashboard processes running.")
+        print("No 3v0 dashboard processes running.")
         return 0
 
-    print(f"{len(live)} hermes dashboard process(es) running:")
+    print(f"{len(live)} 3v0 dashboard process(es) running:")
     for pid, command in live:
         print(f"    PID {pid}: {command}")
     return len(live)
@@ -10348,7 +10348,7 @@ def _maybe_setup_dashboard_auth_interactively(args) -> None:
     ``DashboardAuthProvider`` is registered. Rather than greet an interactive
     operator with that hard error, prompt them to set up the bundled
     username/password provider on the spot — or point them at
-    ``hermes dashboard register`` for OAuth.
+    ``3v0 dashboard register`` for OAuth.
 
     No-ops (so the existing fail-closed ``SystemExit`` remains the backstop)
     when:
@@ -10389,7 +10389,7 @@ def _maybe_setup_dashboard_auth_interactively(args) -> None:
     print()
     print("  How do you want to authenticate the dashboard?")
     print("    [1] Username & password (quickest; for a trusted LAN / VPN)")
-    print("    [2] OAuth via Nous Portal (run `hermes dashboard register`)")
+    print("    [2] OAuth via Nous Portal (run `3v0 dashboard register`)")
     print("    [3] Cancel")
     print()
 
@@ -10404,10 +10404,10 @@ def _maybe_setup_dashboard_auth_interactively(args) -> None:
         print(
             "  Run this on the host where the dashboard lives, then start "
             "the dashboard again:\n"
-            "    hermes dashboard register\n"
+            "    3v0 dashboard register\n"
             "  It provisions a Nous Portal OAuth client and writes "
-            "HERMES_DASHBOARD_OAUTH_CLIENT_ID into ~/.hermes/.env for you.\n"
-            "  Docs: https://hermes-agent.nousresearch.com/docs/"
+            "EV0_DASHBOARD_OAUTH_CLIENT_ID into ~/.3V0/.env for you.\n"
+            "  Docs: https://github.com/1deat0r/3V0-Agent/docs/"
             "user-guide/features/web-dashboard#authentication-gated-mode"
         )
         sys.exit(0)
@@ -10504,14 +10504,14 @@ def _read_ssh_session_token_file(path: str) -> str:
         raise SystemExit("--ssh-session-token-file must be absolute")
 
     token_path = _Path(path)
-    # The Desktop client writes the token under $HOME/.hermes/desktop-ssh: a
-    # literal "~/.hermes/desktop-ssh" in apps/desktop/electron/remote-lifecycle.ts
-    # expanded against the account's $HOME, independent of HERMES_HOME and the
+    # The Desktop client writes the token under $HOME/.3V0/desktop-ssh: a
+    # literal "~/.3V0/desktop-ssh" in apps/desktop/electron/remote-lifecycle.ts
+    # expanded against the account's $HOME, independent of EV0_HOME and the
     # active profile. Anchor validation to that same OS-home path, NOT to
-    # get_hermes_home(): a non-default sticky profile (or any HERMES_HOME pointing
-    # elsewhere, e.g. a Docker /opt/data root) re-homes get_hermes_home() and
+    # get_ev0_home(): a non-default sticky profile (or any EV0_HOME pointing
+    # elsewhere, e.g. a Docker /opt/data root) re-homes get_ev0_home() and
     # would otherwise reject every token the client legitimately wrote (#69551).
-    token_root = _Path.home() / ".hermes" / "desktop-ssh"
+    token_root = _Path.home() / ".3V0" / "desktop-ssh"
     try:
         relative = token_path.relative_to(token_root)
     except ValueError as exc:
@@ -10583,8 +10583,8 @@ def _read_ssh_session_token_file(path: str) -> str:
 def _is_electron_packaged_web_dist(path: str) -> bool:
     """True when *path* looks like an Electron-packaged renderer dist.
 
-    Packaged Desktop sets ``HERMES_WEB_DIST`` to ``.../app.asar/dist`` or
-    ``.../app.asar.unpacked/dist``. A standalone ``hermes dashboard`` that
+    Packaged Desktop sets ``EV0_WEB_DIST`` to ``.../app.asar/dist`` or
+    ``.../app.asar.unpacked/dist``. A standalone ``3v0 dashboard`` that
     inherits that value serves the desktop frontend in the browser
     (issue #52945 — "Desktop IPC bridge is unavailable").
     """
@@ -10612,9 +10612,9 @@ def cmd_dashboard(args):
     if getattr(args, "stop", False):
         pids = _find_stale_dashboard_pids()
         if not pids:
-            print("No hermes dashboard processes running.")
+            print("No 3v0 dashboard processes running.")
             sys.exit(0)
-        # Reuse the same SIGTERM-grace-SIGKILL path used after `hermes update`.
+        # Reuse the same SIGTERM-grace-SIGKILL path used after `3v0 update`.
         _self()._kill_stale_dashboard_processes(reason="requested via --stop")
         # _kill_stale_dashboard_processes prints outcomes itself.  Exit 0 if
         # we killed at least one, 1 if they were all unkillable.
@@ -10630,33 +10630,33 @@ def cmd_dashboard(args):
         raise SystemExit("--ssh-owner-nonce must be 16 lowercase hex characters")
     _ssh_session_token = None
     if _token_file and not _headless_backend:
-        raise SystemExit("--ssh-session-token-file is only valid with hermes serve")
+        raise SystemExit("--ssh-session-token-file is only valid with 3v0 serve")
 
     # ── Sanitize Desktop-inherited env that hijacks a standalone launch ─
-    # Desktop Electron spawns its backend with HERMES_DESKTOP=1 plus
-    # HERMES_WEB_DIST=<packaged app.asar[/unpacked]/dist> (and often
-    # HERMES_SERVE_HEADLESS=1 on the serve path). A shell that inherits
-    # those vars then runs `hermes dashboard` would otherwise:
+    # Desktop Electron spawns its backend with EV0_DESKTOP=1 plus
+    # EV0_WEB_DIST=<packaged app.asar[/unpacked]/dist> (and often
+    # EV0_SERVE_HEADLESS=1 on the serve path). A shell that inherits
+    # those vars then runs `3v0 dashboard` would otherwise:
     #   - serve the desktop renderer → "Desktop IPC bridge is unavailable"
     #     (issue #52945), or
-    #   - disable the SPA via inherited HERMES_SERVE_HEADLESS.
+    #   - disable the SPA via inherited EV0_SERVE_HEADLESS.
     # Only strip Electron-packaged WEB_DIST contamination — caller-managed
-    # HERMES_WEB_DIST overrides (dev / custom builds) must still work.
-    # The desktop-spawned backend itself (HERMES_DESKTOP=1) keeps its dist.
-    # Intentionally headless `serve` re-sets HERMES_SERVE_HEADLESS below.
-    if os.environ.get("HERMES_DESKTOP") != "1":
-        _inherited_web_dist = os.environ.get("HERMES_WEB_DIST", "")
+    # EV0_WEB_DIST overrides (dev / custom builds) must still work.
+    # The desktop-spawned backend itself (EV0_DESKTOP=1) keeps its dist.
+    # Intentionally headless `serve` re-sets EV0_SERVE_HEADLESS below.
+    if os.environ.get("EV0_DESKTOP") != "1":
+        _inherited_web_dist = os.environ.get("EV0_WEB_DIST", "")
         if _is_electron_packaged_web_dist(_inherited_web_dist):
-            os.environ.pop("HERMES_WEB_DIST", None)
+            os.environ.pop("EV0_WEB_DIST", None)
     if not _headless_backend:
-        os.environ.pop("HERMES_SERVE_HEADLESS", None)
+        os.environ.pop("EV0_SERVE_HEADLESS", None)
 
     # ── Unified profile launch routing ────────────────────────────────
     # The dashboard is a MACHINE management surface: it can read/write any
     # profile via the per-request ?profile= scoping. Running one dashboard
     # per profile just fragments that (port collisions, N processes, and a
     # "which dashboard am I on?" guessing game). So when a NAMED profile
-    # launches the dashboard (`worker dashboard` → HERMES_HOME points into
+    # launches the dashboard (`worker dashboard` → EV0_HOME points into
     # profiles/), default to the machine dashboard:
     #   - already running → open the browser at ?profile=<name> and exit
     #   - not running     → re-exec as the machine dashboard (pinned to the
@@ -10675,7 +10675,7 @@ def cmd_dashboard(args):
         and not getattr(args, "isolated", False)
         and not getattr(args, "open_profile", "")
         # Desktop pool backends are intentionally per-profile.
-        and os.environ.get("HERMES_DESKTOP") != "1"
+        and os.environ.get("EV0_DESKTOP") != "1"
     ):
         url = f"http://{args.host or '127.0.0.1'}:{args.port}/?profile={_launch_profile}"
         if _dashboard_listening(args.host, args.port):
@@ -10714,27 +10714,27 @@ def cmd_dashboard(args):
         if getattr(args, "skip_build", False):
             reexec_argv.append("--skip-build")
         from tools.environments.local import build_subprocess_env
-        # Exact env preservation: HERMES_HOME is explicitly pinned to the
+        # Exact env preservation: EV0_HOME is explicitly pinned to the
         # machine root below — the factory must not re-inject a profile home.
         env = build_subprocess_env(scrub_secrets=False, inherit_profile_home=False)
         # Pin the child to the machine ROOT, not the launching profile's
-        # HERMES_HOME.  We must resolve the root explicitly instead of just
-        # dropping HERMES_HOME: in the Docker layout the machine root is
-        # /opt/data (set via `ENV HERMES_HOME=/opt/data`), so an unset
-        # HERMES_HOME falls back to $HOME/.hermes = /opt/data/.hermes — an
+        # EV0_HOME.  We must resolve the root explicitly instead of just
+        # dropping EV0_HOME: in the Docker layout the machine root is
+        # /opt/data (set via `ENV EV0_HOME=/opt/data`), so an unset
+        # EV0_HOME falls back to $HOME/.3V0 = /opt/data/.3V0 — an
         # empty, auto-seeded home where the dashboard sees only the default
         # profile and the install-method stamp is missing (so the Docker
-        # update-button guard also misfires).  get_default_hermes_root()
-        # returns the root for both layouts: ~/.hermes for a standard install
+        # update-button guard also misfires).  get_default_ev0_root()
+        # returns the root for both layouts: ~/.3V0 for a standard install
         # and /opt/data for Docker (it strips a trailing profiles/<name>).
         # See the support report for the double-mount workaround this avoids.
         try:
-            from ev0_constants import get_default_hermes_root
-            env["HERMES_HOME"] = str(get_default_hermes_root())
+            from ev0_constants import get_default_ev0_root
+            env["EV0_HOME"] = str(get_default_ev0_root())
         except Exception:
             # Best-effort: if root resolution fails, fall back to the prior
-            # behaviour (drop HERMES_HOME) rather than block the reroute.
-            env.pop("HERMES_HOME", None)
+            # behaviour (drop EV0_HOME) rather than block the reroute.
+            env.pop("EV0_HOME", None)
         # On Windows, os.execvpe() does not truly replace the process — it
         # spawns via CreateProcess then the parent exits.  Under Python 3.14+
         # this can crash with STATUS_ACCESS_VIOLATION (0xC0000005) when
@@ -10759,7 +10759,7 @@ def cmd_dashboard(args):
         _ssh_session_token = _read_ssh_session_token_file(_token_file)
 
     # Attach gui.log early so dashboard startup/build failures are captured in
-    # the same logs directory as every other Hermes surface.
+    # the same logs directory as every other 3V0 surface.
     try:
         from ev0_logging import setup_logging as _setup_logging_gui
         _setup_logging_gui(mode="gui")
@@ -10806,8 +10806,8 @@ def cmd_dashboard(args):
     if _headless_backend:
         # Don't build the SPA, and tell mount_spa() (read at web_server import
         # below) to disable it even if a stray dist exists. Set it first.
-        os.environ["HERMES_SERVE_HEADLESS"] = "1"
-    elif "HERMES_WEB_DIST" not in os.environ and not getattr(args, "skip_build", False):
+        os.environ["EV0_SERVE_HEADLESS"] = "1"
+    elif "EV0_WEB_DIST" not in os.environ and not getattr(args, "skip_build", False):
         if not _build_web_ui(PROJECT_ROOT / "web", fatal=True):
             sys.exit(1)
     elif getattr(args, "skip_build", False):
@@ -10815,8 +10815,8 @@ def cmd_dashboard(args):
         # Verify the dist actually exists; otherwise the server will start
         # and serve 404s with no obvious cause (issue #23817).
         _dist_root = (
-            Path(os.environ["HERMES_WEB_DIST"])
-            if "HERMES_WEB_DIST" in os.environ
+            Path(os.environ["EV0_WEB_DIST"])
+            if "EV0_WEB_DIST" in os.environ
             else PROJECT_ROOT / "ev0_cli" / "web_dist"
         )
         if not (_dist_root / "index.html").exists():
@@ -10824,9 +10824,9 @@ def cmd_dashboard(args):
             # Instead of hard-failing (issue #59288 — desktop launches with
             # --build-mode skip after a wipe of web_dist), warn and attempt
             # ONE recovery build through the normal build path. Only the
-            # default dist location is recoverable: a custom HERMES_WEB_DIST
+            # default dist location is recoverable: a custom EV0_WEB_DIST
             # points at a caller-managed directory the build cannot populate.
-            _recoverable = "HERMES_WEB_DIST" not in os.environ
+            _recoverable = "EV0_WEB_DIST" not in os.environ
             if _recoverable:
                 print(f"⚠ --skip-build was passed but no web dist found at: {_dist_root}")
                 print("  Attempting one recovery build of the web UI...")
@@ -10841,22 +10841,22 @@ def cmd_dashboard(args):
             print("  ✓ Recovery build produced a web dist")
         print(f"→ Skipping web UI build (--skip-build); using dist at {_dist_root}")
     else:
-        # HERMES_WEB_DIST is set without --skip-build: the build is skipped
+        # EV0_WEB_DIST is set without --skip-build: the build is skipped
         # (the env var points at a caller-managed dist), so validate it the
         # same way the --skip-build branch does — otherwise the server starts
         # and serves 404s with no obvious cause (same failure mode as #23817,
         # via the env-var path).
-        _dist_root = Path(os.environ["HERMES_WEB_DIST"]).expanduser()
+        _dist_root = Path(os.environ["EV0_WEB_DIST"]).expanduser()
         if not (_dist_root / "index.html").exists():
-            print(f"✗ HERMES_WEB_DIST is set but no web dist found at: {_dist_root}")
+            print(f"✗ EV0_WEB_DIST is set but no web dist found at: {_dist_root}")
             print("  Pre-build first:  npm install --workspace web && npm run build -w web")
-            print("  Or unset HERMES_WEB_DIST to build and use the default web UI dist.")
+            print("  Or unset EV0_WEB_DIST to build and use the default web UI dist.")
             sys.exit(1)
-        # Write the expanded path back: web_server reads HERMES_WEB_DIST raw
+        # Write the expanded path back: web_server reads EV0_WEB_DIST raw
         # at import (no expanduser), so a validated "~/dist" would otherwise
         # pass here and still 404 there.
-        os.environ["HERMES_WEB_DIST"] = str(_dist_root)
-        print(f"→ Using web dist from HERMES_WEB_DIST: {_dist_root}")
+        os.environ["EV0_WEB_DIST"] = str(_dist_root)
+        print(f"→ Using web dist from EV0_WEB_DIST: {_dist_root}")
 
     # Discover and load plugins so any DashboardAuthProvider plugin
     # (e.g. plugins/dashboard_auth/nous) registers BEFORE start_server's
@@ -10953,7 +10953,7 @@ def cmd_prompt_size(args):
 
 
 def cmd_logs(args):
-    """View and filter Hermes log files."""
+    """View and filter 3V0 log files."""
     from ev0_cli.logs import tail_log, list_logs
 
     log_name = getattr(args, "log_name", "agent") or "agent"
@@ -10974,7 +10974,7 @@ def cmd_logs(args):
 
 
 def cmd_console(args):
-    """Open the safe Hermes command console."""
+    """Open the safe 3V0 command console."""
     from ev0_cli.console_engine import run_console_repl
 
     return run_console_repl()
@@ -11030,7 +11030,7 @@ _BUILTIN_SUBCOMMANDS = frozenset(
 
 
 # Top-level flags that take a value. Needed by ``_first_positional_argv``
-# so that in ``hermes -m gpt5 chat``, ``gpt5`` is correctly skipped as a
+# so that in ``3v0 -m gpt5 chat``, ``gpt5`` is correctly skipped as a
 # flag value rather than misclassified as a subcommand. Kept in sync with
 # the top-level flags declared in ``ev0_cli/_parser.py``.
 #
@@ -11061,7 +11061,7 @@ def _first_positional_argv() -> str | None:
 
     Used by ``main()`` to decide whether plugin discovery has to run at
     argparse-setup time. Handles common invocations like
-    ``hermes -m gpt5 --provider openai chat "msg"`` by skipping the
+    ``3v0 -m gpt5 --provider openai chat "msg"`` by skipping the
     values attached to known top-level flags.
 
     Does NOT fully simulate argparse — unknown ``--foo=bar`` / ``--foo
@@ -11100,7 +11100,7 @@ def _plugin_cli_discovery_needed() -> bool:
     """
     first = _first_positional_argv()
     if first is None:
-        # Bare ``hermes`` or only flags → defaults to ``chat``.
+        # Bare ``3v0`` or only flags → defaults to ``chat``.
         return False
     if first in _BUILTIN_SUBCOMMANDS:
         return False
@@ -11117,11 +11117,11 @@ def _resolve_deferred_platform_cli_command(command_name: str | None) -> None:
 
     Bundled platform plugins are cheap-registered as *deferred* entries to
     avoid importing every gateway SDK during normal startup. A platform that
-    registers a top-level ``hermes <name>`` command (e.g. Photon ->
+    registers a top-level ``3v0 <name>`` command (e.g. Photon ->
     ``ctx.register_cli_command(name="photon", ...)``) only runs that side
     effect when its module is imported. On the unknown-top-level-command slow
     path, ``discover_plugins()`` records the deferred loader but does not
-    import it, so the CLI registration never happens and ``hermes photon``
+    import it, so the CLI registration never happens and ``3v0 photon``
     fails with argparse ``invalid choice`` (issue #54678).
 
     Resolving only the platform whose name matches the first positional token
@@ -11150,7 +11150,7 @@ _AGENT_SUBCOMMANDS = {
 
 
 def _is_tui_chat_launch(args) -> bool:
-    return bool(getattr(args, "tui", False) or os.environ.get("HERMES_TUI") == "1")
+    return bool(getattr(args, "tui", False) or os.environ.get("EV0_TUI") == "1")
 
 
 def _command_has_dedicated_mcp_startup(args) -> bool:
@@ -11171,7 +11171,7 @@ def _should_background_mcp_startup(args) -> bool:
 
 def _prepare_agent_startup(args) -> None:
     """Discover plugins/MCP/hooks for commands that can run an agent turn."""
-    # --yolo: chokepoint guarantee that HERMES_YOLO_MODE is set before ANY
+    # --yolo: chokepoint guarantee that EV0_YOLO_MODE is set before ANY
     # plugin/tool discovery below imports tools.approval, which freezes
     # _YOLO_MODE_FROZEN at import time (PR #7994 security design).  main()'s
     # dispatch path also sets this earlier, but _prepare_agent_startup() is
@@ -11179,7 +11179,7 @@ def _prepare_agent_startup(args) -> None:
     # so the guarantee lives here where the import is actually triggered
     # (#60328).
     if getattr(args, "yolo", False):
-        os.environ["HERMES_YOLO_MODE"] = "1"
+        os.environ["EV0_YOLO_MODE"] = "1"
     _apply_safe_mode(args)
 
     _sub_attr, _sub_set = _AGENT_SUBCOMMANDS.get(args.command, (None, None))
@@ -11267,9 +11267,9 @@ def _prepare_agent_startup(args) -> None:
 def _apply_safe_mode(args) -> None:
     if not getattr(args, "safe_mode", False):
         return
-    os.environ["HERMES_SAFE_MODE"] = "1"
-    os.environ["HERMES_IGNORE_USER_CONFIG"] = "1"
-    os.environ["HERMES_IGNORE_RULES"] = "1"
+    os.environ["EV0_SAFE_MODE"] = "1"
+    os.environ["EV0_IGNORE_USER_CONFIG"] = "1"
+    os.environ["EV0_IGNORE_RULES"] = "1"
 
 
 def _set_chat_arg_defaults(args) -> None:
@@ -11290,7 +11290,7 @@ def _set_chat_arg_defaults(args) -> None:
 def _try_fast_chat_launch() -> bool:
     """Fast path for unambiguous interactive chat launches (all hosts).
 
-    ``hermes`` / ``hermes -w -s foo --yolo`` / ``hermes chat`` don't need the
+    ``3v0`` / ``3v0 -w -s foo --yolo`` / ``3v0 chat`` don't need the
     full argparse tree: building all ~40 subcommand parsers costs ~140ms of
     pure-Python argparse setup plus their module imports, none of which the
     chat path uses. Parse the lightweight top-level/chat parser instead and
@@ -11302,7 +11302,7 @@ def _try_fast_chat_launch() -> bool:
     ``_try_termux_fast_cli_launch`` minus the Termux-specific deferred
     startup; kept separate so phone-tuned behavior doesn't leak to desktops.
     """
-    if os.environ.get("HERMES_DISABLE_FAST_CHAT_LAUNCH") == "1":
+    if os.environ.get("EV0_DISABLE_FAST_CHAT_LAUNCH") == "1":
         return False
     argv = sys.argv[1:]
     if "-h" in argv or "--help" in argv:
@@ -11340,7 +11340,7 @@ def _try_fast_chat_launch() -> bool:
         return False
 
     if getattr(args, "yolo", False):
-        os.environ["HERMES_YOLO_MODE"] = "1"
+        os.environ["EV0_YOLO_MODE"] = "1"
     _prepare_agent_startup(args)
 
     if getattr(args, "oneshot", None):
@@ -11365,7 +11365,7 @@ def _try_termux_fast_cli_launch() -> bool:
     """Run obvious Termux non-TUI chat/oneshot/version paths on a light parser."""
     if not _is_termux_startup_environment():
         return False
-    if os.environ.get("HERMES_TERMUX_DISABLE_FAST_CLI") == "1":
+    if os.environ.get("EV0_TERMUX_DISABLE_FAST_CLI") == "1":
         return False
 
     argv = sys.argv[1:]
@@ -11420,10 +11420,10 @@ def _try_termux_fast_cli_launch() -> bool:
             # Bare Termux CLI should reach the prompt first and do agent-only
             # discovery on the first submitted turn instead of before input.
             setattr(args, "compact", True)
-            os.environ["HERMES_DEFER_AGENT_STARTUP"] = "1"
-            os.environ["HERMES_FAST_STARTUP_BANNER"] = "1"
+            os.environ["EV0_DEFER_AGENT_STARTUP"] = "1"
+            os.environ["EV0_FAST_STARTUP_BANNER"] = "1"
             if getattr(args, "accept_hooks", False):
-                os.environ["HERMES_ACCEPT_HOOKS"] = "1"
+                os.environ["EV0_ACCEPT_HOOKS"] = "1"
         else:
             _prepare_agent_startup(args)
         cmd_chat(args)
@@ -11435,7 +11435,7 @@ def _try_termux_fast_cli_launch() -> bool:
 def _try_termux_fast_tui_launch() -> bool:
     """Launch obvious Termux TUI invocations before building every subparser.
 
-    `hermes --tui` is the hot path on phones. The full parser setup imports
+    `3v0 --tui` is the hot path on phones. The full parser setup imports
     command modules for model, fallback, migrate, kanban, bundles, plugins,
     etc. even though the TUI immediately execs Node. On Termux only, parse the
     lightweight top-level/chat parser and hand off to ``cmd_chat`` when the
@@ -11486,9 +11486,9 @@ def cmd_memory(args):
         print("\n  ✓ Memory provider: built-in only")
         print("  Saved to config.yaml\n")
     elif sub == "reset":
-        from ev0_constants import get_hermes_home, display_hermes_home
+        from ev0_constants import get_ev0_home, display_ev0_home
 
-        mem_dir = get_hermes_home() / "memories"
+        mem_dir = get_ev0_home() / "memories"
         target = getattr(args, "target", "all")
         files_to_reset = []
         if target in {"all", "memory"}:
@@ -11502,7 +11502,7 @@ def cmd_memory(args):
         ]
         if not existing:
             print(
-                f"\n  Nothing to reset — no memory files found in {display_hermes_home()}/memories/\n"
+                f"\n  Nothing to reset — no memory files found in {display_ev0_home()}/memories/\n"
             )
             return
 
@@ -11529,7 +11529,7 @@ def cmd_memory(args):
         print(
             "\n  Memory reset complete. New sessions will start with a blank slate."
         )
-        print(f"  Files were in: {display_hermes_home()}/memories/\n")
+        print(f"  Files were in: {display_ev0_home()}/memories/\n")
     else:
         from ev0_cli.memory_setup import memory_command
 
@@ -11537,7 +11537,7 @@ def cmd_memory(args):
 
 
 def cmd_acp(args):
-    """Launch Hermes Agent as an ACP server."""
+    """Launch 3V0 Agent as an ACP server."""
     try:
         from acp_adapter.entry import main as acp_main
 
@@ -11632,7 +11632,7 @@ def cmd_monitoring(args):
         else:
             print("  OTLP endpoint:  not configured (monitoring.export.otlp)")
         print(f"  OTel SDK:       {'installed' if otlp_exporter.is_available() else 'not installed'} "
-              f"(optional extra: hermes-agent[otlp])")
+              f"(optional extra: 3v0-agent[otlp])")
         print("\n  Scope: gateway service health + redacted diagnostics only.")
         print("  No prompts, messages, tool args/results, usage analytics, or traces.")
         return
@@ -11685,19 +11685,19 @@ def _advertise_agent_env() -> None:
     detection reads it; pi and other agents set it — earendil-works/pi#7493)
     so generic tooling can attribute subprocesses to the harness that spawned
     them. The value must be our id in the public agent-harness registry
-    (``hermes-agent`` in huggingface.js ``agent-harnesses.ts``): standard-var
+    (``3v0-agent`` in huggingface.js ``agent-harnesses.ts``): standard-var
     matching is exact, so any other value is counted as "unknown".
-    ``HERMES_AGENT`` is the Hermes-specific marker. setdefault: never
-    clobber an outer harness (e.g. Hermes running inside another agent's
+    ``EV0_AGENT`` is the 3V0-specific marker. setdefault: never
+    clobber an outer harness (e.g. 3V0 running inside another agent's
     terminal).
     """
-    os.environ.setdefault("AI_AGENT", "hermes-agent")
-    os.environ.setdefault("HERMES_AGENT", "true")
+    os.environ.setdefault("AI_AGENT", "3v0-agent")
+    os.environ.setdefault("EV0_AGENT", "true")
 
 
 def main():
-    """Main entry point for hermes CLI."""
-    # Cosmetic: make the process show up as 'hermes' instead of 'python3.11'
+    """Main entry point for 3v0 CLI."""
+    # Cosmetic: make the process show up as '3v0' instead of 'python3.11'
     # in ps/top/htop.  Non-fatal — just a nicer UX.
     _set_process_title()
 
@@ -11712,29 +11712,29 @@ def main():
     except Exception:
         pass
 
-    # Sweep stale ``hermes.exe.old.*`` quarantine files left by previous
-    # ``hermes update`` runs on Windows. Silent no-op on non-Windows or when
-    # there's nothing to clean. See ``_quarantine_running_hermes_exe``.
+    # Sweep stale ``3v0.exe.old.*`` quarantine files left by previous
+    # ``3v0 update`` runs on Windows. Silent no-op on non-Windows or when
+    # there's nothing to clean. See ``_quarantine_running_ev0_exe``.
     try:
         _cleanup_quarantined_exes()
     except Exception:
         pass
 
-    # If the checkout changed since the last launch (hermes update, manual
+    # If the checkout changed since the last launch (3v0 update, manual
     # git pull, old-updater update that predates newer clears), sweep stale
     # __pycache__ once so no process — this one's lazy imports included —
     # resolves fresh source against old bytecode. Never raises.
     _sweep_stale_bytecode_if_checkout_changed()
 
-    # Self-heal a venv left half-built by an interrupted ``hermes update``
+    # Self-heal a venv left half-built by an interrupted ``3v0 update``
     # (Ctrl-C, terminal close, WSL OOM mid-install). Skip when the user is
     # *running* update — that flow writes and clears its own marker, and we
     # don't want a recovery install racing the real one. Never raises.
     #
     # The substring match is deliberately loose: argv isn't parsed yet at this
     # point, and the failure modes are asymmetric. Over-matching (e.g.
-    # ``hermes skills install update``) merely defers recovery one launch;
-    # under-matching (missing ``hermes -p work update``) would race a recovery
+    # ``3v0 skills install update``) merely defers recovery one launch;
+    # under-matching (missing ``3v0 -p work update``) would race a recovery
     # install against the real one. Loose wins.
     try:
         if "update" not in sys.argv[1:]:
@@ -11786,7 +11786,7 @@ def main():
             "Manage the fallback provider chain.  Fallback providers are tried "
             "in order when the primary model fails with rate-limit, overload, or "
             "connection errors.  See: "
-            "https://hermes-agent.nousresearch.com/docs/user-guide/features/fallback-providers"
+            "https://github.com/1deat0r/3V0-Agent/docs/user-guide/features/fallback-providers"
         ),
     )
     fallback_subparsers = fallback_parser.add_subparsers(dest="fallback_command")
@@ -11797,7 +11797,7 @@ def main():
     )
     fallback_subparsers.add_parser(
         "add",
-        help="Pick a provider + model (same picker as `hermes model`) and append to the chain",
+        help="Pick a provider + model (same picker as `3v0 model`) and append to the chain",
     )
     fallback_subparsers.add_parser(
         "remove",
@@ -11818,9 +11818,9 @@ def main():
         help="Manage external secret sources (Bitwarden, 1Password)",
         description=(
             "Pull API keys from an external secret manager at process startup "
-            "instead of storing them in ~/.hermes/.env.  Supports Bitwarden "
+            "instead of storing them in ~/.3V0/.env.  Supports Bitwarden "
             "Secrets Manager and 1Password.  See: "
-            "https://hermes-agent.nousresearch.com/docs/user-guide/secrets/"
+            "https://github.com/1deat0r/3V0-Agent/docs/user-guide/secrets/"
         ),
     )
     secrets_subparsers = secrets_parser.add_subparsers(dest="secrets_command")
@@ -11862,7 +11862,7 @@ def main():
     # egress command — iron-proxy outbound credential-injection firewall
     # =========================================================================
     # NOTE: this is the OUTBOUND egress firewall (ironsh/iron-proxy).
-    # `hermes proxy` (defined elsewhere in this file) is a separate INBOUND
+    # `3v0 proxy` (defined elsewhere in this file) is a separate INBOUND
     # OAuth-aggregator reverse proxy.  Different direction, different purpose.
     egress_parser = subparsers.add_parser(
         "egress",
@@ -11871,7 +11871,7 @@ def main():
             "Manage iron-proxy, the optional TLS-intercepting egress firewall "
             "that swaps proxy tokens for real API credentials before outbound "
             "requests leave a sandbox.  Disabled by default.  See: "
-            "https://hermes-agent.nousresearch.com/docs/user-guide/egress/iron-proxy"
+            "https://github.com/1deat0r/3V0-Agent/docs/user-guide/egress/iron-proxy"
         ),
     )
 
@@ -11880,7 +11880,7 @@ def main():
 
     def _dispatch_egress(args):  # noqa: ANN001
         # The egress subparser uses dest='egress_command' to stay disjoint
-        # from the inbound OAuth ``hermes proxy`` subparser (dest='proxy_command').
+        # from the inbound OAuth ``3v0 proxy`` subparser (dest='proxy_command').
         sub = getattr(args, "egress_command", None)
         if sub is not None and hasattr(args, "func") and args.func is not _dispatch_egress:
             return args.func(args)
@@ -11965,7 +11965,7 @@ def main():
         description=(
             "Configure the official Meta WhatsApp Business Cloud API "
             "adapter (Business account required, public webhook URL "
-            "required). Distinct from `hermes whatsapp` which sets up "
+            "required). Distinct from `3v0 whatsapp` which sets up "
             "the Baileys bridge for personal accounts."
         ),
     )
@@ -12089,9 +12089,9 @@ def main():
     # =========================================================================
     checkpoints_parser = subparsers.add_parser(
         "checkpoints",
-        help="Inspect / prune / clear ~/.hermes/checkpoints/",
+        help="Inspect / prune / clear ~/.3V0/checkpoints/",
         description="Manage the filesystem checkpoint store — the shadow git "
-        "repo hermes uses to snapshot working directories before "
+        "repo 3v0 uses to snapshot working directories before "
         "write_file/patch/terminal calls. Lets you see how much "
         "space checkpoints occupy, force a prune, or wipe the base.",
     )
@@ -12164,7 +12164,7 @@ def main():
     # own argparse tree.  No hardcoded plugin commands in main.py.
     #
     # Skipped when the invocation is already targeting a known built-in
-    # subcommand — ``hermes --help``, ``hermes version``, ``hermes logs``,
+    # subcommand — ``3v0 --help``, ``3v0 version``, ``3v0 logs``,
     # etc.  This avoids eagerly importing every bundled plugin module
     # (google.cloud.pubsub_v1, aiohttp, grpc, PIL …) which costs
     # 500-650ms on typical installs.
@@ -12238,7 +12238,7 @@ def main():
         description=(
             "Petdex (https://github.com/crafter-station/petdex) is a public "
             "gallery of animated sprite pets for coding agents. Install one "
-            "and Hermes shows it reacting to agent activity across the CLI, "
+            "and 3V0 shows it reacting to agent activity across the CLI, "
             "TUI, and desktop app."
         ),
     )
@@ -12290,13 +12290,13 @@ def main():
             "Install or check the cua-driver binary used by the\n"
             "`computer_use` toolset. Supported on macOS, Windows, and\n"
             "Linux.\n\n"
-            "Use `hermes computer-use install` to fetch and run the\n"
+            "Use `3v0 computer-use install` to fetch and run the\n"
             "upstream cua-driver installer. This is equivalent to the\n"
-            "post-setup hook that `hermes tools` runs when you first\n"
+            "post-setup hook that `3v0 tools` runs when you first\n"
             "enable the Computer Use toolset, and is a stable target\n"
             "for re-running the install if it didn't fire (e.g. when\n"
             "toggling the toolset on a returning-user setup).\n\n"
-            "Use `hermes computer-use doctor` to run cua-driver's\n"
+            "Use `3v0 computer-use doctor` to run cua-driver's\n"
             "`health_report` MCP tool and surface its check matrix\n"
             "(TCC, bundle identity, version, platform support, ...)\n"
             "in human-readable form."
@@ -12363,7 +12363,7 @@ def main():
         description=(
             "Computer Use drives the Mac through cua-driver, whose TCC grants\n"
             "attach to cua-driver's own identity (com.trycua.driver) — not the\n"
-            "terminal or the Hermes app. `status` reports the driver's grant\n"
+            "terminal or the 3V0 app. `status` reports the driver's grant\n"
             "state; `grant` launches CuaDriver via LaunchServices so the macOS\n"
             "permission dialog is attributed to the process that does the work."
         ),
@@ -12405,7 +12405,7 @@ def main():
             # Must match the runtime resolver: Desktop/TUI processes can omit
             # ~/.local/bin even though the official installer put the driver there.
             path = resolve_cua_driver_cmd()
-            override = _os.environ.get("HERMES_CUA_DRIVER_CMD", "").strip()
+            override = _os.environ.get("EV0_CUA_DRIVER_CMD", "").strip()
             if path:
                 version = ""
                 try:
@@ -12420,10 +12420,10 @@ def main():
                 from ev0_cli.tools_config import _cua_version_summary
                 version = _cua_version_summary(version)
                 # Name the override here too. Without it the operator is told
-                # to repair an install that `hermes computer-use install` will
+                # to repair an install that `3v0 computer-use install` will
                 # (correctly) refuse to touch, with nothing pointing at the
                 # env var that actually selected the binary.
-                origin = " [custom binary from HERMES_CUA_DRIVER_CMD]" if override else ""
+                origin = " [custom binary from EV0_CUA_DRIVER_CMD]" if override else ""
                 if version:
                     print(f"cua-driver: installed at {path}{origin} ({version})")
                 else:
@@ -12436,28 +12436,28 @@ def main():
                     )
                     if override:
                         print(
-                            "    Update the binary selected by HERMES_CUA_DRIVER_CMD, or unset "
-                            "the override and run: hermes computer-use install --upgrade"
+                            "    Update the binary selected by EV0_CUA_DRIVER_CMD, or unset "
+                            "the override and run: 3v0 computer-use install --upgrade"
                         )
                     else:
-                        print("    Run: hermes computer-use install")
+                        print("    Run: 3v0 computer-use install")
                     return 1
                 try:
                     st = cua_driver_update_check()
                     if st and st.get("update_available"):
                         latest = st.get("latest_version") or "?"
                         print(f"  ⬆ Update available: cua-driver {latest}.")
-                        print("    Run: hermes computer-use install --upgrade")
+                        print("    Run: 3v0 computer-use install --upgrade")
                     elif st:
                         print("  ✓ Up to date.")
                     else:
                         # Older driver (no check-update verb) or offline.
-                        print("  Refresh to latest: hermes computer-use install --upgrade")
+                        print("  Refresh to latest: 3v0 computer-use install --upgrade")
                 except Exception:
-                    print("  Refresh to latest: hermes computer-use install --upgrade")
+                    print("  Refresh to latest: 3v0 computer-use install --upgrade")
                 return 0
             print("cua-driver: not installed")
-            print("  Run: hermes computer-use install")
+            print("  Run: 3v0 computer-use install")
             return 1
         if action == "doctor":
             from tools.computer_use.doctor import run_doctor
@@ -12483,7 +12483,7 @@ def main():
                     print(f"Computer Use is not supported on {st['platform']}.")
                     sys.exit(1)
                 if not st["installed"]:
-                    print("cua-driver: not installed. Run: hermes computer-use install")
+                    print("cua-driver: not installed. Run: 3v0 computer-use install")
                     sys.exit(1)
                 glyph = lambda v: "✅" if v is True else ("❌" if v is False else "•")  # noqa: E731
                 print(f"cua-driver: {st['version'] or 'installed'} ({st['platform']})")
@@ -12491,7 +12491,7 @@ def main():
                     print(f"  {glyph(st['accessibility'])} Accessibility")
                     print(f"  {glyph(st['screen_recording'])} Screen Recording")
                     if not st["ready"]:
-                        print("  Grant: hermes computer-use permissions grant")
+                        print("  Grant: 3v0 computer-use permissions grant")
                 else:  # no TCC model — readiness is driver health
                     print(f"  {glyph(st['ready'])} driver health (no permission toggles on {st['platform']})")
                 for c in st["checks"]:
@@ -12578,7 +12578,7 @@ def main():
         p.add_argument(
             "--model",
             help="Only match sessions whose model name contains this substring "
-            "(e.g. 'sonnet', 'gpt-5', 'hermes')",
+            "(e.g. 'sonnet', 'gpt-5', '3v0')",
         )
         p.add_argument(
             "--provider",
@@ -12640,7 +12640,7 @@ def main():
         nargs="?",
         help=(
             "Output path. JSONL: file path (use - for stdout, required). "
-            "md/qmd: output directory (default: <hermes home>/session-exports)"
+            "md/qmd: output directory (default: <3v0 home>/session-exports)"
         ),
     )
     sessions_export.add_argument(
@@ -12961,11 +12961,11 @@ def main():
 
     sessions_import = sessions_subparsers.add_parser(
         "import",
-        help="Import a Claude Code or Codex CLI session into Hermes",
+        help="Import a Claude Code or Codex CLI session into 3V0",
         description=(
             "Pull a conversation started in Claude Code (~/.claude/projects) "
-            "or Codex CLI (~/.codex/sessions) into the Hermes session store "
-            "so it can be resumed with 'hermes --resume <id>'. The foreign "
+            "or Codex CLI (~/.codex/sessions) into the 3V0 session store "
+            "so it can be resumed with '3v0 --resume <id>'. The foreign "
             "files are only read, never modified."
         ),
     )
@@ -13059,8 +13059,8 @@ def main():
     # desktop (a.k.a. gui) command
     #
     # The canonical name is "desktop"; "gui" is kept as a deprecated alias
-    # for one release. The Hermes-Setup.exe success screen tells users to
-    # run `hermes desktop` from a terminal, so the canonical name needs
+    # for one release. The 3V0-Setup.exe success screen tells users to
+    # run `3v0 desktop` from a terminal, so the canonical name needs
     # to be the one that appears in --help (argparse promotes the primary
     # name; aliases stay hidden).
     # =========================================================================
@@ -13078,7 +13078,7 @@ def main():
     # =========================================================================
     # Pre-process argv so unquoted multi-word session names after -c / -r
     # are merged into a single token before argparse sees them.
-    # e.g. ``hermes -c Pokemon Agent Dev`` → ``hermes -c 'Pokemon Agent Dev'``
+    # e.g. ``3v0 -c Pokemon Agent Dev`` → ``3v0 -c 'Pokemon Agent Dev'``
     # ── Container-aware routing ────────────────────────────────────────
     # When NixOS container mode is active, route ALL subcommands into
     # the managed container.  This MUST run before parse_args() so that
@@ -13103,7 +13103,7 @@ def main():
     #
     # Fix: when argv contains a token matching a known subcommand, set
     # subparsers.required=True to force deterministic routing.  If that
-    # fails (e.g. 'hermes -c model' where 'model' is consumed as the
+    # fails (e.g. '3v0 -c model' where 'model' is consumed as the
     # session name for --continue), fall back to the default behaviour.
     import io as _io
 
@@ -13141,18 +13141,18 @@ def main():
         cmd_version(args)
         return
 
-    # --yolo: set HERMES_YOLO_MODE *before* plugin discovery.  The call to
+    # --yolo: set EV0_YOLO_MODE *before* plugin discovery.  The call to
     # _prepare_agent_startup() below triggers discover_plugins() → tool
     # imports, and tools.approval freezes _YOLO_MODE_FROZEN at module
     # import time (PR #7994, security hardening against prompt-injection).
     # If the env var is set only later (e.g. inside cmd_chat), the frozen
     # value is already False and --yolo silently does nothing.
     if getattr(args, "yolo", False):
-        os.environ["HERMES_YOLO_MODE"] = "1"
+        os.environ["EV0_YOLO_MODE"] = "1"
 
     # Discover Python plugins and register shell hooks once, before any
     # command that can fire lifecycle hooks.  Both are idempotent; gated
-    # so introspection/management commands (hermes hooks list, cron
+    # so introspection/management commands (3v0 hooks list, cron
     # list, gateway status, mcp add, ...) don't pay discovery cost or
     # trigger consent prompts for hooks the user is still inspecting.
     _prepare_agent_startup(args)
@@ -13204,7 +13204,7 @@ def main():
 
     # Execute the command.  Propagate the handler's return code as the
     # process exit code so subcommands that signal failure (e.g.
-    # ``hermes egress start`` refusing when credential_source=bitwarden
+    # ``3v0 egress start`` refusing when credential_source=bitwarden
     # is misconfigured) actually exit non-zero.  Handlers that return
     # None are treated as success (exit 0).
     if hasattr(args, "func"):

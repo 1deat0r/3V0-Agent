@@ -128,7 +128,7 @@ def test_explanation_persistence_turn_lease_cause_is_specific():
     assert "not saved" in lower
     assert "disk" not in lower
     assert "compression" not in lower
-    assert "hermes doctor" not in lower
+    assert "3v0 doctor" not in lower
 
 
 def test_explanation_persistence_disk_cause_keeps_disk_wording():
@@ -149,7 +149,7 @@ def test_explanation_persistence_corrupt_cause_never_says_free_space():
     )
     lower = out.lower()
     assert "corrupt" in lower
-    assert "hermes doctor" in lower
+    assert "3v0 doctor" in lower
     assert "free some space" not in lower
     assert "full disk" not in lower
 
@@ -164,7 +164,7 @@ def test_explanation_persistence_unknown_cause_is_neutral():
         assert out.strip() != ""
         assert "disk space" not in lower
         assert "full disk" not in lower
-        assert "hermes doctor" in lower
+        assert "3v0 doctor" in lower
         assert "again" in lower
 
 
@@ -319,7 +319,7 @@ def test_persistence_error_causes_tuple_matches_classifier():
 def test_explainer_enabled_by_default():
     agent = _make_agent()
     with patch.dict(os.environ, {}, clear=False):
-        os.environ.pop("HERMES_TURN_COMPLETION_EXPLAINER", None)
+        os.environ.pop("EV0_TURN_COMPLETION_EXPLAINER", None)
         with patch("ev0_cli.config.load_config", return_value={}):
             assert agent._turn_completion_explainer_enabled() is True
 
@@ -327,7 +327,7 @@ def test_explainer_enabled_by_default():
 def test_explainer_disabled_via_env():
     agent = _make_agent()
     with patch.dict(
-        os.environ, {"HERMES_TURN_COMPLETION_EXPLAINER": "0"}, clear=False
+        os.environ, {"EV0_TURN_COMPLETION_EXPLAINER": "0"}, clear=False
     ):
         assert agent._turn_completion_explainer_enabled() is False
 
@@ -350,7 +350,7 @@ def test_explainer_config_read_once_then_cached():
         return {"display": {"turn_completion_explainer": True}}
 
     with patch.dict(os.environ, {}, clear=False):
-        os.environ.pop("HERMES_TURN_COMPLETION_EXPLAINER", None)
+        os.environ.pop("EV0_TURN_COMPLETION_EXPLAINER", None)
         with patch("ev0_cli.config.load_config", counting_load):
             # First call reads config and caches the result.
             assert agent._turn_completion_explainer_enabled() is True
@@ -361,7 +361,7 @@ def test_explainer_config_read_once_then_cached():
             assert calls["n"] == 1
             # Env override stays authoritative even after the cache is warm.
             with patch.dict(
-                os.environ, {"HERMES_TURN_COMPLETION_EXPLAINER": "0"}, clear=False
+                os.environ, {"EV0_TURN_COMPLETION_EXPLAINER": "0"}, clear=False
             ):
                 assert agent._turn_completion_explainer_enabled() is False
             assert calls["n"] == 1  # env path never touches config

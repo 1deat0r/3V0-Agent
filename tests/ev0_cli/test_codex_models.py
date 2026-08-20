@@ -65,7 +65,7 @@ def test_model_command_prompts_to_reuse_or_reauthenticate_codex_session(monkeypa
     monkeypatch.setattr("builtins.input", lambda prompt="": next(choices))
     monkeypatch.setattr(
         "ev0_cli.auth.get_codex_auth_status",
-        lambda: {"logged_in": True, "source": "hermes-auth-store"},
+        lambda: {"logged_in": True, "source": "3v0-auth-store"},
     )
     monkeypatch.setattr(
         "ev0_cli.auth.resolve_codex_runtime_credentials",
@@ -99,9 +99,9 @@ def test_model_command_prompts_to_reuse_or_reauthenticate_codex_session(monkeypa
 
 
 def _make_cli(model="anthropic/claude-opus-4.6", **kwargs):
-    """Create a HermesCLI with minimal mocking."""
+    """Create a Ev0CLI with minimal mocking."""
     import cli as _cli_mod
-    from cli import HermesCLI
+    from cli import Ev0CLI
 
     _clean_config = {
         "model": {
@@ -113,13 +113,13 @@ def _make_cli(model="anthropic/claude-opus-4.6", **kwargs):
         "agent": {},
         "terminal": {"env_type": "local"},
     }
-    clean_env = {"LLM_MODEL": "", "HERMES_MAX_ITERATIONS": ""}
+    clean_env = {"LLM_MODEL": "", "EV0_MAX_ITERATIONS": ""}
     with (
         patch("cli.get_tool_definitions", return_value=[]),
         patch.dict("os.environ", clean_env, clear=False),
         patch.dict(_cli_mod.__dict__, {"CLI_CONFIG": _clean_config}),
     ):
-        cli = HermesCLI(model=model, **kwargs)
+        cli = Ev0CLI(model=model, **kwargs)
     return cli
 
 
@@ -163,11 +163,11 @@ class TestNormalizeModelForProvider:
         # Don't pass model= so _model_is_default is True
         with (
             patch("cli.get_tool_definitions", return_value=[]),
-            patch.dict("os.environ", {"LLM_MODEL": "", "HERMES_MAX_ITERATIONS": ""}, clear=False),
+            patch.dict("os.environ", {"LLM_MODEL": "", "EV0_MAX_ITERATIONS": ""}, clear=False),
             patch.dict(_cli_mod.__dict__, {"CLI_CONFIG": _clean_config}),
         ):
-            from cli import HermesCLI
-            cli = HermesCLI()
+            from cli import Ev0CLI
+            cli = Ev0CLI()
 
         assert cli._model_is_default is True
         with patch(

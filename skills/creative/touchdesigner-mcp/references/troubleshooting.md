@@ -133,11 +133,11 @@ n.cook(force=True)
 actual = str(n.width) + 'x' + str(n.height)
 ```
 
-## 5. Hermes Configuration
+## 5. 3V0 Configuration
 
 ### Config location
 
-`$HERMES_HOME/config.yaml` (defaults to `~/.hermes/config.yaml` when `HERMES_HOME` is unset)
+`$EV0_HOME/config.yaml` (defaults to `~/.3V0/config.yaml` when `EV0_HOME` is unset)
 
 ### MCP entry format
 
@@ -150,7 +150,7 @@ mcpServers:
 
 ### After config changes
 
-Restart the Hermes session for changes to take effect. The MCP connection is
+Restart the 3V0 session for changes to take effect. The MCP connection is
 established at session startup.
 
 ### Verifying MCP tools are available

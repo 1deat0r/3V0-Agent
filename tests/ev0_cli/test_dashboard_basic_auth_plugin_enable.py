@@ -26,10 +26,10 @@ def _reset_auth_registry():
 
 
 @pytest.fixture
-def hermes_home(tmp_path, monkeypatch):
-    home = tmp_path / "hermes"
+def ev0_home(tmp_path, monkeypatch):
+    home = tmp_path / "3v0"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("EV0_HOME", str(home))
     return home
 
 
@@ -44,10 +44,10 @@ class TestEnsureBasicAuthPluginEnabled:
 
 
 class TestBasicProviderLoadsAfterUnblock:
-    def test_disabled_basic_blocks_registration(self, hermes_home, monkeypatch):
+    def test_disabled_basic_blocks_registration(self, ev0_home, monkeypatch):
         password_hash = basic_plugin.hash_password("hunter2")
         _write_config(
-            hermes_home,
+            ev0_home,
             {
                 "dashboard": {
                     "basic_auth": {
@@ -68,7 +68,7 @@ class TestBasicProviderLoadsAfterUnblock:
         assert list_providers() == []
 
     def test_unblock_then_rediscover_registers_provider(
-        self, hermes_home, monkeypatch,
+        self, ev0_home, monkeypatch,
     ):
         password_hash = basic_plugin.hash_password("hunter2")
         cfg = {
@@ -81,10 +81,10 @@ class TestBasicProviderLoadsAfterUnblock:
             },
             "plugins": {"disabled": ["basic"]},
         }
-        _write_config(hermes_home, cfg)
+        _write_config(ev0_home, cfg)
 
         assert ensure_basic_auth_plugin_enabled_in_config(cfg) is True
-        _write_config(hermes_home, cfg)
+        _write_config(ev0_home, cfg)
 
         import ev0_cli.plugins as plugins_mod
 

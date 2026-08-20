@@ -1321,7 +1321,7 @@ class TestDrainBacklog(Env):
 class TestSyncFold(Env):
     """Stone 14: the own clock now heals store<->profile drift — the wake-time
     reconcilers (sync.py + sync_skills.py) are folded into the maintenance
-    tick, run before the drain. With the Hermes fork cut, this makes the
+    tick, run before the drain. With the 3V0 fork cut, this makes the
     daemon a full maintenance clock (heal + review), not a review-only loop."""
 
     def _noop_decisions(self):

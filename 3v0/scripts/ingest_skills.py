@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ingest a Hermes skill_manage write into the native skill store.
+"""Ingest a 3V0 skill_manage write into the native skill store.
 
 Reads a JSON payload on stdin describing one skill_manage write and replays it
 against the skill store under the cross-process lock. Called by the

@@ -15,7 +15,7 @@ Security features (based on OWASP + NIST SP 800-63-4 guidance):
   - File permissions: chmod 0600 on all data files
   - Codes are never logged to stdout
 
-Storage: ~/.hermes/pairing/
+Storage: ~/.3V0/pairing/
 """
 
 import hashlib
@@ -34,9 +34,9 @@ from gateway.whatsapp_identity import (
     normalize_whatsapp_identifier,
 )
 from ev0_constants import (
-    get_default_hermes_root,
-    get_hermes_dir,
-    get_hermes_home,
+    get_default_ev0_root,
+    get_ev0_dir,
+    get_ev0_home,
 )
 from utils import atomic_replace
 
@@ -56,7 +56,7 @@ LOCKOUT_SECONDS = 3600              # Lockout duration after too many failures
 MAX_PENDING_PER_PLATFORM = 3        # Max pending codes per platform
 MAX_FAILED_ATTEMPTS = 5             # Failed approvals before lockout
 
-PAIRING_DIR = get_hermes_dir("platforms/pairing", "pairing")
+PAIRING_DIR = get_ev0_dir("platforms/pairing", "pairing")
 
 
 # Platform value -> its per-platform allowlist env var. When an operator has
@@ -340,8 +340,8 @@ def _load_json_file(path: Path) -> dict:
 def _merge_pairing_dir(active_dir: Path, alternate_dir: Path) -> None:
     """Merge split legacy/new pairing data into the active PairingStore dir.
 
-    Older installs use ``{HERMES_HOME}/pairing`` while newer code/docs may
-    write ``{HERMES_HOME}/platforms/pairing``. If both directories exist, the
+    Older installs use ``{EV0_HOME}/pairing`` while newer code/docs may
+    write ``{EV0_HOME}/platforms/pairing``. If both directories exist, the
     gateway must not silently ignore approved users sitting in the inactive
     location; otherwise already-paired Feishu users get asked for a fresh code.
     """
@@ -368,7 +368,7 @@ def _migrate_split_pairing_dirs(
     home: Optional[Path] = None,
     active: Optional[Path] = None,
 ) -> None:
-    home = home or get_hermes_home()
+    home = home or get_ev0_home()
     old_dir = home / "pairing"
     new_dir = home / "platforms" / "pairing"
     active = active or PAIRING_DIR
@@ -412,23 +412,23 @@ class PairingStore:
       - _rate_limits.json         : rate limit tracking
 
     When constructed with ``profile="<name>"``, storage resolves from that
-    profile's own HERMES_HOME using the same legacy/consolidated layout rules
-    as ``hermes -p <name> pairing ...``. This keeps multiplex gateways and
+    profile's own EV0_HOME using the same legacy/consolidated layout rules
+    as ``3v0 -p <name> pairing ...``. This keeps multiplex gateways and
     profile-scoped CLI approvals on one whitelist. Without a profile, storage
-    is the global pairing directory for the current HERMES_HOME.
+    is the global pairing directory for the current EV0_HOME.
     """
 
     def __init__(self, profile: Optional[str] = None):
-        # Resolve storage directory lazily — tests use a temp HERMES_HOME
+        # Resolve storage directory lazily — tests use a temp EV0_HOME
         # and PairingStore may be constructed before the env is set.
         if profile:
-            root = get_default_hermes_root()
+            root = get_default_ev0_root()
             profile_home = (
                 root
                 if profile == "default"
                 else root / "profiles" / profile
             )
-            self._dir = get_hermes_dir(
+            self._dir = get_ev0_dir(
                 "platforms/pairing",
                 "pairing",
                 home=profile_home,
@@ -438,7 +438,7 @@ class PairingStore:
         self._dir.mkdir(parents=True, exist_ok=True)
         if profile:
             # Explicit stores must resolve exactly as a standalone
-            # ``hermes -p <profile> pairing ...`` process does. Merge the
+            # ``3v0 -p <profile> pairing ...`` process does. Merge the
             # alternate old/new layout so upgrades cannot split approvals.
             _migrate_split_pairing_dirs(home=profile_home, active=self._dir)
         else:
@@ -471,7 +471,7 @@ class PairingStore:
             except PermissionError as e:
                 # Surface this loudly: a 0600 file owned by a different user
                 # (classic Docker symptom: `docker exec` runs as root and writes
-                # the file, then the gateway process — running as `hermes` after
+                # the file, then the gateway process — running as `3v0` after
                 # gosu drop — can't read it) would otherwise be swallowed by
                 # the generic OSError branch below, silently leaving the user
                 # marked unauthorized. See issue #10270.
@@ -485,9 +485,9 @@ class PairingStore:
                 euid = os.geteuid() if hasattr(os, "geteuid") else "n/a"
                 logger.warning(
                     "Pairing file %s exists but is not readable as uid=%s (%s; %s). "
-                    "If you ran `docker exec <container> hermes pairing approve ...` as root, "
-                    "re-run with `docker exec -u hermes <container> ...` and "
-                    "chown the existing file to the hermes user, or restart the "
+                    "If you ran `docker exec <container> 3v0 pairing approve ...` as root, "
+                    "re-run with `docker exec -u 3v0 <container> ...` and "
+                    "chown the existing file to the 3v0 user, or restart the "
                     "container so the entrypoint can fix ownership.",
                     path, euid, owner_info, e,
                 )
@@ -736,7 +736,7 @@ class PairingStore:
         """
         Approve a pending pairing request by its server-side request id.
 
-        This is the grant path for authenticated admin surfaces (``hermes
+        This is the grant path for authenticated admin surfaces (``3v0
         pairing list``, the dashboard/desktop approve buttons), which show
         pending requests but must never reveal the one-time code DM'd to the
         user. Returns ``{user_id, user_name}`` on success, ``None`` for an

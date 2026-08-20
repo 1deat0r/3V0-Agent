@@ -1,4 +1,4 @@
-import type { BillingBlock } from '@hermes/shared/billing'
+import type { BillingBlock } from '@3v0/shared/billing'
 import { describe, expect, it } from 'vitest'
 
 import { billingDialogCopy } from './billingDialog.js'

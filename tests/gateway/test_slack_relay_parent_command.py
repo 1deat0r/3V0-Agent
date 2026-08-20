@@ -21,13 +21,13 @@ def _wire(text: str, *, platform: str = "slack") -> dict:
 @pytest.mark.parametrize(
     ("wire_text", "expected"),
     [
-        ("/hermes sethome", "/sethome"),
-        ("/hermes\tsethome", "/sethome"),
+        ("/3v0 sethome", "/sethome"),
+        ("/3v0\tsethome", "/sethome"),
         (
-            "/hermes model gpt-5.6 --provider openai",
+            "/3v0 model gpt-5.6 --provider openai",
             "/model gpt-5.6 --provider openai",
         ),
-        ("/hermes", "/help"),
+        ("/3v0", "/help"),
     ],
 )
 def test_slack_relay_parent_becomes_gateway_command(wire_text: str, expected: str):

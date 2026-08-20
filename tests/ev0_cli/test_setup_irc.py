@@ -1,7 +1,7 @@
-"""Tests for IRC gateway configuration via `hermes setup gateway` UI.
+"""Tests for IRC gateway configuration via `3v0 setup gateway` UI.
 
 Covers the full plugin-platform discovery → status → configure flow so that
-a fresh Hermes install (no state, no env vars) can set up IRC through the
+a fresh 3V0 install (no state, no env vars) can set up IRC through the
 interactive setup menus.
 """
 
@@ -56,7 +56,7 @@ def _unregister_irc_platform():
 
 
 class TestIRCFreshInstallDiscovery:
-    """IRC appears in the setup menu on a brand-new Hermes install."""
+    """IRC appears in the setup menu on a brand-new 3V0 install."""
 
     def test_irc_appears_in_all_platforms(self, monkeypatch):
         """When the IRC plugin is registered, _all_platforms() surfaces it."""
@@ -86,8 +86,8 @@ class TestIRCFreshInstallDiscovery:
         plat = _register_irc_platform()
         try:
             monkeypatch.setenv("IRC_SERVER", "irc.libera.chat")
-            monkeypatch.setenv("IRC_CHANNEL", "#hermes")
-            monkeypatch.setenv("IRC_NICKNAME", "hermes-bot")
+            monkeypatch.setenv("IRC_CHANNEL", "#3v0")
+            monkeypatch.setenv("IRC_NICKNAME", "3v0-bot")
 
             status = gateway_mod._platform_status(plat)
             assert status == "configured"
@@ -141,14 +141,14 @@ class TestIRCInteractiveSetup:
 
 
 class TestIRCGatewaySetupFreshInstall:
-    """Simulate the full `hermes setup gateway` experience with IRC present."""
+    """Simulate the full `3v0 setup gateway` experience with IRC present."""
 
     def test_setup_gateway_shows_irc_in_platform_menu(self, monkeypatch, capsys, tmp_path):
         """The gateway setup menu lists IRC among the available platforms."""
         import ev0_cli.gateway as gateway_mod
         from ev0_cli import setup as setup_mod
 
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         _register_irc_platform()
         try:
             for key in ("IRC_SERVER", "IRC_CHANNEL", "IRC_NICKNAME"):
@@ -194,12 +194,12 @@ class TestIRCGatewaySetupFreshInstall:
         import ev0_cli.gateway as gateway_mod
         from ev0_cli import setup as setup_mod
 
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
         _register_irc_platform()
         try:
             monkeypatch.setenv("IRC_SERVER", "irc.libera.chat")
-            monkeypatch.setenv("IRC_CHANNEL", "#hermes")
-            monkeypatch.setenv("IRC_NICKNAME", "hermes-bot")
+            monkeypatch.setenv("IRC_CHANNEL", "#3v0")
+            monkeypatch.setenv("IRC_NICKNAME", "3v0-bot")
 
             monkeypatch.setattr(setup_mod, "prompt_yes_no", lambda *a, **kw: False)
             monkeypatch.setattr(setup_mod, "prompt_choice", lambda *a, **kw: 0)

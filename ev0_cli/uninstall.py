@@ -1,9 +1,9 @@
 """
-Hermes Agent Uninstaller.
+3V0 Agent Uninstaller.
 
 Provides options for:
 - Full uninstall: Remove everything including configs and data
-- Keep data: Remove code but keep ~/.hermes/ (configs, sessions, logs)
+- Keep data: Remove code but keep ~/.3V0/ (configs, sessions, logs)
 """
 
 import os
@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ev0_constants import get_hermes_home
+from ev0_constants import get_ev0_home
 
 from ev0_cli.colors import Colors, color
 
@@ -51,7 +51,7 @@ def find_shell_configs() -> list:
 
 
 def remove_path_from_shell_configs():
-    """Remove Hermes PATH entries from shell configuration files."""
+    """Remove 3V0 PATH entries from shell configuration files."""
     configs = find_shell_configs()
     removed_from = []
     
@@ -60,22 +60,22 @@ def remove_path_from_shell_configs():
             content = config_path.read_text(encoding="utf-8")
             original_content = content
             
-            # Remove lines containing hermes-agent or hermes PATH entries
+            # Remove lines containing 3v0-agent or 3v0 PATH entries
             new_lines = []
             skip_next = False
             
             for line in content.split('\n'):
-                # Skip the "# Hermes Agent" comment and following line
-                if '# Hermes Agent' in line or '# hermes-agent' in line:
+                # Skip the "# 3V0 Agent" comment and following line
+                if '# 3V0 Agent' in line or '# 3v0-agent' in line:
                     skip_next = True
                     continue
-                if skip_next and ('hermes' in line.lower() and 'PATH' in line):
+                if skip_next and ('3v0' in line.lower() and 'PATH' in line):
                     skip_next = False
                     continue
                 skip_next = False
                 
-                # Remove any PATH line containing hermes
-                if 'hermes' in line.lower() and ('PATH=' in line or 'path=' in line.lower()):
+                # Remove any PATH line containing 3v0
+                if '3v0' in line.lower() and ('PATH=' in line or 'path=' in line.lower()):
                     continue
                     
                 new_lines.append(line)
@@ -89,7 +89,7 @@ def remove_path_from_shell_configs():
             if new_content != original_content:
                 from utils import atomic_write_text
 
-                # This is the user's own shell rc, not a Hermes-owned file, and
+                # This is the user's own shell rc, not a 3V0-owned file, and
                 # nothing in this function backs it up. A bare write_text()
                 # truncates it before the new content lands, so a crash or
                 # SIGINT mid-write leaves the user with an empty or truncated
@@ -110,14 +110,14 @@ def remove_path_from_shell_configs():
 
 
 def remove_wrapper_script():
-    """Remove the hermes wrapper script if it exists."""
+    """Remove the 3v0 wrapper script if it exists."""
     wrapper_paths = [
-        Path.home() / ".local" / "bin" / "hermes",
-        Path.home() / ".local" / "bin" / "hermes-acp",
-        Path.home() / ".local" / "bin" / "hermes-agent",
-        Path("/usr/local/bin/hermes"),
-        Path("/usr/local/bin/hermes-acp"),
-        Path("/usr/local/bin/hermes-agent"),
+        Path.home() / ".local" / "bin" / "3v0",
+        Path.home() / ".local" / "bin" / "3v0-acp",
+        Path.home() / ".local" / "bin" / "3v0-agent",
+        Path("/usr/local/bin/3v0"),
+        Path("/usr/local/bin/3v0-acp"),
+        Path("/usr/local/bin/3v0-agent"),
     ]
     
     removed = []
@@ -126,7 +126,7 @@ def remove_wrapper_script():
             try:
                 # Check if it's our wrapper (contains ev0_cli reference)
                 content = wrapper.read_text(encoding="utf-8")
-                if 'ev0_cli' in content or 'hermes-agent' in content:
+                if 'ev0_cli' in content or '3v0-agent' in content:
                     wrapper.unlink()
                     removed.append(wrapper)
             except Exception as e:
@@ -148,11 +148,11 @@ def _node_symlink_candidate_dirs() -> "list[Path]":
     return dirs
 
 
-def remove_node_symlinks(hermes_home: Path) -> list:
+def remove_node_symlinks(ev0_home: Path) -> list:
     """Remove the node/npm/npx symlinks the installer placed on PATH.
 
     The POSIX installer (``scripts/install.sh`` / ``scripts/lib/node-bootstrap.sh``)
-    symlinks node/npm/npx into the same directory as the ``hermes`` command:
+    symlinks node/npm/npx into the same directory as the ``3v0`` command:
 
     - ``/usr/local/bin/`` on root FHS installs (Linux, uid 0)
     - ``$PREFIX/bin/`` on Termux
@@ -161,11 +161,11 @@ def remove_node_symlinks(hermes_home: Path) -> list:
     We check all candidate directories so that uninstall works regardless of
     how the install was done (e.g. a root FHS install that placed links in
     ``/usr/local/bin``, or an older install that used ``~/.local/bin`` before
-    the FHS fix).  Only symlinks that resolve into this Hermes home's ``node``
+    the FHS fix).  Only symlinks that resolve into this 3V0 home's ``node``
     directory are removed — links the user has repointed elsewhere (nvm, fnm,
     etc.) are left untouched.
     """
-    node_dir = (hermes_home / "node").resolve()
+    node_dir = (ev0_home / "node").resolve()
     removed = []
 
     for name in ("node", "npm", "npx"):
@@ -201,7 +201,7 @@ def uninstall_gateway_service():
     - Linux: user + system systemd services (with proper DBUS env setup)
     - macOS: launchd plists
     - Windows: Scheduled Task + Startup-folder fallback, via ``gateway_windows``
-    - All platforms: standalone ``hermes gateway run`` processes
+    - All platforms: standalone ``3v0 gateway run`` processes
     - Termux/Android: skips systemd (no systemd on Android), still kills standalone processes
     """
     import platform
@@ -311,20 +311,20 @@ def uninstall_gateway_service():
 # The installer (``scripts/install.ps1``) does four Windows-only things that
 # ``remove_path_from_shell_configs`` / ``remove_wrapper_script`` don't cover:
 #
-#   1. Sets User-scope env vars ``HERMES_HOME`` and ``HERMES_GIT_BASH_PATH``
+#   1. Sets User-scope env vars ``EV0_HOME`` and ``EV0_GIT_BASH_PATH``
 #      via ``[Environment]::SetEnvironmentVariable(..., "User")``.  These
 #      don't live in ~/.bashrc — they're in the Windows registry at
 #      HKCU\Environment.
 #   2. Prepends to User-scope ``PATH`` (same registry location) entries
-#      like ``%LOCALAPPDATA%\hermes\git\cmd``, ``%LOCALAPPDATA%\hermes\git\bin``,
-#      ``%LOCALAPPDATA%\hermes\git\usr\bin``, ``%LOCALAPPDATA%\hermes\node``.
+#      like ``%LOCALAPPDATA%\3v0\git\cmd``, ``%LOCALAPPDATA%\3v0\git\bin``,
+#      ``%LOCALAPPDATA%\3v0\git\usr\bin``, ``%LOCALAPPDATA%\3v0\node``.
 #      Again not in any rc file — only accessible via the registry or the
 #      .NET [Environment] API.
-#   3. Downloads PortableGit to ``%LOCALAPPDATA%\hermes\git\`` and Node to
-#      ``%LOCALAPPDATA%\hermes\node\`` as user-scoped, isolated copies.
+#   3. Downloads PortableGit to ``%LOCALAPPDATA%\3v0\git\`` and Node to
+#      ``%LOCALAPPDATA%\3v0\node\`` as user-scoped, isolated copies.
 #      These are ~200MB combined and serve no purpose after uninstall.
-#   4. On the ``hermes dashboard`` + gateway paths, drops files into
-#      ``%LOCALAPPDATA%\hermes\gateway-service\`` and sometimes
+#   4. On the ``3v0 dashboard`` + gateway paths, drops files into
+#      ``%LOCALAPPDATA%\3v0\gateway-service\`` and sometimes
 #      ``%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\`` — the
 #      latter is handled by ``gateway_windows.uninstall()`` already.
 #
@@ -336,21 +336,21 @@ def uninstall_gateway_service():
 # or open a new terminal anyway).
 
 
-def _hermes_path_markers(hermes_home: Path) -> list[str]:
-    """Path-entry substrings that identify Hermes-owned User-PATH entries."""
-    root = str(hermes_home).rstrip("\\/")
+def _ev0_path_markers(ev0_home: Path) -> list[str]:
+    """Path-entry substrings that identify 3V0-owned User-PATH entries."""
+    root = str(ev0_home).rstrip("\\/")
     # Match on prefix so sub-entries (git\cmd, git\bin, git\usr\bin, node, etc.)
-    # all get swept.  Also match the bare hermes-agent install dir.
-    markers = [root + "\\hermes-agent", root + "\\git", root + "\\node", root + "\\venv"]
-    # Also match if HERMES_HOME was customised to somewhere else — find-and-nuke
-    # any entry whose path component contains "hermes".  We don't want to catch
-    # unrelated entries like "chermes-foo" or "ephermeral", so we look for
-    # backslash-hermes as a word-ish boundary.
+    # all get swept.  Also match the bare 3v0-agent install dir.
+    markers = [root + "\\3v0-agent", root + "\\git", root + "\\node", root + "\\venv"]
+    # Also match if EV0_HOME was customised to somewhere else — find-and-nuke
+    # any entry whose path component contains "3v0".  We don't want to catch
+    # unrelated entries like "cev0-foo" or "ephermeral", so we look for
+    # backslash-3v0 as a word-ish boundary.
     return markers
 
 
-def remove_path_from_windows_registry(hermes_home: Path) -> list[str]:
-    """Strip Hermes-owned entries from User-scope PATH in the registry.
+def remove_path_from_windows_registry(ev0_home: Path) -> list[str]:
+    """Strip 3V0-owned entries from User-scope PATH in the registry.
 
     Returns the list of removed path entries.  Operates on HKCU\\Environment,
     same key the installer wrote to via ``[Environment]::SetEnvironmentVariable``.
@@ -371,7 +371,7 @@ def remove_path_from_windows_registry(hermes_home: Path) -> list[str]:
                 return []
             # Preserve REG_EXPAND_SZ vs REG_SZ so unexpanded %VARS% survive.
             entries = [e for e in path_value.split(";") if e]
-            markers = _hermes_path_markers(hermes_home)
+            markers = _ev0_path_markers(ev0_home)
             kept: list[str] = []
             for entry in entries:
                 entry_norm = entry.rstrip("\\/")
@@ -388,8 +388,8 @@ def remove_path_from_windows_registry(hermes_home: Path) -> list[str]:
     return removed
 
 
-def remove_hermes_env_vars_windows() -> list[str]:
-    """Delete HERMES_HOME and HERMES_GIT_BASH_PATH from User-scope env vars."""
+def remove_ev0_env_vars_windows() -> list[str]:
+    """Delete EV0_HOME and EV0_GIT_BASH_PATH from User-scope env vars."""
     try:
         import winreg
     except ImportError:
@@ -399,7 +399,7 @@ def remove_hermes_env_vars_windows() -> list[str]:
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0,
                             winreg.KEY_READ | winreg.KEY_WRITE) as key:
-            for name in ("HERMES_HOME", "HERMES_GIT_BASH_PATH"):
+            for name in ("EV0_HOME", "EV0_GIT_BASH_PATH"):
                 try:
                     winreg.QueryValueEx(key, name)
                 except FileNotFoundError:
@@ -414,13 +414,13 @@ def remove_hermes_env_vars_windows() -> list[str]:
     return removed
 
 
-def remove_portable_tooling_windows(hermes_home: Path) -> list[Path]:
+def remove_portable_tooling_windows(ev0_home: Path) -> list[Path]:
     """Delete PortableGit and Node installs the Windows installer created under
-    ``%LOCALAPPDATA%\\hermes\\``.  Only called on full uninstall; they're
+    ``%LOCALAPPDATA%\\3v0\\``.  Only called on full uninstall; they're
     isolated from any system Git / Node so they cannot break other tools."""
     removed: list[Path] = []
     for sub in ("git", "node", "gateway-service"):
-        target = hermes_home / sub
+        target = ev0_home / sub
         if target.exists():
             try:
                 shutil.rmtree(target, ignore_errors=False)
@@ -435,11 +435,11 @@ def _is_windows() -> bool:
     return sys.platform == "win32"
 
 
-def _is_default_hermes_home(hermes_home: Path) -> bool:
-    """Return True when ``hermes_home`` points at the default (non-profile) root."""
+def _is_default_ev0_home(ev0_home: Path) -> bool:
+    """Return True when ``ev0_home`` points at the default (non-profile) root."""
     try:
-        from ev0_constants import get_default_hermes_root
-        return hermes_home.resolve() == get_default_hermes_root().resolve()
+        from ev0_constants import get_default_ev0_root
+        return ev0_home.resolve() == get_default_ev0_root().resolve()
     except Exception:
         return False
 
@@ -461,11 +461,11 @@ def _discover_named_profiles():
 
 def _uninstall_profile(profile) -> None:
     """Fully uninstall a single named profile: stop its gateway service,
-    remove its alias wrapper, and wipe its HERMES_HOME directory.
+    remove its alias wrapper, and wipe its EV0_HOME directory.
 
-    We shell out to ``hermes -p <name> gateway stop|uninstall`` because
+    We shell out to ``3v0 -p <name> gateway stop|uninstall`` because
     service names, unit paths, and plist paths are all derived from the
-    current HERMES_HOME and can't be easily switched in-process.
+    current EV0_HOME and can't be easily switched in-process.
     """
     import sys as _sys
     name = profile.name
@@ -474,13 +474,13 @@ def _uninstall_profile(profile) -> None:
     log_info(f"Uninstalling profile '{name}'...")
 
     # 1. Stop and remove this profile's gateway service.
-    #    Use `python -m ev0_cli.main` so we don't depend on a `hermes`
+    #    Use `python -m ev0_cli.main` so we don't depend on a `3v0`
     #    wrapper that may be half-removed mid-uninstall.
-    hermes_invocation = [_sys.executable, "-m", "ev0_cli.main", "--profile", name]
+    ev0_invocation = [_sys.executable, "-m", "ev0_cli.main", "--profile", name]
     for subcmd in ("stop", "uninstall"):
         try:
             subprocess.run(
-                hermes_invocation + ["gateway", subcmd],
+                ev0_invocation + ["gateway", subcmd],
                 capture_output=True,
                 text=True, encoding='utf-8', errors='replace',
                 timeout=60,
@@ -500,7 +500,7 @@ def _uninstall_profile(profile) -> None:
         except Exception as e:
             log_warn(f"  Could not remove alias {alias_path}: {e}")
 
-    # 3. Wipe the profile's HERMES_HOME directory.
+    # 3. Wipe the profile's EV0_HOME directory.
     try:
         if profile_home.exists():
             shutil.rmtree(profile_home)
@@ -514,28 +514,28 @@ def run_uninstall(args):
     Run the uninstall process.
     
     Options:
-    - Full uninstall: removes code + ~/.hermes/ (configs, data, logs)
-    - Keep data: removes code but keeps ~/.hermes/ for future reinstall
+    - Full uninstall: removes code + ~/.3V0/ (configs, data, logs)
+    - Keep data: removes code but keeps ~/.3V0/ for future reinstall
     """
     project_root = get_project_root()
-    hermes_home = get_hermes_home()
+    ev0_home = get_ev0_home()
 
     if bool(getattr(args, "dry_run", False)):
         _print_uninstall_dry_run(
             project_root=project_root,
-            hermes_home=hermes_home,
+            ev0_home=ev0_home,
             full_uninstall=bool(getattr(args, "full", False)),
         )
         return
 
     # Detect named profiles when uninstalling from the default root —
-    # offer to clean them up too instead of leaving zombie HERMES_HOMEs
+    # offer to clean them up too instead of leaving zombie EV0_HOMEs
     # and systemd units behind.
-    is_default_profile = _is_default_hermes_home(hermes_home)
+    is_default_profile = _is_default_ev0_home(ev0_home)
     named_profiles = _discover_named_profiles() if is_default_profile else []
 
     # Non-interactive fast path (``--yes``): no prompts. ``--full`` selects a
-    # full wipe (code + ~/.hermes data); otherwise keep-data. Named profiles
+    # full wipe (code + ~/.3V0 data); otherwise keep-data. Named profiles
     # are NOT auto-removed here — that's a destructive, surprising default for
     # an unattended run, so it stays opt-in to the interactive flow. This is
     # the path the desktop app's detached cleanup script uses for its
@@ -545,7 +545,7 @@ def run_uninstall(args):
         full_uninstall = bool(getattr(args, "full", False))
         _perform_uninstall(
             project_root=project_root,
-            hermes_home=hermes_home,
+            ev0_home=ev0_home,
             full_uninstall=full_uninstall,
             remove_profiles=False,
             named_profiles=named_profiles,
@@ -554,16 +554,16 @@ def run_uninstall(args):
 
     print()
     print(color("┌─────────────────────────────────────────────────────────┐", Colors.MAGENTA, Colors.BOLD))
-    print(color("│            ⚕ Hermes Agent Uninstaller                  │", Colors.MAGENTA, Colors.BOLD))
+    print(color("│            ⚕ 3V0 Agent Uninstaller                  │", Colors.MAGENTA, Colors.BOLD))
     print(color("└─────────────────────────────────────────────────────────┘", Colors.MAGENTA, Colors.BOLD))
     print()
     
     # Show what will be affected
     print(color("Current Installation:", Colors.CYAN, Colors.BOLD))
     print(f"  Code:    {project_root}")
-    print(f"  Config:  {hermes_home / 'config.yaml'}")
-    print(f"  Secrets: {hermes_home / '.env'}")
-    print(f"  Data:    {hermes_home / 'cron/'}, {hermes_home / 'sessions/'}, {hermes_home / 'logs/'}")
+    print(f"  Config:  {ev0_home / 'config.yaml'}")
+    print(f"  Secrets: {ev0_home / '.env'}")
+    print(f"  Data:    {ev0_home / 'cron/'}, {ev0_home / 'sessions/'}, {ev0_home / 'logs/'}")
     print()
 
     if named_profiles:
@@ -601,7 +601,7 @@ def run_uninstall(args):
 
     # When doing a full uninstall from the default profile, also offer to
     # remove any named profiles — stopping their gateway services, unlinking
-    # their alias wrappers, and wiping their HERMES_HOME dirs. Otherwise
+    # their alias wrappers, and wiping their EV0_HOME dirs. Otherwise
     # those leave zombie services and data behind.
     remove_profiles = False
     if full_uninstall and named_profiles:
@@ -624,7 +624,7 @@ def run_uninstall(args):
     # Final confirmation
     print()
     if full_uninstall:
-        print(color("⚠️  WARNING: This will permanently delete ALL Hermes data!", Colors.RED, Colors.BOLD))
+        print(color("⚠️  WARNING: This will permanently delete ALL 3V0 data!", Colors.RED, Colors.BOLD))
         print(color("   Including: configs, API keys, sessions, scheduled jobs, logs", Colors.RED))
         if remove_profiles:
             print(color(
@@ -633,7 +633,7 @@ def run_uninstall(args):
                 Colors.RED
             ))
     else:
-        print("This will remove the Hermes code but keep your configuration and data.")
+        print("This will remove the 3V0 code but keep your configuration and data.")
     
     print()
     try:
@@ -650,40 +650,40 @@ def run_uninstall(args):
 
     _perform_uninstall(
         project_root=project_root,
-        hermes_home=hermes_home,
+        ev0_home=ev0_home,
         full_uninstall=full_uninstall,
         remove_profiles=remove_profiles,
         named_profiles=named_profiles,
     )
 
 
-def _print_uninstall_dry_run(*, project_root: Path, hermes_home: Path, full_uninstall: bool) -> None:
+def _print_uninstall_dry_run(*, project_root: Path, ev0_home: Path, full_uninstall: bool) -> None:
     """Print the uninstall plan without stopping services or deleting files."""
     print()
     print(color("Dry run: no files, services, or environment entries will be changed.", Colors.CYAN, Colors.BOLD))
     print()
     print(color("Would inspect/remove:", Colors.YELLOW, Colors.BOLD))
     print("  • Gateway services and standalone gateway processes")
-    print("  • Hermes PATH entries from shell configs / Windows User PATH")
-    print("  • Hermes wrapper scripts and Hermes-managed node/npm/npx symlinks")
+    print("  • 3V0 PATH entries from shell configs / Windows User PATH")
+    print("  • 3V0 wrapper scripts and 3V0-managed node/npm/npx symlinks")
     print(f"  • Code checkout: {project_root}")
     if full_uninstall:
-        print(f"  • Hermes config/data: {hermes_home}")
-        if _is_default_hermes_home(hermes_home):
+        print(f"  • 3V0 config/data: {ev0_home}")
+        if _is_default_ev0_home(ev0_home):
             profiles = _discover_named_profiles()
             if profiles:
                 print("  • Named profiles (interactive uninstall asks before removing):")
                 for prof in profiles:
                     print(f"    - {prof.name}: {prof.path}")
     else:
-        print(f"  • Keep Hermes config/data: {hermes_home}")
+        print(f"  • Keep 3V0 config/data: {ev0_home}")
     print()
 
 
 def _perform_uninstall(
     *,
     project_root: Path,
-    hermes_home: Path,
+    ev0_home: Path,
     full_uninstall: bool,
     remove_profiles: bool,
     named_profiles: list,
@@ -692,8 +692,8 @@ def _perform_uninstall(
     paths so the destructive sequence lives in exactly one place.
 
     Steps: stop gateway → strip PATH (rc files + Windows registry) → remove the
-    ``hermes`` wrapper + node symlinks → delete the code checkout → (Windows)
-    remove PortableGit/Node → optionally wipe ``$HERMES_HOME`` data and named
+    ``3v0`` wrapper + node symlinks → delete the code checkout → (Windows)
+    remove PortableGit/Node → optionally wipe ``$EV0_HOME`` data and named
     profiles on full uninstall.
     """
     print()
@@ -718,26 +718,26 @@ def _perform_uninstall(
 
     if _is_windows():
         log_info("Removing PATH entries from Windows User environment...")
-        # Expand %LOCALAPPDATA% etc. in hermes_home so the marker matching is
+        # Expand %LOCALAPPDATA% etc. in ev0_home so the marker matching is
         # against fully resolved paths — installer writes literal strings
-        # like C:\Users\<u>\AppData\Local\hermes\git\cmd, not %LOCALAPPDATA%.
-        removed_path_entries = remove_path_from_windows_registry(Path(os.path.expandvars(str(hermes_home))))
+        # like C:\Users\<u>\AppData\Local\3v0\git\cmd, not %LOCALAPPDATA%.
+        removed_path_entries = remove_path_from_windows_registry(Path(os.path.expandvars(str(ev0_home))))
         if removed_path_entries:
             for entry in removed_path_entries:
                 log_success(f"Removed from User PATH: {entry}")
         else:
-            log_info("No Hermes-owned PATH entries in User environment")
+            log_info("No 3V0-owned PATH entries in User environment")
 
-        log_info("Removing HERMES_HOME / HERMES_GIT_BASH_PATH User env vars...")
-        removed_env = remove_hermes_env_vars_windows()
+        log_info("Removing EV0_HOME / EV0_GIT_BASH_PATH User env vars...")
+        removed_env = remove_ev0_env_vars_windows()
         if removed_env:
             for name in removed_env:
                 log_success(f"Removed User env var: {name}")
         else:
-            log_info("No Hermes-set User env vars to remove")
+            log_info("No 3V0-set User env vars to remove")
     
     # 3. Remove wrapper script
-    log_info("Removing hermes command...")
+    log_info("Removing 3v0 command...")
     removed_wrappers = remove_wrapper_script()
     if removed_wrappers:
         for wrapper in removed_wrappers:
@@ -746,15 +746,15 @@ def _perform_uninstall(
         log_info("No wrapper script found")
 
     # 3b. Remove node/npm/npx symlinks the installer left in ~/.local/bin
-    #     (only when they still point into this Hermes home's node dir, so we
+    #     (only when they still point into this 3V0 home's node dir, so we
     #     never clobber an existing nvm / user-managed Node).
-    log_info("Removing Hermes-managed node/npm/npx symlinks...")
-    removed_node_links = remove_node_symlinks(hermes_home)
+    log_info("Removing 3V0-managed node/npm/npx symlinks...")
+    removed_node_links = remove_node_symlinks(ev0_home)
     if removed_node_links:
         for link in removed_node_links:
             log_success(f"Removed {link}")
     else:
-        log_info("No Hermes-managed node/npm/npx symlinks found")
+        log_info("No 3V0-managed node/npm/npx symlinks found")
 
     # 3c. (Desktop Chat GUI artifacts removed — the GUI shipped in apps/, which
     #     is no longer part of this single-agent repo.)
@@ -766,8 +766,8 @@ def _perform_uninstall(
     # We need to be careful here
     try:
         if project_root.exists():
-            # If the install is inside ~/.hermes/, just remove the hermes-agent subdir
-            if hermes_home in project_root.parents or project_root.parent == hermes_home:
+            # If the install is inside ~/.3V0/, just remove the 3v0-agent subdir
+            if ev0_home in project_root.parents or project_root.parent == ev0_home:
                 shutil.rmtree(project_root)
                 log_success(f"Removed {project_root}")
             else:
@@ -780,23 +780,23 @@ def _perform_uninstall(
 
     # 4b. Remove Windows-only installer artifacts that are NOT user data:
     #     PortableGit, bundled Node, gateway-service dir.  Installer put them
-    #     under HERMES_HOME but they're install tooling, not config — safe to
+    #     under EV0_HOME but they're install tooling, not config — safe to
     #     remove even in "keep data" mode.  If we're doing a full uninstall
-    #     the step-5 rmtree(hermes_home) would sweep them anyway; calling
+    #     the step-5 rmtree(ev0_home) would sweep them anyway; calling
     #     this helper there is a no-op since they'll already be gone.
     if _is_windows():
         log_info("Removing Windows installer artifacts (PortableGit, Node, gateway-service)...")
-        removed_artifacts = remove_portable_tooling_windows(hermes_home)
+        removed_artifacts = remove_portable_tooling_windows(ev0_home)
         if removed_artifacts:
             for path in removed_artifacts:
                 log_success(f"Removed {path}")
         else:
             log_info("No Windows installer artifacts to remove")
     
-    # 5. Optionally remove ~/.hermes/ data directory (and named profiles)
+    # 5. Optionally remove ~/.3V0/ data directory (and named profiles)
     if full_uninstall:
         # 5a. Stop and remove each named profile's gateway service and
-        #     alias wrapper. The profile HERMES_HOME dirs live under
+        #     alias wrapper. The profile EV0_HOME dirs live under
         #     ``<default>/profiles/<name>/`` and will be swept away by the
         #     rmtree below, but services + alias scripts live OUTSIDE the
         #     default root and have to be cleaned up explicitly.
@@ -806,14 +806,14 @@ def _perform_uninstall(
 
         log_info("Removing configuration and data...")
         try:
-            if hermes_home.exists():
-                shutil.rmtree(hermes_home)
-                log_success(f"Removed {hermes_home}")
+            if ev0_home.exists():
+                shutil.rmtree(ev0_home)
+                log_success(f"Removed {ev0_home}")
         except Exception as e:
-            log_warn(f"Could not fully remove {hermes_home}: {e}")
+            log_warn(f"Could not fully remove {ev0_home}: {e}")
             log_info("You may need to manually remove it")
     else:
-        log_info(f"Keeping configuration and data in {hermes_home}")
+        log_info(f"Keeping configuration and data in {ev0_home}")
     
     # Done
     print()
@@ -824,13 +824,13 @@ def _perform_uninstall(
     
     if not full_uninstall:
         print(color("Your configuration and data have been preserved:", Colors.CYAN))
-        print(f"  {hermes_home}/")
+        print(f"  {ev0_home}/")
         print()
         print("To reinstall later with your existing settings:")
         if _is_windows():
-            print(color("  iex (irm https://hermes-agent.nousresearch.com/install.ps1)", Colors.DIM))
+            print(color("  iex (irm https://github.com/1deat0r/3V0-Agent/install.ps1)", Colors.DIM))
         else:
-            print(color("  curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash", Colors.DIM))
+            print(color("  curl -fsSL https://github.com/1deat0r/3V0-Agent/install.sh | bash", Colors.DIM))
         print()
 
     if _is_windows():
@@ -840,7 +840,7 @@ def _perform_uninstall(
         print(color("Reload your shell to complete the process:", Colors.YELLOW))
         print("  source ~/.bashrc  # or ~/.zshrc")
     print()
-    print("Thank you for using Hermes Agent! ⚕")
+    print("Thank you for using 3V0 Agent! ⚕")
     print()
 
 

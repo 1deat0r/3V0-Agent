@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "repo": "NousResearch/hermes-agent",
+  "repo": "NousResearch/3v0-agent",
   "loops": {
     "86711": {
       "kind": "pr",

@@ -68,7 +68,7 @@ def test_install_psutil_android_compat_uses_patched_tree(tmp_path):
     archive = tmp_path / "psutil.tar.gz"
     _build_psutil_archive(archive, malicious_symlink=False)
 
-    from ev0_cli import main as hermes_main
+    from ev0_cli import main as ev0_main
 
     captured: dict[str, object] = {}
 
@@ -86,14 +86,14 @@ def test_install_psutil_android_compat_uses_patched_tree(tmp_path):
         )
 
     with patch("urllib.request.urlretrieve", side_effect=fake_urlretrieve), \
-         patch.object(hermes_main, "_run_install_with_heartbeat", side_effect=fake_run_install):
-        hermes_main._install_psutil_android_compat(
+         patch.object(ev0_main, "_run_install_with_heartbeat", side_effect=fake_run_install):
+        ev0_main._install_psutil_android_compat(
             ["uv", "pip"],
-            env={"HERMES_TEST": "1"},
+            env={"EV0_TEST": "1"},
         )
 
     assert captured["cmd"][:4] == ["uv", "pip", "install", "--no-build-isolation"]
-    assert captured["env"] == {"HERMES_TEST": "1"}
+    assert captured["env"] == {"EV0_TEST": "1"}
     assert REPLACEMENT in str(captured["common_py"])
 
 

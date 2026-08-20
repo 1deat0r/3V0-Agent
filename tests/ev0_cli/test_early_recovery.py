@@ -42,8 +42,8 @@ def _make_broken_dotenv_shadow(tmp_path: Path) -> Path:
 
 def _run_lifecycle_subprocess(tmp_path: Path, *, repair: bool) -> subprocess.CompletedProcess:
     shadow = _make_broken_dotenv_shadow(tmp_path)
-    hermes_home = tmp_path / "hermes_home"
-    hermes_home.mkdir()
+    ev0_home = tmp_path / "ev0_home"
+    ev0_home.mkdir()
     script = tmp_path / "lifecycle.py"
     script.write_text(
         textwrap.dedent(
@@ -76,7 +76,7 @@ def _run_lifecycle_subprocess(tmp_path: Path, *, repair: bool) -> subprocess.Com
     env = {
         **os.environ,
         "PYTHONPATH": str(REPO_ROOT),
-        "HERMES_HOME": str(hermes_home),
+        "EV0_HOME": str(ev0_home),
     }
     return subprocess.run(
         [sys.executable, str(script)],
@@ -474,7 +474,7 @@ def test_lazy_marker_alone_does_not_trigger_core_install(tmp_path, monkeypatch):
 def test_core_marker_from_dead_updater_is_recovered_on_update_retry(
     tmp_path, monkeypatch
 ):
-    """Retrying ``hermes update`` must consume a prior deferral marker.
+    """Retrying ``3v0 update`` must consume a prior deferral marker.
 
     The self-lock preflight exits after writing this marker.  Desktop and CLI
     retries both keep ``update`` in argv, so an argv-only skip loops forever.

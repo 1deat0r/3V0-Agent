@@ -36,9 +36,9 @@ ALLOWLIST = {
     "ev0_cli/config.py",
     "gateway/config.py",
     # _load_gateway_config()'s fallback path for tests that monkeypatch
-    # gateway.run._hermes_home (delegates to read_raw_config otherwise).
+    # gateway.run._ev0_home (delegates to read_raw_config otherwise).
     "gateway/run.py",
-    # Reads the MANAGED-scope config.yaml (/etc/hermes/...), not the user's —
+    # Reads the MANAGED-scope config.yaml (/etc/3v0/...), not the user's —
     # it IS the overlay source; the canonical loaders call into it.
     "ev0_cli/managed_scope.py",
     # Parse-health probe: intentionally answers "does the raw file parse?".

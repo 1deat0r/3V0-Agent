@@ -6,7 +6,7 @@ Columns: path · kind · purpose · why · related
 | path | kind | purpose | why | related |
 |------|------|---------|-----|---------|
 | `optional-skills/productivity/canvas/SKILL.md` | skill-doc | Skill definition for `canvas` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/canvas/scripts/canvas_api.py |
-| `optional-skills/productivity/canvas/scripts/canvas_api.py` | source | Canvas LMS API CLI for Hermes Agent. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/productivity/canvas/scripts/ |
+| `optional-skills/productivity/canvas/scripts/canvas_api.py` | source | Canvas LMS API CLI for 3V0 Agent. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/productivity/canvas/scripts/ |
 | `optional-skills/productivity/here-now/SKILL.md` | skill-doc | Skill definition for `here-now` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/here-now/scripts/drive.sh; optional-skills/productivity/here-now/scripts/publish.sh |
 | `optional-skills/productivity/here-now/scripts/drive.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks | optional-skills/productivity/here-now/scripts/publish.sh |
 | `optional-skills/productivity/here-now/scripts/publish.sh` | script | Shell script | Shell automation invoked manually or by CI/hooks | optional-skills/productivity/here-now/scripts/drive.sh |
@@ -21,4 +21,4 @@ Columns: path · kind · purpose · why · related
 | `optional-skills/productivity/shopify/SKILL.md` | skill-doc | Skill definition for `shopify` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/shopify/ |
 | `optional-skills/productivity/siyuan/SKILL.md` | skill-doc | Skill definition for `siyuan` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/siyuan/ |
 | `optional-skills/productivity/telephony/SKILL.md` | skill-doc | Skill definition for `telephony` | The instruction contract a model loads when the skill's trigger matches | optional-skills/productivity/telephony/scripts/telephony.py |
-| `optional-skills/productivity/telephony/scripts/telephony.py` | source | Telephony helper for the Hermes optional telephony skill. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/productivity/telephony/scripts/ |
+| `optional-skills/productivity/telephony/scripts/telephony.py` | source | Telephony helper for the 3V0 optional telephony skill. | Python module executed or imported by the runtime; check git intent before deleting | optional-skills/productivity/telephony/scripts/ |

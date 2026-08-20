@@ -41,14 +41,14 @@ class BlockingTest(unittest.TestCase):
 
 class CautionTest(unittest.TestCase):
     def test_service_toggle_is_caution_not_blocking(self):
-        a = se.audit("sudo systemctl restart hermes-gateway.service")
+        a = se.audit("sudo systemctl restart 3v0-gateway.service")
         self.assertFalse(a.unsafe)
         self.assertTrue(a.needs_approval)
         self.assertIn("service_toggle", a.caution)
         self.assertIn("privilege_escalate", a.caution)
 
     def test_safe_to_author_for_caution(self):
-        a = se.audit("sudo systemctl restart hermes-gateway.service")
+        a = se.audit("sudo systemctl restart 3v0-gateway.service")
         self.assertTrue(a.safe_to_author)
 
     def test_clean_procedure(self):
@@ -70,13 +70,13 @@ class ReuseGateTest(unittest.TestCase):
         self.assertIn("filesystem_destroy", d.blocking)
 
     def test_caution_requires_approval(self):
-        d = se.govern_reuse("sudo systemctl restart hermes-gateway.service")
+        d = se.govern_reuse("sudo systemctl restart 3v0-gateway.service")
         self.assertFalse(d.reusable)
         self.assertTrue(d.requires_approval)
         self.assertIn("privilege_escalate", d.caution)
 
     def test_caution_approved_reusable(self):
-        d = se.govern_reuse("sudo systemctl restart hermes-gateway.service",
+        d = se.govern_reuse("sudo systemctl restart 3v0-gateway.service",
                             approved=("privilege_escalate", "service_toggle"))
         self.assertTrue(d.reusable)
 

@@ -1,6 +1,6 @@
-"""Shared curses-based UI components for Hermes CLI.
+"""Shared curses-based UI components for 3V0 CLI.
 
-Used by `hermes tools` and `hermes skills` for interactive checklists.
+Used by `3v0 tools` and `3v0 skills` for interactive checklists.
 Provides a curses multi-select with keyboard navigation, plus a
 text-based numbered fallback for terminals without curses support.
 """

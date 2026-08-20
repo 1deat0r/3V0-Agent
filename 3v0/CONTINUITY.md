@@ -21,7 +21,7 @@ editing the anchor is a deliberate, audited act, not an automatic one.
 
 ## Identity
 
-The soul lives at `~/.hermes/profiles/3v0/SOUL.md` (the Hermes profile). The
+The soul lives at `~/.3V0/profiles/3v0/SOUL.md` (the 3V0 profile). The
 body — the repository that is 3V0's self — lives at
 `~/Projects/AI Agents/3V0 Agent`. Identity = body, not context: audit the body
 before trusting any memory of it.
