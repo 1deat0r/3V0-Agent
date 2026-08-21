@@ -124,9 +124,17 @@ CORRECTIONS ADOPTED:
 1. On-disk zero-checks must use `rg -ia` (binary-capable); plain `rg
    --hidden` silently skips memory.db — earlier "on-disk = 0" claims were
    misleading (binary not scanned).
-2. memory.db re-persist is a GATEWAY-CACHE problem, not a scrub problem:
-   semantic reword committed (f4b0d220eb), durable purge requires a gateway
-   restart.
+2. memory.db re-persist ROOT CAUSE (found + fixed 2026-08-21, commit
+   07170f598d): `~/.3V0/profiles/3v0/memories/USER.md` carried a STALE
+   DUPLICATE of the palette fact with old wording (system-prompt blocker
+   hid it; the file kept it). Gateway re-sourced it into the tracked
+   mirror every cycle; scrubs advanced rowids 150→151→152→153 without
+   sticking. FIX: USER.md reworded to canonical Ev0/Nous + mirror
+   rescrubbed + FTS rebuilt. Scope note: state.db message/transcript
+   content containing the word as review-brief text is HISTORY, not brand
+   residue — deliberately NOT scrubbed (would vandalize session data).
+   Logs + pre-eradication .bak files retain it by design (ephemeral /
+   safety copies).
   1. Install dev/mcp extras in a synced env; re-collect → 15 errors vanish.
   2. Triage the 334 failures: env-credential → mark xfail/skip with reason;
      order-dependent → isolate (fixture scope fixes); real bugs → TDD fix.
