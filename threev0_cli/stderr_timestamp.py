@@ -77,7 +77,7 @@ def _is_launchd_supervised(environ: Mapping[str, str] | None = None) -> bool:
     return bool(xpc_service and xpc_service != "0")
 
 
-def _is_ev0_gateway_run_argv(command: Sequence[str]) -> bool:
+def _is_threev0_gateway_run_argv(command: Sequence[str]) -> bool:
     """True for 3V0 ``gateway run`` argv this wrapper is allowed to upgrade.
 
     The wrapper is generic. Only historical/current 3V0 gateway shapes
@@ -114,7 +114,7 @@ def _prepare_child_command(
     argv = [str(part) for part in command]
     if not _is_launchd_supervised(environ):
         return argv
-    if not _is_ev0_gateway_run_argv(argv):
+    if not _is_threev0_gateway_run_argv(argv):
         return argv
     return _with_external_supervisor_flag(argv)
 

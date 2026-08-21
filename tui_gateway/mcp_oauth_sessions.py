@@ -123,7 +123,7 @@ def _start_loopback_listener(flow) -> "http.server.HTTPServer":
     return httpd
 
 
-def _worker(session_id: str, ev0_home: str, server_name: str, cfg: dict, reconnect_live: bool) -> None:
+def _worker(session_id: str, threev0_home: str, server_name: str, cfg: dict, reconnect_live: bool) -> None:
     """Drive the interactive MCP OAuth probe under the shared dashboard bridge.
 
     Structurally identical to ``web_server._run_dashboard_mcp_oauth`` — the same
@@ -138,7 +138,7 @@ def _worker(session_id: str, ev0_home: str, server_name: str, cfg: dict, reconne
         _probe_single_server,
         _save_mcp_server,
     )
-    from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+    from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 
     rec = _sessions.get(session_id)
     flow = rec["flow"] if rec else None
@@ -152,8 +152,8 @@ def _worker(session_id: str, ev0_home: str, server_name: str, cfg: dict, reconne
         from tools.mcp_oauth import force_interactive_oauth
         from tools.mcp_oauth_manager import get_manager
 
-        home_token = set_ev0_home_override(ev0_home)
-        secret_token = set_secret_scope(build_profile_secret_scope(Path(ev0_home)))
+        home_token = set_threev0_home_override(threev0_home)
+        secret_token = set_secret_scope(build_profile_secret_scope(Path(threev0_home)))
         try:
             with force_interactive_oauth(), dashboard_oauth_flow(flow):
                 from tools.mcp_oauth import Ev0TokenStorage
@@ -163,7 +163,7 @@ def _worker(session_id: str, ev0_home: str, server_name: str, cfg: dict, reconne
                 backup = storage.snapshot()
                 previous_entry = None
                 try:
-                    previous_entry = manager.remove(server_name, ev0_home=ev0_home)
+                    previous_entry = manager.remove(server_name, threev0_home=threev0_home)
                     tools = _probe_single_server(
                         server_name,
                         cfg,
@@ -184,11 +184,11 @@ def _worker(session_id: str, ev0_home: str, server_name: str, cfg: dict, reconne
                         reconnect_mcp_server(server_name)
                 except Exception:
                     storage.restore(backup, only_if_absent=True)
-                    manager.restore_entry(server_name, previous_entry, ev0_home=ev0_home)
+                    manager.restore_entry(server_name, previous_entry, threev0_home=threev0_home)
                     raise
         finally:
             reset_secret_scope(secret_token)
-            reset_ev0_home_override(home_token)
+            reset_threev0_home_override(home_token)
     except Exception as exc:
         msg = str(exc)
         try:
@@ -211,7 +211,7 @@ def _worker(session_id: str, ev0_home: str, server_name: str, cfg: dict, reconne
 
 
 def start_flow(
-    ev0_home: str,
+    threev0_home: str,
     server_name: str,
     cfg: dict,
     *,
@@ -239,7 +239,7 @@ def start_flow(
             raise RuntimeError("Too many MCP OAuth flows are already in progress")
         if any(
             r["server_name"] == server_name
-            and r["ev0_home"] == ev0_home
+            and r["ev0_home"] == threev0_home
             and not r["flow"].worker_done
             for r in _sessions.values()
         ):
@@ -250,7 +250,7 @@ def start_flow(
         flow_id=session_id,
         server_name=server_name,
         profile=None,
-        ev0_home=ev0_home,
+        threev0_home=threev0_home,
         redirect_uri="",  # set below once the loopback port is known
         reconnect_live=reconnect_live,
     )
@@ -261,7 +261,7 @@ def start_flow(
     rec = {
         "session_id": session_id,
         "server_name": server_name,
-        "ev0_home": ev0_home,
+        "ev0_home": threev0_home,
         "flow": flow,
         "httpd": httpd,
         "created_at": time.time(),
@@ -271,7 +271,7 @@ def start_flow(
 
     threading.Thread(
         target=_worker,
-        args=(session_id, ev0_home, server_name, dict(cfg), reconnect_live),
+        args=(session_id, threev0_home, server_name, dict(cfg), reconnect_live),
         daemon=True,
         name=f"mcp-oauth-{server_name}",
     ).start()

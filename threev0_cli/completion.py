@@ -72,7 +72,7 @@ def generate_bash(parser: argparse.ArgumentParser) -> str:
                 f"                    return\n"
                 f"                    ;;\n"
                 f"                {profile_actions.replace(' ', '|')})\n"
-                f"                    COMPREPLY=($(compgen -W \"$(_ev0_profiles)\" -- \"$cur\"))\n"
+                f"                    COMPREPLY=($(compgen -W \"$(_threev0_profiles)\" -- \"$cur\"))\n"
                 f"                    return\n"
                 f"                    ;;\n"
                 f"            esac\n"
@@ -101,7 +101,7 @@ def generate_bash(parser: argparse.ArgumentParser) -> str:
 # Add to ~/.bashrc:
 #   eval "$(3v0 completion bash)"
 
-_ev0_profiles() {{
+_threev0_profiles() {{
     local profiles_dir="$HOME/.3V0/profiles"
     local profiles="default"
     if [ -d "$profiles_dir" ]; then
@@ -112,7 +112,7 @@ _ev0_profiles() {{
     echo "$profiles"
 }}
 
-_ev0_completion() {{
+_threev0_completion() {{
     local cur prev
     COMPREPLY=()
     cur="${{COMP_WORDS[COMP_CWORD]}}"
@@ -120,7 +120,7 @@ _ev0_completion() {{
 
     # Complete profile names after -p / --profile
     if [[ "$prev" == "-p" || "$prev" == "--profile" ]]; then
-        COMPREPLY=($(compgen -W "$(_ev0_profiles)" -- "$cur"))
+        COMPREPLY=($(compgen -W "$(_threev0_profiles)" -- "$cur"))
         return
     fi
 
@@ -135,7 +135,7 @@ _ev0_completion() {{
     fi
 }}
 
-complete -F _ev0_completion 3v0
+complete -F _threev0_completion 3v0
 """
 
 
@@ -169,7 +169,7 @@ def generate_zsh(parser: argparse.ArgumentParser) -> str:
                 f"                profile)\n"
                 f"                    case ${{line[2]}} in\n"
                 f"                        use|delete|show|alias|rename|export)\n"
-                f"                            _ev0_profiles\n"
+                f"                            _threev0_profiles\n"
                 f"                            ;;\n"
                 f"                        *)\n"
                 f"                            local -a profile_cmds\n"
@@ -204,7 +204,7 @@ def generate_zsh(parser: argparse.ArgumentParser) -> str:
 # Add to ~/.zshrc:
 #   eval "$(3v0 completion zsh)"
 
-_ev0_profiles() {{
+_threev0_profiles() {{
     local -a profiles
     profiles=(default)
     if [[ -d "$HOME/.3V0/profiles" ]]; then
@@ -213,14 +213,14 @@ _ev0_profiles() {{
     _describe 'profile' profiles
 }}
 
-_ev0() {{
+_threev0() {{
     local context state line
     typeset -A opt_args
 
     _arguments -C \\
         '(-)'{{-h,--help}}'[Show help and exit]' \\
         '(-)'{{-V,--version}}'[Show version and exit]' \\
-        '(-)'{{-p,--profile}}'[Profile name]:profile:_ev0_profiles' \\
+        '(-)'{{-p,--profile}}'[Profile name]:profile:_threev0_profiles' \\
         '1:command:->commands' \\
         '*::arg:->args'
 
@@ -240,7 +240,7 @@ _ev0() {{
     esac
 }}
 
-compdef _ev0 3v0
+compdef _threev0 3v0
 """
 
 
@@ -259,7 +259,7 @@ def generate_fish(parser: argparse.ArgumentParser) -> str:
         "#   3v0 completion fish | source",
         "",
         "# Helper: list available profiles",
-        "function __ev0_profiles",
+        "function __threev0_profiles",
         "    echo default",
         "    if test -d $HOME/.3V0/profiles",
         "        for d in $HOME/.3V0/profiles/*/",
@@ -273,7 +273,7 @@ def generate_fish(parser: argparse.ArgumentParser) -> str:
         "",
         "# Complete profile names after -p / --profile",
         "complete -c 3v0 -f -s p -l profile"
-        " -d 'Profile name' -xa '(__ev0_profiles)'",
+        " -d 'Profile name' -xa '(__threev0_profiles)'",
         "",
         "# Top-level subcommands",
     ]
@@ -312,7 +312,7 @@ def generate_fish(parser: argparse.ArgumentParser) -> str:
                     f"complete -c 3v0 -f "
                     f"-n '__fish_seen_subcommand_from {action}; "
                     f"and __fish_seen_subcommand_from profile' "
-                    f"-a '(__ev0_profiles)' -d 'Profile name'"
+                    f"-a '(__threev0_profiles)' -d 'Profile name'"
                 )
 
     lines.append("")

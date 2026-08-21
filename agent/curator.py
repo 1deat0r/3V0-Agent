@@ -30,7 +30,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from tools import skill_usage
 from utils import atomic_json_write
 
@@ -83,7 +83,7 @@ DEFAULT_CONSOLIDATE = False
 # ---------------------------------------------------------------------------
 
 def _state_file() -> Path:
-    return get_ev0_home() / "skills" / ".curator_state"
+    return get_threev0_home() / "skills" / ".curator_state"
 
 
 def _default_state() -> Dict[str, Any]:
@@ -588,7 +588,7 @@ def _reports_root() -> Path:
     from an odd entry path (e.g. gateway-only install, bare library use)
     that bypasses both.
     """
-    root = get_ev0_home() / "logs" / "curator"
+    root = get_threev0_home() / "logs" / "curator"
     try:
         root.mkdir(parents=True, exist_ok=True)
     except OSError as e:
@@ -1952,8 +1952,8 @@ def _run_llm_review(prompt: str) -> Dict[str, Any]:
         # terminal. The background-thread runner also hides it; this
         # belt-and-suspenders path matters when a caller invokes
         # run_curator_review(synchronous=True) from the CLI.
-        with open(os.devnull, "w", encoding="utf-8") as _devnull, \
-             contextlib.redirect_stdout(_devnull), \
+        with open(os.devnull, "w", encoding="utf-8") as _devnull,\
+             contextlib.redirect_stdout(_devnull),\
              contextlib.redirect_stderr(_devnull):
             conv_result = review_agent.run_conversation(user_message=prompt)
 

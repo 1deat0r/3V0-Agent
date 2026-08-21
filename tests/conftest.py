@@ -60,7 +60,7 @@ _PRE_SANDBOX_KANBAN_OVERRIDE = os.environ.get("EV0_KANBAN_HOME", "").strip()
 _PRE_SANDBOX_EV0_HOME = os.environ.get("EV0_HOME", "")
 
 
-def _ev0_home_points_at_production(value: str) -> bool:
+def _threev0_home_points_at_production(value: str) -> bool:
     """True when a pre-set EV0_HOME resolves to the real production root.
 
     Gateway-launched shells (and developer shells that ``export
@@ -86,7 +86,7 @@ def _ev0_home_points_at_production(value: str) -> bool:
     return resolved.parent.name == "profiles" and resolved.parent.parent == real_root
 
 
-if _ev0_home_points_at_production(os.environ.get("EV0_HOME", "")):
+if _threev0_home_points_at_production(os.environ.get("EV0_HOME", "")):
     _SESSION_EV0_HOME = tempfile.mkdtemp(prefix="3v0-test-home-")
     os.environ["EV0_HOME"] = _SESSION_EV0_HOME
     atexit.register(shutil.rmtree, _SESSION_EV0_HOME, True)
@@ -474,18 +474,18 @@ def _hermetic_environment(tmp_path, monkeypatch):
     #    fixture. Any code in the codebase reading ``~/.3V0/*`` via
     #    ``Path.home() / ".3V0"`` instead of ``get_ev0_home()``
     #    is a bug to fix at the callsite.
-    fake_ev0_home = tmp_path / "ev0_test"
-    fake_ev0_home.mkdir()
-    (fake_ev0_home / "sessions").mkdir()
-    (fake_ev0_home / "cron").mkdir()
-    (fake_ev0_home / "memories").mkdir()
-    (fake_ev0_home / "skills").mkdir()
-    monkeypatch.setenv("EV0_HOME", str(fake_ev0_home))
+    fake_threev0_home = tmp_path / "ev0_test"
+    fake_threev0_home.mkdir()
+    (fake_threev0_home / "sessions").mkdir()
+    (fake_threev0_home / "cron").mkdir()
+    (fake_threev0_home / "memories").mkdir()
+    (fake_threev0_home / "skills").mkdir()
+    monkeypatch.setenv("EV0_HOME", str(fake_threev0_home))
     # Keep the subprocess-surviving isolation marker pointed at THIS test's
     # home (#82770): children spawned by the test inherit it by default, so
     # threev0_state's live-DB guard stays armed in them even when the test
     # strips pytest's own PYTEST_* vars from the child env.
-    monkeypatch.setenv("EV0_TEST_ISOLATION", str(fake_ev0_home))
+    monkeypatch.setenv("EV0_TEST_ISOLATION", str(fake_threev0_home))
     # And never let a developer-shell (or leaked child) bypass disarm the
     # guard for in-process code under test.
     monkeypatch.delenv("EV0_STATE_DB_GUARD_BYPASS", raising=False)
@@ -501,7 +501,7 @@ def _hermetic_environment(tmp_path, monkeypatch):
     threev0_state_mod = sys.modules.get("threev0_state")
     if threev0_state_mod is not None and hasattr(threev0_state_mod, "DEFAULT_DB_PATH"):
         monkeypatch.setattr(
-            threev0_state_mod, "DEFAULT_DB_PATH", fake_ev0_home / "state.db"
+            threev0_state_mod, "DEFAULT_DB_PATH", fake_threev0_home / "state.db"
         )
 
     # 4. Deterministic locale / timezone / hashseed. CI runs in UTC with
@@ -557,7 +557,7 @@ def _hermetic_environment(tmp_path, monkeypatch):
 # Backward-compat alias — old tests reference this fixture name. Keep it
 # as a no-op wrapper so imports don't break.
 @pytest.fixture(autouse=True)
-def _isolate_ev0_home(_hermetic_environment):
+def _isolate_threev0_home(_hermetic_environment):
     """Alias preserved for any test that yields this name explicitly."""
     return None
 
@@ -635,7 +635,7 @@ def _capture_real_kanban_root() -> Path:
     """
     if _PRE_SANDBOX_KANBAN_OVERRIDE:
         return Path(_PRE_SANDBOX_KANBAN_OVERRIDE).expanduser().resolve()
-    if _PRE_SANDBOX_EV0_HOME and not _ev0_home_points_at_production(
+    if _PRE_SANDBOX_EV0_HOME and not _threev0_home_points_at_production(
         _PRE_SANDBOX_EV0_HOME
     ):
         # EV0_HOME was genuinely set to a CUSTOM root before the sandbox
@@ -643,8 +643,8 @@ def _capture_real_kanban_root() -> Path:
         # the env still holds the tempdir and the resolver would be wrong) —
         # honor it via the normal resolver (it may be a profile dir whose
         # root matters).
-        from threev0_constants import get_default_ev0_root
-        return get_default_ev0_root().resolve()
+        from threev0_constants import get_default_threev0_root
+        return get_default_threev0_root().resolve()
     # No pre-existing EV0_HOME: the real root is the platform default,
     # NOT the sandbox tempdir now sitting in the env.
     return (Path.home() / ".3V0").resolve()
@@ -734,7 +734,7 @@ def _state_db_write_guard(request, monkeypatch):
         yield
         return
     extra_roots = []
-    if _PRE_SANDBOX_EV0_HOME and not _ev0_home_points_at_production(
+    if _PRE_SANDBOX_EV0_HOME and not _threev0_home_points_at_production(
         _PRE_SANDBOX_EV0_HOME
     ):
         extra_roots.append(
@@ -854,10 +854,10 @@ def _reset_tui_gateway_server_state():
     # to a stale per-test tmpdir. Force the main-thread ContextVar back
     # to its default.
     try:
-        from threev0_constants import get_ev0_home_override, set_ev0_home_override
+        from threev0_constants import get_threev0_home_override, set_threev0_home_override
 
-        if get_ev0_home_override() is not None:
-            set_ev0_home_override(None)
+        if get_threev0_home_override() is not None:
+            set_threev0_home_override(None)
     except Exception:
         pass
 
@@ -1404,7 +1404,7 @@ def _live_system_guard(request, monkeypatch):
                 return ""
         return str(cmd)
 
-    def _matches_ev0_gateway(cmd_str: str) -> bool:
+    def _matches_threev0_gateway(cmd_str: str) -> bool:
         low = cmd_str.lower()
         return any(tok in low for tok in _EV0_TOKENS)
 
@@ -1412,7 +1412,7 @@ def _live_system_guard(request, monkeypatch):
         cmd_str = _cmd_to_string(cmd)
         if "systemctl" not in cmd_str:
             return False
-        if not _matches_ev0_gateway(cmd_str):
+        if not _matches_threev0_gateway(cmd_str):
             return False
         try:
             tokens = _shlex.split(cmd_str)

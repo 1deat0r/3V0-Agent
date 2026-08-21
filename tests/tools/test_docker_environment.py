@@ -174,14 +174,14 @@ def _make_execute_only_env(forward_env=None):
     return env
 
 
-def test_init_env_args_uses_ev0_dotenv_for_allowlisted_env(monkeypatch):
+def test_init_env_args_uses_threev0_dotenv_for_allowlisted_env(monkeypatch):
     """_build_init_env_args picks up forwarded env vars from .env file at init time."""
     # Use a var that is NOT in _EV0_PROVIDER_ENV_BLOCKLIST (GITHUB_TOKEN
     # is in the copilot provider's api_key_env_vars and gets stripped).
     env = _make_execute_only_env(["DATABASE_URL"])
 
     monkeypatch.delenv("DATABASE_URL", raising=False)
-    monkeypatch.setattr(docker_env, "_load_ev0_env_vars", lambda: {"DATABASE_URL": "value_from_dotenv"})
+    monkeypatch.setattr(docker_env, "_load_threev0_env_vars", lambda: {"DATABASE_URL": "value_from_dotenv"})
 
     args = env._build_init_env_args()
     args_str = " ".join(args)
@@ -189,12 +189,12 @@ def test_init_env_args_uses_ev0_dotenv_for_allowlisted_env(monkeypatch):
     assert "DATABASE_URL=value_from_dotenv" in args_str
 
 
-def test_init_env_args_prefers_shell_env_over_ev0_dotenv(monkeypatch):
+def test_init_env_args_prefers_shell_env_over_threev0_dotenv(monkeypatch):
     """Shell env vars take priority over .env file values in init env args."""
     env = _make_execute_only_env(["DATABASE_URL"])
 
     monkeypatch.setenv("DATABASE_URL", "value_from_shell")
-    monkeypatch.setattr(docker_env, "_load_ev0_env_vars", lambda: {"DATABASE_URL": "value_from_dotenv"})
+    monkeypatch.setattr(docker_env, "_load_threev0_env_vars", lambda: {"DATABASE_URL": "value_from_dotenv"})
 
     args = env._build_init_env_args()
     args_str = " ".join(args)
@@ -203,7 +203,7 @@ def test_init_env_args_prefers_shell_env_over_ev0_dotenv(monkeypatch):
     assert "value_from_dotenv" not in args_str
 
 
-def test_init_env_args_uses_ev0_dotenv_for_empty_shell_env(monkeypatch):
+def test_init_env_args_uses_threev0_dotenv_for_empty_shell_env(monkeypatch):
     """A transient empty-string in the live env must fall back to .env, not win.
 
     Regression: the disk fallback used to fire only on `value is None`, so a
@@ -213,7 +213,7 @@ def test_init_env_args_uses_ev0_dotenv_for_empty_shell_env(monkeypatch):
     env = _make_execute_only_env(["MY_SECRET"])
 
     monkeypatch.setenv("MY_SECRET", "")
-    monkeypatch.setattr(docker_env, "_load_ev0_env_vars", lambda: {"MY_SECRET": "value_from_dotenv"})
+    monkeypatch.setattr(docker_env, "_load_threev0_env_vars", lambda: {"MY_SECRET": "value_from_dotenv"})
 
     args = env._build_init_env_args()
 
@@ -229,7 +229,7 @@ def test_init_env_args_uses_active_profile_for_forwarded_env(monkeypatch):
 
     env = _make_execute_only_env(forward_env=["SERVICE_TOKEN"])
     monkeypatch.setenv("SERVICE_TOKEN", "token-for-default")
-    monkeypatch.setattr(docker_env, "_load_ev0_env_vars", lambda: {})
+    monkeypatch.setattr(docker_env, "_load_threev0_env_vars", lambda: {})
     ss.set_multiplex_active(True)
     token = ss.set_secret_scope({"SERVICE_TOKEN": "token-for-routed-profile"})
     try:
@@ -248,7 +248,7 @@ def test_init_env_args_omits_missing_scoped_forwarded_env(monkeypatch):
 
     env = _make_execute_only_env(forward_env=["SERVICE_TOKEN"])
     monkeypatch.setenv("SERVICE_TOKEN", "token-for-default")
-    monkeypatch.setattr(docker_env, "_load_ev0_env_vars", lambda: {})
+    monkeypatch.setattr(docker_env, "_load_threev0_env_vars", lambda: {})
     ss.set_multiplex_active(True)
     token = ss.set_secret_scope({})
     try:
@@ -267,7 +267,7 @@ def test_runtime_exec_tracks_scope_and_clears_missing_value(monkeypatch):
 
     env = _make_execute_only_env(forward_env=["SERVICE_TOKEN"])
     monkeypatch.setenv("SERVICE_TOKEN", "token-for-default")
-    monkeypatch.setattr(docker_env, "_load_ev0_env_vars", lambda: {})
+    monkeypatch.setattr(docker_env, "_load_threev0_env_vars", lambda: {})
     calls = []
     monkeypatch.setattr(
         docker_env,
@@ -309,7 +309,7 @@ def test_wrapped_exec_scopes_explicit_forward_env_across_profiles(monkeypatch, t
         encoding="utf-8",
     )
     monkeypatch.setenv("EXPLICIT_TOKEN", "token-for-default")
-    monkeypatch.setattr(docker_env, "_load_ev0_env_vars", lambda: {})
+    monkeypatch.setattr(docker_env, "_load_threev0_env_vars", lambda: {})
 
     def _run_fake_docker_exec(cmd, stdin_data=None):
         """Execute the generated docker exec command in a real local bash."""
@@ -411,7 +411,7 @@ def test_forward_env_overrides_docker_env_in_init_args(monkeypatch):
     env._env = {"MY_KEY": "static_value"}
 
     monkeypatch.setenv("MY_KEY", "dynamic_value")
-    monkeypatch.setattr(docker_env, "_load_ev0_env_vars", lambda: {})
+    monkeypatch.setattr(docker_env, "_load_threev0_env_vars", lambda: {})
 
     args = env._build_init_env_args()
     args_str = " ".join(args)
@@ -541,7 +541,7 @@ def _labels_in_run_args(run_args):
     }
 
 
-def test_run_command_tags_ev0_agent_label(monkeypatch):
+def test_run_command_tags_threev0_agent_label(monkeypatch):
     """Every container 3v0-agent starts must carry the 3v0-agent=1 label
     so the orphan reaper (and external operators) can identify them with a
     single ``docker ps --filter label=3v0-agent=1`` call. Regression test

@@ -68,9 +68,9 @@ from pathlib import Path
 from agent.redact import redact_cdp_url
 from threev0_constants import (
     agent_browser_runnable,
-    get_ev0_home,
-    get_ev0_home_override,
-    ev0_home_key,
+    get_threev0_home,
+    get_threev0_home_override,
+    threev0_home_key,
     node_tool_runnable,
 )
 from utils import env_int, is_truthy_value
@@ -134,9 +134,9 @@ def _build_browser_env() -> dict:
     importable under test harnesses that load it against a stubbed ``tools``
     package (tests/tools/test_managed_browserbase_and_modal.py).
     """
-    from tools.environments.local import ev0_subprocess_env
+    from tools.environments.local import threev0_subprocess_env
 
-    env = ev0_subprocess_env(inherit_credentials=False)
+    env = threev0_subprocess_env(inherit_credentials=False)
     for _key in _BROWSER_PASSTHROUGH_KEYS:
         if _key in os.environ:
             env[_key] = os.environ[_key]
@@ -246,11 +246,11 @@ def _discover_homebrew_node_dirs() -> tuple[str, ...]:
 
 def _browser_candidate_path_dirs() -> list[str]:
     """Return ordered browser CLI PATH candidates shared by discovery and execution."""
-    ev0_home = get_ev0_home()
-    ev0_node_bin = str(ev0_home / "node" / "bin")
-    ev0_node_root = str(ev0_home / "node")
-    ev0_nm_bin = str(ev0_home / "node_modules" / ".bin")
-    return [ev0_node_bin, ev0_node_root, ev0_nm_bin, *list(_discover_homebrew_node_dirs()), *_SANE_PATH_DIRS]
+    threev0_home = get_threev0_home()
+    threev0_node_bin = str(threev0_home / "node" / "bin")
+    threev0_node_root = str(threev0_home / "node")
+    threev0_nm_bin = str(threev0_home / "node_modules" / ".bin")
+    return [threev0_node_bin, threev0_node_root, threev0_nm_bin, *list(_discover_homebrew_node_dirs()), *_SANE_PATH_DIRS]
 
 
 def _merge_browser_path(existing_path: str = "") -> str:
@@ -760,7 +760,7 @@ def _get_cloud_provider() -> Optional[CloudBrowserProvider]:
     global _cached_cloud_provider, _cloud_provider_resolved
     global _cached_cloud_provider_scope
 
-    scope = ev0_home_key()
+    scope = threev0_home_key()
     with _cloud_provider_cache_lock:
         # Tests and legacy reset paths clear the boolean. Treat that as a full
         # reset even if a previous scoped resolution remains mirrored here.
@@ -1549,7 +1549,7 @@ def _allow_private_urls() -> bool:
 
     # The profile multiplexer scopes config with a ContextVar while sharing
     # this module. Never reuse another profile's private-network opt-out.
-    if get_ev0_home_override() is not None:
+    if get_threev0_home_override() is not None:
         return _resolve_allow_private_urls()
 
     if _allow_private_urls_resolved:
@@ -1871,7 +1871,7 @@ def _verify_reapable_browser_daemon(daemon_pid: int, socket_dir: str,
         try:
             env_dir = (proc.environ() or {}).get(
                 "AGENT_BROWSER_SOCKET_DIR", "")
-            bound = bool(env_dir) and os.path.normpath(env_dir) == \
+            bound = bool(env_dir) and os.path.normpath(env_dir) ==\
                 os.path.normpath(socket_dir)
         except (psutil.AccessDenied, psutil.NoSuchProcess, OSError):
             # environ() can be denied even same-user on some platforms.
@@ -2582,9 +2582,9 @@ def _find_agent_browser(*, validate: bool = True) -> str:
             candidates = [
                 shutil.which("agent-browser"),
                 shutil.which("agent-browser", path=extended_path) if extended_path else None,
-                shutil.which("agent-browser", path=str(get_ev0_home() / "node_modules" / ".bin")),
-                shutil.which("agent-browser", path=str(get_ev0_home() / "node" / "bin")),
-                shutil.which("agent-browser", path=str(get_ev0_home() / "node")),
+                shutil.which("agent-browser", path=str(get_threev0_home() / "node_modules" / ".bin")),
+                shutil.which("agent-browser", path=str(get_threev0_home() / "node" / "bin")),
+                shutil.which("agent-browser", path=str(get_threev0_home() / "node")),
             ]
             for recheck in candidates:
                 if recheck and agent_browser_runnable(recheck):
@@ -3115,7 +3115,7 @@ def _store_full_snapshot(snapshot_text: str) -> Optional[str]:
     """
     try:
         import hashlib
-        from threev0_constants import get_ev0_dir
+        from threev0_constants import get_threev0_dir
         from agent.redact import redact_sensitive_text
 
         content = redact_sensitive_text(snapshot_text, force=True)
@@ -3125,7 +3125,7 @@ def _store_full_snapshot(snapshot_text: str) -> Optional[str]:
                 + f"\n\n[... stored copy truncated at {MAX_STORED_SNAPSHOT_CHARS:,} chars "
                 f"of {len(content):,} ...]"
             )
-        cache_dir = get_ev0_dir("cache/web", "web_cache")
+        cache_dir = get_threev0_dir("cache/web", "web_cache")
         cache_dir.mkdir(parents=True, exist_ok=True)
         digest = hashlib.sha256(content.encode("utf-8")).hexdigest()[:10]
         path = cache_dir / f"browser-snapshot-{digest}.txt"
@@ -4413,14 +4413,14 @@ def _maybe_start_recording(task_id: str):
             return
     try:
         from threev0_cli.config import read_raw_config
-        ev0_home = get_ev0_home()
+        threev0_home = get_threev0_home()
         cfg = read_raw_config()
         record_enabled = cfg_get(cfg, "browser", "record_sessions", default=False)
 
         if not record_enabled:
             return
 
-        recordings_dir = ev0_home / "browser_recordings"
+        recordings_dir = threev0_home / "browser_recordings"
         recordings_dir.mkdir(parents=True, exist_ok=True)
         _cleanup_old_recordings(max_age_hours=72)
 
@@ -4558,8 +4558,8 @@ def browser_vision(question: str, annotate: bool = False, task_id: Optional[str]
 
     import base64
     import uuid as uuid_mod
-    from threev0_constants import get_ev0_dir
-    screenshots_dir = get_ev0_dir("cache/screenshots", "browser_screenshots")
+    from threev0_constants import get_threev0_dir
+    screenshots_dir = get_threev0_dir("cache/screenshots", "browser_screenshots")
     screenshot_path = screenshots_dir / f"browser_screenshot_{uuid_mod.uuid4().hex}.png"
     effective_task_id = _last_session_key(task_id or "default")
 
@@ -4617,8 +4617,8 @@ def browser_vision(question: str, annotate: bool = False, task_id: Optional[str]
             _lp_fallback_warning = fb_result.get("fallback_warning")
             fb_path = fb_result.get("data", {}).get("path", "")
             if fb_path and os.path.exists(fb_path):
-                from threev0_constants import get_ev0_dir
-                screenshots_dir = get_ev0_dir("cache/screenshots", "browser_screenshots")
+                from threev0_constants import get_threev0_dir
+                screenshots_dir = get_threev0_dir("cache/screenshots", "browser_screenshots")
                 screenshots_dir.mkdir(parents=True, exist_ok=True)
                 import shutil as _shutil_vision
                 persistent_path = screenshots_dir / f"browser_screenshot_{uuid_mod.uuid4().hex}.png"
@@ -4860,8 +4860,8 @@ def _cleanup_old_screenshots(screenshots_dir, max_age_hours=24):
 def _cleanup_old_recordings(max_age_hours=72):
     """Remove browser recordings older than max_age_hours to prevent disk bloat."""
     try:
-        ev0_home = get_ev0_home()
-        recordings_dir = ev0_home / "browser_recordings"
+        threev0_home = get_threev0_home()
+        recordings_dir = threev0_home / "browser_recordings"
         if not recordings_dir.exists():
             return
         cutoff = time.time() - (max_age_hours * 3600)

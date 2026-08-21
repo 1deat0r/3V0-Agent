@@ -587,9 +587,9 @@ def _default_directory():
 
     if _delivers_as_an_attachment():
         try:
-            from threev0_constants import get_ev0_dir
+            from threev0_constants import get_threev0_dir
 
-            return get_ev0_dir("cache/videos", "video_cache")
+            return get_threev0_dir("cache/videos", "video_cache")
         except Exception:
             logger.debug("Could not resolve the video cache dir; using Downloads", exc_info=True)
     downloads = Path.home() / "Downloads"

@@ -30,17 +30,17 @@ import json, os, sys, time, argparse, urllib.request, urllib.error, urllib.parse
 UA = "python-httpx/0.27"  # CF blocks default urllib UA on many providers
 
 
-def _ev0_home():
+def _threev0_home():
     # Prefer 3V0' own resolver (profile-safe); fall back to env then ~/.3v0.
     try:
-        from threev0_constants import get_ev0_home
-        return str(get_ev0_home())
+        from threev0_constants import get_threev0_home
+        return str(get_threev0_home())
     except Exception:
         return os.environ.get("EV0_HOME") or os.path.expanduser("~/.3V0")
 
 
 def _tokens_dir():
-    return os.path.join(_ev0_home(), "mcp-tokens")
+    return os.path.join(_threev0_home(), "mcp-tokens")
 
 
 def _post(url, data=None, headers=None, form=False, timeout=30):

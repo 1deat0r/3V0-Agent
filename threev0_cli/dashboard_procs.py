@@ -146,7 +146,7 @@ def _scan_dashboard_processes(
     return dashboard_processes
 
 
-def _ev0_home_for_pid(pid: int) -> str | None:
+def _threev0_home_for_pid(pid: int) -> str | None:
     """Best-effort ``EV0_HOME`` from *pid*'s environment."""
     try:
         import psutil
@@ -212,7 +212,7 @@ def _normalize_dashboard_cmdline(argv: list[str]) -> tuple[str, ...]:
 
 
 def _profile_key_for_respawn(
-    argv: list[str], ev0_home: str | None = None
+    argv: list[str], threev0_home: str | None = None
 ) -> str:
     """Stable owner key: ``EV0_HOME`` when known, else ``--profile`` / ``-p``.
 
@@ -231,18 +231,18 @@ def _profile_key_for_respawn(
             profile_name = tok.split("=", 1)[1]
             break
 
-    if ev0_home:
+    if threev0_home:
         try:
-            home_path = Path(ev0_home).resolve()
+            home_path = Path(threev0_home).resolve()
         except (OSError, RuntimeError, ValueError):
-            home_path = Path(ev0_home)
+            home_path = Path(threev0_home)
         parts = home_path.parts
         if len(parts) >= 2 and parts[-2] == "profiles" and parts[-1]:
             return f"profile:{parts[-1]}"
         try:
             return f"home:{os.path.normcase(str(home_path))}"
         except (OSError, RuntimeError, ValueError):
-            return f"home:{os.path.normcase(ev0_home)}"
+            return f"home:{os.path.normcase(threev0_home)}"
 
     if profile_name:
         return f"profile:{profile_name}"
@@ -274,7 +274,7 @@ def _filter_dashboard_respawn_candidates(
     seen_cmdlines: set[tuple[str, ...]] = set()
     seen_profiles: set[str] = set()
 
-    for _pid, argv, ev0_home in candidates:
+    for _pid, argv, threev0_home in candidates:
         if not argv:
             continue
         if _is_ephemeral_port_zero_backend(argv):
@@ -282,7 +282,7 @@ def _filter_dashboard_respawn_candidates(
         norm = _normalize_dashboard_cmdline(argv)
         if norm in seen_cmdlines:
             continue
-        profile_key = _profile_key_for_respawn(argv, ev0_home)
+        profile_key = _profile_key_for_respawn(argv, threev0_home)
         if profile_key in seen_profiles:
             continue
         seen_cmdlines.add(norm)
@@ -378,7 +378,7 @@ def _kill_stale_dashboard_processes(
                 cmdline = _m()._dashboard_cmdline_for_pid(pid)
                 if cmdline:
                     pid_cmdline[pid] = cmdline
-                    pid_home[pid] = _ev0_home_for_pid(pid)
+                    pid_home[pid] = _threev0_home_for_pid(pid)
 
         if already_restarted_units:
             # Already handled directly by the caller (e.g. 3v0 update's
@@ -520,7 +520,7 @@ def _kill_stale_dashboard_processes(
         "unrecovered": list(unrecovered),
     }
 
-def _detect_concurrent_ev0_instances(
+def _detect_concurrent_threev0_instances(
     scripts_dir: Path, *, exclude_pid: int | None = None
 ) -> list[tuple[int, str]]:
     """Find other live processes whose .exe is one of our entry-point shims.
@@ -553,7 +553,7 @@ def _detect_concurrent_ev0_instances(
 
     # Resolve every shim path to its canonical form once for cheap comparison.
     shim_paths: set[str] = set()
-    for shim in _m()._ev0_exe_shims(scripts_dir):
+    for shim in _m()._threev0_exe_shims(scripts_dir):
         try:
             shim_paths.add(str(shim.resolve()).lower())
         except OSError:
@@ -730,7 +730,7 @@ _HEX32 = set("0123456789abcdef")
 _HEX16 = _HEX32
 
 
-def _ev0_home_dir() -> Path:
+def _threev0_home_dir() -> Path:
     """Resolved 3V0 home (EV0_HOME override or ~/.3V0)."""
     override = os.environ.get("EV0_HOME", "").strip()
     if override:
@@ -797,7 +797,7 @@ def _lock_owned_serve_pids(base_dir: Path | None = None) -> set[int]:
     import json
 
     root = base_dir if base_dir is not None else (
-        _ev0_home_dir() / _REMOTE_LOCK_SUBDIR
+        _threev0_home_dir() / _REMOTE_LOCK_SUBDIR
     )
     owned: set[int] = set()
     if not root.is_dir():

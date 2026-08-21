@@ -10,7 +10,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 
 import tools.approval as approval_module
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from tools.approval import (
     _get_approval_mode,
     _normalize_approval_mode,
@@ -829,7 +829,7 @@ class TestLaunchctlGatewayLifecycle:
     must require the same approval. See issue #33071.
     """
 
-    def test_launchctl_against_ev0_label_detected(self):
+    def test_launchctl_against_threev0_label_detected(self):
         for cmd in (
             "launchctl stop ai.3v0.gateway",
             "launchctl kickstart -k system/ai.3v0.gateway",

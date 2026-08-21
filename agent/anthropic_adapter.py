@@ -21,7 +21,7 @@ import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from typing import Any, Dict, List, Optional, Tuple
 from utils import base_url_host_matches, base_url_hostname, normalize_proxy_env_vars
 from agent.secret_scope import get_secret as _get_secret
@@ -1511,8 +1511,8 @@ _OAUTH_TOKEN_URL = _OAUTH_TOKEN_URLS[0]
 _OAUTH_TOKEN_USER_AGENT = "axios/1.7.9"
 _OAUTH_REDIRECT_URI = "https://console.anthropic.com/oauth/code/callback"
 _OAUTH_SCOPES = "org:create_api_key user:profile user:inference"
-def _get_ev0_oauth_file() -> Path:
-    return get_ev0_home() / ".anthropic_oauth.json"
+def _get_threev0_oauth_file() -> Path:
+    return get_threev0_home() / ".anthropic_oauth.json"
 
 
 def _generate_pkce() -> tuple:
@@ -1528,7 +1528,7 @@ def _generate_pkce() -> tuple:
     return verifier, challenge
 
 
-def run_ev0_oauth_login_pure() -> Optional[Dict[str, Any]]:
+def run_threev0_oauth_login_pure() -> Optional[Dict[str, Any]]:
     """Run 3V0-native OAuth PKCE flow and return credential state."""
     import secrets
     import time
@@ -1658,9 +1658,9 @@ def run_ev0_oauth_login_pure() -> Optional[Dict[str, Any]]:
     }
 
 
-def read_ev0_oauth_credentials() -> Optional[Dict[str, Any]]:
+def read_threev0_oauth_credentials() -> Optional[Dict[str, Any]]:
     """Read 3V0-managed OAuth credentials from ~/.3V0/.anthropic_oauth.json."""
-    oauth_file = _get_ev0_oauth_file()
+    oauth_file = _get_threev0_oauth_file()
     if oauth_file.exists():
         try:
             data = json.loads(oauth_file.read_text(encoding="utf-8"))

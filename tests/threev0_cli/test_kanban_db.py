@@ -730,9 +730,9 @@ class TestSharedBoardPaths:
     """`kanban_home`/`kanban_db_path`/`workspaces_root`/`worker_log_path`
     must anchor at the **shared root**, not the active profile's EV0_HOME."""
 
-    def _set_home(self, monkeypatch, tmp_path, ev0_home):
+    def _set_home(self, monkeypatch, tmp_path, threev0_home):
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.delenv("EV0_KANBAN_HOME", raising=False)
 
 
@@ -1142,7 +1142,7 @@ def test_migrate_add_optional_columns_tolerates_concurrent_migration(kanban_home
 # ---------------------------------------------------------------------------
 
 
-def test_resolve_ev0_argv_falls_back_to_module_form_when_no_path_shim(monkeypatch):
+def test_resolve_threev0_argv_falls_back_to_module_form_when_no_path_shim(monkeypatch):
     """When the shim is not on PATH, fall back to `python -m threev0_cli.main`.
 
     Pins the correct module name (NOT `3v0` — there is no top-level
@@ -1156,11 +1156,11 @@ def test_resolve_ev0_argv_falls_back_to_module_form_when_no_path_shim(monkeypatc
 
     monkeypatch.delenv("EV0_BIN", raising=False)
     monkeypatch.setattr(shutil, "which", lambda name: None)
-    argv = kb._resolve_ev0_argv()
+    argv = kb._resolve_threev0_argv()
     assert argv == [sys.executable, "-m", "threev0_cli.main"]
 
 
-def test_resolve_ev0_argv_module_actually_runs():
+def test_resolve_threev0_argv_module_actually_runs():
     """The fallback module name must be importable + runnable.
 
     A unit test that pins the literal string is necessary but not
@@ -1177,7 +1177,7 @@ def test_resolve_ev0_argv_module_actually_runs():
     with mock.patch.dict(os.environ, {}, clear=False):
         os.environ.pop("EV0_BIN", None)
         with mock.patch.object(shutil, "which", return_value=None):
-            argv = kb._resolve_ev0_argv()
+            argv = kb._resolve_threev0_argv()
     r = subprocess.run(argv + ["--version"], capture_output=True, text=True, timeout=30)
     assert r.returncode == 0, (
         f"`{' '.join(argv)} --version` failed (rc={r.returncode}); "

@@ -1738,10 +1738,10 @@ class Migrator:
             "ZAI_API_KEY": "ZAI_API_KEY",
             "MINIMAX_API_KEY": "MINIMAX_API_KEY",
         }
-        for oc_key, ev0_key in env_key_mapping.items():
+        for oc_key, threev0_key in env_key_mapping.items():
             val = openclaw_env.get(oc_key, "").strip()
-            if val and ev0_key not in secret_additions:
-                secret_additions[ev0_key] = val
+            if val and threev0_key not in secret_additions:
+                secret_additions[threev0_key] = val
 
         # Check the openclaw.json "env" sub-object — some OpenClaw setups
         # store API keys here instead of in a separate .env file.
@@ -1753,10 +1753,10 @@ class Migrator:
             if isinstance(env_vars, dict):
                 sources.append(env_vars)
             for src in sources:
-                for oc_key, ev0_key in env_key_mapping.items():
+                for oc_key, threev0_key in env_key_mapping.items():
                     val = src.get(oc_key)
-                    if isinstance(val, str) and val.strip() and ev0_key not in secret_additions:
-                        secret_additions[ev0_key] = val.strip()
+                    if isinstance(val, str) and val.strip() and threev0_key not in secret_additions:
+                        secret_additions[threev0_key] = val.strip()
 
         # Check per-agent auth-profiles.json for additional credentials
         auth_profiles_path = self.source_root / "agents" / "main" / "agent" / "auth-profiles.json"
@@ -1843,8 +1843,8 @@ class Migrator:
             self.record("model-config", source_path, destination, "error", "PyYAML is not available")
             return
 
-        ev0_config = load_yaml_file(destination)
-        current_model = ev0_config.get("model")
+        threev0_config = load_yaml_file(destination)
+        current_model = threev0_config.get("model")
         if current_model == model_str:
             self.record("model-config", source_path, destination, "skipped", "Model already set to the same value")
             return
@@ -1854,12 +1854,12 @@ class Migrator:
 
         if self.execute:
             backup_path = self.maybe_backup(destination)
-            existing_model = ev0_config.get("model")
+            existing_model = threev0_config.get("model")
             if isinstance(existing_model, dict):
                 existing_model["default"] = model_str
             else:
-                ev0_config["model"] = {"default": model_str}
-            dump_yaml_file(destination, ev0_config)
+                threev0_config["model"] = {"default": model_str}
+            dump_yaml_file(destination, threev0_config)
             self.record("model-config", source_path, destination, "migrated", backup=str(backup_path) if backup_path else "", model=model_str)
         else:
             self.record("model-config", source_path, destination, "migrated", "Would set model", model=model_str)
@@ -1945,8 +1945,8 @@ class Migrator:
             self.record("tts-config", source_path, destination, "skipped", "No compatible TTS settings found")
             return
 
-        ev0_config = load_yaml_file(destination)
-        existing_tts = ev0_config.get("tts", {})
+        threev0_config = load_yaml_file(destination)
+        existing_tts = threev0_config.get("tts", {})
         if not isinstance(existing_tts, dict):
             existing_tts = {}
 
@@ -1958,8 +1958,8 @@ class Migrator:
                     merged_tts[key] = {**merged_tts[key], **value}
                 else:
                     merged_tts[key] = value
-            ev0_config["tts"] = merged_tts
-            dump_yaml_file(destination, ev0_config)
+            threev0_config["tts"] = merged_tts
+            dump_yaml_file(destination, threev0_config)
             self.record("tts-config", source_path, destination, "migrated", backup=str(backup_path) if backup_path else "", settings=list(tts_data.keys()))
         else:
             self.record("tts-config", source_path, destination, "migrated", "Would set TTS config", settings=list(tts_data.keys()))
@@ -2257,9 +2257,9 @@ class Migrator:
             self.record("mcp-servers", None, None, "skipped", "No MCP servers found in OpenClaw config")
             return
 
-        ev0_cfg_path = self.target_root / "config.yaml"
-        ev0_cfg = load_yaml_file(ev0_cfg_path)
-        existing_mcp = ev0_cfg.get("mcp_servers") or {}
+        threev0_cfg_path = self.target_root / "config.yaml"
+        threev0_cfg = load_yaml_file(threev0_cfg_path)
+        existing_mcp = threev0_cfg.get("mcp_servers") or {}
         added = 0
 
         for name, srv in mcp_raw.items():
@@ -2270,42 +2270,42 @@ class Migrator:
                             "MCP server already exists in 3V0 config")
                 continue
 
-            ev0_srv: Dict[str, Any] = {}
+            threev0_srv: Dict[str, Any] = {}
             # STDIO transport
             if srv.get("command"):
-                ev0_srv["command"] = srv["command"]
+                threev0_srv["command"] = srv["command"]
                 if srv.get("args"):
-                    ev0_srv["args"] = srv["args"]
+                    threev0_srv["args"] = srv["args"]
                 if srv.get("env"):
-                    ev0_srv["env"] = srv["env"]
+                    threev0_srv["env"] = srv["env"]
                 if srv.get("cwd"):
-                    ev0_srv["cwd"] = srv["cwd"]
+                    threev0_srv["cwd"] = srv["cwd"]
             # HTTP/SSE transport
             if srv.get("url"):
-                ev0_srv["url"] = srv["url"]
+                threev0_srv["url"] = srv["url"]
                 if srv.get("headers"):
-                    ev0_srv["headers"] = srv["headers"]
+                    threev0_srv["headers"] = srv["headers"]
                 if srv.get("auth"):
-                    ev0_srv["auth"] = srv["auth"]
+                    threev0_srv["auth"] = srv["auth"]
             # Common fields
             if srv.get("enabled") is False:
-                ev0_srv["enabled"] = False
+                threev0_srv["enabled"] = False
             if srv.get("timeout"):
-                ev0_srv["timeout"] = srv["timeout"]
+                threev0_srv["timeout"] = srv["timeout"]
             if srv.get("connectTimeout"):
-                ev0_srv["connect_timeout"] = srv["connectTimeout"]
+                threev0_srv["connect_timeout"] = srv["connectTimeout"]
             # Tool filtering
             tools_cfg = srv.get("tools") or {}
             if tools_cfg.get("include") or tools_cfg.get("exclude"):
-                ev0_srv["tools"] = {}
+                threev0_srv["tools"] = {}
                 if tools_cfg.get("include"):
-                    ev0_srv["tools"]["include"] = tools_cfg["include"]
+                    threev0_srv["tools"]["include"] = tools_cfg["include"]
                 if tools_cfg.get("exclude"):
-                    ev0_srv["tools"]["exclude"] = tools_cfg["exclude"]
+                    threev0_srv["tools"]["exclude"] = tools_cfg["exclude"]
             # Sampling
             sampling = srv.get("sampling")
             if sampling and isinstance(sampling, dict):
-                ev0_srv["sampling"] = {
+                threev0_srv["sampling"] = {
                     k: v for k, v in {
                         "enabled": sampling.get("enabled"),
                         "model": sampling.get("model"),
@@ -2315,15 +2315,15 @@ class Migrator:
                     }.items() if v is not None
                 }
 
-            existing_mcp[name] = ev0_srv
+            existing_mcp[name] = threev0_srv
             added += 1
             self.record("mcp-servers", f"mcp.servers.{name}", f"config.yaml mcp_servers.{name}",
                         "migrated", servers_added=added)
 
         if added > 0 and self.execute:
-            self.maybe_backup(ev0_cfg_path)
-            ev0_cfg["mcp_servers"] = existing_mcp
-            dump_yaml_file(ev0_cfg_path, ev0_cfg)
+            self.maybe_backup(threev0_cfg_path)
+            threev0_cfg["mcp_servers"] = existing_mcp
+            dump_yaml_file(threev0_cfg_path, threev0_cfg)
 
     # ── Plugins ───────────────────────────────────────────────
     def migrate_plugins_config(self, config: Optional[Dict[str, Any]] = None) -> None:
@@ -2436,12 +2436,12 @@ class Migrator:
             self.record("agent-config", None, None, "skipped", "No agent configuration found")
             return
 
-        ev0_cfg_path = self.target_root / "config.yaml"
-        ev0_cfg = load_yaml_file(ev0_cfg_path)
+        threev0_cfg_path = self.target_root / "config.yaml"
+        threev0_cfg = load_yaml_file(threev0_cfg_path)
         changes = False
 
         # Map agent defaults
-        agent_cfg = ev0_cfg.get("agent") or {}
+        agent_cfg = threev0_cfg.get("agent") or {}
         if defaults.get("contextTokens"):
             # No direct mapping but useful context
             pass
@@ -2465,7 +2465,7 @@ class Migrator:
         # Map compaction -> compression
         compaction = defaults.get("compaction") or {}
         if compaction:
-            compression = ev0_cfg.get("compression") or {}
+            compression = threev0_cfg.get("compression") or {}
             if compaction.get("mode") == "off":
                 compression["enabled"] = False
             else:
@@ -2473,16 +2473,16 @@ class Migrator:
             if compaction.get("timeout"):
                 pass  # No direct mapping
             if compaction.get("model"):
-                aux = ev0_cfg.setdefault("auxiliary", {})
+                aux = threev0_cfg.setdefault("auxiliary", {})
                 aux_comp = aux.setdefault("compression", {})
                 aux_comp["model"] = compaction["model"]
-            ev0_cfg["compression"] = compression
+            threev0_cfg["compression"] = compression
             changes = True
 
         # Map humanDelay
         human_delay = defaults.get("humanDelay") or {}
         if human_delay:
-            hd = ev0_cfg.get("human_delay") or {}
+            hd = threev0_cfg.get("human_delay") or {}
             hd_mode = human_delay.get("mode") or ("natural" if human_delay.get("enabled") else None)
             if hd_mode and hd_mode != "off":
                 hd["mode"] = hd_mode
@@ -2490,38 +2490,38 @@ class Migrator:
                 hd["min_ms"] = human_delay["minMs"]
             if human_delay.get("maxMs"):
                 hd["max_ms"] = human_delay["maxMs"]
-            ev0_cfg["human_delay"] = hd
+            threev0_cfg["human_delay"] = hd
             changes = True
 
         # Map userTimezone
         if defaults.get("userTimezone"):
-            ev0_cfg["timezone"] = defaults["userTimezone"]
+            threev0_cfg["timezone"] = defaults["userTimezone"]
             changes = True
 
         # Map terminal/exec settings
         exec_cfg = (config.get("tools") or {}).get("exec") or {}
         if exec_cfg:
-            terminal_cfg = ev0_cfg.get("terminal") or {}
+            terminal_cfg = threev0_cfg.get("terminal") or {}
             if exec_cfg.get("timeoutSec") or exec_cfg.get("timeout"):
                 terminal_cfg["timeout"] = exec_cfg.get("timeoutSec") or exec_cfg.get("timeout")
                 changes = True
-            ev0_cfg["terminal"] = terminal_cfg
+            threev0_cfg["terminal"] = terminal_cfg
 
         # Map sandbox -> terminal docker settings
         sandbox = defaults.get("sandbox") or {}
         if sandbox and sandbox.get("backend") == "docker":
-            terminal_cfg = ev0_cfg.get("terminal") or {}
+            terminal_cfg = threev0_cfg.get("terminal") or {}
             terminal_cfg["backend"] = "docker"
             if sandbox.get("docker", {}).get("image"):
                 terminal_cfg["docker_image"] = sandbox["docker"]["image"]
-            ev0_cfg["terminal"] = terminal_cfg
+            threev0_cfg["terminal"] = terminal_cfg
             changes = True
 
         if changes:
-            ev0_cfg["agent"] = agent_cfg
+            threev0_cfg["agent"] = agent_cfg
             if self.execute:
-                self.maybe_backup(ev0_cfg_path)
-                dump_yaml_file(ev0_cfg_path, ev0_cfg)
+                self.maybe_backup(threev0_cfg_path)
+                dump_yaml_file(threev0_cfg_path, threev0_cfg)
             self.record("agent-config", "openclaw.json agents.defaults", "config.yaml agent/compression/terminal",
                         "migrated", "Agent defaults mapped to 3V0 config")
 
@@ -2573,9 +2573,9 @@ class Migrator:
             self.record("session-config", None, None, "skipped", "No session configuration found")
             return
 
-        ev0_cfg_path = self.target_root / "config.yaml"
-        ev0_cfg = load_yaml_file(ev0_cfg_path)
-        sr = ev0_cfg.get("session_reset") or {}
+        threev0_cfg_path = self.target_root / "config.yaml"
+        threev0_cfg = load_yaml_file(threev0_cfg_path)
+        sr = threev0_cfg.get("session_reset") or {}
         changes = False
 
         # OpenClaw uses session.reset (structured) and session.resetTriggers (string array)
@@ -2609,10 +2609,10 @@ class Migrator:
             changes = True
 
         if changes:
-            ev0_cfg["session_reset"] = sr
+            threev0_cfg["session_reset"] = sr
             if self.execute:
-                self.maybe_backup(ev0_cfg_path)
-                dump_yaml_file(ev0_cfg_path, ev0_cfg)
+                self.maybe_backup(threev0_cfg_path)
+                dump_yaml_file(threev0_cfg_path, threev0_cfg)
             self.record("session-config", "openclaw.json session.resetTriggers",
                         "config.yaml session_reset", "migrated")
 
@@ -2637,9 +2637,9 @@ class Migrator:
             self.record("full-providers", None, None, "skipped", "No model providers found")
             return
 
-        ev0_cfg_path = self.target_root / "config.yaml"
-        ev0_cfg = load_yaml_file(ev0_cfg_path)
-        custom_providers = ev0_cfg.get("custom_providers") or []
+        threev0_cfg_path = self.target_root / "config.yaml"
+        threev0_cfg = load_yaml_file(threev0_cfg_path)
+        custom_providers = threev0_cfg.get("custom_providers") or []
         added = 0
 
         # Well-known providers: just extract API keys
@@ -2687,9 +2687,9 @@ class Migrator:
                             f"config.yaml custom_providers[{prov_name}]", "migrated")
 
         if added > 0 and self.execute:
-            self.maybe_backup(ev0_cfg_path)
-            ev0_cfg["custom_providers"] = custom_providers
-            dump_yaml_file(ev0_cfg_path, ev0_cfg)
+            self.maybe_backup(threev0_cfg_path)
+            threev0_cfg["custom_providers"] = custom_providers
+            dump_yaml_file(threev0_cfg_path, threev0_cfg)
 
         # Archive model aliases/catalog
         agent_defaults = (config.get("agents") or {}).get("defaults") or {}
@@ -2756,9 +2756,9 @@ class Migrator:
         # Map Discord-specific settings to 3V0 config
         discord_cfg = channels.get("discord") or {}
         if discord_cfg:
-            ev0_cfg_path = self.target_root / "config.yaml"
-            ev0_cfg = load_yaml_file(ev0_cfg_path)
-            discord_ev0 = ev0_cfg.get("discord") or {}
+            threev0_cfg_path = self.target_root / "config.yaml"
+            threev0_cfg = load_yaml_file(threev0_cfg_path)
+            discord_ev0 = threev0_cfg.get("discord") or {}
             changed = False
             if "requireMention" in discord_cfg:
                 discord_ev0["require_mention"] = discord_cfg["requireMention"]
@@ -2767,8 +2767,8 @@ class Migrator:
                 discord_ev0["auto_thread"] = discord_cfg["autoThread"]
                 changed = True
             if changed and self.execute:
-                ev0_cfg["discord"] = discord_ev0
-                dump_yaml_file(ev0_cfg_path, ev0_cfg)
+                threev0_cfg["discord"] = discord_ev0
+                dump_yaml_file(threev0_cfg_path, threev0_cfg)
 
         # Archive complex channel configs (group settings, thread bindings, etc.)
         complex_archive = {}
@@ -2798,9 +2798,9 @@ class Migrator:
             self.record("browser-config", None, None, "skipped", "No browser configuration found")
             return
 
-        ev0_cfg_path = self.target_root / "config.yaml"
-        ev0_cfg = load_yaml_file(ev0_cfg_path)
-        browser_ev0 = ev0_cfg.get("browser") or {}
+        threev0_cfg_path = self.target_root / "config.yaml"
+        threev0_cfg = load_yaml_file(threev0_cfg_path)
+        browser_ev0 = threev0_cfg.get("browser") or {}
         changed = False
 
         # Map fields that have 3V0 equivalents
@@ -2812,10 +2812,10 @@ class Migrator:
             changed = True
 
         if changed:
-            ev0_cfg["browser"] = browser_ev0
+            threev0_cfg["browser"] = browser_ev0
             if self.execute:
-                self.maybe_backup(ev0_cfg_path)
-                dump_yaml_file(ev0_cfg_path, ev0_cfg)
+                self.maybe_backup(threev0_cfg_path)
+                dump_yaml_file(threev0_cfg_path, threev0_cfg)
             self.record("browser-config", "openclaw.json browser.*", "config.yaml browser",
                         "migrated")
 
@@ -2838,17 +2838,17 @@ class Migrator:
             self.record("tools-config", None, None, "skipped", "No tools configuration found")
             return
 
-        ev0_cfg_path = self.target_root / "config.yaml"
-        ev0_cfg = load_yaml_file(ev0_cfg_path)
+        threev0_cfg_path = self.target_root / "config.yaml"
+        threev0_cfg = load_yaml_file(threev0_cfg_path)
         changed = False
 
         # Map exec timeout -> terminal timeout (field is timeoutSec in OpenClaw)
         exec_cfg = tools.get("exec") or {}
         timeout_val = exec_cfg.get("timeoutSec") or exec_cfg.get("timeout")
         if timeout_val:
-            terminal_cfg = ev0_cfg.get("terminal") or {}
+            terminal_cfg = threev0_cfg.get("terminal") or {}
             terminal_cfg["timeout"] = timeout_val
-            ev0_cfg["terminal"] = terminal_cfg
+            threev0_cfg["terminal"] = terminal_cfg
             changed = True
 
         # Map web search API key (path: tools.web.search.brave.apiKey in OpenClaw)
@@ -2860,8 +2860,8 @@ class Migrator:
             self._set_env_var("BRAVE_API_KEY", brave_key, "tools.web.search.brave.apiKey")
 
         if changed and self.execute:
-            self.maybe_backup(ev0_cfg_path)
-            dump_yaml_file(ev0_cfg_path, ev0_cfg)
+            self.maybe_backup(threev0_cfg_path)
+            dump_yaml_file(threev0_cfg_path, threev0_cfg)
             self.record("tools-config", "openclaw.json tools.*", "config.yaml terminal",
                         "migrated")
 
@@ -2882,21 +2882,21 @@ class Migrator:
             self.record("approvals-config", None, None, "skipped", "No approvals configuration found")
             return
 
-        ev0_cfg_path = self.target_root / "config.yaml"
-        ev0_cfg = load_yaml_file(ev0_cfg_path)
+        threev0_cfg_path = self.target_root / "config.yaml"
+        threev0_cfg = load_yaml_file(threev0_cfg_path)
 
         # Map approval mode (nested under approvals.exec.mode in OpenClaw)
         exec_approvals = approvals.get("exec") or {}
         mode = (exec_approvals.get("mode") if isinstance(exec_approvals, dict) else None) or approvals.get("mode") or approvals.get("defaultMode")
         if mode:
             mode_map = {"auto": "off", "always": "manual", "smart": "smart", "manual": "manual"}
-            ev0_mode = mode_map.get(mode, "manual")
-            ev0_cfg.setdefault("approvals", {})["mode"] = ev0_mode
+            threev0_mode = mode_map.get(mode, "manual")
+            threev0_cfg.setdefault("approvals", {})["mode"] = threev0_mode
             if self.execute:
-                self.maybe_backup(ev0_cfg_path)
-                dump_yaml_file(ev0_cfg_path, ev0_cfg)
+                self.maybe_backup(threev0_cfg_path)
+                dump_yaml_file(threev0_cfg_path, threev0_cfg)
             self.record("approvals-config", "openclaw.json approvals.mode",
-                        "config.yaml approvals.mode", "migrated", f"Mapped '{mode}' -> '{ev0_mode}'")
+                        "config.yaml approvals.mode", "migrated", f"Mapped '{mode}' -> '{threev0_mode}'")
 
         # Archive full approvals config
         if len(approvals) > 1 and self.archive_dir:

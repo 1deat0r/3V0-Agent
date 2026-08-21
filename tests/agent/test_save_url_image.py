@@ -94,7 +94,7 @@ def http_server(tmp_path, monkeypatch):
 
 
 class TestSaveUrlImage:
-    def test_writes_real_bytes_to_ev0_home_cache(self, http_server):
+    def test_writes_real_bytes_to_threev0_home_cache(self, http_server):
         base, _ = http_server
         from agent.image_gen_provider import save_url_image
 

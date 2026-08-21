@@ -523,9 +523,9 @@ def test_bot_self_messages_are_ignored_in_dm_and_group():
 
 
 def test_config_bridges_telegram_group_settings(monkeypatch, tmp_path):
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    (ev0_home / "config.yaml").write_text(
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    (threev0_home / "config.yaml").write_text(
         "telegram:\n"
         "  require_mention: true\n"
         "  guest_mode: true\n"
@@ -544,7 +544,7 @@ def test_config_bridges_telegram_group_settings(monkeypatch, tmp_path):
         encoding="utf-8",
     )
 
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     # Clear the TELEGRAM_* vars this test exercises so a developer's ambient
     # shell/.env values don't pre-empt the YAML→env bridge (env-over-YAML
     # precedence, adapter.py::_apply_yaml_config). The authoritative assertions
@@ -593,16 +593,16 @@ def test_top_level_require_mention_bridges_to_telegram(monkeypatch, tmp_path):
     """require_mention at the config.yaml top level (alongside group_sessions_per_user)
     must behave identically to telegram.require_mention: true (#3979).
     """
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
     # Intentionally no "telegram:" section — keys are at the top level.
-    (ev0_home / "config.yaml").write_text(
+    (threev0_home / "config.yaml").write_text(
         "require_mention: true\n"
         "group_sessions_per_user: true\n",
         encoding="utf-8",
     )
 
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.delenv("TELEGRAM_REQUIRE_MENTION", raising=False)
 
     config = load_gateway_config()

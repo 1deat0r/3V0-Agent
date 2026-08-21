@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 from threev0_cli.colors import Colors, color
 
@@ -148,7 +148,7 @@ def _node_symlink_candidate_dirs() -> "list[Path]":
     return dirs
 
 
-def remove_node_symlinks(ev0_home: Path) -> list:
+def remove_node_symlinks(threev0_home: Path) -> list:
     """Remove the node/npm/npx symlinks the installer placed on PATH.
 
     The POSIX installer (``scripts/install.sh`` / ``scripts/lib/node-bootstrap.sh``)
@@ -165,7 +165,7 @@ def remove_node_symlinks(ev0_home: Path) -> list:
     directory are removed — links the user has repointed elsewhere (nvm, fnm,
     etc.) are left untouched.
     """
-    node_dir = (ev0_home / "node").resolve()
+    node_dir = (threev0_home / "node").resolve()
     removed = []
 
     for name in ("node", "npm", "npx"):
@@ -286,7 +286,7 @@ def uninstall_gateway_service():
     elif system == "Windows":
         try:
             from threev0_cli import gateway_windows
-            if gateway_windows.is_installed() or gateway_windows.is_task_registered() \
+            if gateway_windows.is_installed() or gateway_windows.is_task_registered()\
                     or gateway_windows.is_startup_entry_installed():
                 try:
                     gateway_windows.stop()
@@ -336,9 +336,9 @@ def uninstall_gateway_service():
 # or open a new terminal anyway).
 
 
-def _ev0_path_markers(ev0_home: Path) -> list[str]:
+def _threev0_path_markers(threev0_home: Path) -> list[str]:
     """Path-entry substrings that identify 3V0-owned User-PATH entries."""
-    root = str(ev0_home).rstrip("\\/")
+    root = str(threev0_home).rstrip("\\/")
     # Match on prefix so sub-entries (git\cmd, git\bin, git\usr\bin, node, etc.)
     # all get swept.  Also match the bare 3v0-agent install dir.
     markers = [root + "\\3v0-agent", root + "\\git", root + "\\node", root + "\\venv"]
@@ -349,7 +349,7 @@ def _ev0_path_markers(ev0_home: Path) -> list[str]:
     return markers
 
 
-def remove_path_from_windows_registry(ev0_home: Path) -> list[str]:
+def remove_path_from_windows_registry(threev0_home: Path) -> list[str]:
     """Strip 3V0-owned entries from User-scope PATH in the registry.
 
     Returns the list of removed path entries.  Operates on HKCU\\Environment,
@@ -371,7 +371,7 @@ def remove_path_from_windows_registry(ev0_home: Path) -> list[str]:
                 return []
             # Preserve REG_EXPAND_SZ vs REG_SZ so unexpanded %VARS% survive.
             entries = [e for e in path_value.split(";") if e]
-            markers = _ev0_path_markers(ev0_home)
+            markers = _threev0_path_markers(threev0_home)
             kept: list[str] = []
             for entry in entries:
                 entry_norm = entry.rstrip("\\/")
@@ -388,7 +388,7 @@ def remove_path_from_windows_registry(ev0_home: Path) -> list[str]:
     return removed
 
 
-def remove_ev0_env_vars_windows() -> list[str]:
+def remove_threev0_env_vars_windows() -> list[str]:
     """Delete EV0_HOME and EV0_GIT_BASH_PATH from User-scope env vars."""
     try:
         import winreg
@@ -414,13 +414,13 @@ def remove_ev0_env_vars_windows() -> list[str]:
     return removed
 
 
-def remove_portable_tooling_windows(ev0_home: Path) -> list[Path]:
+def remove_portable_tooling_windows(threev0_home: Path) -> list[Path]:
     """Delete PortableGit and Node installs the Windows installer created under
     ``%LOCALAPPDATA%\\3v0\\``.  Only called on full uninstall; they're
     isolated from any system Git / Node so they cannot break other tools."""
     removed: list[Path] = []
     for sub in ("git", "node", "gateway-service"):
-        target = ev0_home / sub
+        target = threev0_home / sub
         if target.exists():
             try:
                 shutil.rmtree(target, ignore_errors=False)
@@ -435,11 +435,11 @@ def _is_windows() -> bool:
     return sys.platform == "win32"
 
 
-def _is_default_ev0_home(ev0_home: Path) -> bool:
+def _is_default_threev0_home(threev0_home: Path) -> bool:
     """Return True when ``ev0_home`` points at the default (non-profile) root."""
     try:
-        from threev0_constants import get_default_ev0_root
-        return ev0_home.resolve() == get_default_ev0_root().resolve()
+        from threev0_constants import get_default_threev0_root
+        return threev0_home.resolve() == get_default_threev0_root().resolve()
     except Exception:
         return False
 
@@ -476,11 +476,11 @@ def _uninstall_profile(profile) -> None:
     # 1. Stop and remove this profile's gateway service.
     #    Use `python -m threev0_cli.main` so we don't depend on a `3v0`
     #    wrapper that may be half-removed mid-uninstall.
-    ev0_invocation = [_sys.executable, "-m", "threev0_cli.main", "--profile", name]
+    threev0_invocation = [_sys.executable, "-m", "threev0_cli.main", "--profile", name]
     for subcmd in ("stop", "uninstall"):
         try:
             subprocess.run(
-                ev0_invocation + ["gateway", subcmd],
+                threev0_invocation + ["gateway", subcmd],
                 capture_output=True,
                 text=True, encoding='utf-8', errors='replace',
                 timeout=60,
@@ -518,12 +518,12 @@ def run_uninstall(args):
     - Keep data: removes code but keeps ~/.3V0/ for future reinstall
     """
     project_root = get_project_root()
-    ev0_home = get_ev0_home()
+    threev0_home = get_threev0_home()
 
     if bool(getattr(args, "dry_run", False)):
         _print_uninstall_dry_run(
             project_root=project_root,
-            ev0_home=ev0_home,
+            threev0_home=threev0_home,
             full_uninstall=bool(getattr(args, "full", False)),
         )
         return
@@ -531,7 +531,7 @@ def run_uninstall(args):
     # Detect named profiles when uninstalling from the default root —
     # offer to clean them up too instead of leaving zombie EV0_HOMEs
     # and systemd units behind.
-    is_default_profile = _is_default_ev0_home(ev0_home)
+    is_default_profile = _is_default_threev0_home(threev0_home)
     named_profiles = _discover_named_profiles() if is_default_profile else []
 
     # Non-interactive fast path (``--yes``): no prompts. ``--full`` selects a
@@ -545,7 +545,7 @@ def run_uninstall(args):
         full_uninstall = bool(getattr(args, "full", False))
         _perform_uninstall(
             project_root=project_root,
-            ev0_home=ev0_home,
+            threev0_home=threev0_home,
             full_uninstall=full_uninstall,
             remove_profiles=False,
             named_profiles=named_profiles,
@@ -561,9 +561,9 @@ def run_uninstall(args):
     # Show what will be affected
     print(color("Current Installation:", Colors.CYAN, Colors.BOLD))
     print(f"  Code:    {project_root}")
-    print(f"  Config:  {ev0_home / 'config.yaml'}")
-    print(f"  Secrets: {ev0_home / '.env'}")
-    print(f"  Data:    {ev0_home / 'cron/'}, {ev0_home / 'sessions/'}, {ev0_home / 'logs/'}")
+    print(f"  Config:  {threev0_home / 'config.yaml'}")
+    print(f"  Secrets: {threev0_home / '.env'}")
+    print(f"  Data:    {threev0_home / 'cron/'}, {threev0_home / 'sessions/'}, {threev0_home / 'logs/'}")
     print()
 
     if named_profiles:
@@ -650,14 +650,14 @@ def run_uninstall(args):
 
     _perform_uninstall(
         project_root=project_root,
-        ev0_home=ev0_home,
+        threev0_home=threev0_home,
         full_uninstall=full_uninstall,
         remove_profiles=remove_profiles,
         named_profiles=named_profiles,
     )
 
 
-def _print_uninstall_dry_run(*, project_root: Path, ev0_home: Path, full_uninstall: bool) -> None:
+def _print_uninstall_dry_run(*, project_root: Path, threev0_home: Path, full_uninstall: bool) -> None:
     """Print the uninstall plan without stopping services or deleting files."""
     print()
     print(color("Dry run: no files, services, or environment entries will be changed.", Colors.CYAN, Colors.BOLD))
@@ -668,22 +668,22 @@ def _print_uninstall_dry_run(*, project_root: Path, ev0_home: Path, full_uninsta
     print("  • 3V0 wrapper scripts and 3V0-managed node/npm/npx symlinks")
     print(f"  • Code checkout: {project_root}")
     if full_uninstall:
-        print(f"  • 3V0 config/data: {ev0_home}")
-        if _is_default_ev0_home(ev0_home):
+        print(f"  • 3V0 config/data: {threev0_home}")
+        if _is_default_threev0_home(threev0_home):
             profiles = _discover_named_profiles()
             if profiles:
                 print("  • Named profiles (interactive uninstall asks before removing):")
                 for prof in profiles:
                     print(f"    - {prof.name}: {prof.path}")
     else:
-        print(f"  • Keep 3V0 config/data: {ev0_home}")
+        print(f"  • Keep 3V0 config/data: {threev0_home}")
     print()
 
 
 def _perform_uninstall(
     *,
     project_root: Path,
-    ev0_home: Path,
+    threev0_home: Path,
     full_uninstall: bool,
     remove_profiles: bool,
     named_profiles: list,
@@ -721,7 +721,7 @@ def _perform_uninstall(
         # Expand %LOCALAPPDATA% etc. in ev0_home so the marker matching is
         # against fully resolved paths — installer writes literal strings
         # like C:\Users\<u>\AppData\Local\3v0\git\cmd, not %LOCALAPPDATA%.
-        removed_path_entries = remove_path_from_windows_registry(Path(os.path.expandvars(str(ev0_home))))
+        removed_path_entries = remove_path_from_windows_registry(Path(os.path.expandvars(str(threev0_home))))
         if removed_path_entries:
             for entry in removed_path_entries:
                 log_success(f"Removed from User PATH: {entry}")
@@ -729,7 +729,7 @@ def _perform_uninstall(
             log_info("No 3V0-owned PATH entries in User environment")
 
         log_info("Removing EV0_HOME / EV0_GIT_BASH_PATH User env vars...")
-        removed_env = remove_ev0_env_vars_windows()
+        removed_env = remove_threev0_env_vars_windows()
         if removed_env:
             for name in removed_env:
                 log_success(f"Removed User env var: {name}")
@@ -749,7 +749,7 @@ def _perform_uninstall(
     #     (only when they still point into this 3V0 home's node dir, so we
     #     never clobber an existing nvm / user-managed Node).
     log_info("Removing 3V0-managed node/npm/npx symlinks...")
-    removed_node_links = remove_node_symlinks(ev0_home)
+    removed_node_links = remove_node_symlinks(threev0_home)
     if removed_node_links:
         for link in removed_node_links:
             log_success(f"Removed {link}")
@@ -767,7 +767,7 @@ def _perform_uninstall(
     try:
         if project_root.exists():
             # If the install is inside ~/.3V0/, just remove the 3v0-agent subdir
-            if ev0_home in project_root.parents or project_root.parent == ev0_home:
+            if threev0_home in project_root.parents or project_root.parent == threev0_home:
                 shutil.rmtree(project_root)
                 log_success(f"Removed {project_root}")
             else:
@@ -786,7 +786,7 @@ def _perform_uninstall(
     #     this helper there is a no-op since they'll already be gone.
     if _is_windows():
         log_info("Removing Windows installer artifacts (PortableGit, Node, gateway-service)...")
-        removed_artifacts = remove_portable_tooling_windows(ev0_home)
+        removed_artifacts = remove_portable_tooling_windows(threev0_home)
         if removed_artifacts:
             for path in removed_artifacts:
                 log_success(f"Removed {path}")
@@ -806,14 +806,14 @@ def _perform_uninstall(
 
         log_info("Removing configuration and data...")
         try:
-            if ev0_home.exists():
-                shutil.rmtree(ev0_home)
-                log_success(f"Removed {ev0_home}")
+            if threev0_home.exists():
+                shutil.rmtree(threev0_home)
+                log_success(f"Removed {threev0_home}")
         except Exception as e:
-            log_warn(f"Could not fully remove {ev0_home}: {e}")
+            log_warn(f"Could not fully remove {threev0_home}: {e}")
             log_info("You may need to manually remove it")
     else:
-        log_info(f"Keeping configuration and data in {ev0_home}")
+        log_info(f"Keeping configuration and data in {threev0_home}")
     
     # Done
     print()
@@ -824,7 +824,7 @@ def _perform_uninstall(
     
     if not full_uninstall:
         print(color("Your configuration and data have been preserved:", Colors.CYAN))
-        print(f"  {ev0_home}/")
+        print(f"  {threev0_home}/")
         print()
         print("To reinstall later with your existing settings:")
         if _is_windows():

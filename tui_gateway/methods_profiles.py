@@ -267,9 +267,9 @@ def _(rid, params: dict) -> dict:
     if is_truthy_value(params.get("mirror_credentials", True)):
         import shutil
 
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        launch_home = get_ev0_home()
+        launch_home = get_threev0_home()
         try:
             src_env = launch_home / ".env"
             dst_env = path / ".env"
@@ -320,8 +320,8 @@ def _(rid, params: dict) -> dict:
                 save_config,
             )
             from threev0_constants import (
-                reset_ev0_home_override,
-                set_ev0_home_override,
+                reset_threev0_home_override,
+                set_threev0_home_override,
             )
 
             src_cfg = load_config_readonly() or {}
@@ -331,7 +331,7 @@ def _(rid, params: dict) -> dict:
             if not sections:
                 return False
 
-            token = set_ev0_home_override(str(path))
+            token = set_threev0_home_override(str(path))
             try:
                 # Write-back round-trip on the raw file: load_config() would
                 # merge DEFAULT_CONFIG, making every section look present and
@@ -346,7 +346,7 @@ def _(rid, params: dict) -> dict:
                 if changed:
                     save_config(dst_cfg)
             finally:
-                reset_ev0_home_override(token)
+                reset_threev0_home_override(token)
             return changed
         except Exception:
             return False
@@ -374,15 +374,15 @@ def _(rid, params: dict) -> dict:
             from threev0_cli.config import load_config_readonly, read_user_config_raw
             from threev0_cli.web_routers.profiles import _write_profile_model
             from threev0_constants import (
-                reset_ev0_home_override,
-                set_ev0_home_override,
+                reset_threev0_home_override,
+                set_threev0_home_override,
             )
 
-            token = set_ev0_home_override(str(path))
+            token = set_threev0_home_override(str(path))
             try:
                 dst_model = (read_user_config_raw() or {}).get("model") or {}
             finally:
-                reset_ev0_home_override(token)
+                reset_threev0_home_override(token)
 
             if not (dst_model.get("provider") and dst_model.get("default")):
                 cfg = load_config_readonly() or {}
@@ -428,13 +428,13 @@ def _(rid, params: dict) -> dict:
         from pathlib import Path
 
         from threev0_cli.profiles import get_profile_dir
-        from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+        from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 
         profile_dir = Path(get_profile_dir(name))
         if not profile_dir.is_dir():
             return _err(rid, 4064, f"profile '{name}' not found")
 
-        token = set_ev0_home_override(str(profile_dir))
+        token = set_threev0_home_override(str(profile_dir))
         try:
             from threev0_cli.config import load_config
             from threev0_cli.skills_config import get_disabled_skills
@@ -574,7 +574,7 @@ def _(rid, params: dict) -> dict:
                 },
             )
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
     except Exception as e:
         return _err(rid, 5063, str(e))
 
@@ -600,7 +600,7 @@ def _(rid, params: dict) -> dict:
         from pathlib import Path
 
         from threev0_cli.profiles import get_profile_dir
-        from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+        from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 
         profile_dir = Path(get_profile_dir(name))
         if not profile_dir.is_dir():
@@ -702,7 +702,7 @@ def _(rid, params: dict) -> dict:
                 except Exception:
                     launch_mcp = {}
 
-            token = set_ev0_home_override(str(profile_dir))
+            token = set_threev0_home_override(str(profile_dir))
             try:
                 from threev0_cli.config import load_config, save_config
 
@@ -775,7 +775,7 @@ def _(rid, params: dict) -> dict:
                     except Exception:
                         applied["mcp_servers"] = False
             finally:
-                reset_ev0_home_override(token)
+                reset_threev0_home_override(token)
 
         return _ok(rid, {"ok": all(applied.values()) if applied else True, "applied": applied})
     except Exception as e:

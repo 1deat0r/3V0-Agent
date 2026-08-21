@@ -90,7 +90,7 @@ class TestPreUpdateBackupIntegrityGuard:
     EV0_HOME whose state.db is corrupted mid-flight (#68474)."""
 
     @pytest.fixture()
-    def ev0_home(self, tmp_path, monkeypatch):
+    def threev0_home(self, tmp_path, monkeypatch):
         from pathlib import Path
         import sys
 
@@ -109,7 +109,7 @@ class TestPreUpdateBackupIntegrityGuard:
                 del sys.modules[mod]
         return root
 
-    def test_healthy_db_stays_quiet(self, ev0_home, capsys):
+    def test_healthy_db_stays_quiet(self, threev0_home, capsys):
         from argparse import Namespace
 
         from threev0_cli.main import _run_pre_update_backup
@@ -120,7 +120,7 @@ class TestPreUpdateBackupIntegrityGuard:
         assert "Pre-update snapshot" in out
         assert "integrity check FAILED" not in out
 
-    def test_zeroed_db_after_snapshot_is_loud(self, ev0_home, capsys, monkeypatch):
+    def test_zeroed_db_after_snapshot_is_loud(self, threev0_home, capsys, monkeypatch):
         """If state.db is zeroed right after the snapshot completes, the
         guard must warn loudly instead of proceeding silently (exit-0 mask)."""
         from argparse import Namespace
@@ -132,7 +132,7 @@ class TestPreUpdateBackupIntegrityGuard:
 
         def create_then_zero(**kwargs):
             snap_id = real_create(**kwargs)
-            live = ev0_home / "state.db"
+            live = threev0_home / "state.db"
             live.write_bytes(b"\x00" * live.stat().st_size)
             return snap_id
 

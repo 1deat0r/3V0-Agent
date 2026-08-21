@@ -173,9 +173,9 @@ _capability_bg_lock = threading.Lock()
 
 def _capability_disk_cache_path() -> "Path":
 
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home() / "cache" / "discord_capabilities.json"
+    return get_threev0_home() / "cache" / "discord_capabilities.json"
 
 
 def _token_cache_key(token: str) -> str:

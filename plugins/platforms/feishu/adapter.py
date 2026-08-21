@@ -132,7 +132,7 @@ from gateway.platforms.base import (
     cache_image_from_bytes,
 )
 from gateway.status import acquire_scoped_lock, release_scoped_lock
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from utils import atomic_json_write, env_float, env_int
 
 from agent.secret_scope import UnscopedSecretError as _UnscopedSecretError
@@ -1524,7 +1524,7 @@ class FeishuAdapter(BasePlatformAdapter):
         self._event_handler: Optional[Any] = None
         self._seen_message_ids: Dict[str, float] = {}  # message_id → seen_at (time.time())
         self._seen_message_order: List[str] = []
-        self._dedup_state_path = get_ev0_home() / "feishu_seen_message_ids.json"
+        self._dedup_state_path = get_threev0_home() / "feishu_seen_message_ids.json"
         self._dedup_lock = threading.Lock()
         self._sender_name_cache: Dict[str, tuple[str, float]] = {}  # sender_id → (name, expire_at)
         self._webhook_rate_counts: Dict[str, tuple[int, float]] = {}  # rate_key → (count, window_start)
@@ -2231,7 +2231,7 @@ class FeishuAdapter(BasePlatformAdapter):
 
     @staticmethod
     def _write_update_prompt_response(answer: str) -> None:
-        response_path = get_ev0_home() / ".update_response"
+        response_path = get_threev0_home() / ".update_response"
         tmp_path = response_path.with_suffix(".tmp")
         tmp_path.write_text(answer, encoding="utf-8")
         tmp_path.replace(response_path)
@@ -2729,13 +2729,13 @@ class FeishuAdapter(BasePlatformAdapter):
         event = getattr(data, "event", None)
         action = getattr(event, "action", None)
         action_value = getattr(action, "value", {}) or {}
-        ev0_action = action_value.get("ev0_action") if isinstance(action_value, dict) else None
+        threev0_action = action_value.get("ev0_action") if isinstance(action_value, dict) else None
         update_prompt_action = (
             action_value.get("ev0_update_prompt_action")
             if isinstance(action_value, dict) else None
         )
 
-        if ev0_action:
+        if threev0_action:
             return self._handle_approval_card_action(event=event, action_value=action_value, loop=loop)
         if update_prompt_action:
             return self._handle_update_prompt_card_action(

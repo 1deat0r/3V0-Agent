@@ -82,7 +82,7 @@ from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Tup
 from urllib.parse import parse_qs, urlencode, urlparse
 
 from threev0_cli.config import (
-    get_ev0_home,
+    get_threev0_home,
     get_config_path,
     read_raw_config,
     require_readable_config_before_write,
@@ -1045,7 +1045,7 @@ def _oauth_trace(event: str, *, sequence_id: Optional[str] = None, **fields: Any
 # =============================================================================
 
 def _auth_file_path() -> Path:
-    path = get_ev0_home() / "auth.json"
+    path = get_threev0_home() / "auth.json"
     # Seat belt: if pytest is running and EV0_HOME resolves to the real
     # user's auth store, refuse rather than silently corrupt it. This catches
     # tests that forgot to monkeypatch EV0_HOME, tests invoked without the
@@ -1077,11 +1077,11 @@ def _global_auth_file_path() -> Optional[Path]:
     See issue #18594 follow-up (credential_pool shadowing).
     """
     try:
-        from threev0_constants import get_default_ev0_root
-        global_root = get_default_ev0_root()
+        from threev0_constants import get_default_threev0_root
+        global_root = get_default_threev0_root()
     except Exception:
         return None
-    profile_home = get_ev0_home()
+    profile_home = get_threev0_home()
     try:
         if profile_home.resolve(strict=False) == global_root.resolve(strict=False):
             return None
@@ -5380,8 +5380,8 @@ def _nous_shared_auth_dir() -> Path:
     override = os.getenv("EV0_SHARED_AUTH_DIR", "").strip()
     if override:
         return Path(override).expanduser()
-    from threev0_constants import get_default_ev0_root
-    return get_default_ev0_root() / "shared"
+    from threev0_constants import get_default_threev0_root
+    return get_default_threev0_root() / "shared"
 
 
 def _nous_shared_store_path() -> Path:
@@ -5393,9 +5393,9 @@ def _nous_shared_store_path() -> Path:
     # so forgetting to set it fails loudly instead of writing to the real
     # shared store).
     if os.environ.get("PYTEST_CURRENT_TEST"):
-        from threev0_constants import get_default_ev0_root
+        from threev0_constants import get_default_threev0_root
         real_home_shared = (
-            get_default_ev0_root() / "shared" / NOUS_SHARED_STORE_FILENAME
+            get_default_threev0_root() / "shared" / NOUS_SHARED_STORE_FILENAME
         ).resolve(strict=False)
         try:
             resolved = path.resolve(strict=False)
@@ -7943,7 +7943,7 @@ def _login_openai_codex(
     config_path = _update_config_for_provider("openai-codex", creds.get("base_url", DEFAULT_CODEX_BASE_URL))
     print()
     print("Login successful!")
-    from threev0_constants import display_ev0_home as _dhh
+    from threev0_constants import display_threev0_home as _dhh
     print(f"  Auth state: {_dhh()}/auth.json")
     print(f"  Config updated: {config_path} (model.provider=openai-codex)")
 
@@ -8011,7 +8011,7 @@ def _login_xai_oauth(
     config_path = _update_config_for_provider("xai-oauth", creds.get("base_url", DEFAULT_XAI_OAUTH_BASE_URL))
     print()
     print("Login successful!")
-    from threev0_constants import display_ev0_home as _dhh
+    from threev0_constants import display_threev0_home as _dhh
     print(f"  Auth state: {_dhh()}/auth.json")
     print(f"  Config updated: {config_path} (model.provider=xai-oauth)")
 

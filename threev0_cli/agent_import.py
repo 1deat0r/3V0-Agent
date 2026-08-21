@@ -760,22 +760,22 @@ class AgentImporter:
                             "MCP server already exists in 3V0 config")
                 continue
 
-            ev0_srv: Dict[str, Any] = {}
+            threev0_srv: Dict[str, Any] = {}
             if srv.get("command"):
-                ev0_srv["command"] = srv["command"]
+                threev0_srv["command"] = srv["command"]
                 if srv.get("args"):
-                    ev0_srv["args"] = srv["args"]
+                    threev0_srv["args"] = srv["args"]
                 env_kept, env_stripped = sanitize_mcp_env(srv.get("env"))
                 if env_kept:
-                    ev0_srv["env"] = env_kept
+                    threev0_srv["env"] = env_kept
                 if env_stripped:
                     self.stripped_secrets.extend(
                         f"mcp_servers.{name}.env.{k}" for k in env_stripped
                     )
                 if srv.get("cwd"):
-                    ev0_srv["cwd"] = srv["cwd"]
+                    threev0_srv["cwd"] = srv["cwd"]
             if srv.get("url"):
-                ev0_srv["url"] = srv["url"]
+                threev0_srv["url"] = srv["url"]
                 headers = srv.get("headers")
                 if isinstance(headers, dict):
                     kept_headers = {
@@ -784,18 +784,18 @@ class AgentImporter:
                         and "authorization" not in str(k).lower()
                     }
                     if kept_headers:
-                        ev0_srv["headers"] = kept_headers
+                        threev0_srv["headers"] = kept_headers
                     for k in headers:
                         if k not in kept_headers:
                             self.stripped_secrets.append(
                                 f"mcp_servers.{name}.headers.{k}"
                             )
-            if not ev0_srv:
+            if not threev0_srv:
                 self.record(kind, name, None, "skipped",
                             "Server has neither a command nor a url")
                 continue
 
-            existing[name] = ev0_srv
+            existing[name] = threev0_srv
             added += 1
             self.record(kind, name, f"config.yaml mcp_servers.{name}",
                         "imported")
@@ -844,7 +844,7 @@ class AgentImporter:
 def import_agent_command(args) -> None:
     """Handle ``3v0 import-agent`` (invoked from threev0_cli.main)."""
     from threev0_cli.config import get_config_path, load_config, save_config
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
     from threev0_cli.setup import (
         Colors,
         color,
@@ -890,12 +890,12 @@ def import_agent_command(args) -> None:
                     f"{agent} --source /path/to/{_AGENT_DEFAULT_DIRS[agent]}")
         return
 
-    ev0_home = get_ev0_home()
+    threev0_home = get_threev0_home()
     print()
     print_header("Import Settings")
     print_info(f"Agent:       {agent}")
     print_info(f"Source:      {source_dir}")
-    print_info(f"Target:      {ev0_home}")
+    print_info(f"Target:      {threev0_home}")
     print_info(f"Overwrite:   {'yes' if overwrite else 'no (skip conflicts)'}")
     print_info("Secrets:     never imported — run '3v0 setup' for credentials")
 
@@ -909,7 +909,7 @@ def import_agent_command(args) -> None:
         preview = AgentImporter(
             agent=agent,
             source_root=source_dir.resolve(),
-            target_root=ev0_home.resolve(),
+            target_root=threev0_home.resolve(),
             execute=False,
             overwrite=overwrite,
         ).run()
@@ -949,7 +949,7 @@ def import_agent_command(args) -> None:
         report = AgentImporter(
             agent=agent,
             source_root=source_dir.resolve(),
-            target_root=ev0_home.resolve(),
+            target_root=threev0_home.resolve(),
             execute=True,
             overwrite=overwrite,
         ).run()

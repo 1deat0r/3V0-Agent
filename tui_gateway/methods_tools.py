@@ -394,7 +394,7 @@ def _(rid, params: dict) -> dict:
             cwd=os.getcwd(),
             # cli.exec runs `python -m threev0_cli.main` (can drive the agent) →
             # needs provider credentials. Tier-1 secrets still stripped (#29157).
-            env=ev0_subprocess_env(inherit_credentials=True),
+            env=threev0_subprocess_env(inherit_credentials=True),
             stdin=subprocess.DEVNULL,
             creationflags=windows_hide_flags(),
         )
@@ -1178,7 +1178,7 @@ def _(rid, params: dict) -> dict:
 
     try:
         from agent.skill_commands import get_skill_commands
-        from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+        from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 
         # Re-bind EV0_HOME to the session's profile so get_skill_commands()
         # sees that profile's skills.external_dirs rather than whatever the
@@ -1187,7 +1187,7 @@ def _(rid, params: dict) -> dict:
         # here binds the override for slash.exec.
         _profile_home = session.get("profile_home")
         _home_token = (
-            set_ev0_home_override(_profile_home) if _profile_home else None
+            set_threev0_home_override(_profile_home) if _profile_home else None
         )
         try:
             _cmd_key = f"/{_cmd_base}"
@@ -1197,7 +1197,7 @@ def _(rid, params: dict) -> dict:
                 )
         finally:
             if _home_token is not None:
-                reset_ev0_home_override(_home_token)
+                reset_threev0_home_override(_home_token)
     except Exception:
         pass
 
@@ -1467,7 +1467,7 @@ def _(rid, params: dict) -> dict:
                 "title": "Environment",
                 "rows": [
                     ["Working Dir", os.getcwd()],
-                    ["Config File", str(_ev0_home / "config.yaml")],
+                    ["Config File", str(_threev0_home / "config.yaml")],
                 ],
             },
         ]
@@ -1685,12 +1685,12 @@ def _(rid, params: dict) -> dict:
     if profile:
         try:
             from threev0_cli.profiles import get_profile_dir
-            from threev0_constants import set_ev0_home_override
+            from threev0_constants import set_threev0_home_override
 
             profile_dir = get_profile_dir(profile)
             if not profile_dir or not profile_dir.is_dir():
                 return _err(rid, 4064, f"profile '{profile}' not found")
-            token = set_ev0_home_override(str(profile_dir))
+            token = set_threev0_home_override(str(profile_dir))
         except Exception as e:
             return _err(rid, 5023, str(e))
     try:
@@ -1736,9 +1736,9 @@ def _(rid, params: dict) -> dict:
     finally:
         if token is not None:
             try:
-                from threev0_constants import reset_ev0_home_override
+                from threev0_constants import reset_threev0_home_override
 
-                reset_ev0_home_override(token)
+                reset_threev0_home_override(token)
             except Exception:
                 pass
 
@@ -1812,12 +1812,12 @@ def _(rid, params: dict) -> dict:
     if profile:
         try:
             from threev0_cli.profiles import get_profile_dir
-            from threev0_constants import set_ev0_home_override
+            from threev0_constants import set_threev0_home_override
 
             profile_dir = get_profile_dir(profile)
             if not profile_dir or not profile_dir.is_dir():
                 return _err(rid, 4064, f"profile '{profile}' not found")
-            token = set_ev0_home_override(str(profile_dir))
+            token = set_threev0_home_override(str(profile_dir))
         except Exception as e:
             return _err(rid, 5024, str(e))
     try:
@@ -1877,9 +1877,9 @@ def _(rid, params: dict) -> dict:
     finally:
         if token is not None:
             try:
-                from threev0_constants import reset_ev0_home_override
+                from threev0_constants import reset_threev0_home_override
 
-                reset_ev0_home_override(token)
+                reset_threev0_home_override(token)
             except Exception:
                 pass
 
@@ -1899,12 +1899,12 @@ def _(rid, params: dict) -> dict:
     try:
         if profile:
             from threev0_cli.profiles import get_profile_dir
-            from threev0_constants import set_ev0_home_override
+            from threev0_constants import set_threev0_home_override
 
             profile_dir = get_profile_dir(profile)
             if not profile_dir or not profile_dir.is_dir():
                 return _err(rid, 4064, f"profile '{profile}' not found")
-            token = set_ev0_home_override(str(profile_dir))
+            token = set_threev0_home_override(str(profile_dir))
 
         from threev0_cli import mcp_catalog
 
@@ -1935,9 +1935,9 @@ def _(rid, params: dict) -> dict:
     finally:
         if token is not None:
             try:
-                from threev0_constants import reset_ev0_home_override
+                from threev0_constants import reset_threev0_home_override
 
-                reset_ev0_home_override(token)
+                reset_threev0_home_override(token)
             except Exception:
                 pass
 
@@ -2271,7 +2271,7 @@ def _(rid, params: dict) -> dict:
         return err
     try:
         from threev0_cli.mcp_config import _get_mcp_servers
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from tui_gateway import mcp_oauth_sessions
 
         servers = _get_mcp_servers()
@@ -2288,8 +2288,8 @@ def _(rid, params: dict) -> dict:
             )
         cfg["auth"] = "oauth"
 
-        ev0_home = str(get_ev0_home().expanduser().resolve(strict=False))
-        result = mcp_oauth_sessions.start_flow(ev0_home, name, cfg)
+        threev0_home = str(get_threev0_home().expanduser().resolve(strict=False))
+        result = mcp_oauth_sessions.start_flow(threev0_home, name, cfg)
         return _ok(
             rid,
             {

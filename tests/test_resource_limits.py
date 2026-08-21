@@ -278,7 +278,7 @@ def test_named_profile_reroute_defers_limit_to_final_process(monkeypatch, tmp_pa
     )
     monkeypatch.setattr(
         threev0_constants,
-        "get_default_ev0_root",
+        "get_default_threev0_root",
         lambda: tmp_path,
     )
 

@@ -15,11 +15,11 @@ def test_run_xai_oauth_login_from_setup_does_not_hijack_active_provider(
     `active_provider`), so `3v0 setup tts` OAuth login hijacked the main
     chat provider.
     """
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
-    auth_path = ev0_home / "auth.json"
+    auth_path = threev0_home / "auth.json"
     auth_path.write_text(
         json.dumps(
             {
@@ -30,7 +30,7 @@ def test_run_xai_oauth_login_from_setup_does_not_hijack_active_provider(
         ),
         encoding="utf-8",
     )
-    config_path = ev0_home / "config.yaml"
+    config_path = threev0_home / "config.yaml"
     config_path.write_text(
         yaml.safe_dump(
             {

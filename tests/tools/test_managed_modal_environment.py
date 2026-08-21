@@ -51,7 +51,7 @@ def _install_fake_tools_package(*, credential_mounts=None):
     threev0_cli.__path__ = []  # type: ignore[attr-defined]
     sys.modules["threev0_cli"] = threev0_cli
     sys.modules["threev0_cli.config"] = types.SimpleNamespace(
-        get_ev0_home=lambda: Path(tempfile.gettempdir()) / "3v0-home",
+        get_threev0_home=lambda: Path(tempfile.gettempdir()) / "3v0-home",
     )
 
     tools_package = types.ModuleType("tools")

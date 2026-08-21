@@ -13,7 +13,7 @@ class TestResolveEv0Bin:
         monkeypatch.setattr(sys, "argv", [fake])
         monkeypatch.setattr(relaunch_mod.os.path, "isfile", lambda p: p == fake)
         monkeypatch.setattr(relaunch_mod.os, "access", lambda p, mode: p == fake)
-        assert relaunch_mod.resolve_ev0_bin() == fake
+        assert relaunch_mod.resolve_threev0_bin() == fake
 
     def test_resolves_relative_argv0(self, monkeypatch, tmp_path):
         fake = tmp_path / "3v0"
@@ -23,14 +23,14 @@ class TestResolveEv0Bin:
         monkeypatch.chdir(tmp_path)
         # Ensure we don't accidentally match a real '3v0' on PATH
         monkeypatch.setattr(relaunch_mod.shutil, "which", lambda _name: None)
-        assert relaunch_mod.resolve_ev0_bin() == str(fake)
+        assert relaunch_mod.resolve_threev0_bin() == str(fake)
 
     def test_falls_back_to_path_which(self, monkeypatch):
         monkeypatch.setattr(sys, "argv", ["-c"])  # not a real path
         monkeypatch.setattr(
             relaunch_mod.shutil, "which", lambda name: "/usr/bin/3v0" if name == "3v0" else None
         )
-        assert relaunch_mod.resolve_ev0_bin() == "/usr/bin/3v0"
+        assert relaunch_mod.resolve_threev0_bin() == "/usr/bin/3v0"
 
 
 class TestExtractInheritedFlags:
@@ -69,13 +69,13 @@ class TestInheritedFlagTable:
 
 class TestBuildRelaunchArgv:
     def test_uses_bin_when_available(self, monkeypatch):
-        monkeypatch.setattr(relaunch_mod, "resolve_ev0_bin", lambda: "/usr/bin/3v0")
+        monkeypatch.setattr(relaunch_mod, "resolve_threev0_bin", lambda: "/usr/bin/3v0")
         argv = relaunch_mod.build_relaunch_argv(["--resume", "abc"])
         assert argv[0] == "/usr/bin/3v0"
 
 
     def test_preserves_inherited_flags(self, monkeypatch):
-        monkeypatch.setattr(relaunch_mod, "resolve_ev0_bin", lambda: "/usr/bin/3v0")
+        monkeypatch.setattr(relaunch_mod, "resolve_threev0_bin", lambda: "/usr/bin/3v0")
         original = ["--tui", "--dev", "--profile", "work", "sessions", "browse"]
         argv = relaunch_mod.build_relaunch_argv(["--resume", "abc"], original_argv=original)
         assert "--tui" in argv
@@ -89,7 +89,7 @@ class TestBuildRelaunchArgv:
         assert "browse" not in argv
 
     def test_can_disable_preserve(self, monkeypatch):
-        monkeypatch.setattr(relaunch_mod, "resolve_ev0_bin", lambda: "/usr/bin/3v0")
+        monkeypatch.setattr(relaunch_mod, "resolve_threev0_bin", lambda: "/usr/bin/3v0")
         original = ["--tui", "chat"]
         argv = relaunch_mod.build_relaunch_argv(
             ["--resume", "abc"], preserve_inherited=False, original_argv=original
@@ -107,7 +107,7 @@ class TestRelaunch:
             raise SystemExit(0)
 
         monkeypatch.setattr(relaunch_mod.os, "execvp", fake_execvp)
-        monkeypatch.setattr(relaunch_mod, "resolve_ev0_bin", lambda: "/usr/bin/3v0")
+        monkeypatch.setattr(relaunch_mod, "resolve_threev0_bin", lambda: "/usr/bin/3v0")
 
         with pytest.raises(SystemExit):
             relaunch_mod.relaunch(["--resume", "abc"])
@@ -126,7 +126,7 @@ class TestRelaunch:
         platform only re-asserted the branch we wrote, never the constraint
         that motivated it.
         """
-        monkeypatch.setattr(relaunch_mod, "resolve_ev0_bin", lambda: r"C:\Users\test\3v0.exe")
+        monkeypatch.setattr(relaunch_mod, "resolve_threev0_bin", lambda: r"C:\Users\test\3v0.exe")
         # Pin sys.argv: relaunch() preserves inherited flags from the LIVE
         # argv, so under pytest it happily inherited the runner's own
         # "-m 'windows_only and not integration'" and the assertion below saw
@@ -166,7 +166,7 @@ class TestRelaunch:
     @pytest.mark.windows_only
     def test_windows_propagates_child_exit_code(self, monkeypatch):
         """A non-zero exit from the child should flow through to sys.exit."""
-        monkeypatch.setattr(relaunch_mod, "resolve_ev0_bin", lambda: r"C:\3v0.exe")
+        monkeypatch.setattr(relaunch_mod, "resolve_threev0_bin", lambda: r"C:\3v0.exe")
 
         import subprocess as _subprocess
 
@@ -211,7 +211,7 @@ class TestResolveEv0BinWindowsPyGuard:
             lambda name: r"C:\venv\Scripts\3v0.exe" if name == "3v0" else None,
         )
 
-        bin_path = relaunch_mod.resolve_ev0_bin()
+        bin_path = relaunch_mod.resolve_threev0_bin()
         # Must NOT be the .py — must be the 3v0.exe PATH entry.
         assert bin_path == r"C:\venv\Scripts\3v0.exe"
 
@@ -224,10 +224,10 @@ class TestResolveEv0BinWindowsPyGuard:
         script.write_text("#!/usr/bin/env python3\n")
         script.chmod(0o755)
         monkeypatch.setattr(relaunch_mod.sys, "argv", [str(script), "chat"])
-        assert relaunch_mod.resolve_ev0_bin() == str(script)
+        assert relaunch_mod.resolve_threev0_bin() == str(script)
 
     @pytest.mark.windows_only
-    def test_windows_py_argv0_with_no_ev0_on_path_returns_none(self, monkeypatch, tmp_path):
+    def test_windows_py_argv0_with_no_threev0_on_path_returns_none(self, monkeypatch, tmp_path):
         """Bulletproof fallback: if argv0 is .py on Windows AND 3v0.exe
         isn't on PATH, return None so the caller falls back to
         python -m threev0_cli.main."""
@@ -237,4 +237,4 @@ class TestResolveEv0BinWindowsPyGuard:
         monkeypatch.setattr(relaunch_mod.sys, "argv", [str(script), "chat"])
         monkeypatch.setattr(relaunch_mod.shutil, "which", lambda name: None)
 
-        assert relaunch_mod.resolve_ev0_bin() is None
+        assert relaunch_mod.resolve_threev0_bin() is None

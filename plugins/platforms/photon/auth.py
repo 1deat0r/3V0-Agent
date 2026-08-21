@@ -114,8 +114,8 @@ E164_RE = re.compile(r"^\+[1-9]\d{6,14}$")
 def _auth_json_path() -> Path:
     """Resolve ``~/.3V0/auth.json`` honouring the active 3V0 profile."""
     try:
-        from threev0_constants import get_ev0_home
-        return Path(get_ev0_home()) / "auth.json"
+        from threev0_constants import get_threev0_home
+        return Path(get_threev0_home()) / "auth.json"
     except Exception:
         return Path(os.path.expanduser("~/.3V0")) / "auth.json"
 

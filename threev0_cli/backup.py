@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from threev0_constants import get_default_ev0_root, get_ev0_home, display_ev0_home
+from threev0_constants import get_default_threev0_root, get_threev0_home, display_threev0_home
 from utils import (
     _preserve_file_mode,
     _preserve_file_owner,
@@ -160,9 +160,9 @@ class _SQLiteBackupTimeout(RuntimeError):
 
 
 @contextmanager
-def _backup_operation_lock(ev0_home: Path, timeout_seconds: float = 0.25):
+def _backup_operation_lock(threev0_home: Path, timeout_seconds: float = 0.25):
     """Acquire one cross-process backup slot for full and quick snapshots."""
-    lock_path = ev0_home / ".backup.lock"
+    lock_path = threev0_home / ".backup.lock"
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     handle = lock_path.open("a+b")
     acquired = False
@@ -627,21 +627,21 @@ def copy_db_and_verify(src: Path, dst: Path) -> bool:
 
 def run_backup(args) -> None:
     """Create a zip backup of the 3V0 home directory."""
-    ev0_root = get_default_ev0_root()
+    threev0_root = get_default_threev0_root()
 
-    if not ev0_root.is_dir():
-        print(f"Error: 3V0 home directory not found at {ev0_root}")
+    if not threev0_root.is_dir():
+        print(f"Error: 3V0 home directory not found at {threev0_root}")
         sys.exit(1)
 
     try:
-        with _backup_operation_lock(ev0_root):
-            _run_backup_locked(args, ev0_root)
+        with _backup_operation_lock(threev0_root):
+            _run_backup_locked(args, threev0_root)
     except BackupInProgressError as exc:
         print(f"Error: {exc}")
         raise SystemExit(2) from exc
 
 
-def _run_backup_locked(args, ev0_root: Path) -> None:
+def _run_backup_locked(args, threev0_root: Path) -> None:
     """Write a full backup while the cross-process backup slot is held."""
 
     # Determine output path
@@ -665,13 +665,13 @@ def _run_backup_locked(args, ev0_root: Path) -> None:
     # Collect files
     scan_started = time.monotonic()
     logger.info("backup phase=scan status=started")
-    print(f"Scanning {display_ev0_home()} ...")
+    print(f"Scanning {display_threev0_home()} ...")
     files_to_add: list[tuple[Path, Path]] = []  # (absolute, relative)
     skipped_dirs = set()
 
-    for dirpath, dirnames, filenames in os.walk(ev0_root, followlinks=False):
+    for dirpath, dirnames, filenames in os.walk(threev0_root, followlinks=False):
         dp = Path(dirpath)
-        rel_dir = dp.relative_to(ev0_root)
+        rel_dir = dp.relative_to(threev0_root)
 
         # Prune excluded directories in-place so os.walk doesn't descend
         # ``3v0-agent`` is only pruned at the root level; nested dirs
@@ -687,7 +687,7 @@ def _run_backup_locked(args, ev0_root: Path) -> None:
 
         for fname in filenames:
             fpath = dp / fname
-            rel = fpath.relative_to(ev0_root)
+            rel = fpath.relative_to(threev0_root)
 
             if _should_skip_backup_file(fpath, rel, out_path):
                 continue
@@ -814,7 +814,7 @@ def _run_backup_locked(args, ev0_root: Path) -> None:
     if external_to_add:
         print(
             f"\n  Included {len(external_to_add)} memory-provider file(s) "
-            f"stored outside {display_ev0_home()}."
+            f"stored outside {display_threev0_home()}."
         )
 
     if skipped_external:
@@ -1032,7 +1032,7 @@ def run_import(args) -> None:
         print(f"Error: Not a valid zip file: {zip_path}")
         sys.exit(1)
 
-    ev0_root = get_default_ev0_root()
+    threev0_root = get_default_threev0_root()
 
     with zipfile.ZipFile(zip_path, "r") as zf:
         # Validate
@@ -1046,14 +1046,14 @@ def run_import(args) -> None:
         file_count = len(members)
 
         print(f"Backup contains {file_count} files")
-        print(f"Target: {display_ev0_home()}")
+        print(f"Target: {display_threev0_home()}")
 
         if prefix:
             print(f"Detected archive prefix: {prefix!r} (will be stripped)")
 
         # Check for existing installation
-        has_config = (ev0_root / "config.yaml").exists()
-        has_env = (ev0_root / ".env").exists()
+        has_config = (threev0_root / "config.yaml").exists()
+        has_env = (threev0_root / ".env").exists()
 
         if (has_config or has_env) and not args.force:
             print()
@@ -1071,7 +1071,7 @@ def run_import(args) -> None:
 
         # Extract
         print(f"\nImporting {file_count} files ...")
-        ev0_root.mkdir(parents=True, exist_ok=True)
+        threev0_root.mkdir(parents=True, exist_ok=True)
 
         errors = []
         restored = 0
@@ -1134,11 +1134,11 @@ def run_import(args) -> None:
                 skipped_runtime.append(rel)
                 continue
 
-            target = ev0_root / rel
+            target = threev0_root / rel
 
             # Security: reject absolute paths and traversals
             try:
-                target.resolve().relative_to(ev0_root.resolve())
+                target.resolve().relative_to(threev0_root.resolve())
             except ValueError:
                 errors.append(f"  {rel}: path traversal blocked")
                 continue
@@ -1160,12 +1160,12 @@ def run_import(args) -> None:
         # Summary
         print()
         print(f"Import complete: {restored} files restored in {elapsed:.1f}s")
-        print(f"  Target: {display_ev0_home()}")
+        print(f"  Target: {display_threev0_home()}")
 
         if restored_external:
             print(
                 f"\n  Restored {restored_external} memory-provider file(s) to "
-                f"their original location(s) outside {display_ev0_home()}."
+                f"their original location(s) outside {display_threev0_home()}."
             )
 
         if errors:
@@ -1186,7 +1186,7 @@ def run_import(args) -> None:
                 print(f"    ... and {len(skipped_runtime) - 10} more")
 
         # Post-import: restore profile wrapper scripts
-        profiles_dir = ev0_root / "profiles"
+        profiles_dir = threev0_root / "profiles"
         restored_profiles = []
         if profiles_dir.is_dir():
             try:
@@ -1228,7 +1228,7 @@ def run_import(args) -> None:
 
         # Guidance
         print()
-        if not (ev0_root / "3v0-agent").is_dir():
+        if not (threev0_root / "3v0-agent").is_dir():
             print("Note: The 3v0-agent codebase was not included in the backup.")
             print("  If this is a fresh install, run: 3v0 update")
 
@@ -1305,23 +1305,23 @@ _QUICK_SNAPSHOTS_DIR = "state-snapshots"
 _QUICK_DEFAULT_KEEP = 20
 
 
-def _quick_snapshot_root(ev0_home: Optional[Path] = None) -> Path:
-    home = ev0_home or get_ev0_home()
+def _quick_snapshot_root(threev0_home: Optional[Path] = None) -> Path:
+    home = threev0_home or get_threev0_home()
     return home / _QUICK_SNAPSHOTS_DIR
 
 
 def create_quick_snapshot(
     label: Optional[str] = None,
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
     keep: Optional[int] = None,
     max_file_size: Optional[int] = None,
 ) -> Optional[str]:
     """Create one atomic quick snapshot while holding the shared backup slot."""
-    home = ev0_home or get_ev0_home()
+    home = threev0_home or get_threev0_home()
     with _backup_operation_lock(home):
         return _create_quick_snapshot_locked(
             label=label,
-            ev0_home=home,
+            threev0_home=home,
             keep=keep,
             max_file_size=max_file_size,
         )
@@ -1329,7 +1329,7 @@ def create_quick_snapshot(
 
 def _create_quick_snapshot_locked(
     label: Optional[str] = None,
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
     keep: Optional[int] = None,
     max_file_size: Optional[int] = None,
 ) -> Optional[str]:
@@ -1351,7 +1351,7 @@ def _create_quick_snapshot_locked(
     Returns:
         Snapshot ID (timestamp-based), or None if no files found.
     """
-    home = ev0_home or get_ev0_home()
+    home = threev0_home or get_threev0_home()
     root = _quick_snapshot_root(home)
 
     def _too_large(path: Path, rel_name: str) -> bool:
@@ -1556,10 +1556,10 @@ def _create_quick_snapshot_locked(
 
 def list_quick_snapshots(
     limit: int = 20,
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
 ) -> List[Dict[str, Any]]:
     """List existing quick state snapshots, most recent first."""
-    root = _quick_snapshot_root(ev0_home)
+    root = _quick_snapshot_root(threev0_home)
     if not root.exists():
         return []
 
@@ -1582,14 +1582,14 @@ def list_quick_snapshots(
 
 def restore_quick_snapshot(
     snapshot_id: str,
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
 ) -> bool:
     """Restore state from a quick snapshot.
 
     Overwrites current state files with the snapshot's copies.
     Returns True if at least one file was restored.
     """
-    home = ev0_home or get_ev0_home()
+    home = threev0_home or get_threev0_home()
     root = _quick_snapshot_root(home)
 
     # Security: reject snapshot_id values that contain path separators or
@@ -1694,7 +1694,7 @@ def _count_cron_jobs(path: Path) -> Optional[int]:
 
 def restore_cron_jobs_if_emptied(
     snapshot_id: str,
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
 ) -> Optional[Dict[str, Any]]:
     """Safety net for silent cron-job loss across ``3v0 update``.
 
@@ -1727,7 +1727,7 @@ def restore_cron_jobs_if_emptied(
     if not snapshot_id:
         return None
 
-    home = ev0_home or get_ev0_home()
+    home = threev0_home or get_threev0_home()
     live_path = home / _CRON_JOBS_REL
 
     live_count = _count_cron_jobs(live_path)
@@ -1796,10 +1796,10 @@ def _prune_quick_snapshots(root: Path, keep: int = _QUICK_DEFAULT_KEEP) -> int:
 
 def prune_quick_snapshots(
     keep: int = _QUICK_DEFAULT_KEEP,
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
 ) -> int:
     """Manually prune quick snapshots. Returns count deleted."""
-    return _prune_quick_snapshots(_quick_snapshot_root(ev0_home), keep=keep)
+    return _prune_quick_snapshots(_quick_snapshot_root(threev0_home), keep=keep)
 
 
 def run_quick_backup(args) -> None:
@@ -1809,7 +1809,7 @@ def run_quick_backup(args) -> None:
     if snap_id:
         print(f"State snapshot created: {snap_id}")
         snaps = list_quick_snapshots()
-        print(f"  {len(snaps)} snapshot(s) stored in {display_ev0_home()}/state-snapshots/")
+        print(f"  {len(snaps)} snapshot(s) stored in {display_threev0_home()}/state-snapshots/")
         print(f"  Restore with: /snapshot restore {snap_id}")
     else:
         print("No state files found to snapshot.")
@@ -1819,17 +1819,17 @@ def run_quick_backup(args) -> None:
 # Shared full-zip backup helper
 # ---------------------------------------------------------------------------
 
-def _write_full_zip_backup(out_path: Path, ev0_root: Path) -> Optional[Path]:
+def _write_full_zip_backup(out_path: Path, threev0_root: Path) -> Optional[Path]:
     """Single-flight wrapper for automatic full zip backups."""
     try:
-        with _backup_operation_lock(ev0_root):
-            return _write_full_zip_backup_locked(out_path, ev0_root)
+        with _backup_operation_lock(threev0_root):
+            return _write_full_zip_backup_locked(out_path, threev0_root)
     except BackupInProgressError as exc:
         logger.warning("Full-zip backup skipped: %s", exc)
         return None
 
 
-def _write_full_zip_backup_locked(out_path: Path, ev0_root: Path) -> Optional[Path]:
+def _write_full_zip_backup_locked(out_path: Path, threev0_root: Path) -> Optional[Path]:
     """Write a full zip snapshot of ``ev0_root`` to ``out_path``.
 
     Uses the same exclusion rules and SQLite safe-copy as :func:`run_backup`.
@@ -1840,7 +1840,7 @@ def _write_full_zip_backup_locked(out_path: Path, ev0_root: Path) -> Optional[Pa
     logger.info("automatic backup phase=scan status=started")
     files_to_add: list[tuple[Path, Path]] = []
     try:
-        for dirpath, dirnames, filenames in os.walk(ev0_root, followlinks=False):
+        for dirpath, dirnames, filenames in os.walk(threev0_root, followlinks=False):
             dp = Path(dirpath)
             # Prune excluded directories in-place so os.walk doesn't descend
             dirnames[:] = [d for d in dirnames if d not in _EXCLUDED_DIRS]
@@ -1848,7 +1848,7 @@ def _write_full_zip_backup_locked(out_path: Path, ev0_root: Path) -> Optional[Pa
             for fname in filenames:
                 fpath = dp / fname
                 try:
-                    rel = fpath.relative_to(ev0_root)
+                    rel = fpath.relative_to(threev0_root)
                 except ValueError:
                     continue
 
@@ -1932,8 +1932,8 @@ _PRE_UPDATE_PREFIX = "pre-update-"
 _PRE_UPDATE_DEFAULT_KEEP = 5
 
 
-def _pre_update_backup_dir(ev0_home: Optional[Path] = None) -> Path:
-    home = ev0_home or get_ev0_home()
+def _pre_update_backup_dir(threev0_home: Optional[Path] = None) -> Path:
+    home = threev0_home or get_threev0_home()
     return home / _PRE_UPDATE_BACKUPS_DIR
 
 
@@ -1975,7 +1975,7 @@ def _prune_pre_update_backups(backup_dir: Path, keep: int) -> int:
 
 
 def create_pre_update_backup(
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
     keep: int = _PRE_UPDATE_DEFAULT_KEEP,
 ) -> Optional[Path]:
     """Create a full zip backup of EV0_HOME under ``backups/``.
@@ -1988,11 +1988,11 @@ def create_pre_update_backup(
     found or the backup could not be created.  Never raises — the caller
     (``3v0 update``) should continue even if the backup fails.
     """
-    ev0_root = ev0_home or get_default_ev0_root()
-    if not ev0_root.is_dir():
+    threev0_root = threev0_home or get_default_threev0_root()
+    if not threev0_root.is_dir():
         return None
 
-    backup_dir = _pre_update_backup_dir(ev0_root)
+    backup_dir = _pre_update_backup_dir(threev0_root)
     try:
         backup_dir.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
@@ -2002,7 +2002,7 @@ def create_pre_update_backup(
     stamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")
     out_path = backup_dir / f"{_PRE_UPDATE_PREFIX}{stamp}.zip"
 
-    result = _write_full_zip_backup(out_path, ev0_root)
+    result = _write_full_zip_backup(out_path, threev0_root)
     if result is None:
         return None
 
@@ -2047,7 +2047,7 @@ def _prune_pre_migration_backups(backup_dir: Path, keep: int) -> int:
 
 
 def create_pre_migration_backup(
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
     keep: int = _PRE_MIGRATION_DEFAULT_KEEP,
 ) -> Optional[Path]:
     """Create a full zip backup of EV0_HOME under ``backups/`` before a
@@ -2063,13 +2063,13 @@ def create_pre_migration_backup(
     to back up (fresh install) or the write failed.  Never raises — the
     caller decides whether to abort or proceed.
     """
-    ev0_root = ev0_home or get_default_ev0_root()
-    if not ev0_root.is_dir():
+    threev0_root = threev0_home or get_default_threev0_root()
+    if not threev0_root.is_dir():
         return None
 
     # Reuses the shared backups/ directory so `3v0 import` and the
     # update-backup listing pick up pre-migration archives too.
-    backup_dir = _pre_update_backup_dir(ev0_root)
+    backup_dir = _pre_update_backup_dir(threev0_root)
     try:
         backup_dir.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
@@ -2079,7 +2079,7 @@ def create_pre_migration_backup(
     stamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")
     out_path = backup_dir / f"{_PRE_MIGRATION_PREFIX}{stamp}.zip"
 
-    result = _write_full_zip_backup(out_path, ev0_root)
+    result = _write_full_zip_backup(out_path, threev0_root)
     if result is None:
         return None
 

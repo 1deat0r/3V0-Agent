@@ -41,7 +41,7 @@ def _seed_config(tmp_path, monkeypatch):
     # cli captures _ev0_home at import; force it to the temp home.
     import cli
 
-    monkeypatch.setattr(cli, "_ev0_home", hh, raising=False)
+    monkeypatch.setattr(cli, "_threev0_home", hh, raising=False)
     return hh
 
 

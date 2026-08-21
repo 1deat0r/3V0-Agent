@@ -18,7 +18,7 @@ def clean_ca_env(monkeypatch):
 
 
 
-def test_ev0_ca_bundle_returns_ssl_context(clean_ca_env, monkeypatch):
+def test_threev0_ca_bundle_returns_ssl_context(clean_ca_env, monkeypatch):
     monkeypatch.setenv("EV0_CA_BUNDLE", certifi.where())
     result = resolve_httpx_verify()
     assert isinstance(result, ssl.SSLContext)

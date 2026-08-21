@@ -1599,7 +1599,7 @@ def _apply_context_engine_selection(
     # would leave nested containers (tool_calls, content parts) aliased to
     # the persisted history, so an engine writing into them would rewrite
     # the transcript (#80498 aliasing class).
-    _conv_copy = [_clone_message_for_send(m) for m in conversation_messages] \
+    _conv_copy = [_clone_message_for_send(m) for m in conversation_messages]\
         if conversation_messages is not None else None
     _incoming_copy = _clone_message_for_send(incoming_message) if isinstance(incoming_message, dict) else incoming_message
     try:
@@ -4726,7 +4726,7 @@ def run_conversation(
                     # Credential refresh didn't help — show diagnostic info.
                     # Most common causes: Portal OAuth expired/revoked,
                     # account out of credits, or agent key blocked.
-                    from threev0_constants import display_ev0_home as _dhh_fn
+                    from threev0_constants import display_threev0_home as _dhh_fn
                     _dhh = _dhh_fn()
                     _body_text = ""
                     try:
@@ -4783,7 +4783,7 @@ def run_conversation(
                         print(f"{agent.log_prefix}   Auth method: {auth_method}")
                         print(f"{agent.log_prefix}   Token prefix: {key[:12]}..." if isinstance(key, str) and len(key) > 12 else f"{agent.log_prefix}   Token: (empty or short)")
                     print(f"{agent.log_prefix}   Troubleshooting:")
-                    from threev0_constants import display_ev0_home as _dhh_fn
+                    from threev0_constants import display_threev0_home as _dhh_fn
                     _dhh = _dhh_fn()
                     print(f"{agent.log_prefix}     • Check ANTHROPIC_TOKEN in {_dhh}/.env for 3V0-managed OAuth/setup tokens")
                     print(f"{agent.log_prefix}     • Check ANTHROPIC_API_KEY in {_dhh}/.env for API keys or legacy token values")

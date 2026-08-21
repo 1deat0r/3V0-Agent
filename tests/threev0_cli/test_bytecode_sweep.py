@@ -13,7 +13,7 @@ updaters).
 
 from pathlib import Path
 
-from threev0_cli import main as ev0_main
+from threev0_cli import main as threev0_main
 
 
 def _make_repo(tmp_path: Path, sha: str = "a" * 40) -> Path:
@@ -36,17 +36,17 @@ def _make_pycache(repo: Path, subdir: str = "threev0_cli") -> Path:
 def test_sweep_clears_pycache_when_checkout_changed(monkeypatch, tmp_path):
     repo = _make_repo(tmp_path, sha="b" * 40)
     cache = _make_pycache(repo)
-    monkeypatch.setattr(ev0_main, "PROJECT_ROOT", repo)
+    monkeypatch.setattr(threev0_main, "PROJECT_ROOT", repo)
     # Stamp records a different (older) fingerprint.
-    (repo / ev0_main._BYTECODE_FINGERPRINT_FILE).write_text(
+    (repo / threev0_main._BYTECODE_FINGERPRINT_FILE).write_text(
         "git:refs/heads/main:" + "a" * 40, encoding="utf-8"
     )
 
-    ev0_main._sweep_stale_bytecode_if_checkout_changed()
+    threev0_main._sweep_stale_bytecode_if_checkout_changed()
 
     assert not cache.exists()
     # Stamp updated to the current fingerprint.
-    recorded = (repo / ev0_main._BYTECODE_FINGERPRINT_FILE).read_text(encoding="utf-8")
+    recorded = (repo / threev0_main._BYTECODE_FINGERPRINT_FILE).read_text(encoding="utf-8")
     assert recorded.strip().endswith("b" * 40)
 
 

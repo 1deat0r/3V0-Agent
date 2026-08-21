@@ -38,11 +38,11 @@ def fake_ev0(tmp_path, monkeypatch):
     monkeypatch.setenv("EV0_HOME", str(sec_home))
 
     import threev0_constants
-    monkeypatch.setattr(threev0_constants, "get_default_ev0_root", lambda: root)
+    monkeypatch.setattr(threev0_constants, "get_default_threev0_root", lambda: root)
 
     import agent.file_safety as fs
-    monkeypatch.setattr(fs, "_ev0_home_path", lambda: sec_home)
-    monkeypatch.setattr(fs, "_ev0_root_path", lambda: root)
+    monkeypatch.setattr(fs, "_threev0_home_path", lambda: sec_home)
+    monkeypatch.setattr(fs, "_threev0_root_path", lambda: root)
 
     return {
         "root": root,
@@ -83,7 +83,7 @@ class TestWriteFileCrossProfileGuard:
         assert target.read_text() == original
 
 
-    def test_non_ev0_path_unaffected(self, fake_ev0, tmp_path):
+    def test_non_threev0_path_unaffected(self, fake_ev0, tmp_path):
         from tools.file_tools import write_file_tool
         target = tmp_path / "outside" / "main.py"
         target.parent.mkdir()
@@ -207,8 +207,8 @@ class TestSystemPromptActiveProfile:
         about ~/.3V0/profiles/<name>/."""
         # Don't set EV0_HOME — falls back to default.
         import agent.file_safety as fs
-        monkeypatch.setattr(fs, "_ev0_home_path", lambda: tmp_path / "fake")
-        monkeypatch.setattr(fs, "_ev0_root_path", lambda: tmp_path / "fake")
+        monkeypatch.setattr(fs, "_threev0_home_path", lambda: tmp_path / "fake")
+        monkeypatch.setattr(fs, "_threev0_root_path", lambda: tmp_path / "fake")
 
         from agent.file_safety import _resolve_active_profile_name
         assert _resolve_active_profile_name() == "default"

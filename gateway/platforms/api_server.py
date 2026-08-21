@@ -123,7 +123,7 @@ def _get_scoped_secret(name, default=None):
 logger = logging.getLogger(__name__)
 
 
-def _ev0_version() -> str:
+def _threev0_version() -> str:
     """Return the canonical 3V0 Agent version string.
 
     ``threev0_cli.__version__`` is the runtime source of truth used by the CLI,
@@ -830,8 +830,8 @@ class ResponseStore:
         self._max_size = max_size
         if db_path is None:
             try:
-                from threev0_cli.config import get_ev0_home
-                db_path = str(get_ev0_home() / "response_store.db")
+                from threev0_cli.config import get_threev0_home
+                db_path = str(get_threev0_home() / "response_store.db")
             except Exception:
                 db_path = ":memory:"
         self._db_path: Optional[str] = db_path if db_path != ":memory:" else None
@@ -2019,9 +2019,9 @@ class APIServerAdapter(BasePlatformAdapter):
 
                 if is_multiplex_active():
                     from gateway.run import _profile_runtime_scope
-                    from threev0_constants import get_ev0_home
+                    from threev0_constants import get_threev0_home
 
-                    return _profile_runtime_scope(get_ev0_home())
+                    return _profile_runtime_scope(get_threev0_home())
             except Exception:
                 pass
             return nullcontext()
@@ -2226,9 +2226,9 @@ class APIServerAdapter(BasePlatformAdapter):
         if self._session_db is not None:
             return self._session_db
         try:
-            from threev0_constants import get_ev0_home
+            from threev0_constants import get_threev0_home
 
-            return self._open_and_cache_session_db(get_ev0_home())
+            return self._open_and_cache_session_db(get_threev0_home())
         except Exception as e:
             logger.debug("SessionDB unavailable for API server: %s", e)
             return None
@@ -2245,9 +2245,9 @@ class APIServerAdapter(BasePlatformAdapter):
         if self._session_db is not None:
             return self._session_db
         try:
-            from threev0_constants import get_ev0_home
+            from threev0_constants import get_threev0_home
 
-            home = get_ev0_home()
+            home = get_threev0_home()
             key = str(home)
             with self._session_db_cache_lock:
                 cached = self._session_dbs.get(key)
@@ -2941,7 +2941,7 @@ class APIServerAdapter(BasePlatformAdapter):
             agent_kwargs["service_tier"] = request_service_tier
 
         agent = AIAgent(**agent_kwargs)
-        agent._ev0_api_runtime = {
+        agent._threev0_api_runtime = {
             "provider": runtime_kwargs.get("provider") or getattr(agent, "provider", "") or "",
             "model": getattr(agent, "model", None) or model,
             "route_source": (
@@ -2963,7 +2963,7 @@ class APIServerAdapter(BasePlatformAdapter):
     async def _handle_health(self, request: "web.Request") -> "web.Response":
         """GET /health — simple health check."""
         return web.json_response(
-            {"status": "ok", "platform": "3v0-agent", "version": _ev0_version()}
+            {"status": "ok", "platform": "3v0-agent", "version": _threev0_version()}
         )
 
     async def _handle_health_detailed(self, request: "web.Request") -> "web.Response":
@@ -3005,7 +3005,7 @@ class APIServerAdapter(BasePlatformAdapter):
             "status": readiness["status"],
             "readiness": readiness,
             "platform": "3v0-agent",
-            "version": _ev0_version(),
+            "version": _threev0_version(),
             "gateway_state": gw_state,
             "platforms": runtime.get("platforms", {}),
             "active_agents": gw_active,
@@ -6408,7 +6408,7 @@ class APIServerAdapter(BasePlatformAdapter):
                         or (route_source and route_source != "global")
                     )
                     if include_runtime:
-                        runtime = dict(getattr(agent, "_ev0_api_runtime", {}) or {})
+                        runtime = dict(getattr(agent, "_threev0_api_runtime", {}) or {})
                         raw_provider = getattr(agent, "provider", "")
                         raw_model = getattr(agent, "model", "")
                         actual_provider = (

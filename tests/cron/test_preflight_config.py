@@ -69,9 +69,9 @@ def _run_job_patched(job, tmp_path, *, resolve=None, skill_view=None):
     """
     fake_db = MagicMock()
     patches = [
-        patch("cron.scheduler._ev0_home", tmp_path),
+        patch("cron.scheduler._threev0_home", tmp_path),
         patch("cron.scheduler._resolve_origin", return_value=None),
-        patch("threev0_cli.env_loader.load_ev0_dotenv"),
+        patch("threev0_cli.env_loader.load_threev0_dotenv"),
         patch("threev0_cli.env_loader.reset_secret_source_cache"),
         patch("threev0_state.SessionDB", return_value=fake_db),
         patch("tools.mcp_tool.discover_mcp_tools", return_value=[]),
@@ -138,9 +138,9 @@ class TestMissingProviderKeyBlocks:
             fake_db = MagicMock()
             for _tick in range(2):
                 fresh = [j for j in cron_jobs.load_jobs() if j["id"] == job["id"]][0]
-                with patch("cron.scheduler._ev0_home", tmp_path), \
+                with patch("cron.scheduler._threev0_home", tmp_path), \
                      patch("cron.scheduler._resolve_origin", return_value=None), \
-                     patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+                     patch("threev0_cli.env_loader.load_threev0_dotenv"), \
                      patch("threev0_cli.env_loader.reset_secret_source_cache"), \
                      patch("threev0_state.SessionDB", return_value=fake_db), \
                      patch("tools.mcp_tool.discover_mcp_tools", return_value=[]), \
@@ -242,9 +242,9 @@ class TestOptOut:
             fake_db = MagicMock()
             for _tick in range(2):
                 fresh = [j for j in cron_jobs.load_jobs() if j["id"] == job["id"]][0]
-                with patch("cron.scheduler._ev0_home", tmp_path), \
+                with patch("cron.scheduler._threev0_home", tmp_path), \
                      patch("cron.scheduler._resolve_origin", return_value=None), \
-                     patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+                     patch("threev0_cli.env_loader.load_threev0_dotenv"), \
                      patch("threev0_cli.env_loader.reset_secret_source_cache"), \
                      patch("threev0_state.SessionDB", return_value=fake_db), \
                      patch("tools.mcp_tool.discover_mcp_tools", return_value=[]), \

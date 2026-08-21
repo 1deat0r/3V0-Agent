@@ -185,8 +185,8 @@ def _has_agent_browser() -> bool:
         # are prepended to PATH at runtime but usually absent from the *probe*
         # process's PATH. Without this rung a successful install keeps
         # reporting "needs setup" on Windows.
-        from threev0_constants import with_ev0_node_path
-        managed_path = with_ev0_node_path().get("PATH", "")
+        from threev0_constants import with_threev0_node_path
+        managed_path = with_threev0_node_path().get("PATH", "")
         if managed_path:
             managed_hit = shutil.which("agent-browser", path=managed_path)
             if managed_hit and agent_browser_runnable(managed_hit):

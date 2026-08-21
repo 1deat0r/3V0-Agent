@@ -264,8 +264,8 @@ _LOCAL_PROBE_DISK_TTL_SECONDS = 300.0
 
 
 def _local_probe_disk_cache_path() -> Path:
-    from threev0_constants import get_ev0_home
-    return get_ev0_home() / "cache" / "local_endpoint_probes.json"
+    from threev0_constants import get_threev0_home
+    return get_threev0_home() / "cache" / "local_endpoint_probes.json"
 
 
 def _load_local_probe_disk_cache() -> Dict[str, Any]:
@@ -314,8 +314,8 @@ def _local_probe_disk_put(kind: str, key: str, value: Any) -> None:
 
 def _get_model_metadata_cache_path() -> Path:
     """Return path to the OpenRouter model metadata disk cache."""
-    from threev0_constants import get_ev0_home
-    return get_ev0_home() / "cache" / "openrouter_model_metadata.json"
+    from threev0_constants import get_threev0_home
+    return get_threev0_home() / "cache" / "openrouter_model_metadata.json"
 
 
 def _model_metadata_disk_cache_age_seconds() -> Optional[float]:
@@ -1446,8 +1446,8 @@ def _resolve_endpoint_context_length(
 
 def _get_context_cache_path() -> Path:
     """Return path to the persistent context length cache file."""
-    from threev0_constants import get_ev0_home
-    return get_ev0_home() / "context_length_cache.yaml"
+    from threev0_constants import get_threev0_home
+    return get_threev0_home() / "context_length_cache.yaml"
 
 
 def _load_context_cache() -> Dict[str, int]:

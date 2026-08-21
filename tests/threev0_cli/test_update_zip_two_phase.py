@@ -335,10 +335,10 @@ def test_patched_is_windows_reaches_the_venv_path_derivation():
     """End-to-end: patching the module predicate must change the derived path."""
     from unittest.mock import patch
 
-    from threev0_cli import main as ev0_main
+    from threev0_cli import main as threev0_main
 
-    with patch.object(ev0_main, "_is_windows", return_value=True):
-        got = ev0_main._resolve_install_target_python(
+    with patch.object(threev0_main, "_is_windows", return_value=True):
+        got = threev0_main._resolve_install_target_python(
             ["uv", "pip"], env={"VIRTUAL_ENV": "/nope/venv"}
         )
     # The path doesn't exist so we get None, but the *derivation* must have

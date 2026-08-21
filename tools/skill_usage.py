@@ -33,7 +33,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from agent.skill_utils import is_excluded_skill_path, is_external_skill_path
 
 logger = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ def is_protected_builtin(skill_name: str) -> bool:
 
 
 def _skills_dir() -> Path:
-    return get_ev0_home() / "skills"
+    return get_threev0_home() / "skills"
 
 
 def _usage_file() -> Path:

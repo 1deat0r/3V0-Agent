@@ -13,10 +13,10 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _isolate_home(tmp_path, monkeypatch):
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
-    yield ev0_home
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
+    yield threev0_home
 
 
 # ---------------------------------------------------------------------------
@@ -49,7 +49,7 @@ def test_setup_linux_loads_null_sink_and_virtual_source():
         raise AssertionError(f"unexpected pactl invocation: {argv}")
 
     with patch("plugins.google_meet.audio_bridge.platform.system",
-               return_value="Linux"), \
+               return_value="Linux"),\
          patch("plugins.google_meet.audio_bridge.subprocess.run",
                side_effect=_fake_run):
         br = AudioBridge()
@@ -87,7 +87,7 @@ def test_teardown_linux_unloads_modules_in_reverse_order():
         return _linux_pactl_result("43\n")
 
     with patch("plugins.google_meet.audio_bridge.platform.system",
-               return_value="Linux"), \
+               return_value="Linux"),\
          patch("plugins.google_meet.audio_bridge.subprocess.run",
                side_effect=_setup_run):
         br = AudioBridge()

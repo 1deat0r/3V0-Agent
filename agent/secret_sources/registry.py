@@ -44,7 +44,7 @@ from agent.secret_sources.base import (
     reset_source_environment,
     set_source_environment,
 )
-from threev0_constants import ev0_home_key
+from threev0_constants import threev0_home_key
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +169,7 @@ def register_source(
 def get_source(name: str, *, scope: Optional[str] = None) -> Optional[SecretSource]:
     _ensure_builtin_sources()
     with _REGISTRY_LOCK:
-        return _SCOPED_SOURCES.get(scope or ev0_home_key(), {}).get(
+        return _SCOPED_SOURCES.get(scope or threev0_home_key(), {}).get(
             name
         ) or _SOURCES.get(name)
 
@@ -210,7 +210,7 @@ def list_sources(*, scope: Optional[str] = None) -> List[SecretSource]:
     _ensure_builtin_sources()
     with _REGISTRY_LOCK:
         merged = dict(_SOURCES)
-        merged.update(_SCOPED_SOURCES.get(scope or ev0_home_key(), {}))
+        merged.update(_SCOPED_SOURCES.get(scope or threev0_home_key(), {}))
         return list(merged.values())
 
 
@@ -229,7 +229,7 @@ def list_plugin_sources() -> List[SecretSource]:
             for name, source in _SOURCES.items()
             if _SOURCE_ORIGINS.get(name) == "plugin"
         }
-        merged.update(_SCOPED_SOURCES.get(ev0_home_key(), {}))
+        merged.update(_SCOPED_SOURCES.get(threev0_home_key(), {}))
         return list(merged.values())
 
 
@@ -456,7 +456,7 @@ def apply_all(secrets_cfg: dict, home_path: Path,
 
     secrets_cfg = secrets_cfg if isinstance(secrets_cfg, dict) else {}
     enabled = _ordered_enabled_sources(
-        secrets_cfg, scope=ev0_home_key(home_path)
+        secrets_cfg, scope=threev0_home_key(home_path)
     )
     if not enabled:
         return report

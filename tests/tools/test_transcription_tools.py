@@ -98,7 +98,7 @@ class TestGetProviderGroq:
 
     def test_groq_when_key_set(self, monkeypatch):
         monkeypatch.setenv("GROQ_API_KEY", "gsk-test")
-        with patch("tools.transcription_tools._HAS_OPENAI", True), \
+        with patch("tools.transcription_tools._HAS_OPENAI", True),\
              patch("tools.transcription_tools._HAS_FASTER_WHISPER", False):
             from tools.transcription_tools import _get_provider
             assert _get_provider({"provider": "groq"}) == "groq"
@@ -129,8 +129,8 @@ class TestExplicitProviderRespected:
         even when an OpenAI API key is set."""
         monkeypatch.setenv("OPENAI_API_KEY", "***")
         monkeypatch.delenv("GROQ_API_KEY", raising=False)
-        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", False), \
-             patch("tools.transcription_tools._has_local_command", return_value=False), \
+        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", False),\
+             patch("tools.transcription_tools._has_local_command", return_value=False),\
              patch("tools.transcription_tools._HAS_OPENAI", True):
             from tools.transcription_tools import _get_provider
             result = _get_provider({"provider": "local"})
@@ -151,8 +151,8 @@ class TestExplicitProviderRespected:
     def test_auto_detect_prefers_groq_over_openai(self, monkeypatch):
         monkeypatch.setenv("GROQ_API_KEY", "gsk-test")
         monkeypatch.setenv("OPENAI_API_KEY", "sk-real-key")
-        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", False), \
-             patch("tools.transcription_tools._has_local_command", return_value=False), \
+        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", False),\
+             patch("tools.transcription_tools._has_local_command", return_value=False),\
              patch("tools.transcription_tools._HAS_OPENAI", True):
             from tools.transcription_tools import _get_provider
             result = _get_provider({})
@@ -188,8 +188,8 @@ class TestTranscribeGroq:
         mock_client = MagicMock()
         mock_client.audio.transcriptions.create.return_value = "hi"
 
-        with patch("tools.transcription_tools._HAS_OPENAI", True), \
-             patch("openai.OpenAI", return_value=mock_client), \
+        with patch("tools.transcription_tools._HAS_OPENAI", True),\
+             patch("openai.OpenAI", return_value=mock_client),\
              patch(
                  "tools.transcription_tools._load_stt_config",
                  return_value={"groq": None},
@@ -357,9 +357,9 @@ class TestTranscribeLocalExtended:
         mock_model.transcribe.return_value = ([mock_segment], mock_info)
         mock_whisper_cls = MagicMock(return_value=mock_model)
 
-        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", True), \
-             patch("faster_whisper.WhisperModel", mock_whisper_cls), \
-             patch("tools.transcription_tools._local_model", None), \
+        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", True),\
+             patch("faster_whisper.WhisperModel", mock_whisper_cls),\
+             patch("tools.transcription_tools._local_model", None),\
              patch("tools.transcription_tools._local_model_name", None):
             from tools.transcription_tools import _transcribe_local
             _transcribe_local(str(audio), "base")
@@ -393,10 +393,10 @@ class TestTranscribeLocalExtended:
             }
         }
 
-        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", True), \
-             patch("faster_whisper.WhisperModel", mock_whisper_cls), \
-             patch("tools.transcription_tools._local_model", None), \
-             patch("tools.transcription_tools._local_model_name", None), \
+        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", True),\
+             patch("faster_whisper.WhisperModel", mock_whisper_cls),\
+             patch("tools.transcription_tools._local_model", None),\
+             patch("tools.transcription_tools._local_model_name", None),\
              patch("tools.transcription_tools._load_stt_config", return_value=fake_config):
             from tools.transcription_tools import _transcribe_local
             result = _transcribe_local(str(audio), "base")
@@ -412,9 +412,9 @@ class TestTranscribeLocalExtended:
 
         mock_whisper_cls = MagicMock(side_effect=RuntimeError("CUDA out of memory"))
 
-        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", True), \
-             patch("faster_whisper.WhisperModel", mock_whisper_cls), \
-             patch("tools.transcription_tools._local_model", None), \
+        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", True),\
+             patch("faster_whisper.WhisperModel", mock_whisper_cls),\
+             patch("tools.transcription_tools._local_model", None),\
              patch("tools.transcription_tools._local_model_name", None):
             from tools.transcription_tools import _transcribe_local
             result = _transcribe_local(str(audio), "base")
@@ -436,7 +436,7 @@ class TestModelAutoCorrection:
         mock_client = MagicMock()
         mock_client.audio.transcriptions.create.return_value = "hello world"
 
-        with patch("tools.transcription_tools._HAS_OPENAI", True), \
+        with patch("tools.transcription_tools._HAS_OPENAI", True),\
              patch("openai.OpenAI", return_value=mock_client):
             from tools.transcription_tools import _transcribe_groq, DEFAULT_GROQ_STT_MODEL
             _transcribe_groq(sample_wav, "whisper-1")
@@ -452,7 +452,7 @@ class TestModelAutoCorrection:
         mock_client = MagicMock()
         mock_client.audio.transcriptions.create.return_value = "test"
 
-        with patch("tools.transcription_tools._HAS_OPENAI", True), \
+        with patch("tools.transcription_tools._HAS_OPENAI", True),\
              patch("openai.OpenAI", return_value=mock_client):
             from tools.transcription_tools import _transcribe_groq
             _transcribe_groq(sample_wav, "my-custom-model")
@@ -507,8 +507,8 @@ class TestValidateAudioFileEdgeCases:
 
 class TestTranscribeAudioDispatch:
     def test_oversized_local_file_reaches_dispatcher(self, oversized_wav):
-        with patch("tools.transcription_tools._load_stt_config", return_value={"provider": "local"}), \
-             patch("tools.transcription_tools._get_provider", return_value="local"), \
+        with patch("tools.transcription_tools._load_stt_config", return_value={"provider": "local"}),\
+             patch("tools.transcription_tools._get_provider", return_value="local"),\
              patch("tools.transcription_tools._transcribe_local",
                    return_value={"success": True, "transcript": "hi"}) as mock_local:
             from tools.transcription_tools import transcribe_audio
@@ -519,7 +519,7 @@ class TestTranscribeAudioDispatch:
 
 
     def test_no_provider_returns_error(self, sample_ogg):
-        with patch("tools.transcription_tools._load_stt_config", return_value={}), \
+        with patch("tools.transcription_tools._load_stt_config", return_value={}),\
              patch("tools.transcription_tools._get_provider", return_value="none"):
             from tools.transcription_tools import transcribe_audio
             result = transcribe_audio(sample_ogg)
@@ -556,8 +556,8 @@ class TestTranscribeAudioDispatch:
 
     def test_config_local_model_used(self, sample_ogg):
         config = {"local": {"model": "small"}}
-        with patch("tools.transcription_tools._load_stt_config", return_value=config), \
-             patch("tools.transcription_tools._get_provider", return_value="local"), \
+        with patch("tools.transcription_tools._load_stt_config", return_value=config),\
+             patch("tools.transcription_tools._get_provider", return_value="local"),\
              patch("tools.transcription_tools._transcribe_local",
                    return_value={"success": True, "transcript": "hi"}) as mock_local:
             from tools.transcription_tools import transcribe_audio
@@ -631,9 +631,9 @@ class TestGetProviderMistral:
         monkeypatch.delenv("VOICE_TOOLS_OPENAI_KEY", raising=False)
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         monkeypatch.setenv("MISTRAL_API_KEY", "test-key")
-        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", False), \
-             patch("tools.transcription_tools._has_local_command", return_value=False), \
-             patch("tools.transcription_tools._HAS_OPENAI", False), \
+        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", False),\
+             patch("tools.transcription_tools._has_local_command", return_value=False),\
+             patch("tools.transcription_tools._HAS_OPENAI", False),\
              patch("tools.transcription_tools._HAS_MISTRAL", True):
             from tools.transcription_tools import _get_provider
             assert _get_provider({}) == "mistral"
@@ -645,8 +645,8 @@ class TestGetProviderMistral:
 class TestTranscribeAudioMistralDispatch:
     def test_config_mistral_model_used(self, sample_ogg):
         config = {"provider": "mistral", "mistral": {"model": "voxtral-mini-2602"}}
-        with patch("tools.transcription_tools._load_stt_config", return_value=config), \
-             patch("tools.transcription_tools._get_provider", return_value="mistral"), \
+        with patch("tools.transcription_tools._load_stt_config", return_value=config),\
+             patch("tools.transcription_tools._get_provider", return_value="mistral"),\
              patch("tools.transcription_tools._transcribe_mistral",
                    return_value={"success": True, "transcript": "hi"}) as mock_mistral:
             from tools.transcription_tools import transcribe_audio
@@ -663,7 +663,7 @@ class TestTranscribeAudioMistralDispatch:
 def mock_xai_http_module():
     """Inject a fake tools.xai_http module for testing."""
     fake_module = MagicMock()
-    fake_module.ev0_xai_user_agent = MagicMock(return_value="3v0-xai/test")
+    fake_module.threev0_xai_user_agent = MagicMock(return_value="3v0-xai/test")
     with patch.dict("sys.modules", {"tools.xai_http": fake_module}):
         yield fake_module
 
@@ -680,7 +680,7 @@ class TestTranscribeXAI:
             "duration": 3.2,
         }
 
-        with patch("tools.transcription_tools._load_stt_config", return_value={}), \
+        with patch("tools.transcription_tools._load_stt_config", return_value={}),\
              patch("requests.post", return_value=mock_response):
             from tools.transcription_tools import _transcribe_xai
             result = _transcribe_xai(sample_ogg, "grok-stt")
@@ -721,8 +721,8 @@ class TestTranscribeXAI:
         }
 
         stt_config = {"provider": "xai"}
-        with patch("tools.transcription_tools._load_stt_config", return_value=stt_config), \
-             patch("tools.transcription_tools._get_provider", return_value="xai"), \
+        with patch("tools.transcription_tools._load_stt_config", return_value=stt_config),\
+             patch("tools.transcription_tools._get_provider", return_value="xai"),\
              patch("requests.post", side_effect=[rejected, accepted]) as mock_post:
             from tools.transcription_tools import transcribe_audio
             result = transcribe_audio(sample_ogg)
@@ -755,7 +755,7 @@ class TestTranscribeXAI:
         mock_response.status_code = 200
         mock_response.json.return_value = {"text": "test", "language": "fr", "duration": 1.0}
 
-        with patch("tools.transcription_tools._load_stt_config", return_value={}), \
+        with patch("tools.transcription_tools._load_stt_config", return_value={}),\
              patch("requests.post", return_value=mock_response) as mock_post:
             from tools.transcription_tools import _transcribe_xai
             _transcribe_xai(sample_ogg, "grok-stt")
@@ -811,9 +811,9 @@ class TestGetProviderXAI:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         monkeypatch.delenv("MISTRAL_API_KEY", raising=False)
         monkeypatch.setenv("XAI_API_KEY", "xai-test")
-        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", False), \
-             patch("tools.transcription_tools._has_local_command", return_value=False), \
-             patch("tools.transcription_tools._HAS_OPENAI", False), \
+        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", False),\
+             patch("tools.transcription_tools._has_local_command", return_value=False),\
+             patch("tools.transcription_tools._HAS_OPENAI", False),\
              patch("tools.transcription_tools._HAS_MISTRAL", False):
             from tools.transcription_tools import _get_provider
             assert _get_provider({}) == "xai"
@@ -824,8 +824,8 @@ class TestGetProviderXAI:
 
 class TestTranscribeAudioXAIDispatch:
     def test_model_default_is_grok_stt(self, sample_ogg):
-        with patch("tools.transcription_tools._load_stt_config", return_value={"provider": "xai"}), \
-             patch("tools.transcription_tools._get_provider", return_value="xai"), \
+        with patch("tools.transcription_tools._load_stt_config", return_value={"provider": "xai"}),\
+             patch("tools.transcription_tools._get_provider", return_value="xai"),\
              patch("tools.transcription_tools._transcribe_xai",
                    return_value={"success": True, "transcript": "hi"}) as mock_xai:
             from tools.transcription_tools import transcribe_audio
@@ -852,7 +852,7 @@ class TestTranscribeElevenLabs:
                 "diarize": True,
             }
         }
-        with patch("tools.transcription_tools._load_stt_config", return_value=config), \
+        with patch("tools.transcription_tools._load_stt_config", return_value=config),\
              patch("requests.post", return_value=mock_response) as mock_post:
             from tools.transcription_tools import _transcribe_elevenlabs
             result = _transcribe_elevenlabs(sample_ogg, "scribe_v2")
@@ -882,9 +882,9 @@ class TestGetProviderElevenLabs:
         monkeypatch.delenv("MISTRAL_API_KEY", raising=False)
         monkeypatch.delenv("XAI_API_KEY", raising=False)
         monkeypatch.setenv("ELEVENLABS_API_KEY", "eleven-test")
-        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", False), \
-             patch("tools.transcription_tools._has_local_command", return_value=False), \
-             patch("tools.transcription_tools._HAS_OPENAI", False), \
+        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", False),\
+             patch("tools.transcription_tools._has_local_command", return_value=False),\
+             patch("tools.transcription_tools._HAS_OPENAI", False),\
              patch("tools.transcription_tools._HAS_MISTRAL", False):
             from tools.transcription_tools import _get_provider
             assert _get_provider({}) == "elevenlabs"
@@ -896,8 +896,8 @@ class TestGetProviderElevenLabs:
 class TestTranscribeAudioElevenLabsDispatch:
     def test_config_elevenlabs_model_used(self, sample_ogg):
         config = {"provider": "elevenlabs", "elevenlabs": {"model_id": "scribe_v1"}}
-        with patch("tools.transcription_tools._load_stt_config", return_value=config), \
-             patch("tools.transcription_tools._get_provider", return_value="elevenlabs"), \
+        with patch("tools.transcription_tools._load_stt_config", return_value=config),\
+             patch("tools.transcription_tools._get_provider", return_value="elevenlabs"),\
              patch("tools.transcription_tools._transcribe_elevenlabs",
                    return_value={"success": True, "transcript": "hi"}) as mock_elevenlabs:
             from tools.transcription_tools import transcribe_audio
@@ -1056,10 +1056,10 @@ class TestLocalModelLock:
             model.transcribe.return_value = ([seg], info)
             return model
 
-        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", True), \
-             patch("tools.transcription_tools._load_stt_config", return_value={}), \
-             patch("tools.transcription_tools._load_local_whisper_model", side_effect=slow_load), \
-             patch("tools.transcription_tools._local_model", None), \
+        with patch("tools.transcription_tools._HAS_FASTER_WHISPER", True),\
+             patch("tools.transcription_tools._load_stt_config", return_value={}),\
+             patch("tools.transcription_tools._load_local_whisper_model", side_effect=slow_load),\
+             patch("tools.transcription_tools._local_model", None),\
              patch("tools.transcription_tools._local_model_name", None):
             threads = [
                 threading.Thread(target=_transcribe_local, args=(str(audio), "base"))
@@ -1134,10 +1134,10 @@ class TestCafConversion:
         caf_path.write_bytes(b"caff\x00" * 20)
 
         with patch("tools.transcription_tools._load_stt_config",
-                   return_value={"provider": "local"}), \
+                   return_value={"provider": "local"}),\
              patch("tools.transcription_tools._get_provider",
-                   return_value="local"), \
-             patch("tools.transcription_tools._convert_caf_to_wav") as mock_convert, \
+                   return_value="local"),\
+             patch("tools.transcription_tools._convert_caf_to_wav") as mock_convert,\
              patch("tools.transcription_tools._transcribe_local",
                    return_value={"success": True, "transcript": "hi"}):
             from tools.transcription_tools import transcribe_audio

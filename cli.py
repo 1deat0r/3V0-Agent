@@ -218,19 +218,19 @@ _COMMAND_SPINNER_FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧
 
 # Load .env from ~/.3V0/.env first, then project root as dev fallback.
 # User-managed env files should override stale shell exports on restart.
-from threev0_constants import get_ev0_home, display_ev0_home
+from threev0_constants import get_threev0_home, display_threev0_home
 from threev0_cli.browser_connect import (
     DEFAULT_BROWSER_CDP_URL,
     is_browser_debug_ready,
     manual_chrome_debug_command,
     try_launch_chrome_debug,
 )
-from threev0_cli.env_loader import load_ev0_dotenv
+from threev0_cli.env_loader import load_threev0_dotenv
 from utils import base_url_host_matches, base_url_hostname, fast_safe_load
 
-_ev0_home = get_ev0_home()
+_threev0_home = get_threev0_home()
 _project_env = Path(__file__).parent / '.env'
-load_ev0_dotenv(ev0_home=_ev0_home, project_env=_project_env)
+load_threev0_dotenv(threev0_home=_threev0_home, project_env=_project_env)
 
 
 _REASONING_TAGS = (
@@ -350,7 +350,7 @@ def _load_prefill_messages(file_path: str) -> List[Dict[str, Any]]:
         return []
     path = Path(file_path).expanduser()
     if not path.is_absolute():
-        path = _ev0_home / path
+        path = _threev0_home / path
     if not path.exists():
         logger.warning("Prefill messages file not found: %s", path)
         return []
@@ -426,7 +426,7 @@ def load_cli_config() -> Dict[str, Any]:
     behavioral/config settings.
     """
     # Check user config first ({EV0_HOME}/config.yaml)
-    user_config_path = _ev0_home / 'config.yaml'
+    user_config_path = _threev0_home / 'config.yaml'
     project_config_path = Path(__file__).parent / 'cli-config.yaml'
 
     # --ignore-user-config: force-skip the user config.yaml (still honor project
@@ -1955,7 +1955,7 @@ _WORKTREE_MERGE_CACHE_MAX = 1000
 
 def _worktree_merge_cache_path() -> Path:
     """Path of the patch-equivalence verdict cache (profile-aware)."""
-    return get_ev0_home() / "cache" / "worktree_merge_verdicts.json"
+    return get_threev0_home() / "cache" / "worktree_merge_verdicts.json"
 
 
 def _load_worktree_merge_cache() -> Dict[str, bool]:
@@ -2246,14 +2246,14 @@ def _run_state_db_auto_maintenance(session_db) -> None:
         return
     try:
         from threev0_cli.config import load_config as _load_full_config
-        from threev0_constants import get_ev0_home as _get_ev0_home
-        _ev0_home_maint = _get_ev0_home()
+        from threev0_constants import get_threev0_home as _get_threev0_home
+        _threev0_home_maint = _get_threev0_home()
 
         # One-time prune of empty TUI ghost sessions.
         try:
             if not session_db.get_meta("ghost_session_prune_v1"):
                 pruned = session_db.prune_empty_ghost_sessions(
-                    sessions_dir=_ev0_home_maint / "sessions"
+                    sessions_dir=_threev0_home_maint / "sessions"
                 )
                 session_db.set_meta("ghost_session_prune_v1", "1")
                 if pruned:
@@ -2291,7 +2291,7 @@ def _run_state_db_auto_maintenance(session_db) -> None:
             min_interval_hours=int(cfg.get("min_interval_hours", 24)),
             min_vacuum_interval_days=int(cfg.get("min_vacuum_interval_days", 30)),
             vacuum=bool(cfg.get("vacuum_after_prune", True)),
-            sessions_dir=_ev0_home_maint / "sessions",
+            sessions_dir=_threev0_home_maint / "sessions",
         )
     except Exception as exc:
         logger.debug("state.db auto-maintenance skipped: %s", exc)
@@ -2990,7 +2990,7 @@ def _install_skin_light_mode_hook() -> None:
         from threev0_cli.skin_engine import SkinConfig  # type: ignore[import]
     except Exception:
         return
-    if getattr(SkinConfig, "_ev0_light_mode_hook_installed", False):
+    if getattr(SkinConfig, "_threev0_light_mode_hook_installed", False):
         return
     _orig_get_color = SkinConfig.get_color
 
@@ -3002,7 +3002,7 @@ def _install_skin_light_mode_hook() -> None:
             return value
 
     SkinConfig.get_color = _wrapped_get_color  # type: ignore[method-assign]
-    SkinConfig._ev0_light_mode_hook_installed = True  # type: ignore[attr-defined]
+    SkinConfig._threev0_light_mode_hook_installed = True  # type: ignore[attr-defined]
 
 
 _install_skin_light_mode_hook()
@@ -3736,7 +3736,7 @@ def _strip_leaked_bracketed_paste_wrappers(text: str) -> str:
     return strip_leaked_bracketed_paste_wrappers(text)
 
 
-def _ev0_call_output_screen_diff(
+def _threev0_call_output_screen_diff(
     orig_osd,
     app,
     output,
@@ -3809,7 +3809,7 @@ def _apply_bracketed_paste_timeout_patch() -> None:
         from prompt_toolkit.keys import Keys as _PtKeys
         from prompt_toolkit.key_binding.key_processor import KeyPress as _PtKeyPress
 
-        if getattr(_vt100_mod, "_ev0_bp_timeout_patched", False):
+        if getattr(_vt100_mod, "_threev0_bp_timeout_patched", False):
             return
 
         _BP_TIMEOUT_S = 2.0  # max time to wait for ESC[201~ before flushing
@@ -3830,19 +3830,19 @@ def _apply_bracketed_paste_timeout_patch() -> None:
                         end_index + len(end_mark):
                     ]
                     self_parser._paste_buffer = ""
-                    self_parser._ev0_bp_start = None
+                    self_parser._threev0_bp_start = None
                     if remaining:
                         _patched_vt100_feed(self_parser, remaining)
                 else:
-                    bp_start = getattr(self_parser, "_ev0_bp_start", None)
+                    bp_start = getattr(self_parser, "_threev0_bp_start", None)
                     now = time.monotonic()
                     if bp_start is None:
-                        self_parser._ev0_bp_start = now
+                        self_parser._threev0_bp_start = now
                     elif now - bp_start > _BP_TIMEOUT_S:
                         paste_content = self_parser._paste_buffer
                         self_parser._in_bracketed_paste = False
                         self_parser._paste_buffer = ""
-                        self_parser._ev0_bp_start = None
+                        self_parser._threev0_bp_start = None
                         if paste_content:
                             self_parser.feed_key_callback(
                                 _PtKeyPress(_PtKeys.BracketedPaste, paste_content)
@@ -3865,7 +3865,7 @@ def _apply_bracketed_paste_timeout_patch() -> None:
                     self_parser._input_parser.send(c)
 
         _vt100_mod.Vt100Parser.feed = _patched_vt100_feed
-        _vt100_mod._ev0_bp_timeout_patched = True
+        _vt100_mod._threev0_bp_timeout_patched = True
         logger.debug("Applied Vt100Parser bracketed-paste timeout patch (#16263)")
     except Exception as exc:  # noqa: BLE001 — defensive: never break startup
         logger.debug("Bracketed-paste timeout patch skipped: %s", exc)
@@ -4563,7 +4563,7 @@ def save_config_value(key_path: str, value: any) -> bool:
     # exists in the checkout) while startup read EV0_HOME/config.yaml, so the
     # setting silently vanished every restart on any install whose
     # EV0_HOME/config.yaml didn't exist yet.
-    config_path = get_ev0_home() / 'config.yaml'
+    config_path = get_threev0_home() / 'config.yaml'
     
     try:
         # Ensure parent directory exists (for ~/.3V0/config.yaml on first use)
@@ -5109,7 +5109,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         getattr(self, "_write_terminal_breadcrumb", lambda: None)()
         
         # History file for persistent input recall across sessions
-        self._history_file = _ev0_home / ".ev0_history"
+        self._history_file = _threev0_home / ".threev0_history"
         self._last_invalidate: float = 0.0  # throttle UI repaints
         self._app = None
 
@@ -8181,10 +8181,10 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 )
 
         # Warn if the configured model is a Nous 3V0 LLM (not agentic)
-        from threev0_cli.model_switch import is_nous_ev0_non_agentic
+        from threev0_cli.model_switch import is_nous_threev0_non_agentic
 
         model_name = getattr(self, "model", "") or ""
-        if is_nous_ev0_non_agentic(model_name):
+        if is_nous_threev0_non_agentic(model_name):
             self._console_print()
             self._console_print(
                 "[bold yellow]⚠  Nous Research 3V0 3 & 4 models are NOT agentic and are not "
@@ -8491,7 +8491,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         """
         from threev0_cli.clipboard import save_clipboard_image
 
-        img_dir = get_ev0_home() / "images"
+        img_dir = get_threev0_home() / "images"
         self._image_counter += 1
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         img_path = img_dir / f"clip_{ts}_{self._image_counter}.png"
@@ -8813,7 +8813,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             "3V0 CLI Status",
             "",
             f"Session ID: {self.session_id}",
-            f"Path: {display_ev0_home()}",
+            f"Path: {display_threev0_home()}",
         ]
         if title:
             lines.append(f"Title: {title}")
@@ -8986,7 +8986,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         terminal_cwd = os.getenv("TERMINAL_CWD", os.getcwd())
         terminal_timeout = os.getenv("TERMINAL_TIMEOUT", "60")
         
-        user_config_path = _ev0_home / 'config.yaml'
+        user_config_path = _threev0_home / 'config.yaml'
         project_config_path = Path(__file__).parent / 'cli-config.yaml'
         if user_config_path.exists():
             config_path = user_config_path
@@ -9213,7 +9213,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if getattr(self, "conversation_history", None):
             return False
         try:
-            from threev0_constants import get_ev0_home as _ghh
+            from threev0_constants import get_threev0_home as _ghh
             return self._session_db.delete_session_if_empty(
                 session_id, sessions_dir=_ghh() / "sessions"
             )
@@ -9583,7 +9583,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             session_data = redact_session_data(session_data)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        saved_dir = get_ev0_home() / "sessions" / "saved"
+        saved_dir = get_threev0_home() / "sessions" / "saved"
         try:
             saved_dir.mkdir(parents=True, exist_ok=True)
         except Exception as e:
@@ -11077,7 +11077,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             print("  To start the gateway:")
             print("    python cli.py --gateway")
             print()
-            print(f"  Configuration file: {display_ev0_home()}/config.yaml")
+            print(f"  Configuration file: {display_threev0_home()}/config.yaml")
             print()
             
         except Exception as e:
@@ -11087,7 +11087,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             print("    1. Set environment variables:")
             print("       TELEGRAM_BOT_TOKEN=your_token")
             print("       DISCORD_BOT_TOKEN=your_token")
-            print(f"    2. Or configure settings in {display_ev0_home()}/config.yaml")
+            print(f"    2. Or configure settings in {display_threev0_home()}/config.yaml")
             print()
     
     def process_command(self, command: str) -> bool:
@@ -11484,7 +11484,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 if not user_entries:
                     print("No user plugins installed.")
                     print("  Install one: 3v0 plugins install owner/repo")
-                    print(f"  Or drop a plugin directory into {display_ev0_home()}/plugins/")
+                    print(f"  Or drop a plugin directory into {display_threev0_home()}/plugins/")
                     if bundled_count:
                         print(f"  ({bundled_count} bundled plugins available — see: 3v0 plugins list)")
                 else:
@@ -13576,7 +13576,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                         if not is_seen(CLI_CONFIG, TOOL_PROGRESS_FLAG):
                             self._long_tool_hint_fired = True
                             _cprint(f"  {_DIM}{tool_progress_hint_cli()}{_RST}")
-                            mark_seen(_ev0_home / "config.yaml", TOOL_PROGRESS_FLAG)
+                            mark_seen(_threev0_home / "config.yaml", TOOL_PROGRESS_FLAG)
                             CLI_CONFIG.setdefault("onboarding", {}).setdefault("seen", {})[TOOL_PROGRESS_FLAG] = True
                 except Exception:
                     pass
@@ -15633,7 +15633,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                             self._clear_active_overlays_for_interrupt()
                             # Debug: log to file (stdout may be devnull from redirect_stdout)
                             try:
-                                _dbg = _ev0_home / "interrupt_debug.log"
+                                _dbg = _threev0_home / "interrupt_debug.log"
                                 with open(_dbg, "a", encoding="utf-8") as _f:
                                     _f.write(f"{time.strftime('%H:%M:%S')} interrupt fired: msg={str(interrupt_msg)[:60]!r}, "
                                              f"children={len(self.agent._active_children)}, "
@@ -16996,7 +16996,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                             # follow-ups, or a turn that finished in the race.
                             self._interrupt_queue.put(payload)
                             try:
-                                _dbg = _ev0_home / "interrupt_debug.log"
+                                _dbg = _threev0_home / "interrupt_debug.log"
                                 with open(_dbg, "a", encoding="utf-8") as _f:
                                     _f.write(f"{time.strftime('%H:%M:%S')} ENTER: queued interrupt msg={str(payload)[:60]!r}, "
                                              f"agent_running={self._agent_running}\n")
@@ -17017,7 +17017,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                         if not is_seen(CLI_CONFIG, BUSY_INPUT_FLAG):
                             _hint_mode = "redirect" if redirected else _effective_mode
                             _cprint(f"  {_DIM}{busy_input_hint_cli(_hint_mode)}{_RST}")
-                            mark_seen(_ev0_home / "config.yaml", BUSY_INPUT_FLAG)
+                            mark_seen(_threev0_home / "config.yaml", BUSY_INPUT_FLAG)
                             CLI_CONFIG.setdefault("onboarding", {}).setdefault("seen", {})[BUSY_INPUT_FLAG] = True
                     except Exception:
                         pass
@@ -17804,7 +17804,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 chars_hit = char_threshold > 0 and len(pasted_text) >= char_threshold
                 if (lines_hit or chars_hit) and not buf.text.strip().startswith('/'):
                     _paste_counter[0] += 1
-                    paste_dir = _ev0_home / "pastes"
+                    paste_dir = _threev0_home / "pastes"
                     paste_dir.mkdir(parents=True, exist_ok=True)
                     paste_file = paste_dir / f"paste_{_paste_counter[0]}_{datetime.now().strftime('%H%M%S')}.txt"
                     paste_file.write_text(pasted_text, encoding="utf-8")
@@ -17975,7 +17975,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             chars_hit = char_threshold > 0 and len(text) >= char_threshold
             if (lines_hit or chars_hit) and is_paste and not text.startswith('/'):
                 _paste_counter[0] += 1
-                paste_dir = _ev0_home / "pastes"
+                paste_dir = _threev0_home / "pastes"
                 paste_dir.mkdir(parents=True, exist_ok=True)
                 paste_file = paste_dir / f"paste_{_paste_counter[0]}_{datetime.now().strftime('%H%M%S')}.txt"
                 paste_file.write_text(text, encoding="utf-8")
@@ -18797,7 +18797,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             import prompt_toolkit.renderer as _pt_renderer
             from prompt_toolkit.renderer import _output_screen_diff as _orig_osd
 
-            if not getattr(_pt_renderer, "_ev0_osd_patched", False):
+            if not getattr(_pt_renderer, "_threev0_osd_patched", False):
                 def _patched_output_screen_diff(
                     app, output, screen, current_pos, color_depth,
                     previous_screen, last_style, is_done, full_screen,
@@ -18826,7 +18826,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                     with previous_screen=None so pt takes the first-paint
                     erase path instead of wedging the event loop.
                     """
-                    return _ev0_call_output_screen_diff(
+                    return _threev0_call_output_screen_diff(
                         _orig_osd,
                         app, output, screen, current_pos, color_depth,
                         previous_screen, last_style, is_done, full_screen,
@@ -18835,7 +18835,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                     )
 
                 _pt_renderer._output_screen_diff = _patched_output_screen_diff
-                _pt_renderer._ev0_osd_patched = True
+                _pt_renderer._threev0_osd_patched = True
         except Exception:
             pass
 
@@ -19423,7 +19423,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 # and SQLite history. Ported from google-gemini/gemini-cli#19332.
                 if getattr(self, '_delete_session_on_exit', False):
                     try:
-                        from threev0_constants import get_ev0_home as _ghh
+                        from threev0_constants import get_threev0_home as _ghh
                         _sessions_dir = _ghh() / "sessions"
                         _sid = self.agent.session_id
                         if self._session_db.delete_session(_sid, sessions_dir=_sessions_dir):

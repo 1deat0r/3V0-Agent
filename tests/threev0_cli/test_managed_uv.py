@@ -78,7 +78,7 @@ class TestManagedUvPath:
     # for real by TestEnsureUvWindowsSafe on the Windows lane.
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX-only: bin/uv name")
     def test_posix(self, tmp_path):
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path):
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path):
             from threev0_cli.managed_uv import managed_uv_path
             assert managed_uv_path() == tmp_path / "bin" / "uv"
 
@@ -91,7 +91,7 @@ class TestResolveUv:
 
     def test_existing_executable(self, tmp_path):
         _make_executable(tmp_path / "bin" / "uv")
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path):
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path):
             from threev0_cli.managed_uv import resolve_uv
             result = resolve_uv()
             assert result == str(tmp_path / "bin" / "uv")
@@ -102,7 +102,7 @@ class TestResolveUv:
         uv.write_text("not a binary")
         # Ensure no execute bit
         uv.chmod(0o644)
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path):
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path):
             from threev0_cli.managed_uv import resolve_uv
             assert resolve_uv() is None
 
@@ -114,8 +114,8 @@ class TestResolveUv:
 class TestEnsureUv:
 
     def test_installs_if_missing(self, tmp_path):
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
-             patch("threev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")), \
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path),\
+             patch("threev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")),\
              patch("threev0_cli.managed_uv._install_uv") as mock_install:
             # Simulate the installer creating the binary
             def fake_install(target):
@@ -144,7 +144,7 @@ class TestEnsureUv:
 
         observed = []
         with patch(
-            "threev0_cli.managed_uv.get_ev0_home",
+            "threev0_cli.managed_uv.get_threev0_home",
             return_value=tmp_path,
         ), patch(
             "threev0_cli.managed_uv._install_uv",
@@ -183,7 +183,7 @@ class TestEnsureUvUpdateBoundary:
 
     def test_success_usable_as_single_value(self, tmp_path):
         _make_executable(tmp_path / "bin" / "uv")
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path),\
              patch("threev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")):
             from threev0_cli.managed_uv import ensure_uv
             uv_bin = ensure_uv()
@@ -192,7 +192,7 @@ class TestEnsureUvUpdateBoundary:
 
     def test_success_unpacks_as_legacy_two_tuple(self, tmp_path):
         _make_executable(tmp_path / "bin" / "uv")
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path),\
              patch("threev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")):
             from threev0_cli.managed_uv import ensure_uv
             uv_bin, fresh = ensure_uv()  # old: uv_bin, fresh_bootstrap = ensure_uv()
@@ -200,8 +200,8 @@ class TestEnsureUvUpdateBoundary:
             assert fresh is False
 
     def test_failure_unpacks_without_raising(self, tmp_path):
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
-             patch("threev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")), \
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path),\
+             patch("threev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")),\
              patch("threev0_cli.managed_uv._install_uv", side_effect=RuntimeError("network down")):
             from threev0_cli.managed_uv import ensure_uv
             uv_bin, fresh = ensure_uv()
@@ -243,7 +243,7 @@ class TestEnsureUvWindowsSafe:
         import subprocess
         # On Windows the managed binary is uv.exe.
         _make_executable(tmp_path / "bin" / "uv.exe")
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path),\
              patch("threev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")):
             from threev0_cli.managed_uv import _UvResult, ensure_uv
             uv_bin = ensure_uv()
@@ -270,12 +270,12 @@ class TestUpdateManagedUv:
         _make_executable(uv)
         # Fresh stamp under the isolated EV0_HOME.
         import threev0_constants
-        stamp = threev0_constants.get_ev0_home() / "cache" / ".uv_self_update_stamp"
+        stamp = threev0_constants.get_threev0_home() / "cache" / ".uv_self_update_stamp"
         stamp.parent.mkdir(parents=True, exist_ok=True)
         stamp.touch()
 
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
-             patch("threev0_cli.managed_uv.subprocess.run") as mock_run, \
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path),\
+             patch("threev0_cli.managed_uv.subprocess.run") as mock_run,\
              patch(
                  "threev0_cli.managed_uv.repair_vulnerable_runtime",
                  return_value=RuntimeRepairResult("skipped"),
@@ -296,14 +296,14 @@ class TestUpdateManagedUv:
         uv = tmp_path / "bin" / "uv"
         _make_executable(uv)
         import threev0_constants
-        stamp = threev0_constants.get_ev0_home() / "cache" / ".uv_self_update_stamp"
+        stamp = threev0_constants.get_threev0_home() / "cache" / ".uv_self_update_stamp"
         stamp.parent.mkdir(parents=True, exist_ok=True)
         stamp.touch()
         old = _time.time() - UV_SELF_UPDATE_INTERVAL_SECONDS - 60
         _os.utime(stamp, (old, old))
 
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
-             patch("threev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")), \
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path),\
+             patch("threev0_cli.managed_uv.repair_vulnerable_runtime", return_value=_RRR("not-applicable")),\
              patch("threev0_cli.managed_uv.subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0, stdout="uv 0.2.0")
             update_managed_uv()
@@ -383,7 +383,7 @@ class TestRuntimeRepair:
         with patch(
                  "threev0_cli.managed_uv.probe_sqlite_runtime",
                  return_value=current,
-             ), \
+             ),\
              patch(
                  "threev0_cli.managed_uv._install_safe_python_generation"
              ) as mock_install:
@@ -413,7 +413,7 @@ class TestRuntimeRepair:
             calls.append((list(argv), kwargs.get("env")))
             return MagicMock(returncode=0)
 
-        with patch("threev0_cli.managed_uv.subprocess.run", side_effect=fake_run), \
+        with patch("threev0_cli.managed_uv.subprocess.run", side_effect=fake_run),\
              patch(
                  "threev0_cli.managed_uv._smoke_candidate_venv",
                  return_value=(True, "", None),
@@ -455,11 +455,11 @@ class TestRuntimeRepair:
         with patch(
                  "threev0_cli.managed_uv.probe_sqlite_runtime",
                  side_effect=[current, current],
-             ), \
+             ),\
              patch(
                  "threev0_cli.managed_uv._install_safe_python_generation",
                  return_value=(generation, candidate_python, fixed),
-             ), \
+             ),\
              patch(
                  "threev0_cli.managed_uv._stage_candidate_venv",
                  return_value=None,
@@ -528,15 +528,15 @@ class TestRuntimeRepair:
         with patch(
                  "threev0_cli.managed_uv.probe_sqlite_runtime",
                  side_effect=[current, current],
-             ), \
+             ),\
              patch(
                  "threev0_cli.managed_uv._install_safe_python_generation",
                  return_value=(generation, candidate_python, fixed),
-             ), \
+             ),\
              patch(
                  "threev0_cli.managed_uv._stage_candidate_venv",
                  return_value=candidate_venv,
-             ), \
+             ),\
              patch(
                  "threev0_cli.managed_uv._smoke_candidate_venv",
                  return_value=(True, "", fixed),
@@ -1063,8 +1063,8 @@ class TestRefreshManagedUvCatalog:
         import threev0_cli.managed_uv as managed_uv
 
         versions = iter(["uv 0.1.0", "uv 0.2.0"])
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
-             patch("threev0_cli.managed_uv._install_uv"), \
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path),\
+             patch("threev0_cli.managed_uv._install_uv"),\
              patch(
                  "threev0_cli.managed_uv._uv_version_string",
                  side_effect=lambda _uv: next(versions),
@@ -1080,7 +1080,7 @@ class TestRefreshManagedUvCatalog:
     def test_installer_failure_reports_false(self, tmp_path):
         import threev0_cli.managed_uv as managed_uv
 
-        with patch("threev0_cli.managed_uv.get_ev0_home", return_value=tmp_path), \
+        with patch("threev0_cli.managed_uv.get_threev0_home", return_value=tmp_path),\
              patch(
                  "threev0_cli.managed_uv._install_uv",
                  side_effect=RuntimeError("network down"),
@@ -1111,15 +1111,15 @@ class TestRepairRetriesAfterUvRefresh:
         with patch(
                  "threev0_cli.managed_uv.probe_sqlite_runtime",
                  return_value=current,
-             ), \
+             ),\
              patch(
                  "threev0_cli.managed_uv._install_safe_python_generation",
                  side_effect=fake_install,
-             ), \
+             ),\
              patch(
                  "threev0_cli.managed_uv._refresh_managed_uv_catalog",
                  return_value=refresh_result,
-             ) as mock_refresh, \
+             ) as mock_refresh,\
              patch(
                  "threev0_cli.managed_uv._stage_candidate_venv",
                  return_value=None,
@@ -1245,7 +1245,7 @@ class TestVenvPythonUpdateBoundary:
 
         # Host-native: the subject is the reload-recovery seam, not the
         # bin/Scripts mapping — assert whatever layout the real host resolves.
-        expected = Path("/opt/3v0/venv/Scripts/python.exe") \
+        expected = Path("/opt/3v0/venv/Scripts/python.exe")\
             if sys.platform == "win32" else Path("/opt/3v0/venv/bin/python")
         assert _venv_python(Path("/opt/3v0/venv")) == expected
 
@@ -1283,7 +1283,7 @@ class TestVenvPythonUpdateBoundary:
 
         monkeypatch.setattr("importlib.reload", _no_reload)
 
-        expected = Path("/opt/3v0/venv/Scripts/python.exe") \
+        expected = Path("/opt/3v0/venv/Scripts/python.exe")\
             if sys.platform == "win32" else Path("/opt/3v0/venv/bin/python")
         assert _venv_python(Path("/opt/3v0/venv")) == expected
 

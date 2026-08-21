@@ -39,7 +39,7 @@ def _reset_caches():
 
 
 @pytest.fixture
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     """Point 3V0 at an isolated home directory."""
     home = tmp_path / ".3V0"
     home.mkdir()
@@ -76,8 +76,8 @@ def ev0_home(tmp_path, monkeypatch):
     ],
 )
 def test_platform_asset_name(system, machine, libc_text, expected):
-    with mock.patch.object(bw.platform, "system", return_value=system), \
-         mock.patch.object(bw.platform, "machine", return_value=machine), \
+    with mock.patch.object(bw.platform, "system", return_value=system),\
+         mock.patch.object(bw.platform, "machine", return_value=machine),\
          mock.patch.object(
              bw.subprocess,
              "run",
@@ -135,7 +135,7 @@ def test_safe_extract_member_rejects_traversal(tmp_path, evil_name):
 
 
 
-def test_install_bws_happy_path(ev0_home, monkeypatch):
+def test_install_bws_happy_path(threev0_home, monkeypatch):
     fake_binary = b"#!/bin/sh\necho 'bws fake 2.0.0'\n"
     zip_bytes = _make_fake_zip(fake_binary)
     asset_name = bw._platform_asset_name()

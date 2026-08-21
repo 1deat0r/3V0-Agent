@@ -179,8 +179,8 @@ def describe_profile(
 
     try:
         if canon == "default":
-            from threev0_constants import get_ev0_home  # type: ignore
-            profile_dir = Path(get_ev0_home())
+            from threev0_constants import get_threev0_home  # type: ignore
+            profile_dir = Path(get_threev0_home())
         else:
             profile_dir = profiles_mod.get_profile_dir(canon)
     except Exception as exc:

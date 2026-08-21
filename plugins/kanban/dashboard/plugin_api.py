@@ -658,14 +658,14 @@ def create_task(payload: CreateTaskBody, board: Optional[str] = Query(None)):
         if task and task.status == "ready" and task.assignee:
             try:
                 from threev0_cli.kanban import _check_dispatcher_presence
-                from threev0_constants import get_ev0_home
+                from threev0_constants import get_threev0_home
 
                 # Scope the probe to the request's active home. The dashboard
                 # backend can run under a different EV0_HOME than the
                 # profile this board belongs to, which otherwise warned "no
                 # gateway is running" against a live profile gateway (#71211).
                 running, message = _check_dispatcher_presence(
-                    ev0_home=get_ev0_home()
+                    threev0_home=get_threev0_home()
                 )
                 if not running and message:
                     body["warning"] = message
@@ -2668,9 +2668,9 @@ def update_profile_description(profile_name: str, payload: DescribeBody):
         from threev0_cli import profiles as profiles_mod
         canon = profiles_mod.normalize_profile_name(profile_name)
         if canon == "default":
-            from threev0_constants import get_ev0_home  # type: ignore
+            from threev0_constants import get_threev0_home  # type: ignore
             from pathlib import Path as _Path
-            profile_dir = _Path(get_ev0_home())
+            profile_dir = _Path(get_threev0_home())
         else:
             profile_dir = profiles_mod.get_profile_dir(canon)
         if not profile_dir.is_dir():

@@ -659,7 +659,7 @@ class TestTerminalCWDIntegration:
 class TestOrphanedBranchPruning:
     """Test cleanup of orphaned 3v0/* and pr-* branches."""
 
-    def test_prunes_orphaned_ev0_branch(self, git_repo):
+    def test_prunes_orphaned_threev0_branch(self, git_repo):
         """3v0/3v0-* branches with no worktree should be deleted."""
         # Create a branch that looks like a worktree branch but has no worktree
         subprocess.run(

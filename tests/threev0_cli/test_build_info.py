@@ -13,7 +13,7 @@ def test_get_build_sha_returns_none_when_file_absent(tmp_path):
     """Source installs: no file present → None, callers fall back to git."""
     from threev0_cli import build_info
 
-    missing = tmp_path / ".ev0_build_sha"  # never created
+    missing = tmp_path / ".threev0_build_sha"  # never created
 
     with patch.object(build_info, "_BUILD_SHA_FILE", missing):
         assert build_info.get_build_sha() is None
@@ -23,7 +23,7 @@ def test_get_build_sha_respects_short_argument(tmp_path):
     """``short=N`` truncates to N chars; ``short<=0`` returns full SHA."""
     from threev0_cli import build_info
 
-    sha_file = tmp_path / ".ev0_build_sha"
+    sha_file = tmp_path / ".threev0_build_sha"
     full_sha = "abcdef1234567890abcdef1234567890abcdef12"
     sha_file.write_text(full_sha + "\n")
 

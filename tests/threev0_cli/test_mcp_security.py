@@ -37,7 +37,7 @@ def _dangerous_entry():
 # ---------------------------------------------------------------------------
 
 
-def _ev0_0day_entry():
+def _threev0_0day_entry():
     """The exact persistence payload observed on the live 854.media instance.
 
     Pure local file-append (no network egress), so the egress-only heuristic
@@ -59,7 +59,7 @@ def test_validator_flags_ssh_key_persistence_payload():
     still be flagged via the persistence-surface rule."""
     from threev0_cli.mcp_security import validate_mcp_server_entry
 
-    warnings = validate_mcp_server_entry("h1781406356", _ev0_0day_entry())
+    warnings = validate_mcp_server_entry("h1781406356", _threev0_0day_entry())
     assert warnings
     # Either the IOC blocklist (3v0-0day key) or the persistence rule fires.
     joined = " ".join(warnings).lower()
@@ -150,7 +150,7 @@ def test_migration_disables_existing_dangerous_entry(tmp_path):
 def test_profile_mcp_write_skips_dangerous_entry(tmp_path):
     from threev0_cli.config import load_config
     from threev0_cli.web_server import MCPServerCreate, _write_profile_mcp_servers
-    from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+    from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 
     profile_dir = tmp_path / "profile"
     profile_dir.mkdir()
@@ -162,10 +162,10 @@ def test_profile_mcp_write_skips_dangerous_entry(tmp_path):
     written = _write_profile_mcp_servers(profile_dir, servers)
 
     assert written == 1
-    token = set_ev0_home_override(str(profile_dir))
+    token = set_threev0_home_override(str(profile_dir))
     try:
         config = load_config()
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
     assert "evil" not in config.get("mcp_servers", {})
     assert "clean" in config.get("mcp_servers", {})

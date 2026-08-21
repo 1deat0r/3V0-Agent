@@ -52,7 +52,7 @@ _APPLIED_HOMES: set[str] = set()
 _SECRET_SOURCE_CACHE_LOCK = threading.RLock()
 
 
-def _known_ev0_env_keys() -> set[str]:
+def _known_threev0_env_keys() -> set[str]:
     """Return the combined set of known 3V0 env-var keys.
 
     Includes both ``OPTIONAL_ENV_VARS`` (setup-flow vars with metadata) and
@@ -159,15 +159,15 @@ def get_secret_source(env_var: str) -> str | None:
 
 
 def get_secret_source_values(
-    ev0_home: str | os.PathLike,
+    threev0_home: str | os.PathLike,
 ) -> dict[str, str]:
     """Return the external-secret value snapshot for ``ev0_home``."""
-    home_key = str(Path(ev0_home).resolve())
+    home_key = str(Path(threev0_home).resolve())
     return dict(_SECRET_SOURCE_VALUES_BY_HOME.get(home_key, {}))
 
 
 def hydrate_profile_secret_sources(
-    ev0_home: str | os.PathLike,
+    threev0_home: str | os.PathLike,
 ) -> dict[str, str]:
     """Resolve one profile's configured sources without mutating ``os.environ``.
 
@@ -182,7 +182,7 @@ def hydrate_profile_secret_sources(
     plaintext ``.env`` entries.
     """
     with _SECRET_SOURCE_CACHE_LOCK:
-        return _hydrate_profile_secret_sources(Path(ev0_home))
+        return _hydrate_profile_secret_sources(Path(threev0_home))
 
 
 def _hydrate_profile_secret_sources(home: Path) -> dict[str, str]:
@@ -468,9 +468,9 @@ def _sanitize_env_file_if_needed(path: Path) -> None:
         pass  # best-effort — don't block gateway startup
 
 
-def load_ev0_dotenv(
+def load_threev0_dotenv(
     *,
-    ev0_home: str | os.PathLike | None = None,
+    threev0_home: str | os.PathLike | None = None,
     project_env: str | os.PathLike | None = None,
     load_external_secrets: bool = True,
 ) -> list[Path]:
@@ -487,7 +487,7 @@ def load_ev0_dotenv(
     """
     loaded: list[Path] = []
 
-    home_path = Path(ev0_home or os.getenv("EV0_HOME", Path.home() / ".3V0"))
+    home_path = Path(threev0_home or os.getenv("EV0_HOME", Path.home() / ".3V0"))
     user_env = home_path / ".env"
     project_env_path = Path(project_env) if project_env else None
 
@@ -574,7 +574,7 @@ def _reapply_terminal_config_bridge(home_path: Path) -> None:
     loading (the historical env-driven behavior still applies).
     """
     try:
-        if Path(home_path).resolve() != _process_ev0_home().resolve():
+        if Path(home_path).resolve() != _process_threev0_home().resolve():
             return
         from threev0_cli.config import apply_terminal_config_to_env
 
@@ -774,7 +774,7 @@ def _load_secrets_config(home_path: Path) -> dict:
     # direct isolated parse if the shared reader is unavailable, preserving
     # the "malformed config can't take down dotenv loading" property (the
     # shared reader also swallows parse errors and returns {}).
-    if home_path == _process_ev0_home():
+    if home_path == _process_threev0_home():
         try:
             from threev0_cli.config import read_raw_config
 
@@ -794,11 +794,11 @@ def _load_secrets_config(home_path: Path) -> dict:
     return data.get("secrets") or {}
 
 
-def _process_ev0_home() -> Path:
+def _process_threev0_home() -> Path:
     """The EV0_HOME the shared config cache is keyed to."""
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        return get_ev0_home()
+        return get_threev0_home()
     except Exception:
         return Path.home() / ".3V0"

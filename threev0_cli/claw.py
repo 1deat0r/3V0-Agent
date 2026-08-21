@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from threev0_cli.config import get_ev0_home, get_config_path, load_config, save_config
+from threev0_cli.config import get_threev0_home, get_config_path, load_config, save_config
 from threev0_constants import get_optional_skills_dir
 from threev0_cli.setup import (
     Colors,
@@ -44,7 +44,7 @@ _OPENCLAW_SCRIPT = (
 
 # Fallback: user may have installed the skill from the Hub
 _OPENCLAW_SCRIPT_INSTALLED = (
-    get_ev0_home()
+    get_threev0_home()
     / "skills"
     / "migration"
     / "openclaw-migration"
@@ -385,12 +385,12 @@ def _cmd_migrate(args):
         return
 
     # Show what we're doing
-    ev0_home = get_ev0_home()
+    threev0_home = get_threev0_home()
     auto_yes = getattr(args, "yes", False)
     print()
     print_header("Migration Settings")
     print_info(f"Source:      {source_dir}")
-    print_info(f"Target:      {ev0_home}")
+    print_info(f"Target:      {threev0_home}")
     print_info(f"Preset:      {preset}")
     print_info(f"Overwrite:   {'yes' if overwrite else 'no (skip conflicts)'}")
     print_info(f"Secrets:     {'yes (allowlisted only)' if migrate_secrets else 'no'}")
@@ -431,7 +431,7 @@ def _cmd_migrate(args):
     try:
         preview = mod.Migrator(
             source_root=source_dir.resolve(),
-            target_root=ev0_home.resolve(),
+            target_root=threev0_home.resolve(),
             execute=False,
             workspace_target=ws_target,
             overwrite=overwrite,
@@ -515,7 +515,7 @@ def _cmd_migrate(args):
     if not no_backup:
         try:
             from threev0_cli.backup import create_pre_migration_backup, _format_size
-            backup_archive = create_pre_migration_backup(ev0_home=ev0_home)
+            backup_archive = create_pre_migration_backup(threev0_home=threev0_home)
             if backup_archive:
                 size_str = _format_size(backup_archive.stat().st_size)
                 print()
@@ -533,7 +533,7 @@ def _cmd_migrate(args):
     try:
         migrator = mod.Migrator(
             source_root=source_dir.resolve(),
-            target_root=ev0_home.resolve(),
+            target_root=threev0_home.resolve(),
             execute=True,
             workspace_target=ws_target,
             overwrite=overwrite,

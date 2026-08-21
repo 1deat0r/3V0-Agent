@@ -120,9 +120,9 @@ _RUNTIME_RECORD_NAME = "photon-sidecar.json"
 
 def _runtime_record_path() -> Path:
     # get_ev0_home() honors profile overrides — never hardcode ~/.3v0.
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home() / "runtime" / _RUNTIME_RECORD_NAME
+    return get_threev0_home() / "runtime" / _RUNTIME_RECORD_NAME
 
 
 def _write_runtime_record(port: int, token: str, pid: int) -> None:

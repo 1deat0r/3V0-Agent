@@ -488,9 +488,9 @@ def _store_full_text(url: str, content: str) -> Optional[str]:
     try:
         import hashlib
         from urllib.parse import urlparse
-        from threev0_constants import get_ev0_dir
+        from threev0_constants import get_threev0_dir
 
-        cache_dir = get_ev0_dir("cache/web", "web_cache")
+        cache_dir = get_threev0_dir("cache/web", "web_cache")
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         host = (urlparse(url).hostname or "page").replace(":", "_")

@@ -134,11 +134,11 @@ class TestHelpers:
     def test_to_image_url_part_blocks_credential_store(self, tmp_path, monkeypatch):
         from plugins.image_gen.openrouter import _to_image_url_part
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        auth_json = ev0_home / "auth.json"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        auth_json = threev0_home / "auth.json"
         auth_json.write_text('{"api_key":"sk-secret"}', encoding="utf-8")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         with pytest.raises(ValueError, match="credential store"):
             _to_image_url_part(str(auth_json))
@@ -182,8 +182,8 @@ class TestGenerate:
         assert result["error_type"] == "missing_api_key"
 
     def test_success_data_uri(self):
-        with patch(_RUNTIME, return_value=_runtime_ok()), \
-             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])), \
+        with patch(_RUNTIME, return_value=_runtime_ok()),\
+             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])),\
              patch(
                  "plugins.image_gen.openrouter.save_b64_image",
                  return_value=Path("/tmp/openrouter_gen.png"),
@@ -197,7 +197,7 @@ class TestGenerate:
 
 
     def test_empty_response(self):
-        with patch(_RUNTIME, return_value=_runtime_ok()), \
+        with patch(_RUNTIME, return_value=_runtime_ok()),\
              patch("requests.post", return_value=_mock_chat_response([])):
             result = _openrouter().generate(prompt="a pet")
         assert result["success"] is False
@@ -210,8 +210,8 @@ class TestGenerate:
         ref = tmp_path / "base.png"
         ref.write_bytes(b"\x89PNG\r\n")
 
-        with patch(_RUNTIME, return_value=_runtime_ok()), \
-             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])) as mock_post, \
+        with patch(_RUNTIME, return_value=_runtime_ok()),\
+             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])) as mock_post,\
              patch("plugins.image_gen.openrouter.save_b64_image", return_value=Path("/tmp/x.png")):
             _openrouter().generate(
                 prompt="a pet", aspect_ratio="square", reference_images=[str(ref)]
@@ -227,8 +227,8 @@ class TestGenerate:
         assert image_parts[0]["image_url"]["url"].startswith("data:image/png;base64,")
 
     def test_auth_header(self):
-        with patch(_RUNTIME, return_value=_runtime_ok()), \
-             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])) as mock_post, \
+        with patch(_RUNTIME, return_value=_runtime_ok()),\
+             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])) as mock_post,\
              patch("plugins.image_gen.openrouter.save_b64_image", return_value=Path("/tmp/x.png")):
             _openrouter().generate(prompt="a pet")
 
@@ -237,8 +237,8 @@ class TestGenerate:
 
     def test_generate_uses_model_kwarg_from_dispatch(self):
         """image_generate passes image_gen.model as a model kwarg — honor it."""
-        with patch(_RUNTIME, return_value=_runtime_ok()), \
-             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])) as mock_post, \
+        with patch(_RUNTIME, return_value=_runtime_ok()),\
+             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])) as mock_post,\
              patch("plugins.image_gen.openrouter.save_b64_image", return_value=Path("/tmp/x.png")):
             result = _openrouter().generate(prompt="a pet", model="openai/gpt-image-2")
 
@@ -251,8 +251,8 @@ class TestGenerate:
         nous_runtime = _runtime_ok(
             provider="nous", base_url="https://inference.nousresearch.com/v1", api_key="nous-tok"
         )
-        with patch(_RUNTIME, return_value=nous_runtime), \
-             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])) as mock_post, \
+        with patch(_RUNTIME, return_value=nous_runtime),\
+             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])) as mock_post,\
              patch("plugins.image_gen.openrouter.save_b64_image", return_value=Path("/tmp/x.png")):
             from plugins.image_gen.openrouter import _build_providers
 
@@ -273,7 +273,7 @@ class TestGenerate:
         resp.json.return_value = {"error": {"message": "Invalid API key"}}
         resp.raise_for_status.side_effect = req_lib.HTTPError(response=resp)
 
-        with patch(_RUNTIME, return_value=_runtime_ok()), \
+        with patch(_RUNTIME, return_value=_runtime_ok()),\
              patch("requests.post", return_value=resp) as mock_post:
             result = _openrouter().generate(prompt="a pet")
         assert result["success"] is False
@@ -283,7 +283,7 @@ class TestGenerate:
     def test_timeout(self):
         import requests as req_lib
 
-        with patch(_RUNTIME, return_value=_runtime_ok()), \
+        with patch(_RUNTIME, return_value=_runtime_ok()),\
              patch("requests.post", side_effect=req_lib.Timeout()):
             result = _openrouter().generate(prompt="a pet")
         assert result["success"] is False

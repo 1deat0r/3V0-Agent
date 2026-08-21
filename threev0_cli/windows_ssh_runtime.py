@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from threev0_constants import get_default_ev0_root
+from threev0_constants import get_default_threev0_root
 
 _HEX32 = re.compile(r"[0-9a-f]{32}\Z")
 _HEX16 = re.compile(r"[0-9a-f]{16}\Z")
@@ -53,7 +53,7 @@ def _root() -> Path:
     # read_token() runs after profile activation. Anchor both processes to the
     # machine root so a named profile cannot move the reader away from the
     # helper's token, including custom EV0_HOME layouts.
-    return get_default_ev0_root() / "desktop-ssh"
+    return get_default_threev0_root() / "desktop-ssh"
 
 
 def _directory(ownership_id: str) -> Path:
@@ -288,7 +288,7 @@ def remove_artifact(path: Path) -> bool:
     return True
 
 
-def process_state(pid: int, creation_time_ns: int, ev0_path: str, spawn_nonce: str) -> dict[str, Any]:
+def process_state(pid: int, creation_time_ns: int, threev0_path: str, spawn_nonce: str) -> dict[str, Any]:
     import psutil
     _nonce(spawn_nonce)
     try:
@@ -307,7 +307,7 @@ def process_state(pid: int, creation_time_ns: int, ev0_path: str, spawn_nonce: s
                 "actualCreationTimeNs": str(actual_creation), "expectedCreationTimeNs": str(creation_time_ns)}
     if not argv:
         return {"alive": True, "owned": False, "indeterminate": True, "reason": "argv-unavailable"}
-    expected = os.path.normcase(os.path.abspath(ev0_path))
+    expected = os.path.normcase(os.path.abspath(threev0_path))
     arg0 = os.path.normcase(os.path.abspath(argv[0]))
     # argv[0] is either the 3v0 exe directly, or (normal case) the base Python
     # interpreter -- its exact path varies by venv/uv layout, so match on "a python
@@ -331,8 +331,8 @@ def process_state(pid: int, creation_time_ns: int, ev0_path: str, spawn_nonce: s
             "argv": argv[:20], "expectedExecutable": expected}
 
 
-def terminate_owned(pid: int, creation_time_ns: int, ev0_path: str, spawn_nonce: str) -> bool:
-    state = process_state(pid, creation_time_ns, ev0_path, spawn_nonce)
+def terminate_owned(pid: int, creation_time_ns: int, threev0_path: str, spawn_nonce: str) -> bool:
+    state = process_state(pid, creation_time_ns, threev0_path, spawn_nonce)
     if not state["alive"] or not state["owned"]:
         return False
     import psutil
@@ -391,13 +391,13 @@ def spawn_backend(payload: dict[str, Any]) -> dict[str, Any]:
     configured_path = str(payload["ev0Path"])
     if not os.path.isabs(configured_path):
         raise ValueError("3V0 path must be absolute")
-    ev0_path = os.path.abspath(configured_path)
+    threev0_path = os.path.abspath(configured_path)
     token_path = str(_token_path(ownership_id, spawn_nonce))
     log_path = _log_path(ownership_id, spawn_nonce)
     profile = str(payload.get("profile") or "")
     if len(profile) > 256 or any(ch in profile for ch in "\x00\r\n"):
         raise ValueError("invalid profile")
-    venv_dir = os.path.dirname(ev0_path)
+    venv_dir = os.path.dirname(threev0_path)
     python_entry = os.path.join(venv_dir, "python.exe")
     if not os.path.isfile(python_entry):
         raise ValueError("3V0 Python runtime was not found")
@@ -436,9 +436,9 @@ def spawn_backend(payload: dict[str, Any]) -> dict[str, Any]:
             "logPath": str(log_path), "tokenPath": token_path}
 
 
-def inspect_ev0(ev0_path: str) -> dict[str, Any]:
-    path = os.path.abspath(ev0_path)
-    if not os.path.isabs(ev0_path) or not os.path.isfile(path):
+def inspect_ev0(threev0_path: str) -> dict[str, Any]:
+    path = os.path.abspath(threev0_path)
+    if not os.path.isabs(threev0_path) or not os.path.isfile(path):
         raise ValueError("3V0 path is not an executable file")
     version = subprocess.run([path, "--version"], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=20)
     help_result = subprocess.run([path, "serve", "--help"], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=20)
@@ -456,7 +456,7 @@ def dispatch(argv: list[str]) -> Any:
     operation = argv[0]
     if operation == "probe":
         import platform
-        return {"os": "Windows", "arch": platform.machine(), "ev0Home": str(get_default_ev0_root()), "python": sys.executable}
+        return {"os": "Windows", "arch": platform.machine(), "ev0Home": str(get_default_threev0_root()), "python": sys.executable}
     if operation == "upload-token" and len(argv) == 3:
         return upload_token(argv[1], argv[2], sys.stdin.buffer.read(65))
     if operation == "read-lock" and len(argv) == 2:

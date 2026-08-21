@@ -42,7 +42,7 @@ from agent.skill_commands import (
     SKILL_SCAFFOLD_SQL_LIKE,
     describe_skill_invocation,
 )
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from threev0_cli.sqlite_runtime import (
     is_sqlite_wal_reset_vulnerable as _is_sqlite_wal_reset_vulnerable,
 )
@@ -346,7 +346,7 @@ def _delete_delegate_children(conn, parent_ids: List[str]) -> List[str]:
 
 T = TypeVar("T")
 
-DEFAULT_DB_PATH = get_ev0_home() / "state.db"
+DEFAULT_DB_PATH = get_threev0_home() / "state.db"
 
 # How long SessionDB stops attempting read-only opens after one fails, before
 # probing again. Long enough that a genuinely unreadable file isn't retried per
@@ -393,7 +393,7 @@ def _default_db_path() -> Path:
     """
     if DEFAULT_DB_PATH != _IMPORT_DEFAULT_DB_PATH:
         return DEFAULT_DB_PATH
-    return get_ev0_home() / "state.db"
+    return get_threev0_home() / "state.db"
 
 
 # ---------------------------------------------------------------------------
@@ -2079,7 +2079,7 @@ def preflight_db_writability(
         return
 
     try:
-        home: Optional[Path] = Path(get_ev0_home()).resolve()
+        home: Optional[Path] = Path(get_threev0_home()).resolve()
     except Exception:  # pragma: no cover - defensive
         home = None
 
@@ -2606,7 +2606,7 @@ def fts5_cjk_so_path() -> Path:
     env = os.getenv("EV0_FTS5_CJK_SO")
     if env:
         return Path(env).expanduser()
-    return get_ev0_home() / "lib" / "libfts5_cjk.so"
+    return get_threev0_home() / "lib" / "libfts5_cjk.so"
 
 
 def _cjk_fts_config_enabled() -> bool:

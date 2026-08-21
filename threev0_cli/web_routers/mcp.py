@@ -43,7 +43,7 @@ _profile_cli_args = late("_profile_cli_args")
 _profile_scope = late("_profile_scope")
 _require_token = late("_require_token")
 _run_dashboard_mcp_oauth = late("_run_dashboard_mcp_oauth")
-_spawn_ev0_action = late("_spawn_ev0_action")
+_spawn_threev0_action = late("_spawn_threev0_action")
 load_config = late("load_config")
 save_config = late("save_config")
 save_env_value = late("save_env_value")
@@ -241,13 +241,13 @@ async def auth_mcp_server(name: str, request: Request, profile: Optional[str] = 
 
     _require_token(request)
     _gc_mcp_oauth_flows()
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    process_home = str(get_ev0_home().expanduser().resolve(strict=False))
+    process_home = str(get_threev0_home().expanduser().resolve(strict=False))
 
     def _read():
         with _profile_scope(profile):
-            return _get_mcp_servers(), str(get_ev0_home().expanduser().resolve(strict=False))
+            return _get_mcp_servers(), str(get_threev0_home().expanduser().resolve(strict=False))
 
     servers, flow_home = await asyncio.to_thread(_read)
     if name not in servers:
@@ -264,7 +264,7 @@ async def auth_mcp_server(name: str, request: Request, profile: Optional[str] = 
         flow_id=flow_id,
         server_name=name,
         profile=profile,
-        ev0_home=flow_home,
+        threev0_home=flow_home,
         redirect_uri=(cfg.get("oauth") or {}).get("redirect_uri")
         or _mcp_oauth_callback_url(request, name),
         reconnect_live=flow_home == process_home,
@@ -281,7 +281,7 @@ async def auth_mcp_server(name: str, request: Request, profile: Optional[str] = 
             )
         if any(
             flow.server_name == name
-            and flow.ev0_home == flow_home
+            and flow.threev0_home == flow_home
             and not flow.worker_done
             for flow in _mcp_oauth_flows.values()
         ):
@@ -524,7 +524,7 @@ async def install_mcp_catalog_entry(body: MCPCatalogInstall, profile: Optional[s
         # the first clone is still running.
         action = _mcp_install_action_name(name)
         try:
-            _spawn_ev0_action(
+            _spawn_threev0_action(
                 _profile_cli_args(effective_profile) + ["mcp", "install", name],
                 action,
             )

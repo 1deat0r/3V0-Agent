@@ -61,7 +61,7 @@ agent:
 
     from threev0_cli import kanban_db as kb
 
-    monkeypatch.setattr(kb, "_resolve_ev0_argv", lambda: ["3v0"])
+    monkeypatch.setattr(kb, "_resolve_threev0_argv", lambda: ["3v0"])
 
     captured = {}
 
@@ -104,7 +104,7 @@ def test_default_spawn_model_override_survives_real_cli_parse(monkeypatch, tmp_p
     from threev0_cli import kanban_db as kb
     from threev0_cli._parser import build_top_level_parser
 
-    monkeypatch.setattr(kb, "_resolve_ev0_argv", lambda: ["3v0"])
+    monkeypatch.setattr(kb, "_resolve_threev0_argv", lambda: ["3v0"])
     captured = {}
 
     class FakeProc:

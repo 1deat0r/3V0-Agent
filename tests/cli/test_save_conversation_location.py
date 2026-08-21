@@ -20,15 +20,15 @@ import pytest
 
 
 @pytest.fixture
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     home = tmp_path / ".3V0"
     home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("EV0_HOME", str(home))
     # Clear any cached ev0_home computation
     import threev0_constants
-    if hasattr(threev0_constants, "_ev0_home_cache"):
-        threev0_constants._ev0_home_cache = None
+    if hasattr(threev0_constants, "_threev0_home_cache"):
+        threev0_constants._threev0_home_cache = None
     return home
 
 
@@ -42,7 +42,7 @@ def _make_stub_cli(history):
     )
 
 
-def test_save_conversation_writes_under_ev0_home(ev0_home, tmp_path, monkeypatch, capsys):
+def test_save_conversation_writes_under_threev0_home(threev0_home, tmp_path, monkeypatch, capsys):
     """Snapshot must land under ~/.3V0/sessions/saved/, not CWD."""
     # Change CWD to a different directory to prove the file does NOT go there.
     work = tmp_path / "somewhere-else"
@@ -68,7 +68,7 @@ def test_save_conversation_writes_under_ev0_home(ev0_home, tmp_path, monkeypatch
     assert not cwd_leak, f"snapshot leaked to CWD: {cwd_leak}"
 
     # File MUST be under ~/.3V0/sessions/saved/
-    saved_dir = ev0_home / "sessions" / "saved"
+    saved_dir = threev0_home / "sessions" / "saved"
     assert saved_dir.is_dir(), "expected saved/ subdirectory to be created"
     files = list(saved_dir.glob("ev0_conversation_*.json"))
     assert len(files) == 1, files
@@ -89,7 +89,7 @@ def test_save_conversation_writes_under_ev0_home(ev0_home, tmp_path, monkeypatch
     assert "3v0 --resume 20260101_120000_abc123" in out, out
 
 
-def test_save_conversation_empty_history_does_nothing(ev0_home, capsys):
+def test_save_conversation_empty_history_does_nothing(threev0_home, capsys):
     for mod in [m for m in sys.modules if m.startswith("cli") or m == "threev0_constants"]:
         sys.modules.pop(mod, None)
     import cli
@@ -97,13 +97,13 @@ def test_save_conversation_empty_history_does_nothing(ev0_home, capsys):
     stub = _make_stub_cli([])
     cli.Ev0CLI.save_conversation(stub, "/save json")
 
-    saved_dir = ev0_home / "sessions" / "saved"
+    saved_dir = threev0_home / "sessions" / "saved"
     assert not saved_dir.exists() or not list(saved_dir.iterdir())
     out = capsys.readouterr().out
     assert "No conversation to save" in out
 
 
-def test_save_conversation_bare_shows_usage(ev0_home, capsys):
+def test_save_conversation_bare_shows_usage(threev0_home, capsys):
     """Bare /save prints the usage card and writes nothing."""
     for mod in [m for m in sys.modules if m.startswith("cli") or m == "threev0_constants"]:
         sys.modules.pop(mod, None)
@@ -112,7 +112,7 @@ def test_save_conversation_bare_shows_usage(ev0_home, capsys):
     stub = _make_stub_cli([{"role": "user", "content": "hi"}])
     cli.Ev0CLI.save_conversation(stub, "/save")
 
-    saved_dir = ev0_home / "sessions" / "saved"
+    saved_dir = threev0_home / "sessions" / "saved"
     assert not saved_dir.exists() or not list(saved_dir.iterdir())
     out = capsys.readouterr().out
     # Usage card lists every format and the redact option
@@ -120,7 +120,7 @@ def test_save_conversation_bare_shows_usage(ev0_home, capsys):
         assert token in out, (token, out)
 
 
-def test_save_conversation_bad_format_shows_usage(ev0_home, capsys):
+def test_save_conversation_bad_format_shows_usage(threev0_home, capsys):
     for mod in [m for m in sys.modules if m.startswith("cli") or m == "threev0_constants"]:
         sys.modules.pop(mod, None)
     import cli
@@ -128,7 +128,7 @@ def test_save_conversation_bad_format_shows_usage(ev0_home, capsys):
     stub = _make_stub_cli([{"role": "user", "content": "hi"}])
     cli.Ev0CLI.save_conversation(stub, "/save pdf")
 
-    saved_dir = ev0_home / "sessions" / "saved"
+    saved_dir = threev0_home / "sessions" / "saved"
     assert not saved_dir.exists() or not list(saved_dir.iterdir())
     out = capsys.readouterr().out
     assert "Usage:" in out

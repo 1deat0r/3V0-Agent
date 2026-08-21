@@ -29,7 +29,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def _traces_enabled_and_dir() -> Optional[Path]:
     if override:
         base = Path(os.path.expandvars(os.path.expanduser(str(override))))
     else:
-        base = get_ev0_home() / "moa-traces"
+        base = get_threev0_home() / "moa-traces"
     return base
 
 

@@ -411,8 +411,8 @@ def evict_cached_exchanged_token(raw_token: str) -> None:
 def _jwt_disk_path() -> Optional[Path]:
     """Path to the on-disk exchanged-JWT cache (profile-aware), or None."""
     try:
-        from threev0_constants import get_ev0_home
-        return Path(get_ev0_home()) / _JWT_DISK_FILENAME
+        from threev0_constants import get_threev0_home
+        return Path(get_threev0_home()) / _JWT_DISK_FILENAME
     except Exception:
         return None
 

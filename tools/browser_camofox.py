@@ -855,8 +855,8 @@ def camofox_vision(question: str, annotate: bool = False,
         )
 
         # Save screenshot to cache
-        from threev0_constants import get_ev0_home
-        screenshots_dir = get_ev0_home() / "browser_screenshots"
+        from threev0_constants import get_threev0_home
+        screenshots_dir = get_threev0_home() / "browser_screenshots"
         screenshots_dir.mkdir(parents=True, exist_ok=True)
         screenshot_path = str(screenshots_dir / f"browser_screenshot_{uuid.uuid4().hex[:8]}.png")
 

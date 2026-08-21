@@ -36,7 +36,7 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-from threev0_constants import get_ev0_home, get_optional_mcps_dir
+from threev0_constants import get_threev0_home, get_optional_mcps_dir
 from threev0_cli._subprocess_compat import noninteractive_git_env
 from threev0_cli.colors import Colors, color
 from threev0_cli.config import (
@@ -437,7 +437,7 @@ def is_enabled(name: str) -> bool:
 
 def _install_root() -> Path:
     """Where git-bootstrapped MCPs are cloned. Per-user, profile-aware."""
-    root = get_ev0_home() / "mcp-installs"
+    root = get_threev0_home() / "mcp-installs"
     root.mkdir(parents=True, exist_ok=True)
     return root
 

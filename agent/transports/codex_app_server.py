@@ -25,7 +25,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from tools.environments.local import ev0_subprocess_env
+from tools.environments.local import threev0_subprocess_env
 
 # Default minimum codex version we test against. The PR sets this from the
 # `codex --version` parsed at install time; bumping is a one-line change here.
@@ -87,7 +87,7 @@ class CodexAppServerClient:
         # centralized helper so Tier-1 + dynamic-internal secrets are always
         # stripped while provider creds still flow, matching copilot_acp_client
         # (#29157 sibling spawn-site gap).
-        spawn_env = ev0_subprocess_env(inherit_credentials=True)
+        spawn_env = threev0_subprocess_env(inherit_credentials=True)
         if env:
             spawn_env.update(env)
         if codex_home:

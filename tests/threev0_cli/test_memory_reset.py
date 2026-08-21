@@ -14,10 +14,10 @@ import pytest
 @pytest.fixture
 def memory_env(tmp_path, monkeypatch):
     """Set up a fake EV0_HOME with memory files."""
-    ev0_home = tmp_path / ".3V0"
-    memories = ev0_home / "memories"
+    threev0_home = tmp_path / ".3V0"
+    memories = threev0_home / "memories"
     memories.mkdir(parents=True)
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     # Create sample memory files
     (memories / "MEMORY.md").write_text(
@@ -28,7 +28,7 @@ def memory_env(tmp_path, monkeypatch):
         "§\nUser is Teknium\n§\nTimezone: US Pacific",
         encoding="utf-8",
     )
-    return ev0_home, memories
+    return threev0_home, memories
 
 
 def _run_memory_reset(target="all", yes=False, monkeypatch=None, confirm_input="no"):
@@ -36,9 +36,9 @@ def _run_memory_reset(target="all", yes=False, monkeypatch=None, confirm_input="
 
     Simulates what happens when `3v0 memory reset` is run.
     """
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    mem_dir = get_ev0_home() / "memories"
+    mem_dir = get_threev0_home() / "memories"
     files_to_reset = []
     if target in {"all", "memory"}:
         files_to_reset.append(("MEMORY.md", "agent notes"))
@@ -64,7 +64,7 @@ class TestMemoryReset:
 
     def test_reset_all_with_yes_flag(self, memory_env):
         """--yes flag should skip confirmation and delete both files."""
-        ev0_home, memories = memory_env
+        threev0_home, memories = memory_env
         assert (memories / "MEMORY.md").exists()
         assert (memories / "USER.md").exists()
 
@@ -76,9 +76,9 @@ class TestMemoryReset:
 
     def test_reset_no_files_exist(self, tmp_path, monkeypatch):
         """Should return 'nothing' when no memory files exist."""
-        ev0_home = tmp_path / ".3V0"
-        (ev0_home / "memories").mkdir(parents=True)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        (threev0_home / "memories").mkdir(parents=True)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         result = _run_memory_reset(target="all", yes=True)
         assert result == "nothing"
@@ -86,7 +86,7 @@ class TestMemoryReset:
 
     def test_reset_partial_files(self, memory_env):
         """Reset should work when only one memory file exists."""
-        ev0_home, memories = memory_env
+        threev0_home, memories = memory_env
         (memories / "USER.md").unlink()
 
         result = _run_memory_reset(target="all", yes=True)

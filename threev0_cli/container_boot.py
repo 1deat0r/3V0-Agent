@@ -94,7 +94,7 @@ class ReconcileAction:
 
 def reconcile_profile_gateways(
     *,
-    ev0_home: Path,
+    threev0_home: Path,
     scandir: Path,
     dry_run: bool = False,
     container_argv: Sequence[str] | None = None,
@@ -150,23 +150,23 @@ def reconcile_profile_gateways(
     # `gateway run` command and no state exists yet, seed that intent
     # as `running` so the s6 reconciler preserves the pre-s6 behavior.
     legacy_default_state = _maybe_migrate_legacy_gateway_run_state(
-        ev0_home,
+        threev0_home,
         container_argv=container_argv,
         dry_run=dry_run,
     )
-    default_prior_state = legacy_default_state or _read_desired_state(ev0_home)
+    default_prior_state = legacy_default_state or _read_desired_state(threev0_home)
     default_should_start = default_prior_state in _AUTOSTART_STATES
     if not dry_run:
-        _cleanup_stale_runtime_files(ev0_home)
+        _cleanup_stale_runtime_files(threev0_home)
         _register_service(scandir, "default", start=default_should_start)
     actions.append(ReconcileAction(
         profile="default",
         prior_state=default_prior_state,
         action="started" if default_should_start else "registered",
-        prior_exit=_read_prior_exit_label(ev0_home),
+        prior_exit=_read_prior_exit_label(threev0_home),
     ))
 
-    profiles_root = ev0_home / "profiles"
+    profiles_root = threev0_home / "profiles"
     if profiles_root.is_dir():
         for entry in sorted(profiles_root.iterdir()):
             if not entry.is_dir():
@@ -207,12 +207,12 @@ def reconcile_profile_gateways(
             ))
 
     if not dry_run:
-        _write_reconcile_log(ev0_home, actions)
+        _write_reconcile_log(threev0_home, actions)
     return actions
 
 
 def _maybe_migrate_legacy_gateway_run_state(
-    ev0_home: Path,
+    threev0_home: Path,
     *,
     container_argv: Sequence[str] | None,
     dry_run: bool,
@@ -227,7 +227,7 @@ def _maybe_migrate_legacy_gateway_run_state(
     root gateway_state.json exists so explicit stopped/failed states keep
     winning across restarts.
     """
-    state_file = ev0_home / "gateway_state.json"
+    state_file = threev0_home / "gateway_state.json"
     if state_file.exists():
         return None
 
@@ -531,7 +531,7 @@ def _register_service(scandir: Path, profile: str, *, start: bool) -> None:
 
 
 def _write_reconcile_log(
-    ev0_home: Path, actions: list[ReconcileAction],
+    threev0_home: Path, actions: list[ReconcileAction],
 ) -> None:
     """Append one line per profile to $EV0_HOME/logs/container-boot.log.
 
@@ -549,7 +549,7 @@ def _write_reconcile_log(
     one append-only file (PR #30136 review item O3).
     """
     import time
-    log_dir = ev0_home / "logs"
+    log_dir = threev0_home / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / "container-boot.log"
 
@@ -598,10 +598,10 @@ def main() -> int:
         )
         return 0
 
-    ev0_home = Path(os.environ.get("EV0_HOME", "/opt/data"))
+    threev0_home = Path(os.environ.get("EV0_HOME", "/opt/data"))
     scandir = Path(os.environ.get("S6_PROFILE_GATEWAY_SCANDIR", "/run/service"))
     actions = reconcile_profile_gateways(
-        ev0_home=ev0_home, scandir=scandir,
+        threev0_home=threev0_home, scandir=scandir,
     )
     for a in actions:
         print(

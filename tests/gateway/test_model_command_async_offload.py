@@ -72,12 +72,12 @@ def _isolated_config(tmp_path, monkeypatch):
     and deterministic (no real provider creds / network)."""
     import gateway.run as gateway_run
 
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    (ev0_home / "config.yaml").write_text("model:\n  default: gpt-x\n  provider: openrouter\nproviders: {}\n", encoding="utf-8")
-    monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    (threev0_home / "config.yaml").write_text("model:\n  default: gpt-x\n  provider: openrouter\nproviders: {}\n", encoding="utf-8")
+    monkeypatch.setattr(gateway_run, "_threev0_home", threev0_home)
     monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda: {})
-    return ev0_home
+    return threev0_home
 
 
 # --------------------------------------------------------------------------- #

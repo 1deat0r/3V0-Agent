@@ -20,9 +20,9 @@ from pathlib import Path
 import pytest
 
 from threev0_constants import (
-    get_ev0_home,
-    reset_ev0_home_override,
-    set_ev0_home_override,
+    get_threev0_home,
+    reset_threev0_home_override,
+    set_threev0_home_override,
 )
 
 
@@ -40,11 +40,11 @@ def two_profiles(tmp_path):
 
 def _under_override(home: Path, fn):
     """Run ``fn`` with the profile override set to ``home`` and reset after."""
-    token = set_ev0_home_override(str(home))
+    token = set_threev0_home_override(str(home))
     try:
         return fn()
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
 
 # ---------------------------------------------------------------------------
@@ -124,7 +124,7 @@ class TestThreadContextPropagation:
         seen = {}
 
         def worker():
-            seen["home"] = str(get_ev0_home())
+            seen["home"] = str(get_threev0_home())
 
         def run():
             t = threading.Thread(target=worker)
@@ -149,7 +149,7 @@ class TestThreadContextPropagation:
         import model_tools
 
         async def reads_home():
-            return str(get_ev0_home())
+            return str(get_threev0_home())
 
         async def driver():
             # Inside a running loop, _run_async spawns a worker thread + loop.

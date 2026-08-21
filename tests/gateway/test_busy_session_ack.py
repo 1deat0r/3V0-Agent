@@ -411,7 +411,7 @@ class TestBusySessionOnboardingHint:
         """First busy-while-running message gets an extra hint about /busy."""
         import gateway.run as _gr
 
-        monkeypatch.setattr(_gr, "_ev0_home", tmp_path)
+        monkeypatch.setattr(_gr, "_threev0_home", tmp_path)
         # mark_seen imports utils.atomic_yaml_write; make sure it resolves
         # against a writable dir by pointing _ev0_home at tmp_path.
         monkeypatch.setattr(_gr, "_load_gateway_config", lambda: {})

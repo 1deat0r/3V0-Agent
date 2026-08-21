@@ -254,12 +254,12 @@ def test_asyncio_create_subprocess_shell_systemctl_blocked():
 # ──────────────────── pkill / killall / taskkill ───────────────
 
 
-def test_subprocess_pkill_ev0_blocked():
+def test_subprocess_pkill_threev0_blocked():
     with pytest.raises(RuntimeError, match="live-system guard"):
         subprocess.run(["pkill", "-f", "3v0"])
 
 
-def test_subprocess_pkill_ev0_gateway_blocked():
+def test_subprocess_pkill_threev0_gateway_blocked():
     with pytest.raises(RuntimeError, match="live-system guard"):
         subprocess.run(["pkill", "-f", "3v0-gateway"])
 
@@ -270,7 +270,7 @@ def test_subprocess_pkill_python_dash_f_blocked():
         subprocess.run(["pkill", "-f", "python"])
 
 
-def test_subprocess_killall_ev0_blocked():
+def test_subprocess_killall_threev0_blocked():
     with pytest.raises(RuntimeError, match="live-system guard"):
         subprocess.run(["killall", "3v0"])
 

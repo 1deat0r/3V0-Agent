@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 from threev0_cli.plugins import PluginContext, PluginManager, PluginManifest
 
 
@@ -26,21 +26,21 @@ def _context(
 
 
 def _in_home(home: Path, fn, *args):
-    token = set_ev0_home_override(home)
+    token = set_threev0_home_override(home)
     try:
         return fn(*args)
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
 
 @pytest.fixture
 def isolated_home(tmp_path: Path):
     home = tmp_path / "profile"
-    token = set_ev0_home_override(home)
+    token = set_threev0_home_override(home)
     try:
         yield home
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
 
 def test_config_round_trip_uses_canonical_settings_namespace(
@@ -282,22 +282,22 @@ def test_config_and_state_follow_context_local_profile_scope(tmp_path: Path) -> 
 
     for index, home in enumerate(homes):
         home.mkdir(parents=True)
-        token = set_ev0_home_override(home)
+        token = set_threev0_home_override(home)
         try:
             ctx.set_config("profile_value", index)
             ctx.state.set("profile_value", index)
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
     # One globally-loaded plugin context follows each multiplexed turn's
     # context-local profile instead of pinning the startup profile.
     for index, home in enumerate(homes):
-        token = set_ev0_home_override(home)
+        token = set_threev0_home_override(home)
         try:
             assert ctx.get_config("profile_value") == index
             assert ctx.state.get("profile_value") == index
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
 
 def test_fixture_plugin_round_trips_bridge_during_real_discovery(

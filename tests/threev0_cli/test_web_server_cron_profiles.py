@@ -22,7 +22,7 @@ def isolated_profiles(tmp_path, monkeypatch):
         (home / "cron").mkdir(parents=True, exist_ok=True)
         (home / "config.yaml").write_text("model: test-model\n", encoding="utf-8")
 
-    monkeypatch.setattr(profiles, "_get_default_ev0_home", lambda: default_home)
+    monkeypatch.setattr(profiles, "_get_default_threev0_home", lambda: default_home)
     monkeypatch.setattr(profiles, "_get_profiles_root", lambda: profiles_root)
     return {"default": default_home, "worker_alpha": worker_home}
 
@@ -48,19 +48,19 @@ def test_fire_cron_job_scopes_store_and_runtime_home_together(
     from threev0_cli import web_server
 
     from threev0_constants import (
-        reset_ev0_home_override,
-        set_ev0_home_override,
+        reset_threev0_home_override,
+        set_threev0_home_override,
     )
 
     default_home = isolated_profiles["default"]
     worker_home = isolated_profiles["worker_alpha"]
-    monkeypatch.setattr(scheduler, "_ev0_home", None)
+    monkeypatch.setattr(scheduler, "_threev0_home", None)
     captured = {}
 
     class RecordingProvider:
         def fire_due(self, job_id, *, adapters=None, loop=None):
             captured["job_id"] = job_id
-            captured["runtime_home"] = scheduler._get_ev0_home()
+            captured["runtime_home"] = scheduler._get_threev0_home()
             captured["jobs_file"] = cron_jobs._current_cron_store().jobs_file
             return True
 
@@ -69,7 +69,7 @@ def test_fire_cron_job_scopes_store_and_runtime_home_together(
         lambda: RecordingProvider(),
     )
 
-    outer_token = set_ev0_home_override(default_home)
+    outer_token = set_threev0_home_override(default_home)
     try:
         assert web_server._fire_cron_job_for_profile("worker_alpha", "worker-job") is True
         assert captured == {
@@ -77,9 +77,9 @@ def test_fire_cron_job_scopes_store_and_runtime_home_together(
             "runtime_home": worker_home,
             "jobs_file": worker_home / "cron" / "jobs.json",
         }
-        assert scheduler._get_ev0_home() == default_home
+        assert scheduler._get_threev0_home() == default_home
     finally:
-        reset_ev0_home_override(outer_token)
+        reset_threev0_home_override(outer_token)
 
 
 def test_create_registers_scheduler_inside_target_profile(
@@ -90,7 +90,7 @@ def test_create_registers_scheduler_inside_target_profile(
     from cron import jobs as cron_jobs
     from cron.scheduler_provider import CronScheduler
     from threev0_cli import web_server
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
     worker_home = isolated_profiles["worker_alpha"]
     captured = {}
@@ -105,7 +105,7 @@ def test_create_registers_scheduler_inside_target_profile(
 
         def register_job(self, job):
             captured["job"] = job
-            captured["runtime_home"] = get_ev0_home()
+            captured["runtime_home"] = get_threev0_home()
             captured["jobs_file"] = cron_jobs._current_cron_store().jobs_file
 
     monkeypatch.setattr(
@@ -177,13 +177,13 @@ def test_notify_cron_provider_scopes_store_and_runtime_home_together(
     from threev0_cli import web_server
 
     from threev0_constants import (
-        reset_ev0_home_override,
-        set_ev0_home_override,
+        reset_threev0_home_override,
+        set_threev0_home_override,
     )
 
     default_home = isolated_profiles["default"]
     worker_home = isolated_profiles["worker_alpha"]
-    monkeypatch.setattr(scheduler, "_ev0_home", None)
+    monkeypatch.setattr(scheduler, "_threev0_home", None)
     monkeypatch.setattr(
         web_server,
         "_cron_profile_dicts",
@@ -193,7 +193,7 @@ def test_notify_cron_provider_scopes_store_and_runtime_home_together(
 
     class RecordingProvider:
         def on_jobs_changed(self):
-            captured["runtime_home"] = scheduler._get_ev0_home()
+            captured["runtime_home"] = scheduler._get_threev0_home()
             captured["jobs_file"] = cron_jobs._current_cron_store().jobs_file
 
     monkeypatch.setattr(
@@ -201,16 +201,16 @@ def test_notify_cron_provider_scopes_store_and_runtime_home_together(
         lambda: RecordingProvider(),
     )
 
-    outer_token = set_ev0_home_override(default_home)
+    outer_token = set_threev0_home_override(default_home)
     try:
         web_server._notify_cron_provider_for_profile("worker_alpha")
         assert captured == {
             "runtime_home": worker_home,
             "jobs_file": worker_home / "cron" / "jobs.json",
         }
-        assert scheduler._get_ev0_home() == default_home
+        assert scheduler._get_threev0_home() == default_home
     finally:
-        reset_ev0_home_override(outer_token)
+        reset_threev0_home_override(outer_token)
 
 
 def test_notify_cron_provider_failure_is_best_effort(
@@ -258,7 +258,7 @@ def test_external_provider_reconcile_fails_closed_with_multiple_profiles(
     from cron import scheduler
     from threev0_cli import web_server
 
-    monkeypatch.setattr(scheduler, "_ev0_home", None)
+    monkeypatch.setattr(scheduler, "_threev0_home", None)
     monkeypatch.setattr(
         web_server,
         "_cron_profile_dicts",
@@ -307,7 +307,7 @@ def test_builtin_provider_hook_still_fires_with_multiple_profiles(
     from cron.scheduler_provider import InProcessCronScheduler
     from threev0_cli import web_server
 
-    monkeypatch.setattr(scheduler, "_ev0_home", None)
+    monkeypatch.setattr(scheduler, "_threev0_home", None)
     monkeypatch.setattr(
         web_server,
         "_cron_profile_dicts",

@@ -146,7 +146,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -787,7 +787,7 @@ _active_skin_name: str = "default"
 
 def _skins_dir() -> Path:
     """User skins directory."""
-    return get_ev0_home() / "skins"
+    return get_threev0_home() / "skins"
 
 
 def _load_skin_from_yaml(path: Path) -> Optional[Dict[str, Any]]:

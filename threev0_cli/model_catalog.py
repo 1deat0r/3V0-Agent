@@ -114,8 +114,8 @@ def _load_catalog_config() -> dict[str, Any]:
 
 def _cache_path() -> Path:
     """Return the disk cache path. Import lazily so tests can monkeypatch home."""
-    from threev0_constants import get_ev0_home
-    return get_ev0_home() / "cache" / "model_catalog.json"
+    from threev0_constants import get_threev0_home
+    return get_threev0_home() / "cache" / "model_catalog.json"
 
 
 # ---------------------------------------------------------------------------

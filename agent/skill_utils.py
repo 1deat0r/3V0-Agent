@@ -568,9 +568,9 @@ def get_external_skills_dirs() -> List[Path]:
     if not isinstance(raw_dirs, list):
         return []
 
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    ev0_home = get_ev0_home()
+    threev0_home = get_threev0_home()
     local_skills = get_skills_dir().resolve()
     seen: Set[Path] = set()
     result = []
@@ -584,7 +584,7 @@ def get_external_skills_dirs() -> List[Path]:
         p = Path(expanded)
         # Resolve relative paths against EV0_HOME, not cwd
         if not p.is_absolute():
-            p = (ev0_home / p).resolve()
+            p = (threev0_home / p).resolve()
         else:
             p = p.resolve()
         if p == local_skills:

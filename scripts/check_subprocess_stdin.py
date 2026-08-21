@@ -160,7 +160,7 @@ def main() -> int:
     # Add repo root to sys.path so we can import threev0_constants (this script
     # runs as a standalone subprocess, not as a module).
     sys.path.insert(0, str(repo_root))
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
     all_violations = []
 
@@ -189,7 +189,7 @@ def main() -> int:
     # plugins in get_ev0_home()/plugins/ and project plugins in
     # ./.3V0/plugins/, where code like ori/hooks.py can spawn
     # subprocesses with inherited stdin — #67639).
-    plugin_roots: list[Path] = [get_ev0_home() / "plugins"]
+    plugin_roots: list[Path] = [get_threev0_home() / "plugins"]
     if os.environ.get("EV0_ENABLE_PROJECT_PLUGINS"):
         plugin_roots.append(Path.cwd() / ".3V0" / "plugins")
     seen_roots: set[Path] = set()

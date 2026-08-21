@@ -107,7 +107,7 @@ USER_OWNED_EXCLUDE: frozenset = frozenset({
     "response_store.db-shm", "response_store.db-wal",
     "gateway.pid", "gateway_state.json", "processes.json",
     "auth.lock", "active_profile", ".update_check",
-    "errors.log", ".ev0_history",
+    "errors.log", ".threev0_history",
     # User data
     "memories", "sessions", "logs", "plans", "workspace", "home",
     "image_cache", "audio_cache", "document_cache",
@@ -171,7 +171,7 @@ class DistributionManifest:
     name: str
     version: str = "0.1.0"
     description: str = ""
-    ev0_requires: str = ""
+    threev0_requires: str = ""
     author: str = ""
     license: str = ""
     env_requires: List[EnvRequirement] = field(default_factory=list)
@@ -204,7 +204,7 @@ class DistributionManifest:
             name=name,
             version=str(data.get("version") or "0.1.0"),
             description=str(data.get("description") or ""),
-            ev0_requires=str(data.get("ev0_requires") or ""),
+            threev0_requires=str(data.get("ev0_requires") or ""),
             author=str(data.get("author") or ""),
             license=str(data.get("license") or ""),
             env_requires=env_requires,
@@ -220,8 +220,8 @@ class DistributionManifest:
         }
         if self.description:
             out["description"] = self.description
-        if self.ev0_requires:
-            out["ev0_requires"] = self.ev0_requires
+        if self.threev0_requires:
+            out["ev0_requires"] = self.threev0_requires
         if self.author:
             out["author"] = self.author
         if self.license:
@@ -312,7 +312,7 @@ def _parse_semver(v: str) -> Tuple[int, int, int]:
         raise DistributionError(f"Unparseable version: {v!r}") from exc
 
 
-def check_ev0_requires(spec: str, current_version: str) -> None:
+def check_threev0_requires(spec: str, current_version: str) -> None:
     """Raise DistributionError if ``current_version`` does not satisfy ``spec``.
 
     ``spec`` accepts a single comparator (``>=0.12.0``, ``==0.12.0``, etc.).
@@ -513,7 +513,7 @@ def plan_install(
         normalize_profile_name,
         validate_profile_name,
     )
-    from threev0_cli import __version__ as ev0_version
+    from threev0_cli import __version__ as threev0_version
 
     staged, provenance = _stage_source(source, workdir)
     _reject_distribution_symlinks(staged)
@@ -525,7 +525,7 @@ def plan_install(
         )
 
     # Version check up-front so we fail fast
-    check_ev0_requires(manifest.ev0_requires, ev0_version)
+    check_threev0_requires(manifest.threev0_requires, threev0_version)
 
     # Resolve target profile name
     target_name = override_name or manifest.name

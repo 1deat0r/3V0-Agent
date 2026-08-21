@@ -304,8 +304,8 @@ class TestGlobalAllowPrivateUrls:
     ):
         """Multiplexed profiles must resolve their own private-URL policy."""
         from threev0_constants import (
-            reset_ev0_home_override,
-            set_ev0_home_override,
+            reset_threev0_home_override,
+            set_threev0_home_override,
         )
 
         monkeypatch.delenv("EV0_ALLOW_PRIVATE_URLS", raising=False)
@@ -326,11 +326,11 @@ class TestGlobalAllowPrivateUrls:
         )
 
         def under_profile(home):
-            token = set_ev0_home_override(home)
+            token = set_threev0_home_override(home)
             try:
                 return is_safe_url("http://profile-private.test/resource")
             finally:
-                reset_ev0_home_override(token)
+                reset_threev0_home_override(token)
 
         homes = {"allowed": allowed_home, "blocked": blocked_home}
         expected = {"allowed": True, "blocked": False}

@@ -25,12 +25,12 @@ import pytest
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(autouse=True)
-def _isolate_ev0_home(tmp_path, monkeypatch):
+def _isolate_threev0_home(tmp_path, monkeypatch):
     """Redirect EV0_HOME to a temp directory."""
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
     try:
         import threev0_constants
-        monkeypatch.setattr(threev0_constants, "get_ev0_home", lambda: tmp_path)
+        monkeypatch.setattr(threev0_constants, "get_threev0_home", lambda: tmp_path)
     except (ImportError, AttributeError):
         pass
     return tmp_path
@@ -1178,7 +1178,7 @@ class TestEventBridgePollE2E:
 
         # Second poll — files unchanged, should skip entirely
         bridge._poll_once(db)
-        assert db.call_count == first_calls, \
+        assert db.call_count == first_calls,\
             "Second poll should skip DB queries when files unchanged"
 
     def test_poll_detects_new_message_after_db_write(self, tmp_path, monkeypatch):

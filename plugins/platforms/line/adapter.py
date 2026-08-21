@@ -1402,15 +1402,15 @@ class LineAdapter(BasePlatformAdapter):
             return web.Response(status=404, text="not found")
 
         try:
-            from threev0_constants import get_ev0_home
-            ev0_home = Path(get_ev0_home()).resolve()
+            from threev0_constants import get_threev0_home
+            threev0_home = Path(get_threev0_home()).resolve()
         except Exception:
-            ev0_home = Path.home().joinpath(".3V0").resolve()
+            threev0_home = Path.home().joinpath(".3V0").resolve()
 
         allowed_roots = {
             Path(tempfile.gettempdir()).resolve(),
             Path("/tmp").resolve(),  # → /private/tmp on macOS
-            ev0_home,
+            threev0_home,
         }
         resolved = path.resolve()
         if not any(_is_relative_to(resolved, r) for r in allowed_roots):

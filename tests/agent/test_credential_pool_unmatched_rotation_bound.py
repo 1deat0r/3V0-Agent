@@ -25,12 +25,12 @@ import pytest
 
 
 def _seed_pool(tmp_path, monkeypatch, entries, provider="openrouter"):
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir(parents=True, exist_ok=True)
-    (ev0_home / "auth.json").write_text(
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir(parents=True, exist_ok=True)
+    (threev0_home / "auth.json").write_text(
         json.dumps({"version": 1, "credential_pool": {provider: entries}})
     )
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     from agent.credential_pool import load_pool
 
     return load_pool(provider)

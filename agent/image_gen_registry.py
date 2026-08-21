@@ -25,7 +25,7 @@ import threading
 from typing import Dict, List, Optional
 
 from agent.image_gen_provider import ImageGenProvider
-from threev0_constants import ev0_home_key
+from threev0_constants import threev0_home_key
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def list_providers(*, scope: Optional[str] = None) -> List[ImageGenProvider]:
     """Return all registered providers, sorted by name."""
     with _lock:
         merged = dict(_providers)
-        merged.update(_scoped_providers.get(scope or ev0_home_key(), {}))
+        merged.update(_scoped_providers.get(scope or threev0_home_key(), {}))
         items = list(merged.values())
     return sorted(items, key=lambda p: p.name)
 
@@ -76,7 +76,7 @@ def get_provider(name: str, *, scope: Optional[str] = None) -> Optional[ImageGen
         return None
     with _lock:
         key = name.strip()
-        return _scoped_providers.get(scope or ev0_home_key(), {}).get(key) or _providers.get(key)
+        return _scoped_providers.get(scope or threev0_home_key(), {}).get(key) or _providers.get(key)
 
 
 def snapshot_registration(
@@ -141,7 +141,7 @@ def get_active_provider() -> Optional[ImageGenProvider]:
 
     with _lock:
         snapshot = dict(_providers)
-        snapshot.update(_scoped_providers.get(ev0_home_key(), {}))
+        snapshot.update(_scoped_providers.get(threev0_home_key(), {}))
 
     def _is_available_safe(p: ImageGenProvider) -> bool:
         """Wrap ``is_available()`` so a buggy provider doesn't kill resolution."""

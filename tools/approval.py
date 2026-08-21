@@ -72,25 +72,25 @@ _approval_session_id: contextvars.ContextVar[str] = contextvars.ContextVar(
 # thread/task-local, so each executor worker (or asyncio task) sees only its
 # own value. None = unset → fall back to the env var for legacy
 # single-threaded CLI callers that still export EV0_INTERACTIVE.
-_ev0_interactive_ctx: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+_threev0_interactive_ctx: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
     "ev0_interactive",
     default=None,
 )
 
 
-def set_ev0_interactive_context(interactive: bool) -> contextvars.Token:
+def set_threev0_interactive_context(interactive: bool) -> contextvars.Token:
     """Bind interactive mode for the current context (thread or asyncio task).
 
     Use this instead of mutating ``os.environ["EV0_INTERACTIVE"]`` from
     concurrent executor threads. When unset (default), interactive detection
     falls back to the ``EV0_INTERACTIVE`` env var for legacy callers.
     """
-    return _ev0_interactive_ctx.set("1" if interactive else "")
+    return _threev0_interactive_ctx.set("1" if interactive else "")
 
 
-def reset_ev0_interactive_context(token: contextvars.Token) -> None:
+def reset_threev0_interactive_context(token: contextvars.Token) -> None:
     """Restore the prior value from :func:`set_ev0_interactive_context`."""
-    _ev0_interactive_ctx.reset(token)
+    _threev0_interactive_ctx.reset(token)
 
 
 def _is_interactive_cli() -> bool:
@@ -99,7 +99,7 @@ def _is_interactive_cli() -> bool:
     Prefers the context-local flag (set by concurrent ACP sessions) and falls
     back to the ``EV0_INTERACTIVE`` env var for single-threaded callers.
     """
-    ctx_val = _ev0_interactive_ctx.get()
+    ctx_val = _threev0_interactive_ctx.get()
     if ctx_val is not None:
         return is_truthy_value(ctx_val)
     return env_var_enabled("EV0_INTERACTIVE")
@@ -693,10 +693,10 @@ def _save_blocked_payload(command: str) -> Optional[str]:
     back to the manual write_file recipe).
     """
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         import time as _time
         import uuid as _uuid
-        script_dir = get_ev0_home() / "cache" / "blocked-scripts"
+        script_dir = get_threev0_home() / "cache" / "blocked-scripts"
         script_dir.mkdir(parents=True, exist_ok=True)
         # Opportunistic cleanup: blocked payloads older than 7 days.
         cutoff = _time.time() - 7 * 86400
@@ -1180,7 +1180,7 @@ def _normalize_command_for_detection(command: str) -> str:
     # Fold the (more specific) 3V0 home first: on Windows it nests under the
     # user home (C:\Users\alice\AppData\...\3v0), so folding the user home
     # first would eat the prefix the 3V0-home fold needs.
-    command = _rewrite_resolved_ev0_home(command)
+    command = _rewrite_resolved_threev0_home(command)
     command = _rewrite_resolved_user_home(command)
     # Strip shell backslash-escapes: r\m → rm. Prevents \-injection bypass.
     command = re.sub(r'\\([^\n])', r'\1', command)
@@ -1285,7 +1285,7 @@ def _rewrite_resolved_user_home(command: str) -> str:
     return _fold_home_prefixes(command, candidates, "~")
 
 
-def _rewrite_resolved_ev0_home(command: str) -> str:
+def _rewrite_resolved_threev0_home(command: str) -> str:
     """Rewrite the resolved absolute 3V0 home prefix to ``~/.3V0/``.
 
     Resolves the active ``EV0_HOME`` at call time (and its symlink-resolved
@@ -1298,8 +1298,8 @@ def _rewrite_resolved_ev0_home(command: str) -> str:
     path can't be resolved or doesn't appear.
     """
     try:
-        from threev0_constants import get_ev0_home
-        home = get_ev0_home().expanduser()
+        from threev0_constants import get_threev0_home
+        home = get_threev0_home().expanduser()
         candidates = [
             str(home),
             str(home.resolve(strict=False)),

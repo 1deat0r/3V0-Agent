@@ -178,8 +178,8 @@ def test_release_under_profile_home_override_targets_acquisition_registry(
     ``_profile_runtime_scope``). Before the fix the root entry survived and
     the session cap filled with phantom leases."""
     from threev0_constants import (
-        reset_ev0_home_override,
-        set_ev0_home_override,
+        reset_threev0_home_override,
+        set_threev0_home_override,
     )
 
     root = tmp_path / "3v0"
@@ -196,11 +196,11 @@ def test_release_under_profile_home_override_targets_acquisition_registry(
     root_registry = root / "runtime" / "active_sessions.json"
     assert root_registry.exists()
 
-    token = set_ev0_home_override(str(profile))
+    token = set_threev0_home_override(str(profile))
     try:
         lease.release()
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
     assert lease.released is True
     remaining = active_sessions._read_entries(root_registry)
@@ -215,8 +215,8 @@ def test_transfer_under_profile_home_override_targets_acquisition_registry(
     """Sibling site of #85431: transfer must also update the registry the
     lease was acquired against, not one resolved from the current override."""
     from threev0_constants import (
-        reset_ev0_home_override,
-        set_ev0_home_override,
+        reset_threev0_home_override,
+        set_threev0_home_override,
     )
 
     root = tmp_path / "3v0"
@@ -231,11 +231,11 @@ def test_transfer_under_profile_home_override_targets_acquisition_registry(
     )
     assert lease is not None and error is None
 
-    token = set_ev0_home_override(str(profile))
+    token = set_threev0_home_override(str(profile))
     try:
         assert active_sessions.transfer_active_session(lease, session_id="after")
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
     root_registry = root / "runtime" / "active_sessions.json"
     entries = active_sessions._read_entries(root_registry)

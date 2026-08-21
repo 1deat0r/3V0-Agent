@@ -34,7 +34,7 @@ from typing import Any
 
 import yaml
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 # These are 3V0 UI surfaces, not app/vendor/domain buckets.  Keep this
 # long-running-only: regular tool/thinking/interim chatter is intentionally not
@@ -163,22 +163,22 @@ def resolve_status_phrase_catalog(user_config: Mapping[str, Any] | None, platfor
     ``display.platforms.<platform>.status_phrases``.
     """
     catalog = _copy_default_catalog()
-    ev0_home = get_ev0_home()
-    _merge_phrase_paths(catalog, list(_CONVENTIONAL_RELATIVE_PATHS), base_dir=ev0_home)
+    threev0_home = get_threev0_home()
+    _merge_phrase_paths(catalog, list(_CONVENTIONAL_RELATIVE_PATHS), base_dir=threev0_home)
 
     display = (user_config or {}).get("display") if isinstance(user_config, Mapping) else None
     if not isinstance(display, Mapping):
         return catalog
 
-    _merge_phrase_config(catalog, display.get("generic_status_phrases"), base_dir=ev0_home)
-    _merge_phrase_config(catalog, display.get("status_phrases"), base_dir=ev0_home)
+    _merge_phrase_config(catalog, display.get("generic_status_phrases"), base_dir=threev0_home)
+    _merge_phrase_config(catalog, display.get("status_phrases"), base_dir=threev0_home)
 
     platforms = display.get("platforms")
     if platform_key and isinstance(platforms, Mapping):
         platform_display = platforms.get(platform_key)
         if isinstance(platform_display, Mapping):
-            _merge_phrase_config(catalog, platform_display.get("generic_status_phrases"), base_dir=ev0_home)
-            _merge_phrase_config(catalog, platform_display.get("status_phrases"), base_dir=ev0_home)
+            _merge_phrase_config(catalog, platform_display.get("generic_status_phrases"), base_dir=threev0_home)
+            _merge_phrase_config(catalog, platform_display.get("status_phrases"), base_dir=threev0_home)
     return catalog
 
 

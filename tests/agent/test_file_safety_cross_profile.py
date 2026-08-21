@@ -58,11 +58,11 @@ def fake_ev0(tmp_path, monkeypatch):
     # Monkeypatch the resolver functions used by file_safety so each test
     # can choose which profile is "active".
     import threev0_constants
-    monkeypatch.setattr(threev0_constants, "get_default_ev0_root", lambda: root)
+    monkeypatch.setattr(threev0_constants, "get_default_threev0_root", lambda: root)
 
     # The reloads below ensure get_cross_profile_warning/classify see the patched root.
     import agent.file_safety as fs
-    monkeypatch.setattr(fs, "_ev0_root_path", lambda: root)
+    monkeypatch.setattr(fs, "_threev0_root_path", lambda: root)
 
     return {
         "root": root,
@@ -72,10 +72,10 @@ def fake_ev0(tmp_path, monkeypatch):
     }
 
 
-def _set_active_home(monkeypatch, ev0_home: Path):
+def _set_active_home(monkeypatch, threev0_home: Path):
     """Point file_safety._ev0_home_path at a specific profile dir."""
     import agent.file_safety as fs
-    monkeypatch.setattr(fs, "_ev0_home_path", lambda: ev0_home)
+    monkeypatch.setattr(fs, "_threev0_home_path", lambda: threev0_home)
 
 
 # ---------------------------------------------------------------------------
@@ -97,7 +97,7 @@ class TestResolveActiveProfileName:
         def _boom():
             raise RuntimeError("simulated")
 
-        monkeypatch.setattr(fs, "_ev0_home_path", _boom)
+        monkeypatch.setattr(fs, "_threev0_home_path", _boom)
         # Should not raise — falls back to "default"
         assert fs._resolve_active_profile_name() == "default"
 

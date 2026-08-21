@@ -44,8 +44,8 @@ class TestVerifyConsoleScriptsInstalled:
         for name in ("3v0", "3v0-agent", "3v0-acp"):
             (fake_scripts_dir / f"{name}.exe").write_bytes(b"fake")
 
-        with patch("threev0_cli.main._is_windows", return_value=True), \
-             patch("threev0_cli.main._venv_scripts_dir", return_value=fake_scripts_dir), \
+        with patch("threev0_cli.main._is_windows", return_value=True),\
+             patch("threev0_cli.main._venv_scripts_dir", return_value=fake_scripts_dir),\
              patch("threev0_cli.main._run_quarantined_install") as mock_install:
             from threev0_cli.main import _verify_console_scripts_installed
 
@@ -62,7 +62,7 @@ class TestVerifyConsoleScriptsInstalled:
         import threev0_cli.main as main_mod
 
         with patch("threev0_cli.main._is_windows", return_value=True):
-            names = {path.name for path in main_mod._ev0_exe_shims(fake_scripts_dir)}
+            names = {path.name for path in main_mod._threev0_exe_shims(fake_scripts_dir)}
 
         assert {"3v0.exe", "3v0-agent.exe", "3v0-acp.exe"} <= names
         assert "3v0-gateway.exe" in names

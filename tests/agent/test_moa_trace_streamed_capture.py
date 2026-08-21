@@ -24,9 +24,9 @@ from agent.moa_loop import MoAChatCompletions
 
 def _enable_traces(tmp_path, monkeypatch):
     """Point EV0_HOME at a temp dir and turn moa.save_traces on."""
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     # save_moa_turn reads config via threev0_cli.config.load_config; stub it to
     # return traces-on so the test doesn't depend on a real config file.
@@ -45,7 +45,7 @@ def _enable_traces(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cfg, "load_config", lambda: {"moa": {"save_traces": True}}, raising=False
     )
-    return ev0_home / "moa-traces"
+    return threev0_home / "moa-traces"
 
 
 def _make_completions_with_pending(streamed: bool, inline_output):

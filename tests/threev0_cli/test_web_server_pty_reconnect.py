@@ -39,7 +39,7 @@ class _OneFrameBridge:
 
 
 @pytest.fixture
-def pty_client(monkeypatch, _isolate_ev0_home):
+def pty_client(monkeypatch, _isolate_threev0_home):
     from starlette.testclient import TestClient
 
     import threev0_cli.web_server as ws

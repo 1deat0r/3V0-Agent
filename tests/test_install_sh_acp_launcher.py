@@ -38,15 +38,15 @@ def _run_block(tmp_path: Path, use_venv: str) -> Path:
     """Execute the extracted block with the env vars setup_path() sets."""
     command_link_dir = tmp_path / "local_bin"
     command_link_dir.mkdir()
-    ev0_bin = tmp_path / "venv" / "bin" / "python"
-    ev0_bin.parent.mkdir(parents=True)
-    ev0_bin.write_text("#!/bin/sh\n", encoding="utf-8")
+    threev0_bin = tmp_path / "venv" / "bin" / "python"
+    threev0_bin.parent.mkdir(parents=True)
+    threev0_bin.write_text("#!/bin/sh\n", encoding="utf-8")
     entrypoint = tmp_path / "3v0"
     entrypoint.write_text("#!/bin/sh\n", encoding="utf-8")
 
     script = (
         "set -e\n"
-        f"EV0_BIN={ev0_bin}\n"
+        f"EV0_BIN={threev0_bin}\n"
         f"EV0_ENTRYPOINT={entrypoint}\n"
         f"command_link_dir={command_link_dir}\n"
         f"command_link_display_dir={command_link_dir}\n"
@@ -102,14 +102,14 @@ def test_acp_launcher_does_not_follow_a_symlink_into_the_venv(tmp_path):
     shim_path.symlink_to(console_script)
     assert shim_path.is_symlink()
 
-    ev0_bin = tmp_path / "venv" / "bin" / "python"
-    ev0_bin.write_text("#!/bin/sh\n", encoding="utf-8")
+    threev0_bin = tmp_path / "venv" / "bin" / "python"
+    threev0_bin.write_text("#!/bin/sh\n", encoding="utf-8")
     entrypoint = tmp_path / "3v0"
     entrypoint.write_text("#!/bin/sh\n", encoding="utf-8")
 
     script = (
         "set -e\n"
-        f"EV0_BIN={ev0_bin}\n"
+        f"EV0_BIN={threev0_bin}\n"
         f"EV0_ENTRYPOINT={entrypoint}\n"
         f"command_link_dir={command_link_dir}\n"
         f"command_link_display_dir={command_link_dir}\n"
@@ -140,7 +140,7 @@ EV0_AGENT_BLOCK = re.compile(
 )
 
 
-def _extract_ev0_agent_shim_block() -> str:
+def _extract_threev0_agent_shim_block() -> str:
     match = EV0_AGENT_BLOCK.search(INSTALL_SH.read_text(encoding="utf-8"))
     assert match, (
         "could not locate the 3v0-agent launcher block in scripts/install.sh — "
@@ -149,7 +149,7 @@ def _extract_ev0_agent_shim_block() -> str:
     return match.group(1)
 
 
-def _run_ev0_agent_block(tmp_path: Path, use_venv: str) -> Path | None:
+def _run_threev0_agent_block(tmp_path: Path, use_venv: str) -> Path | None:
     """Execute the extracted 3v0-agent block with the env vars setup_path() sets."""
     if use_venv == "false":
         # --no-venv: 3v0-agent is NOT installed by this block (handled
@@ -158,20 +158,20 @@ def _run_ev0_agent_block(tmp_path: Path, use_venv: str) -> Path | None:
 
     command_link_dir = tmp_path / "local_bin"
     command_link_dir.mkdir()
-    ev0_bin = tmp_path / "venv" / "bin" / "python"
-    ev0_bin.parent.mkdir(parents=True)
-    ev0_bin.write_text("#!/bin/sh\n", encoding="utf-8")
+    threev0_bin = tmp_path / "venv" / "bin" / "python"
+    threev0_bin.parent.mkdir(parents=True)
+    threev0_bin.write_text("#!/bin/sh\n", encoding="utf-8")
     install_dir = tmp_path / "install"
     install_dir.mkdir()
 
     script = (
         "set -e\n"
-        f"EV0_BIN={ev0_bin}\n"
+        f"EV0_BIN={threev0_bin}\n"
         f"INSTALL_DIR={install_dir}\n"
         f"command_link_dir={command_link_dir}\n"
         f"command_link_display_dir={command_link_dir}\n"
         f"USE_VENV={use_venv}\n"
-        "log_success(){ :; }\n" + _extract_ev0_agent_shim_block()
+        "log_success(){ :; }\n" + _extract_threev0_agent_shim_block()
     )
     result = subprocess.run(
         ["bash", "-c", script],
@@ -185,9 +185,9 @@ def _run_ev0_agent_block(tmp_path: Path, use_venv: str) -> Path | None:
     return command_link_dir / "3v0-agent"
 
 
-def test_venv_install_writes_executable_ev0_agent_launcher(tmp_path):
+def test_venv_install_writes_executable_threev0_agent_launcher(tmp_path):
     """venv install must write a user-executable 3v0-agent launcher."""
-    shim = _run_ev0_agent_block(tmp_path, "true")
+    shim = _run_threev0_agent_block(tmp_path, "true")
     assert shim is not None
     assert shim.is_file()
     assert shim.stat().st_mode & stat.S_IXUSR, "launcher must be user-executable"
@@ -198,7 +198,7 @@ def test_venv_install_writes_executable_ev0_agent_launcher(tmp_path):
     assert "run_agent.py" in text, "3v0-agent must dispatch to run_agent.py"
 
 
-def test_ev0_agent_launcher_cleanup_on_uninstall(tmp_path):
+def test_threev0_agent_launcher_cleanup_on_uninstall(tmp_path):
     """uninstall.remove_wrapper_script() must remove 3v0-agent alongside
     3v0 and 3v0-acp."""
     from threev0_cli.uninstall import remove_wrapper_script

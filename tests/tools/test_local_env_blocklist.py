@@ -49,9 +49,9 @@ def _run_with_env(extra_os_env=None, self_env=None):
 
     env = LocalEnvironment(cwd="/tmp", timeout=10, env=self_env)
 
-    with patch("tools.environments.local._find_bash", return_value="/bin/bash"), \
-         patch("subprocess.Popen", side_effect=_make_fake_popen(captured)), \
-         patch("tools.terminal_tool._interrupt_event", fake_interrupt), \
+    with patch("tools.environments.local._find_bash", return_value="/bin/bash"),\
+         patch("subprocess.Popen", side_effect=_make_fake_popen(captured)),\
+         patch("tools.terminal_tool._interrupt_event", fake_interrupt),\
          patch.dict(os.environ, test_environ, clear=True):
         env.execute("echo hello")
 
@@ -517,7 +517,7 @@ class TestSanePathIncludesHomebrew:
     """Verify _SANE_PATH includes macOS Homebrew directories."""
 
     @pytest.fixture(autouse=True)
-    def _disable_ev0_bin_injection(self):
+    def _disable_threev0_bin_injection(self):
         """These tests assert the sane-path merge in isolation. Disable the
         3v0-install-dir prepend (a separate concern, covered by
         TestEv0BinDirOnPath) so a real ``3v0`` on the test runner's PATH
@@ -596,16 +596,16 @@ class TestEv0BinDirOnPath:
         monkeypatch.setattr(local_mod.shutil, "which",
                             lambda name: "/opt/3v0/bin/3v0" if name == "3v0" else None)
         monkeypatch.setattr(local_mod.os.path, "isdir", lambda p: p == "/opt/3v0/bin")
-        assert local_mod._resolve_ev0_bin_dir() == "/opt/3v0/bin"
+        assert local_mod._resolve_threev0_bin_dir() == "/opt/3v0/bin"
 
 
     def test_prepend_noop_when_unresolved(self, monkeypatch):
         from tools.environments import local as local_mod
         self._reset_cache()
         local_mod._EV0_BIN_DIR = None
-        assert local_mod._prepend_ev0_bin_dir("/usr/bin:/bin") == "/usr/bin:/bin"
+        assert local_mod._prepend_threev0_bin_dir("/usr/bin:/bin") == "/usr/bin:/bin"
 
-    def test_make_run_env_injects_ev0_bin_dir(self):
+    def test_make_run_env_injects_threev0_bin_dir(self):
         """A gateway env missing the 3v0 dir gets it back in the subshell PATH.
 
         Platform-agnostic: ``_prepend_ev0_bin_dir`` uses ``os.pathsep`` on
@@ -641,36 +641,36 @@ class TestEv0InternalDynamicSecrets:
     """
 
     def test_predicate_matches_auxiliary_api_key(self):
-        from tools.environments.local import _is_ev0_internal_secret
-        assert _is_ev0_internal_secret("AUXILIARY_VISION_API_KEY")
-        assert _is_ev0_internal_secret("AUXILIARY_WEB_EXTRACT_API_KEY")
-        assert _is_ev0_internal_secret("AUXILIARY_APPROVAL_API_KEY")
+        from tools.environments.local import _is_threev0_internal_secret
+        assert _is_threev0_internal_secret("AUXILIARY_VISION_API_KEY")
+        assert _is_threev0_internal_secret("AUXILIARY_WEB_EXTRACT_API_KEY")
+        assert _is_threev0_internal_secret("AUXILIARY_APPROVAL_API_KEY")
         # plugin-registered task names are covered by the pattern
-        assert _is_ev0_internal_secret("AUXILIARY_MY_PLUGIN_TASK_API_KEY")
+        assert _is_threev0_internal_secret("AUXILIARY_MY_PLUGIN_TASK_API_KEY")
 
     def test_predicate_matches_auxiliary_base_url(self):
-        from tools.environments.local import _is_ev0_internal_secret
-        assert _is_ev0_internal_secret("AUXILIARY_VISION_BASE_URL")
-        assert _is_ev0_internal_secret("AUXILIARY_COMPRESSION_BASE_URL")
+        from tools.environments.local import _is_threev0_internal_secret
+        assert _is_threev0_internal_secret("AUXILIARY_VISION_BASE_URL")
+        assert _is_threev0_internal_secret("AUXILIARY_COMPRESSION_BASE_URL")
 
     def test_predicate_matches_gateway_relay_auth(self):
-        from tools.environments.local import _is_ev0_internal_secret
-        assert _is_ev0_internal_secret("GATEWAY_RELAY_SECRET")
-        assert _is_ev0_internal_secret("GATEWAY_RELAY_DELIVERY_KEY")
-        assert _is_ev0_internal_secret("GATEWAY_RELAY_SESSION_TOKEN")
+        from tools.environments.local import _is_threev0_internal_secret
+        assert _is_threev0_internal_secret("GATEWAY_RELAY_SECRET")
+        assert _is_threev0_internal_secret("GATEWAY_RELAY_DELIVERY_KEY")
+        assert _is_threev0_internal_secret("GATEWAY_RELAY_SESSION_TOKEN")
 
     def test_predicate_allows_auxiliary_non_secrets(self):
         """AUXILIARY_*_PROVIDER / _MODEL and GATEWAY_RELAY_* routing hints are
         NOT secrets and must remain visible so tooling that reads them works."""
-        from tools.environments.local import _is_ev0_internal_secret
-        assert not _is_ev0_internal_secret("AUXILIARY_VISION_PROVIDER")
-        assert not _is_ev0_internal_secret("AUXILIARY_VISION_MODEL")
-        assert not _is_ev0_internal_secret("GATEWAY_RELAY_URL")
-        assert not _is_ev0_internal_secret("GATEWAY_RELAY_PLATFORMS")
-        assert not _is_ev0_internal_secret("GATEWAY_RELAY_ID")  # not a secret suffix
+        from tools.environments.local import _is_threev0_internal_secret
+        assert not _is_threev0_internal_secret("AUXILIARY_VISION_PROVIDER")
+        assert not _is_threev0_internal_secret("AUXILIARY_VISION_MODEL")
+        assert not _is_threev0_internal_secret("GATEWAY_RELAY_URL")
+        assert not _is_threev0_internal_secret("GATEWAY_RELAY_PLATFORMS")
+        assert not _is_threev0_internal_secret("GATEWAY_RELAY_ID")  # not a secret suffix
         # unrelated vars pass through
-        assert not _is_ev0_internal_secret("PATH")
-        assert not _is_ev0_internal_secret("MY_APP_KEY")
+        assert not _is_threev0_internal_secret("PATH")
+        assert not _is_threev0_internal_secret("MY_APP_KEY")
 
     def test_auxiliary_secrets_stripped_from_subprocess(self):
         """AUXILIARY_*_API_KEY / _BASE_URL injected into os.environ must not

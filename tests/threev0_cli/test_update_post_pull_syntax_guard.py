@@ -17,7 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
-from threev0_cli import main as ev0_main
+from threev0_cli import main as threev0_main
 
 
 # ---------------------------------------------------------------------------
@@ -29,9 +29,9 @@ def test_capture_head_sha_returns_stripped_sha(monkeypatch, tmp_path):
         assert cmd[-2:] == ["rev-parse", "HEAD"]
         return SimpleNamespace(stdout="deadbeefcafe\n", returncode=0)
 
-    monkeypatch.setattr(ev0_main.subprocess, "run", fake_run)
+    monkeypatch.setattr(threev0_main.subprocess, "run", fake_run)
 
-    assert ev0_main._capture_head_sha(["git"], tmp_path) == "deadbeefcafe"
+    assert threev0_main._capture_head_sha(["git"], tmp_path) == "deadbeefcafe"
 
 
 # ---------------------------------------------------------------------------
@@ -54,7 +54,7 @@ def _populate_critical_tree(root: Path, *, broken_file: str | None = None) -> No
         ">>>>>>> 0b6d673e7\n"
         "}\n"
     )
-    for relpath in ev0_main._UPDATE_CRITICAL_FILES:
+    for relpath in threev0_main._UPDATE_CRITICAL_FILES:
         path = root / relpath
         path.parent.mkdir(parents=True, exist_ok=True)
         if relpath == broken_file:
@@ -69,14 +69,14 @@ def test_validate_critical_files_syntax_tolerates_missing_files(tmp_path):
     """A refactor may legitimately remove one of the critical files — the
     guard should skip missing files, not falsely flag the install as broken."""
     # Populate everything except threev0_constants.py
-    for relpath in ev0_main._UPDATE_CRITICAL_FILES:
+    for relpath in threev0_main._UPDATE_CRITICAL_FILES:
         if relpath == "threev0_constants.py":
             continue
         path = tmp_path / relpath
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# stub\n")
 
-    ok, failing_path, error = ev0_main._validate_critical_files_syntax(tmp_path)
+    ok, failing_path, error = threev0_main._validate_critical_files_syntax(tmp_path)
 
     assert ok is True
     assert failing_path is None

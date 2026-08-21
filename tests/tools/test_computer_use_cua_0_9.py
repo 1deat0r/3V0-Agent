@@ -220,7 +220,7 @@ def test_action_verdict_precedence(result_kwargs, decision):
     assert _classify_action_result(result)["decision"] == decision
 
 
-def test_backends_are_isolated_by_ev0_session_and_reused_within_it():
+def test_backends_are_isolated_by_threev0_session_and_reused_within_it():
     from tools.computer_use import tool as computer_use
 
     created = []
@@ -319,7 +319,7 @@ def test_release_seam_waits_for_in_flight_action_before_stopping_backend():
     backend.stop.assert_called_once_with()
 
 
-def test_concurrent_ev0_sessions_do_not_share_backend_state():
+def test_concurrent_threev0_sessions_do_not_share_backend_state():
     from tools.computer_use import tool as computer_use
 
     created = []
@@ -458,7 +458,7 @@ def _bind_and_snapshot(route) -> str:
     return next(iter(route.state.refs))
 
 
-def test_exact_browser_binding_injects_ev0_session_capability():
+def test_exact_browser_binding_injects_threev0_session_capability():
     driver = _BrowserDriver()
     route = _browser_route(driver, session_id="3v0-owned-session")
 

@@ -11,7 +11,7 @@ def test_slash_worker_accepts_profile_home():
     # subprocess isolation).
     with patch.dict("sys.modules", {
         "threev0_constants": MagicMock(
-            get_ev0_home=MagicMock(return_value=Path("/tmp/ev0_test")),
+            get_threev0_home=MagicMock(return_value=Path("/tmp/ev0_test")),
         ),
     }):
         with patch("subprocess.Popen") as mock_popen:

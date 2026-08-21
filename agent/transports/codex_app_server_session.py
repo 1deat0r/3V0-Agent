@@ -325,7 +325,7 @@ class CodexAppServerSession:
         self._client.initialize(
             client_name="3v0",
             client_title="3V0 Agent",
-            client_version=_get_ev0_version(),
+            client_version=_get_threev0_version(),
         )
         # Permission selection is intentionally NOT sent on thread/start.
         # Two reasons (live-tested against codex 0.130.0):
@@ -1282,7 +1282,7 @@ def _has_turn_aborted_marker(text: str) -> bool:
     return False
 
 
-def _get_ev0_version() -> str:
+def _get_threev0_version() -> str:
     """Best-effort 3V0 version string for codex's userAgent line."""
     try:
         from importlib.metadata import version

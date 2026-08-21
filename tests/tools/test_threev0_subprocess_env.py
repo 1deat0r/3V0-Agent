@@ -15,7 +15,7 @@ import os
 from unittest.mock import patch
 
 from tools.environments.local import (
-    ev0_subprocess_env,
+    threev0_subprocess_env,
     _ALWAYS_STRIP_KEYS,
     _EV0_PROVIDER_ENV_FORCE_PREFIX,
 )
@@ -48,7 +48,7 @@ def _build(extra=None, *, inherit_credentials=False):
     if extra:
         env.update(extra)
     with patch.dict(os.environ, env, clear=True):
-        return ev0_subprocess_env(inherit_credentials=inherit_credentials)
+        return threev0_subprocess_env(inherit_credentials=inherit_credentials)
 
 
 class TestStripByDefault:
@@ -128,7 +128,7 @@ class TestBrowserPassthroughPattern:
             "TELEGRAM_BOT_TOKEN": "bot-should-go",
         }
         with patch.dict(os.environ, {**_SAFE_SAMPLE, **leaked}, clear=True):
-            env = ev0_subprocess_env(inherit_credentials=False)
+            env = threev0_subprocess_env(inherit_credentials=False)
             for key in _BROWSER_PASSTHROUGH_KEYS:
                 if key in os.environ:
                     env[key] = os.environ[key]
@@ -156,7 +156,7 @@ class TestDelegatedChildMarker:
             clear=True,
         ):
             with delegated_child_context():
-                env = ev0_subprocess_env(inherit_credentials=True)
+                env = threev0_subprocess_env(inherit_credentials=True)
 
         assert env["EV0_DELEGATED_CHILD_CONTEXT"] == "1"
         assert "EV0_KANBAN_TASK" not in env

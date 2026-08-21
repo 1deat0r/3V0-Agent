@@ -45,7 +45,7 @@ def test_refresh_secret_sources_noop_without_plugin_sources(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "threev0_cli.env_loader.load_ev0_dotenv",
+        "threev0_cli.env_loader.load_threev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -71,7 +71,7 @@ def test_refresh_secret_sources_noop_when_only_builtins(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "threev0_cli.env_loader.load_ev0_dotenv",
+        "threev0_cli.env_loader.load_threev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -95,7 +95,7 @@ def test_refresh_secret_sources_repulls_when_plugin_enabled(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "threev0_cli.env_loader.load_ev0_dotenv",
+        "threev0_cli.env_loader.load_threev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -123,7 +123,7 @@ def test_refresh_respects_custom_is_enabled(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "threev0_cli.env_loader.load_ev0_dotenv",
+        "threev0_cli.env_loader.load_threev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -150,7 +150,7 @@ def test_refresh_skips_custom_source_when_not_activated(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "threev0_cli.env_loader.load_ev0_dotenv",
+        "threev0_cli.env_loader.load_threev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 
@@ -178,7 +178,7 @@ def test_refresh_skips_source_whose_is_enabled_raises(monkeypatch):
         lambda: called.__setitem__("reset", called["reset"] + 1),
     )
     monkeypatch.setattr(
-        "threev0_cli.env_loader.load_ev0_dotenv",
+        "threev0_cli.env_loader.load_threev0_dotenv",
         lambda **kw: called.__setitem__("load", called["load"] + 1),
     )
 

@@ -23,7 +23,7 @@ import urllib.parse
 from pathlib import Path
 from typing import Any, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from threev0_cli._subprocess_compat import noninteractive_git_env
 from threev0_cli.config import cfg_get
 from threev0_cli.secret_prompt import masked_secret_prompt
@@ -79,7 +79,7 @@ _SUPPORTED_MANIFEST_VERSION = 1
 
 def _plugins_dir() -> Path:
     """Return the user plugins directory, creating it if needed."""
-    plugins = get_ev0_home() / "plugins"
+    plugins = get_threev0_home() / "plugins"
     plugins.mkdir(parents=True, exist_ok=True)
     return plugins
 
@@ -382,7 +382,7 @@ def _prompt_plugin_env_vars(manifest: dict, console) -> None:
         return
 
     from threev0_cli.config import get_env_value, save_env_value  # noqa: F811
-    from threev0_constants import display_ev0_home
+    from threev0_constants import display_threev0_home
 
     # Normalise to list-of-dicts
     env_specs: list[dict] = []
@@ -419,15 +419,15 @@ def _prompt_plugin_env_vars(manifest: dict, console) -> None:
             else:
                 value = input(f"  {name}: ").strip()
         except (EOFError, KeyboardInterrupt):
-            console.print(f"\n[dim]  Skipped (you can set these later in {display_ev0_home()}/.env)[/dim]")
+            console.print(f"\n[dim]  Skipped (you can set these later in {display_threev0_home()}/.env)[/dim]")
             return
 
         if value:
             save_env_value(name, value)
             os.environ[name] = value
-            console.print(f"  [green]✓[/green] Saved to {display_ev0_home()}/.env")
+            console.print(f"  [green]✓[/green] Saved to {display_threev0_home()}/.env")
         else:
-            console.print(f"  [dim]  Skipped (set {name} in {display_ev0_home()}/.env later)[/dim]")
+            console.print(f"  [dim]  Skipped (set {name} in {display_threev0_home()}/.env later)[/dim]")
 
     console.print()
 
@@ -494,7 +494,7 @@ _INSTALL_METADATA_FILE = ".install-metadata.json"
 
 
 def _install_metadata_path() -> Path:
-    return get_ev0_home() / "plugins" / _INSTALL_METADATA_FILE
+    return get_threev0_home() / "plugins" / _INSTALL_METADATA_FILE
 
 
 def _read_install_metadata() -> dict[str, dict[str, object]]:

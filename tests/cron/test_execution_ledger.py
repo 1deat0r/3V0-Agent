@@ -44,7 +44,7 @@ def test_execution_ledger_follows_the_current_profile_home(monkeypatch, tmp_path
 
     current_home = {"path": tmp_path / "default"}
     monkeypatch.setattr(executions, "EXECUTIONS_FILE", None)
-    monkeypatch.setattr(executions, "get_ev0_home", lambda: current_home["path"])
+    monkeypatch.setattr(executions, "get_threev0_home", lambda: current_home["path"])
 
     default_row = executions.create_execution("default-job", source="builtin")
     current_home["path"] = tmp_path / "worker"

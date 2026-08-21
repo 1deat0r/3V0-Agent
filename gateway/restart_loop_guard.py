@@ -38,7 +38,7 @@ import logging
 import time
 from typing import List, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger("gateway.run")
 
@@ -66,7 +66,7 @@ _MAX_STORED_BOOTS = 50
 
 
 def _state_path():
-    return get_ev0_home() / "gateway" / "restart_loop.json"
+    return get_threev0_home() / "gateway" / "restart_loop.json"
 
 
 def _load_boots() -> List[float]:

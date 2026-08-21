@@ -351,7 +351,7 @@ class TestTerminalIntegration:
         finally:
             os.environ.pop(blocked_var, None)
 
-    def test_non_ev0_api_key_still_registerable(self):
+    def test_non_threev0_api_key_still_registerable(self):
         """Third-party API keys (TENOR_API_KEY, NOTION_TOKEN, etc.) are NOT
         3V0 provider credentials and must still pass through — skills
         that legitimately wrap third-party APIs must keep working."""
@@ -389,9 +389,9 @@ class TestTerminalIntegration:
         monkeypatch.setattr(builtins, "__import__", fail_local_import)
 
         # Every name is now treated as a protected provider credential.
-        assert _ep_mod._is_ev0_provider_credential("OPENAI_API_KEY")
-        assert _ep_mod._is_ev0_provider_credential("ANTHROPIC_API_KEY")
-        assert _ep_mod._is_ev0_provider_credential("GH_TOKEN")
+        assert _ep_mod._is_threev0_provider_credential("OPENAI_API_KEY")
+        assert _ep_mod._is_threev0_provider_credential("ANTHROPIC_API_KEY")
+        assert _ep_mod._is_threev0_provider_credential("GH_TOKEN")
 
         # Registration is refused while the blocklist is unavailable.
         register_env_passthrough(["OPENAI_API_KEY", "ANTHROPIC_API_KEY"])

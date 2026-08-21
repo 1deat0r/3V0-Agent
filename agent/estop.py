@@ -42,18 +42,18 @@ _log_lock = threading.Lock()
 _logged_components: set[str] = set()
 
 
-def _ev0_home() -> Path:
+def _threev0_home() -> Path:
     """Resolve the active EV0_HOME (profile-aware) at call time."""
     try:
-        from threev0_constants import get_ev0_home
-        return get_ev0_home()
+        from threev0_constants import get_threev0_home
+        return get_threev0_home()
     except Exception:
         return Path(os.path.expanduser("~/.3V0"))
 
 
 def sentinel_path() -> Path:
     """Path of the ESTOP sentinel under the active EV0_HOME."""
-    return _ev0_home() / SENTINEL_NAME
+    return _threev0_home() / SENTINEL_NAME
 
 
 def is_engaged() -> bool:

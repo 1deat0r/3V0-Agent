@@ -50,9 +50,9 @@ def _run_with_current_provider(job, current_provider, tmp_path):
     Returns (success, output, final_response, error, agent_constructed).
     """
     fake_db = MagicMock()
-    with patch("cron.scheduler._ev0_home", tmp_path), \
+    with patch("cron.scheduler._threev0_home", tmp_path), \
          patch("cron.scheduler._resolve_origin", return_value=None), \
-         patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+         patch("threev0_cli.env_loader.load_threev0_dotenv"), \
          patch("threev0_cli.env_loader.reset_secret_source_cache"), \
          patch("threev0_state.SessionDB", return_value=fake_db), \
          patch(
@@ -239,10 +239,10 @@ def _run_with_current_provider_and_model(
         config_yaml += "cron:\n" + "\n".join(cron_lines) + "\n"
     (tmp_path / "config.yaml").write_text(config_yaml)
     fake_db = MagicMock()
-    with patch("cron.scheduler._ev0_home", tmp_path), \
-         patch("cron.scheduler._get_ev0_home", return_value=tmp_path), \
+    with patch("cron.scheduler._threev0_home", tmp_path), \
+         patch("cron.scheduler._get_threev0_home", return_value=tmp_path), \
          patch("cron.scheduler._resolve_origin", return_value=None), \
-         patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+         patch("threev0_cli.env_loader.load_threev0_dotenv"), \
          patch("threev0_cli.env_loader.reset_secret_source_cache"), \
          patch("threev0_state.SessionDB", return_value=fake_db), \
          patch(
@@ -404,9 +404,9 @@ class TestRuntimeResolutionTargetModel:
             }
 
         fake_db = MagicMock()
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch(

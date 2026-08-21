@@ -47,11 +47,11 @@ def _make_cli(env_overrides=None, config_overrides=None, **kwargs):
         "prompt_toolkit.auto_suggest": MagicMock(),
     }
     try:
-        with patch.dict(sys.modules, prompt_toolkit_stubs), \
+        with patch.dict(sys.modules, prompt_toolkit_stubs),\
              patch.dict("os.environ", clean_env, clear=False):
             import cli as _cli_mod
             _cli_mod = importlib.reload(_cli_mod)
-            with patch.object(_cli_mod, "get_tool_definitions", return_value=[]), \
+            with patch.object(_cli_mod, "get_tool_definitions", return_value=[]),\
                  patch.dict(_cli_mod.__dict__, {"CLI_CONFIG": _clean_config}):
                 return _cli_mod.Ev0CLI(**kwargs)
     finally:
@@ -179,7 +179,7 @@ class TestPromptToolkitTerminalCompatibility:
         # Default: Enter submits while c-j stays free for the newline binding.
         # (Runs on the POSIX CI job; the native-Windows arm is the marked test
         # below, so no sys.platform fake is needed here.)
-        with _patch.dict(_os.environ, {}, clear=True), \
+        with _patch.dict(_os.environ, {}, clear=True),\
              _patch("builtins.open", side_effect=OSError("no /proc")):
             kb = KeyBindings()
             _bind_prompt_submit_keys(kb, submit_handler)
@@ -200,7 +200,7 @@ class TestPromptToolkitTerminalCompatibility:
 
         # POSIX over SSH: c-j stays free so Ctrl+Enter (sent as LF by
         # Windows Terminal / Kitty / mintty over SSH) inserts a newline.
-        with _patch.dict(_os.environ, {"SSH_CONNECTION": "1.2.3.4 5 6.7.8.9 22"}, clear=True), \
+        with _patch.dict(_os.environ, {"SSH_CONNECTION": "1.2.3.4 5 6.7.8.9 22"}, clear=True),\
              _patch("builtins.open", side_effect=OSError("no /proc")):
             kb = KeyBindings()
             _bind_prompt_submit_keys(kb, submit_handler)
@@ -210,7 +210,7 @@ class TestPromptToolkitTerminalCompatibility:
 
         # Ghostty through tmux: TERM_PROGRAM is tmux, but Ghostty exports a
         # stable env marker. Keep c-j free so Ctrl+J inserts a newline.
-        with _patch.dict(_os.environ, {"TERM": "tmux-256color", "TERM_PROGRAM": "tmux", "GHOSTTY_RESOURCES_DIR": "/usr/share/ghostty"}, clear=True), \
+        with _patch.dict(_os.environ, {"TERM": "tmux-256color", "TERM_PROGRAM": "tmux", "GHOSTTY_RESOURCES_DIR": "/usr/share/ghostty"}, clear=True),\
              _patch("builtins.open", side_effect=OSError("no /proc")):
             kb = KeyBindings()
             _bind_prompt_submit_keys(kb, submit_handler)
@@ -451,11 +451,11 @@ class TestRootLevelProviderOverride:
         """model.provider takes priority — root-level provider is only a fallback."""
         import yaml
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
-        config_path = ev0_home / "config.yaml"
+        config_path = threev0_home / "config.yaml"
         config_path.write_text(yaml.safe_dump({
             "provider": "opencode-go",  # stale root-level key
             "model": {
@@ -465,7 +465,7 @@ class TestRootLevelProviderOverride:
         }))
 
         import cli
-        monkeypatch.setattr(cli, "_ev0_home", ev0_home)
+        monkeypatch.setattr(cli, "_threev0_home", threev0_home)
         cfg = cli.load_cli_config()
 
         assert cfg["model"]["provider"] == "openrouter"
@@ -474,11 +474,11 @@ class TestRootLevelProviderOverride:
         """Legacy root-level provider still populates model.provider in the CLI loader."""
         import yaml
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
-        config_path = ev0_home / "config.yaml"
+        config_path = threev0_home / "config.yaml"
         config_path.write_text(yaml.safe_dump({
             "provider": "opencode-go",  # stale root key
             "model": {
@@ -488,7 +488,7 @@ class TestRootLevelProviderOverride:
         }))
 
         import cli
-        monkeypatch.setattr(cli, "_ev0_home", ev0_home)
+        monkeypatch.setattr(cli, "_threev0_home", threev0_home)
         cfg = cli.load_cli_config()
 
         assert cfg["model"]["provider"] == "opencode-go"
@@ -497,11 +497,11 @@ class TestRootLevelProviderOverride:
         """Legacy root-level base_url still populates model.base_url in the CLI loader."""
         import yaml
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
-        config_path = ev0_home / "config.yaml"
+        config_path = threev0_home / "config.yaml"
         config_path.write_text(yaml.safe_dump({
             "base_url": "https://example.com/v1",
             "model": {
@@ -510,7 +510,7 @@ class TestRootLevelProviderOverride:
         }))
 
         import cli
-        monkeypatch.setattr(cli, "_ev0_home", ev0_home)
+        monkeypatch.setattr(cli, "_threev0_home", threev0_home)
         cfg = cli.load_cli_config()
 
         assert cfg["model"]["base_url"] == "https://example.com/v1"
@@ -519,12 +519,12 @@ class TestRootLevelProviderOverride:
         """Classic CLI must expose terminal.vercel_runtime to terminal_tool.py."""
         import yaml
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.delenv("TERMINAL_VERCEL_RUNTIME", raising=False)
 
-        config_path = ev0_home / "config.yaml"
+        config_path = threev0_home / "config.yaml"
         config_path.write_text(yaml.safe_dump({
             "terminal": {
                 "backend": "vercel_sandbox",
@@ -533,7 +533,7 @@ class TestRootLevelProviderOverride:
         }))
 
         import cli
-        monkeypatch.setattr(cli, "_ev0_home", ev0_home)
+        monkeypatch.setattr(cli, "_threev0_home", threev0_home)
         cfg = cli.load_cli_config()
 
         assert cfg["terminal"]["vercel_runtime"] == "python3.13"

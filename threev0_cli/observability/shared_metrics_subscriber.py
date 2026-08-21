@@ -33,13 +33,13 @@ class SharedMetricsSubscriber:
     def __init__(
         self,
         store: SharedMetricsStore,
-        ev0_version: str,
+        threev0_version: str,
         *,
         runtime_id: str | None = None,
     ) -> None:
         self.store = store
         self._client_resource = client_resource(
-            ev0_version,
+            threev0_version,
             os_name=platform.system(),
             architecture=platform.machine(),
             install_method=detect_install_method(),

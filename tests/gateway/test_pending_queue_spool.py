@@ -45,7 +45,7 @@ def spool_home(tmp_path, monkeypatch):
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
     import threev0_constants
     monkeypatch.setattr(
-        threev0_constants, "get_ev0_home", lambda: tmp_path, raising=True
+        threev0_constants, "get_threev0_home", lambda: tmp_path, raising=True
     )
     return tmp_path
 

@@ -24,7 +24,7 @@ from threev0_state import SessionDB
 
 
 @pytest.fixture()
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     home = tmp_path / ".3V0"
     home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -33,7 +33,7 @@ def ev0_home(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
-def server(ev0_home):
+def server(threev0_home):
     # Mocks are scoped to the initial import only (see
     # tests/tui_gateway/test_protocol.py for the rationale).
     with patch.dict(
@@ -61,8 +61,8 @@ def server(ev0_home):
 
 
 @pytest.fixture()
-def db(ev0_home):
-    return SessionDB(db_path=ev0_home / "state.db")
+def db(threev0_home):
+    return SessionDB(db_path=threev0_home / "state.db")
 
 
 @pytest.fixture()

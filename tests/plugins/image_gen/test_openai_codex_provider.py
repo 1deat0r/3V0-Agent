@@ -34,7 +34,7 @@ def _b64_png() -> str:
 
 
 @pytest.fixture(autouse=True)
-def _tmp_ev0_home(tmp_path, monkeypatch):
+def _tmp_threev0_home(tmp_path, monkeypatch):
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
     yield tmp_path
 

@@ -74,19 +74,19 @@ class TestDoctorEnvFileEncoding:
     ):
         import pathlib
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
         # Write a UTF-8 .env containing an em dash (U+2014 = e2 80 94). The
         # 0x94 byte is exactly the one the issue reporter hit: it's invalid
         # as a GBK trailing byte in this position, so locale-default reads
         # raise UnicodeDecodeError on Chinese Windows.
-        env_path = ev0_home / ".env"
+        env_path = threev0_home / ".env"
         env_path.write_text(
             "OPENAI_API_KEY=sk-test  # em-dash here — should not crash\n",
             encoding="utf-8",
         )
 
-        monkeypatch.setattr(doctor_mod, "EV0_HOME", ev0_home)
+        monkeypatch.setattr(doctor_mod, "EV0_HOME", threev0_home)
 
         orig_read_text = pathlib.Path.read_text
 
@@ -119,14 +119,14 @@ class TestDoctorEnvFileEncoding:
         self, monkeypatch, tmp_path
     ):
         """cp1252/latin-1 .env with ASCII provider hints must not abort doctor."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        env_path = ev0_home / ".env"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        env_path = threev0_home / ".env"
         # 0xff is invalid UTF-8; latin-1 decodes it. Keep an ASCII provider key
         # so the scan still reports a configured endpoint/key.
         env_path.write_bytes(b"OPENAI_API_KEY=sk-test\xff\n")
 
-        monkeypatch.setattr(doctor_mod, "EV0_HOME", ev0_home)
+        monkeypatch.setattr(doctor_mod, "EV0_HOME", threev0_home)
 
         fake_model_tools = types.SimpleNamespace(
             check_tool_availability=lambda *a, **kw: (_ for _ in ()).throw(SystemExit(0)),
@@ -224,7 +224,7 @@ def test_doctor_reports_vercel_backend_diagnostics(monkeypatch, tmp_path):
 class TestDoctorMemoryProviderSection:
     """The ◆ Memory Provider section should respect memory.provider config."""
 
-    def _make_ev0_home(self, tmp_path, provider=""):
+    def _make_threev0_home(self, tmp_path, provider=""):
         """Create a minimal EV0_HOME with config.yaml."""
         home = tmp_path / ".3V0"
         home.mkdir(parents=True, exist_ok=True)
@@ -235,7 +235,7 @@ class TestDoctorMemoryProviderSection:
 
     def _run_doctor_and_capture(self, monkeypatch, tmp_path, provider=""):
         """Run doctor and capture stdout."""
-        home = self._make_ev0_home(tmp_path, provider)
+        home = self._make_threev0_home(tmp_path, provider)
         monkeypatch.setattr(doctor_mod, "EV0_HOME", home)
         monkeypatch.setattr(doctor_mod, "PROJECT_ROOT", tmp_path / "project")
         monkeypatch.setattr(doctor_mod, "_DHH", str(home))
@@ -502,7 +502,7 @@ def test_run_doctor_flags_missing_credentials_for_active_openrouter_provider(mon
         ("moa", "anthropic/claude-sonnet-4.6"),
     ],
 )
-def test_run_doctor_accepts_ev0_provider_ids_that_catalog_aliases(
+def test_run_doctor_accepts_threev0_provider_ids_that_catalog_aliases(
     monkeypatch, tmp_path, provider, default_model
 ):
     home = tmp_path / ".3V0"
@@ -1321,20 +1321,20 @@ class TestDoctorStaleMaxIterationsDrift:
         import io
         from argparse import Namespace
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir(parents=True)
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir(parents=True)
+        (threev0_home / "config.yaml").write_text(
             f"agent:\n  max_turns: {cfg_turns}\n", encoding="utf-8"
         )
         env_lines = ["OPENAI_API_KEY=sk-test\n"]
         if ghost is not None:
             env_lines.append(f"EV0_MAX_ITERATIONS={ghost}\n")
-        (ev0_home / ".env").write_text("".join(env_lines), encoding="utf-8")
+        (threev0_home / ".env").write_text("".join(env_lines), encoding="utf-8")
 
-        monkeypatch.setattr(doctor_mod, "EV0_HOME", ev0_home)
-        monkeypatch.setattr(doctor_mod, "get_ev0_home", lambda: ev0_home)
+        monkeypatch.setattr(doctor_mod, "EV0_HOME", threev0_home)
+        monkeypatch.setattr(doctor_mod, "get_threev0_home", lambda: threev0_home)
         # Point the config helpers at the temp home.
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         if os_environ_value is not None:
             # Simulate the gateway bridge having already overridden os.environ.
             monkeypatch.setenv("EV0_MAX_ITERATIONS", str(os_environ_value))
@@ -1352,25 +1352,25 @@ class TestDoctorStaleMaxIterationsDrift:
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf), pytest.raises(SystemExit):
             doctor_mod.run_doctor(Namespace(fix=fix))
-        return buf.getvalue(), ev0_home
+        return buf.getvalue(), threev0_home
 
     def test_detects_drift_warn_only(self, monkeypatch, tmp_path):
-        out, ev0_home = self._run_config_section(
+        out, threev0_home = self._run_config_section(
             monkeypatch, tmp_path, fix=False, ghost=90, cfg_turns=400,
             os_environ_value=400,  # bridge contaminated os.environ
         )
         assert "EV0_MAX_ITERATIONS=90" in out
         assert "shadows" in out
         # Warn-only must NOT mutate .env.
-        assert "EV0_MAX_ITERATIONS=90" in (ev0_home / ".env").read_text(encoding="utf-8")
+        assert "EV0_MAX_ITERATIONS=90" in (threev0_home / ".env").read_text(encoding="utf-8")
 
     def test_fix_removes_ghost(self, monkeypatch, tmp_path):
-        out, ev0_home = self._run_config_section(
+        out, threev0_home = self._run_config_section(
             monkeypatch, tmp_path, fix=True, ghost=90, cfg_turns=400,
             os_environ_value=400,
         )
         assert "Removed stale EV0_MAX_ITERATIONS" in out
-        env_after = (ev0_home / ".env").read_text(encoding="utf-8")
+        env_after = (threev0_home / ".env").read_text(encoding="utf-8")
         assert "EV0_MAX_ITERATIONS" not in env_after
         assert "OPENAI_API_KEY=sk-test" in env_after  # other keys preserved
 
@@ -1396,7 +1396,7 @@ class TestDoctorDeprecatedConfigAndEnv:
         assert doctor_mod.collect_deprecated_env_vars({}) == []
         assert doctor_mod.collect_deprecated_env_vars(None) == []
 
-    def test_ev0_tool_progress_warning_says_unsupported_since_floor(self):
+    def test_threev0_tool_progress_warning_says_unsupported_since_floor(self):
         """EV0_TOOL_PROGRESS lost its last consumer (the retired v3→4
         migration) when the v12 support floor landed — doctor must say the
         variable is ignored rather than merely 'deprecated but read'."""
@@ -1412,15 +1412,15 @@ class TestDoctorDeprecatedConfigAndEnv:
         assert mode["EV0_TOOL_PROGRESS_MODE"] == "display.tool_progress in config.yaml"
 
     def _run_doctor_with_config(self, monkeypatch, tmp_path, *, config_yaml: str, env_text: str = ""):
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir(parents=True)
-        (ev0_home / "config.yaml").write_text(config_yaml, encoding="utf-8")
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir(parents=True)
+        (threev0_home / "config.yaml").write_text(config_yaml, encoding="utf-8")
         env_body = env_text if env_text else "OPENAI_API_KEY=sk-test\n"
-        (ev0_home / ".env").write_text(env_body, encoding="utf-8")
+        (threev0_home / ".env").write_text(env_body, encoding="utf-8")
 
-        monkeypatch.setattr(doctor_mod, "EV0_HOME", ev0_home)
-        monkeypatch.setattr(doctor_mod, "get_ev0_home", lambda: ev0_home)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setattr(doctor_mod, "EV0_HOME", threev0_home)
+        monkeypatch.setattr(doctor_mod, "get_threev0_home", lambda: threev0_home)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         # Clear process-level legacy env so tests only see the on-disk .env.
         for k in (
             "EV0_TOOL_PROGRESS",
@@ -1441,7 +1441,7 @@ class TestDoctorDeprecatedConfigAndEnv:
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf), pytest.raises(SystemExit):
             doctor_mod.run_doctor(Namespace(fix=False))
-        return buf.getvalue(), ev0_home
+        return buf.getvalue(), threev0_home
 
 
 

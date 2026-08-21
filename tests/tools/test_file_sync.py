@@ -307,7 +307,7 @@ class TestConcurrency:
             sync_future = executor.submit(mgr.sync, force=True)
             assert upload_started.wait(timeout=2.0)
 
-            sync_back_future = executor.submit(mgr.sync_back, ev0_home=tmp_path)
+            sync_back_future = executor.submit(mgr.sync_back, threev0_home=tmp_path)
 
             sync_future.result(timeout=3.0)
             sync_back_future.result(timeout=3.0)
@@ -364,7 +364,7 @@ class TestSyncBackSecurity:
         )
 
         mgr.sync(force=True)
-        mgr.sync_back(ev0_home=tmp_path)
+        mgr.sync_back(threev0_home=tmp_path)
 
         assert credential.read_text(encoding="utf-8") == "host-token"
         assert skill.read_text(encoding="utf-8") == "remote-skill"

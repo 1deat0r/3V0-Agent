@@ -14,10 +14,10 @@ import os
 from pathlib import Path
 
 try:
-    from threev0_constants import get_ev0_home as get_ev0_home
+    from threev0_constants import get_threev0_home as get_threev0_home
 except (ModuleNotFoundError, ImportError):
 
-    def get_ev0_home() -> Path:
+    def get_threev0_home() -> Path:
         """Return the 3V0 home directory (default: ``~/.3V0``)."""
         val = os.environ.get("EV0_HOME", "").strip()
         return Path(val) if val else Path.home() / ".3V0"

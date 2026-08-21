@@ -226,9 +226,9 @@ def default_downgrade_notice() -> Optional[str]:
         if _find_cli() is not None:
             return None
 
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        stamp = Path(get_ev0_home()) / "cache" / _NOTICE_STAMP_NAME
+        stamp = Path(get_threev0_home()) / "cache" / _NOTICE_STAMP_NAME
         try:
             if 0 <= time.time() - stamp.stat().st_mtime < _NOTICE_INTERVAL_S:
                 return None
@@ -253,9 +253,9 @@ def _managed_bin_dir() -> Optional[str]:
     """3V0' own bin dir ($EV0_HOME/bin) — where install.sh puts uv/uvx
     and where install_cli() links the browser-use binary."""
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        return str(Path(get_ev0_home()) / "bin")
+        return str(Path(get_threev0_home()) / "bin")
     except Exception as e:  # pragma: no cover — defensive
         logger.debug("Could not resolve managed bin dir: %s", e)
         return None
@@ -387,10 +387,10 @@ def _workspace_dir(task_id: Optional[str]) -> Optional[str]:
     try:
         from pathlib import Path
 
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
         safe = _TASK_ID_SAFE_RE.sub("_", str(task_id or "default"))[:80] or "default"
-        path = Path(get_ev0_home()) / "cache" / "browser-use" / "workspace" / safe
+        path = Path(get_threev0_home()) / "cache" / "browser-use" / "workspace" / safe
         path.mkdir(parents=True, exist_ok=True)
         return str(path)
     except Exception as e:

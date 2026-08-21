@@ -14,10 +14,10 @@ import tempfile
 import time
 from typing import Optional
 
-from threev0_cli.config import get_ev0_home
+from threev0_cli.config import get_threev0_home
 
 
-CACHE_PATH = get_ev0_home() / "sticker_cache.json"
+CACHE_PATH = get_threev0_home() / "sticker_cache.json"
 
 # Vision prompt for describing stickers -- kept concise to save tokens
 STICKER_VISION_PROMPT = (

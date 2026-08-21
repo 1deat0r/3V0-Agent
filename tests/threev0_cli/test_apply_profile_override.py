@@ -18,7 +18,7 @@ from types import SimpleNamespace
 
 
 def _run_apply_profile_override(
-    tmp_path, monkeypatch, *, ev0_home: str | None, active_profile: str | None,
+    tmp_path, monkeypatch, *, threev0_home: str | None, active_profile: str | None,
     argv: list[str] | None = None,
 ):
     """Run _apply_profile_override in isolation.
@@ -26,18 +26,18 @@ def _run_apply_profile_override(
     Returns the value of os.environ["EV0_HOME"] after the call,
     or None if unset.
     """
-    ev0_root = tmp_path / ".3V0"
-    ev0_root.mkdir(parents=True, exist_ok=True)
+    threev0_root = tmp_path / ".3V0"
+    threev0_root.mkdir(parents=True, exist_ok=True)
 
     if active_profile is not None:
-        (ev0_root / "active_profile").write_text(active_profile)
+        (threev0_root / "active_profile").write_text(active_profile)
 
     if active_profile and active_profile != "default":
-        (ev0_root / "profiles" / active_profile).mkdir(parents=True, exist_ok=True)
+        (threev0_root / "profiles" / active_profile).mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    if ev0_home is not None:
-        monkeypatch.setenv("EV0_HOME", ev0_home)
+    if threev0_home is not None:
+        monkeypatch.setenv("EV0_HOME", threev0_home)
     else:
         monkeypatch.delenv("EV0_HOME", raising=False)
 
@@ -57,7 +57,7 @@ class TestApplyProfileOverrideEv0HomeGuard:
     profile directory IS trusted as-is.
     """
 
-    def test_ev0_home_at_root_with_active_profile_is_redirected(
+    def test_threev0_home_at_root_with_active_profile_is_redirected(
         self, tmp_path, monkeypatch
     ):
         """EV0_HOME=/root/.3V0 + active_profile=coder must redirect
@@ -67,13 +67,13 @@ class TestApplyProfileOverrideEv0HomeGuard:
         and the user switches to a profile via `3v0 profile use`.
         Before the fix, the guard returned early and active_profile was ignored.
         """
-        ev0_root = tmp_path / ".3V0"
-        ev0_root.mkdir(parents=True, exist_ok=True)
+        threev0_root = tmp_path / ".3V0"
+        threev0_root.mkdir(parents=True, exist_ok=True)
 
         result = _run_apply_profile_override(
             tmp_path,
             monkeypatch,
-            ev0_home=str(ev0_root),
+            threev0_home=str(threev0_root),
             active_profile="coder",
         )
 
@@ -134,7 +134,7 @@ class TestSupervisedChildIgnoresStickyProfile:
         result = _run_apply_profile_override(
             tmp_path,
             monkeypatch,
-            ev0_home=None,
+            threev0_home=None,
             active_profile="briefer",
             argv=["3v0", "gateway", "run"],
         )
@@ -146,11 +146,11 @@ class TestSupervisedChildIgnoresStickyProfile:
         """A supervised named-profile slot passes ``-p <name>`` explicitly;
         that must still resolve (the sentinel guard only skips the sticky
         active_profile fallback, never an explicit flag)."""
-        ev0_root = tmp_path / ".3V0"
-        ev0_root.mkdir(parents=True, exist_ok=True)
-        (ev0_root / "active_profile").write_text("briefer")
-        (ev0_root / "profiles" / "briefer").mkdir(parents=True, exist_ok=True)
-        (ev0_root / "profiles" / "coder").mkdir(parents=True, exist_ok=True)
+        threev0_root = tmp_path / ".3V0"
+        threev0_root.mkdir(parents=True, exist_ok=True)
+        (threev0_root / "active_profile").write_text("briefer")
+        (threev0_root / "profiles" / "briefer").mkdir(parents=True, exist_ok=True)
+        (threev0_root / "profiles" / "coder").mkdir(parents=True, exist_ok=True)
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.delenv("EV0_HOME", raising=False)

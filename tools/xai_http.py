@@ -45,9 +45,9 @@ def has_xai_credentials() -> bool:
         if (get_secret("XAI_API_KEY", "") or "").strip():
             return True
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        auth_path = get_ev0_home() / "auth.json"
+        auth_path = get_threev0_home() / "auth.json"
         if not auth_path.exists():
             return False
         store = json.loads(auth_path.read_text(encoding="utf-8-sig"))
@@ -84,15 +84,15 @@ def get_env_value(name: str, default=None):
     xAI credential resolver.
     """
     try:
-        from threev0_cli.config import get_env_value as _ev0_get_env_value
+        from threev0_cli.config import get_env_value as _threev0_get_env_value
     except ImportError:
         return os.environ.get(name, default)
 
-    value = _ev0_get_env_value(name)
+    value = _threev0_get_env_value(name)
     return value if value is not None else default
 
 
-def ev0_xai_user_agent() -> str:
+def threev0_xai_user_agent() -> str:
     """Return a stable 3V0-specific User-Agent for xAI HTTP calls."""
     try:
         from threev0_cli import __version__
@@ -101,14 +101,14 @@ def ev0_xai_user_agent() -> str:
     return f"3V0-Agent/{__version__}"
 
 
-def ev0_xai_default_headers() -> Dict[str, str]:
+def threev0_xai_default_headers() -> Dict[str, str]:
     """Default headers for OpenAI-SDK and raw HTTP clients talking to xAI.
 
     Replaces the OpenAI Python SDK's identifying ``User-Agent: OpenAI/Python …``
     so chat/completions and Responses traffic is attributed as 3V0 Agent,
     matching the direct HTTP integrations (search, TTS, STT, image, video).
     """
-    return {"User-Agent": ev0_xai_user_agent()}
+    return {"User-Agent": threev0_xai_user_agent()}
 
 
 def _load_config_section(section_name: str) -> Dict[str, Any]:
@@ -241,9 +241,9 @@ def maybe_mark_xai_storage_notice_seen(section_name: str) -> Optional[str]:
     if not notice:
         return None
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        marker_dir = get_ev0_home() / "state"
+        marker_dir = get_threev0_home() / "state"
         marker_dir.mkdir(parents=True, exist_ok=True)
         marker = marker_dir / f"{section_name}_xai_storage_notice_seen"
         if marker.exists():

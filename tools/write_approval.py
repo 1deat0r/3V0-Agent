@@ -50,7 +50,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +108,7 @@ def _normalize_enabled(value: Any) -> bool:
 # ---------------------------------------------------------------------------
 
 def _pending_dir(subsystem: str) -> Path:
-    return get_ev0_home() / "pending" / subsystem
+    return get_threev0_home() / "pending" / subsystem
 
 
 def stage_write(subsystem: str, payload: Dict[str, Any],

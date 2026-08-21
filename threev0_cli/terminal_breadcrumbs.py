@@ -44,9 +44,9 @@ _SANITIZE_RE = re.compile(r"[^A-Za-z0-9._-]")
 
 
 def _breadcrumbs_dir() -> Path:
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home() / "terminal-sessions"
+    return get_threev0_home() / "terminal-sessions"
 
 
 def _sanitize(raw: str) -> str:

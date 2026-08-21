@@ -48,7 +48,7 @@ def _build_runner(monkeypatch, tmp_path, mode: str) -> GatewayRunner:
 
     import gateway.run as gateway_run
 
-    monkeypatch.setattr(gateway_run, "_ev0_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_threev0_home", tmp_path)
 
     runner = GatewayRunner(GatewayConfig())
     adapter = SimpleNamespace(send=AsyncMock(), handle_message=AsyncMock())
@@ -87,7 +87,7 @@ class TestLoadBackgroundNotificationsMode:
 
     def test_defaults_to_concise(self, monkeypatch, tmp_path):
         import gateway.run as gw
-        monkeypatch.setattr(gw, "_ev0_home", tmp_path)
+        monkeypatch.setattr(gw, "_threev0_home", tmp_path)
         monkeypatch.delenv("EV0_BACKGROUND_NOTIFICATIONS", raising=False)
         assert GatewayRunner._load_background_notifications_mode() == "concise"
 
@@ -96,7 +96,7 @@ class TestLoadBackgroundNotificationsMode:
             "display:\n  background_process_notifications: bogus\n"
         )
         import gateway.run as gw
-        monkeypatch.setattr(gw, "_ev0_home", tmp_path)
+        monkeypatch.setattr(gw, "_threev0_home", tmp_path)
         monkeypatch.delenv("EV0_BACKGROUND_NOTIFICATIONS", raising=False)
         assert GatewayRunner._load_background_notifications_mode() == "concise"
 
@@ -105,7 +105,7 @@ class TestLoadBackgroundNotificationsMode:
             "display:\n  background_process_notifications: error\n"
         )
         import gateway.run as gw
-        monkeypatch.setattr(gw, "_ev0_home", tmp_path)
+        monkeypatch.setattr(gw, "_threev0_home", tmp_path)
         monkeypatch.delenv("EV0_BACKGROUND_NOTIFICATIONS", raising=False)
         assert GatewayRunner._load_background_notifications_mode() == "error"
 

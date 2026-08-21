@@ -35,11 +35,11 @@ def test_skill_config_helpers_share_raw_config_parse_cache(tmp_path, monkeypatch
     """Repeated skill config helpers should parse config.yaml only once."""
     from agent import skill_utils
 
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
     external = tmp_path / "external-skills"
     external.mkdir()
-    config_path = ev0_home / "config.yaml"
+    config_path = threev0_home / "config.yaml"
     config_path.write_text(
         f"""
 skills:
@@ -61,7 +61,7 @@ skills:
         parse_count += 1
         return real_yaml_load(text)
 
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     skill_utils._external_dirs_cache_clear()
     getattr(skill_utils, "_raw_config_cache_clear", lambda: None)()
     monkeypatch.setattr(skill_utils, "yaml_load", counting_yaml_load)
@@ -117,13 +117,13 @@ class TestDisabledSkillsJsonArrayString:
     def test_get_disabled_skill_names_parses_json_array_string(
         self, tmp_path, monkeypatch
     ):
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
             "skills:\n  disabled: '[\"skill-a\",\"skill-b\"]'\n",
             encoding="utf-8",
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         from agent import skill_utils
 
         getattr(skill_utils, "_raw_config_cache_clear", lambda: None)()
@@ -133,13 +133,13 @@ class TestDisabledSkillsJsonArrayString:
     def test_get_disabled_skill_names_scalar_string_still_single_name(
         self, tmp_path, monkeypatch
     ):
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
             "skills:\n  disabled: 'hidden-skill'\n",
             encoding="utf-8",
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         from agent import skill_utils
 
         getattr(skill_utils, "_raw_config_cache_clear", lambda: None)()

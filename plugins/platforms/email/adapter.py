@@ -201,12 +201,12 @@ def _send_imap_id(imap: "imaplib.IMAP4") -> None:
     """
     try:
         try:
-            from threev0_cli import __version__ as _ev0_version
+            from threev0_cli import __version__ as _threev0_version
         except Exception:  # noqa: BLE001 — keep ID best-effort if import fails
-            _ev0_version = "0"
+            _threev0_version = "0"
         imap.xatom(
             "ID",
-            f'("name" "3v0-agent" "version" "{_ev0_version}" '
+            f'("name" "3v0-agent" "version" "{_threev0_version}" '
             '"vendor" "NousResearch" '
             '"support-email" "noreply@nousresearch.com")',
         )

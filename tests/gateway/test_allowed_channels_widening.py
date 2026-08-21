@@ -97,16 +97,16 @@ class TestTelegramAllowedChats:
         """slack-style config.yaml → env var bridge works."""
         from gateway.config import load_gateway_config
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
             "telegram:\n"
             "  allowed_chats:\n"
             "    - -100\n"
             "    - -200\n",
             encoding="utf-8",
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setenv("TELEGRAM_ALLOWED_CHATS", "__sentinel__")
         monkeypatch.delenv("TELEGRAM_ALLOWED_CHATS")
 
@@ -181,16 +181,16 @@ class TestMattermostAllowedChannels:
     def test_config_bridge(self, monkeypatch, tmp_path):
         from gateway.config import load_gateway_config
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
             "mattermost:\n"
             "  allowed_channels:\n"
             "    - chanABC\n"
             "    - chanDEF\n",
             encoding="utf-8",
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         # Pre-register the key with monkeypatch so teardown cleans it up
         # even though load_gateway_config mutates os.environ directly
         # (monkeypatch only restores keys it's touched via setenv/delenv;

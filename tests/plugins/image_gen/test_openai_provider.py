@@ -30,7 +30,7 @@ def _fake_response(*, b64=None, url=None, revised_prompt=None):
 
 
 @pytest.fixture(autouse=True)
-def _tmp_ev0_home(tmp_path, monkeypatch):
+def _tmp_threev0_home(tmp_path, monkeypatch):
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
     yield tmp_path
 
@@ -108,11 +108,11 @@ class TestModelResolution:
 
 class TestSourceImageLoading:
     def test_load_image_bytes_blocks_credential_store(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        auth_json = ev0_home / "auth.json"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        auth_json = threev0_home / "auth.json"
         auth_json.write_text('{"api_key":"sk-secret"}', encoding="utf-8")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         with pytest.raises(ValueError, match="credential store"):
             openai_plugin._load_image_bytes(str(auth_json))
@@ -121,9 +121,9 @@ class TestSourceImageLoading:
     def test_load_image_bytes_allows_legit_local_image(self, tmp_path, monkeypatch):
         """Negative control: a legitimate local image path is NOT blocked and
         loads normally — proves the guard doesn't over-fire on everything."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         img = tmp_path / "pic.png"
         img.write_bytes(b"\x89PNG\r\n\x1a\nfake-image-bytes")
 

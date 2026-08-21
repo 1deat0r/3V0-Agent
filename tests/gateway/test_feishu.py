@@ -1396,7 +1396,7 @@ class TestHydrateBotIdentity(unittest.TestCase):
                 "code": 0,
                 "bot": {
                     "bot_name": "3V0 Bot",
-                    "open_id": "ou_ev0_hydrated",
+                    "open_id": "ou_threev0_hydrated",
                 },
             }
         ).encode("utf-8")
@@ -1405,7 +1405,7 @@ class TestHydrateBotIdentity(unittest.TestCase):
 
         asyncio.run(adapter._hydrate_bot_identity())
 
-        self.assertEqual(adapter._bot_open_id, "ou_ev0_hydrated")
+        self.assertEqual(adapter._bot_open_id, "ou_threev0_hydrated")
         self.assertEqual(adapter._bot_name, "3V0 Bot")
 
     @patch.dict(
@@ -1553,15 +1553,15 @@ class TestWebhookSecurity(unittest.TestCase):
 
     def test_webhook_request_rejects_oversized_chunked_body_while_reading(self):
         from gateway.config import PlatformConfig
-        from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+        from threev0_constants import reset_threev0_home_override, set_threev0_home_override
         from plugins.platforms.feishu.adapter import FeishuAdapter, _FEISHU_WEBHOOK_MAX_BODY_BYTES
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            token = set_ev0_home_override(tmpdir)
+            token = set_threev0_home_override(tmpdir)
             try:
                 adapter = FeishuAdapter(PlatformConfig())
             finally:
-                reset_ev0_home_override(token)
+                reset_threev0_home_override(token)
             content = _FakeRequestContent(b"A" * (_FEISHU_WEBHOOK_MAX_BODY_BYTES + 2))
             request = SimpleNamespace(
                 remote="127.0.0.1",

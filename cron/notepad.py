@@ -28,10 +28,10 @@ import threading
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional
 
-from threev0_constants import get_ev0_home
-from threev0_time import now as _ev0_now
+from threev0_constants import get_threev0_home
+from threev0_time import now as _threev0_now
 
-NOTEPAD_FILE = get_ev0_home().resolve() / "cron" / "notepad.db"
+NOTEPAD_FILE = get_threev0_home().resolve() / "cron" / "notepad.db"
 MAX_VALUE_BYTES = 16 * 1024
 MAX_KEY_CHARS = 128
 MAX_JOB_TOTAL_BYTES = 64 * 1024
@@ -95,7 +95,7 @@ def set_note(job_id: str, key: str, value: str) -> Dict[str, Any]:
     """Upsert one key. Raises ValueError when a size cap would be exceeded."""
     job_id, key, value = str(job_id), str(key), str(value)
     _validate(job_id, key, value)
-    now = _ev0_now().isoformat()
+    now = _threev0_now().isoformat()
     with _transaction() as conn:
         row = conn.execute(
             """SELECT COALESCE(SUM(LENGTH(CAST(key AS BLOB))

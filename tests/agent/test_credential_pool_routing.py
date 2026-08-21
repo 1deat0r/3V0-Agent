@@ -290,9 +290,9 @@ class TestApiKeyHintRealPool:
     def _seed_pool(self, tmp_path, monkeypatch):
         import json
 
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        (ev0_home / "auth.json").write_text(
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        (threev0_home / "auth.json").write_text(
             json.dumps(
                 {
                     "version": 1,
@@ -320,7 +320,7 @@ class TestApiKeyHintRealPool:
                 }
             )
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         from agent.credential_pool import load_pool
 
         return load_pool("openrouter")
@@ -371,9 +371,9 @@ class TestFailureAttribution:
     """
 
     def _make_pool(self, tmp_path, monkeypatch, entries):
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         # Keep host Anthropic/Claude credentials out of this fixture. load_pool()
         # auto-seeds ~/.claude/.credentials.json and env keys when anthropic is
         # explicitly configured on the machine, which turns a deliberate
@@ -389,7 +389,7 @@ class TestFailureAttribution:
             "threev0_cli.auth.is_provider_explicitly_configured",
             lambda provider: False,
         )
-        (ev0_home / "auth.json").write_text(
+        (threev0_home / "auth.json").write_text(
             json.dumps({"version": 1, "credential_pool": {"anthropic": entries}}),
             encoding="utf-8",
         )

@@ -40,7 +40,7 @@ def _setup(tmp_path, *, ps1=b"WRITE-HOST current\n", sh=b"echo current\n"):
 
 
 def _run(home, root, branch="main"):
-    with patch.object(cli_main, "get_ev0_home", return_value=str(home)), patch.object(
+    with patch.object(cli_main, "get_threev0_home", return_value=str(home)), patch.object(
         cli_main, "PROJECT_ROOT", root
     ):
         cli_main._refresh_bootstrap_cache_scripts(branch)
@@ -147,5 +147,5 @@ def test_missing_sources_is_noop(tmp_path):
 
 def test_never_raises_on_io_error(tmp_path):
     home, root = _setup(tmp_path)
-    with patch.object(cli_main, "get_ev0_home", side_effect=OSError("boom")):
+    with patch.object(cli_main, "get_threev0_home", side_effect=OSError("boom")):
         cli_main._refresh_bootstrap_cache_scripts()  # must not raise

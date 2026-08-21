@@ -198,15 +198,15 @@ class TestLoadGatewayConfigApiServerExplicitDisable:
     def test_load_gateway_config_honors_explicit_api_server_disable(
         self, tmp_path, monkeypatch
     ):
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
             "platforms:\n"
             "  api_server:\n"
             "    enabled: false\n",
             encoding="utf-8",
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setenv("API_SERVER_ENABLED", "true")
         # Must satisfy _has_usable_api_server_key (min_length=16) — a weaker
         # key never enters the env-override branch on current main, which

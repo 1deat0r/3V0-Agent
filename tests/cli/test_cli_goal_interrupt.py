@@ -25,7 +25,7 @@ import pytest
 
 
 @pytest.fixture
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     """Isolated EV0_HOME so SessionDB.state_meta writes stay hermetic."""
     home = tmp_path / ".3V0"
     home.mkdir()
@@ -68,7 +68,7 @@ def _make_cli_with_goal(session_id: str, goal_text: str = "build a thing"):
 
 class TestInterruptAutoPause:
 
-    def test_interrupted_turn_is_resumable(self, ev0_home):
+    def test_interrupted_turn_is_resumable(self, threev0_home):
         """After auto-pause from Ctrl+C, /goal resume puts it back to active."""
         sid = f"sid-resume-{uuid.uuid4().hex}"
         cli, mgr = _make_cli_with_goal(sid)
@@ -88,7 +88,7 @@ class TestInterruptAutoPause:
 
 class TestHealthyTurnStillRuns:
     def test_clean_response_enqueues_continuation_when_judge_says_continue(
-        self, ev0_home,
+        self, threev0_home,
     ):
         """Sanity check: the hook still works in the happy path."""
         sid = f"sid-healthy-{uuid.uuid4().hex}"
@@ -112,7 +112,7 @@ class TestHealthyTurnStillRuns:
         assert "Continuing toward your standing goal" in queued
         assert mgr.state.status == "active"
 
-    def test_clean_response_marks_done_when_judge_says_done(self, ev0_home):
+    def test_clean_response_marks_done_when_judge_says_done(self, threev0_home):
         sid = f"sid-done-{uuid.uuid4().hex}"
         cli, mgr = _make_cli_with_goal(sid)
         cli._last_turn_interrupted = False
@@ -131,7 +131,7 @@ class TestHealthyTurnStillRuns:
 
 
 class TestInterruptFlagLifecycle:
-    def test_chat_resets_flag_at_entry(self, ev0_home):
+    def test_chat_resets_flag_at_entry(self, threev0_home):
         """chat() must reset _last_turn_interrupted at the top of each turn.
 
         This guards against stale flag state: if turn N was interrupted and

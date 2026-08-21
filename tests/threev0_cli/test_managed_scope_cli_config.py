@@ -39,7 +39,7 @@ def _load_cli_config(home):
     """
     import cli
 
-    cli._ev0_home = home
+    cli._threev0_home = home
     return cli.load_cli_config()
 
 

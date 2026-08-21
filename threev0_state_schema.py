@@ -13,7 +13,7 @@ import json
 import sqlite3
 from typing import Dict, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from threev0_state_common import (
     DEFERRED_INDEX_SQL,
     FTS_CJK_STALE_KEY,
@@ -466,8 +466,8 @@ class SessionSchemaMixin:
         cache_path = None
         schema_hash = _hashlib.sha256(schema_sql.encode("utf-8")).hexdigest()
         try:
-            from threev0_constants import get_ev0_home
-            cache_path = get_ev0_home() / "cache" / "schema_columns.json"
+            from threev0_constants import get_threev0_home
+            cache_path = get_threev0_home() / "cache" / "schema_columns.json"
             blob = _json.loads(cache_path.read_text(encoding="utf-8"))
             if (
                 isinstance(blob, dict)
@@ -1280,7 +1280,7 @@ class SessionSchemaMixin:
         can switch to state.db without losing pre-migration sessions.
         Only fills NULL columns — never overwrites data written by newer code.
         """
-        sessions_file = get_ev0_home() / "sessions" / "sessions.json"
+        sessions_file = get_threev0_home() / "sessions" / "sessions.json"
         if not sessions_file.exists():
             return
         with open(sessions_file, "r", encoding="utf-8") as f:

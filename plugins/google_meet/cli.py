@@ -17,14 +17,14 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 from plugins.google_meet import process_manager as pm
 from plugins.google_meet.meet_bot import _is_safe_meet_url
 
 
 def _auth_state_path() -> Path:
-    return Path(get_ev0_home()) / "workspace" / "meetings" / "auth.json"
+    return Path(get_threev0_home()) / "workspace" / "meetings" / "auth.json"
 
 
 # ---------------------------------------------------------------------------

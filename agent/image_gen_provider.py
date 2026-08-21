@@ -235,9 +235,9 @@ def normalize_reference_images(value: Any) -> Optional[List[str]]:
 
 def _images_cache_dir() -> Path:
     """Return ``$EV0_HOME/cache/images/``, creating parents as needed."""
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    path = get_ev0_home() / "cache" / "images"
+    path = get_threev0_home() / "cache" / "images"
     path.mkdir(parents=True, exist_ok=True)
     return path
 

@@ -126,10 +126,10 @@ class HolographicMemoryProvider(MemoryProvider):
     def is_available(self) -> bool:
         return True  # SQLite is always available, numpy is optional
 
-    def save_config(self, values, ev0_home):
+    def save_config(self, values, threev0_home):
         """Write config to config.yaml under plugins.3v0-memory-store."""
         from pathlib import Path
-        config_path = Path(ev0_home) / "config.yaml"
+        config_path = Path(threev0_home) / "config.yaml"
         try:
             import yaml
             # Write-back round-trip: raw read is correct (merged defaults
@@ -144,8 +144,8 @@ class HolographicMemoryProvider(MemoryProvider):
             pass
 
     def get_config_schema(self):
-        from threev0_constants import display_ev0_home
-        _default_db = f"{display_ev0_home()}/memory_store.db"
+        from threev0_constants import display_threev0_home
+        _default_db = f"{display_threev0_home()}/memory_store.db"
         return [
             {"key": "db_path", "description": "SQLite database path", "default": _default_db},
             {"key": "auto_extract", "description": "Auto-extract facts at session end", "default": "false", "choices": ["true", "false"]},
@@ -154,16 +154,16 @@ class HolographicMemoryProvider(MemoryProvider):
         ]
 
     def initialize(self, session_id: str, **kwargs) -> None:
-        from threev0_constants import get_ev0_home
-        _ev0_home = str(get_ev0_home())
-        _default_db = _ev0_home + "/memory_store.db"
+        from threev0_constants import get_threev0_home
+        _threev0_home = str(get_threev0_home())
+        _default_db = _threev0_home + "/memory_store.db"
         db_path = self._config.get("db_path", _default_db)
         # Expand $EV0_HOME in user-supplied paths so config values like
         # "$EV0_HOME/memory_store.db" or "~/.3V0/memory_store.db" both
         # resolve to the active profile's directory.
         if isinstance(db_path, str):
-            db_path = db_path.replace("$EV0_HOME", _ev0_home)
-            db_path = db_path.replace("${EV0_HOME}", _ev0_home)
+            db_path = db_path.replace("$EV0_HOME", _threev0_home)
+            db_path = db_path.replace("${EV0_HOME}", _threev0_home)
         default_trust = float(self._config.get("default_trust", 0.5))
         hrr_dim = int(self._config.get("hrr_dim", 1024))
         hrr_weight = float(self._config.get("hrr_weight", 0.3))

@@ -13,7 +13,7 @@ from .constants import QQBOT_VERSION
 # User-Agent
 # ---------------------------------------------------------------------------
 
-def _get_ev0_version() -> str:
+def _get_threev0_version() -> str:
     """Return the 3v0-agent package version, or 'dev' if unavailable."""
     try:
         from importlib.metadata import version
@@ -35,8 +35,8 @@ def build_user_agent() -> str:
     """
     py_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     os_name = platform.system().lower()
-    ev0_version = _get_ev0_version()
-    return f"QQBotAdapter/{QQBOT_VERSION} (Python/{py_version}; {os_name}; 3V0/{ev0_version})"
+    threev0_version = _get_threev0_version()
+    return f"QQBotAdapter/{QQBOT_VERSION} (Python/{py_version}; {os_name}; 3V0/{threev0_version})"
 
 
 def get_api_headers() -> Dict[str, str]:

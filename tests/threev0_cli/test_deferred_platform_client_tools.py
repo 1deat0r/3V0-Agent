@@ -199,7 +199,7 @@ class TestA2AClientToolsInCliProcess:
         # this was [] until a gateway/web process called all_entries().
         assert set(resolve_toolset("a2a")) == A2A_CLIENT_TOOLS
 
-    def test_a2a_appears_in_the_ev0_tools_checklist(self):
+    def test_a2a_appears_in_the_threev0_tools_checklist(self):
         """`a2a` is in _DEFAULT_OFF_TOOLSETS, so it must be tickable.
 
         Every other member of that set (homeassistant, spotify, video_gen,

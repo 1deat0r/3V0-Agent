@@ -337,12 +337,12 @@ class HonchoMemoryProvider(MemoryProvider):
         except Exception:
             return False
 
-    def save_config(self, values, ev0_home):
+    def save_config(self, values, threev0_home):
         """Write config to $EV0_HOME/honcho.json (Honcho SDK native format)."""
         import json
         import os
         from pathlib import Path
-        config_path = Path(ev0_home) / "honcho.json"
+        config_path = Path(threev0_home) / "honcho.json"
         existing = {}
         if config_path.exists():
             try:
@@ -359,7 +359,7 @@ class HonchoMemoryProvider(MemoryProvider):
             {"key": "baseUrl", "description": "Honcho base URL (for self-hosted)"},
         ]
 
-    def post_setup(self, ev0_home: str, config: dict) -> None:
+    def post_setup(self, threev0_home: str, config: dict) -> None:
         """Run the full Honcho setup wizard after provider selection."""
         import types
         from plugins.memory.honcho.cli import cmd_setup
@@ -530,8 +530,8 @@ class HonchoMemoryProvider(MemoryProvider):
         # of performing a one-time migration.
         try:
             if not session.messages and cfg.session_strategy != "per-session":
-                from threev0_constants import get_ev0_home
-                mem_dir = str(get_ev0_home() / "memories")
+                from threev0_constants import get_threev0_home
+                mem_dir = str(get_threev0_home() / "memories")
                 self._manager.migrate_memory_files(self._session_key, mem_dir)
                 logger.debug("Honcho memory file migration attempted for new session: %s", self._session_key)
             elif cfg.session_strategy == "per-session":

@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 from threev0_constants import agent_browser_runnable, find_node_executable
-from tools.environments.local import ev0_subprocess_env
+from tools.environments.local import threev0_subprocess_env
 
 _IS_WINDOWS = platform.system() == "Windows"
 
@@ -34,7 +34,7 @@ _DEP_CHECKS = {
     "browser": lambda: (
         agent_browser_runnable(shutil.which("agent-browser"))
         or _has_system_browser()
-        or _has_ev0_agent_browser()
+        or _has_threev0_agent_browser()
         or _has_npx_agent_browser()
     ),
     "ripgrep": lambda: shutil.which("rg") is not None,
@@ -79,9 +79,9 @@ def _has_npx_agent_browser() -> bool:
     return not _requires_real_termux_browser_install(browser_cmd)
 
 
-def _has_ev0_agent_browser() -> bool:
-    from threev0_constants import get_ev0_home
-    home = get_ev0_home()
+def _has_threev0_agent_browser() -> bool:
+    from threev0_constants import get_threev0_home
+    home = get_threev0_home()
     if _IS_WINDOWS:
         # npm -g --prefix puts .cmd shims directly in the prefix dir on Windows
         return (home / "node" / "agent-browser.cmd").is_file()
@@ -155,7 +155,7 @@ def ensure_dependency(
             return False
 
     if shell == "powershell":
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         ps_bin = shutil.which("powershell") or shutil.which("pwsh")
         if not ps_bin:
             if interactive:
@@ -166,12 +166,12 @@ def ensure_dependency(
             "-ExecutionPolicy", "Bypass",
             "-File", str(script),
             "-Ensure", dep,
-            "-Ev0Home", str(get_ev0_home()),
+            "-Ev0Home", str(get_threev0_home()),
         ]
     else:
         cmd = ["bash", str(script), "--ensure", dep]
 
-    run_env = ev0_subprocess_env(inherit_credentials=False)
+    run_env = threev0_subprocess_env(inherit_credentials=False)
     run_env["IS_INTERACTIVE"] = "false"
     result = subprocess.run(
         cmd,

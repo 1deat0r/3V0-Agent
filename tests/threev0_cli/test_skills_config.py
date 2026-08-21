@@ -110,7 +110,7 @@ class TestGetDisabledSkillNames:
         result = get_disabled_skill_names()
         assert result == {"discord-skill", "global-skill"}
 
-    def test_ev0_platform_takes_precedence(self, tmp_path, monkeypatch):
+    def test_threev0_platform_takes_precedence(self, tmp_path, monkeypatch):
         """EV0_PLATFORM should win over EV0_SESSION_PLATFORM."""
         config = tmp_path / "config.yaml"
         config.write_text(

@@ -188,15 +188,15 @@ class TestOneTurnNeverPersisted:
         from gateway.run import GatewayRunner
         from threev0_cli.model_switch import ModelSwitchResult
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
             _yaml.safe_dump(
                 {"model": {"default": "old-model", "provider": "openrouter"}}
             ),
             encoding="utf-8",
         )
-        monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
+        monkeypatch.setattr(gateway_run, "_threev0_home", threev0_home)
         monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda: {})
         monkeypatch.setattr(
             "threev0_cli.model_switch.switch_model",
@@ -211,8 +211,8 @@ class TestOneTurnNeverPersisted:
                 provider_label="OpenRouter",
             ),
         )
-        monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: ev0_home)
-        monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: ev0_home)
+        monkeypatch.setattr("threev0_constants.get_threev0_home", lambda: threev0_home)
+        monkeypatch.setattr("threev0_cli.config.get_threev0_home", lambda: threev0_home)
 
         runner = object.__new__(GatewayRunner)
         runner.adapters = {}

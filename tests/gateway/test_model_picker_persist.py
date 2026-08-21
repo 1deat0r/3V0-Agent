@@ -101,19 +101,19 @@ def _setup_isolated_home(tmp_path, monkeypatch, model_yaml_value):
     """Write a config.yaml with the given ``model:`` value and stub heavy bits."""
     import gateway.run as gateway_run
 
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    cfg_path = ev0_home / "config.yaml"
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    cfg_path = threev0_home / "config.yaml"
     cfg_path.write_text(
         yaml.safe_dump({"model": model_yaml_value, "providers": {}}),
         encoding="utf-8",
     )
 
-    monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
+    monkeypatch.setattr(gateway_run, "_threev0_home", threev0_home)
     _stub_picker_dependencies(monkeypatch)
     # save_config writes to ``get_ev0_home() / config.yaml`` — point it here.
-    monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: ev0_home)
-    monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_constants.get_threev0_home", lambda: threev0_home)
+    monkeypatch.setattr("threev0_cli.config.get_threev0_home", lambda: threev0_home)
     return cfg_path
 
 
@@ -231,7 +231,7 @@ async def test_multiplex_picker_global_persists_only_named_profile(
     default_adapter = _FakePickerAdapter()
     named_adapter = _FakePickerAdapter()
     runner = _make_named_runner(monkeypatch, default_adapter, named_adapter, named_home)
-    monkeypatch.setattr(gateway_run, "_ev0_home", default_home)
+    monkeypatch.setattr(gateway_run, "_threev0_home", default_home)
     _stub_picker_dependencies(monkeypatch)
     event = _named_event("--global")
 

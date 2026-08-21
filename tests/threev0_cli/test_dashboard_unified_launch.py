@@ -57,8 +57,8 @@ class TestUnifiedDashboardRouting:
         # EV0_HOME.  For a standard install (EV0_HOME unset) that root is
         # the platform-native default (~/.3V0), NOT dropped — see the Docker
         # test below for why we resolve explicitly instead of popping.
-        from threev0_constants import get_default_ev0_root
-        assert env.get("EV0_HOME") == str(get_default_ev0_root())
+        from threev0_constants import get_default_threev0_root
+        assert env.get("EV0_HOME") == str(get_default_threev0_root())
 
 
     def test_desktop_profile_backend_skips_machine_dashboard_reroute(self, main_mod, monkeypatch):

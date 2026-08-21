@@ -75,14 +75,14 @@ class TestCacheRoundTrip:
 
 
 class TestCacheFileLocation:
-    def test_cache_lives_under_ev0_home_cache_dir_with_0600(
+    def test_cache_lives_under_threev0_home_cache_dir_with_0600(
         self, monkeypatch, tmp_path
     ):
         # Real path (no _cache_path monkeypatch): EV0_HOME/cache/…, 0o600,
         # matching the discovery-cache precedent in tools/registry.py.
         import threev0_constants
 
-        monkeypatch.setattr(threev0_constants, "get_ev0_home", lambda: tmp_path)
+        monkeypatch.setattr(threev0_constants, "get_threev0_home", lambda: tmp_path)
         path = msc._cache_path()
         assert path == tmp_path / "cache" / "mcp_schema_cache.json"
         msc.write_cache_entry("srv", "fp", tools=[], utility_tools=[])

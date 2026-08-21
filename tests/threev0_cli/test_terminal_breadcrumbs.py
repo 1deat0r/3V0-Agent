@@ -27,7 +27,7 @@ TERMINAL_ENV_VARS = (
 
 
 @pytest.fixture
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     home = tmp_path / ".3V0"
     home.mkdir()
     monkeypatch.setenv("EV0_HOME", str(home))
@@ -80,7 +80,7 @@ def test_terminal_id_none_when_no_identity(monkeypatch, no_terminal_env):
 
 # ---------------------------------------------------------- write / read
 
-def test_breadcrumb_roundtrip(ev0_home, monkeypatch, no_terminal_env):
+def test_breadcrumb_roundtrip(threev0_home, monkeypatch, no_terminal_env):
     _fake_tty(monkeypatch)
     tb.write_breadcrumb("20260815_120000_abc123", cwd="/tmp/project")
     crumb = tb.read_breadcrumb()
@@ -88,18 +88,18 @@ def test_breadcrumb_roundtrip(ev0_home, monkeypatch, no_terminal_env):
     assert crumb["session_id"] == "20260815_120000_abc123"
     assert crumb["cwd"] == "/tmp/project"
     assert isinstance(crumb["ts"], float)
-    files = list((ev0_home / "terminal-sessions").iterdir())
+    files = list((threev0_home / "terminal-sessions").iterdir())
     assert [f.name for f in files] == ["tty-dev-pts-7"]
 
 
-def test_write_skipped_without_terminal_identity(ev0_home, monkeypatch, no_terminal_env):
+def test_write_skipped_without_terminal_identity(threev0_home, monkeypatch, no_terminal_env):
     _fake_no_tty(monkeypatch)
     tb.write_breadcrumb("20260815_120000_abc123")
-    assert not (ev0_home / "terminal-sessions").exists()
+    assert not (threev0_home / "terminal-sessions").exists()
     assert tb.read_breadcrumb() is None
 
 
-def test_two_terminals_do_not_clobber(ev0_home, monkeypatch, no_terminal_env):
+def test_two_terminals_do_not_clobber(threev0_home, monkeypatch, no_terminal_env):
     _fake_tty(monkeypatch, "/dev/pts/1")
     tb.write_breadcrumb("session-one")
     _fake_tty(monkeypatch, "/dev/pts/2")
@@ -109,9 +109,9 @@ def test_two_terminals_do_not_clobber(ev0_home, monkeypatch, no_terminal_env):
     assert tb.read_breadcrumb()["session_id"] == "session-one"
 
 
-def test_stale_breadcrumb_ignored_and_pruned(ev0_home, monkeypatch, no_terminal_env):
+def test_stale_breadcrumb_ignored_and_pruned(threev0_home, monkeypatch, no_terminal_env):
     _fake_tty(monkeypatch, "/dev/pts/1")
-    directory = ev0_home / "terminal-sessions"
+    directory = threev0_home / "terminal-sessions"
     directory.mkdir(parents=True)
     stale = directory / "tty-dev-pts-1"
     stale.write_text(
@@ -127,9 +127,9 @@ def test_stale_breadcrumb_ignored_and_pruned(ev0_home, monkeypatch, no_terminal_
     assert not stale.exists()
 
 
-def test_corrupt_breadcrumb_returns_none(ev0_home, monkeypatch, no_terminal_env):
+def test_corrupt_breadcrumb_returns_none(threev0_home, monkeypatch, no_terminal_env):
     _fake_tty(monkeypatch, "/dev/pts/1")
-    directory = ev0_home / "terminal-sessions"
+    directory = threev0_home / "terminal-sessions"
     directory.mkdir(parents=True)
     (directory / "tty-dev-pts-1").write_text("not json{")
     assert tb.read_breadcrumb() is None
@@ -145,24 +145,24 @@ def _make_session(home: Path, session_id: str):
     db.close()
 
 
-def test_resolve_picks_this_terminals_session(ev0_home, monkeypatch, no_terminal_env):
+def test_resolve_picks_this_terminals_session(threev0_home, monkeypatch, no_terminal_env):
     _fake_tty(monkeypatch, "/dev/pts/5")
-    _make_session(ev0_home, "20260815_100000_aaaaaa")
-    _make_session(ev0_home, "20260815_110000_bbbbbb")  # newer, other terminal
+    _make_session(threev0_home, "20260815_100000_aaaaaa")
+    _make_session(threev0_home, "20260815_110000_bbbbbb")  # newer, other terminal
     tb.write_breadcrumb("20260815_100000_aaaaaa")
     assert tb.resolve_breadcrumb_session() == "20260815_100000_aaaaaa"
 
 
-def test_resolve_falls_back_when_session_deleted(ev0_home, monkeypatch, no_terminal_env):
+def test_resolve_falls_back_when_session_deleted(threev0_home, monkeypatch, no_terminal_env):
     _fake_tty(monkeypatch, "/dev/pts/5")
-    _make_session(ev0_home, "20260815_110000_bbbbbb")
+    _make_session(threev0_home, "20260815_110000_bbbbbb")
     tb.write_breadcrumb("20260815_100000_deleted")  # never existed / deleted
     assert tb.resolve_breadcrumb_session() is None
 
 
-def test_resolve_projects_through_compression_chain(ev0_home, monkeypatch, no_terminal_env):
+def test_resolve_projects_through_compression_chain(threev0_home, monkeypatch, no_terminal_env):
     _fake_tty(monkeypatch, "/dev/pts/5")
-    _make_session(ev0_home, "20260815_100000_parent")
+    _make_session(threev0_home, "20260815_100000_parent")
     tb.write_breadcrumb("20260815_100000_parent")
 
     from threev0_state import SessionDB
@@ -178,7 +178,7 @@ def test_resolve_projects_through_compression_chain(ev0_home, monkeypatch, no_te
 # ------------------------------------------------------------ config gate
 
 def test_config_gate_off_disables_writes_and_resolution(
-    ev0_home, monkeypatch, no_terminal_env
+    threev0_home, monkeypatch, no_terminal_env
 ):
     _fake_tty(monkeypatch, "/dev/pts/9")
     import threev0_cli.config as config_mod
@@ -187,7 +187,7 @@ def test_config_gate_off_disables_writes_and_resolution(
         config_mod, "load_config", lambda: {"session": {"terminal_continue": False}}
     )
     tb.write_breadcrumb("20260815_120000_abc123")
-    assert not (ev0_home / "terminal-sessions").exists()
+    assert not (threev0_home / "terminal-sessions").exists()
     # Even with a pre-existing breadcrumb, resolution must decline
     monkeypatch.setattr(config_mod, "load_config", lambda: {})
     tb.write_breadcrumb("20260815_120000_abc123")

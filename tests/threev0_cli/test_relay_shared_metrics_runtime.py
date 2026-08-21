@@ -1131,8 +1131,8 @@ def test_managed_config_cannot_override_shared_metrics_consent(
 ):
     from threev0_cli import config, managed_scope
     from threev0_constants import (
-        reset_ev0_home_override,
-        set_ev0_home_override,
+        reset_threev0_home_override,
+        set_threev0_home_override,
     )
 
     profile = tmp_path / "profile"
@@ -1158,7 +1158,7 @@ def test_managed_config_cannot_override_shared_metrics_consent(
     config._RAW_CONFIG_CACHE.clear()
     managed_scope.invalidate_managed_cache()
 
-    token = set_ev0_home_override(profile)
+    token = set_threev0_home_override(profile)
     try:
         assert (
             config.load_config_readonly()["telemetry"]["shared_metrics"]["enabled"]
@@ -1166,7 +1166,7 @@ def test_managed_config_cannot_override_shared_metrics_consent(
         )
         assert relay_shared_metrics.enabled() is (profile_enabled is True)
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
         relay_shared_metrics._reset_for_tests()
         relay_runtime._reset_for_tests()
         managed_scope.invalidate_managed_cache()

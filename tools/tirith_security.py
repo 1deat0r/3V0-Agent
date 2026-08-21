@@ -34,7 +34,7 @@ import threading
 import time
 import urllib.request
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -162,14 +162,14 @@ def _reset_spawn_warning_state() -> None:
 _MARKER_TTL = 86400  # 24 hours
 
 
-def _get_ev0_home() -> str:
+def _get_threev0_home() -> str:
     """Return the 3V0 home directory, respecting EV0_HOME env var."""
-    return str(get_ev0_home())
+    return str(get_threev0_home())
 
 
 def _failure_marker_path() -> str:
     """Return the path to the install-failure marker file."""
-    return os.path.join(_get_ev0_home(), ".tirith-install-failed")
+    return os.path.join(_get_threev0_home(), ".tirith-install-failed")
 
 
 def _read_failure_reason() -> str | None:
@@ -235,9 +235,9 @@ def _clear_install_failed():
         pass
 
 
-def _ev0_bin_dir() -> str:
+def _threev0_bin_dir() -> str:
     """Return $EV0_HOME/bin, creating it if needed."""
-    d = os.path.join(_get_ev0_home(), "bin")
+    d = os.path.join(_get_threev0_home(), "bin")
     os.makedirs(d, exist_ok=True)
     return d
 
@@ -459,7 +459,7 @@ def _install_tirith(*, log_failures: bool = True) -> tuple[str | None, str]:
             if src is None:
                 return None, reason
 
-        dest = os.path.join(_ev0_bin_dir(), "tirith")
+        dest = os.path.join(_threev0_bin_dir(), "tirith")
         try:
             shutil.move(src, dest)
         except OSError:
@@ -549,12 +549,12 @@ def _resolve_tirith_path(configured_path: str) -> str:
         _clear_install_failed()
         return found
 
-    ev0_bin = os.path.join(_ev0_bin_dir(), "tirith")
-    if os.path.isfile(ev0_bin) and os.access(ev0_bin, os.X_OK):
-        _resolved_path = ev0_bin
+    threev0_bin = os.path.join(_threev0_bin_dir(), "tirith")
+    if os.path.isfile(threev0_bin) and os.access(threev0_bin, os.X_OK):
+        _resolved_path = threev0_bin
         _install_failure_reason = ""
         _clear_install_failed()
-        return ev0_bin
+        return threev0_bin
 
     # Local checks failed.  If a previous install attempt already failed,
     # skip the network retry — UNLESS the failure was "cosign_missing" and
@@ -613,9 +613,9 @@ def _background_install(*, log_failures: bool = True):
             _install_failure_reason = ""
             return
 
-        ev0_bin = os.path.join(_ev0_bin_dir(), "tirith")
-        if os.path.isfile(ev0_bin) and os.access(ev0_bin, os.X_OK):
-            _resolved_path = ev0_bin
+        threev0_bin = os.path.join(_threev0_bin_dir(), "tirith")
+        if os.path.isfile(threev0_bin) and os.access(threev0_bin, os.X_OK):
+            _resolved_path = threev0_bin
             _install_failure_reason = ""
             return
 
@@ -683,12 +683,12 @@ def ensure_installed(*, log_failures: bool = True):
         _clear_install_failed()
         return found
 
-    ev0_bin = os.path.join(_ev0_bin_dir(), "tirith")
-    if os.path.isfile(ev0_bin) and os.access(ev0_bin, os.X_OK):
-        _resolved_path = ev0_bin
+    threev0_bin = os.path.join(_threev0_bin_dir(), "tirith")
+    if os.path.isfile(threev0_bin) and os.access(threev0_bin, os.X_OK):
+        _resolved_path = threev0_bin
         _install_failure_reason = ""
         _clear_install_failed()
-        return ev0_bin
+        return threev0_bin
 
     # If previously failed in-memory, check if the cause is now resolved
     if _resolved_path is _INSTALL_FAILED:

@@ -656,25 +656,25 @@ _SENSITIVE_PATH_PREFIXES = (
 )
 _SENSITIVE_EXACT_PATHS = {"/var/run/docker.sock", "/run/docker.sock"}
 
-_ev0_config_resolved: str | None = None
-_ev0_config_resolved_loaded = False
+_threev0_config_resolved: str | None = None
+_threev0_config_resolved_loaded = False
 
 
-def _get_ev0_config_resolved() -> str | None:
+def _get_threev0_config_resolved() -> str | None:
     """Return the resolved absolute path of the 3V0 config file (cached)."""
-    global _ev0_config_resolved, _ev0_config_resolved_loaded
-    if _ev0_config_resolved_loaded:
-        return _ev0_config_resolved
-    _ev0_config_resolved_loaded = True
+    global _threev0_config_resolved, _threev0_config_resolved_loaded
+    if _threev0_config_resolved_loaded:
+        return _threev0_config_resolved
+    _threev0_config_resolved_loaded = True
     try:
         from threev0_cli.config import get_config_path
-        _ev0_config_resolved = str(get_config_path().resolve())
+        _threev0_config_resolved = str(get_config_path().resolve())
     except Exception:
         try:
-            _ev0_config_resolved = str(Path(_expand_tilde("~/.3V0/config.yaml")).resolve())
+            _threev0_config_resolved = str(Path(_expand_tilde("~/.3V0/config.yaml")).resolve())
         except Exception:
-            _ev0_config_resolved = None
-    return _ev0_config_resolved
+            _threev0_config_resolved = None
+    return _threev0_config_resolved
 
 
 def _check_sensitive_path(filepath: str, task_id: str = "default") -> str | None:
@@ -697,8 +697,8 @@ def _check_sensitive_path(filepath: str, task_id: str = "default") -> str | None
     # approvals.mode and other security settings live here; a malicious or
     # prompt-injected agent could silently disable exec approval by writing to
     # this file.
-    ev0_config = _get_ev0_config_resolved()
-    if ev0_config and (resolved == ev0_config or normalized == ev0_config):
+    threev0_config = _get_threev0_config_resolved()
+    if threev0_config and (resolved == threev0_config or normalized == threev0_config):
         return (
             f"Refusing to write to 3V0 config file: {filepath}\n"
             "Agent cannot modify security-sensitive configuration. "
@@ -733,25 +733,25 @@ _PROTECTED_INSTRUCTION_BASENAMES = frozenset({
     "agents.md", "claude.md", "soul.md", ".cursorrules",
 })
 
-_real_ev0_home_cached: str | None = None
-_real_ev0_home_loaded = False
+_real_threev0_home_cached: str | None = None
+_real_threev0_home_loaded = False
 
 
-def _get_real_ev0_home() -> str | None:
+def _get_real_threev0_home() -> str | None:
     """Return the realpath of the authoritative 3V0 home (cached)."""
-    global _real_ev0_home_cached, _real_ev0_home_loaded
-    if _real_ev0_home_loaded:
-        return _real_ev0_home_cached
-    _real_ev0_home_loaded = True
+    global _real_threev0_home_cached, _real_threev0_home_loaded
+    if _real_threev0_home_loaded:
+        return _real_threev0_home_cached
+    _real_threev0_home_loaded = True
     try:
-        from threev0_constants import get_ev0_home
-        _real_ev0_home_cached = os.path.realpath(str(get_ev0_home()))
+        from threev0_constants import get_threev0_home
+        _real_threev0_home_cached = os.path.realpath(str(get_threev0_home()))
     except Exception:
         try:
-            _real_ev0_home_cached = os.path.realpath(_expand_tilde("~/.3V0"))
+            _real_threev0_home_cached = os.path.realpath(_expand_tilde("~/.3V0"))
         except Exception:
-            _real_ev0_home_cached = None
-    return _real_ev0_home_cached
+            _real_threev0_home_cached = None
+    return _real_threev0_home_cached
 
 
 def _protected_instruction_config() -> tuple[bool, list[str]]:
@@ -810,7 +810,7 @@ def _protected_instruction_reason(filepath: str, task_id: str = "default",
     # gate targets PROJECT-LOCAL instruction files only. Checked before the
     # ``.3V0`` component rule below, which would otherwise match the
     # home directory itself.
-    real_home = _get_real_ev0_home()
+    real_home = _get_real_threev0_home()
     if real_home and (resolved == real_home
                       or resolved.startswith(real_home + os.sep)):
         return None
@@ -1347,7 +1347,7 @@ def _is_internal_file_status_text(content: str) -> bool:
         return False
     if stripped == _READ_DEDUP_STATUS_MESSAGE:
         return True
-    if _READ_DEDUP_STATUS_MESSAGE in stripped and \
+    if _READ_DEDUP_STATUS_MESSAGE in stripped and\
             len(stripped) <= 2 * len(_READ_DEDUP_STATUS_MESSAGE):
         return True
     return False

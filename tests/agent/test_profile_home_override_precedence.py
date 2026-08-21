@@ -23,7 +23,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 
 
 class _DB:
@@ -65,7 +65,7 @@ def test_bound_override_wins_over_shared_db_home(tmp_path, monkeypatch):
     monkeypatch.setenv("EV0_HOME", str(root))
 
     agent = _agent_for(root)  # shared db lives at <root>/state.db
-    token = set_ev0_home_override(str(bot_home))
+    token = set_threev0_home_override(str(bot_home))
     try:
         assert system_prompt._agent_home(agent) == bot_home
         assert (
@@ -73,7 +73,7 @@ def test_bound_override_wins_over_shared_db_home(tmp_path, monkeypatch):
             == "mybot"
         )
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
 
 def test_db_home_wins_on_bare_thread_without_override(tmp_path, monkeypatch):

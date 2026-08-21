@@ -32,7 +32,7 @@ from gateway.platforms.api_server import (
     ResponseStore,
     _IdempotencyCache,
     _derive_chat_session_id,
-    _ev0_version,
+    _threev0_version,
     _redact_api_error_text,
     _request_agent_overrides,
     check_api_server_requirements,
@@ -753,7 +753,7 @@ class TestHealthDetailedEndpoint:
             "cancelled": {"status": "cancelled"},
         }
 
-        with patch("tools.process_registry.process_registry.completion_queue.qsize", return_value=0), \
+        with patch("tools.process_registry.process_registry.completion_queue.qsize", return_value=0),\
              patch("tools.async_delegation.active_count", return_value=0):
             assert adapter._readiness_work_counts() == (4, 0, 0)
 
@@ -765,7 +765,7 @@ class TestHealthDetailedEndpoint:
 
 class TestModelsEndpoint:
     @pytest.mark.asyncio
-    async def test_models_returns_ev0_agent(self, adapter):
+    async def test_models_returns_threev0_agent(self, adapter):
         app = _create_app(adapter)
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.get("/v1/models")

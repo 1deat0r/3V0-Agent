@@ -112,9 +112,9 @@ def _resolve_xai_credentials() -> Tuple[str, str]:
 
 def _xai_user_agent() -> str:
     try:
-        from tools.xai_http import ev0_xai_user_agent
+        from tools.xai_http import threev0_xai_user_agent
 
-        return ev0_xai_user_agent()
+        return threev0_xai_user_agent()
     except Exception:
         return "3v0-agent/video_gen"
 

@@ -61,7 +61,7 @@ def test_skills_tool_load_env_strips_export_prefix(tmp_path, monkeypatch):
     import tools.skills_tool as skills_tool
 
     importlib.reload(skills_tool)
-    with patch.object(skills_tool, "get_ev0_home", return_value=tmp_path):
+    with patch.object(skills_tool, "get_threev0_home", return_value=tmp_path):
         env = skills_tool.load_env()
 
     assert env["SOME_SKILL_KEY"] == "skillval"

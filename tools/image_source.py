@@ -225,9 +225,9 @@ def _media_cache_roots() -> list:
     downloaded inbound media and the tools' own URL-download temp dirs. Covers
     the consolidated ``cache/`` layout and the legacy flat directories.
     """
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    home = get_ev0_home()
+    home = get_threev0_home()
     return [
         home / "cache",  # cache/images, cache/vision, cache/video(s), cache/audio
         home / "images",  # desktop/clipboard/PDF uploads (tui_gateway) — #69575

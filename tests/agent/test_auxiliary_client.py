@@ -343,9 +343,9 @@ class TestMoaAggregatorSharedResolution:
         from agent.auxiliary_client import _try_main_agent_model_fallback
 
         self._write_moa_config(tmp_path, monkeypatch)
-        with patch("agent.auxiliary_client._read_main_provider", return_value="moa"), \
-             patch("agent.auxiliary_client._read_main_model", return_value="opus-gpt"), \
-             patch("agent.auxiliary_client._is_provider_unhealthy", return_value=False), \
+        with patch("agent.auxiliary_client._read_main_provider", return_value="moa"),\
+             patch("agent.auxiliary_client._read_main_model", return_value="opus-gpt"),\
+             patch("agent.auxiliary_client._is_provider_unhealthy", return_value=False),\
              patch("agent.auxiliary_client.resolve_provider_client") as mock_resolve:
             mock_client = MagicMock()
             mock_resolve.return_value = (mock_client, "anthropic/claude-opus-4.8")
@@ -509,9 +509,9 @@ class TestNormalizeAuxProvider:
 
 class TestReadCodexAccessToken:
     def test_valid_auth_store(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        (ev0_home / "auth.json").write_text(json.dumps({
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        (threev0_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {
                 "openai-codex": {
@@ -519,7 +519,7 @@ class TestReadCodexAccessToken:
                 },
             },
         }))
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         result = _read_codex_access_token()
         assert result == "tok-123"
 
@@ -540,9 +540,9 @@ class TestReadCodexAccessToken:
         payload = base64.urlsafe_b64encode(payload_data).rstrip(b"=").decode()
         expired_jwt = f"{header}.{payload}.fakesig"
 
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        (ev0_home / "auth.json").write_text(json.dumps({
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        (threev0_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {
                 "openai-codex": {
@@ -550,7 +550,7 @@ class TestReadCodexAccessToken:
                 },
             },
         }))
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)):
             result = _read_codex_access_token()
         assert result is None, "Expired JWT should return None"
@@ -565,9 +565,9 @@ class TestReadCodexAccessToken:
         payload = base64.urlsafe_b64encode(payload_data).rstrip(b"=").decode()
         valid_jwt = f"{header}.{payload}.fakesig"
 
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        (ev0_home / "auth.json").write_text(json.dumps({
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        (threev0_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {
                 "openai-codex": {
@@ -575,7 +575,7 @@ class TestReadCodexAccessToken:
                 },
             },
         }))
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         result = _read_codex_access_token()
         assert result == valid_jwt
 
@@ -592,13 +592,13 @@ class TestResolveXaiOAuthForAux:
         from agent.credential_pool import AUTH_TYPE_OAUTH, PooledCredential, load_pool
         from threev0_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
 
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        (ev0_home / "auth.json").write_text(json.dumps({
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        (threev0_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {},
         }))
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.delenv("EV0_XAI_BASE_URL", raising=False)
         monkeypatch.delenv("XAI_BASE_URL", raising=False)
 
@@ -624,13 +624,13 @@ class TestResolveXaiOAuthForAux:
         from agent.credential_pool import AUTH_TYPE_OAUTH, PooledCredential, load_pool
         from threev0_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
 
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        (ev0_home / "auth.json").write_text(json.dumps({
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        (threev0_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {},
         }))
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setenv("EV0_XAI_BASE_URL", "https://example.x.ai/v1/")
 
         pool = load_pool("xai-oauth")
@@ -670,8 +670,8 @@ class TestAnthropicOAuthFlag:
 
     def test_api_key_no_oauth_flag(self, monkeypatch):
         """Regular API keys (sk-ant-api-*) should create client with is_oauth=False."""
-        with patch("agent.anthropic_adapter.resolve_anthropic_token", return_value="sk-ant-api03-testkey1234"), \
-             patch("agent.anthropic_adapter.build_anthropic_client") as mock_build, \
+        with patch("agent.anthropic_adapter.resolve_anthropic_token", return_value="sk-ant-api03-testkey1234"),\
+             patch("agent.anthropic_adapter.build_anthropic_client") as mock_build,\
              patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)):
             mock_build.return_value = MagicMock()
             from agent.auxiliary_client import _try_anthropic, AnthropicAuxiliaryClient
@@ -874,9 +874,9 @@ class TestExpiredCodexFallback:
         payload = base64.urlsafe_b64encode(payload_data).rstrip(b"=").decode()
         expired_jwt = f"{header}.{payload}.fakesig"
 
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        (ev0_home / "auth.json").write_text(json.dumps({
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        (threev0_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {
                 "openai-codex": {
@@ -884,7 +884,7 @@ class TestExpiredCodexFallback:
                 },
             },
         }))
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         # Set up Anthropic as fallback
         monkeypatch.setenv("ANTHROPIC_TOKEN", "sk-ant-oat01-test-fallback")
@@ -917,9 +917,9 @@ class TestExpiredCodexFallback:
         payload = base64.urlsafe_b64encode(payload_data).rstrip(b"=").decode()
         expired_jwt = f"{header}.{payload}.fakesig"
 
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        (ev0_home / "auth.json").write_text(json.dumps({
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        (threev0_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {
                 "openai-codex": {
@@ -927,7 +927,7 @@ class TestExpiredCodexFallback:
                 },
             },
         }))
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-test-key")
 
         with patch("agent.auxiliary_client.OpenAI") as mock_openai:
@@ -961,8 +961,8 @@ class TestExplicitProviderRouting:
 
     def test_explicit_anthropic_api_key(self, monkeypatch):
         """provider='anthropic' + regular API key should work with is_oauth=False."""
-        with patch("agent.anthropic_adapter.resolve_anthropic_token", return_value="sk-ant-api-regular-key"), \
-             patch("agent.anthropic_adapter.build_anthropic_client") as mock_build, \
+        with patch("agent.anthropic_adapter.resolve_anthropic_token", return_value="sk-ant-api-regular-key"),\
+             patch("agent.anthropic_adapter.build_anthropic_client") as mock_build,\
              patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)):
             mock_build.return_value = MagicMock()
             client, model = resolve_provider_client("anthropic")
@@ -975,7 +975,7 @@ class TestExplicitProviderRouting:
     def test_try_openrouter_pool_exhausted_falls_back_to_env(self, monkeypatch):
         """Pool present but exhausted → fall through to OPENROUTER_API_KEY env var."""
         monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-env-fallback")
-        with patch("agent.auxiliary_client._select_pool_entry", return_value=(True, None)), \
+        with patch("agent.auxiliary_client._select_pool_entry", return_value=(True, None)),\
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             mock_client = MagicMock(name="openrouter_client")
             mock_openai.return_value = mock_client
@@ -996,8 +996,8 @@ class TestOpenRouterPaidLaneGuard:
     def test_free_only_skips_paid_default_model(self, monkeypatch):
         """free_only=true + default (paid) model → OpenRouter skipped."""
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
-        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("threev0_cli.config.load_config_readonly", return_value={"auxiliary": {"free_only": True}}), \
+        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)),\
+             patch("threev0_cli.config.load_config_readonly", return_value={"auxiliary": {"free_only": True}}),\
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             client, model = _try_openrouter()
         assert client is None
@@ -1007,10 +1007,10 @@ class TestOpenRouterPaidLaneGuard:
     def test_free_only_allows_free_model(self, monkeypatch):
         """free_only=true + :free model → OpenRouter used with that model."""
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
-        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
+        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)),\
              patch("threev0_cli.config.load_config_readonly",
                    return_value={"auxiliary": {"free_only": True,
-                                              "openrouter_model": "nvidia/nemotron-3-ultra-550b-a55b:free"}}), \
+                                              "openrouter_model": "nvidia/nemotron-3-ultra-550b-a55b:free"}}),\
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             mock_client = MagicMock(name="openrouter_client")
             mock_openai.return_value = mock_client
@@ -1021,9 +1021,9 @@ class TestOpenRouterPaidLaneGuard:
     def test_configured_model_overrides_hardcoded_default(self, monkeypatch):
         """auxiliary.openrouter_model replaces _OPENROUTER_MODEL."""
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
-        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
+        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)),\
              patch("threev0_cli.config.load_config_readonly",
-                   return_value={"auxiliary": {"openrouter_model": "some/vendor-model"}}), \
+                   return_value={"auxiliary": {"openrouter_model": "some/vendor-model"}}),\
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             mock_client = MagicMock(name="openrouter_client")
             mock_openai.return_value = mock_client
@@ -1034,8 +1034,8 @@ class TestOpenRouterPaidLaneGuard:
     def test_explicit_caller_model_respects_free_only(self, monkeypatch):
         """Auxiliary.<task>.model (explicit) is also gated by free_only."""
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
-        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("threev0_cli.config.load_config_readonly", return_value={"auxiliary": {"free_only": True}}), \
+        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)),\
+             patch("threev0_cli.config.load_config_readonly", return_value={"auxiliary": {"free_only": True}}),\
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             client, model = _try_openrouter(model="google/gemini-3.6-flash")
         assert client is None
@@ -1048,8 +1048,8 @@ class TestOpenRouterPaidLaneGuard:
         from agent.auxiliary_client import _paid_lane_warned
         _paid_lane_warned.discard(_OPENROUTER_MODEL)
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
-        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("threev0_cli.config.load_config_readonly", return_value={"auxiliary": {}}), \
+        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)),\
+             patch("threev0_cli.config.load_config_readonly", return_value={"auxiliary": {}}),\
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             mock_client = MagicMock(name="openrouter_client")
             mock_openai.return_value = mock_client
@@ -1059,8 +1059,8 @@ class TestOpenRouterPaidLaneGuard:
         assert model == _OPENROUTER_MODEL
         assert any("PAID lane engaged" in r.getMessage() for r in caplog.records)
         # Second call logs nothing new.
-        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("threev0_cli.config.load_config_readonly", return_value={"auxiliary": {}}), \
+        with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)),\
+             patch("threev0_cli.config.load_config_readonly", return_value={"auxiliary": {}}),\
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             caplog.clear()
             with caplog.at_level(logging.WARNING, logger="agent.auxiliary_client"):
@@ -1109,8 +1109,8 @@ class TestGetTextAuxiliaryClient:
         monkeypatch.delenv("OPENAI_BASE_URL", raising=False)
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
-        with patch("agent.auxiliary_client._read_nous_auth", return_value=None), \
-             patch("agent.auxiliary_client._read_codex_access_token", return_value=None), \
+        with patch("agent.auxiliary_client._read_nous_auth", return_value=None),\
+             patch("agent.auxiliary_client._read_codex_access_token", return_value=None),\
              patch("agent.auxiliary_client._resolve_api_key_provider", return_value=(None, None)):
             client, model = get_text_auxiliary_client()
         assert client is None
@@ -1118,10 +1118,10 @@ class TestGetTextAuxiliaryClient:
 
     def test_custom_endpoint_uses_codex_wrapper_when_runtime_requests_responses_api(self):
         with patch("agent.auxiliary_client._resolve_custom_runtime",
-                   return_value=("https://api.openai.com/v1", "sk-test", "codex_responses")), \
-             patch("agent.auxiliary_client._read_nous_auth", return_value=None), \
-             patch("agent.auxiliary_client._resolve_nous_runtime_api", return_value=None), \
-             patch("agent.auxiliary_client._read_main_model", return_value="gpt-5.3-codex"), \
+                   return_value=("https://api.openai.com/v1", "sk-test", "codex_responses")),\
+             patch("agent.auxiliary_client._read_nous_auth", return_value=None),\
+             patch("agent.auxiliary_client._resolve_nous_runtime_api", return_value=None),\
+             patch("agent.auxiliary_client._read_main_model", return_value="gpt-5.3-codex"),\
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             client, model = get_text_auxiliary_client()
 
@@ -1513,8 +1513,8 @@ class TestTryPaymentFallback:
 
     def test_skips_failed_provider(self):
         mock_client = MagicMock()
-        with patch("agent.auxiliary_client._try_openrouter", return_value=(None, None)), \
-             patch("agent.auxiliary_client._try_nous", return_value=(mock_client, "nous-model")), \
+        with patch("agent.auxiliary_client._try_openrouter", return_value=(None, None)),\
+             patch("agent.auxiliary_client._try_nous", return_value=(mock_client, "nous-model")),\
              patch("agent.auxiliary_client._read_main_provider", return_value="openrouter"):
             client, model, label = _try_payment_fallback("openrouter", task="compression")
         assert client is mock_client
@@ -1529,10 +1529,10 @@ class TestTryPaymentFallback:
         When OR/Nous/custom/api-key all fail, payment-fallback returns None —
         Codex is never tried with a guessed model.
         """
-        with patch("agent.auxiliary_client._try_openrouter", return_value=(None, None)), \
-             patch("agent.auxiliary_client._try_nous", return_value=(None, None)), \
-             patch("agent.auxiliary_client._try_custom_endpoint", return_value=(None, None)), \
-             patch("agent.auxiliary_client._resolve_api_key_provider", return_value=(None, None)), \
+        with patch("agent.auxiliary_client._try_openrouter", return_value=(None, None)),\
+             patch("agent.auxiliary_client._try_nous", return_value=(None, None)),\
+             patch("agent.auxiliary_client._try_custom_endpoint", return_value=(None, None)),\
+             patch("agent.auxiliary_client._resolve_api_key_provider", return_value=(None, None)),\
              patch("agent.auxiliary_client._read_main_provider", return_value="openrouter"):
             client, model, label = _try_payment_fallback("openrouter")
         assert client is None
@@ -1568,9 +1568,9 @@ class TestCallLlmPaymentFallback:
         ])
 
         with patch("agent.auxiliary_client._get_cached_client",
-                    return_value=(primary_client, "xiaomi/mimo-v2-pro")), \
+                    return_value=(primary_client, "xiaomi/mimo-v2-pro")),\
              patch("agent.auxiliary_client._resolve_task_provider_model",
-                    return_value=("auto", "xiaomi/mimo-v2-pro", None, None, None)), \
+                    return_value=("auto", "xiaomi/mimo-v2-pro", None, None, None)),\
              patch("agent.auxiliary_client._try_payment_fallback",
                     return_value=(fallback_client, "fallback-model", "openrouter")):
             result = call_llm(
@@ -1597,9 +1597,9 @@ class TestCallLlmPaymentFallback:
         fallback_client.chat.completions.create.return_value = _DummyResponse("fallback auth response")
 
         with patch("agent.auxiliary_client._get_cached_client",
-                   return_value=(primary_client, "minimax/minimax-m2.7")), \
+                   return_value=(primary_client, "minimax/minimax-m2.7")),\
              patch("agent.auxiliary_client._resolve_task_provider_model",
-                   return_value=("auto", "minimax/minimax-m2.7", None, None, None)), \
+                   return_value=("auto", "minimax/minimax-m2.7", None, None, None)),\
              patch("agent.auxiliary_client._try_payment_fallback",
                    return_value=(fallback_client, "fallback-model", "openrouter")) as mock_fb:
             result = call_llm(
@@ -1652,14 +1652,14 @@ class TestStaleFallbackCandidateSkip:
             return (primary_client, "gpt-5.5")
 
         with patch("agent.auxiliary_client._resolve_task_provider_model",
-                   return_value=("auto", None, None, None, None)), \
-             patch("agent.auxiliary_client._get_cached_client", side_effect=_cached_client), \
+                   return_value=("auto", None, None, None, None)),\
+             patch("agent.auxiliary_client._get_cached_client", side_effect=_cached_client),\
              patch("agent.auxiliary_client._try_configured_fallback_chain",
-                   return_value=(None, None, "")), \
+                   return_value=(None, None, "")),\
              patch("agent.auxiliary_client._try_main_fallback_chain",
-                   return_value=(None, None, "")), \
+                   return_value=(None, None, "")),\
              patch("agent.auxiliary_client._try_payment_fallback",
-                   return_value=(stale_fb, "claude-haiku-4-5-20251001", "anthropic")), \
+                   return_value=(stale_fb, "claude-haiku-4-5-20251001", "anthropic")),\
              patch("agent.auxiliary_client._refresh_provider_credentials",
                    return_value=True) as mock_refresh:
             result = call_llm(
@@ -1693,17 +1693,17 @@ class TestStaleFallbackCandidateSkip:
         ]
 
         with patch("agent.auxiliary_client._resolve_task_provider_model",
-                   return_value=("auto", None, None, None, None)), \
+                   return_value=("auto", None, None, None, None)),\
              patch("agent.auxiliary_client._get_cached_client",
-                   return_value=(primary_client, "gpt-5.5")), \
+                   return_value=(primary_client, "gpt-5.5")),\
              patch("agent.auxiliary_client._try_configured_fallback_chain",
-                   return_value=(None, None, "")), \
+                   return_value=(None, None, "")),\
              patch("agent.auxiliary_client._try_main_fallback_chain",
-                   return_value=(None, None, "")), \
+                   return_value=(None, None, "")),\
              patch("agent.auxiliary_client._try_payment_fallback",
-                   side_effect=fb_walks) as mock_fb, \
+                   side_effect=fb_walks) as mock_fb,\
              patch("agent.auxiliary_client._refresh_provider_credentials",
-                   return_value=False), \
+                   return_value=False),\
              patch("agent.auxiliary_client._mark_provider_unhealthy") as mock_mark:
             result = call_llm(
                 task="compression",
@@ -1728,13 +1728,13 @@ class TestStaleFallbackCandidateSkip:
         broken_fb.chat.completions.create.side_effect = ValueError("malformed response")
 
         with patch("agent.auxiliary_client._resolve_task_provider_model",
-                   return_value=("auto", None, None, None, None)), \
+                   return_value=("auto", None, None, None, None)),\
              patch("agent.auxiliary_client._get_cached_client",
-                   return_value=(primary_client, "gpt-5.5")), \
+                   return_value=(primary_client, "gpt-5.5")),\
              patch("agent.auxiliary_client._try_configured_fallback_chain",
-                   return_value=(None, None, "")), \
+                   return_value=(None, None, "")),\
              patch("agent.auxiliary_client._try_main_fallback_chain",
-                   return_value=(None, None, "")), \
+                   return_value=(None, None, "")),\
              patch("agent.auxiliary_client._try_payment_fallback",
                    return_value=(broken_fb, "claude-haiku-4-5-20251001", "anthropic")):
             with pytest.raises(ValueError, match="malformed response"):
@@ -1779,11 +1779,11 @@ class TestAuxiliaryFallbackLayering:
         ])
 
         with patch("agent.auxiliary_client._get_cached_client",
-                   return_value=(primary_client, "gpt-5.5")), \
+                   return_value=(primary_client, "gpt-5.5")),\
              patch("agent.auxiliary_client._resolve_task_provider_model",
-                   return_value=("openai-codex", "gpt-5.5", None, None, None)), \
+                   return_value=("openai-codex", "gpt-5.5", None, None, None)),\
              patch("agent.auxiliary_client._try_configured_fallback_chain",
-                   return_value=(fallback_client, "deepseek-v4-pro", "fallback_chain[0](opencode-go)")) as mock_chain, \
+                   return_value=(fallback_client, "deepseek-v4-pro", "fallback_chain[0](opencode-go)")) as mock_chain,\
              patch("agent.auxiliary_client._try_main_agent_model_fallback") as mock_main:
             result = call_llm(
                 task="kanban_decomposer",
@@ -1805,13 +1805,13 @@ class TestAuxiliaryFallbackLayering:
         primary_client.chat.completions.create.side_effect = self._make_payment_err()
 
         with patch("agent.auxiliary_client._get_cached_client",
-                   return_value=(primary_client, "glm-4v-flash")), \
+                   return_value=(primary_client, "glm-4v-flash")),\
              patch("agent.auxiliary_client._resolve_task_provider_model",
-                   return_value=("glm", "glm-4v-flash", None, None, None)), \
+                   return_value=("glm", "glm-4v-flash", None, None, None)),\
              patch("agent.auxiliary_client._try_configured_fallback_chain",
-                   return_value=(None, None, "")), \
+                   return_value=(None, None, "")),\
              patch("agent.auxiliary_client._try_main_agent_model_fallback",
-                   return_value=(None, None, "")), \
+                   return_value=(None, None, "")),\
              caplog.at_level("WARNING", logger="agent.auxiliary_client"):
             with pytest.raises(Exception, match="Payment Required"):
                 call_llm(
@@ -1831,9 +1831,9 @@ class TestAuxiliaryFallbackLayering:
         ])
 
         with patch("agent.auxiliary_client._get_cached_client",
-                   return_value=(None, None)), \
+                   return_value=(None, None)),\
              patch("agent.auxiliary_client._resolve_task_provider_model",
-                   return_value=("ollama-cloud", "deepseek-v4-flash:cloud", None, None, None)), \
+                   return_value=("ollama-cloud", "deepseek-v4-flash:cloud", None, None, None)),\
              patch("agent.auxiliary_client._try_configured_fallback_chain",
                    return_value=(chain_client, "gpt-5.4-mini", "fallback_chain[0](openai-codex)")) as mock_chain:
             result = call_llm(
@@ -1865,9 +1865,9 @@ class TestAuxiliaryFallbackLayering:
         real_client.base_url = "https://chatgpt.com/backend-api/codex"
 
         with patch("agent.auxiliary_client._select_pool_entry",
-                   return_value=(True, pool_entry)), \
+                   return_value=(True, pool_entry)),\
              patch("agent.auxiliary_client._read_codex_access_token",
-                   side_effect=AssertionError("should use pool token")), \
+                   side_effect=AssertionError("should use pool token")),\
              patch("agent.auxiliary_client.OpenAI", return_value=real_client) as mock_openai:
             client, model = _resolve_fallback_entry({
                 "provider": "openai-codex",
@@ -1885,7 +1885,7 @@ class TestTryMainAgentModelFallback:
 
     def test_returns_none_when_main_provider_is_auto(self):
         from agent.auxiliary_client import _try_main_agent_model_fallback
-        with patch("agent.auxiliary_client._read_main_provider", return_value="auto"), \
+        with patch("agent.auxiliary_client._read_main_provider", return_value="auto"),\
              patch("agent.auxiliary_client._read_main_model", return_value="some-model"):
             client, model, label = _try_main_agent_model_fallback("glm", task="vision")
         assert client is None and model is None and label == ""
@@ -1894,9 +1894,9 @@ class TestTryMainAgentModelFallback:
     def test_resolves_main_provider_client(self):
         from agent.auxiliary_client import _try_main_agent_model_fallback
         fake_client = MagicMock()
-        with patch("agent.auxiliary_client._read_main_provider", return_value="openrouter"), \
-             patch("agent.auxiliary_client._read_main_model", return_value="anthropic/claude-sonnet-4"), \
-             patch("agent.auxiliary_client._is_provider_unhealthy", return_value=False), \
+        with patch("agent.auxiliary_client._read_main_provider", return_value="openrouter"),\
+             patch("agent.auxiliary_client._read_main_model", return_value="anthropic/claude-sonnet-4"),\
+             patch("agent.auxiliary_client._is_provider_unhealthy", return_value=False),\
              patch("agent.auxiliary_client.resolve_provider_client",
                    return_value=(fake_client, "anthropic/claude-sonnet-4")):
             client, model, label = _try_main_agent_model_fallback("glm", task="vision")
@@ -1947,7 +1947,7 @@ def test_resolve_api_key_provider_skips_unconfigured_anthropic(monkeypatch):
     from agent.auxiliary_client import _resolve_api_key_provider
     _resolve_api_key_provider()
 
-    assert "anthropic" not in called, \
+    assert "anthropic" not in called,\
         "_try_anthropic() should not be called when anthropic is not explicitly configured"
 
 
@@ -2100,7 +2100,7 @@ class TestAuxClientNoSdkRetries:
             def __init__(self, **kwargs):
                 captured.update(kwargs)
 
-        with patch.object(ac, "OpenAI", _FakeOpenAI), \
+        with patch.object(ac, "OpenAI", _FakeOpenAI),\
              patch.object(ac, "_openai_http_client_kwargs", return_value={}):
             ac._create_openai_client(api_key="k", base_url="https://x/v1")
         assert captured.get("max_retries") == 0
@@ -2113,7 +2113,7 @@ class TestAuxClientNoSdkRetries:
             def __init__(self, **kwargs):
                 captured.update(kwargs)
 
-        with patch.object(ac, "OpenAI", _FakeOpenAI), \
+        with patch.object(ac, "OpenAI", _FakeOpenAI),\
              patch.object(ac, "_openai_http_client_kwargs", return_value={}):
             ac._create_openai_client(api_key="k", base_url="https://x/v1", max_retries=5)
         assert captured.get("max_retries") == 5
@@ -2230,12 +2230,12 @@ class TestStaleBaseUrlWarning:
         monkeypatch.setenv("OPENAI_BASE_URL", "http://localhost:11434/v1")
         monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
 
-        with patch("agent.auxiliary_client._read_main_provider", return_value="openrouter"), \
-             patch("agent.auxiliary_client._read_main_model", return_value="google/gemini-flash"), \
+        with patch("agent.auxiliary_client._read_main_provider", return_value="openrouter"),\
+             patch("agent.auxiliary_client._read_main_model", return_value="google/gemini-flash"),\
              caplog.at_level(logging.WARNING, logger="agent.auxiliary_client"):
             _resolve_auto()
 
-        assert any("OPENAI_BASE_URL is set" in rec.message for rec in caplog.records), \
+        assert any("OPENAI_BASE_URL is set" in rec.message for rec in caplog.records),\
             "Expected a warning about stale OPENAI_BASE_URL"
         assert mod._stale_base_url_warned is True
 
@@ -2315,7 +2315,7 @@ class TestAuxiliaryTaskExtraBody:
         from agent.auxiliary_client import _get_task_extra_body
 
         config = {"auxiliary": {moa_task: {"reasoning_effort": "xhigh"}}}
-        with patch("threev0_cli.config.load_config", return_value=config), patch("threev0_cli.config.load_config_readonly", return_value=config), \
+        with patch("threev0_cli.config.load_config", return_value=config), patch("threev0_cli.config.load_config_readonly", return_value=config),\
              caplog.at_level(logging.WARNING, logger="agent.auxiliary_client"):
             result = _get_task_extra_body(moa_task)
 
@@ -2331,8 +2331,8 @@ class TestAuxiliaryTaskExtraBody:
         adapter = _AnthropicCompletionsAdapter(MagicMock(), "claude-sonnet-4-6", is_oauth=False)
 
         with patch("agent.anthropic_adapter.build_anthropic_kwargs",
-                   return_value={"model": "claude-sonnet-4-6", "messages": [], "max_tokens": 64}) as mock_bak, \
-             patch("agent.anthropic_adapter.create_anthropic_message") as mock_create, \
+                   return_value={"model": "claude-sonnet-4-6", "messages": [], "max_tokens": 64}) as mock_bak,\
+             patch("agent.anthropic_adapter.create_anthropic_message") as mock_create,\
              patch("agent.transports.get_transport") as mock_gt:
             mock_gt.return_value.normalize_response.return_value = MagicMock(
                 content="ok", tool_calls=None, reasoning=None, finish_reason="stop",
@@ -2360,8 +2360,8 @@ class TestAuxiliaryTaskExtraBody:
             "model": "claude-sonnet-4-6", "messages": [], "max_tokens": 64,
         }
         with patch("agent.anthropic_adapter.build_anthropic_kwargs",
-                   return_value=dict(bak_result)), \
-             patch("agent.anthropic_adapter.create_anthropic_message") as mock_create, \
+                   return_value=dict(bak_result)),\
+             patch("agent.anthropic_adapter.create_anthropic_message") as mock_create,\
              patch("agent.transports.get_transport") as mock_gt:
             mock_gt.return_value.normalize_response.return_value = MagicMock(
                 content="ok", tool_calls=None, reasoning=None, finish_reason="stop",
@@ -2397,16 +2397,16 @@ class TestAuxiliaryTaskExtraBody:
         monkeypatch.setenv("OPENAI_BASE_URL", "http://localhost:11434/v1")
         monkeypatch.setenv("OPENAI_API_KEY", "test-key")
 
-        with patch("agent.auxiliary_client._read_main_provider", return_value="custom"), \
-             patch("agent.auxiliary_client._read_main_model", return_value="llama3"), \
+        with patch("agent.auxiliary_client._read_main_provider", return_value="custom"),\
+             patch("agent.auxiliary_client._read_main_model", return_value="llama3"),\
              patch("agent.auxiliary_client._resolve_custom_runtime",
-                   return_value=("http://localhost:11434/v1", "test-key", None)), \
-             patch("agent.auxiliary_client.OpenAI") as mock_openai, \
+                   return_value=("http://localhost:11434/v1", "test-key", None)),\
+             patch("agent.auxiliary_client.OpenAI") as mock_openai,\
              caplog.at_level(logging.WARNING, logger="agent.auxiliary_client"):
             mock_openai.return_value = MagicMock()
             _resolve_auto()
 
-        assert not any("OPENAI_BASE_URL is set" in rec.message for rec in caplog.records), \
+        assert not any("OPENAI_BASE_URL is set" in rec.message for rec in caplog.records),\
             "Should NOT warn when provider is 'custom'"
 
 
@@ -3774,8 +3774,8 @@ class TestAnthropicExplicitApiKey:
 
     def test_try_anthropic_uses_explicit_api_key_over_env(self):
         """_try_anthropic(explicit_api_key) must use the supplied key, not the env fallback."""
-        with patch("agent.anthropic_adapter.resolve_anthropic_token", return_value="env-fallback-key"), \
-             patch("agent.anthropic_adapter.build_anthropic_client") as mock_build, \
+        with patch("agent.anthropic_adapter.resolve_anthropic_token", return_value="env-fallback-key"),\
+             patch("agent.anthropic_adapter.build_anthropic_client") as mock_build,\
              patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)):
             mock_build.return_value = MagicMock()
             from agent.auxiliary_client import _try_anthropic
@@ -3788,8 +3788,8 @@ class TestAnthropicExplicitApiKey:
 
     def test_try_anthropic_without_explicit_key_falls_back_to_resolve(self):
         """Without explicit_api_key, _try_anthropic falls back to resolve_anthropic_token."""
-        with patch("agent.anthropic_adapter.resolve_anthropic_token", return_value="env-fallback-key"), \
-             patch("agent.anthropic_adapter.build_anthropic_client") as mock_build, \
+        with patch("agent.anthropic_adapter.resolve_anthropic_token", return_value="env-fallback-key"),\
+             patch("agent.anthropic_adapter.build_anthropic_client") as mock_build,\
              patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)):
             mock_build.return_value = MagicMock()
             from agent.auxiliary_client import _try_anthropic
@@ -3799,8 +3799,8 @@ class TestAnthropicExplicitApiKey:
 
     def test_resolve_provider_client_passes_explicit_api_key_to_anthropic(self):
         """resolve_provider_client(provider='anthropic', explicit_api_key=...) must propagate the key."""
-        with patch("agent.anthropic_adapter.resolve_anthropic_token", return_value="env-key"), \
-             patch("agent.anthropic_adapter.build_anthropic_client") as mock_build, \
+        with patch("agent.anthropic_adapter.resolve_anthropic_token", return_value="env-key"),\
+             patch("agent.anthropic_adapter.build_anthropic_client") as mock_build,\
              patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)):
             mock_build.return_value = MagicMock()
             client, model = resolve_provider_client(
@@ -3863,10 +3863,10 @@ class TestAuxUnhealthyCache:
         # Mark BOTH the failed provider (openrouter) and a sibling (custom)
         # unhealthy. The chain should still find nous.
         _mark_provider_unhealthy("local/custom")
-        with patch("agent.auxiliary_client._read_main_provider", return_value="openrouter"), \
-             patch("agent.auxiliary_client._try_openrouter") as or_try, \
-             patch("agent.auxiliary_client._try_nous", return_value=(nous_client, "n-model")), \
-             patch("agent.auxiliary_client._try_custom_endpoint") as custom_try, \
+        with patch("agent.auxiliary_client._read_main_provider", return_value="openrouter"),\
+             patch("agent.auxiliary_client._try_openrouter") as or_try,\
+             patch("agent.auxiliary_client._try_nous", return_value=(nous_client, "n-model")),\
+             patch("agent.auxiliary_client._try_custom_endpoint") as custom_try,\
              patch("agent.auxiliary_client._resolve_api_key_provider", return_value=(None, None)):
             client, model, label = _try_payment_fallback("openrouter", task="compression")
         assert client is nous_client
@@ -3899,11 +3899,11 @@ class TestAuxUnhealthyCache:
         nous_client.chat.completions.create.return_value = nous_resp
 
         with patch("agent.auxiliary_client._get_cached_client",
-                    return_value=(primary_client, "google/gemini-3-flash-preview")), \
+                    return_value=(primary_client, "google/gemini-3-flash-preview")),\
              patch("agent.auxiliary_client._resolve_task_provider_model",
-                    return_value=("auto", "google/gemini-3-flash-preview", None, None, None)), \
+                    return_value=("auto", "google/gemini-3-flash-preview", None, None, None)),\
              patch("agent.auxiliary_client._try_payment_fallback",
-                    return_value=(nous_client, "n-model", "nous")), \
+                    return_value=(nous_client, "n-model", "nous")),\
              patch("agent.auxiliary_client._build_call_kwargs",
                     return_value={"model": "n-model", "messages": [{"role": "user", "content": "hi"}]}):
             assert _is_provider_unhealthy("openrouter") is False
@@ -4015,7 +4015,7 @@ class TestCompressionFallbackContextFilter:
         )
 
         with patch("agent.auxiliary_client._resolve_fallback_entry",
-                   side_effect=fake_resolve), \
+                   side_effect=fake_resolve),\
              patch("agent.auxiliary_client.get_model_context_length",
                    side_effect=fake_ctx):
             client, model, label = _try_configured_fallback_chain(
@@ -4133,7 +4133,7 @@ class TestCustomEndpointApiKeyInheritance:
             captured.update(kwargs)
             return MagicMock()
 
-        with patch("threev0_cli.config.load_config", return_value=fake_config), patch("threev0_cli.config.load_config_readonly", return_value=fake_config), \
+        with patch("threev0_cli.config.load_config", return_value=fake_config), patch("threev0_cli.config.load_config_readonly", return_value=fake_config),\
              patch.object(ac, "_create_openai_client", side_effect=_capture_create):
             client, model = resolve_provider_client(
                 "custom",
@@ -4161,7 +4161,7 @@ class TestCustomEndpointApiKeyInheritance:
             captured.update(kwargs)
             return MagicMock()
 
-        with patch("threev0_cli.config.load_config", return_value=fake_config), patch("threev0_cli.config.load_config_readonly", return_value=fake_config), \
+        with patch("threev0_cli.config.load_config", return_value=fake_config), patch("threev0_cli.config.load_config_readonly", return_value=fake_config),\
              patch.object(ac, "_create_openai_client", side_effect=_capture_create):
             client, model = resolve_provider_client(
                 "custom",
@@ -4186,9 +4186,9 @@ class TestCustomEndpointApiKeyInheritance:
             captured.update(kwargs)
             return MagicMock()
 
-        with patch.object(ac, "_RUNTIME_MAIN_API_KEY", "sk-runtime-key"), \
-             patch.object(ac, "_RUNTIME_MAIN_BASE_URL", "https://gw.example.com/v1"), \
-             patch("threev0_cli.config.load_config", return_value={"model": {}}), patch("threev0_cli.config.load_config_readonly", return_value={"model": {}}), \
+        with patch.object(ac, "_RUNTIME_MAIN_API_KEY", "sk-runtime-key"),\
+             patch.object(ac, "_RUNTIME_MAIN_BASE_URL", "https://gw.example.com/v1"),\
+             patch("threev0_cli.config.load_config", return_value={"model": {}}), patch("threev0_cli.config.load_config_readonly", return_value={"model": {}}),\
              patch.object(ac, "_create_openai_client", side_effect=_capture_create):
             client, model = resolve_provider_client(
                 "custom",
@@ -4220,7 +4220,7 @@ class TestCustomEndpointApiKeyInheritance:
             captured.update(kwargs)
             return MagicMock()
 
-        with patch("threev0_cli.config.load_config", return_value=fake_config), patch("threev0_cli.config.load_config_readonly", return_value=fake_config), \
+        with patch("threev0_cli.config.load_config", return_value=fake_config), patch("threev0_cli.config.load_config_readonly", return_value=fake_config),\
              patch.object(ac, "_create_openai_client", side_effect=_capture_create):
             client, model = resolve_provider_client(
                 "custom",

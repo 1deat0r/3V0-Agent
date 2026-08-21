@@ -42,7 +42,7 @@ def _validate(model, provider="openrouter", api_models=FAKE_API_MODELS, **kw):
         "suggested_base_url": None,
         "used_fallback": False,
     }
-    with patch("threev0_cli.models.fetch_api_models", return_value=api_models), \
+    with patch("threev0_cli.models.fetch_api_models", return_value=api_models),\
          patch("threev0_cli.models.probe_api_models", return_value=probe_payload):
         return validate_requested_model(model, provider, **kw)
 
@@ -484,7 +484,7 @@ class TestProbeApiModelsUserAgent:
         mock_resp.read = MagicMock(return_value=body)
         return mock_resp
 
-    def test_probe_sends_ev0_user_agent(self):
+    def test_probe_sends_threev0_user_agent(self):
         from unittest.mock import patch
 
         body = b'{"data":[{"id":"claude-opus-4.7"}]}'

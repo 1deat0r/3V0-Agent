@@ -69,7 +69,7 @@ def test_recovery_self_lock_does_not_clear_core_marker_via_import_probes(
 
     monkeypatch.setattr(m, "_is_windows", lambda: True)
     monkeypatch.setattr(m, "_venv_scripts_dir", lambda: scripts_dir)
-    monkeypatch.setattr(m, "_ev0_exe_shims", lambda d: [shim])
+    monkeypatch.setattr(m, "_threev0_exe_shims", lambda d: [shim])
     monkeypatch.setattr(
         m,
         "_default_venv_install_target",

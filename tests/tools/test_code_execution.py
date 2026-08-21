@@ -40,7 +40,7 @@ from unittest.mock import patch, MagicMock
 from tools.code_execution_tool import (
     SANDBOX_ALLOWED_TOOLS,
     execute_code,
-    generate_ev0_tools_module,
+    generate_threev0_tools_module,
     check_sandbox_requirements,
     build_execute_code_schema,
     EXECUTE_CODE_SCHEMA,
@@ -83,19 +83,19 @@ class TestSandboxRequirements(unittest.TestCase):
 
 class TestEv0ToolsGeneration(unittest.TestCase):
     def test_generates_all_allowed_tools(self):
-        src = generate_ev0_tools_module(list(SANDBOX_ALLOWED_TOOLS))
+        src = generate_threev0_tools_module(list(SANDBOX_ALLOWED_TOOLS))
         for tool in SANDBOX_ALLOWED_TOOLS:
             self.assertIn(f"def {tool}(", src)
 
 
     def test_empty_list_generates_nothing(self):
-        src = generate_ev0_tools_module([])
+        src = generate_threev0_tools_module([])
         self.assertNotIn("def terminal(", src)
         self.assertIn("def _call(", src)  # infrastructure still present
 
 
     def test_file_transport_uses_tempfile_fallback_for_rpc_dir(self):
-        src = generate_ev0_tools_module(["terminal"], transport="file")
+        src = generate_threev0_tools_module(["terminal"], transport="file")
         self.assertIn("import json, os, shlex, tempfile, threading, time", src)
         self.assertIn("os.path.join(tempfile.gettempdir(), \"ev0_rpc\")", src)
         self.assertNotIn('os.environ.get("EV0_RPC_DIR", "/tmp/ev0_rpc")', src)
@@ -104,7 +104,7 @@ class TestEv0ToolsGeneration(unittest.TestCase):
         """Regression: UDS _call() must hold a lock across send+recv so that
         concurrent tool calls from multiple threads don't interleave on the
         shared socket and receive each other's responses."""
-        src = generate_ev0_tools_module(["terminal"], transport="uds")
+        src = generate_threev0_tools_module(["terminal"], transport="uds")
         self.assertIn("_call_lock = threading.Lock()", src)
         self.assertIn("with _call_lock:", src)
 
@@ -112,7 +112,7 @@ class TestEv0ToolsGeneration(unittest.TestCase):
         """Regression: file transport _call() must allocate `_seq` under a
         lock, otherwise concurrent threads can pick the same seq and clobber
         each other's request files."""
-        src = generate_ev0_tools_module(["terminal"], transport="file")
+        src = generate_threev0_tools_module(["terminal"], transport="file")
         self.assertIn("_seq_lock = threading.Lock()", src)
         self.assertIn("with _seq_lock:", src)
 
@@ -137,9 +137,9 @@ class TestExecuteCodeRemoteTempDir(unittest.TestCase):
         env = FakeEnv()
         fake_thread = MagicMock()
 
-        with patch("tools.code_execution_tool._load_config", return_value={"timeout": 30, "max_tool_calls": 5}), \
-             patch("tools.code_execution_tool._get_or_create_env", return_value=(env, "ssh")), \
-             patch("tools.code_execution_tool._ship_file_to_remote"), \
+        with patch("tools.code_execution_tool._load_config", return_value={"timeout": 30, "max_tool_calls": 5}),\
+             patch("tools.code_execution_tool._get_or_create_env", return_value=(env, "ssh")),\
+             patch("tools.code_execution_tool._ship_file_to_remote"),\
              patch("tools.code_execution_tool.threading.Thread", return_value=fake_thread):
             result = json.loads(_execute_remote("print('hello')", "task-1", ["terminal"]))
 
@@ -178,12 +178,12 @@ class TestExecuteCodeRemoteTempDir(unittest.TestCase):
         malicious_tz = "US/Eastern; echo PWNED"
 
         with patch("tools.code_execution_tool._load_config",
-                   return_value={"timeout": 30, "max_tool_calls": 5}), \
+                   return_value={"timeout": 30, "max_tool_calls": 5}),\
              patch("tools.code_execution_tool._get_or_create_env",
-                   return_value=(env, "ssh")), \
-             patch("tools.code_execution_tool._ship_file_to_remote"), \
+                   return_value=(env, "ssh")),\
+             patch("tools.code_execution_tool._ship_file_to_remote"),\
              patch("tools.code_execution_tool.threading.Thread",
-                   return_value=fake_thread), \
+                   return_value=fake_thread),\
              patch.dict(os.environ, {"EV0_TIMEZONE": malicious_tz}):
             result = json.loads(_execute_remote("print('hello')", "task-1", ["terminal"]))
 
@@ -424,7 +424,7 @@ class TestStubSchemaDrift(unittest.TestCase):
     def test_generated_module_accepts_all_params(self):
         """The generated ev0_tools.py module should accept all current params
         without TypeError when called with keyword arguments."""
-        src = generate_ev0_tools_module(list(SANDBOX_ALLOWED_TOOLS))
+        src = generate_threev0_tools_module(list(SANDBOX_ALLOWED_TOOLS))
 
         # Compile the generated module to check for syntax errors
         compile(src, "ev0_tools.py", "exec")
@@ -498,7 +498,7 @@ class TestEnvVarFiltering(unittest.TestCase):
         try:
             if extra_env:
                 os.environ.update(extra_env)
-            with patch("model_tools.handle_function_call", return_value='{}'), \
+            with patch("model_tools.handle_function_call", return_value='{}'),\
                  patch("tools.code_execution_tool._load_config",
                        return_value={"timeout": 10, "max_tool_calls": 50}):
                 raw = execute_code(code, task_id="test-env",
@@ -532,7 +532,7 @@ class TestEnvVarFiltering(unittest.TestCase):
         self.assertNotIn("MODAL_TOKEN_SECRET", child_env)
 
 
-    def test_ev0_rpc_socket_injected(self):
+    def test_threev0_rpc_socket_injected(self):
         child_env = self._get_child_env()
         self.assertIn("EV0_RPC_SOCKET", child_env)
 
@@ -663,7 +663,7 @@ class TestLoadConfig(unittest.TestCase):
         from tools.code_execution_tool import _load_config
         mock_cli = MagicMock()
         mock_cli.CLI_CONFIG = {"code_execution": {"timeout": 999}}
-        with patch.dict("sys.modules", {"cli": mock_cli}), \
+        with patch.dict("sys.modules", {"cli": mock_cli}),\
              patch("threev0_cli.config.read_raw_config", return_value={}):
             result = _load_config()
         self.assertEqual(result, {})
@@ -694,7 +694,7 @@ class TestInterruptHandling(unittest.TestCase):
 
         try:
             with patch("model_tools.handle_function_call",
-                        return_value=json.dumps({"ok": True})), \
+                        return_value=json.dumps({"ok": True})),\
                  patch("tools.code_execution_tool._load_config",
                        return_value={"timeout": 30, "max_tool_calls": 50}):
                 result = json.loads(execute_code(
@@ -747,9 +747,9 @@ class TestHeadTailTruncation(unittest.TestCase):
 
         fake_thread = MagicMock()
 
-        with patch("tools.code_execution_tool._load_config", return_value={"timeout": 30, "max_tool_calls": 5}), \
-             patch("tools.code_execution_tool._get_or_create_env", return_value=(FakeEnv(), "ssh")), \
-             patch("tools.code_execution_tool._ship_file_to_remote"), \
+        with patch("tools.code_execution_tool._load_config", return_value={"timeout": 30, "max_tool_calls": 5}),\
+             patch("tools.code_execution_tool._get_or_create_env", return_value=(FakeEnv(), "ssh")),\
+             patch("tools.code_execution_tool._ship_file_to_remote"),\
              patch("tools.code_execution_tool.threading.Thread", return_value=fake_thread):
             result = json.loads(_execute_remote("print('large')", "task-1", ["terminal"]))
 
@@ -858,7 +858,7 @@ class TestRpcTokenAuthorization(unittest.TestCase):
 
     def test_generated_module_sends_token(self):
         """The generated ev0_tools module reads EV0_RPC_TOKEN and sends it."""
-        src = generate_ev0_tools_module(["terminal"], transport="uds")
+        src = generate_threev0_tools_module(["terminal"], transport="uds")
         self.assertIn("EV0_RPC_TOKEN", src)
         self.assertIn('"token"', src)
 

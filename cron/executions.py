@@ -14,8 +14,8 @@ import uuid
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional
 
-from threev0_constants import get_ev0_home
-from threev0_time import now as _ev0_now
+from threev0_constants import get_threev0_home
+from threev0_time import now as _threev0_now
 
 # Optional test override. Production resolves the path at transaction time so
 # dashboard operations that temporarily enter another profile cannot leak that
@@ -28,7 +28,7 @@ _PROCESS_ID = uuid.uuid4().hex
 
 
 def _connect() -> sqlite3.Connection:
-    path = EXECUTIONS_FILE or (get_ev0_home().resolve() / "cron" / "executions.db")
+    path = EXECUTIONS_FILE or (get_threev0_home().resolve() / "cron" / "executions.db")
     path.parent.mkdir(parents=True, exist_ok=True)
     return sqlite3.connect(path, timeout=5)
 
@@ -138,7 +138,7 @@ def _prune_unlocked(conn: sqlite3.Connection) -> None:
 
 def create_execution(job_id: str, *, source: str) -> Dict[str, Any]:
     """Persist a claimed attempt before executor/provider dispatch."""
-    now = _ev0_now().isoformat()
+    now = _threev0_now().isoformat()
     execution_id = uuid.uuid4().hex
     pid = os.getpid()
     with _transaction() as conn:
@@ -160,7 +160,7 @@ def create_execution(job_id: str, *, source: str) -> Dict[str, Any]:
 
 def mark_execution_running(execution_id: str) -> Optional[Dict[str, Any]]:
     """Transition one claimed attempt to running exactly once."""
-    now = _ev0_now().isoformat()
+    now = _threev0_now().isoformat()
     with _transaction() as conn:
         cur = conn.execute(
             """UPDATE executions SET status='running', started_at=?
@@ -181,7 +181,7 @@ def finish_execution(
     delivery_outcome: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """Write a terminal result once; terminal attempts cannot be rewritten."""
-    now = _ev0_now().isoformat()
+    now = _threev0_now().isoformat()
     status = "completed" if success else "failed"
     detail = None if success else (str(error) if error else "unknown failure")
     with _transaction() as conn:
@@ -202,7 +202,7 @@ def finish_execution(
 
 def recover_interrupted_executions() -> int:
     """Mark provably abandoned attempts unknown without scheduling retries."""
-    now = _ev0_now().isoformat()
+    now = _threev0_now().isoformat()
     changed = 0
     recovered: List[Dict[str, Any]] = []
     with _transaction() as conn:

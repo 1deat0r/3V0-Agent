@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from threev0_constants import display_ev0_home
+from threev0_constants import display_threev0_home
 from agent.prompt_cache_boundary import register_stable_prefix
 from agent.skill_preprocessing import (
     expand_inline_shell as _expand_inline_shell,
@@ -219,9 +219,9 @@ def _resolve_skill_commands_home() -> str:
     skill list cached, so ``get_skill_commands()`` reported a cache miss for
     skills that only exist under the new profile (#88023).
     """
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return str(get_ev0_home())
+    return str(get_threev0_home())
 
 
 def _load_skill_payload(skill_identifier: str, task_id: str | None = None) -> tuple[dict[str, Any], Path | None, str] | None:
@@ -293,7 +293,7 @@ def _inject_skill_config(loaded_skill: dict[str, Any], parts: list[str]) -> None
         if not resolved:
             return
 
-        lines = ["", f"[Skill config (from {display_ev0_home()}/config.yaml):"]
+        lines = ["", f"[Skill config (from {display_threev0_home()}/config.yaml):"]
         for key, value in resolved.items():
             display_val = str(value) if value else "(not set)"
             lines.append(f"  {key} = {display_val}")

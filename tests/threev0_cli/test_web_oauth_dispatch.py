@@ -112,13 +112,13 @@ def test_minimax_login_does_not_launch_anthropic_flow():
 
 def test_oauth_provider_status_uses_profile_query(tmp_path, monkeypatch):
     from threev0_cli import web_server as ws
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
     profile_home = _make_profile_home(tmp_path, monkeypatch)
     observed_homes = []
 
     def fake_status():
-        observed_homes.append(get_ev0_home())
+        observed_homes.append(get_threev0_home())
         return {"logged_in": False, "source": None}
 
     fake_catalog = ({

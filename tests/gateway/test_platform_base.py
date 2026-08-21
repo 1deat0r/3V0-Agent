@@ -26,11 +26,11 @@ def test_media_delivery_denies_encrypted_bitwarden_cache(tmp_path, monkeypatch):
     """Encrypted Bitwarden cache is covered by the media credential guard."""
     import gateway.platforms.base as base
 
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    monkeypatch.setattr(base, "_EV0_HOME", ev0_home)
-    monkeypatch.setattr(base, "_EV0_ROOT", ev0_home)
-    path = ev0_home / "cache" / "bws_cache.enc.json"
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    monkeypatch.setattr(base, "_EV0_HOME", threev0_home)
+    monkeypatch.setattr(base, "_EV0_ROOT", threev0_home)
+    path = threev0_home / "cache" / "bws_cache.enc.json"
     path.parent.mkdir()
     path.write_text("encrypted-secret-cache")
 
@@ -618,18 +618,18 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "home"
-        ev0_dir = fake_home / ".3V0"
-        (ev0_dir / "mcp-tokens").mkdir(parents=True)
-        secret = ev0_dir / rel
+        threev0_dir = fake_home / ".3V0"
+        (threev0_dir / "mcp-tokens").mkdir(parents=True)
+        secret = threev0_dir / rel
         secret.write_text('{"access_token": "live-bearer-abc123"}')
         monkeypatch.setenv("HOME", str(fake_home))
         monkeypatch.setattr(
             "gateway.platforms.base._EV0_HOME",
-            ev0_dir,
+            threev0_dir,
         )
         monkeypatch.setattr(
             "gateway.platforms.base._EV0_ROOT",
-            ev0_dir,
+            threev0_dir,
         )
 
         assert BasePlatformAdapter.validate_media_delivery_path(str(secret)) is None
@@ -645,18 +645,18 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "home"
-        ev0_dir = fake_home / ".3V0"
-        ev0_dir.mkdir(parents=True)
-        token = ev0_dir / "google_token.json"
+        threev0_dir = fake_home / ".3V0"
+        threev0_dir.mkdir(parents=True)
+        token = threev0_dir / "google_token.json"
         token.write_text('{"access_token": "***", "refresh_token": "***"}')
         monkeypatch.setenv("HOME", str(fake_home))
-        monkeypatch.setattr("gateway.platforms.base._EV0_HOME", ev0_dir)
-        monkeypatch.setattr("gateway.platforms.base._EV0_ROOT", ev0_dir)
+        monkeypatch.setattr("gateway.platforms.base._EV0_HOME", threev0_dir)
+        monkeypatch.setattr("gateway.platforms.base._EV0_ROOT", threev0_dir)
 
         assert BasePlatformAdapter.validate_media_delivery_path(str(token)) is None
 
 
-    def test_denylist_blocks_non_cache_file_under_ev0_home(self, tmp_path, monkeypatch):
+    def test_denylist_blocks_non_cache_file_under_threev0_home(self, tmp_path, monkeypatch):
         """A non-credential file the agent wrote directly under ~/.3V0
         (not in a cache subdir) is still deliverable via recency trust — we
         did NOT blanket-deny the tree (per #32090/#34425). This guards against
@@ -667,13 +667,13 @@ class TestMediaDeliveryDefaultMode:
         monkeypatch.setenv("EV0_MEDIA_TRUST_RECENT_SECONDS", "600")
 
         fake_home = tmp_path / "home"
-        ev0_dir = fake_home / ".3V0"
-        ev0_dir.mkdir(parents=True)
-        artifact = ev0_dir / "adhoc_report.pdf"
+        threev0_dir = fake_home / ".3V0"
+        threev0_dir.mkdir(parents=True)
+        artifact = threev0_dir / "adhoc_report.pdf"
         artifact.write_bytes(b"%PDF-1.4")  # fresh mtime
         monkeypatch.setenv("HOME", str(fake_home))
-        monkeypatch.setattr("gateway.platforms.base._EV0_HOME", ev0_dir)
-        monkeypatch.setattr("gateway.platforms.base._EV0_ROOT", ev0_dir)
+        monkeypatch.setattr("gateway.platforms.base._EV0_HOME", threev0_dir)
+        monkeypatch.setattr("gateway.platforms.base._EV0_ROOT", threev0_dir)
 
         assert BasePlatformAdapter.validate_media_delivery_path(str(artifact)) == str(artifact.resolve())
 
@@ -733,8 +733,8 @@ class TestMediaDeliveryDefaultMode:
 
         # Stand-in for the literal /root deny prefix in the deployment.
         denied_root = tmp_path / "root"
-        ev0_root = denied_root / ".3V0"
-        prof_cache = ev0_root / "profiles" / "myprof" / "cache" / "images"
+        threev0_root = denied_root / ".3V0"
+        prof_cache = threev0_root / "profiles" / "myprof" / "cache" / "images"
         prof_cache.mkdir(parents=True)
         image = prof_cache / "gen.png"
         image.write_bytes(b"\x89PNG\r\n\x1a\n")
@@ -748,7 +748,7 @@ class TestMediaDeliveryDefaultMode:
             (str(denied_root),),
         )
         monkeypatch.setattr(
-            "gateway.platforms.base._EV0_ROOT", ev0_root
+            "gateway.platforms.base._EV0_ROOT", threev0_root
         )
 
         assert (
@@ -880,12 +880,12 @@ class TestDockerContainerMediaPathTranslation:
         """MEDIA:/root/.3V0/cache/images/... (the agent_visible_image path
         under docker) must translate to the HOST cache file, not the sandbox
         home copy."""
-        ev0_home = tmp_path / ".3V0"
-        cache = ev0_home / "cache" / "images"
+        threev0_home = tmp_path / ".3V0"
+        cache = threev0_home / "cache" / "images"
         cache.mkdir(parents=True)
         media = cache / "generated.png"
         media.write_bytes(b"\x89PNG\r\n\x1a\n")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setenv("TERMINAL_ENV", "docker")
         monkeypatch.delenv("TERMINAL_DOCKER_VOLUMES", raising=False)
 
@@ -903,9 +903,9 @@ class TestDockerContainerMediaPathTranslation:
         secret = home / ".3V0"
         secret.mkdir(parents=True)
         (secret / "auth.json").write_text('{"token": "SECRET"}')
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setenv("TERMINAL_ENV", "docker")
         monkeypatch.setenv("TERMINAL_CONTAINER_PERSISTENT", "true")
         monkeypatch.setenv("TERMINAL_SANDBOX_DIR", str(sandbox))
@@ -1150,7 +1150,7 @@ class TestMediaDeliveryDiagnosability:
         outside = tmp_path / "outside.ogg"
         outside.write_bytes(b"OggS")
         with patch.dict(os.environ, {"EV0_MEDIA_DELIVERY_STRICT": "1",
-                                     "EV0_MEDIA_TRUST_RECENT_FILES": "0"}), \
+                                     "EV0_MEDIA_TRUST_RECENT_FILES": "0"}),\
                 patch("gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS", ()):
             with caplog.at_level("WARNING"):
                 out = BasePlatformAdapter.filter_media_delivery_paths([(str(outside), False)])

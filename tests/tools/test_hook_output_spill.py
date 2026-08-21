@@ -61,7 +61,7 @@ class SpillIfOversizedTests(unittest.TestCase):
         self.assertEqual(hos.spill_if_oversized(small, config=self._cfg()), small)
 
 
-    def test_default_directory_uses_ev0_home(self):
+    def test_default_directory_uses_threev0_home(self):
         """When no directory override, spill under EV0_HOME/hook_outputs."""
         test_home = tempfile.mkdtemp(prefix="3v0-home-")
         try:

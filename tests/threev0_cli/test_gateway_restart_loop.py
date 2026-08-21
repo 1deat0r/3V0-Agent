@@ -32,7 +32,7 @@ class TestGatewayLifecyclePattern:
         "Hermez Gateway Restart".lower().replace("z", "s"),  # case handled
         "EV0 GATEWAY RESTART",           # uppercase
     ])
-    def test_ev0_gateway_commands(self, text):
+    def test_threev0_gateway_commands(self, text):
         assert _contains_gateway_lifecycle_command(text), f"Should match: {text!r}"
 
     @pytest.mark.parametrize("text", [
@@ -116,7 +116,7 @@ class TestCronCreateLifecycleBlock:
         monkeypatch.setattr("cron.jobs.JOBS_FILE", tmp_path / "cron" / "jobs.json")
         monkeypatch.setattr("cron.jobs.OUTPUT_DIR", tmp_path / "cron" / "output")
 
-    def test_block_ev0_gateway_restart(self, capsys):
+    def test_block_threev0_gateway_restart(self, capsys):
         args = Namespace(
             cron_command="create",
             schedule="30m",

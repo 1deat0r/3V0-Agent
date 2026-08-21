@@ -579,8 +579,8 @@ class RetainDBMemoryProvider(MemoryProvider):
         if explicit:
             project = explicit
         else:
-            ev0_home = str(kwargs.get("ev0_home", ""))
-            profile_name = os.path.basename(ev0_home) if ev0_home else ""
+            threev0_home = str(kwargs.get("ev0_home", ""))
+            profile_name = os.path.basename(threev0_home) if threev0_home else ""
             project = f"3v0-{profile_name}" if (profile_name and profile_name not in {"", ".3V0"}) else "default"
 
         self._client = _Client(api_key, base_url, project)
@@ -588,13 +588,13 @@ class RetainDBMemoryProvider(MemoryProvider):
         self._user_id = kwargs.get("user_id", "default") or "default"
         self._agent_id = kwargs.get("agent_id", "3v0") or "3v0"
 
-        from threev0_constants import get_ev0_home
-        ev0_home_path = get_ev0_home()
-        db_path = ev0_home_path / "retaindb_queue.db"
+        from threev0_constants import get_threev0_home
+        threev0_home_path = get_threev0_home()
+        db_path = threev0_home_path / "retaindb_queue.db"
         self._queue = _WriteQueue(self._client, db_path)
 
         # Seed agent identity from SOUL.md in background
-        soul_path = ev0_home_path / "SOUL.md"
+        soul_path = threev0_home_path / "SOUL.md"
         if soul_path.exists():
             soul_content = soul_path.read_text(encoding="utf-8", errors="replace").strip()
             if soul_content:

@@ -34,7 +34,7 @@ import re
 from typing import Any, Optional
 from urllib.parse import parse_qsl, quote, unquote, urljoin, urlparse, urlsplit, urlunsplit
 
-from threev0_constants import get_ev0_home_override
+from threev0_constants import get_threev0_home_override
 from utils import is_truthy_value
 
 logger = logging.getLogger(__name__)
@@ -234,7 +234,7 @@ def _global_allow_private_urls() -> bool:
     # A multiplex gateway serves several independently configured profiles in
     # one process. Reusing the first profile's opt-out here would let it disable
     # private-network blocking for every later profile in that process.
-    if get_ev0_home_override() is not None:
+    if get_threev0_home_override() is not None:
         return _resolve_allow_private_urls()
 
     if _allow_private_resolved:
@@ -754,7 +754,7 @@ def ssrf_safe_http_transport(**kwargs: Any) -> Any:
 
 def _install_ssrf_guard_on_async_transport(transport: Any, schemes_by_origin_var: Any) -> None:
     state = getattr(transport, "__dict__", {}) if transport is not None else {}
-    if transport is None or state.get("_ev0_ssrf_guarded", False):
+    if transport is None or state.get("_threev0_ssrf_guarded", False):
         return
 
     pool = state.get("_pool")
@@ -774,12 +774,12 @@ def _install_ssrf_guard_on_async_transport(transport: Any, schemes_by_origin_var
             schemes_by_origin_var.reset(token)
 
     transport.handle_async_request = guarded_handle_async_request
-    transport._ev0_ssrf_guarded = True
+    transport._threev0_ssrf_guarded = True
 
 
 def _install_ssrf_guard_on_transport(transport: Any, schemes_by_origin_var: Any) -> None:
     state = getattr(transport, "__dict__", {}) if transport is not None else {}
-    if transport is None or state.get("_ev0_ssrf_guarded", False):
+    if transport is None or state.get("_threev0_ssrf_guarded", False):
         return
 
     pool = state.get("_pool")
@@ -799,7 +799,7 @@ def _install_ssrf_guard_on_transport(transport: Any, schemes_by_origin_var: Any)
             schemes_by_origin_var.reset(token)
 
     transport.handle_request = guarded_handle_request
-    transport._ev0_ssrf_guarded = True
+    transport._threev0_ssrf_guarded = True
 
 
 def _install_ssrf_guard_on_async_client(client: Any) -> None:

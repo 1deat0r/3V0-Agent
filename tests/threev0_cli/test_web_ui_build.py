@@ -32,9 +32,9 @@ from threev0_cli.main import (
 
 
 @pytest.fixture(autouse=True)
-def _isolated_ev0_home(tmp_path, monkeypatch):
+def _isolated_threev0_home(tmp_path, monkeypatch):
     """Keep web-build-stamp writes inside the test's tmp dir, never the real home."""
-    monkeypatch.setenv("EV0_HOME", str(tmp_path / "_ev0_home"))
+    monkeypatch.setenv("EV0_HOME", str(tmp_path / "_threev0_home"))
 
 
 def _touch(path: Path, offset: float = 0.0) -> None:
@@ -145,8 +145,8 @@ class TestBuildWebUISkipsWhenFresh:
 
         install_cp = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
         build_cp = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
-        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"), \
-             patch("threev0_cli.main.subprocess.run", return_value=install_cp) as mock_run, \
+        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"),\
+             patch("threev0_cli.main.subprocess.run", return_value=install_cp) as mock_run,\
              patch("threev0_cli.main._run_with_idle_timeout", return_value=build_cp) as mock_build:
             result = _build_web_ui(web_dir)
 
@@ -178,8 +178,8 @@ class TestBuildWebUISkipsWhenFresh:
 
         install_cp = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
         build_cp = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
-        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"), \
-             patch("threev0_cli.main.subprocess.run", return_value=install_cp) as mock_run, \
+        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"),\
+             patch("threev0_cli.main.subprocess.run", return_value=install_cp) as mock_run,\
              patch("threev0_cli.main._run_with_idle_timeout", return_value=build_cp):
             result = _build_web_ui(web_dir)
 
@@ -201,8 +201,8 @@ class TestBuildWebUISkipsWhenFresh:
 
         install_cp = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
         build_cp = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
-        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"), \
-             patch("threev0_cli.main.subprocess.run", return_value=install_cp) as mock_run, \
+        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"),\
+             patch("threev0_cli.main.subprocess.run", return_value=install_cp) as mock_run,\
              patch("threev0_cli.main._run_with_idle_timeout", return_value=build_cp):
             result = _build_web_ui(web_dir)
 
@@ -223,8 +223,8 @@ class TestBuildWebUISkipsWhenFresh:
 
         install_cp = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
         build_cp = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
-        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"), \
-             patch("threev0_cli.main.subprocess.run", return_value=install_cp), \
+        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"),\
+             patch("threev0_cli.main.subprocess.run", return_value=install_cp),\
              patch("threev0_cli.main._run_with_idle_timeout", return_value=build_cp) as mock_idle:
             result = _build_web_ui(web_dir)
 
@@ -247,9 +247,9 @@ class TestBuildWebUIRetryAndStaleFallback:
         # build attempt 1: fail; build attempt 2: success.
         build_fail = Subprocess.CompletedProcess([], 1, stdout="EPERM", stderr="")
         build_ok = Subprocess.CompletedProcess([], 0, stdout="", stderr="")
-        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"), \
-             patch("threev0_cli.main._time.sleep") as mock_sleep, \
-             patch("threev0_cli.main.subprocess.run", return_value=install_ok), \
+        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"),\
+             patch("threev0_cli.main._time.sleep") as mock_sleep,\
+             patch("threev0_cli.main.subprocess.run", return_value=install_ok),\
              patch("threev0_cli.main._run_with_idle_timeout",
                    side_effect=[build_fail, build_ok]) as mock_idle:
             result = _build_web_ui(web_dir)
@@ -267,9 +267,9 @@ class TestBuildWebUIRetryAndStaleFallback:
         Subprocess = __import__("subprocess")
         install_ok = Subprocess.CompletedProcess([], 0, stdout="", stderr="")
         build_fail = Subprocess.CompletedProcess([], 1, stdout="vite ENOMEM", stderr="")
-        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"), \
-             patch("threev0_cli.main._time.sleep"), \
-             patch("threev0_cli.main.subprocess.run", return_value=install_ok), \
+        with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"),\
+             patch("threev0_cli.main._time.sleep"),\
+             patch("threev0_cli.main.subprocess.run", return_value=install_ok),\
              patch("threev0_cli.main._run_with_idle_timeout",
                    side_effect=[build_fail, build_fail]):
             result = _build_web_ui(web_dir, fatal=True)
@@ -317,7 +317,7 @@ class TestBuildWebUIFlock:
         t = threading.Timer(0.2, release_after_building)
         t.start()
         try:
-            with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"), \
+            with patch("threev0_cli.main.shutil.which", return_value="/usr/bin/npm"),\
                  patch("threev0_cli.main.subprocess.run") as mock_run:
                 result = build(web_dir)
         finally:
@@ -396,11 +396,11 @@ class TestBuildRecoversFromMissingToolchain:
         )
         build_ok = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
 
-        with patch("threev0_cli.main._resolve_node_runtime_npm", return_value="/usr/bin/npm"), \
-             patch("threev0_cli.main._run_npm_install_deterministic", return_value=install_ok) as mock_install, \
-             patch("threev0_cli.main._run_with_idle_timeout", side_effect=[build_fail, build_ok]) as mock_build, \
-             patch("threev0_cli.main._web_ui_build_needed", return_value=True), \
-             patch("threev0_cli.main._write_web_ui_build_stamp"), \
+        with patch("threev0_cli.main._resolve_node_runtime_npm", return_value="/usr/bin/npm"),\
+             patch("threev0_cli.main._run_npm_install_deterministic", return_value=install_ok) as mock_install,\
+             patch("threev0_cli.main._run_with_idle_timeout", side_effect=[build_fail, build_ok]) as mock_build,\
+             patch("threev0_cli.main._web_ui_build_needed", return_value=True),\
+             patch("threev0_cli.main._write_web_ui_build_stamp"),\
              patch("threev0_cli.main._time.sleep"):
             result = _build_web_ui(web_dir)
 
@@ -416,10 +416,10 @@ class TestBuildRecoversFromMissingToolchain:
         install_ok = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
         build_ok = __import__("subprocess").CompletedProcess([], 0, stdout="", stderr="")
 
-        with patch("threev0_cli.main._resolve_node_runtime_npm", return_value="/usr/bin/npm"), \
-             patch("threev0_cli.main._run_npm_install_deterministic", return_value=install_ok) as mock_install, \
-             patch("threev0_cli.main._run_with_idle_timeout", return_value=build_ok) as mock_build, \
-             patch("threev0_cli.main._web_ui_build_needed", return_value=True), \
+        with patch("threev0_cli.main._resolve_node_runtime_npm", return_value="/usr/bin/npm"),\
+             patch("threev0_cli.main._run_npm_install_deterministic", return_value=install_ok) as mock_install,\
+             patch("threev0_cli.main._run_with_idle_timeout", return_value=build_ok) as mock_build,\
+             patch("threev0_cli.main._web_ui_build_needed", return_value=True),\
              patch("threev0_cli.main._write_web_ui_build_stamp"):
             result = _build_web_ui(web_dir)
 

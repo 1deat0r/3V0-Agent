@@ -669,7 +669,7 @@ def _request_approval(action: str, args: Dict[str, Any],
 
 
 def _summarize_action(action: str, args: Dict[str, Any]) -> str:
-    fg = " [FOREGROUND — briefly raises the window / changes focus]" \
+    fg = " [FOREGROUND — briefly raises the window / changes focus]"\
         if args.get("delivery_mode") == "foreground" else ""
     if action in {"click", "double_click", "right_click", "middle_click"}:
         if args.get("element") is not None:
@@ -1467,7 +1467,7 @@ def _route_capture_through_aux_vision(
         import os as _os
         import uuid as _uuid
 
-        from threev0_constants import get_ev0_dir
+        from threev0_constants import get_threev0_dir
         from model_tools import _run_async
         from tools.vision_tools import vision_analyze_tool
     except Exception as exc:  # pragma: no cover - defensive
@@ -1490,7 +1490,7 @@ def _route_capture_through_aux_vision(
             ext = ".jpg"
         else:
             ext = ".png"
-        cache_dir = get_ev0_dir("cache/vision", "temp_vision_images")
+        cache_dir = get_threev0_dir("cache/vision", "temp_vision_images")
         cache_dir.mkdir(parents=True, exist_ok=True)
         temp_image_path = cache_dir / f"computer_use_{_uuid.uuid4().hex}{ext}"
         raw, scale_note = _shrink_capture_for_vision(raw, ext)
@@ -1667,9 +1667,9 @@ def _spill_elements_to_file(cap: CaptureResult) -> Optional[str]:
     try:
         import uuid as _uuid
 
-        from threev0_constants import get_ev0_dir
+        from threev0_constants import get_threev0_dir
 
-        cache_dir = get_ev0_dir("cache/computer_use", "computer_use_cache")
+        cache_dir = get_threev0_dir("cache/computer_use", "computer_use_cache")
         cache_dir.mkdir(parents=True, exist_ok=True)
         # Prune oldest spills beyond the cap (best-effort).
         try:

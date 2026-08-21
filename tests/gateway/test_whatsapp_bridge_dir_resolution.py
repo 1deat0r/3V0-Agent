@@ -20,21 +20,21 @@ def _seed_install_tree(install_bridge: Path) -> None:
     (install_bridge / "package.json").write_text('{"name": "whatsapp-bridge"}\n')
 
 
-def test_readonly_install_mirrors_to_ev0_home(tmp_path, monkeypatch):
+def test_readonly_install_mirrors_to_threev0_home(tmp_path, monkeypatch):
     """A read-only install tree is mirrored into a writable EV0_HOME."""
     install_root = tmp_path / "install"
     install_bridge = install_root / "scripts" / "whatsapp-bridge"
     _seed_install_tree(install_bridge)
 
-    ev0_home = tmp_path / "ev0_home"
-    ev0_home.mkdir()
+    threev0_home = tmp_path / "ev0_home"
+    threev0_home.mkdir()
 
     monkeypatch.setattr(
         whatsapp_common, "__file__",
         str(install_root / "gateway" / "platforms" / "whatsapp_common.py"),
     )
     monkeypatch.setattr(
-        "threev0_constants.get_ev0_home", lambda: ev0_home
+        "threev0_constants.get_threev0_home", lambda: threev0_home
     )
 
     # Simulate a read-only install tree. chmod(0o555) is unreliable under
@@ -51,7 +51,7 @@ def test_readonly_install_mirrors_to_ev0_home(tmp_path, monkeypatch):
 
     resolved = whatsapp_common.resolve_whatsapp_bridge_dir()
 
-    expected = ev0_home / "scripts" / "whatsapp-bridge"
+    expected = threev0_home / "scripts" / "whatsapp-bridge"
     assert resolved == expected
     # Source was mirrored, not symlinked.
     assert (expected / "bridge.js").read_text() == "// bridge\n"

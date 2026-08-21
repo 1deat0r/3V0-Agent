@@ -100,7 +100,7 @@ class TestGatewayPersonalityNone:
         # gateway.run._ev0_home) and persists via persist_personality
         # (rooted at EV0_HOME) — point both at the same tmp dir.
         return (
-            patch("gateway.run._ev0_home", tmp_path),
+            patch("gateway.run._threev0_home", tmp_path),
             patch.dict(os.environ, {"EV0_HOME": str(tmp_path)}),
         )
 

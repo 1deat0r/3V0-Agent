@@ -16,8 +16,8 @@ from pathlib import Path
 
 
 def _write_config(tmp_path: Path, body: str) -> None:
-    ev0_home = tmp_path
-    (ev0_home / "config.yaml").write_text(body or "{}\n", encoding="utf-8")
+    threev0_home = tmp_path
+    (threev0_home / "config.yaml").write_text(body or "{}\n", encoding="utf-8")
 
 
 def _make_agent(tmp_path: Path, **overrides):

@@ -482,7 +482,7 @@ class TestAgentBrowserPostSetup:
         The install command must use that same resolved npx, not silently
         hand subprocess.run a None argument from a bare shutil.which('npx')
         re-derivation (#43564 regression — Copilot review, task #9)."""
-        ev0_npx = "/home/user/.3V0/node/bin/npx"
+        threev0_npx = "/home/user/.3V0/node/bin/npx"
         with patch("shutil.which", return_value=None), patch(
             "subprocess.run"
         ) as run, patch(
@@ -492,7 +492,7 @@ class TestAgentBrowserPostSetup:
         ), patch(
             "tools.browser_tool._find_agent_browser", return_value="npx agent-browser"
         ), patch(
-            "tools.browser_tool._resolve_npx_bin", return_value=ev0_npx
+            "tools.browser_tool._resolve_npx_bin", return_value=threev0_npx
         ), patch(
             "threev0_cli.tools_config._print_success"
         ):
@@ -501,7 +501,7 @@ class TestAgentBrowserPostSetup:
 
         run.assert_called_once()
         assert run.call_args.args[0] == [
-            ev0_npx, "--ignore-scripts", "-y", AGENT_BROWSER_NPX_SPEC, "install", "--with-deps",
+            threev0_npx, "--ignore-scripts", "-y", AGENT_BROWSER_NPX_SPEC, "install", "--with-deps",
         ]
 
     def test_warns_instead_of_crashing_when_npx_unresolvable_after_all(self):
@@ -845,9 +845,9 @@ def test_vision_picker_custom_endpoint(tmp_path, monkeypatch):
 
     seq = iter([2])  # Custom OpenAI-compatible endpoint
     prompts = iter(["https://my.endpoint/v1", "sk-secret", "my-vision-model"])
-    with patch.object(tc, "_prompt_choice", side_effect=lambda *a, **k: next(seq)), \
-         patch.object(tc, "_prompt", side_effect=lambda *a, **k: next(prompts)), \
-         patch.object(tc, "save_env_value") as save_env, \
+    with patch.object(tc, "_prompt_choice", side_effect=lambda *a, **k: next(seq)),\
+         patch.object(tc, "_prompt", side_effect=lambda *a, **k: next(prompts)),\
+         patch.object(tc, "save_env_value") as save_env,\
          patch.object(tc, "_toolset_has_keys", return_value=False):
         tc._configure_vision_backend()
 

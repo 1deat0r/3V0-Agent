@@ -58,7 +58,7 @@ from typing import Callable, Dict, Any, Iterator, List, Optional, Tuple
 from urllib.parse import urljoin, urlparse
 
 from threev0_cli._subprocess_compat import windows_hide_flags
-from threev0_constants import display_ev0_home
+from threev0_constants import display_threev0_home
 
 logger = logging.getLogger(__name__)
 def get_env_value(name, default=None):
@@ -98,7 +98,7 @@ from tools.tool_backend_helpers import (
     prefers_gateway,
     resolve_openai_audio_api_key,
 )
-from tools.xai_http import ev0_xai_user_agent
+from tools.xai_http import threev0_xai_user_agent
 
 # ---------------------------------------------------------------------------
 # Lazy imports -- providers are imported only when actually used to avoid
@@ -260,8 +260,8 @@ TTS_RESPONSE_BODY_LIMIT_BYTES = 16 * 1024 * 1024
 TTS_RESPONSE_BODY_CHUNK_BYTES = 64 * 1024
 
 def _get_default_output_dir() -> str:
-    from threev0_constants import get_ev0_dir
-    return str(get_ev0_dir("cache/audio", "audio_cache"))
+    from threev0_constants import get_threev0_dir
+    return str(get_threev0_dir("cache/audio", "audio_cache"))
 
 DEFAULT_OUTPUT_DIR = _get_default_output_dir()
 
@@ -1187,9 +1187,9 @@ def _run_command_tts(
     propagating delegated-child lineage markers when applicable.
     """
     from agent.delegation_context import delegated_child_subprocess_env
-    from tools.environments.local import ev0_subprocess_env
+    from tools.environments.local import threev0_subprocess_env
 
-    scrubbed = ev0_subprocess_env(inherit_credentials=False)
+    scrubbed = threev0_subprocess_env(inherit_credentials=False)
     for key in env_passthrough or []:
         value = os.environ.get(key)
         if value is not None:
@@ -2196,7 +2196,7 @@ def _generate_xai_tts(text: str, output_path: str, tts_config: Dict[str, Any]) -
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
-            "User-Agent": ev0_xai_user_agent(),
+            "User-Agent": threev0_xai_user_agent(),
         },
         json=payload,
         timeout=60,
@@ -2449,8 +2449,8 @@ def _resolve_gemini_persona_prompt_path(gemini_config: Dict[str, Any]) -> Option
     path = Path(expanded).expanduser()
     if not path.is_absolute():
         try:
-            from threev0_constants import get_ev0_home
-            path = get_ev0_home() / path
+            from threev0_constants import get_threev0_home
+            path = get_threev0_home() / path
         except Exception:
             path = Path.cwd() / path
     return path
@@ -2665,13 +2665,13 @@ def _generate_gemini_tts(text: str, output_path: str, tts_config: Dict[str, Any]
         try:
             import threev0_cli as _threev0_cli
 
-            _ev0_version = str(_threev0_cli.__version__)
+            _threev0_version = str(_threev0_cli.__version__)
         except Exception:
-            _ev0_version = "0.0.0"
+            _threev0_version = "0.0.0"
         # Include 3V0 client context following Gemini's partner
         # integration guidance:
         # https://ai.google.dev/gemini-api/docs/partner-integration
-        headers["X-Goog-Api-Client"] = f"3v0-agent/{_ev0_version}"
+        headers["X-Goog-Api-Client"] = f"3v0-agent/{_threev0_version}"
 
     endpoint = f"{base_url}/models/{model}:generateContent"
     response = requests.post(
@@ -2902,8 +2902,8 @@ def _get_piper_voices_dir() -> Path:
     Resolves to ``~/.3V0/cache/piper-voices/`` under the active
     EV0_HOME so voice downloads follow profile boundaries.
     """
-    from threev0_constants import get_ev0_dir
-    root = Path(get_ev0_dir("cache/piper-voices", "piper_voices_cache"))
+    from threev0_constants import get_threev0_dir
+    root = Path(get_threev0_dir("cache/piper-voices", "piper_voices_cache"))
     root.mkdir(parents=True, exist_ok=True)
     return root
 
@@ -4457,7 +4457,7 @@ TTS_SCHEMA = {
             },
             "output_path": {
                 "type": "string",
-                "description": f"Optional custom file path to save the audio. Defaults to {display_ev0_home()}/audio_cache/<timestamp>.mp3"
+                "description": f"Optional custom file path to save the audio. Defaults to {display_threev0_home()}/audio_cache/<timestamp>.mp3"
             },
             "speed": {
                 "type": "number",

@@ -42,7 +42,7 @@ def test_resolve_journal_mode_uses_real_database_config(monkeypatch, tmp_path):
     assert resolve_journal_mode() == "delete"
 
 
-def test_new_nonsecret_ev0_env_override_is_not_exposed(monkeypatch, tmp_path):
+def test_new_nonsecret_threev0_env_override_is_not_exposed(monkeypatch, tmp_path):
     from threev0_state import resolve_journal_mode
 
     _configure_mode(monkeypatch, tmp_path, "wal")
@@ -169,7 +169,7 @@ def test_real_db_openers_honor_configured_delete(monkeypatch, tmp_path):
     finally:
         cron_conn.close()
 
-    discord = DiscordRecoveryStore(ev0_home=tmp_path)
+    discord = DiscordRecoveryStore(threev0_home=tmp_path)
     observed["discord_recovery"] = discord.call(
         lambda conn: conn.execute("PRAGMA journal_mode").fetchone()[0].lower()
     )

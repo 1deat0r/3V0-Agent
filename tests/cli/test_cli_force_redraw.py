@@ -175,7 +175,7 @@ class TestForceFullRedraw:
         previous = MagicMock()
         previous.height = 8
 
-        result = cli_mod._ev0_call_output_screen_diff(
+        result = cli_mod._threev0_call_output_screen_diff(
             fake_osd,
             app=None,
             output=None,

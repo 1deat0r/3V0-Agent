@@ -125,21 +125,21 @@ _KEYS_DROPPED_WITH_WARNING = {
 
 
 def _translate_one_server(
-    name: str, ev0_cfg: dict
+    name: str, threev0_cfg: dict
 ) -> tuple[Optional[dict], list[str]]:
     """Translate one 3V0 MCP server config to the codex inline-table dict
     representation. Returns (codex_entry, skipped_keys).
 
     codex_entry is a dict ready for TOML serialization, or None when the
     server can't be translated (e.g. neither command nor url present)."""
-    if not isinstance(ev0_cfg, dict):
+    if not isinstance(threev0_cfg, dict):
         return None, []
 
     skipped: list[str] = []
     out: dict[str, Any] = {}
 
-    has_command = bool(ev0_cfg.get("command"))
-    has_url = bool(ev0_cfg.get("url"))
+    has_command = bool(threev0_cfg.get("command"))
+    has_url = bool(threev0_cfg.get("url"))
 
     if has_command and has_url:
         skipped.append("url (both command and url set; preferring stdio)")
@@ -147,47 +147,47 @@ def _translate_one_server(
 
     if has_command:
         # Stdio transport
-        out["command"] = str(ev0_cfg["command"])
-        args = ev0_cfg.get("args") or []
+        out["command"] = str(threev0_cfg["command"])
+        args = threev0_cfg.get("args") or []
         if args:
             out["args"] = [str(a) for a in args]
-        env = ev0_cfg.get("env") or {}
+        env = threev0_cfg.get("env") or {}
         if env:
             # Codex expects string values
             out["env"] = {str(k): str(v) for k, v in env.items()}
-        cwd = ev0_cfg.get("cwd")
+        cwd = threev0_cfg.get("cwd")
         if cwd:
             out["cwd"] = str(cwd)
     elif has_url:
         # streamable_http transport (codex covers both http and SSE here)
-        out["url"] = str(ev0_cfg["url"])
-        headers = ev0_cfg.get("headers") or {}
+        out["url"] = str(threev0_cfg["url"])
+        headers = threev0_cfg.get("headers") or {}
         if headers:
             out["http_headers"] = {str(k): str(v) for k, v in headers.items()}
         # 3V0' transport: sse hint is informational; codex auto-negotiates
-        if ev0_cfg.get("transport") == "sse":
+        if threev0_cfg.get("transport") == "sse":
             skipped.append("transport=sse (codex auto-negotiates)")
     else:
         return None, ["no command or url field"]
 
     # Timeouts
-    if "timeout" in ev0_cfg:
+    if "timeout" in threev0_cfg:
         try:
-            out["tool_timeout_sec"] = float(ev0_cfg["timeout"])
+            out["tool_timeout_sec"] = float(threev0_cfg["timeout"])
         except (TypeError, ValueError):
             skipped.append("timeout (not numeric)")
-    if "connect_timeout" in ev0_cfg:
+    if "connect_timeout" in threev0_cfg:
         try:
-            out["startup_timeout_sec"] = float(ev0_cfg["connect_timeout"])
+            out["startup_timeout_sec"] = float(threev0_cfg["connect_timeout"])
         except (TypeError, ValueError):
             skipped.append("connect_timeout (not numeric)")
 
     # Enabled flag (codex defaults to true so we only emit when explicitly false)
-    if ev0_cfg.get("enabled") is False:
+    if threev0_cfg.get("enabled") is False:
         out["enabled"] = False
 
     # Detect keys we explicitly drop with warning
-    for key in ev0_cfg:
+    for key in threev0_cfg:
         if key in _KEYS_DROPPED_WITH_WARNING:
             skipped.append(f"{key} (no codex equivalent)")
         elif key not in _KNOWN_EV0_KEYS:
@@ -554,7 +554,7 @@ def _looks_like_test_tempdir(path: str) -> bool:
     return any(needle in normalized for needle in needles)
 
 
-def _build_ev0_tools_mcp_entry() -> dict:
+def _build_threev0_tools_mcp_entry() -> dict:
     """Build the codex stdio-transport entry that launches 3V0' own
     tool surface as an MCP server. Codex's subprocess will call back into
     this for browser/web/delegate_task/vision/memory/skills tools.
@@ -579,12 +579,12 @@ def _build_ev0_tools_mcp_entry() -> dict:
     # a sibling test's monkeypatch.setenv("EV0_HOME", tmp_path) would
     # otherwise leak a transient pytest tempdir into the user's real
     # ~/.codex/config.toml and silently brick codex once the tempdir is GC'd.
-    ev0_home = os.environ.get("EV0_HOME") or ""
-    if ev0_home and _looks_like_test_tempdir(ev0_home):
-        ev0_home = ""
-    if ev0_home:
-        env["EV0_HOME"] = ev0_home
-        env["3V0_HOME"] = ev0_home  # canonical (ADR-0006)
+    threev0_home = os.environ.get("EV0_HOME") or ""
+    if threev0_home and _looks_like_test_tempdir(threev0_home):
+        threev0_home = ""
+    if threev0_home:
+        env["EV0_HOME"] = threev0_home
+        env["3V0_HOME"] = threev0_home  # canonical (ADR-0006)
     # PYTHONPATH passes through so a worktree-launched 3v0 finds the
     # branch's modules instead of the installed package.
     pythonpath = os.environ.get("PYTHONPATH")
@@ -608,13 +608,13 @@ def _build_ev0_tools_mcp_entry() -> dict:
 
 
 def migrate(
-    ev0_config: dict,
+    threev0_config: dict,
     *,
     codex_home: Optional[Path] = None,
     dry_run: bool = False,
     discover_plugins: bool = True,
     default_permission_profile: Optional[str] = ":workspace",
-    expose_ev0_tools: bool = True,
+    expose_threev0_tools: bool = True,
 ) -> MigrationReport:
     """Translate 3V0 mcp_servers config + Codex curated plugins into
     ~/.codex/config.toml.
@@ -647,15 +647,15 @@ def migrate(
     target = codex_home / "config.toml"
     report.target_path = target
 
-    ev0_servers = (ev0_config or {}).get("mcp_servers") or {}
-    if not isinstance(ev0_servers, dict):
+    threev0_servers = (threev0_config or {}).get("mcp_servers") or {}
+    if not isinstance(threev0_servers, dict):
         report.errors.append(
             "mcp_servers in 3V0 config is not a dict; cannot migrate."
         )
         return report
 
     translated: dict[str, dict] = {}
-    for name, cfg in ev0_servers.items():
+    for name, cfg in threev0_servers.items():
         out, skipped = _translate_one_server(str(name), cfg or {})
         if out is None:
             report.errors.append(
@@ -694,8 +694,8 @@ def migrate(
     # memory, skills, session_search, image_generate, text_to_speech.
     # The server itself is agent/transports/threev0_tools_mcp_server.py
     # and is launched on demand by codex (stdio MCP).
-    if expose_ev0_tools:
-        translated["3v0-tools"] = _build_ev0_tools_mcp_entry()
+    if expose_threev0_tools:
+        translated["3v0-tools"] = _build_threev0_tools_mcp_entry()
         if "3v0-tools" not in report.migrated:
             report.migrated.append("3v0-tools")
 

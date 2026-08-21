@@ -434,20 +434,20 @@ class TestSearchHints:
 class TestSensitivePathCheck:
     """Verify that _check_sensitive_path blocks writes to protected locations."""
 
-    def test_ev0_config_blocked_for_write_file(self, tmp_path, monkeypatch):
+    def test_threev0_config_blocked_for_write_file(self, tmp_path, monkeypatch):
         fake_config = tmp_path / "config.yaml"
-        monkeypatch.setattr("tools.file_tools._ev0_config_resolved", str(fake_config))
-        monkeypatch.setattr("tools.file_tools._ev0_config_resolved_loaded", True)
+        monkeypatch.setattr("tools.file_tools._threev0_config_resolved", str(fake_config))
+        monkeypatch.setattr("tools.file_tools._threev0_config_resolved_loaded", True)
 
         from tools.file_tools import write_file_tool
         result = json.loads(write_file_tool(str(fake_config), "approvals:\n  mode: off\n"))
         assert "error" in result
         assert "3V0 config" in result["error"]
 
-    def test_ev0_config_blocked_via_tilde_path(self, tmp_path, monkeypatch):
+    def test_threev0_config_blocked_via_tilde_path(self, tmp_path, monkeypatch):
         fake_config = tmp_path / "config.yaml"
-        monkeypatch.setattr("tools.file_tools._ev0_config_resolved", str(fake_config))
-        monkeypatch.setattr("tools.file_tools._ev0_config_resolved_loaded", True)
+        monkeypatch.setattr("tools.file_tools._threev0_config_resolved", str(fake_config))
+        monkeypatch.setattr("tools.file_tools._threev0_config_resolved_loaded", True)
 
         from tools.file_tools import write_file_tool
         result = json.loads(write_file_tool(str(fake_config), "approvals:\n  mode: off\n"))
@@ -456,8 +456,8 @@ class TestSensitivePathCheck:
 
 
     def test_system_path_still_blocked(self, monkeypatch):
-        monkeypatch.setattr("tools.file_tools._ev0_config_resolved", "/some/other/path")
-        monkeypatch.setattr("tools.file_tools._ev0_config_resolved_loaded", True)
+        monkeypatch.setattr("tools.file_tools._threev0_config_resolved", "/some/other/path")
+        monkeypatch.setattr("tools.file_tools._threev0_config_resolved_loaded", True)
 
         from tools.file_tools import write_file_tool
         result = json.loads(write_file_tool("/etc/passwd", "evil"))
@@ -480,8 +480,8 @@ class TestSensitivePathCheck:
 
     @patch("tools.file_tools._get_file_ops")
     def test_normal_file_not_blocked(self, mock_get, monkeypatch):
-        monkeypatch.setattr("tools.file_tools._ev0_config_resolved", "/home/user/.3V0/config.yaml")
-        monkeypatch.setattr("tools.file_tools._ev0_config_resolved_loaded", True)
+        monkeypatch.setattr("tools.file_tools._threev0_config_resolved", "/home/user/.3V0/config.yaml")
+        monkeypatch.setattr("tools.file_tools._threev0_config_resolved_loaded", True)
         mock_ops = MagicMock()
         result_obj = MagicMock()
         result_obj.to_dict.return_value = {"status": "ok", "path": "/tmp/other.txt", "bytes": 5}
@@ -568,7 +568,7 @@ class TestSessionCwdSurvivesEnvRecreation:
                 if len(args) >= 3:
                     cwd_passed = args[2]
 
-            assert cwd_passed == "/Users/user/project", \
+            assert cwd_passed == "/Users/user/project",\
                 f"Expected cwd='/Users/user/project', got {cwd_passed!r}"
         finally:
             tt.clear_session_cwd(task_id)
@@ -618,7 +618,7 @@ class TestSessionCwdSurvivesEnvRecreation:
                     cwd_passed = args[2]
 
             # Rebuilt env restored the rescued cwd, NOT the config default.
-            assert cwd_passed == "/Users/user/project", \
+            assert cwd_passed == "/Users/user/project",\
                 f"Expected restored cwd='/Users/user/project', got {cwd_passed!r}"
         finally:
             tt.clear_session_cwd(task_id)
@@ -673,7 +673,7 @@ class TestSilentFileMisplacementE2E:
         res = json.loads(ft.write_file_tool("report.txt", "hello\n", task_id))
         assert res.get("resolved_path") == str(project / "report.txt"), res
         assert (project / "report.txt").exists(), "file should be in the user's cwd"
-        assert not (config_default / "report.txt").exists(), \
+        assert not (config_default / "report.txt").exists(),\
             "file silently misplaced into config default (the #26211 bug)"
 
         tt.clear_session_cwd(task_id)

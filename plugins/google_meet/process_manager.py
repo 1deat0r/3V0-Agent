@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 # File + directory layout (under $EV0_HOME):
 #
@@ -37,7 +37,7 @@ from threev0_constants import get_ev0_home
 
 
 def _root() -> Path:
-    return Path(get_ev0_home()) / "workspace" / "meetings"
+    return Path(get_threev0_home()) / "workspace" / "meetings"
 
 
 def _active_file() -> Path:

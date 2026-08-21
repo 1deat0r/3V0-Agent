@@ -88,7 +88,7 @@ def _manager_provider_with_context(storage: Ev0TokenStorage, **context_attrs):
     if _EV0_PROVIDER_CLS is None:
         pytest.skip("MCP SDK auth not available")
     provider = _EV0_PROVIDER_CLS.__new__(_EV0_PROVIDER_CLS)
-    provider._ev0_server_name = context_attrs.get("server_name", "srv")
+    provider._threev0_server_name = context_attrs.get("server_name", "srv")
     context = MagicMock()
     context.storage = storage
     context.oauth_metadata = context_attrs.get("oauth_metadata")
@@ -113,7 +113,7 @@ class TestManagerOAuthProviderMetadata:
             asyncio.run(provider._initialize())
 
         assert provider.context.oauth_metadata is not None
-        assert str(provider.context.oauth_metadata.token_endpoint) == \
+        assert str(provider.context.oauth_metadata.token_endpoint) ==\
             "https://mgr.example.com/token"
 
 

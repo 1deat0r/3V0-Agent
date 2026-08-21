@@ -37,9 +37,9 @@ _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
-from _ev0_home import display_ev0_home, get_ev0_home
+from _threev0_home import display_threev0_home, get_threev0_home
 
-EV0_HOME = get_ev0_home()
+EV0_HOME = get_threev0_home()
 TOKEN_PATH = EV0_HOME / "google_token.json"
 CLIENT_SECRET_PATH = EV0_HOME / "google_client_secret.json"
 PENDING_AUTH_PATH = EV0_HOME / "google_oauth_pending.json"
@@ -446,7 +446,7 @@ def exchange_auth_code(code: str):
     TOKEN_PATH.write_text(json.dumps(token_payload, indent=2), encoding="utf-8")
     PENDING_AUTH_PATH.unlink(missing_ok=True)
     print(f"OK: Authenticated. Token saved to {TOKEN_PATH}")
-    print(f"Profile-scoped token location: {display_ev0_home()}/google_token.json")
+    print(f"Profile-scoped token location: {display_threev0_home()}/google_token.json")
 
 
 def revoke():

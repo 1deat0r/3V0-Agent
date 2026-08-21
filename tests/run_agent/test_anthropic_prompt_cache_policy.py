@@ -259,9 +259,9 @@ class TestThirdPartyAnthropicGateway:
         agent and the policy loads config itself."""
         import textwrap
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
             textwrap.dedent(
                 """
                 providers:
@@ -277,7 +277,7 @@ class TestThirdPartyAnthropicGateway:
                 """
             )
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         # load_config's cache is keyed by resolved config path, so pointing
         # EV0_HOME at a fresh tempdir needs no cache invalidation.
         agent = _make_agent(

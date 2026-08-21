@@ -19,7 +19,7 @@ import yaml
 
 
 @pytest.fixture()
-def isolated_ev0_home():
+def isolated_threev0_home():
     """Per-test EV0_HOME dir (already redirected by the autouse conftest
     fixture) as a Path, with the raw-config cache cleared around the test."""
     from pathlib import Path
@@ -41,14 +41,14 @@ def _write_config(home, data):
 
 
 
-def test_freshness_after_config_edit(isolated_ev0_home):
+def test_freshness_after_config_edit(isolated_threev0_home):
     from threev0_cli.config import read_raw_config_readonly
 
-    cfg = _write_config(isolated_ev0_home, {"display": {"ephemeral_system_ttl": 1}})
+    cfg = _write_config(isolated_threev0_home, {"display": {"ephemeral_system_ttl": 1}})
     first = read_raw_config_readonly()
     assert first["display"]["ephemeral_system_ttl"] == 1
 
-    _write_config(isolated_ev0_home, {"display": {"ephemeral_system_ttl": 7}})
+    _write_config(isolated_threev0_home, {"display": {"ephemeral_system_ttl": 7}})
     # Force a distinct mtime_ns even on coarse-timestamp filesystems.
     st = cfg.stat()
     os.utime(cfg, ns=(st.st_atime_ns, st.st_mtime_ns + 1_000_000))
@@ -57,10 +57,10 @@ def test_freshness_after_config_edit(isolated_ev0_home):
     assert second["display"]["ephemeral_system_ttl"] == 7
 
 
-def test_missing_config_returns_empty(isolated_ev0_home):
+def test_missing_config_returns_empty(isolated_threev0_home):
     from threev0_cli.config import read_raw_config_readonly
 
-    cfg = isolated_ev0_home / "config.yaml"
+    cfg = isolated_threev0_home / "config.yaml"
     if cfg.exists():
         cfg.unlink()
     assert read_raw_config_readonly() == {}

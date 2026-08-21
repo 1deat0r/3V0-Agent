@@ -20,7 +20,7 @@ import pytest
 
 
 @pytest.fixture()
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     home = tmp_path / ".3V0"
     home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -35,7 +35,7 @@ def ev0_home(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
-def server(ev0_home, monkeypatch):
+def server(threev0_home, monkeypatch):
     # Mocks are scoped to the initial import only (see
     # tests/tui_gateway/test_protocol.py for the rationale).
     with patch.dict(
@@ -58,7 +58,7 @@ def server(ev0_home, monkeypatch):
     # local MoA preset) instead of the one ``_write_moa_config`` writes.
     # Also reset the mtime-keyed config cache; monkeypatch restores the
     # originals on teardown so nothing leaks to later tests either.
-    monkeypatch.setattr(mod, "_ev0_home", ev0_home)
+    monkeypatch.setattr(mod, "_threev0_home", threev0_home)
     monkeypatch.setattr(mod, "_cfg_cache", None)
     monkeypatch.setattr(mod, "_cfg_mtime", None)
     monkeypatch.setattr(mod, "_cfg_path", None)
@@ -398,8 +398,8 @@ def _write_moa_config(home, text):
     cfg_path.write_text(text)
 
 
-def test_moa_bare_returns_usage(server, session, ev0_home):
-    _write_moa_config(ev0_home, """
+def test_moa_bare_returns_usage(server, session, threev0_home):
+    _write_moa_config(threev0_home, """
 moa:
   default_preset: default
   presets:

@@ -349,7 +349,7 @@ _EV0_PROVIDER_ENV_BLOCKLIST = _build_provider_env_blocklist()
 _ACTIVE_VENV_MARKER_VARS = ("VIRTUAL_ENV", "CONDA_PREFIX")
 
 
-def _is_ev0_internal_secret(key: str) -> bool:
+def _is_threev0_internal_secret(key: str) -> bool:
     """Return True for 3V0-internal secrets injected under *dynamic* names.
 
     ``_EV0_PROVIDER_ENV_BLOCKLIST`` is name-based and derived from the
@@ -394,12 +394,12 @@ def _is_ev0_internal_secret(key: str) -> bool:
     return False
 
 
-def _inject_context_ev0_home(env: dict) -> None:
+def _inject_context_threev0_home(env: dict) -> None:
     """Bridge the context-local 3V0 home override into subprocess env."""
     try:
-        from threev0_constants import get_ev0_home_override
+        from threev0_constants import get_threev0_home_override
 
-        value = get_ev0_home_override()
+        value = get_threev0_home_override()
         if value:
             env["EV0_HOME"] = value
     except Exception:
@@ -469,7 +469,7 @@ def _sanitize_subprocess_env(base_env: dict | None, extra_env: dict | None = Non
     for key, value in (base_env or {}).items():
         if key.startswith(_EV0_PROVIDER_ENV_FORCE_PREFIX):
             continue
-        if _is_ev0_internal_secret(key):
+        if _is_threev0_internal_secret(key):
             continue
         passthrough = _is_passthrough(key)
         if key in _EV0_PROVIDER_ENV_BLOCKLIST and not passthrough:
@@ -481,10 +481,10 @@ def _sanitize_subprocess_env(base_env: dict | None, extra_env: dict | None = Non
     for key, value in (extra_env or {}).items():
         if key.startswith(_EV0_PROVIDER_ENV_FORCE_PREFIX):
             real_key = key[len(_EV0_PROVIDER_ENV_FORCE_PREFIX):]
-            if _is_ev0_internal_secret(real_key):
+            if _is_threev0_internal_secret(real_key):
                 continue
             sanitized[real_key] = value
-        elif _is_ev0_internal_secret(key):
+        elif _is_threev0_internal_secret(key):
             continue
         else:
             passthrough = _is_passthrough(key)
@@ -494,7 +494,7 @@ def _sanitize_subprocess_env(base_env: dict | None, extra_env: dict | None = Non
             if resolved is not None:
                 sanitized[key] = resolved
 
-    _inject_context_ev0_home(sanitized)
+    _inject_context_threev0_home(sanitized)
 
     from threev0_constants import apply_subprocess_home_env
     apply_subprocess_home_env(sanitized)
@@ -571,7 +571,7 @@ _ALWAYS_STRIP_KEYS: frozenset[str] = frozenset({
 })
 
 
-def ev0_subprocess_env(*, inherit_credentials: bool = False) -> dict[str, str]:
+def threev0_subprocess_env(*, inherit_credentials: bool = False) -> dict[str, str]:
     """Build a sanitized environment dict for a spawned subprocess.
 
     Centralized helper for the **non-terminal** spawn surface (browser,
@@ -616,7 +616,7 @@ def ev0_subprocess_env(*, inherit_credentials: bool = False) -> dict[str, str]:
     for key in list(env):
         if key.startswith(_EV0_PROVIDER_ENV_FORCE_PREFIX):
             env.pop(key, None)
-        elif _is_ev0_internal_secret(key):
+        elif _is_threev0_internal_secret(key):
             env.pop(key, None)
 
     if not inherit_credentials:
@@ -627,7 +627,7 @@ def ev0_subprocess_env(*, inherit_credentials: bool = False) -> dict[str, str]:
     # Windows UTF-8 safety for spawned processes (#31420).
     env.setdefault("PYTHONUTF8", "1")
 
-    _inject_context_ev0_home(env)
+    _inject_context_threev0_home(env)
     from threev0_constants import apply_subprocess_home_env
     apply_subprocess_home_env(env)
 
@@ -711,7 +711,7 @@ def build_subprocess_env(
 
     env: dict[str, str] = dict(base) if base is not None else os.environ.copy()
     if inherit_profile_home:
-        _inject_context_ev0_home(env)
+        _inject_context_threev0_home(env)
         from threev0_constants import apply_subprocess_home_env
         apply_subprocess_home_env(env)
     if extra:
@@ -745,11 +745,11 @@ def _find_bash() -> str:
     #   PortableGit: %LOCALAPPDATA%\3v0\git\bin\bash.exe   (primary)
     #   MinGit:      %LOCALAPPDATA%\3v0\git\usr\bin\bash.exe (legacy/32-bit fallback)
     _local_appdata = os.environ.get("LOCALAPPDATA", "")
-    _ev0_portable_git = os.path.join(_local_appdata, "3v0", "git") if _local_appdata else ""
-    if _ev0_portable_git:
+    _threev0_portable_git = os.path.join(_local_appdata, "3v0", "git") if _local_appdata else ""
+    if _threev0_portable_git:
         for candidate in (
-            os.path.join(_ev0_portable_git, "bin", "bash.exe"),        # PortableGit (primary)
-            os.path.join(_ev0_portable_git, "usr", "bin", "bash.exe"), # MinGit fallback
+            os.path.join(_threev0_portable_git, "bin", "bash.exe"),        # PortableGit (primary)
+            os.path.join(_threev0_portable_git, "usr", "bin", "bash.exe"), # MinGit fallback
         ):
             if os.path.isfile(candidate) and candidate not in candidates:
                 candidates.append(candidate)
@@ -1066,7 +1066,7 @@ _SENTINEL = object()
 _EV0_BIN_DIR: "str | None | object" = _SENTINEL
 
 
-def _resolve_ev0_bin_dir() -> str | None:
+def _resolve_threev0_bin_dir() -> str | None:
     """Return the directory holding the ``3v0`` console-script, or None.
 
     The terminal tool runs in a freshly-spawned subshell whose PATH is the
@@ -1123,14 +1123,14 @@ def _resolve_ev0_bin_dir() -> str | None:
     return candidate
 
 
-def _prepend_ev0_bin_dir(existing_path: str) -> str:
+def _prepend_threev0_bin_dir(existing_path: str) -> str:
     """Prepend the 3v0 install dir to ``existing_path`` if it's missing.
 
     Cross-platform (uses ``os.pathsep``). First-occurrence wins, so a PATH
     that already contains the dir is returned unchanged. Returns the input
     unchanged when the install dir can't be resolved.
     """
-    bin_dir = _resolve_ev0_bin_dir()
+    bin_dir = _resolve_threev0_bin_dir()
     if not bin_dir:
         return existing_path
     sep = os.pathsep
@@ -1160,9 +1160,9 @@ def _managed_runtime_path_entries() -> list[str]:
     mid-process (``heal_ev0_managed_node``, a first browser install).
     """
     try:
-        from threev0_constants import get_ev0_home, iter_ev0_node_dirs
+        from threev0_constants import get_threev0_home, iter_threev0_node_dirs
 
-        candidates = [*iter_ev0_node_dirs(), get_ev0_home() / "bin"]
+        candidates = [*iter_threev0_node_dirs(), get_threev0_home() / "bin"]
         return [str(d) for d in candidates if d.is_dir()]
     except Exception:
         return []
@@ -1281,10 +1281,10 @@ def _make_run_env(env: dict) -> dict:
     for k, v in merged.items():
         if k.startswith(_EV0_PROVIDER_ENV_FORCE_PREFIX):
             real_key = k[len(_EV0_PROVIDER_ENV_FORCE_PREFIX):]
-            if _is_ev0_internal_secret(real_key):
+            if _is_threev0_internal_secret(real_key):
                 continue
             run_env[real_key] = v
-        elif _is_ev0_internal_secret(k):
+        elif _is_threev0_internal_secret(k):
             continue
         else:
             passthrough = _is_passthrough(k)
@@ -1306,9 +1306,9 @@ def _make_run_env(env: dict) -> dict:
         # Ensure the 3v0 install dir is reachable so plugins can shell out
         # to bare ``3v0`` via the terminal tool even when the gateway was
         # launched without it on PATH (systemd, service managers, cron, etc.).
-        run_env[path_key] = _prepend_ev0_bin_dir(new_path)
+        run_env[path_key] = _prepend_threev0_bin_dir(new_path)
 
-    _inject_context_ev0_home(run_env)
+    _inject_context_threev0_home(run_env)
 
     from threev0_constants import apply_subprocess_home_env
     apply_subprocess_home_env(run_env)
@@ -1452,8 +1452,8 @@ class LocalEnvironment(BaseEnvironment):
             # accepts forward slashes in filesystem paths, and we control
             # the path so we can guarantee no spaces.
             try:
-                from threev0_constants import get_ev0_home
-                cache_dir = get_ev0_home() / "cache" / "terminal"
+                from threev0_constants import get_threev0_home
+                cache_dir = get_threev0_home() / "cache" / "terminal"
             except Exception:
                 cache_dir = Path(tempfile.gettempdir()) / "ev0_terminal"
             cache_dir.mkdir(parents=True, exist_ok=True)
@@ -1544,7 +1544,7 @@ class LocalEnvironment(BaseEnvironment):
         )
         if not _IS_WINDOWS:
             try:
-                proc._ev0_pgid = os.getpgid(proc.pid)
+                proc._threev0_pgid = os.getpgid(proc.pid)
             except ProcessLookupError:
                 pass
 
@@ -1601,7 +1601,7 @@ class LocalEnvironment(BaseEnvironment):
                 try:
                     pgid = os.getpgid(proc.pid)
                 except ProcessLookupError:
-                    pgid = getattr(proc, "_ev0_pgid", None)
+                    pgid = getattr(proc, "_threev0_pgid", None)
                     if pgid is None:
                         raise
 

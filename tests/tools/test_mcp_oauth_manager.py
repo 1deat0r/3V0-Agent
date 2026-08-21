@@ -13,14 +13,14 @@ import pytest
 
 
 def test_manager_isolates_same_named_servers_by_profile_home(tmp_path, monkeypatch):
-    from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+    from threev0_constants import reset_threev0_home_override, set_threev0_home_override
     from tools.mcp_oauth import Ev0TokenStorage
     from tools.mcp_oauth_manager import MCPOAuthManager
 
     profile_a = tmp_path / "profile-a"
     profile_b = tmp_path / "profile-b"
     for home, access_token in ((profile_a, "TOKEN_A"), (profile_b, "TOKEN_B")):
-        token = set_ev0_home_override(home)
+        token = set_threev0_home_override(home)
         try:
             storage = Ev0TokenStorage("shared")
             storage._tokens_path().parent.mkdir(parents=True, exist_ok=True)
@@ -29,18 +29,18 @@ def test_manager_isolates_same_named_servers_by_profile_home(tmp_path, monkeypat
                 % access_token
             )
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
     manager = MCPOAuthManager()
     providers = []
     for home in (profile_a, profile_b):
-        token = set_ev0_home_override(home)
+        token = set_threev0_home_override(home)
         try:
             provider = manager.get_or_build_provider("shared", "https://mcp.example/mcp", {})
             asyncio.run(provider._initialize())
             providers.append(provider)
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
     assert providers[0] is not providers[1]
     assert providers[0].context.current_tokens.access_token == "TOKEN_A"
@@ -74,7 +74,7 @@ def _set_interactive_stdin(monkeypatch, *, is_tty: bool = True) -> None:
     monkeypatch.setattr("tools.mcp_oauth.sys.stdin", mock_stdin)
 
 
-def test_ev0_provider_subclass_exists():
+def test_threev0_provider_subclass_exists():
     """Ev0MCPOAuthProvider is defined and subclasses OAuthClientProvider."""
     from tools.mcp_oauth_manager import _EV0_PROVIDER_CLS
     from mcp.client.auth.oauth2 import OAuthClientProvider

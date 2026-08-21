@@ -84,7 +84,7 @@ def emits(monkeypatch):
 @pytest.fixture()
 def marker_home(monkeypatch, tmp_path):
     """Point the server's marker storage at a temp EV0_HOME."""
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     return tmp_path
 
 

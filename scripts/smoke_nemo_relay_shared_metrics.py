@@ -27,12 +27,12 @@ SKILL_CANARY = "relay-smoke-private-agent-skill"
 INSTALLED_SKILL_CANARY = "relay-smoke-private-installed-skill"
 
 
-def _resolve_ev0_executable(ev0_repo: Path) -> Path:
+def _resolve_threev0_executable(threev0_repo: Path) -> Path:
     for relative_path in (
         Path(".venv") / "bin" / "3v0",
         Path(".venv") / "Scripts" / "3v0.exe",
     ):
-        candidate = ev0_repo / relative_path
+        candidate = threev0_repo / relative_path
         if candidate.is_file():
             return candidate
     discovered = shutil.which("3v0")
@@ -553,9 +553,9 @@ def _validate_packages(
 
 def main() -> int:
     args = _arguments()
-    ev0_repo = args.ev0_repo.resolve()
+    threev0_repo = args.threev0_repo.resolve()
     relay_python = args.relay_python.resolve() if args.relay_python else None
-    ev0 = _resolve_ev0_executable(ev0_repo)
+    ev0 = _resolve_threev0_executable(threev0_repo)
     if relay_python is not None and not any(
         (relay_python / "nemo_relay").glob("_native.*")
     ):
@@ -610,7 +610,7 @@ def main() -> int:
         env = os.environ.copy()
         env["EV0_HOME"] = str(home)
         env["3V0_HOME"] = str(home)  # canonical (ADR-0006)
-        python_paths = [str(ev0_repo)]
+        python_paths = [str(threev0_repo)]
         if relay_python is not None:
             python_paths.append(str(relay_python))
         python_paths.append(env.get("PYTHONPATH", ""))
@@ -720,7 +720,7 @@ def main() -> int:
     counters = _validate_store(telemetry / "metrics.sqlite3")
     package_paths, packages = _validate_packages(
         telemetry / "outbox",
-        ev0_repo
+        threev0_repo
         / "threev0_cli"
         / "observability"
         / "schemas"

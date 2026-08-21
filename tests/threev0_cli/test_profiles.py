@@ -38,7 +38,7 @@ from threev0_cli.profiles import (
     export_profile,
     import_profile,
     _get_profiles_root,
-    _get_default_ev0_home,
+    _get_default_threev0_home,
     seed_profile_skills,
     has_bundled_skills_opt_out,
     NO_BUNDLED_SKILLS_MARKER,
@@ -110,7 +110,7 @@ class TestValidateProfileName:
 class TestGetProfileDir:
     """Tests for get_profile_dir()."""
 
-    def test_default_returns_ev0_home(self, profile_env):
+    def test_default_returns_threev0_home(self, profile_env):
         tmp_path = profile_env
         result = get_profile_dir("default")
         assert result == tmp_path / ".3V0"
@@ -273,8 +273,8 @@ class TestDeleteProfile:
         profile_dir = create_profile("coder", no_alias=True)
         set_active_profile("coder")
 
-        with patch("threev0_cli.profiles._cleanup_gateway_service"), \
-             patch("threev0_cli.profiles.time.sleep"), \
+        with patch("threev0_cli.profiles._cleanup_gateway_service"),\
+             patch("threev0_cli.profiles.time.sleep"),\
              patch("threev0_cli.profiles.shutil.rmtree", side_effect=PermissionError("locked")):
             with pytest.raises(RuntimeError, match="Could not remove profile directory"):
                 delete_profile("coder", yes=True)
@@ -704,13 +704,13 @@ class TestInternalHelpers:
 
 
 
-    def test_default_ev0_home_docker(self, tmp_path, monkeypatch):
+    def test_default_threev0_home_docker(self, tmp_path, monkeypatch):
         """In Docker, _get_default_ev0_home() returns EV0_HOME itself."""
         docker_home = tmp_path / "opt" / "data"
         docker_home.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("EV0_HOME", str(docker_home))
-        home = _get_default_ev0_home()
+        home = _get_default_threev0_home()
         assert home == docker_home
 
 
@@ -935,7 +935,7 @@ class TestProfilesToServe:
         create_profile("writer", no_alias=True)
         serve = dict(profiles_to_serve(multiplex=True))
         assert set(serve) == {"default", "coder", "writer"}
-        assert serve["default"] == _get_default_ev0_home()
+        assert serve["default"] == _get_default_threev0_home()
         assert serve["coder"] == get_profile_dir("coder")
 
     def test_empty_allowlist_serves_only_default(self, profile_env):
@@ -943,7 +943,7 @@ class TestProfilesToServe:
 
         serve = dict(profiles_to_serve(multiplex=True, profile_allowlist=[]))
 
-        assert serve == {"default": _get_default_ev0_home()}
+        assert serve == {"default": _get_default_threev0_home()}
 
     def test_allowlist_normalizes_deduplicates_and_keeps_default(self, profile_env):
         create_profile("worker", no_alias=True)

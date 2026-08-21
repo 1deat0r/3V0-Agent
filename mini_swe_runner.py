@@ -295,7 +295,7 @@ class MiniSWERunner:
             })
         return json.dumps(formatted_tools, ensure_ascii=False)
     
-    def _convert_to_ev0_format(
+    def _convert_to_threev0_format(
         self,
         messages: List[Dict[str, Any]],
         user_query: str,
@@ -347,8 +347,8 @@ class MiniSWERunner:
                     for tool_call in msg["tool_calls"]:
                         if not tool_call or not isinstance(tool_call, dict): continue
                         try:
-                            arguments = json.loads(tool_call["function"]["arguments"]) \
-                                if isinstance(tool_call["function"]["arguments"], str) \
+                            arguments = json.loads(tool_call["function"]["arguments"])\
+                                if isinstance(tool_call["function"]["arguments"], str)\
                                 else tool_call["function"]["arguments"]
                         except json.JSONDecodeError:
                             arguments = {}
@@ -378,7 +378,7 @@ class MiniSWERunner:
                         tool_response = "<tool_response>\n"
                         tool_response += json.dumps({
                             "tool_call_id": tool_msg.get("tool_call_id", ""),
-                            "name": msg["tool_calls"][len(tool_responses)]["function"]["name"] \
+                            "name": msg["tool_calls"][len(tool_responses)]["function"]["name"]\
                                 if len(tool_responses) < len(msg["tool_calls"]) else "unknown",
                             "content": tool_content
                         }, ensure_ascii=False)
@@ -557,7 +557,7 @@ Complete the user's task step by step."""
             self._cleanup_env()
         
         # Convert to 3V0 trajectory format
-        trajectory = self._convert_to_ev0_format(messages, task, completed)
+        trajectory = self._convert_to_threev0_format(messages, task, completed)
         
         return {
             "conversations": trajectory,

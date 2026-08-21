@@ -58,19 +58,19 @@ _LOW_MEM_AVAILABLE_KIB = 64 * 1024  # < 64 MiB available
 _LOW_MEM_AVAILABLE_FRACTION = 0.05  # < 5% of MemTotal available
 
 
-def _process_ev0_home() -> Path:
+def _process_threev0_home() -> Path:
     """EV0_HOME for process-level identity files (ignore task overrides)."""
     val = os.environ.get("EV0_HOME", "").strip()
     if val:
         return Path(val)
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home()
+    return get_threev0_home()
 
 
 def get_lifecycle_sentinel_path(home: Optional[Path] = None) -> Path:
     """Return ``<EV0_HOME>/state/gateway.lifecycle.json``."""
-    base = home if home is not None else _process_ev0_home()
+    base = home if home is not None else _process_threev0_home()
     return base.joinpath(*_LIFECYCLE_RELATIVE)
 
 
@@ -132,7 +132,7 @@ def _write_sentinel(payload: Dict[str, Any], home: Optional[Path]) -> None:
 def _append_exit_diag(record: Dict[str, Any], home: Optional[Path]) -> None:
     """Append a JSON line to gateway-exit-diag.log (same format as the CLI's
     ``_exit_diag`` records so existing tooling greps both)."""
-    base = home if home is not None else _process_ev0_home()
+    base = home if home is not None else _process_threev0_home()
     path = base.joinpath(*_EXIT_DIAG_RELATIVE)
     try:
         path.parent.mkdir(parents=True, exist_ok=True)

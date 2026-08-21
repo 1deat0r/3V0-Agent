@@ -173,7 +173,7 @@ _SKIP_TOKENS = frozenset({"skip", "cancel", "s", "n", "no", "q", "quit"})
 # _wait_for_callback maps this to OAuthNonInteractiveError ("user_skipped")
 # so the MCP setup path treats it as a non-fatal "continue without this
 # server" rather than a hard failure.
-_USER_SKIPPED_SENTINEL = "__ev0_user_skipped__"
+_USER_SKIPPED_SENTINEL = "__threev0_user_skipped__"
 
 
 # ---------------------------------------------------------------------------
@@ -181,15 +181,15 @@ _USER_SKIPPED_SENTINEL = "__ev0_user_skipped__"
 # ---------------------------------------------------------------------------
 
 
-def _get_token_dir(ev0_home: str | Path | None = None) -> Path:
+def _get_token_dir(threev0_home: str | Path | None = None) -> Path:
     """Return the directory for MCP OAuth token files.
 
     Uses EV0_HOME so each profile gets its own OAuth tokens.
     Layout: ``EV0_HOME/mcp-tokens/``
     """
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    base = Path(ev0_home) if ev0_home is not None else Path(get_ev0_home())
+    base = Path(threev0_home) if threev0_home is not None else Path(get_threev0_home())
     return base / "mcp-tokens"
 
 
@@ -436,18 +436,18 @@ class Ev0TokenStorage:
         EV0_HOME/mcp-tokens/<server_name>.meta.json     -- oauth server metadata
     """
 
-    def __init__(self, server_name: str, *, ev0_home: str | Path | None = None):
+    def __init__(self, server_name: str, *, threev0_home: str | Path | None = None):
         self._server_name = _safe_filename(server_name)
-        self._ev0_home = Path(ev0_home) if ev0_home is not None else None
+        self._threev0_home = Path(threev0_home) if threev0_home is not None else None
 
     def _tokens_path(self) -> Path:
-        return _get_token_dir(self._ev0_home) / f"{self._server_name}.json"
+        return _get_token_dir(self._threev0_home) / f"{self._server_name}.json"
 
     def _client_info_path(self) -> Path:
-        return _get_token_dir(self._ev0_home) / f"{self._server_name}.client.json"
+        return _get_token_dir(self._threev0_home) / f"{self._server_name}.client.json"
 
     def _meta_path(self) -> Path:
-        return _get_token_dir(self._ev0_home) / f"{self._server_name}.meta.json"
+        return _get_token_dir(self._threev0_home) / f"{self._server_name}.meta.json"
 
     # -- tokens ------------------------------------------------------------
 
@@ -609,7 +609,7 @@ class Ev0TokenStorage:
         self.remove()
         if not snapshot:
             return
-        token_dir = _get_token_dir(self._ev0_home)
+        token_dir = _get_token_dir(self._threev0_home)
         token_dir.mkdir(parents=True, exist_ok=True)
         for fname, data in snapshot.items():
             path = token_dir / fname
@@ -1051,7 +1051,7 @@ def _paste_callback_reader(result: dict) -> None:
 Ev0OAuthClientProvider: Any = None
 
 
-def _get_ev0_oauth_provider_class() -> type | None:
+def _get_threev0_oauth_provider_class() -> type | None:
     global Ev0OAuthClientProvider
     if Ev0OAuthClientProvider is not None:
         return Ev0OAuthClientProvider
@@ -1144,10 +1144,10 @@ def _get_ev0_oauth_provider_class() -> type | None:
 def remove_oauth_tokens(
     server_name: str,
     *,
-    ev0_home: str | Path | None = None,
+    threev0_home: str | Path | None = None,
 ) -> None:
     """Delete stored OAuth tokens and client info for a server."""
-    storage = Ev0TokenStorage(server_name, ev0_home=ev0_home)
+    storage = Ev0TokenStorage(server_name, threev0_home=threev0_home)
     storage.remove()
     logger.info("OAuth tokens removed for '%s'", server_name)
 
@@ -1532,7 +1532,7 @@ def build_oauth_auth(
     )
     callback_handler = _make_callback_waiter(resolved_port)
 
-    provider_class = _get_ev0_oauth_provider_class()
+    provider_class = _get_threev0_oauth_provider_class()
     if provider_class is None:
         logger.warning(
             "MCP OAuth requested for '%s' but the provider class is unavailable",

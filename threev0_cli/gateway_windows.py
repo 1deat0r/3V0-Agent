@@ -89,7 +89,7 @@ def _assert_windows() -> None:
         raise RuntimeError("gateway_windows is Windows-only")
 
 
-def _preserve_ev0_home_path(path: str | Path) -> str:
+def _preserve_threev0_home_path(path: str | Path) -> str:
     """Render 3V0-owned paths under the configured EV0_HOME spelling.
 
     Windows installs may keep ``%LOCALAPPDATA%\\3v0`` as a symlink/junction to
@@ -99,9 +99,9 @@ def _preserve_ev0_home_path(path: str | Path) -> str:
     """
     candidate = Path(path)
     try:
-        from threev0_cli.config import get_ev0_home
+        from threev0_cli.config import get_threev0_home
 
-        home = Path(get_ev0_home())
+        home = Path(get_threev0_home())
         resolved_home = home.resolve()
         resolved_candidate = candidate.resolve()
         home_key = os.path.normcase(str(resolved_home))
@@ -320,9 +320,9 @@ def get_task_script_path() -> Path:
     3V0 installs stay self-contained).
     """
     _assert_windows()
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
 
-    script_dir = Path(get_ev0_home()) / "gateway-service"
+    script_dir = Path(get_threev0_home()) / "gateway-service"
     script_dir.mkdir(parents=True, exist_ok=True)
     return script_dir / f"{_sanitize_filename(get_task_name())}.cmd"
 
@@ -370,10 +370,10 @@ def _stable_gateway_working_dir(project_root: Path) -> str:
     configured spelling instead of resolving symlinks so AppData installs backed
     by a junction/symlink still identify themselves as AppData.
     """
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
 
     try:
-        home = get_ev0_home()
+        home = get_threev0_home()
         if home:
             home_path = Path(home)
             if home_path.is_dir():
@@ -390,7 +390,7 @@ def _stable_gateway_working_dir(project_root: Path) -> str:
 def _build_gateway_cmd_script(
     python_path: str,
     working_dir: str,
-    ev0_home: str,
+    threev0_home: str,
     profile_arg: str,
 ) -> str:
     """Build the ``gateway.cmd`` wrapper content (CRLF-terminated).
@@ -412,16 +412,16 @@ def _build_gateway_cmd_script(
     """
     lines = ["@echo off", f"rem {_TASK_DESCRIPTION}"]
     lines.append(f"cd /d {_quote_cmd_script_arg(working_dir)}")
-    lines.append(f'set "EV0_HOME={ev0_home}"')
+    lines.append(f'set "EV0_HOME={threev0_home}"')
     lines.append('set "PYTHONIOENCODING=utf-8"')
     lines.append('set "EV0_GATEWAY_DETACHED=1"')
     python_exe_path, venv_dir, extra_pythonpath = _resolve_detached_python(python_path)
     # VIRTUAL_ENV lets the gateway's own python detection find the venv
     # if someone imports threev0_constants-based logic during startup.
-    lines.append(f'set "VIRTUAL_ENV={_preserve_ev0_home_path(venv_dir)}"')
+    lines.append(f'set "VIRTUAL_ENV={_preserve_threev0_home_path(venv_dir)}"')
     pythonpath_entries = [
-        _preserve_ev0_home_path(Path(__file__).resolve().parent.parent),
-        *[_preserve_ev0_home_path(entry) for entry in extra_pythonpath],
+        _preserve_threev0_home_path(Path(__file__).resolve().parent.parent),
+        *[_preserve_threev0_home_path(entry) for entry in extra_pythonpath],
     ]
     lines.append(f'set "PYTHONPATH={";".join([*pythonpath_entries, "%PYTHONPATH%"])}"')
 
@@ -452,7 +452,7 @@ def _quote_vbs_string(value: str) -> str:
 def _build_gateway_vbs_script(
     python_path: str,
     working_dir: str,
-    ev0_home: str,
+    threev0_home: str,
     profile_arg: str,
 ) -> str:
     """Build a hidden-console ``gateway.vbs`` launcher (CRLF-terminated).
@@ -486,9 +486,9 @@ def _build_gateway_vbs_script(
     # list2cmdline gives CreateProcess-correct quoting for WScript.Shell.Run.
     command_line = subprocess.list2cmdline(prog_args)
 
-    repo_root = _preserve_ev0_home_path(Path(__file__).resolve().parent.parent)
+    repo_root = _preserve_threev0_home_path(Path(__file__).resolve().parent.parent)
     static_pythonpath = os.pathsep.join(
-        [repo_root, *[_preserve_ev0_home_path(entry) for entry in extra_pythonpath]]
+        [repo_root, *[_preserve_threev0_home_path(entry) for entry in extra_pythonpath]]
     )
 
     lines = [
@@ -497,10 +497,10 @@ def _build_gateway_vbs_script(
         "Dim sh, env, existing_pp",
         'Set sh = CreateObject("WScript.Shell")',
         'Set env = sh.Environment("PROCESS")',
-        f"env.Item({_quote_vbs_string('EV0_HOME')}) = {_quote_vbs_string(ev0_home)}",
+        f"env.Item({_quote_vbs_string('EV0_HOME')}) = {_quote_vbs_string(threev0_home)}",
         f"env.Item({_quote_vbs_string('PYTHONIOENCODING')}) = {_quote_vbs_string('utf-8')}",
         f"env.Item({_quote_vbs_string('EV0_GATEWAY_DETACHED')}) = {_quote_vbs_string('1')}",
-        f"env.Item({_quote_vbs_string('VIRTUAL_ENV')}) = {_quote_vbs_string(_preserve_ev0_home_path(venv_dir))}",
+        f"env.Item({_quote_vbs_string('VIRTUAL_ENV')}) = {_quote_vbs_string(_preserve_threev0_home_path(venv_dir))}",
         # Mirror the cmd wrapper's ``PYTHONPATH=<static>;%PYTHONPATH%``: chain onto
         # whatever PYTHONPATH the task environment already carries, at runtime.
         f"existing_pp = env.Item({_quote_vbs_string('PYTHONPATH')})",
@@ -546,19 +546,19 @@ def _write_task_script() -> Path:
     """Generate and write the gateway.cmd wrapper. Return its absolute path."""
     _assert_windows()
     # Local imports to avoid circular-init at module load time.
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
     from threev0_cli.gateway import (
         PROJECT_ROOT,
         _profile_arg,
         get_python_path,
     )
 
-    python_path = _preserve_ev0_home_path(get_python_path())
+    python_path = _preserve_threev0_home_path(get_python_path())
     working_dir = _stable_gateway_working_dir(PROJECT_ROOT)
-    ev0_home = str(Path(get_ev0_home()))
-    profile_arg = _profile_arg(ev0_home)
+    threev0_home = str(Path(get_threev0_home()))
+    profile_arg = _profile_arg(threev0_home)
 
-    content = _build_gateway_cmd_script(python_path, working_dir, ev0_home, profile_arg)
+    content = _build_gateway_cmd_script(python_path, working_dir, threev0_home, profile_arg)
     script_path = get_task_script_path()
     tmp = script_path.with_suffix(".tmp")
     tmp.write_text(content, encoding="utf-8", newline="")
@@ -567,7 +567,7 @@ def _write_task_script() -> Path:
     # Also render the console-less .vbs launcher used by Scheduled Task and the
     # Startup-folder fallback via wscript.exe (issue #45599 fix A). The .cmd
     # wrapper stays as a generated helper/compatibility artifact.
-    vbs_content = _build_gateway_vbs_script(python_path, working_dir, ev0_home, profile_arg)
+    vbs_content = _build_gateway_vbs_script(python_path, working_dir, threev0_home, profile_arg)
     vbs_path = script_path.with_suffix(".vbs")
     vbs_tmp = vbs_path.with_name(vbs_path.name + ".tmp")
     vbs_tmp.write_text(vbs_content, encoding="utf-8", newline="")
@@ -790,7 +790,7 @@ def _build_gateway_argv() -> tuple[list[str], str, dict[str, str]]:
     layer in between.
     """
     _assert_windows()
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
     from threev0_cli.gateway import (
         PROJECT_ROOT,
         _profile_arg,
@@ -798,12 +798,12 @@ def _build_gateway_argv() -> tuple[list[str], str, dict[str, str]]:
     )
 
     python_exe, venv_dir, extra_pythonpath = _resolve_detached_python(
-        _preserve_ev0_home_path(get_python_path())
+        _preserve_threev0_home_path(get_python_path())
     )
-    project_root = _preserve_ev0_home_path(PROJECT_ROOT)
+    project_root = _preserve_threev0_home_path(PROJECT_ROOT)
     working_dir = _stable_gateway_working_dir(PROJECT_ROOT)
-    ev0_home = str(Path(get_ev0_home()))
-    profile_arg = _profile_arg(ev0_home)
+    threev0_home = str(Path(get_threev0_home()))
+    profile_arg = _profile_arg(threev0_home)
 
     argv = [python_exe, "-m", "threev0_cli.main"]
     if profile_arg:
@@ -811,14 +811,14 @@ def _build_gateway_argv() -> tuple[list[str], str, dict[str, str]]:
     argv.extend(["gateway", "run"])
 
     env_overlay = {
-        "EV0_HOME": ev0_home,
+        "EV0_HOME": threev0_home,
         "PYTHONIOENCODING": "utf-8",
         "EV0_GATEWAY_DETACHED": "1",
-        "VIRTUAL_ENV": _preserve_ev0_home_path(venv_dir),
+        "VIRTUAL_ENV": _preserve_threev0_home_path(venv_dir),
     }
     _prepend_pythonpath(
         env_overlay,
-        [project_root, *[_preserve_ev0_home_path(entry) for entry in extra_pythonpath]]
+        [project_root, *[_preserve_threev0_home_path(entry) for entry in extra_pythonpath]]
         if extra_pythonpath
         else [project_root],
     )
@@ -853,7 +853,7 @@ def windowless_gateway_restart_spec(
     if sys.platform != "win32":
         return run_argv, "", {}
 
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
     from threev0_cli.gateway import PROJECT_ROOT
 
     python_exe = run_argv[0]
@@ -874,18 +874,18 @@ def windowless_gateway_restart_spec(
     working_dir = _stable_gateway_working_dir(PROJECT_ROOT)
     project_root = str(PROJECT_ROOT)
     try:
-        ev0_home = str(Path(get_ev0_home()).resolve())
+        threev0_home = str(Path(get_threev0_home()).resolve())
     except Exception:
-        ev0_home = ""
+        threev0_home = ""
 
     env_overlay: dict[str, str] = {
         "PYTHONIOENCODING": "utf-8",
         "EV0_GATEWAY_DETACHED": "1",
         "VIRTUAL_ENV": str(venv_dir),
     }
-    if ev0_home:
-        env_overlay["EV0_HOME"] = ev0_home
-        env_overlay["3V0_HOME"] = ev0_home  # canonical (ADR-0006)
+    if threev0_home:
+        env_overlay["EV0_HOME"] = threev0_home
+        env_overlay["3V0_HOME"] = threev0_home  # canonical (ADR-0006)
     _prepend_pythonpath(
         env_overlay,
         [project_root, *extra_pythonpath] if extra_pythonpath else [project_root],
@@ -937,9 +937,9 @@ def _spawn_detached(script_path: Path | None = None) -> int:
     # logging module writes to gateway.log through a FileHandler, so the
     # real gateway logs still land there — this just captures anything
     # that goes to print() or native stderr.
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
 
-    log_dir = Path(get_ev0_home()) / "logs"
+    log_dir = Path(get_threev0_home()) / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     stray_log = log_dir / "gateway-stdio.log"
 
@@ -1200,19 +1200,19 @@ def _report_gateway_start(via: str) -> None:
     else:
         print(f"⚠ Launched gateway via {via}, but no process detected after 6s.")
         print("  Check the log for startup errors:")
-        from threev0_cli.config import get_ev0_home
-        print(f"    type {Path(get_ev0_home())}\\logs\\gateway.log")
-        print(f"    type {Path(get_ev0_home())}\\logs\\gateway-stdio.log")
+        from threev0_cli.config import get_threev0_home
+        print(f"    type {Path(get_threev0_home())}\\logs\\gateway.log")
+        print(f"    type {Path(get_threev0_home())}\\logs\\gateway-stdio.log")
 
 
 def _print_next_steps() -> None:
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
 
-    ev0_home = Path(get_ev0_home())
+    threev0_home = Path(get_threev0_home())
     print()
     print("Next steps:")
     print("  3v0 gateway status                      # Check status")
-    print(f"  type {ev0_home}\\logs\\gateway.log       # View logs")
+    print(f"  type {threev0_home}\\logs\\gateway.log       # View logs")
 
 
 def uninstall() -> None:
@@ -1329,9 +1329,9 @@ def _print_deep_probes() -> None:
     import json
     from datetime import datetime, timezone
 
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
 
-    home = Path(get_ev0_home())
+    home = Path(get_threev0_home())
     pid_path = home / "gateway.pid"
     lock_path = home / "gateway.lock"
     state_path = home / "gateway_state.json"

@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, List, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ class PluginIndexEntry:
 
 
 def _cache_path() -> Path:
-    return get_ev0_home() / "cache" / "plugin_index.json"
+    return get_threev0_home() / "cache" / "plugin_index.json"
 
 
 def get_index_url() -> str:

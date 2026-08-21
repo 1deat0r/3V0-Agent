@@ -298,7 +298,7 @@ def test_has_agent_browser_import_failure_falls_back_to_path_check(monkeypatch):
     assert ns._has_agent_browser() is True
 
 
-def test_has_agent_browser_import_failure_falls_back_to_ev0_managed_node_path(
+def test_has_agent_browser_import_failure_falls_back_to_threev0_managed_node_path(
     monkeypatch, tmp_path
 ):
     """If tools.browser_tool cannot be imported, the managed-Node rung must
@@ -323,7 +323,7 @@ def test_has_agent_browser_import_failure_falls_back_to_ev0_managed_node_path(
         ),
     )
     monkeypatch.setattr(
-        "threev0_constants.with_ev0_node_path", lambda: {"PATH": str(managed_dir)}
+        "threev0_constants.with_threev0_node_path", lambda: {"PATH": str(managed_dir)}
     )
     monkeypatch.setattr(
         "threev0_constants.agent_browser_runnable",

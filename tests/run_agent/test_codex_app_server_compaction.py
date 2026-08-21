@@ -154,7 +154,7 @@ def test_codex_app_server_compaction_heartbeat_refreshes_activity_while_waiting(
 
 
 
-def test_codex_native_boundary_clears_stale_ev0_fallback_streak():
+def test_codex_native_boundary_clears_stale_threev0_fallback_streak():
     from unittest.mock import patch
 
     from agent.context_compressor import ContextCompressor

@@ -52,9 +52,9 @@ def test_cron_manage_profile_reads_that_profiles_store(tmp_path, monkeypatch):
 
     # The override must not leak: an unscoped call after this one resolves the
     # launch profile again, which does not contain botA's job.
-    from threev0_constants import get_ev0_home_override
+    from threev0_constants import get_threev0_home_override
 
-    assert get_ev0_home_override() is None
+    assert get_threev0_home_override() is None
 
 
 def test_cron_manage_unknown_profile_errors(tmp_path, monkeypatch):

@@ -3753,8 +3753,8 @@ class TelegramAdapter(BasePlatformAdapter):
     ) -> None:
         """Save a newly created thread_id back into config.yaml so it persists across restarts."""
         try:
-            from threev0_constants import get_ev0_home
-            config_path = get_ev0_home() / "config.yaml"
+            from threev0_constants import get_threev0_home
+            config_path = get_threev0_home() / "config.yaml"
             if not config_path.exists():
                 logger.warning("[%s] Config file not found at %s, cannot persist thread_id", self.name, config_path)
                 return
@@ -5992,7 +5992,7 @@ class TelegramAdapter(BasePlatformAdapter):
 
         # Trim to the same UTF-16 budget the platform enforces on regular
         # sends.  Drafts have the same length contract as messages.
-        text = content if len(content) <= self.MAX_MESSAGE_LENGTH else \
+        text = content if len(content) <= self.MAX_MESSAGE_LENGTH else\
             self.truncate_message(content, self.MAX_MESSAGE_LENGTH, len_fn=utf16_len)[0]
 
         thread_id = self._metadata_thread_id(metadata)
@@ -7374,8 +7374,8 @@ class TelegramAdapter(BasePlatformAdapter):
             pass  # non-fatal if edit fails
         # Write the response file
         try:
-            from threev0_constants import get_ev0_home
-            home = get_ev0_home()
+            from threev0_constants import get_threev0_home
+            home = get_threev0_home()
             response_path = home / ".update_response"
             tmp = response_path.with_suffix(".tmp")
             tmp.write_text(answer, encoding="utf-8")

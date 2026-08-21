@@ -83,7 +83,7 @@ class TestMissingProfileWarning:
             with patch("threev0_cli.profiles.get_profile_dir") as mock_get_dir:
                 mock_get_dir.return_value = Path("/3v0/profiles/nonexistent")
                 with patch("threev0_cli.profiles.profile_exists", return_value=False):
-                    with patch("threev0_constants.get_ev0_home", return_value=Path("/3v0")):
+                    with patch("threev0_constants.get_threev0_home", return_value=Path("/3v0")):
                         with caplog.at_level(logging.WARNING):
                             result = mock_runner._resolve_profile_home_for_source(discord_source)
                             
@@ -111,7 +111,7 @@ class TestExceptionHandling:
         
         with patch("threev0_cli.profiles.get_active_profile_name", return_value="active"):
             with patch("threev0_cli.profiles.get_profile_dir", side_effect=ValueError("Invalid profile name")):
-                with patch("threev0_constants.get_ev0_home", return_value=Path("/3v0")):
+                with patch("threev0_constants.get_threev0_home", return_value=Path("/3v0")):
                     with caplog.at_level(logging.WARNING):
                         result = mock_runner._resolve_profile_home_for_source(discord_source)
                         

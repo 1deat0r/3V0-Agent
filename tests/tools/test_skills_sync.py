@@ -416,7 +416,7 @@ class TestSyncSkills:
         skills_dir = tmp_path / "user_skills"
         manifest_file = skills_dir / ".bundled_manifest"
 
-        with self._patches(bundled, skills_dir, manifest_file), \
+        with self._patches(bundled, skills_dir, manifest_file),\
                 patch("tools.skills_sync._read_suppressed_names", return_value={"old-skill"}):
             result = sync_skills(quiet=True)
 
@@ -705,9 +705,9 @@ class TestNoBundledSkillsOptOut:
 
         skills_dir = tmp_path / "user_skills"
         manifest_file = skills_dir / ".bundled_manifest"
-        ev0_home = tmp_path / "home"
-        ev0_home.mkdir()
-        marker = ev0_home / ".no-bundled-skills"
+        threev0_home = tmp_path / "home"
+        threev0_home.mkdir()
+        marker = threev0_home / ".no-bundled-skills"
         marker.write_text("opted out\n")
 
         from contextlib import ExitStack
@@ -718,7 +718,7 @@ class TestNoBundledSkillsOptOut:
             stack.enter_context(patch("tools.skills_sync._get_optional_dir", return_value=bundled.parent / "optional-skills"))
             stack.enter_context(patch("tools.skills_sync.SKILLS_DIR", skills_dir))
             stack.enter_context(patch("tools.skills_sync.MANIFEST_FILE", manifest_file))
-            stack.enter_context(patch("tools.skills_sync.EV0_HOME", ev0_home))
+            stack.enter_context(patch("tools.skills_sync.EV0_HOME", threev0_home))
             return stack
 
         with _patches():
@@ -778,10 +778,10 @@ class TestOptOutToggleAndRemove:
         manifest_file = skills_dir / ".bundled_manifest"
         home = tmp_path / "home"
         home.mkdir()
-        with patch("tools.skills_sync._get_bundled_dir", return_value=bundled), \
-             patch("tools.skills_sync._get_optional_dir", return_value=bundled.parent / "optional-skills"), \
-             patch("tools.skills_sync.SKILLS_DIR", skills_dir), \
-             patch("tools.skills_sync.MANIFEST_FILE", manifest_file), \
+        with patch("tools.skills_sync._get_bundled_dir", return_value=bundled),\
+             patch("tools.skills_sync._get_optional_dir", return_value=bundled.parent / "optional-skills"),\
+             patch("tools.skills_sync.SKILLS_DIR", skills_dir),\
+             patch("tools.skills_sync.MANIFEST_FILE", manifest_file),\
              patch("tools.skills_sync.EV0_HOME", home):
             sync_skills(quiet=True)
             # User edits 'beta'
@@ -859,7 +859,7 @@ class TestUpdateBackupRecovery:
         def _boom(src, dst, **kwargs):
             raise OSError("simulated copy failure")
 
-        with self._patches(bundled, skills_dir, manifest_file), \
+        with self._patches(bundled, skills_dir, manifest_file),\
                 patch("tools.skills_sync.shutil.copytree", side_effect=_boom):
             sync_skills(quiet=True)
 
@@ -908,7 +908,7 @@ class TestUpdateBackupRecovery:
             (Path(dst) / "PARTIAL").write_text("half-written")
             raise OSError("simulated failure mid-copy")
 
-        with self._patches(bundled, skills_dir, manifest_file), \
+        with self._patches(bundled, skills_dir, manifest_file),\
                 patch("tools.skills_sync.shutil.copytree", side_effect=_partial_then_fail):
             sync_skills(quiet=True)
 

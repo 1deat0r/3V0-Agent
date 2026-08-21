@@ -263,7 +263,7 @@ class TestRepairDecision:
 
         upgrades = []
         monkeypatch.setattr(
-            npm_engine, "bootstrap_ev0_managed_node", fake_bootstrap
+            npm_engine, "bootstrap_threev0_managed_node", fake_bootstrap
         )
         monkeypatch.setattr(
             npm_engine,
@@ -291,7 +291,7 @@ class TestRepairDecision:
         import threev0_cli.npm_engine as npm_engine
 
         monkeypatch.setattr(
-            npm_engine, "bootstrap_ev0_managed_node", lambda: None
+            npm_engine, "bootstrap_threev0_managed_node", lambda: None
         )
         assert not maybe_repair_npm_engine(str(system_npm), EBADENGINE_OUTPUT)
 
@@ -335,7 +335,7 @@ class TestRepairDecision:
 
         upgrades = []
         monkeypatch.setattr(
-            npm_engine, "bootstrap_ev0_managed_node", fake_bootstrap
+            npm_engine, "bootstrap_threev0_managed_node", fake_bootstrap
         )
         monkeypatch.setattr(
             npm_engine,

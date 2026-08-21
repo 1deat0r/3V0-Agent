@@ -356,10 +356,10 @@ class TokenMapping:
 # ---------------------------------------------------------------------------
 
 
-def _ev0_bin_dir() -> Path:
-    from threev0_constants import get_ev0_home
+def _threev0_bin_dir() -> Path:
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home() / "bin"
+    return get_threev0_home() / "bin"
 
 
 def _proxy_state_dir_ro() -> Path:
@@ -369,9 +369,9 @@ def _proxy_state_dir_ro() -> Path:
     this — there's no reason to materialize ``~/.3V0/proxy/`` just to
     check whether a pidfile exists.
     """
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home() / "proxy"
+    return get_threev0_home() / "proxy"
 
 
 def _proxy_state_dir() -> Path:
@@ -444,7 +444,7 @@ def find_iron_proxy(*, install_if_missing: bool = False) -> Optional[Path]:
     :func:`install_iron_proxy` to download and verify the pinned version.
     """
 
-    managed = _ev0_bin_dir() / _platform_binary_name()
+    managed = _threev0_bin_dir() / _platform_binary_name()
     if managed.exists() and os.access(managed, os.X_OK):
         return managed
 
@@ -470,7 +470,7 @@ def install_iron_proxy(*, force: bool = False) -> Path:
     propagate so the wizard can show a clear error.
     """
 
-    bin_dir = _ev0_bin_dir()
+    bin_dir = _threev0_bin_dir()
     bin_dir.mkdir(parents=True, exist_ok=True)
     target = bin_dir / _platform_binary_name()
 

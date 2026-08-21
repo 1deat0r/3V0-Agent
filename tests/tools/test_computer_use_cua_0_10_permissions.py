@@ -17,7 +17,7 @@ def _reset_computer_use_state():
     reset_backend_for_tests()
 
 
-def test_normal_ev0_session_maps_to_standard_mode():
+def test_normal_threev0_session_maps_to_standard_mode():
     from tools.computer_use import tool as computer_use
 
     with patch(
@@ -27,7 +27,7 @@ def test_normal_ev0_session_maps_to_standard_mode():
         assert computer_use._cua_permission_mode("session-a") == "standard"
 
 
-def test_any_explicit_ev0_bypass_maps_to_unrestricted_mode():
+def test_any_explicit_threev0_bypass_maps_to_unrestricted_mode():
     from tools.computer_use import tool as computer_use
 
     with patch(

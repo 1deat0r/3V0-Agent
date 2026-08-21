@@ -68,7 +68,7 @@ class TestIgnoreUserConfigEnvGate:
     def _reload_cli(self, monkeypatch, tmp_path):
         """Point cli._ev0_home at tmp_path and return a fresh load_cli_config."""
         import cli
-        monkeypatch.setattr(cli, "_ev0_home", tmp_path)
+        monkeypatch.setattr(cli, "_threev0_home", tmp_path)
         return cli.load_cli_config
 
     def test_user_config_loaded_when_flag_unset(self, tmp_path, monkeypatch):

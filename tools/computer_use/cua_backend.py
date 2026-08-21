@@ -1733,12 +1733,12 @@ class _CuaDriverSession:
             # passes but the wrapper times out" reports are undiagnosable
             # from a bare "never reached ready".
             phase = getattr(self, "_startup_phase", "unknown")
-            from threev0_constants import display_ev0_home
+            from threev0_constants import display_threev0_home
             raise RuntimeError(
                 "cua-driver session never reached ready (timeout 30s; "
                 f"stuck in phase: {phase}). "
                 "Run `3v0 computer-use doctor` and check "
-                f"{display_ev0_home()}/logs/agent.log for the phase timings."
+                f"{display_threev0_home()}/logs/agent.log for the phase timings."
             )
         # If setup failed, the lifecycle coroutine set _setup_error
         # before setting _ready_event. Re-raise it on the caller's thread.

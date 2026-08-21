@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Iterable, List, Optional
 
 from threev0_cli.sqlite_util import add_column_if_missing as _add_column_if_missing, write_txn
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -47,7 +47,7 @@ def projects_db_path() -> Path:
     Profile-aware: ``get_ev0_home()`` already points at the active profile's
     home. Tests pass an explicit ``db_path`` to :func:`connect`.
     """
-    return get_ev0_home() / "projects.db"
+    return get_threev0_home() / "projects.db"
 
 
 # ---------------------------------------------------------------------------
@@ -793,7 +793,7 @@ def project_for_path(
     best_len = -1
     for row in conn.execute(sql).fetchall():
         folder = row["folder"]
-        if target == folder or target.startswith(folder.rstrip("/\\") + os.sep) or \
+        if target == folder or target.startswith(folder.rstrip("/\\") + os.sep) or\
                 target.startswith(folder.rstrip("/\\") + "/"):
             if len(folder) > best_len:
                 best_len = len(folder)

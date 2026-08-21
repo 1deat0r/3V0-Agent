@@ -33,9 +33,9 @@ from threev0_cli.proxy.adapters.xai import XAIGrokAdapter
 # ---------------------------------------------------------------------------
 
 
-def _write_auth_store(ev0_home: Path, nous_state: Dict[str, Any]) -> Path:
+def _write_auth_store(threev0_home: Path, nous_state: Dict[str, Any]) -> Path:
     """Write an auth.json with the given nous state into a hermetic EV0_HOME."""
-    auth_path = ev0_home / "auth.json"
+    auth_path = threev0_home / "auth.json"
     auth_path.write_text(json.dumps({
         "version": 1,
         "providers": {"nous": nous_state},
@@ -112,7 +112,7 @@ def test_nous_adapter_concurrent_refresh_serialized(tmp_path, monkeypatch):
 
 
 def _write_xai_pool_entry(
-    ev0_home: Path,
+    threev0_home: Path,
     *,
     access_token: str = "xai-access-token",
     refresh_token: str = "xai-refresh-token",
@@ -120,7 +120,7 @@ def _write_xai_pool_entry(
     source: str = "manual:xai_pkce",
 ) -> Path:
     """Write an xai-oauth pool entry into a hermetic EV0_HOME."""
-    auth_path = ev0_home / "auth.json"
+    auth_path = threev0_home / "auth.json"
     auth_path.write_text(json.dumps({
         "version": 1,
         "providers": {},

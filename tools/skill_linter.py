@@ -196,8 +196,8 @@ def _check_metadata_block(frontmatter: Dict[str, Any]) -> List[LintFinding]:
                 )
             )
     meta = frontmatter.get("metadata")
-    ev0_meta = meta.get("3v0") if isinstance(meta, dict) else None
-    if not isinstance(ev0_meta, dict):
+    threev0_meta = meta.get("3v0") if isinstance(meta, dict) else None
+    if not isinstance(threev0_meta, dict):
         findings.append(
             LintFinding(
                 WARNING,
@@ -206,7 +206,7 @@ def _check_metadata_block(frontmatter: Dict[str, Any]) -> List[LintFinding]:
             )
         )
     else:
-        if "tags" not in ev0_meta:
+        if "tags" not in threev0_meta:
             findings.append(
                 LintFinding(
                     WARNING, "missing-metadata", "metadata.3v0.tags is missing."

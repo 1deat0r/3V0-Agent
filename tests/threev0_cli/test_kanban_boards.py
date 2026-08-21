@@ -56,7 +56,7 @@ def fresh_home(tmp_path, monkeypatch):
     # Also reset threev0_constants cache so get_default_ev0_root() re-reads.
     try:
         import threev0_constants
-        threev0_constants._cached_default_ev0_root = None  # type: ignore[attr-defined]
+        threev0_constants._cached_default_threev0_root = None  # type: ignore[attr-defined]
     except Exception:
         pass
     # Kanban module-level init cache must not leak between tests.

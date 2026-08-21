@@ -25,7 +25,7 @@ import time
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
-from threev0_constants import get_ev0_home, _get_platform_default_ev0_home
+from threev0_constants import get_threev0_home, _get_platform_default_threev0_home
 from typing import Any, Callable, NamedTuple, Optional
 from utils import atomic_json_write
 
@@ -65,7 +65,7 @@ def _get_starts_log_path() -> Path:
     """Path to the append-only gateway-start ledger used by the respawn-storm
     breaker. Distinct from ``restart_loop.json`` (the auto-resume guard) — no
     collision."""
-    return get_ev0_home() / "gateway-starts.log"
+    return get_threev0_home() / "gateway-starts.log"
 
 
 def record_start_and_check_storm(
@@ -128,7 +128,7 @@ def record_start_and_check_storm(
         return None
 
 
-def _get_process_ev0_home() -> Path:
+def _get_process_threev0_home() -> Path:
     """Return the process-level EV0_HOME, skipping context-local overrides.
 
     Gateway identity files (PID, lock, runtime status, takeover/stop markers)
@@ -141,24 +141,24 @@ def _get_process_ev0_home() -> Path:
     val = os.environ.get("EV0_HOME", "").strip()
     if val:
         return Path(val)
-    return _get_platform_default_ev0_home()
+    return _get_platform_default_threev0_home()
 
 
-def _canonical_ev0_home(path: Path | str) -> Path:
+def _canonical_threev0_home(path: Path | str) -> Path:
     """Return a stable absolute EV0_HOME path for persisted identity data."""
     return Path(path).expanduser().resolve(strict=False)
 
 
-def _same_ev0_home(left: Path | str, right: Path | str) -> bool:
+def _same_threev0_home(left: Path | str, right: Path | str) -> bool:
     """Compare EV0_HOME paths with the host platform's case semantics."""
-    return os.path.normcase(str(_canonical_ev0_home(left))) == os.path.normcase(
-        str(_canonical_ev0_home(right))
+    return os.path.normcase(str(_canonical_threev0_home(left))) == os.path.normcase(
+        str(_canonical_threev0_home(right))
     )
 
 
 def _get_pid_path() -> Path:
     """Return the path to the gateway PID file, respecting EV0_HOME."""
-    home = _get_process_ev0_home()
+    home = _get_process_threev0_home()
     return home / "gateway.pid"
 
 
@@ -166,7 +166,7 @@ def _get_gateway_lock_path(pid_path: Optional[Path] = None) -> Path:
     """Return the path to the runtime gateway lock file."""
     if pid_path is not None:
         return pid_path.with_name(_GATEWAY_LOCK_FILENAME)
-    home = _get_process_ev0_home()
+    home = _get_process_threev0_home()
     return home / _GATEWAY_LOCK_FILENAME
 
 
@@ -576,7 +576,7 @@ def _build_pid_record() -> dict:
         # EV0_HOME-local.  Persist the owning gateway's process home so an
         # explicit cross-profile --replace can place its planned-takeover
         # marker where the target process will actually read it.
-        "ev0_home": str(_canonical_ev0_home(_get_process_ev0_home())),
+        "ev0_home": str(_canonical_threev0_home(_get_process_threev0_home())),
     }
 
 
@@ -1604,19 +1604,19 @@ _PLANNED_STOP_MARKER_FILENAME = ".gateway-planned-stop.json"
 _PLANNED_STOP_MARKER_TTL_S = 60
 
 
-def _get_takeover_marker_path(ev0_home: Optional[Path] = None) -> Path:
+def _get_takeover_marker_path(threev0_home: Optional[Path] = None) -> Path:
     """Return the path to the --replace takeover marker file.
 
     ``ev0_home`` is supplied only for a verified cross-home handoff.  The
     target process always consumes the marker from its own process-level home.
     """
-    home = ev0_home or _get_process_ev0_home()
-    return _canonical_ev0_home(home) / _TAKEOVER_MARKER_FILENAME
+    home = threev0_home or _get_process_threev0_home()
+    return _canonical_threev0_home(home) / _TAKEOVER_MARKER_FILENAME
 
 
 def _get_planned_stop_marker_path() -> Path:
     """Return the path to the intentional gateway stop marker file."""
-    home = _get_process_ev0_home()
+    home = _get_process_threev0_home()
     return home / _PLANNED_STOP_MARKER_FILENAME
 
 
@@ -1663,16 +1663,16 @@ def _consume_pid_marker_for_self(
     # ensuring a marker accidentally written into another profile's directory
     # is ignored.  Legacy markers have no target field, so retain the original
     # same-replacer-home rule for backwards compatibility.
-    our_home = _get_process_ev0_home()
-    target_home = record.get("target_ev0_home")
+    our_home = _get_process_threev0_home()
+    target_home = record.get("target_threev0_home")
     if target_home is not None:
-        if not isinstance(target_home, str) or not _same_ev0_home(
+        if not isinstance(target_home, str) or not _same_threev0_home(
             target_home, our_home
         ):
             return False
     else:
-        replacer_home = record.get("replacer_ev0_home")
-        if replacer_home is not None and not _same_ev0_home(
+        replacer_home = record.get("replacer_threev0_home")
+        if replacer_home is not None and not _same_threev0_home(
             replacer_home, our_home
         ):
             return False
@@ -1729,18 +1729,18 @@ def write_takeover_marker(
     without recognizing the handoff.
     """
     try:
-        marker_home = _canonical_ev0_home(
-            target_home or _get_process_ev0_home()
+        marker_home = _canonical_threev0_home(
+            target_home or _get_process_threev0_home()
         )
         if target_start_time is _UNSET:
             target_start_time = _get_process_start_time(target_pid)
         record = {
             "target_pid": target_pid,
             "target_start_time": target_start_time,
-            "target_ev0_home": str(marker_home),
+            "target_threev0_home": str(marker_home),
             "replacer_pid": os.getpid(),
-            "replacer_ev0_home": str(
-                _canonical_ev0_home(_get_process_ev0_home())
+            "replacer_threev0_home": str(
+                _canonical_threev0_home(_get_process_threev0_home())
             ),
             "written_at": _utc_now_iso(),
         }
@@ -1808,7 +1808,7 @@ def _validated_scoped_lock_gateway_owner(
         return None
     if not Path(raw_home).expanduser().is_absolute():
         return None
-    target_home = _canonical_ev0_home(raw_home)
+    target_home = _canonical_threev0_home(raw_home)
 
     if not _pid_exists(owner_pid):
         return None
@@ -1833,7 +1833,7 @@ def _validated_scoped_lock_gateway_owner(
         return None
 
     pid_record_home = pid_record.get("ev0_home")
-    if not isinstance(pid_record_home, str) or not _same_ev0_home(
+    if not isinstance(pid_record_home, str) or not _same_threev0_home(
         pid_record_home, target_home
     ):
         return None

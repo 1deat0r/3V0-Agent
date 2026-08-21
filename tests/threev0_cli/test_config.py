@@ -10,8 +10,8 @@ import yaml
 from threev0_cli.config import (
     DEFAULT_CONFIG,
     check_config_version,
-    get_ev0_home,
-    ensure_ev0_home,
+    get_threev0_home,
+    ensure_threev0_home,
     get_compatible_custom_providers,
     _explicit_config_paths,
     _normalize_max_turns_config,
@@ -35,7 +35,7 @@ class TestGetEv0Home:
     def test_default_path(self):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("EV0_HOME", None)
-            home = get_ev0_home()
+            home = get_threev0_home()
             assert home == Path.home() / ".3V0"
 
 
@@ -43,7 +43,7 @@ class TestEnsureEv0Home:
 
     def test_creates_default_soul_md_if_missing(self, tmp_path):
         with patch.dict(os.environ, {"EV0_HOME": str(tmp_path)}):
-            ensure_ev0_home()
+            ensure_threev0_home()
             soul_path = tmp_path / "SOUL.md"
             assert soul_path.exists()
             assert soul_path.read_text(encoding="utf-8").strip() != ""
@@ -58,7 +58,7 @@ class TestEnsureEv0Home:
         with patch.dict(os.environ, {"EV0_HOME": str(tmp_path)}):
             soul_path = tmp_path / "SOUL.md"
             soul_path.write_text(_LEGACY_TEMPLATE_SOULS[0] + "\n", encoding="utf-8")
-            ensure_ev0_home()
+            ensure_threev0_home()
             assert soul_path.read_text(encoding="utf-8") == DEFAULT_SOUL_MD
 
 
@@ -677,12 +677,12 @@ class TestConfigSupportFloor:
         assert captured.out == ""
         assert results["warnings"]
 
-    def test_floor_message_uses_display_ev0_home(self):
+    def test_floor_message_uses_display_threev0_home(self):
         from threev0_cli.config_migrations import support_floor_message
-        from threev0_constants import display_ev0_home
+        from threev0_constants import display_threev0_home
 
         msg = support_floor_message()
-        assert f"{display_ev0_home()}/config.yaml" in msg
+        assert f"{display_threev0_home()}/config.yaml" in msg
 
     def test_registry_has_no_targets_below_floor(self):
         from threev0_cli.config_migrations import (
@@ -1058,9 +1058,9 @@ class TestEnvWriteDenylist:
     """
 
     @pytest.fixture(autouse=True)
-    def _ev0_home(self, tmp_path, monkeypatch):
+    def _threev0_home(self, tmp_path, monkeypatch):
         monkeypatch.setenv("EV0_HOME", str(tmp_path))
-        ensure_ev0_home()
+        ensure_threev0_home()
 
 
     @pytest.mark.parametrize(
@@ -1072,7 +1072,7 @@ class TestEnvWriteDenylist:
             "EV0_MAX_ITERATIONS",
         ],
     )
-    def test_ev0_integration_keys_still_writable(self, allowed_key):
+    def test_threev0_integration_keys_still_writable(self, allowed_key):
         """``EV0_*`` overall is NOT blocked — only the four runtime
         location names (HOME/PROFILE/CONFIG/ENV) are. Integration
         credentials following the ``EV0_*`` convention must keep

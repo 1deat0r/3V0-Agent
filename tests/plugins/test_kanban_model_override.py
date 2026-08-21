@@ -118,7 +118,7 @@ def test_migration_adds_provider_override_column(conn):
 
 
 def _spawn_and_capture(monkeypatch, tmp_path, task):
-    monkeypatch.setattr(kb, "_resolve_ev0_argv", lambda: ["3v0"])
+    monkeypatch.setattr(kb, "_resolve_threev0_argv", lambda: ["3v0"])
     captured = {}
 
     class FakeProc:

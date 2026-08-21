@@ -54,10 +54,10 @@ from pathlib import Path
 from typing import (Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Type, Union)
 
 from threev0_constants import (
-    get_ev0_home,
-    ev0_home_key,
-    reset_ev0_home_override,
-    set_ev0_home_override,
+    get_threev0_home,
+    threev0_home_key,
+    reset_threev0_home_override,
+    set_threev0_home_override,
 )
 from registration_lifecycle import replacement_coordinator
 from utils import env_var_enabled, fast_safe_load
@@ -555,11 +555,11 @@ def _serialized_replacement(method):
 @contextmanager
 def _plugin_home_scope(home: Path):
     """Bind discovery and loading to the manager's immutable 3V0 home."""
-    token = set_ev0_home_override(home)
+    token = set_threev0_home_override(home)
     try:
         yield
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
 
 def _env_enabled(name: str) -> bool:
@@ -1321,7 +1321,7 @@ class PluginState:
     @property
     def data_dir(self) -> Path:
         """Profile-scoped directory matching portable plugins' PLUGIN_DATA."""
-        return get_ev0_home() / "plugin-data" / self._data_namespace
+        return get_threev0_home() / "plugin-data" / self._data_namespace
 
     @property
     def path(self) -> Path:
@@ -3392,7 +3392,7 @@ class PluginManager:
         # Capture the home immutably. Unload can run from a different ambient
         # profile context, but every inverse must target the registration's
         # original scope.
-        self.scope_key = scope_key or ev0_home_key()
+        self.scope_key = scope_key or threev0_home_key()
         self.home_path = Path(self.scope_key)
         self._discovery_lock = threading.RLock()
         self._plugins: Dict[str, LoadedPlugin] = {}
@@ -3830,7 +3830,7 @@ class PluginManager:
         """
         try:
             from agent.secret_sources.registry import list_plugin_sources
-            from threev0_cli.env_loader import load_ev0_dotenv, reset_secret_source_cache
+            from threev0_cli.env_loader import load_threev0_dotenv, reset_secret_source_cache
         except Exception:
             return
         try:
@@ -3864,7 +3864,7 @@ class PluginManager:
             return
         try:
             reset_secret_source_cache()
-            load_ev0_dotenv()
+            load_threev0_dotenv()
             logger.debug(
                 "Re-applied secret sources after plugin discovery for: %s",
                 ", ".join(sorted(enabled_names)),
@@ -4032,7 +4032,7 @@ class PluginManager:
             name=clean,
             present=present_fn,
             plugin_id=plugin_id,
-            profile_home=str(get_ev0_home().resolve()),
+            profile_home=str(get_threev0_home().resolve()),
         )
         logger.info("Plugin %s registered approval transport: %s", plugin_id, clean)
 
@@ -4041,7 +4041,7 @@ class PluginManager:
         registered = self._approval_transports.get(str(name).strip().lower())
         if registered is None:
             return None
-        if registered.profile_home != str(get_ev0_home().resolve()):
+        if registered.profile_home != str(get_threev0_home().resolve()):
             return None
         return registered
 
@@ -4075,7 +4075,7 @@ class PluginManager:
         manifests.extend(bundled_platforms)
 
         # 2. User plugins (~/.3V0/plugins/)
-        user_dir = get_ev0_home() / "plugins"
+        user_dir = get_threev0_home() / "plugins"
         logger.debug("Scanning user plugins: %s", user_dir)
         user_manifests = self._scan_directory(user_dir, source="user")
         logger.debug("  user: %d manifest(s)", len(user_manifests))
@@ -4139,7 +4139,7 @@ class PluginManager:
 
                 if _discover_mcp(
                     Path(manifest.path),
-                    get_ev0_home()
+                    get_threev0_home()
                     / "plugin-data"
                     / (manifest.skill_namespace or lookup_key),
                     [],
@@ -4887,7 +4887,7 @@ class PluginManager:
 
             package = load_agent_plugin(
                 Path(manifest.path),
-                get_ev0_home() / "plugin-data" / manifest.skill_namespace,
+                get_threev0_home() / "plugin-data" / manifest.skill_namespace,
             )
             ctx = PluginContext(manifest, self)
             for diagnostic in package.diagnostics:
@@ -5560,9 +5560,9 @@ def _plugin_home_key() -> Path:
     being one process-wide singleton.
     """
     try:
-        return get_ev0_home().expanduser().resolve()
+        return get_threev0_home().expanduser().resolve()
     except Exception:
-        return get_ev0_home().expanduser()
+        return get_threev0_home().expanduser()
 
 
 def _clear_plugin_submodules(manager: Optional[PluginManager]) -> None:
@@ -5625,7 +5625,7 @@ def get_plugin_manager() -> PluginManager:
 
         manager = _plugin_managers_by_home.get(current_home)
         if manager is None:
-            manager = PluginManager(scope_key=ev0_home_key(current_home))
+            manager = PluginManager(scope_key=threev0_home_key(current_home))
             _plugin_managers_by_home[current_home] = manager
 
         _plugin_manager = manager
@@ -5722,8 +5722,8 @@ def _join_background_discovery(timeout: float = 30.0) -> None:
 
 
 def _plugin_toolset_keys_cache_path():
-    from threev0_constants import get_ev0_home
-    return get_ev0_home() / "cache" / "plugin_toolset_keys.json"
+    from threev0_constants import get_threev0_home
+    return get_threev0_home() / "cache" / "plugin_toolset_keys.json"
 
 
 def _persist_plugin_toolset_keys() -> None:

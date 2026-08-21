@@ -38,10 +38,10 @@ def _advance_backup_clock(seconds: float = 1.1) -> None:
 
     import threev0_cli.backup as _backup
 
-    shim = getattr(_backup.datetime, "_ev0_test_shim", None)
+    shim = getattr(_backup.datetime, "_threev0_test_shim", None)
     if shim is None:
         class _ShimDatetime(_dt.datetime):
-            _ev0_test_shim = True
+            _threev0_test_shim = True
             _offset = _dt.timedelta(0)
 
             @classmethod
@@ -55,7 +55,7 @@ def _advance_backup_clock(seconds: float = 1.1) -> None:
     shim._offset += _dt.timedelta(seconds=seconds)
 
 
-def _make_ev0_tree(root: Path) -> None:
+def _make_threev0_tree(root: Path) -> None:
     """Create a realistic ~/.3V0 directory structure for testing."""
     (root / "config.yaml").write_text("model:\n  provider: openrouter\n")
     (root / ".env").write_text("OPENROUTER_API_KEY=sk-test-123\n")
@@ -122,7 +122,7 @@ def _symlink_file_or_skip(link: Path, target: Path) -> None:
 # ---------------------------------------------------------------------------
 
 class TestShouldExclude:
-    def test_excludes_ev0_agent(self):
+    def test_excludes_threev0_agent(self):
         from threev0_cli.backup import _should_exclude
         assert _should_exclude(Path("3v0-agent/run_agent.py"))
         assert _should_exclude(Path("3v0-agent/.git/HEAD"))
@@ -157,11 +157,11 @@ class TestBackup:
         """SQLite staging temp files must be created on the output zip's
         filesystem (dir=out_path.parent), NOT the system /tmp default — a
         small tmpfs there silently drops large DBs from the backup (#35376)."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        _make_ev0_tree(ev0_home)
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        _make_threev0_tree(threev0_home)
 
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         out_dir = tmp_path / "external-drive"
@@ -188,14 +188,14 @@ class TestBackup:
     def test_pre_update_db_snapshots_staged_beside_output_zip(self, tmp_path, monkeypatch):
         """The pre-update/pre-migration zip path (_write_full_zip_backup) must
         also stage SQLite snapshots beside its output zip, not in /tmp."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        _make_ev0_tree(ev0_home)
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        _make_threev0_tree(threev0_home)
 
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
-        out_zip = ev0_home / "backups" / "pre-update-test.zip"
+        out_zip = threev0_home / "backups" / "pre-update-test.zip"
         out_zip.parent.mkdir(parents=True, exist_ok=True)
 
         import threev0_cli.backup as backup_mod
@@ -207,7 +207,7 @@ class TestBackup:
             return real_ntf(*a, **kw)
 
         monkeypatch.setattr(backup_mod.tempfile, "NamedTemporaryFile", _spy)
-        result = backup_mod._write_full_zip_backup(out_zip, ev0_home)
+        result = backup_mod._write_full_zip_backup(out_zip, threev0_home)
 
         assert result is not None
         assert staged_dirs, "no SQLite snapshot was staged"
@@ -220,14 +220,14 @@ class TestBackup:
 
     def test_skips_symlinked_files(self, tmp_path, monkeypatch):
         """Backup must not dereference symlinks and leak files outside EV0_HOME."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        _make_ev0_tree(ev0_home)
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        _make_threev0_tree(threev0_home)
         outside = tmp_path / "outside-secret.txt"
         outside.write_text("outside secret\n")
-        _symlink_file_or_skip(ev0_home / "skills" / "outside-link.txt", outside)
+        _symlink_file_or_skip(threev0_home / "skills" / "outside-link.txt", outside)
 
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         out_zip = tmp_path / "backup.zip"
@@ -282,9 +282,9 @@ class TestImport:
         (the install-then-import dead-gateway bug)."""
         import threev0_cli.gateway as gateway_mod
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         calls = []
@@ -306,9 +306,9 @@ class TestImport:
         """A live gateway is left alone — no reinstall churn during import."""
         import threev0_cli.gateway as gateway_mod
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         calls = []
@@ -329,9 +329,9 @@ class TestImport:
     def test_import_survives_service_layer_import_failure(self, tmp_path, monkeypatch, capsys):
         """If the service helpers can't even be reached, import still completes
         and prints the manual fallback."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         import threev0_cli.gateway as gateway_mod
@@ -361,13 +361,13 @@ class TestImport:
         """The skip is matched by basename, so a named profile's
         gateway_state.json (profiles/<name>/gateway_state.json) is preserved
         the same way the root profile's is."""
-        ev0_home = tmp_path / ".3V0"
-        (ev0_home / "profiles" / "coder").mkdir(parents=True)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        (threev0_home / "profiles" / "coder").mkdir(parents=True)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         live_state = '{"gateway_state": "running"}'
-        (ev0_home / "profiles" / "coder" / "gateway_state.json").write_text(live_state)
+        (threev0_home / "profiles" / "coder" / "gateway_state.json").write_text(live_state)
 
         zip_path = tmp_path / "backup.zip"
         self._make_backup_zip(zip_path, {
@@ -382,23 +382,23 @@ class TestImport:
         run_import(args)
 
         # Profile config is restored, but its live gateway state is preserved.
-        assert (ev0_home / "profiles" / "coder" / "config.yaml").read_text() == "model: anthropic\n"
+        assert (threev0_home / "profiles" / "coder" / "config.yaml").read_text() == "model: anthropic\n"
         assert (
-            ev0_home / "profiles" / "coder" / "gateway_state.json"
+            threev0_home / "profiles" / "coder" / "gateway_state.json"
         ).read_text() == live_state
 
     def test_preserves_runtime_pid_and_process_files(self, tmp_path, monkeypatch):
         """gateway.pid / cron.pid / gateway.lock / processes.json from a backup
         reference the source machine's process namespace and must never be
         written over the target's."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         # Live runtime files belonging to the target's own processes.
-        (ev0_home / "gateway.pid").write_text("4242")
-        (ev0_home / "processes.json").write_text('{"live": true}')
+        (threev0_home / "gateway.pid").write_text("4242")
+        (threev0_home / "processes.json").write_text('{"live": true}')
 
         zip_path = tmp_path / "backup.zip"
         self._make_backup_zip(zip_path, {
@@ -415,20 +415,20 @@ class TestImport:
         run_import(args)
 
         # Live runtime files are untouched; the backup's foreign ones never land.
-        assert (ev0_home / "gateway.pid").read_text() == "4242"
-        assert (ev0_home / "processes.json").read_text() == '{"live": true}'
+        assert (threev0_home / "gateway.pid").read_text() == "4242"
+        assert (threev0_home / "processes.json").read_text() == '{"live": true}'
         # cron.pid / gateway.lock had no live copy and were not seeded.
-        assert not (ev0_home / "cron.pid").exists()
-        assert not (ev0_home / "gateway.lock").exists()
+        assert not (threev0_home / "cron.pid").exists()
+        assert not (threev0_home / "gateway.lock").exists()
 
 
 
     @pytest.mark.skipif(os.name != "posix", reason="POSIX file permissions only")
     def test_restores_secret_files_with_0600_perms(self, tmp_path, monkeypatch):
         """Secret files must end up at 0600 after restore (zipfile drops mode bits)."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         zip_path = tmp_path / "backup.zip"
@@ -446,7 +446,7 @@ class TestImport:
         run_import(args)
 
         for rel in (".env", "auth.json", "state.db", "profiles/coder/.env"):
-            mode = (ev0_home / rel).stat().st_mode & 0o777
+            mode = (threev0_home / rel).stat().st_mode & 0o777
             assert mode == 0o600, f"{rel} restored with mode {oct(mode)}, expected 0o600"
 
 
@@ -460,7 +460,7 @@ class TestRoundTrip:
         # Source
         src_home = tmp_path / "source" / ".3V0"
         src_home.mkdir(parents=True)
-        _make_ev0_tree(src_home)
+        _make_threev0_tree(src_home)
 
         monkeypatch.setenv("EV0_HOME", str(src_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "source")
@@ -553,15 +553,15 @@ class TestValidation:
 class TestBackupEdgeCases:
 
 
-    def test_empty_ev0_home(self, tmp_path, monkeypatch):
+    def test_empty_threev0_home(self, tmp_path, monkeypatch):
         """Backup handles empty 3v0 home (no files to back up)."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
         # Only excluded dirs, no actual files
-        (ev0_home / "__pycache__").mkdir()
-        (ev0_home / "__pycache__" / "foo.pyc").write_bytes(b"\x00")
+        (threev0_home / "__pycache__").mkdir()
+        (threev0_home / "__pycache__" / "foo.pyc").write_bytes(b"\x00")
 
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         args = Namespace(output=str(tmp_path / "out.zip"))
@@ -575,16 +575,16 @@ class TestBackupEdgeCases:
 
     def test_pre1980_timestamp_skipped(self, tmp_path, monkeypatch):
         """Backup skips files with pre-1980 timestamps (ZIP limitation)."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text("model: test\n")
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text("model: test\n")
 
         # Create a file with epoch timestamp (1970-01-01)
-        old_file = ev0_home / "ancient.txt"
+        old_file = threev0_home / "ancient.txt"
         old_file.write_text("old data")
         os.utime(old_file, (0, 0))
 
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         out_zip = tmp_path / "out.zip"
@@ -612,10 +612,10 @@ class TestImportEdgeCases:
 
     def test_eof_during_confirmation(self, tmp_path, monkeypatch):
         """Import handles EOFError during confirmation prompt."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text("existing\n")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text("existing\n")
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         zip_path = tmp_path / "backup.zip"
@@ -632,9 +632,9 @@ class TestImportEdgeCases:
 
     def test_progress_with_many_files(self, tmp_path, monkeypatch):
         """Import shows progress with 500+ files."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         zip_path = tmp_path / "big.zip"
@@ -649,8 +649,8 @@ class TestImportEdgeCases:
         from threev0_cli.backup import run_import
         run_import(args)
 
-        assert (ev0_home / "config.yaml").exists()
-        assert (ev0_home / "sessions" / "s0599.json").exists()
+        assert (threev0_home / "config.yaml").exists()
+        assert (threev0_home / "sessions" / "s0599.json").exists()
 
 
 class _ExplodingMember:
@@ -704,11 +704,11 @@ class TestImportAtomicWrites:
 
     def test_failed_member_leaves_existing_file_intact(self, tmp_path, monkeypatch):
         """A dying member must not destroy the file it was replacing."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
         original = "model: original\napi_key: keep-me\n"
-        (ev0_home / "config.yaml").write_text(original)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        (threev0_home / "config.yaml").write_text(original)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         zip_path = tmp_path / "backup.zip"
@@ -719,16 +719,16 @@ class TestImportAtomicWrites:
         run_import(Namespace(zipfile=str(zip_path), force=True))
 
         # Pre-fix this file is 0 bytes: the truncate landed, the write did not.
-        assert (ev0_home / "config.yaml").read_text() == original
+        assert (threev0_home / "config.yaml").read_text() == original
         # And the aborted write must not litter the directory it staged in.
-        assert list(ev0_home.glob(".config.yaml.*")) == []
+        assert list(threev0_home.glob(".config.yaml.*")) == []
 
     def test_failed_external_member_leaves_existing_file_intact(self, tmp_path, monkeypatch):
         """Same invariant on the `_external/` branch, which writes outside EV0_HOME."""
         dst_home = tmp_path / "dst"
         dst_home.mkdir()
-        ev0_home = dst_home / ".3V0"
-        ev0_home.mkdir()
+        threev0_home = dst_home / ".3V0"
+        threev0_home.mkdir()
         honcho = dst_home / ".honcho"
         honcho.mkdir()
         original = '{"peer":"original"}'
@@ -740,7 +740,7 @@ class TestImportAtomicWrites:
             "_external/.honcho/config.json": '{"peer":"replacement"}',
         })
 
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: dst_home)
         _break_member(monkeypatch, "_external/.honcho/config.json")
 
@@ -758,16 +758,16 @@ class TestImportAtomicWrites:
         detach dotfiles-managed deployments (GitHub #16743). ``atomic_replace``
         resolves the link first.
         """
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        store = ev0_home / "store"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        store = threev0_home / "store"
         store.mkdir()
         real = store / "config.yaml"
         real.write_text("model: original\n")
-        link = ev0_home / "config.yaml"
+        link = threev0_home / "config.yaml"
         link.symlink_to(real)
 
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         zip_path = tmp_path / "backup.zip"
@@ -784,8 +784,8 @@ class TestImportAtomicWrites:
         """Same guard on the `_external/` branch — the realistic dotfiles case."""
         dst_home = tmp_path / "dst"
         dst_home.mkdir()
-        ev0_home = dst_home / ".3V0"
-        ev0_home.mkdir()
+        threev0_home = dst_home / ".3V0"
+        threev0_home.mkdir()
         dotfiles = dst_home / "dotfiles"
         dotfiles.mkdir()
         real = dotfiles / "honcho.json"
@@ -795,7 +795,7 @@ class TestImportAtomicWrites:
         link = honcho / "config.json"
         link.symlink_to(real)
 
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: dst_home)
 
         zip_path = tmp_path / "backup.zip"
@@ -818,12 +818,12 @@ class TestImportAtomicWrites:
         replaced has to survive the publish, or Docker/NAS installs that rely
         on broader permissions break on restore.
         """
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        target = ev0_home / "config.yaml"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        target = threev0_home / "config.yaml"
         target.write_text("model: original\n")
         os.chmod(target, 0o644)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         zip_path = tmp_path / "backup.zip"
@@ -844,11 +844,11 @@ class TestImportAtomicWrites:
         EV0_HOME would hand every restored file to root. The uid/gid is
         forced so the assertion does not require running as root.
         """
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        target = ev0_home / "config.yaml"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        target = threev0_home / "config.yaml"
         target.write_text("model: original\n")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         zip_path = tmp_path / "backup.zip"
@@ -882,12 +882,12 @@ class TestImportAtomicWrites:
         ``shutil.copystat`` fallback would copy 0600 onto the target. Mirrors
         the transit-window fix ``atomic_yaml_write`` already carries.
         """
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        target = ev0_home / "config.yaml"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        target = threev0_home / "config.yaml"
         target.write_text("model: original\n")
         os.chmod(target, 0o644)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         zip_path = tmp_path / "backup.zip"
@@ -932,14 +932,14 @@ class TestImportAtomicWrites:
         discards exactly the bits at issue, so this failure is invisible to
         them.
         """
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        target = ev0_home / "helper.sh"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        target = threev0_home / "helper.sh"
         target.write_text("#!/bin/sh\necho original\n")
         os.chmod(target, 0o6755)
         if stat.S_IMODE(target.stat().st_mode) != 0o6755:
             pytest.skip("filesystem refuses setuid/setgid on a user-owned file")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         zip_path = tmp_path / "backup.zip"
@@ -994,9 +994,9 @@ class TestProfileRestoration:
 
     def test_import_skips_profile_dirs_without_config(self, tmp_path, monkeypatch):
         """Import doesn't create wrappers for profile dirs without config."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         wrapper_dir = tmp_path / ".local" / "bin"
@@ -1106,7 +1106,7 @@ class TestSafeCopyDb:
 
 class TestQuickSnapshot:
     @pytest.fixture
-    def ev0_home(self, tmp_path):
+    def threev0_home(self, tmp_path):
         """Create a fake EV0_HOME with critical state files."""
         home = tmp_path / ".3V0"
         home.mkdir()
@@ -1130,10 +1130,10 @@ class TestQuickSnapshot:
 
 
 
-    def test_state_db_safely_copied(self, ev0_home):
+    def test_state_db_safely_copied(self, threev0_home):
         from threev0_cli.backup import create_quick_snapshot
-        snap_id = create_quick_snapshot(ev0_home=ev0_home)
-        db_copy = ev0_home / "state-snapshots" / snap_id / "state.db"
+        snap_id = create_quick_snapshot(threev0_home=threev0_home)
+        db_copy = threev0_home / "state-snapshots" / snap_id / "state.db"
         assert db_copy.exists()
         conn = sqlite3.connect(str(db_copy))
         rows = conn.execute("SELECT * FROM sessions").fetchall()
@@ -1141,7 +1141,7 @@ class TestQuickSnapshot:
         assert len(rows) == 1
         assert rows[0] == ("s1", "hello world")
 
-    def test_failed_state_db_copy_is_loud(self, ev0_home, monkeypatch, capsys):
+    def test_failed_state_db_copy_is_loud(self, threev0_home, monkeypatch, capsys):
         """#68474: unreadable state.db must not look like a silent success."""
         from threev0_cli import backup as backup_mod
 
@@ -1149,13 +1149,13 @@ class TestQuickSnapshot:
             return False
 
         monkeypatch.setattr(backup_mod, "_safe_copy_db", boom)
-        snap_id = backup_mod.create_quick_snapshot(ev0_home=ev0_home)
+        snap_id = backup_mod.create_quick_snapshot(threev0_home=threev0_home)
         err = capsys.readouterr().out
         assert "SQLite safe copy FAILED" in err or "CRITICAL" in err
         assert "state.db" in err
         # Other small files may still snapshot
         if snap_id:
-            manifest = (ev0_home / "state-snapshots" / snap_id / "manifest.json")
+            manifest = (threev0_home / "state-snapshots" / snap_id / "manifest.json")
             assert manifest.exists()
             data = json.loads(manifest.read_text(encoding="utf-8"))
             assert "state.db" not in data.get("files", {})
@@ -1174,34 +1174,34 @@ class TestQuickSnapshot:
 
 
 
-    def test_snapshot_includes_pairing_directories(self, ev0_home):
+    def test_snapshot_includes_pairing_directories(self, threev0_home):
         """Pairing JSONs live outside state.db — snapshot must capture them
         recursively (generic + per-platform) so approved-user lists survive
         disasters like #15733."""
         from threev0_cli.backup import create_quick_snapshot
 
         # Generic pairing store (new location)
-        (ev0_home / "platforms" / "pairing").mkdir(parents=True)
-        (ev0_home / "platforms" / "pairing" / "telegram-approved.json").write_text(
+        (threev0_home / "platforms" / "pairing").mkdir(parents=True)
+        (threev0_home / "platforms" / "pairing" / "telegram-approved.json").write_text(
             '{"12345": {"user_name": "alice"}}'
         )
-        (ev0_home / "platforms" / "pairing" / "discord-approved.json").write_text(
+        (threev0_home / "platforms" / "pairing" / "discord-approved.json").write_text(
             '{"67890": {"user_name": "bob"}}'
         )
         # Legacy pairing store (old location)
-        (ev0_home / "pairing").mkdir()
-        (ev0_home / "pairing" / "matrix-approved.json").write_text(
+        (threev0_home / "pairing").mkdir()
+        (threev0_home / "pairing" / "matrix-approved.json").write_text(
             '{"@charlie:server": {"user_name": "charlie"}}'
         )
         # Feishu's separate JSON
-        (ev0_home / "feishu_comment_pairing.json").write_text(
+        (threev0_home / "feishu_comment_pairing.json").write_text(
             '{"doc_abc": {"allow_from": ["user_xyz"]}}'
         )
 
-        snap_id = create_quick_snapshot(ev0_home=ev0_home)
+        snap_id = create_quick_snapshot(threev0_home=threev0_home)
         assert snap_id is not None
 
-        snap_dir = ev0_home / "state-snapshots" / snap_id
+        snap_dir = threev0_home / "state-snapshots" / snap_id
         assert (snap_dir / "platforms" / "pairing" / "telegram-approved.json").exists()
         assert (snap_dir / "platforms" / "pairing" / "discord-approved.json").exists()
         assert (snap_dir / "pairing" / "matrix-approved.json").exists()
@@ -1230,7 +1230,7 @@ class TestQuickSnapshot:
 
 
 
-    def test_oversized_db_suppresses_pruning(self, ev0_home, capsys):
+    def test_oversized_db_suppresses_pruning(self, threev0_home, capsys):
         """#68805: an oversized state.db skipped for size must suppress
         pruning so the older complete snapshot (containing the only
         recoverable database) is preserved.
@@ -1245,9 +1245,9 @@ class TestQuickSnapshot:
         from threev0_cli.backup import create_quick_snapshot, list_quick_snapshots
 
         # First snapshot: complete (state.db is small, under any cap)
-        first_id = create_quick_snapshot(label="complete", ev0_home=ev0_home)
+        first_id = create_quick_snapshot(label="complete", threev0_home=threev0_home)
         assert first_id is not None
-        first_dir = ev0_home / "state-snapshots" / first_id
+        first_dir = threev0_home / "state-snapshots" / first_id
         assert (first_dir / "state.db").exists()
 
         _advance_backup_clock()
@@ -1255,10 +1255,10 @@ class TestQuickSnapshot:
         # Second snapshot: state.db exceeds the 1024-byte cap → skipped for
         # size, but small config files (32-54 bytes) still land in the manifest.
         second_id = create_quick_snapshot(
-            label="oversized", ev0_home=ev0_home, max_file_size=1024, keep=1
+            label="oversized", threev0_home=threev0_home, max_file_size=1024, keep=1
         )
         assert second_id is not None
-        second_dir = ev0_home / "state-snapshots" / second_id
+        second_dir = threev0_home / "state-snapshots" / second_id
         assert not (second_dir / "state.db").exists()
 
         # Manifest must record the oversized skip
@@ -1268,7 +1268,7 @@ class TestQuickSnapshot:
 
         # CRITICAL: the first (complete) snapshot must survive pruning
         # because the second snapshot is incomplete (oversized state.db).
-        all_snaps = list_quick_snapshots(limit=100, ev0_home=ev0_home)
+        all_snaps = list_quick_snapshots(limit=100, threev0_home=threev0_home)
         snap_ids = {s["id"] for s in all_snaps}
         assert first_id in snap_ids, (
             f"Complete snapshot {first_id} was pruned by an incomplete "
@@ -1289,7 +1289,7 @@ class TestQuickSnapshotProjectsKanban:
     """
 
     @pytest.fixture
-    def ev0_home(self, tmp_path):
+    def threev0_home(self, tmp_path):
         home = tmp_path / ".3V0"
         home.mkdir()
         # Minimal critical file so the snapshot is non-empty.
@@ -1308,14 +1308,14 @@ class TestQuickSnapshotProjectsKanban:
 
 
 
-    def test_non_default_kanban_board_snapshotted(self, ev0_home):
+    def test_non_default_kanban_board_snapshotted(self, threev0_home):
         """#52889 completeness: non-default boards live at
         <root>/kanban/boards/<slug>/kanban.db, not <root>/kanban.db. The
         ``kanban/boards`` dir entry must capture them too, or multi-board
         users still lose every board except ``default`` on upgrade."""
         from threev0_cli.backup import create_quick_snapshot, restore_quick_snapshot
 
-        board_dir = ev0_home / "kanban" / "boards" / "work"
+        board_dir = threev0_home / "kanban" / "boards" / "work"
         board_dir.mkdir(parents=True)
         conn = sqlite3.connect(str(board_dir / "kanban.db"))
         conn.execute("CREATE TABLE tasks (id TEXT PRIMARY KEY, data TEXT)")
@@ -1323,9 +1323,9 @@ class TestQuickSnapshotProjectsKanban:
         conn.commit()
         conn.close()
 
-        snap_id = create_quick_snapshot(ev0_home=ev0_home)
+        snap_id = create_quick_snapshot(threev0_home=threev0_home)
         copy = (
-            ev0_home / "state-snapshots" / snap_id
+            threev0_home / "state-snapshots" / snap_id
             / "kanban" / "boards" / "work" / "kanban.db"
         )
         assert copy.exists(), "non-default board kanban.db was not snapshotted"
@@ -1336,7 +1336,7 @@ class TestQuickSnapshotProjectsKanban:
         conn.commit()
         conn.close()
 
-        assert restore_quick_snapshot(snap_id, ev0_home=ev0_home) is True
+        assert restore_quick_snapshot(snap_id, threev0_home=threev0_home) is True
         conn = sqlite3.connect(str(board_dir / "kanban.db"))
         rows = conn.execute("SELECT * FROM tasks").fetchall()
         conn.close()
@@ -1344,14 +1344,14 @@ class TestQuickSnapshotProjectsKanban:
 
 
 
-    def test_board_db_copied_wal_safely(self, ev0_home, monkeypatch):
+    def test_board_db_copied_wal_safely(self, threev0_home, monkeypatch):
         """#52889 W2: a non-default board's .db (dir-branch) must go through the
         WAL-safe _safe_copy_db, not a raw shutil.copy2, so an open WAL doesn't
         produce an inconsistent copy."""
         import threev0_cli.backup as bk
         from threev0_cli.backup import create_quick_snapshot
 
-        board = ev0_home / "kanban" / "boards" / "work"
+        board = threev0_home / "kanban" / "boards" / "work"
         board.mkdir(parents=True)
         conn = sqlite3.connect(str(board / "kanban.db"))
         conn.execute("PRAGMA journal_mode=WAL")
@@ -1368,10 +1368,10 @@ class TestQuickSnapshotProjectsKanban:
             return real(src, dst)
 
         monkeypatch.setattr(bk, "_safe_copy_db", _spy)
-        snap_id = create_quick_snapshot(ev0_home=ev0_home)
+        snap_id = create_quick_snapshot(threev0_home=threev0_home)
         # The board db was copied via _safe_copy_db (not raw copy).
         assert any(s.endswith("boards/work/kanban.db") for s in called["db"]), called["db"]
-        copy = ev0_home / "state-snapshots" / snap_id / "kanban" / "boards" / "work" / "kanban.db"
+        copy = threev0_home / "state-snapshots" / snap_id / "kanban" / "boards" / "work" / "kanban.db"
         rows = sqlite3.connect(str(copy)).execute("SELECT * FROM tasks").fetchall()
         assert rows == [("w1", "ship")]
 
@@ -1382,18 +1382,18 @@ class TestPreUpdateBackup:
 
 
     @pytest.fixture
-    def ev0_home(self, tmp_path):
+    def threev0_home(self, tmp_path):
         root = tmp_path / ".3V0"
         root.mkdir()
-        _make_ev0_tree(root)
+        _make_threev0_tree(root)
         return root
 
 
-    def test_backup_contents_match_full_backup(self, ev0_home):
+    def test_backup_contents_match_full_backup(self, threev0_home):
         """Pre-update backup should include the same user data that
         ``3v0 backup`` would, and should exclude the same directories."""
         from threev0_cli.backup import create_pre_update_backup
-        out = create_pre_update_backup(ev0_home=ev0_home)
+        out = create_pre_update_backup(threev0_home=threev0_home)
         assert out is not None
         with zipfile.ZipFile(out) as zf:
             names = set(zf.namelist())
@@ -1411,19 +1411,19 @@ class TestPreUpdateBackup:
         assert "gateway.pid" not in names
 
 
-    def test_rotation_keeps_only_n(self, ev0_home):
+    def test_rotation_keeps_only_n(self, threev0_home):
         """After more than ``keep`` backups are created, older ones are
         pruned automatically."""
         from threev0_cli.backup import create_pre_update_backup
 
         created = []
         for _ in range(5):
-            out = create_pre_update_backup(ev0_home=ev0_home, keep=3)
+            out = create_pre_update_backup(threev0_home=threev0_home, keep=3)
             created.append(out)
             _advance_backup_clock()
 
         remaining = sorted(
-            p.name for p in (ev0_home / "backups").iterdir()
+            p.name for p in (threev0_home / "backups").iterdir()
             if p.name.startswith("pre-update-")
         )
         assert len(remaining) == 3
@@ -1438,15 +1438,15 @@ class TestPreUpdateBackup:
 
 
 
-    def test_skips_symlinked_files(self, ev0_home, tmp_path):
+    def test_skips_symlinked_files(self, threev0_home, tmp_path):
         """Pre-update backups must not dereference symlinks outside EV0_HOME."""
         from threev0_cli.backup import create_pre_update_backup
 
         outside = tmp_path / "outside-secret.txt"
         outside.write_text("outside secret\n")
-        _symlink_file_or_skip(ev0_home / "skills" / "outside-link.txt", outside)
+        _symlink_file_or_skip(threev0_home / "skills" / "outside-link.txt", outside)
 
-        out = create_pre_update_backup(ev0_home=ev0_home)
+        out = create_pre_update_backup(threev0_home=threev0_home)
         assert out is not None
         with zipfile.ZipFile(out) as zf:
             names = zf.namelist()
@@ -1460,10 +1460,10 @@ class TestRunPreUpdateBackup:
     user-facing output."""
 
     @pytest.fixture
-    def ev0_home(self, tmp_path, monkeypatch):
+    def threev0_home(self, tmp_path, monkeypatch):
         root = tmp_path / ".3V0"
         root.mkdir()
-        _make_ev0_tree(root)
+        _make_threev0_tree(root)
         # Point EV0_HOME at the temp dir so config + backup paths resolve here
         monkeypatch.setenv("EV0_HOME", str(root))
         # Make Path.home() point at tmp_path for anything that uses it
@@ -1474,49 +1474,49 @@ class TestRunPreUpdateBackup:
         return root
 
     @staticmethod
-    def _set_mode(ev0_home, value):
+    def _set_mode(threev0_home, value):
         import yaml
-        (ev0_home / "config.yaml").write_text(yaml.safe_dump({
+        (threev0_home / "config.yaml").write_text(yaml.safe_dump({
             "_config_version": 22,
             "updates": {"pre_update_backup": value},
         }))
 
     @staticmethod
-    def _zips(ev0_home):
-        d = ev0_home / "backups"
+    def _zips(threev0_home):
+        d = threev0_home / "backups"
         return list(d.glob("pre-update-*.zip")) if d.exists() else []
 
     @staticmethod
-    def _snaps(ev0_home):
-        d = ev0_home / "state-snapshots"
+    def _snaps(threev0_home):
+        d = threev0_home / "state-snapshots"
         return [p for p in d.iterdir() if p.is_dir()] if d.exists() else []
 
 
 
 
-    def test_config_off_disables_everything_silently(self, ev0_home, capsys):
+    def test_config_off_disables_everything_silently(self, threev0_home, capsys):
         """pre_update_backup: off — an explicit opt-out disables the quick
         snapshot too (it previously ran unconditionally), with no output."""
-        self._set_mode(ev0_home, "off")
+        self._set_mode(threev0_home, "off")
         from threev0_cli.main import _run_pre_update_backup
         snap_id = _run_pre_update_backup(Namespace(no_backup=False, backup=False))
         out = capsys.readouterr().out
         assert snap_id is None
         assert out == ""
-        assert not self._snaps(ev0_home)
-        assert not self._zips(ev0_home)
+        assert not self._snaps(threev0_home)
+        assert not self._zips(threev0_home)
 
 
 
-    def test_config_full_mode(self, ev0_home, capsys):
-        self._set_mode(ev0_home, "full")
+    def test_config_full_mode(self, threev0_home, capsys):
+        self._set_mode(threev0_home, "full")
         from threev0_cli.main import _run_pre_update_backup
         snap_id = _run_pre_update_backup(Namespace(no_backup=False, backup=False))
         out = capsys.readouterr().out
         assert snap_id is not None
         assert "Pre-update snapshot" in out
         assert "Creating pre-update backup" in out
-        assert len(self._zips(ev0_home)) == 1
+        assert len(self._zips(threev0_home)) == 1
 
 
 
@@ -1530,18 +1530,18 @@ class TestPreMigrationBackup:
     ``3v0 claw migrate`` runs before mutating ~/.3V0/."""
 
     @pytest.fixture
-    def ev0_home(self, tmp_path):
+    def threev0_home(self, tmp_path):
         root = tmp_path / ".3V0"
         root.mkdir()
-        _make_ev0_tree(root)
+        _make_threev0_tree(root)
         return root
 
 
-    def test_restorable_with_ev0_import(self, ev0_home, tmp_path):
+    def test_restorable_with_threev0_import(self, threev0_home, tmp_path):
         """The zip produced by pre-migration backup must be a valid 3V0
         backup — `3v0 import` should accept it."""
         from threev0_cli.backup import create_pre_migration_backup, _validate_backup_zip
-        out = create_pre_migration_backup(ev0_home=ev0_home)
+        out = create_pre_migration_backup(threev0_home=threev0_home)
         assert out is not None
         with zipfile.ZipFile(out) as zf:
             valid, _reason = _validate_backup_zip(zf)
@@ -1550,15 +1550,15 @@ class TestPreMigrationBackup:
 
 
 
-    def test_does_not_touch_pre_update_backups(self, ev0_home):
+    def test_does_not_touch_pre_update_backups(self, threev0_home):
         """Pre-migration rotation must only prune pre-migration-*.zip files,
         leaving pre-update-*.zip backups untouched."""
         from threev0_cli.backup import create_pre_update_backup, create_pre_migration_backup
-        update_backup = create_pre_update_backup(ev0_home=ev0_home, keep=5)
+        update_backup = create_pre_update_backup(threev0_home=threev0_home, keep=5)
         assert update_backup is not None and update_backup.exists()
         # Spin up a lot of migration backups with keep=1
         for _ in range(3):
-            out = create_pre_migration_backup(ev0_home=ev0_home, keep=1)
+            out = create_pre_migration_backup(threev0_home=threev0_home, keep=1)
             assert out is not None
             _advance_backup_clock()
         # Update backup must still be there
@@ -1579,23 +1579,23 @@ class TestRestoreCronJobsIfEmptied:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"jobs": jobs}))
 
-    def _make_snapshot(self, ev0_home: Path, label="pre-update"):
+    def _make_snapshot(self, threev0_home: Path, label="pre-update"):
         from threev0_cli.backup import create_quick_snapshot
-        return create_quick_snapshot(label=label, ev0_home=ev0_home, keep=5)
+        return create_quick_snapshot(label=label, threev0_home=threev0_home, keep=5)
 
     def test_restores_when_emptied_after_migration(self, tmp_path):
         from threev0_cli.backup import restore_cron_jobs_if_emptied
-        ev0_home = tmp_path / ".3V0"
-        jobs_path = ev0_home / "cron" / "jobs.json"
+        threev0_home = tmp_path / ".3V0"
+        jobs_path = threev0_home / "cron" / "jobs.json"
         # Pre-update: 3 real jobs.
         self._seed_jobs(jobs_path, [{"id": "a"}, {"id": "b"}, {"id": "c"}])
-        snap_id = self._make_snapshot(ev0_home)
+        snap_id = self._make_snapshot(threev0_home)
         assert snap_id
 
         # Migration silently empties the file (valid JSON, zero jobs).
         jobs_path.write_text(json.dumps({"jobs": []}))
 
-        result = restore_cron_jobs_if_emptied(snap_id, ev0_home=ev0_home)
+        result = restore_cron_jobs_if_emptied(snap_id, threev0_home=threev0_home)
         assert result is not None
         assert result["restored"] is True
         assert result["job_count"] == 3
@@ -1610,20 +1610,20 @@ class TestRestoreCronJobsIfEmptied:
         """Desktop scheduler overwrites jobs.json with its own small set,
         losing tool-created crons while keeping desktop-tracked ones."""
         from threev0_cli.backup import restore_cron_jobs_if_emptied
-        ev0_home = tmp_path / ".3V0"
-        jobs_path = ev0_home / "cron" / "jobs.json"
+        threev0_home = tmp_path / ".3V0"
+        jobs_path = threev0_home / "cron" / "jobs.json"
         # Pre-update: 19 jobs (18 tool-created + 1 desktop watchdog).
         self._seed_jobs(
             jobs_path,
             [{"id": f"job-{i}"} for i in range(19)],
         )
-        snap_id = self._make_snapshot(ev0_home)
+        snap_id = self._make_snapshot(threev0_home)
         assert snap_id
 
         # Desktop scheduler overwrites with only its own 1 job.
         jobs_path.write_text(json.dumps({"jobs": [{"id": "desktop-watchdog"}]}))
 
-        result = restore_cron_jobs_if_emptied(snap_id, ev0_home=ev0_home)
+        result = restore_cron_jobs_if_emptied(snap_id, threev0_home=threev0_home)
         assert result is not None
         assert result["restored"] is True
         assert result["job_count"] == 19
@@ -1644,23 +1644,23 @@ class TestRestoreCronJobsIfEmptied:
 # ---------------------------------------------------------------------------
 
 class TestMemoryProviderExternalPaths:
-    def _make_min_tree(self, ev0_home: Path) -> None:
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        (ev0_home / "config.yaml").write_text("model:\n  provider: openrouter\n")
-        (ev0_home / ".env").write_text("OPENROUTER_API_KEY=sk-test\n")
-        (ev0_home / "state.db").write_bytes(b"x")
+    def _make_min_tree(self, threev0_home: Path) -> None:
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        (threev0_home / "config.yaml").write_text("model:\n  provider: openrouter\n")
+        (threev0_home / ".env").write_text("OPENROUTER_API_KEY=sk-test\n")
+        (threev0_home / "state.db").write_bytes(b"x")
 
 
     def test_backup_skips_external_paths_outside_home(self, tmp_path, monkeypatch):
         """A declared path outside the home dir is not portable and must be
         skipped, never archived."""
-        ev0_home = tmp_path / ".3V0"
-        self._make_min_tree(ev0_home)
+        threev0_home = tmp_path / ".3V0"
+        self._make_min_tree(threev0_home)
         outside = tmp_path.parent / "outside-home-secret"
         outside.mkdir(exist_ok=True)
         (outside / "leak.json").write_text('{"secret":1}')
 
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         import threev0_cli.backup as backup_mod
@@ -1683,8 +1683,8 @@ class TestMemoryProviderExternalPaths:
         and credential-shaped files get 0600."""
         dst_home = tmp_path / "dst"
         dst_home.mkdir()
-        ev0_home = dst_home / ".3V0"
-        ev0_home.mkdir()
+        threev0_home = dst_home / ".3V0"
+        threev0_home.mkdir()
 
         zip_path = tmp_path / "backup.zip"
         with zipfile.ZipFile(zip_path, "w") as zf:
@@ -1693,7 +1693,7 @@ class TestMemoryProviderExternalPaths:
             zf.writestr("state.db", "")
             zf.writestr("_external/.honcho/config.json", '{"peer":"bob"}')
 
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(Path, "home", lambda: dst_home)
 
         from threev0_cli.backup import run_import
@@ -1705,7 +1705,7 @@ class TestMemoryProviderExternalPaths:
         # Credential-shaped file tightened.
         assert (restored.stat().st_mode & 0o777) == 0o600
         # External state did NOT leak into EV0_HOME.
-        assert not (ev0_home / "_external").exists()
+        assert not (threev0_home / "_external").exists()
 
 
 

@@ -15,12 +15,12 @@ import pytest
 
 
 @pytest.fixture
-def profiles_on_disk(tmp_path, monkeypatch, _isolate_ev0_home):
+def profiles_on_disk(tmp_path, monkeypatch, _isolate_threev0_home):
     """An isolated default home plus one named profile, each with a state.db."""
     from threev0_cli import profiles
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    default_home = get_ev0_home()
+    default_home = get_threev0_home()
     profiles_root = default_home / "profiles"
     worker_home = profiles_root / "worker"
 
@@ -28,7 +28,7 @@ def profiles_on_disk(tmp_path, monkeypatch, _isolate_ev0_home):
         home.mkdir(parents=True, exist_ok=True)
         (home / "config.yaml").write_text("{}\n", encoding="utf-8")
 
-    monkeypatch.setattr(profiles, "_get_default_ev0_home", lambda: default_home)
+    monkeypatch.setattr(profiles, "_get_default_threev0_home", lambda: default_home)
     monkeypatch.setattr(profiles, "_get_profiles_root", lambda: profiles_root)
 
     return {"default": default_home, "worker": worker_home}
@@ -43,9 +43,9 @@ def client(monkeypatch, profiles_on_disk):
 
     import threev0_state
     from threev0_cli.web_server import _SESSION_HEADER_NAME, _SESSION_TOKEN, app
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
+    monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db")
     c = TestClient(app)
     c.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
 
@@ -231,9 +231,9 @@ class TestCrossProfileProjectTree:
         real_build = gateway_server._build_project_tree
 
         def explode_for_worker(db, **kwargs):
-            from threev0_constants import get_ev0_home
+            from threev0_constants import get_threev0_home
 
-            if get_ev0_home().name == "worker":
+            if get_threev0_home().name == "worker":
                 raise RuntimeError("worker store is unreadable")
 
             return real_build(db, **kwargs)

@@ -44,7 +44,7 @@ from gateway.restart import (
 )
 from threev0_cli.config import (
     get_env_value,
-    get_ev0_home,
+    get_threev0_home,
     is_managed,
     managed_error,
     read_raw_config,
@@ -52,7 +52,7 @@ from threev0_cli.config import (
     write_platform_config_field,
 )
 
-# display_ev0_home is imported lazily at call sites to avoid ImportError
+# display_threev0_home is imported lazily at call sites to avoid ImportError
 # when threev0_constants is cached from a pre-update version during `3v0 update`.
 from threev0_cli.setup import (
     print_header,
@@ -486,7 +486,7 @@ def _scan_gateway_pids(
         looks_like_gateway_command_line,
         looks_like_gateway_runtime_command_line,
     )
-    current_home = str(get_ev0_home().resolve())
+    current_home = str(get_threev0_home().resolve())
     # Forward slashes on both sides of the EV0_HOME= match — see
     # gateway.status._command_line_belongs_to_profile, which this mirrors.
     current_home_lc = current_home.lower().replace("\\", "/")
@@ -1081,7 +1081,7 @@ def _read_systemd_unit_environment(system: bool = False) -> dict[str, str]:
     return parsed
 
 
-def _ev0_home_from_systemd_unit_file(system: bool = False) -> str | None:
+def _threev0_home_from_systemd_unit_file(system: bool = False) -> str | None:
     """Read ``EV0_HOME`` from the on-disk unit file (not ``systemctl show``).
 
     Prefer the file when refreshing/comparing: under ``sudo``, ``systemctl``
@@ -1107,7 +1107,7 @@ def _ev0_home_from_systemd_unit_file(system: bool = False) -> str | None:
     return None
 
 
-def _sync_ev0_home_from_systemd_unit(system: bool) -> None:
+def _sync_threev0_home_from_systemd_unit(system: bool) -> None:
     """When acting on a system-scope unit, adopt its ``EV0_HOME``.
 
     Under ``sudo``, ``EV0_HOME`` is stripped and ``HOME=/root``, so
@@ -1120,7 +1120,7 @@ def _sync_ev0_home_from_systemd_unit(system: bool) -> None:
         return
     # Prefer the on-disk unit (source of truth for refresh/compare). Fall
     # back to ``systemctl show`` for units that only exist in the manager.
-    unit_home = (_ev0_home_from_systemd_unit_file(system=True) or "").strip()
+    unit_home = (_threev0_home_from_systemd_unit_file(system=True) or "").strip()
     if not unit_home:
         unit_home = _read_systemd_unit_environment(system=True).get("EV0_HOME", "").strip()
     if not unit_home:
@@ -2095,10 +2095,10 @@ def _profile_suffix() -> str:
     """
     import hashlib
     import re
-    from threev0_constants import get_default_ev0_root
+    from threev0_constants import get_default_threev0_root
 
-    home = get_ev0_home().resolve()
-    default = get_default_ev0_root().resolve()
+    home = get_threev0_home().resolve()
+    default = get_default_threev0_root().resolve()
     if home == default:
         return ""
     # Detect <root>/profiles/<name> pattern → use the profile name
@@ -2114,7 +2114,7 @@ def _profile_suffix() -> str:
     return hashlib.sha256(str(home).encode()).hexdigest()[:8]
 
 
-def _profile_arg(ev0_home: str | None = None, default_root: str | Path | None = None) -> str:
+def _profile_arg(threev0_home: str | None = None, default_root: str | Path | None = None) -> str:
     """Return ``--profile <name>`` only when EV0_HOME is a named profile.
 
     For ``~/.3V0/profiles/<name>``, returns ``"--profile <name>"``.
@@ -2130,10 +2130,10 @@ def _profile_arg(ev0_home: str | None = None, default_root: str | Path | None = 
             refer to root but the target profile lives under the service user.
     """
     import re
-    from threev0_constants import get_default_ev0_root
+    from threev0_constants import get_default_threev0_root
 
-    home = Path(ev0_home or str(get_ev0_home())).resolve()
-    default = Path(default_root).resolve() if default_root else get_default_ev0_root().resolve()
+    home = Path(threev0_home or str(get_threev0_home())).resolve()
+    default = Path(default_root).resolve() if default_root else get_default_threev0_root().resolve()
     if home == default:
         return ""
     profiles_root = (default / "profiles").resolve()
@@ -2147,14 +2147,14 @@ def _profile_arg(ev0_home: str | None = None, default_root: str | Path | None = 
     return ""
 
 
-def _profile_arg_for_target_user(ev0_home: str, target_home_dir: str) -> str:
+def _profile_arg_for_target_user(threev0_home: str, target_home_dir: str) -> str:
     """Return the profile arg for a system service running as another user."""
     target_root = Path(target_home_dir) / ".3V0"
     try:
-        Path(ev0_home).resolve().relative_to(target_root.resolve())
-        return _profile_arg(ev0_home, default_root=target_root)
+        Path(threev0_home).resolve().relative_to(target_root.resolve())
+        return _profile_arg(threev0_home, default_root=target_root)
     except ValueError:
-        return _profile_arg(ev0_home)
+        return _profile_arg(threev0_home)
 
 
 def get_service_name() -> str:
@@ -2491,7 +2491,7 @@ def _legacy_unit_search_paths() -> list[tuple[bool, Path]]:
     ]
 
 
-def _find_legacy_ev0_units() -> list[tuple[str, Path, bool]]:
+def _find_legacy_threev0_units() -> list[tuple[str, Path, bool]]:
     """Return ``[(unit_name, unit_path, is_system)]`` for legacy 3V0 gateway units.
 
     Detects unit files installed by older 3V0 versions that used a
@@ -2529,9 +2529,9 @@ def _find_legacy_ev0_units() -> list[tuple[str, Path, bool]]:
     return results
 
 
-def has_legacy_ev0_units() -> bool:
+def has_legacy_threev0_units() -> bool:
     """Return True when any legacy 3V0 gateway unit files exist."""
-    return bool(_find_legacy_ev0_units())
+    return bool(_find_legacy_threev0_units())
 
 
 def print_legacy_unit_warning() -> None:
@@ -2540,7 +2540,7 @@ def print_legacy_unit_warning() -> None:
     Idempotent: prints nothing when no legacy units are detected. Safe to
     call from any status/install/setup path.
     """
-    legacy = _find_legacy_ev0_units()
+    legacy = _find_legacy_threev0_units()
     if not legacy:
         return
     print_warning("Legacy 3V0 gateway unit(s) detected from an older install:")
@@ -2553,7 +2553,7 @@ def print_legacy_unit_warning() -> None:
     print_info("    3v0 gateway migrate-legacy")
 
 
-def remove_legacy_ev0_units(
+def remove_legacy_threev0_units(
     interactive: bool = True,
     dry_run: bool = False,
 ) -> tuple[int, list[Path]]:
@@ -2573,7 +2573,7 @@ def remove_legacy_ev0_units(
         ``(removed_count, remaining_paths)`` — remaining includes units we
         couldn't remove (typically system-scope when not running as root).
     """
-    legacy = _find_legacy_ev0_units()
+    legacy = _find_legacy_threev0_units()
     if not legacy:
         print("No legacy 3V0 gateway units found.")
         return 0, []
@@ -3111,7 +3111,7 @@ def _remap_path_for_user(path: str, target_home_dir: str) -> str:
         return str(p)
 
 
-def _ev0_home_for_target_user(target_home_dir: str) -> str:
+def _threev0_home_for_target_user(target_home_dir: str) -> str:
     """Remap the current EV0_HOME to the equivalent under a target user's home.
 
     When installing a system service via sudo, get_ev0_home() resolves to
@@ -3120,11 +3120,11 @@ def _ev0_home_for_target_user(target_home_dir: str) -> str:
       /root/.3V0/profiles/coder     → /home/alice/.3V0/profiles/coder
       /opt/custom-3v0               → /opt/custom-3v0  (kept as-is)
     """
-    current_ev0_raw = os.environ.get("EV0_HOME", "").strip()
+    current_threev0_raw = os.environ.get("EV0_HOME", "").strip()
     current_ev0 = (
-        Path(current_ev0_raw).expanduser()
-        if current_ev0_raw
-        else get_ev0_home()
+        Path(current_threev0_raw).expanduser()
+        if current_threev0_raw
+        else get_threev0_home()
     )
     # Keep explicit custom paths lexical. Resolving a non-existent custom path
     # can rewrite it through host-specific path mappings, which would bake a
@@ -3168,13 +3168,13 @@ def _build_service_path_dirs(project_root: Path | None = None) -> list[str]:
     if _is_dir(node_bin):
         candidates.append(str(node_bin))
 
-    ev0_home = get_ev0_home()
-    ev0_node = ev0_home / "node" / "bin"
-    if _is_dir(ev0_node):
-        candidates.append(str(ev0_node))
-    ev0_nm = ev0_home / "node_modules" / ".bin"
-    if _is_dir(ev0_nm):
-        candidates.append(str(ev0_nm))
+    threev0_home = get_threev0_home()
+    threev0_node = threev0_home / "node" / "bin"
+    if _is_dir(threev0_node):
+        candidates.append(str(threev0_node))
+    threev0_nm = threev0_home / "node_modules" / ".bin"
+    if _is_dir(threev0_nm):
+        candidates.append(str(threev0_nm))
 
     return candidates
 
@@ -3199,7 +3199,7 @@ def _stable_service_working_dir() -> str:
     cannot be resolved (it always can in practice).
     """
     try:
-        home = get_ev0_home()
+        home = get_threev0_home()
         if home and Path(home).is_dir():
             return str(Path(home).resolve())
     except Exception:
@@ -3207,18 +3207,18 @@ def _stable_service_working_dir() -> str:
     return str(PROJECT_ROOT)
 
 
-def _systemd_watchdog_seconds(ev0_home: str | Path | None = None) -> int:
+def _systemd_watchdog_seconds(threev0_home: str | Path | None = None) -> int:
     """Resolve the managed-overlay-aware watchdog setting for a service home."""
     override_token = None
     reset_home_override = None
-    if ev0_home is not None:
+    if threev0_home is not None:
         from threev0_constants import (
-            reset_ev0_home_override,
-            set_ev0_home_override,
+            reset_threev0_home_override,
+            set_threev0_home_override,
         )
 
-        override_token = set_ev0_home_override(ev0_home)
-        reset_home_override = reset_ev0_home_override
+        override_token = set_threev0_home_override(threev0_home)
+        reset_home_override = reset_threev0_home_override
     try:
         config = load_gateway_config()
         return coerce_systemd_watchdog_seconds(
@@ -3236,17 +3236,17 @@ def _systemd_watchdog_seconds(ev0_home: str | Path | None = None) -> int:
 
 
 def _systemd_watchdog_service_fields(
-    ev0_home: str | Path | None = None,
+    threev0_home: str | Path | None = None,
 ) -> tuple[str, str]:
     """Return systemd service fields for the effective gateway config."""
-    seconds = _systemd_watchdog_seconds(ev0_home)
+    seconds = _systemd_watchdog_seconds(threev0_home)
     if seconds <= 0:
         return "simple", ""
     return "notify", f"NotifyAccess=main\nWatchdogSec={seconds}s\n"
 
 
 def _append_node_dir_for_service(
-    path_entries: list[str], ev0_root: Path | None = None
+    path_entries: list[str], threev0_root: Path | None = None
 ) -> None:
     """Add the Node directory a generated service unit should use to *path_entries*.
 
@@ -3268,12 +3268,12 @@ def _append_node_dir_for_service(
     PATH lookup remains the fallback rung for installs with no managed Node.
     """
     from threev0_constants import (
-        ev0_managed_node_tree_present,
-        iter_ev0_node_dirs,
+        threev0_managed_node_tree_present,
+        iter_threev0_node_dirs,
     )
 
-    managed_node_present = ev0_managed_node_tree_present(ev0_root)
-    for directory in iter_ev0_node_dirs(ev0_root) if managed_node_present else ():
+    managed_node_present = threev0_managed_node_tree_present(threev0_root)
+    for directory in iter_threev0_node_dirs(threev0_root) if managed_node_present else ():
         entry = str(directory)
         try:
             present = directory.is_dir()
@@ -3340,11 +3340,12 @@ def generate_systemd_unit(system: bool = False, run_as_user: str | None = None) 
 
     if system:
         username, group_name, home_dir = _system_service_identity(run_as_user)
-        ev0_home = _ev0_home_for_target_user(home_dir)
+        threev0_home = _threev0_home_for_target_user(home_dir)
+        threev0_home = threev0_home or str(Path(home_dir) / ".3V0")
         systemd_type, systemd_watchdog_directives = _systemd_watchdog_service_fields(
-            ev0_home
+            threev0_home
         )
-        profile_arg = _profile_arg_for_target_user(ev0_home, home_dir)
+        profile_arg = _profile_arg_for_target_user(threev0_home, home_dir)
         # Remap all paths that may resolve under the calling user's home
         # (e.g. /root/) to the target user's home so the service can
         # actually access them.
@@ -3352,7 +3353,7 @@ def generate_systemd_unit(system: bool = False, run_as_user: str | None = None) 
         # Anchor cwd to the target user's EV0_HOME (stable, always exists)
         # rather than a remapped source-checkout path that can rot. See
         # _stable_service_working_dir() for the full rationale.
-        working_dir = str(ev0_home) if ev0_home else _remap_path_for_user(working_dir, home_dir)
+        working_dir = str(threev0_home) if threev0_home else _remap_path_for_user(working_dir, home_dir)
         venv_dir = _remap_path_for_user(venv_dir, home_dir)
         path_entries = [_remap_path_for_user(p, home_dir) for p in path_entries]
         # Managed Node for the TARGET user's tree (see the skip above): probe
@@ -3361,7 +3362,7 @@ def generate_systemd_unit(system: bool = False, run_as_user: str | None = None) 
         # user-unit ordering where it's appended before PATH capture.
         _target_node_entries: list[str] = []
         _append_node_dir_for_service(
-            _target_node_entries, Path(ev0_home) if ev0_home else None
+            _target_node_entries, Path(threev0_home) if threev0_home else None
         )
         path_entries = [
             e for e in _target_node_entries if e not in path_entries
@@ -3387,7 +3388,7 @@ Environment="USER={username}"
 Environment="LOGNAME={username}"
 Environment="PATH={sane_path}"
 Environment="VIRTUAL_ENV={venv_dir}"
-Environment="EV0_HOME={ev0_home}"
+Environment="EV0_HOME={threev0_home}"
 Restart=always
 RestartSec=5
 RestartForceExitStatus={GATEWAY_SERVICE_RESTART_EXIT_CODE}
@@ -3404,11 +3405,12 @@ StandardError=journal
 WantedBy=multi-user.target
 """
 
-    ev0_home = str(get_ev0_home().resolve())
+    threev0_home = str(get_threev0_home().resolve())
+    threev0_home = threev0_home
     systemd_type, systemd_watchdog_directives = _systemd_watchdog_service_fields(
-        ev0_home
+        threev0_home
     )
-    profile_arg = _profile_arg(ev0_home)
+    profile_arg = _profile_arg(threev0_home)
     path_entries.extend(_build_user_local_paths(Path.home(), path_entries))
     path_entries.extend(_build_wsl_interop_paths(path_entries))
     path_entries.extend(common_bin_paths)
@@ -3425,7 +3427,7 @@ Type={systemd_type}
 WorkingDirectory={working_dir}
 Environment="PATH={sane_path}"
 Environment="VIRTUAL_ENV={venv_dir}"
-Environment="EV0_HOME={ev0_home}"
+Environment="EV0_HOME={threev0_home}"
 Restart=always
 RestartSec=5
 RestartForceExitStatus={GATEWAY_SERVICE_RESTART_EXIT_CODE}
@@ -3506,7 +3508,7 @@ def systemd_unit_is_current(system: bool = False) -> bool:
     # ``_sync_...`` is idempotent (early-returns once os.environ matches), so
     # the mutation persists for callers that read runtime state after this
     # (e.g. ``systemd_restart``'s post-refresh get_running_pid / drain-timeout).
-    _sync_ev0_home_from_systemd_unit(system=system)
+    _sync_threev0_home_from_systemd_unit(system=system)
 
     unit_path = get_systemd_unit_path(system=system)
     if not unit_path.exists():
@@ -3792,12 +3794,12 @@ def systemd_install(
     # flap-fight for the Telegram bot token on every gateway startup.
     # Only removes units matching _LEGACY_SERVICE_NAMES + our ExecStart
     # signature — profile units are never touched.
-    if has_legacy_ev0_units():
+    if has_legacy_threev0_units():
         print()
         print_legacy_unit_warning()
         print()
         if non_interactive or prompt_yes_no("Remove the legacy unit(s) before installing?", True):
-            remove_legacy_ev0_units(interactive=False)
+            remove_legacy_threev0_units(interactive=False)
             print()
 
     unit_path = get_systemd_unit_path(system=system)
@@ -3810,7 +3812,7 @@ def systemd_install(
     # ``sudo 3v0 gateway install --system --force`` would bake /root/.3V0
     # into an already-correct unit. Keep it to protect that bypass path.
     if unit_path.exists():
-        _sync_ev0_home_from_systemd_unit(system=system)
+        _sync_threev0_home_from_systemd_unit(system=system)
 
     if unit_path.exists() and not force:
         if not systemd_unit_is_current(system=system):
@@ -3915,7 +3917,7 @@ def systemd_stop(system: bool = False):
     if system:
         _require_root_for_system_service("stop")
     _require_service_installed("stop", system=system)
-    _sync_ev0_home_from_systemd_unit(system=system)
+    _sync_threev0_home_from_systemd_unit(system=system)
     try:
         from gateway.status import get_running_pid, write_planned_stop_marker
 
@@ -4074,7 +4076,7 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
         print_systemd_scope_conflict_warning()
         print()
 
-    if has_legacy_ev0_units():
+    if has_legacy_threev0_units():
         print_legacy_unit_warning()
         print()
 
@@ -4349,7 +4351,7 @@ def _launchctl_bootstrap(
 
 def _launchd_reload_log_path() -> Path:
     """Path the launchd reload watchdog tails for persistent-orphan detection."""
-    return get_ev0_home() / "logs" / "launchd-reload.log"
+    return get_threev0_home() / "logs" / "launchd-reload.log"
 
 
 def _append_launchd_reload_log(message: str) -> None:
@@ -4453,7 +4455,7 @@ def _retry_launchctl_bootstrap_until_registered(
 
 
 def _launchd_unsupported_marker_path() -> Path:
-    return get_ev0_home() / ".gateway-launchd-unsupported"
+    return get_threev0_home() / ".gateway-launchd-unsupported"
 
 
 def _write_launchd_unsupported_marker() -> None:
@@ -4538,7 +4540,7 @@ def _spawn_detached_gateway() -> bool:
     """
     from threev0_cli._subprocess_compat import windows_detach_popen_kwargs
 
-    log_dir = get_ev0_home() / "logs"
+    log_dir = get_threev0_home() / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     out_path = log_dir / "gateway.log"
     err_path = log_dir / "gateway.error.log"
@@ -4567,7 +4569,7 @@ def _launchd_fallback_to_detached(reason: str, *, exit_on_failure: bool = True) 
     launched, prints the manual workaround and (by default) exits non-zero so
     the failure surfaces instead of silently doing nothing.
     """
-    from threev0_constants import display_ev0_home as _dhh
+    from threev0_constants import display_threev0_home as _dhh
 
     _write_launchd_unsupported_marker()
     print(f"⚠ launchd cannot manage the gateway on this macOS version ({reason}).")
@@ -4592,8 +4594,8 @@ def generate_launchd_plist() -> str:
     # _stable_service_working_dir() for the rationale (same rot risk applies
     # to launchd's WorkingDirectory as to systemd's).
     working_dir = _stable_service_working_dir()
-    ev0_home = str(get_ev0_home().resolve())
-    log_dir = get_ev0_home() / "logs"
+    threev0_home = str(get_threev0_home().resolve())
+    log_dir = get_threev0_home() / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     label = get_launchd_label()
     # Build a sane PATH for the launchd plist.  launchd provides only a
@@ -4670,7 +4672,7 @@ def generate_launchd_plist() -> str:
         <key>VIRTUAL_ENV</key>
         <string>{venv_dir}</string>
         <key>EV0_HOME</key>
-        <string>{ev0_home}</string>
+        <string>{threev0_home}</string>
     </dict>
 
     <key>LimitLoadToSessionType</key>
@@ -4783,7 +4785,7 @@ def refresh_launchd_plist_if_needed() -> bool:
         # to ~/.3V0/logs/launchd-reload.log, which the health watchdog
         # can tail to detect a persistent orphan. See 3v0-restart
         # rootcause handoff (2026-06-26 incident).
-        reload_log_path = get_ev0_home() / "logs" / "launchd-reload.log"
+        reload_log_path = get_threev0_home() / "logs" / "launchd-reload.log"
         try:
             reload_log_path.parent.mkdir(parents=True, exist_ok=True)
         except OSError:
@@ -4965,7 +4967,7 @@ def launchd_install(force: bool = False):
     print()
     print("Next steps:")
     print("  3v0 gateway status             # Check status")
-    from threev0_constants import display_ev0_home as _dhh
+    from threev0_constants import display_threev0_home as _dhh
 
     print(f"  tail -f {_dhh()}/logs/gateway.log  # View logs")
 
@@ -5290,7 +5292,7 @@ def launchd_status(deep: bool = False):
             print(f"  Note: a detached gateway process is running (PID {fallback_pid})")
 
     if deep:
-        log_file = get_ev0_home() / "logs" / "gateway.log"
+        log_file = get_threev0_home() / "logs" / "gateway.log"
         if log_file.exists():
             print()
             print("Recent logs:")
@@ -5355,8 +5357,8 @@ def _guard_named_profile_under_multiplexer(force: bool = False) -> None:
         return  # default profile (or unrecognized) — this guard doesn't apply
 
     try:
-        from threev0_constants import get_default_ev0_root
-        default_root = get_default_ev0_root()
+        from threev0_constants import get_default_threev0_root
+        default_root = get_default_threev0_root()
         # (b) Is the default-profile gateway running?
         from gateway.status import get_running_pid as _default_running_pid  # noqa
     except Exception:
@@ -5655,7 +5657,7 @@ def run_gateway(verbose: int = 0, quiet: bool = False, replace: bool = False, fo
         if os.environ.get("EV0_GATEWAY_EXIT_DIAG", "1") != "1":
             return
         try:
-            from threev0_constants import get_ev0_home as _ghh
+            from threev0_constants import get_threev0_home as _ghh
 
             log_dir = _ghh() / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
@@ -6104,7 +6106,7 @@ def _platform_status(platform: dict) -> str:
     val = get_env_value(token_var)
     if token_var == "WHATSAPP_ENABLED":
         if val and val.lower() == "true":
-            session_file = get_ev0_home() / "whatsapp" / "session" / "creds.json"
+            session_file = get_threev0_home() / "whatsapp" / "session" / "creds.json"
             if session_file.exists():
                 return "configured + paired"
             return "enabled, not paired"
@@ -6529,7 +6531,7 @@ def _setup_weixin():
     import asyncio
 
     try:
-        credentials = asyncio.run(qr_login(str(get_ev0_home())))
+        credentials = asyncio.run(qr_login(str(get_threev0_home())))
     except KeyboardInterrupt:
         print()
         print_warning("  Weixin setup cancelled.")
@@ -7048,7 +7050,7 @@ def gateway_setup():
         print_systemd_scope_conflict_warning()
         print()
 
-    if supports_systemd_services() and has_legacy_ev0_units():
+    if supports_systemd_services() and has_legacy_threev0_units():
         print_legacy_unit_warning()
         print()
 
@@ -7239,7 +7241,7 @@ def gateway_setup():
                     "  To enable systemd: add systemd=true to /etc/wsl.conf, then 'wsl --shutdown'"
                 )
             elif is_termux():
-                from threev0_constants import display_ev0_home as _dhh
+                from threev0_constants import display_threev0_home as _dhh
 
                 print_info("  Termux does not use systemd/launchd services.")
                 print_info("  Run in foreground: 3v0 gateway run")
@@ -7416,7 +7418,7 @@ def _maybe_redirect_run_to_s6_supervision(args) -> bool:
 
     Returns True iff dispatched (caller should ``return``).
     """
-    no_supervise = getattr(args, "no_supervise", False) or \
+    no_supervise = getattr(args, "no_supervise", False) or\
         os.environ.get("EV0_GATEWAY_NO_SUPERVISE", "").lower() in ("1", "true", "yes")
     if no_supervise:
         return False
@@ -8097,4 +8099,4 @@ def _gateway_command_inner(args):
         if not supports_systemd_services() and not is_macos():
             print("Legacy unit migration only applies to systemd-based Linux hosts.")
             return
-        remove_legacy_ev0_units(interactive=not yes, dry_run=dry_run)
+        remove_legacy_threev0_units(interactive=not yes, dry_run=dry_run)

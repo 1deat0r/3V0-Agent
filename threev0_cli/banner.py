@@ -11,7 +11,7 @@ import threading
 import time
 from pathlib import Path
 from urllib.parse import urlparse
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 # rich and prompt_toolkit are imported lazily (inside the functions that use
@@ -393,8 +393,8 @@ def check_for_updates() -> Optional[int]:
     if behind but the count is unknown, ``0`` if up-to-date, or ``None`` if
     the check failed or doesn't apply. Cached for 6 hours.
     """
-    ev0_home = get_ev0_home()
-    cache_file = ev0_home / ".update_check"
+    threev0_home = get_threev0_home()
+    cache_file = threev0_home / ".update_check"
     embedded_rev = os.environ.get("EV0_REVISION") or None
 
     # Docker images have no working tree to count commits against — the
@@ -434,7 +434,7 @@ def check_for_updates() -> Optional[int]:
         # Path(__file__) always resolves to the actual installed checkout.
         repo_dir = Path(__file__).parent.parent.resolve()
         if not (repo_dir / ".git").exists():
-            repo_dir = ev0_home / "3v0-agent"
+            repo_dir = threev0_home / "3v0-agent"
         if not (repo_dir / ".git").exists():
             # No git checkout and no embedded revision — can't determine
             # update status. This is the Docker path (already short-circuited
@@ -463,8 +463,8 @@ def _resolve_repo_dir() -> Optional[Path]:
     """
     repo_dir = Path(__file__).parent.parent.resolve()
     if not (repo_dir / ".git").exists():
-        ev0_home = get_ev0_home()
-        repo_dir = ev0_home / "3v0-agent"
+        threev0_home = get_threev0_home()
+        repo_dir = threev0_home / "3v0-agent"
     return repo_dir if (repo_dir / ".git").exists() else None
 
 
@@ -790,7 +790,7 @@ _BANNER_SNAPSHOT_VERSION = 1
 
 
 def _banner_snapshot_path() -> Path:
-    return get_ev0_home() / "cache" / "banner_snapshot.json"
+    return get_threev0_home() / "cache" / "banner_snapshot.json"
 
 
 def banner_snapshot_fingerprint() -> Optional[str]:
@@ -799,7 +799,7 @@ def banner_snapshot_fingerprint() -> Optional[str]:
     parts = [f"v{_BANNER_SNAPSHOT_VERSION}"]
     try:
         from threev0_cli.config import get_config_path
-        for p in (get_config_path(), get_ev0_home() / ".env"):
+        for p in (get_config_path(), get_threev0_home() / ".env"):
             try:
                 st = p.stat()
                 parts.append(f"{p.name}:{st.st_mtime_ns}:{st.st_size}")
@@ -831,7 +831,7 @@ def load_banner_snapshot(enabled_toolsets: List[str] = None) -> Optional[Dict[st
     tools = blob.get("tools")
     toolset_map = blob.get("toolset_map")
     availability = blob.get("availability")
-    if not isinstance(tools, list) or not isinstance(toolset_map, dict) \
+    if not isinstance(tools, list) or not isinstance(toolset_map, dict)\
             or not isinstance(availability, dict):
         return None
     if not isinstance(blob.get("skills_by_category"), dict):

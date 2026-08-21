@@ -117,9 +117,9 @@ def resolve_sidecar_dir(source_dir: Optional[Path] = None) -> Path:
     # Deps missing or stale inside a read-only tree: mirror to the durable
     # data volume so the normal install/self-heal machinery has somewhere
     # writable to work.
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    mirror = get_ev0_home() / "photon" / "sidecar"
+    mirror = get_threev0_home() / "photon" / "sidecar"
     try:
         mirror.mkdir(parents=True, exist_ok=True)
         for name in _MIRROR_FILES:

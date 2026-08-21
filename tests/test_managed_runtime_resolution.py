@@ -188,9 +188,9 @@ def test_allowlist_has_no_stale_entries():
     "helper",
     [
         "find_node_executable",
-        "find_ev0_node_executable",
-        "iter_ev0_node_dirs",
-        "with_ev0_node_path",
+        "find_threev0_node_executable",
+        "iter_threev0_node_dirs",
+        "with_threev0_node_path",
     ],
 )
 def test_managed_node_helpers_exist(helper):

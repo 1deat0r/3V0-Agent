@@ -36,9 +36,9 @@ class TestOfferOpenclawMigration:
         openclaw_dir.mkdir()
 
         # Create a fake 3v0 home with config
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        config_path = ev0_home / "config.yaml"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        config_path = threev0_home / "config.yaml"
         config_path.write_text("agent:\n  max_turns: 90\n")
 
         # Build a fake migration module
@@ -48,7 +48,7 @@ class TestOfferOpenclawMigration:
         fake_migrator.migrate.return_value = {
             "summary": {"migrated": 3, "skipped": 1, "conflict": 0, "error": 0},
             "items": [{"kind": "config", "status": "migrated", "destination": "/tmp/x"}],
-            "output_dir": str(ev0_home / "migration"),
+            "output_dir": str(threev0_home / "migration"),
         }
         fake_mod.Migrator = MagicMock(return_value=fake_migrator)
 
@@ -74,7 +74,7 @@ class TestOfferOpenclawMigration:
 
             mock_spec.loader.exec_module = exec_module
 
-            result = setup_mod._offer_openclaw_migration(ev0_home)
+            result = setup_mod._offer_openclaw_migration(threev0_home)
 
         assert result is True
         fake_mod.resolve_selected_options.assert_called_once_with(
@@ -105,9 +105,9 @@ class TestOfferOpenclawMigration:
         """Should catch exceptions and return False."""
         openclaw_dir = tmp_path / ".openclaw"
         openclaw_dir.mkdir()
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        config_path = ev0_home / "config.yaml"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        config_path = threev0_home / "config.yaml"
         config_path.write_text("")
 
         script = tmp_path / "openclaw_to_ev0.py"
@@ -123,7 +123,7 @@ class TestOfferOpenclawMigration:
                 side_effect=RuntimeError("boom"),
             ),
         ):
-            result = setup_mod._offer_openclaw_migration(ev0_home)
+            result = setup_mod._offer_openclaw_migration(threev0_home)
 
         assert result is False
 
@@ -149,9 +149,9 @@ class TestSetupWizardOpenclawIntegration:
         args = _first_time_args()
 
         with (
-            patch.object(setup_mod, "ensure_ev0_home"),
+            patch.object(setup_mod, "ensure_threev0_home"),
             patch.object(setup_mod, "load_config", return_value={}),
-            patch.object(setup_mod, "get_ev0_home", return_value=tmp_path),
+            patch.object(setup_mod, "get_threev0_home", return_value=tmp_path),
             patch.object(setup_mod, "get_env_value", return_value=""),
             patch.object(setup_mod, "is_interactive_stdin", return_value=True),
             patch("threev0_cli.auth.get_active_provider", return_value=None),
@@ -186,9 +186,9 @@ class TestSetupWizardOpenclawIntegration:
             return {}
 
         with (
-            patch.object(setup_mod, "ensure_ev0_home"),
+            patch.object(setup_mod, "ensure_threev0_home"),
             patch.object(setup_mod, "load_config", side_effect=tracking_load_config),
-            patch.object(setup_mod, "get_ev0_home", return_value=tmp_path),
+            patch.object(setup_mod, "get_threev0_home", return_value=tmp_path),
             patch.object(setup_mod, "get_env_value", return_value=""),
             patch.object(setup_mod, "is_interactive_stdin", return_value=True),
             patch("threev0_cli.auth.get_active_provider", return_value=None),
@@ -285,7 +285,7 @@ class TestSetupWizardSkipsConfiguredSections:
                 return "sk-xxx"
             return ""
 
-        def fake_migration(ev0_home):
+        def fake_migration(threev0_home):
             migration_done["value"] = True
             return True
 
@@ -299,12 +299,12 @@ class TestSetupWizardSkipsConfiguredSections:
         import threev0_cli.gateway as gateway_mod
 
         with (
-            patch.object(setup_mod, "ensure_ev0_home"),
+            patch.object(setup_mod, "ensure_threev0_home"),
             patch.object(
                 setup_mod, "load_config",
                 side_effect=[{}, reloaded_config],
             ),
-            patch.object(setup_mod, "get_ev0_home", return_value=tmp_path),
+            patch.object(setup_mod, "get_threev0_home", return_value=tmp_path),
             patch.object(setup_mod, "get_env_value", side_effect=env_side),
             patch.object(gateway_mod, "get_env_value", side_effect=env_side),
             patch.object(setup_mod, "is_interactive_stdin", return_value=True),

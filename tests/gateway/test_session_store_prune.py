@@ -24,7 +24,7 @@ from gateway.config import GatewayConfig, Platform, SessionResetPolicy
 from gateway.session import SessionEntry, SessionStore
 
 
-def test_session_store_default_db_uses_runtime_ev0_home(tmp_path, monkeypatch):
+def test_session_store_default_db_uses_runtime_threev0_home(tmp_path, monkeypatch):
     """SessionStore must honor runtime EV0_HOME when opening the default DB.
 
     Regression for the import-time DEFAULT_DB_PATH freeze: importing
@@ -32,7 +32,7 @@ def test_session_store_default_db_uses_runtime_ev0_home(tmp_path, monkeypatch):
     default SessionDB() at the developer's real ~/.3V0/state.db.
     """
     config = GatewayConfig(default_reset_policy=SessionResetPolicy(mode="none"))
-    fake_home = tmp_path / "alt_ev0_home"
+    fake_home = tmp_path / "alt_threev0_home"
     fake_home.mkdir()
     monkeypatch.setenv("EV0_HOME", str(fake_home))
 

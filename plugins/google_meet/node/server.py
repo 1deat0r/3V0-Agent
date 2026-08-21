@@ -30,12 +30,12 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from plugins.google_meet.node import protocol as _proto
 
 
 def _default_token_path() -> Path:
-    return Path(get_ev0_home()) / "workspace" / "meetings" / "node_token.json"
+    return Path(get_threev0_home()) / "workspace" / "meetings" / "node_token.json"
 
 
 class NodeServer:

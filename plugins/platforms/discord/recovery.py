@@ -11,7 +11,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Any, Callable
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +22,13 @@ _RETENTION_DAYS = 30
 class DiscordRecoveryStore:
     """Small profile-scoped SQLite ledger for completed Discord messages."""
 
-    def __init__(self, ev0_home: Path | None = None) -> None:
+    def __init__(self, threev0_home: Path | None = None) -> None:
         self._lock = threading.Lock()
         self._initialized = False
-        self._ev0_home = Path(ev0_home or get_ev0_home())
+        self._threev0_home = Path(threev0_home or get_threev0_home())
 
     def path(self) -> Path:
-        directory = self._ev0_home / "gateway"
+        directory = self._threev0_home / "gateway"
         directory.mkdir(parents=True, exist_ok=True)
         return directory / _DB_FILENAME
 

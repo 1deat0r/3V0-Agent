@@ -59,9 +59,9 @@ SCENARIOS: List[Dict[str, Any]] = base.SCENARIOS + [
 def run_one(scenario: Dict[str, Any], mode: str, rep: int, out_dir: Path) -> Dict[str, Any]:
     """mode: 'enabled' (bare bridge) | 'listing' (bridge + catalog listing) | 'disabled' (eager)."""
     enabled = mode in ("enabled", "listing")
-    ev0_home = base.setup_isolated_home(enabled, listing=("auto" if mode == "listing" else "off"))
-    os.environ["EV0_HOME"] = str(ev0_home)
-    os.environ["3V0_HOME"] = str(ev0_home)  # canonical (ADR-0006)
+    threev0_home = base.setup_isolated_home(enabled, listing=("auto" if mode == "listing" else "off"))
+    os.environ["EV0_HOME"] = str(threev0_home)
+    os.environ["3V0_HOME"] = str(threev0_home)  # canonical (ADR-0006)
     base.reset_module_state()
     n_registered = base.register_fake_tools()
 

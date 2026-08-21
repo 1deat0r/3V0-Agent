@@ -29,7 +29,7 @@ class TestCronFilePermissions(unittest.TestCase):
         cron_dir = Path(self.tmpdir) / "cron"
         output_dir = cron_dir / "output"
 
-        with patch("cron.jobs.CRON_DIR", cron_dir), \
+        with patch("cron.jobs.CRON_DIR", cron_dir),\
              patch("cron.jobs.OUTPUT_DIR", output_dir):
             from cron.jobs import ensure_dirs
             ensure_dirs()
@@ -47,8 +47,8 @@ class TestCronFilePermissions(unittest.TestCase):
         output_dir = cron_dir / "output"
         jobs_file = cron_dir / "jobs.json"
 
-        with patch("cron.jobs.CRON_DIR", cron_dir), \
-             patch("cron.jobs.OUTPUT_DIR", output_dir), \
+        with patch("cron.jobs.CRON_DIR", cron_dir),\
+             patch("cron.jobs.OUTPUT_DIR", output_dir),\
              patch("cron.jobs.JOBS_FILE", jobs_file):
             from cron.jobs import save_jobs
             save_jobs([{"id": "test", "prompt": "hello"}])
@@ -58,8 +58,8 @@ class TestCronFilePermissions(unittest.TestCase):
 
     def test_save_job_output_sets_0600(self):
         output_dir = Path(self.tmpdir) / "output"
-        with patch("cron.jobs.OUTPUT_DIR", output_dir), \
-             patch("cron.jobs.CRON_DIR", Path(self.tmpdir)), \
+        with patch("cron.jobs.OUTPUT_DIR", output_dir),\
+             patch("cron.jobs.CRON_DIR", Path(self.tmpdir)),\
              patch("cron.jobs.ensure_dirs"):
             output_dir.mkdir(parents=True, exist_ok=True)
             from cron.jobs import save_job_output
@@ -86,8 +86,8 @@ class TestConfigFilePermissions(unittest.TestCase):
 
     def test_save_config_sets_0600(self):
         config_path = Path(self.tmpdir) / "config.yaml"
-        with patch("threev0_cli.config.get_config_path", return_value=config_path), \
-             patch("threev0_cli.config.ensure_ev0_home"):
+        with patch("threev0_cli.config.get_config_path", return_value=config_path),\
+             patch("threev0_cli.config.ensure_threev0_home"):
             from threev0_cli.config import save_config
             save_config({"model": "test/model"})
 
@@ -96,19 +96,19 @@ class TestConfigFilePermissions(unittest.TestCase):
 
     def test_save_env_value_sets_0600(self):
         env_path = Path(self.tmpdir) / ".env"
-        with patch("threev0_cli.config.get_env_path", return_value=env_path), \
-             patch("threev0_cli.config.ensure_ev0_home"):
+        with patch("threev0_cli.config.get_env_path", return_value=env_path),\
+             patch("threev0_cli.config.ensure_threev0_home"):
             from threev0_cli.config import save_env_value
             save_env_value("TEST_KEY", "test_value")
 
             file_mode = stat.S_IMODE(os.stat(env_path).st_mode)
             self.assertEqual(file_mode, 0o600)
 
-    def test_ensure_ev0_home_sets_0700(self):
+    def test_ensure_threev0_home_sets_0700(self):
         home = Path(self.tmpdir) / ".3V0"
-        with patch("threev0_cli.config.get_ev0_home", return_value=home):
-            from threev0_cli.config import ensure_ev0_home
-            ensure_ev0_home()
+        with patch("threev0_cli.config.get_threev0_home", return_value=home):
+            from threev0_cli.config import ensure_threev0_home
+            ensure_threev0_home()
 
             home_mode = stat.S_IMODE(os.stat(home).st_mode)
             self.assertEqual(home_mode, 0o700)

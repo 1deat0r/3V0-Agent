@@ -30,7 +30,7 @@ from typing import Optional
 
 # Path is resolved relative to this module so it works regardless of cwd —
 # matches the pattern used by ``banner._resolve_repo_dir``.
-_BUILD_SHA_FILE = Path(__file__).parent.parent / ".ev0_build_sha"
+_BUILD_SHA_FILE = Path(__file__).parent.parent / ".threev0_build_sha"
 
 
 def get_build_sha(short: int = 8) -> Optional[str]:

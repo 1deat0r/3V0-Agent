@@ -24,9 +24,9 @@ def main() -> None:
     parser.add_argument("--wait", type=float, default=7.0)
     args = parser.parse_args()
 
-    ev0_home = Path(tempfile.mkdtemp(prefix="3v0-otel-smoke-"))
-    os.environ["EV0_HOME"] = str(ev0_home)
-    os.environ["3V0_HOME"] = str(ev0_home)  # canonical (ADR-0006)
+    threev0_home = Path(tempfile.mkdtemp(prefix="3v0-otel-smoke-"))
+    os.environ["EV0_HOME"] = str(threev0_home)
+    os.environ["3V0_HOME"] = str(threev0_home)  # canonical (ADR-0006)
 
     from gateway.status import write_runtime_status
     from agent.monitoring.gateway_health_export import start_gateway_health_export
@@ -80,7 +80,7 @@ def main() -> None:
     log_path = Path(args.log)
     rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     paths = {row["path"] for row in rows}
-    print(json.dumps({"ev0_home": str(ev0_home), "requests": len(rows), "paths": sorted(paths)}, indent=2))
+    print(json.dumps({"ev0_home": str(threev0_home), "requests": len(rows), "paths": sorted(paths)}, indent=2))
     if "/v1/traces" not in paths:
         raise SystemExit("missing /v1/traces request")
     if "/v1/logs" not in paths:

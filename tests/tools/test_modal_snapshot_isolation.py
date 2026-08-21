@@ -29,7 +29,7 @@ def _reset_modules(prefixes: tuple[str, ...]):
 
 @pytest.fixture(autouse=True)
 def _restore_tool_modules():
-    original_ev0_home = os.environ.get("EV0_HOME")
+    original_threev0_home = os.environ.get("EV0_HOME")
     original_modules = {
         name: module
         for name, module in sys.modules.items()
@@ -43,10 +43,10 @@ def _restore_tool_modules():
     try:
         yield
     finally:
-        if original_ev0_home is None:
+        if original_threev0_home is None:
             os.environ.pop("EV0_HOME", None)
         else:
-            os.environ["EV0_HOME"] = original_ev0_home
+            os.environ["EV0_HOME"] = original_threev0_home
         _reset_modules(("tools", "threev0_cli", "modal"))
         sys.modules.update(original_modules)
 
@@ -62,10 +62,10 @@ def _install_modal_test_modules(
     threev0_cli = types.ModuleType("threev0_cli")
     threev0_cli.__path__ = []  # type: ignore[attr-defined]
     sys.modules["threev0_cli"] = threev0_cli
-    ev0_home = tmp_path / "3v0-home"
-    os.environ["EV0_HOME"] = str(ev0_home)
+    threev0_home = tmp_path / "3v0-home"
+    os.environ["EV0_HOME"] = str(threev0_home)
     sys.modules["threev0_cli.config"] = types.SimpleNamespace(
-        get_ev0_home=lambda: ev0_home,
+        get_threev0_home=lambda: threev0_home,
     )
 
     tools_package = types.ModuleType("tools")
@@ -190,7 +190,7 @@ def _install_modal_test_modules(
     )
 
     return {
-        "snapshot_store": ev0_home / "modal_snapshots.json",
+        "snapshot_store": threev0_home / "modal_snapshots.json",
         "create_calls": create_calls,
         "from_id_calls": from_id_calls,
         "registry_calls": registry_calls,

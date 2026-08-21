@@ -168,7 +168,7 @@ def _clone_all_copytree_ignore(source_dir: Path):
     clone.
     """
     source_resolved = source_dir.resolve()
-    is_default_source = source_resolved == _get_default_ev0_home().resolve()
+    is_default_source = source_resolved == _get_default_threev0_home().resolve()
 
     def _ignore(directory: str, names: List[str]) -> List[str]:
         ignored: list[str] = []
@@ -220,7 +220,7 @@ _DEFAULT_EXPORT_EXCLUDE_ROOT = frozenset({
     ".env",                 # API keys (dotenv)
     "auth.lock", "active_profile", ".update_check",
     "errors.log",
-    ".ev0_history",
+    ".threev0_history",
     # Caches (regenerated on use)
     "image_cache", "audio_cache", "document_cache",
     "browser_screenshots", "checkpoints",
@@ -279,23 +279,23 @@ def _get_profiles_root() -> Path:
     ``~/.3V0``, profiles live under ``EV0_HOME/profiles/`` so
     they persist on the mounted volume.
     """
-    return _get_default_ev0_home() / "profiles"
+    return _get_default_threev0_home() / "profiles"
 
 
-def _get_default_ev0_home() -> Path:
+def _get_default_threev0_home() -> Path:
     """Return the default (pre-profile) EV0_HOME path.
 
     In standard deployments this is ``~/.3V0``.
     In Docker/custom deployments where EV0_HOME is outside ``~/.3V0``
     (e.g. ``/opt/data``), returns EV0_HOME directly.
     """
-    from threev0_constants import get_default_ev0_root
-    return get_default_ev0_root()
+    from threev0_constants import get_default_threev0_root
+    return get_default_threev0_root()
 
 
 def _get_active_profile_path() -> Path:
     """Return the path to the sticky active_profile file."""
-    return _get_default_ev0_home() / "active_profile"
+    return _get_default_threev0_home() / "active_profile"
 
 
 def _get_wrapper_dir() -> Path:
@@ -377,7 +377,7 @@ def get_profile_dir(name: str) -> Path:
     """Resolve a profile name to its EV0_HOME directory."""
     canon = normalize_profile_name(name)
     if canon == "default":
-        return _get_default_ev0_home()
+        return _get_default_threev0_home()
     return _get_profiles_root() / canon
 
 
@@ -475,8 +475,8 @@ def create_wrapper_script(name: str, target: Optional[str] = None) -> Optional[P
     else:
         wrapper_path = wrapper_dir / canon
         try:
-            ev0_exe = shutil.which("3v0") or "3v0"
-            wrapper_path.write_text(f'#!/bin/sh\nexec {shlex.quote(ev0_exe)} -p {profile} "$@"\n', encoding="utf-8")
+            threev0_exe = shutil.which("3v0") or "3v0"
+            wrapper_path.write_text(f'#!/bin/sh\nexec {shlex.quote(threev0_exe)} -p {profile} "$@"\n', encoding="utf-8")
             wrapper_path.chmod(wrapper_path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
             return wrapper_path
         except OSError as e:
@@ -528,16 +528,16 @@ def _migrate_profile_config_if_outdated(profile_dir: Path) -> None:
         return
 
     try:
-        from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+        from threev0_constants import reset_threev0_home_override, set_threev0_home_override
         from threev0_cli.config import check_config_version, migrate_config
 
-        token = set_ev0_home_override(str(profile_dir))
+        token = set_threev0_home_override(str(profile_dir))
         try:
             current_ver, latest_ver = check_config_version()
             if current_ver < latest_ver:
                 migrate_config(interactive=False, quiet=True)
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
     except Exception:
         # Profile creation should not fail because an old copied config could
         # not be migrated. The next `3v0 doctor --fix` can still surface the
@@ -894,7 +894,7 @@ def list_profiles() -> List[ProfileInfo]:
     wrapper_dir = _get_wrapper_dir()
 
     # Default profile
-    default_home = _get_default_ev0_home()
+    default_home = _get_default_threev0_home()
     if default_home.is_dir():
         model, provider = _read_config_model(default_home)
         dist_name, dist_version, dist_source = _read_distribution_meta(default_home)
@@ -989,7 +989,7 @@ def profiles_to_serve(
     if not multiplex:
         return [(active, get_profile_dir(active))]
 
-    serve: List[Tuple[str, Path]] = [("default", _get_default_ev0_home())]
+    serve: List[Tuple[str, Path]] = [("default", _get_default_threev0_home())]
     allowed: Optional[set[str]] = None
     if profile_allowlist is not None:
         allowed = set()
@@ -1088,8 +1088,8 @@ def create_profile(
     if clone_from is not None or clone_all or clone_config:
         if clone_from is None:
             # Default: clone from active profile
-            from threev0_constants import get_ev0_home
-            source_dir = get_ev0_home()
+            from threev0_constants import get_threev0_home
+            source_dir = get_threev0_home()
         else:
             clone_from = normalize_profile_name(clone_from)
             validate_profile_name(clone_from)
@@ -1291,7 +1291,7 @@ def backfill_profile_envs(quiet: bool = False) -> List[str]:
     if not profiles_root.is_dir():
         return backfilled
 
-    default_env = _get_default_ev0_home() / ".env"
+    default_env = _get_default_threev0_home() / ".env"
 
     for entry in sorted(profiles_root.iterdir()):
         if not entry.is_dir() or not _PROFILE_ID_RE.match(entry.name):
@@ -1365,7 +1365,7 @@ def _profile_bound_backend_pids(canon: str, profile_dir: Path) -> list[int]:
         current_user = None
 
     backend_tokens = {"serve", "dashboard", "gateway"}
-    ev0_markers = ("threev0_cli.main", "3v0-gateway", "tui_gateway")
+    threev0_markers = ("threev0_cli.main", "3v0-gateway", "tui_gateway")
     pids: list[int] = []
 
     for proc in psutil.process_iter(["pid", "name", "username", "cmdline"]):
@@ -1386,7 +1386,7 @@ def _profile_bound_backend_pids(canon: str, profile_dir: Path) -> list[int]:
             joined = " ".join(argv)
             exe_name = os.path.basename(argv[0]).lower()
             is_ev0 = (
-                any(marker in joined for marker in ev0_markers)
+                any(marker in joined for marker in threev0_markers)
                 or exe_name == "3v0"
                 or exe_name.startswith("3v0")
             )
@@ -1882,11 +1882,11 @@ def get_active_profile_name() -> str:
     Returns the profile name if EV0_HOME points into ``~/.3V0/profiles/<name>``.
     Returns ``"custom"`` if EV0_HOME is set to an unrecognized path.
     """
-    from threev0_constants import get_ev0_home
-    ev0_home = get_ev0_home()
-    resolved = ev0_home.resolve()
+    from threev0_constants import get_threev0_home
+    threev0_home = get_threev0_home()
+    resolved = threev0_home.resolve()
 
-    default_resolved = _get_default_ev0_home().resolve()
+    default_resolved = _get_default_threev0_home().resolve()
     if resolved == default_resolved:
         return "default"
 
@@ -2249,7 +2249,7 @@ def _migrate_honcho_profile_host(old_name: str, new_name: str, new_dir: Path) ->
 
     candidates = [
         new_dir / "honcho.json",
-        _get_default_ev0_home() / "honcho.json",
+        _get_default_threev0_home() / "honcho.json",
         Path.home() / ".honcho" / "config.json",
     ]
 

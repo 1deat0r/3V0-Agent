@@ -36,8 +36,8 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from threev0_constants import get_ev0_home
-from threev0_time import now as _ev0_now
+from threev0_constants import get_threev0_home
+from threev0_time import now as _threev0_now
 from utils import atomic_replace
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 # Per-profile by design (issue #4707): suggestions live alongside the active
 # profile's cron store. Anchor on get_ev0_home() (profile home), not the
 # shared default root. See cron/jobs.py for the full rationale.
-CRON_DIR = get_ev0_home().resolve() / "cron"
+CRON_DIR = get_threev0_home().resolve() / "cron"
 SUGGESTIONS_FILE = CRON_DIR / "suggestions.json"
 
 # In-process lock protecting load->modify->save cycles (the background review
@@ -96,7 +96,7 @@ def _save_raw(suggestions: List[Dict[str, Any]]) -> None:
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(
-                {"suggestions": suggestions, "updated_at": _ev0_now().isoformat()},
+                {"suggestions": suggestions, "updated_at": _threev0_now().isoformat()},
                 f,
                 indent=2,
             )
@@ -170,7 +170,7 @@ def add_suggestion(
             "job_spec": job_spec,
             "dedup_key": dedup_key.strip(),
             "status": _STATUS_PENDING,
-            "created_at": _ev0_now().isoformat(),
+            "created_at": _threev0_now().isoformat(),
         }
         suggestions.append(record)
         _save_raw(suggestions)
@@ -204,7 +204,7 @@ def _set_status(suggestion_id: str, status: str) -> bool:
         for s in suggestions:
             if s.get("id") == suggestion_id:
                 s["status"] = status
-                s["resolved_at"] = _ev0_now().isoformat()
+                s["resolved_at"] = _threev0_now().isoformat()
                 changed = True
                 break
         if changed:

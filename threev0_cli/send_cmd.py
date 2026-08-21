@@ -229,7 +229,7 @@ def _list_targets(platform_filter: Optional[str], *, json_mode: bool) -> int:
     return _SUCCESS_EXIT
 
 
-def _load_ev0_env() -> None:
+def _load_threev0_env() -> None:
     """Populate ``os.environ`` from ``~/.3V0/.env`` AND bridge top-level
     ``config.yaml`` keys into the environment so the underlying gateway
     config loader sees platform credentials and home channel IDs.
@@ -255,8 +255,8 @@ def _load_ev0_env() -> None:
         load_dotenv = None  # type: ignore[assignment]
 
     try:
-        from threev0_cli.config import get_ev0_home
-        home = get_ev0_home()
+        from threev0_cli.config import get_threev0_home
+        home = get_threev0_home()
     except Exception:
         return
 
@@ -331,7 +331,7 @@ def cmd_send(args: argparse.Namespace) -> None:
     # Bridge ~/.3V0/.env and ~/.3V0/config.yaml into os.environ so the
     # gateway config loader (invoked downstream by send_message_tool and by
     # the channel directory) can see platform credentials and home channels.
-    _load_ev0_env()
+    _load_threev0_env()
 
     # --list short-circuits everything else.
     if getattr(args, "list_targets", False):

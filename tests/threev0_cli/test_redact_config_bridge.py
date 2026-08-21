@@ -23,11 +23,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 def test_redact_secrets_false_in_config_yaml_is_honored(tmp_path):
     """Setting `security.redact_secrets: false` in config.yaml must disable
     redaction — even though it's set in YAML, not as an env var."""
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
 
     # Write a config.yaml with redact_secrets: false
-    (ev0_home / "config.yaml").write_text(
+    (threev0_home / "config.yaml").write_text(
         textwrap.dedent(
             """\
             security:
@@ -36,7 +36,7 @@ def test_redact_secrets_false_in_config_yaml_is_honored(tmp_path):
         )
     )
     # Empty .env so nothing else sets the env var
-    (ev0_home / ".env").write_text("")
+    (threev0_home / ".env").write_text("")
 
     # Spawn a fresh Python process that imports threev0_cli.main and checks
     # _REDACT_ENABLED. Must be a subprocess — we need a clean module state.
@@ -54,7 +54,7 @@ def test_redact_secrets_false_in_config_yaml_is_honored(tmp_path):
     ) % str(REPO_ROOT)
 
     env = dict(os.environ)
-    env["EV0_HOME"] = str(ev0_home)
+    env["EV0_HOME"] = str(threev0_home)
     env.pop("EV0_REDACT_SECRETS", None)
 
     result = subprocess.run(
@@ -80,10 +80,10 @@ def test_redact_secrets_default_true_when_unset(tmp_path):
     `security.redact_secrets: false` explicitly (or
     `EV0_REDACT_SECRETS=false`).
     """
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    (ev0_home / "config.yaml").write_text("{}\n")  # empty config
-    (ev0_home / ".env").write_text("")
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    (threev0_home / "config.yaml").write_text("{}\n")  # empty config
+    (threev0_home / ".env").write_text("")
 
     probe = textwrap.dedent(
         """\
@@ -97,7 +97,7 @@ def test_redact_secrets_default_true_when_unset(tmp_path):
     ) % str(REPO_ROOT)
 
     env = dict(os.environ)
-    env["EV0_HOME"] = str(ev0_home)
+    env["EV0_HOME"] = str(threev0_home)
     env.pop("EV0_REDACT_SECRETS", None)
 
     result = subprocess.run(
@@ -116,9 +116,9 @@ def test_redact_secrets_default_true_when_unset(tmp_path):
 
 def test_dotenv_redact_secrets_beats_config_yaml(tmp_path):
     """.env EV0_REDACT_SECRETS takes precedence over config.yaml."""
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    (ev0_home / "config.yaml").write_text(
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    (threev0_home / "config.yaml").write_text(
         textwrap.dedent(
             """\
             security:
@@ -127,7 +127,7 @@ def test_dotenv_redact_secrets_beats_config_yaml(tmp_path):
         )
     )
     # .env force-enables redaction
-    (ev0_home / ".env").write_text("EV0_REDACT_SECRETS=true\n")
+    (threev0_home / ".env").write_text("EV0_REDACT_SECRETS=true\n")
 
     probe = textwrap.dedent(
         """\
@@ -142,7 +142,7 @@ def test_dotenv_redact_secrets_beats_config_yaml(tmp_path):
     ) % str(REPO_ROOT)
 
     env = dict(os.environ)
-    env["EV0_HOME"] = str(ev0_home)
+    env["EV0_HOME"] = str(threev0_home)
     env.pop("EV0_REDACT_SECRETS", None)
 
     result = subprocess.run(

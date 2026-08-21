@@ -100,7 +100,7 @@ sys.path.insert(0, %r)
 import gateway.run  # noqa: F401
 print("EXEC_ASK=" + repr(os.environ.get("EV0_EXEC_ASK")))
 """ % (str(REPO_ROOT),)
-        ev0_home = tmp_path / "import-test-home"
+        threev0_home = tmp_path / "import-test-home"
         proc = subprocess.run(
             [sys.executable, "-c", script],
             cwd=str(REPO_ROOT),
@@ -108,7 +108,7 @@ print("EXEC_ASK=" + repr(os.environ.get("EV0_EXEC_ASK")))
             text=True,
             env={
                 **os.environ,
-                "EV0_HOME": str(ev0_home),
+                "EV0_HOME": str(threev0_home),
             },
             timeout=60,
         )

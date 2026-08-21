@@ -595,9 +595,9 @@ MAX_MESSAGE_LENGTH = DEFAULT_MAX_MESSAGE_LENGTH
 
 # Store directory for E2EE keys and sync state.
 # Uses get_ev0_home() so each profile gets its own Matrix store.
-from threev0_constants import get_ev0_dir as _get_ev0_dir
+from threev0_constants import get_threev0_dir as _get_threev0_dir
 
-_STORE_DIR = _get_ev0_dir("platforms/matrix/store", "matrix/store")
+_STORE_DIR = _get_threev0_dir("platforms/matrix/store", "matrix/store")
 _CRYPTO_DB_PATH = _STORE_DIR / "crypto.db"
 
 # Grace period: ignore messages older than this many seconds before startup.
@@ -2941,7 +2941,7 @@ class MatrixAdapter(BasePlatformAdapter):
                 "[%s] upload fallback: media file not found for %s",
                 self.name, file_path,
             )
-            text = f"{caption}\n⚠️ Couldn't deliver the attachment." if caption \
+            text = f"{caption}\n⚠️ Couldn't deliver the attachment." if caption\
                 else "⚠️ Couldn't deliver the attachment."
             return await self.send(room_id, text, reply_to)
         try:

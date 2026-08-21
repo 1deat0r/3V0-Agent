@@ -710,11 +710,11 @@ class TestLocalEnvironmentWindowsTempDir:
                 f"POSIX temp dir must start with '/'; got {tmp_dir!r}"
             )
 
-    def test_source_has_windows_branch_using_ev0_home(self):
+    def test_source_has_windows_branch_using_threev0_home(self):
         root = Path(__file__).resolve().parents[2]
         source = (root / "tools" / "environments" / "local.py").read_text(encoding="utf-8")
         assert "if _IS_WINDOWS:" in source
-        assert "get_ev0_home" in source
+        assert "get_threev0_home" in source
         assert 'cache_dir = get_ev0_home() / "cache" / "terminal"' in source
 
 
@@ -977,7 +977,7 @@ class TestWindowlessGatewayRestartSpec:
         with mock.patch.object(
             gw, "_stable_gateway_working_dir", return_value="C:/3v0"
         ), mock.patch(
-            "threev0_cli.config.get_ev0_home", return_value="C:/3v0"
+            "threev0_cli.config.get_threev0_home", return_value="C:/3v0"
         ):
             new_argv, cwd, env = gw.windowless_gateway_restart_spec(list(argv))
 
@@ -1040,7 +1040,7 @@ class TestGatewayRunRestartWatcherOuterPopenFallback:
             windows_detach_popen_kwargs,
         )
 
-        monkeypatch.setattr(gr, "_resolve_ev0_bin", lambda: ["3v0"])
+        monkeypatch.setattr(gr, "_resolve_threev0_bin", lambda: ["3v0"])
 
         calls = []
 
@@ -1099,7 +1099,7 @@ class TestGatewayRunRestartWatcherOuterPopenFallback:
     def test_outer_watcher_happy_path_spawns_once(self, monkeypatch):
         import gateway.run as gr
 
-        monkeypatch.setattr(gr, "_resolve_ev0_bin", lambda: ["3v0"])
+        monkeypatch.setattr(gr, "_resolve_threev0_bin", lambda: ["3v0"])
 
         calls = []
         monkeypatch.setattr(
@@ -1119,7 +1119,7 @@ class TestGatewayRunRestartWatcherOuterPopenFallback:
     ):
         import gateway.run as gr
 
-        monkeypatch.setattr(gr, "_resolve_ev0_bin", lambda: ["3v0"])
+        monkeypatch.setattr(gr, "_resolve_threev0_bin", lambda: ["3v0"])
 
         calls = []
 

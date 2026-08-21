@@ -134,7 +134,7 @@ def _parse_branch_flag(value: Optional[str]) -> Optional[str]:
 
 
 def _check_dispatcher_presence(
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
 ) -> tuple[bool, str]:
     """Return ``(running, message)``.
 
@@ -169,7 +169,7 @@ def _check_dispatcher_presence(
         # CLI/create-time probe, not a polling loop, and it must observe the
         # gateway's state right now rather than a cached snapshot.
         liveness = resolve_gateway_liveness(
-            profile_dir=ev0_home, use_cache=False
+            profile_dir=threev0_home, use_cache=False
         )
     except Exception:
         return (True, "")  # probe errored — silent

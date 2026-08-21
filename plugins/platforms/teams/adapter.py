@@ -1068,10 +1068,10 @@ class TeamsAdapter(BasePlatformAdapter):
 
         action = ctx.activity.value.action
         data = action.data or {}
-        ev0_action = data.get("ev0_action", "")
+        threev0_action = data.get("ev0_action", "")
         session_key = data.get("session_key", "")
 
-        if not ev0_action or not session_key:
+        if not threev0_action or not session_key:
             return InvokeResponse(
                 status=200,
                 body=AdaptiveCardActionMessageResponse(value="Unknown action."),
@@ -1113,7 +1113,7 @@ class TeamsAdapter(BasePlatformAdapter):
             "approve_always": "always",
             "deny": "deny",
         }
-        choice = choice_map.get(ev0_action)
+        choice = choice_map.get(threev0_action)
         if not choice:
             return InvokeResponse(
                 status=200,

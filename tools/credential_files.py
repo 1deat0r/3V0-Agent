@@ -54,9 +54,9 @@ def _get_registered() -> Dict[str, str]:
 _config_files: List[Dict[str, str]] | None = None
 
 
-def _resolve_ev0_home() -> Path:
-    from threev0_constants import get_ev0_home
-    return get_ev0_home()
+def _resolve_threev0_home() -> Path:
+    from threev0_constants import get_threev0_home
+    return get_threev0_home()
 
 
 def register_credential_file(
@@ -82,7 +82,7 @@ def register_credential_file(
     — the same guard that stops the agent reading them with ``read_file``, so
     the mount surface cannot hand a skill what the read surface denies it.
     """
-    ev0_home = _resolve_ev0_home()
+    threev0_home = _resolve_threev0_home()
 
     # Reject absolute paths — they bypass the EV0_HOME sandbox entirely.
     if os.path.isabs(relative_path):
@@ -92,13 +92,13 @@ def register_credential_file(
         )
         return False
 
-    host_path = ev0_home / relative_path
+    host_path = threev0_home / relative_path
 
     # Resolve symlinks and normalise ``..`` before the containment check so
     # that traversal like ``../. ssh/id_rsa`` cannot escape EV0_HOME.
     from tools.path_security import validate_within_dir
 
-    containment_error = validate_within_dir(host_path, ev0_home)
+    containment_error = validate_within_dir(host_path, threev0_home)
     if containment_error:
         logger.warning(
             "credential_files: rejected path traversal %r (%s)",
@@ -182,7 +182,7 @@ def _load_config_files() -> List[Dict[str, str]]:
     result: List[Dict[str, str]] = []
     try:
         from threev0_cli.config import read_raw_config
-        ev0_home = _resolve_ev0_home()
+        threev0_home = _resolve_threev0_home()
         cfg = read_raw_config()
         cred_files = cfg_get(cfg, "terminal", "credential_files")
         if isinstance(cred_files, list):
@@ -196,8 +196,8 @@ def _load_config_files() -> List[Dict[str, str]]:
                             "credential_files: rejected absolute config path %r", rel,
                         )
                         continue
-                    host_path = ev0_home / rel
-                    containment_error = validate_within_dir(host_path, ev0_home)
+                    host_path = threev0_home / rel
+                    containment_error = validate_within_dir(host_path, threev0_home)
                     if containment_error:
                         logger.warning(
                             "credential_files: rejected config path traversal %r (%s)",
@@ -264,8 +264,8 @@ def get_skills_directory_mount(
     at ``<container_base>/external_skills/<index>``.
     """
     mounts = []
-    ev0_home = _resolve_ev0_home()
-    skills_dir = ev0_home / "skills"
+    threev0_home = _resolve_threev0_home()
+    skills_dir = threev0_home / "skills"
     if skills_dir.is_dir():
         host_path = _safe_skills_path(skills_dir)
         mounts.append({
@@ -347,8 +347,8 @@ def iter_skills_files(
     """
     result: List[Dict[str, str]] = []
 
-    ev0_home = _resolve_ev0_home()
-    skills_dir = ev0_home / "skills"
+    threev0_home = _resolve_threev0_home()
+    skills_dir = threev0_home / "skills"
     if skills_dir.is_dir():
         container_root = f"{container_base.rstrip('/')}/skills"
         for item in skills_dir.rglob("*"):
@@ -417,11 +417,11 @@ def get_cache_directory_mounts(
     ``container_path`` keys.  The host path is resolved via
     ``get_ev0_dir()`` for backward compatibility with old directory layouts.
     """
-    from threev0_constants import get_ev0_dir
+    from threev0_constants import get_threev0_dir
 
     mounts: List[Dict[str, str]] = []
     for new_subpath, old_name in _CACHE_DIRS:
-        host_dir = get_ev0_dir(new_subpath, old_name)
+        host_dir = get_threev0_dir(new_subpath, old_name)
         if not host_dir.is_dir():
             # Create missing staging dirs instead of skipping them: Docker
             # snapshots this mount list at container CREATION, so a dir that
@@ -540,11 +540,11 @@ def iter_cache_files(
     Used by Modal to upload files individually and resync before each command.
     Skips symlinks.  The container paths use the new ``cache/<subdir>`` layout.
     """
-    from threev0_constants import get_ev0_dir
+    from threev0_constants import get_threev0_dir
 
     result: List[Dict[str, str]] = []
     for new_subpath, old_name in _CACHE_DIRS:
-        host_dir = get_ev0_dir(new_subpath, old_name)
+        host_dir = get_threev0_dir(new_subpath, old_name)
         if not host_dir.is_dir():
             continue
         container_root = f"{container_base.rstrip('/')}/{new_subpath}"

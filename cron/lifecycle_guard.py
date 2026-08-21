@@ -641,7 +641,7 @@ def _resolve_script_path(script_path: str) -> Optional[Path]:
     ``_expand_candidate_path``; such a value can never name a file the
     scheduler would execute, so there is nothing to scan.
     """
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
     raw = _expand_candidate_path(script_path)
     if raw is None:
@@ -649,7 +649,7 @@ def _resolve_script_path(script_path: str) -> Optional[Path]:
     if raw.is_absolute():
         return raw
     try:
-        return get_ev0_home() / "scripts" / raw
+        return get_threev0_home() / "scripts" / raw
     except (RuntimeError, OSError):
         # get_ev0_home() falls back to Path.home(), which raises when
         # neither EV0_HOME nor HOME is resolvable (launchd/systemd

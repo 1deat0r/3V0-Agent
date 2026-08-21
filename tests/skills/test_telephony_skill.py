@@ -104,8 +104,8 @@ def test_twilio_buy_number_saves_env_and_state(tmp_path: Path):
 
 def test_diagnose_includes_decision_tree_and_saved_state(tmp_path: Path, monkeypatch):
     mod = load_module()
-    ev0_home = tmp_path / ".3V0"
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / ".3V0"
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     mod._save_state(
         {
             "version": 1,
@@ -117,10 +117,10 @@ def test_diagnose_includes_decision_tree_and_saved_state(tmp_path: Path, monkeyp
                 "phone_number_id": "vapi-abc",
             },
         },
-        ev0_home / "telephony_state.json",
+        threev0_home / "telephony_state.json",
     )
-    (ev0_home / ".env").parent.mkdir(parents=True, exist_ok=True)
-    (ev0_home / ".env").write_text(
+    (threev0_home / ".env").parent.mkdir(parents=True, exist_ok=True)
+    (threev0_home / ".env").write_text(
         "TWILIO_ACCOUNT_SID=AC123\nTWILIO_AUTH_TOKEN=token\nBLAND_API_KEY=bland\n",
         encoding="utf-8",
     )

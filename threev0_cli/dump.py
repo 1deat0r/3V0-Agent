@@ -13,9 +13,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-from threev0_cli.config import get_ev0_home, get_env_path, get_project_root, load_config
-from threev0_cli.env_loader import load_ev0_dotenv
-from threev0_constants import display_ev0_home
+from threev0_cli.config import get_threev0_home, get_env_path, get_project_root, load_config
+from threev0_cli.env_loader import load_threev0_dotenv
+from threev0_constants import display_threev0_home
 from agent.skill_utils import is_excluded_skill_path
 
 
@@ -141,9 +141,9 @@ def _gateway_status() -> str:
         return "unknown" if sys.platform.startswith(("linux", "darwin")) else "N/A"
 
 
-def _count_skills(ev0_home: Path) -> int:
+def _count_skills(threev0_home: Path) -> int:
     """Count installed skills."""
-    skills_dir = ev0_home / "skills"
+    skills_dir = threev0_home / "skills"
     if not skills_dir.is_dir():
         return 0
     count = 0
@@ -161,9 +161,9 @@ def _count_mcp_servers(config: dict) -> int:
     return len(servers)
 
 
-def _cron_summary(ev0_home: Path) -> str:
+def _cron_summary(threev0_home: Path) -> str:
     """Return cron jobs summary."""
-    jobs_file = ev0_home / "cron" / "jobs.json"
+    jobs_file = threev0_home / "cron" / "jobs.json"
     if not jobs_file.exists():
         return "0"
     try:
@@ -282,13 +282,13 @@ def run_dump(args):
 
     # Load env from .env file so key checks work
     env_path = get_env_path()
-    load_ev0_dotenv(
-        ev0_home=env_path.parent,
+    load_threev0_dotenv(
+        threev0_home=env_path.parent,
         project_env=get_project_root() / ".env",
     )
 
     project_root = get_project_root()
-    ev0_home = get_ev0_home()
+    threev0_home = get_threev0_home()
 
     try:
         from threev0_cli import __version__
@@ -356,7 +356,7 @@ def run_dump(args):
     lines.append(f"python:           {sys.version.split()[0]}")
     lines.append(f"openai_sdk:       {openai_ver}")
     lines.append(f"profile:          {profile}")
-    lines.append(f"ev0_home:      {display_ev0_home()}")
+    lines.append(f"ev0_home:      {display_threev0_home()}")
     lines.append(f"model:            {model}")
     lines.append(f"provider:         {provider}")
     lines.append(f"terminal:         {backend}")
@@ -432,8 +432,8 @@ def run_dump(args):
 
     platforms = _configured_platforms()
     lines.append(f"  platforms:          {', '.join(platforms) if platforms else 'none'}")
-    lines.append(f"  cron_jobs:          {_cron_summary(ev0_home)}")
-    lines.append(f"  skills:             {_count_skills(ev0_home)}")
+    lines.append(f"  cron_jobs:          {_cron_summary(threev0_home)}")
+    lines.append(f"  skills:             {_count_skills(threev0_home)}")
 
     # Config overrides (non-default values)
     overrides = _config_overrides(config)

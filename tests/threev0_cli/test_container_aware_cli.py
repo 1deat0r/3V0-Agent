@@ -24,12 +24,12 @@ from threev0_cli.config import (
 @pytest.fixture
 def container_env(tmp_path, monkeypatch):
     """Set up a fake EV0_HOME with .container-mode file."""
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.delenv("EV0_DEV", raising=False)
 
-    container_mode = ev0_home / ".container-mode"
+    container_mode = threev0_home / ".container-mode"
     container_mode.write_text(
         "# Written by NixOS activation script. Do not edit manually.\n"
         "backend=podman\n"
@@ -37,7 +37,7 @@ def container_env(tmp_path, monkeypatch):
         "exec_user=3v0\n"
         "ev0_bin=/data/current-package/bin/3v0\n"
     )
-    return ev0_home
+    return threev0_home
 
 
 def test_get_container_exec_info_returns_metadata(container_env):
@@ -88,10 +88,10 @@ def test_exec_in_container_calls_execvp(docker_container_info):
     user, env vars, container name, binary, and CLI args."""
     from threev0_cli.main import _exec_in_container
 
-    with patch("shutil.which", return_value="/usr/bin/docker"), \
-         patch("subprocess.run") as mock_run, \
-         patch("sys.stdin") as mock_stdin, \
-         patch("os.execvp") as mock_execvp, \
+    with patch("shutil.which", return_value="/usr/bin/docker"),\
+         patch("subprocess.run") as mock_run,\
+         patch("sys.stdin") as mock_stdin,\
+         patch("os.execvp") as mock_execvp,\
          patch.dict(os.environ, {"TERM": "xterm-256color", "LANG": "en_US.UTF-8"},
                     clear=False):
         mock_stdin.isatty.return_value = True

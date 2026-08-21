@@ -27,9 +27,9 @@ def isolated_home(tmp_path, monkeypatch):
     files in the same worker (which breaks their import-time mocks), we snapshot
     the affected modules and restore them on teardown.
     """
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.delenv("EV0_MAX_TOKENS", raising=False)
 
     _saved = {
@@ -39,7 +39,7 @@ def isolated_home(tmp_path, monkeypatch):
     }
 
     def write_cfg(body: str) -> None:
-        (ev0_home / "config.yaml").write_text(textwrap.dedent(body))
+        (threev0_home / "config.yaml").write_text(textwrap.dedent(body))
 
     def fresh_gateway():
         for mod in list(sys.modules.keys()):

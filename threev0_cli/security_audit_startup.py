@@ -165,15 +165,15 @@ def _path_is_mounted(path: Path) -> bool:
     return best_fstype not in ("overlay", "tmpfs", "aufs")
 
 
-def _container_no_volume_mount(ev0_home: Optional[Path]) -> Optional[str]:
+def _container_no_volume_mount(threev0_home: Optional[Path]) -> Optional[str]:
     if not _in_container():
         return None
-    if ev0_home is not None:
-        home = ev0_home
+    if threev0_home is not None:
+        home = threev0_home
     else:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        home = get_ev0_home()
+        home = get_threev0_home()
     try:
         if _path_is_mounted(home):
             return None
@@ -224,7 +224,7 @@ def _network_listener_without_auth(config: Optional[dict]) -> list[str]:
 
 
 def run_security_audit(
-    *, ev0_home: Optional[Path] = None, config: Optional[dict] = None
+    *, threev0_home: Optional[Path] = None, config: Optional[dict] = None
 ) -> list[str]:
     """Run all checks and return a list of human-readable warning strings.
 
@@ -244,7 +244,7 @@ def run_security_audit(
         except Exception:
             continue
     try:
-        r = _container_no_volume_mount(ev0_home)
+        r = _container_no_volume_mount(threev0_home)
         if r:
             findings.append(r)
     except Exception:
@@ -258,7 +258,7 @@ def run_security_audit(
 
 def log_startup_security_warnings(
     *,
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
     config: Optional[dict] = None,
     force: bool = False,
 ) -> list[str]:
@@ -272,7 +272,7 @@ def log_startup_security_warnings(
         return []
     _AUDIT_RAN = True
     try:
-        findings = run_security_audit(ev0_home=ev0_home, config=config)
+        findings = run_security_audit(threev0_home=threev0_home, config=config)
     except Exception:
         return []
     if findings:

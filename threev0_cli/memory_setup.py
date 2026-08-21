@@ -13,7 +13,7 @@ import sys
 import shlex
 from pathlib import Path
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from threev0_cli.secret_prompt import masked_secret_prompt
 
 _CANCELLED = -1
@@ -34,7 +34,7 @@ def _provider_pip_dependencies(provider_name: str, declared: list) -> list:
     if provider_name == "hindsight":
         try:
             import json
-            cfg_path = get_ev0_home() / "hindsight" / "config.json"
+            cfg_path = get_threev0_home() / "hindsight" / "config.json"
             cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
             mode = cfg.get("mode", "")
             # "local" is a legacy alias for "local_embedded"
@@ -269,8 +269,8 @@ def cmd_setup_provider(provider_name: str) -> None:
         config["memory"] = {}
 
     if hasattr(provider, "post_setup"):
-        ev0_home = str(get_ev0_home())
-        provider.post_setup(ev0_home, config)
+        threev0_home = str(get_threev0_home())
+        provider.post_setup(threev0_home, config)
         return
 
     # Fallback: generic schema-based setup (same as cmd_setup)
@@ -325,8 +325,8 @@ def cmd_setup(args) -> None:
     # If the provider has a post_setup hook, delegate entirely to it.
     # The hook handles its own config, connection test, and activation.
     if hasattr(provider, "post_setup"):
-        ev0_home = str(get_ev0_home())
-        provider.post_setup(ev0_home, config)
+        threev0_home = str(get_threev0_home())
+        provider.post_setup(threev0_home, config)
         return
 
     schema = provider.get_config_schema() if hasattr(provider, "get_config_schema") else []
@@ -335,7 +335,7 @@ def cmd_setup(args) -> None:
     if not isinstance(provider_config, dict):
         provider_config = {}
 
-    env_path = get_ev0_home() / ".env"
+    env_path = get_threev0_home() / ".env"
     env_writes = {}
 
     if schema:
@@ -405,10 +405,10 @@ def cmd_setup(args) -> None:
     save_config(config)
 
     # Write non-secret config to provider's native location
-    ev0_home = str(get_ev0_home())
+    threev0_home = str(get_threev0_home())
     if provider_config and hasattr(provider, "save_config"):
         try:
-            provider.save_config(provider_config, ev0_home)
+            provider.save_config(provider_config, threev0_home)
         except Exception as e:
             print(f"  Failed to write provider config: {e}")
 

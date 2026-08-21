@@ -1385,10 +1385,10 @@ class AutoSetHomeMiddleware(InboundMiddleware):
                 adapter._auto_sethome_done = True  # DM seen — no further upgrades needed
             if _should_set:
                 try:
-                    from threev0_constants import get_ev0_home
+                    from threev0_constants import get_threev0_home
                     from threev0_cli.config import atomic_config_write, read_user_config_raw
 
-                    _home = get_ev0_home()
+                    _home = get_threev0_home()
                     config_path = _home / "config.yaml"
                     # Write-back round-trip: raw read is correct (merged
                     # defaults must not be persisted to the user's file).

@@ -374,7 +374,7 @@ class TestBlockMessageGuidance:
         assert "tmpfs" in msg
         assert "Delete the clone" in msg
 
-    def test_scratch_hint_honors_ev0_home(self, repo, monkeypatch):
+    def test_scratch_hint_honors_threev0_home(self, repo, monkeypatch):
         monkeypatch.setenv("EV0_HOME", "/custom/3v0-home")
         hit, msg = _detect("git rebase origin/main", repo, repo)
         assert hit is True

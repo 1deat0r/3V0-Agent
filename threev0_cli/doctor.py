@@ -14,21 +14,21 @@ from pathlib import Path
 from threev0_cli.config import (
     detect_install_method,
     get_env_path,
-    get_ev0_home,
+    get_threev0_home,
     get_project_root,
     recommended_update_command_for_method,
 )
-from threev0_cli.env_loader import load_ev0_dotenv
-from threev0_constants import display_ev0_home
+from threev0_cli.env_loader import load_threev0_dotenv
+from threev0_constants import display_threev0_home
 from threev0_constants import agent_browser_runnable
 
 PROJECT_ROOT = get_project_root()
-EV0_HOME = get_ev0_home()
-_DHH = display_ev0_home()  # user-facing display path (e.g. ~/.3V0 or ~/.3V0/profiles/coder)
+EV0_HOME = get_threev0_home()
+_DHH = display_threev0_home()  # user-facing display path (e.g. ~/.3V0 or ~/.3V0/profiles/coder)
 
 # Load environment variables from ~/.3V0/.env so API key checks work
 _env_path = get_env_path()
-load_ev0_dotenv(ev0_home=_env_path.parent, project_env=PROJECT_ROOT / ".env")
+load_threev0_dotenv(threev0_home=_env_path.parent, project_env=PROJECT_ROOT / ".env")
 
 from threev0_cli.colors import Colors, color
 from threev0_cli.models import _EV0_USER_AGENT
@@ -99,19 +99,19 @@ def _sqlite_upgrade_hint(install_method: str | None = None) -> str:
     )
 
 
-def _ev0_database_paths(ev0_home: Path) -> list[tuple[str, Path]]:
+def _threev0_database_paths(threev0_home: Path) -> list[tuple[str, Path]]:
     """Return (display name, path) pairs for 3V0-managed SQLite databases."""
     # backup.py owns the canonical list of per-profile stores; reuse it.
     from threev0_cli.backup import _QUICK_STATE_FILES
 
     entries = [
-        (name, ev0_home / name)
+        (name, threev0_home / name)
         for name in _QUICK_STATE_FILES
         if name.endswith(".db")
     ]
     # Non-default kanban boards each keep their own kanban.db.
-    for board_db in sorted((ev0_home / "kanban" / "boards").glob("*/kanban.db")):
-        entries.append((str(board_db.relative_to(ev0_home)), board_db))
+    for board_db in sorted((threev0_home / "kanban" / "boards").glob("*/kanban.db")):
+        entries.append((str(board_db.relative_to(threev0_home)), board_db))
     return entries
 
 
@@ -154,16 +154,16 @@ def _format_db_size(db_path: Path) -> str:
 
 
 def _report_database_journal_modes(
-    ev0_home: Path | None = None,
+    threev0_home: Path | None = None,
     version_info: tuple[int, ...] | None = None,
 ) -> None:
     """List each database's journal mode; warn on WAL under a vulnerable SQLite."""
     from threev0_state import _wal_reset_repair_hint, is_sqlite_wal_reset_vulnerable
 
     vulnerable = is_sqlite_wal_reset_vulnerable(version_info)
-    home = ev0_home if ev0_home is not None else EV0_HOME
+    home = threev0_home if threev0_home is not None else EV0_HOME
     try:
-        databases = _ev0_database_paths(home)
+        databases = _threev0_database_paths(home)
     except Exception as exc:
         check_warn(f"Could not list 3V0 databases: {exc}")
         return
@@ -1617,11 +1617,11 @@ def run_doctor(args):
         pass
 
     _section("Directory Structure")
-    ev0_home = EV0_HOME
-    if ev0_home.exists():
+    threev0_home = EV0_HOME
+    if threev0_home.exists():
         check_ok(f"{_DHH} directory exists")
     elif should_fix:
-        ev0_home.mkdir(parents=True, exist_ok=True)
+        threev0_home.mkdir(parents=True, exist_ok=True)
         check_ok(f"Created {_DHH} directory")
         fixed_count += 1
     else:
@@ -1630,7 +1630,7 @@ def run_doctor(args):
     # Check expected subdirectories
     expected_subdirs = ["cron", "sessions", "logs", "skills", "memories"]
     for subdir_name in expected_subdirs:
-        subdir_path = ev0_home / subdir_name
+        subdir_path = threev0_home / subdir_name
         if subdir_path.exists():
             check_ok(f"{_DHH}/{subdir_name}/ exists")
         elif should_fix:
@@ -1641,7 +1641,7 @@ def run_doctor(args):
             check_warn(f"{_DHH}/{subdir_name}/ not found", "(will be created on first use)")
     
     # Check for SOUL.md persona file
-    soul_path = ev0_home / "SOUL.md"
+    soul_path = threev0_home / "SOUL.md"
     if soul_path.exists():
         content = soul_path.read_text(encoding="utf-8").strip()
         # Check if it's just the template comments (no real content)
@@ -1664,7 +1664,7 @@ def run_doctor(args):
             fixed_count += 1
     
     # Check memory directory
-    memories_dir = ev0_home / "memories"
+    memories_dir = threev0_home / "memories"
     if memories_dir.exists():
         check_ok(f"{_DHH}/memories/ directory exists")
         memory_file = memories_dir / "MEMORY.md"
@@ -1687,7 +1687,7 @@ def run_doctor(args):
             fixed_count += 1
     
     # Check SQLite session store
-    state_db_path = ev0_home / "state.db"
+    state_db_path = threev0_home / "state.db"
     if state_db_path.exists():
         try:
             import sqlite3
@@ -1818,7 +1818,7 @@ def run_doctor(args):
         check_info(f"{_DHH}/state.db not created yet (will be created on first session)")
 
     # Check WAL file size (unbounded growth indicates missed checkpoints)
-    wal_path = ev0_home / "state.db-wal"
+    wal_path = threev0_home / "state.db-wal"
     if wal_path.exists():
         try:
             wal_size = wal_path.stat().st_size

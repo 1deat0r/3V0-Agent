@@ -29,7 +29,7 @@ def server():
     # (a fixed shared path) forever, leaking active-session registry entries
     # across every later test in the process. Scope the patch to the import.
     with patch.dict("sys.modules", {
-        "threev0_constants": MagicMock(get_ev0_home=MagicMock(return_value="/tmp/ev0_test")),
+        "threev0_constants": MagicMock(get_threev0_home=MagicMock(return_value="/tmp/ev0_test")),
         "threev0_cli.env_loader": MagicMock(),
         "threev0_cli.banner": MagicMock(),
         "threev0_state": MagicMock(),
@@ -741,7 +741,7 @@ def test_make_agent_accepts_list_system_prompt(server, monkeypatch):
 
 
 def test_config_roundtrip(server, tmp_path):
-    server._ev0_home = tmp_path
+    server._threev0_home = tmp_path
     server._save_cfg({"model": "test/model"})
     assert server._load_cfg()["model"] == "test/model"
 
@@ -939,8 +939,8 @@ def test_skin_live_switch_end_to_end(server, tmp_path, monkeypatch):
     (tmp_path / "skins" / "midnight.yaml").write_text(
         "name: midnight\ndescription: t\ncolors:\n  banner_title: '#00ffcc'\n  background: '#001010'\n"
     )
-    monkeypatch.setattr(skin_engine, "get_ev0_home", lambda: tmp_path)
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(skin_engine, "get_threev0_home", lambda: tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     monkeypatch.setattr(server, "_last_skin_sig", None, raising=False)
     server._cfg_cache = server._cfg_mtime = server._cfg_path = None
 

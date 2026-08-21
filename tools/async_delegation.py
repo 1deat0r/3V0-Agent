@@ -46,7 +46,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from typing import Any, Callable, Dict, Iterator, List, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from tools.daemon_pool import DaemonThreadPoolExecutor
 from tools.thread_context import propagate_context_to_thread
 
@@ -122,7 +122,7 @@ _monitor_stop = threading.Event()
 
 
 def _db_path():
-    return get_ev0_home() / "state.db"
+    return get_threev0_home() / "state.db"
 
 
 def _connect() -> sqlite3.Connection:

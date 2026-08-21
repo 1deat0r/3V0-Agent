@@ -63,8 +63,8 @@ except ImportError:
 def _get_sessions_dir() -> Path:
     """Return the sessions directory using EV0_HOME."""
     try:
-        from threev0_constants import get_ev0_home
-        return get_ev0_home() / "sessions"
+        from threev0_constants import get_threev0_home
+        return get_threev0_home() / "sessions"
     except ImportError:
         return Path(os.environ.get("EV0_HOME", Path.home() / ".3V0")) / "sessions"
 
@@ -211,8 +211,8 @@ def _load_sessions_index_from_json() -> dict:
 def _load_channel_directory() -> dict:
     """Load the cached channel directory for available targets."""
     try:
-        from threev0_constants import get_ev0_home
-        directory_file = get_ev0_home() / "channel_directory.json"
+        from threev0_constants import get_threev0_home
+        directory_file = get_threev0_home() / "channel_directory.json"
     except ImportError:
         directory_file = Path(
             os.environ.get("EV0_HOME", Path.home() / ".3V0")
@@ -486,8 +486,8 @@ class EventBridge:
         message is still delivered on its state.db-change tick.
         """
         try:
-            from threev0_constants import get_ev0_home
-            db_file = get_ev0_home() / "state.db"
+            from threev0_constants import get_threev0_home
+            db_file = get_threev0_home() / "state.db"
         except ImportError:
             db_file = Path(os.environ.get("EV0_HOME", Path.home() / ".3V0")) / "state.db"
         try:
@@ -543,8 +543,8 @@ class EventBridge:
         could drop brand-new conversations (#8925).
         """
         try:
-            from threev0_constants import get_ev0_home
-            db_file = get_ev0_home() / "state.db"
+            from threev0_constants import get_threev0_home
+            db_file = get_threev0_home() / "state.db"
         except ImportError:
             db_file = Path(os.environ.get("EV0_HOME", Path.home() / ".3V0")) / "state.db"
 

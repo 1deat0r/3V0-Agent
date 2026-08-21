@@ -482,7 +482,7 @@ class TestAutoSetHomeMiddleware:
         """Pairing-approved senders may auto-designate the home channel."""
         monkeypatch.delenv("YUANBAO_HOME_CHANNEL", raising=False)
         monkeypatch.setattr(
-            "threev0_constants.get_ev0_home",
+            "threev0_constants.get_threev0_home",
             lambda: tmp_path,
         )
 
@@ -648,7 +648,7 @@ class TestAutoSetHomeAfterGroupAtGuard:
         monkeypatch.delenv("YUANBAO_HOME_CHANNEL", raising=False)
         monkeypatch.setenv("GATEWAY_ALLOW_ALL_USERS", "true")
         monkeypatch.setattr(
-            "threev0_constants.get_ev0_home",
+            "threev0_constants.get_threev0_home",
             lambda: tmp_path,
         )
 

@@ -30,8 +30,8 @@ from typing import Dict, Optional, Any
 from threev0_cli._subprocess_compat import windows_detach_popen_kwargs
 from threev0_constants import (
     find_node_executable,
-    get_ev0_dir,
-    with_ev0_node_path,
+    get_threev0_dir,
+    with_threev0_node_path,
 )
 
 def _wenv(name: str, default: str = "") -> str:
@@ -425,7 +425,7 @@ class WhatsAppAdapter(WhatsAppBehaviorMixin, BasePlatformAdapter):
         )
         self._session_path: Path = Path(config.extra.get(
             "session_path",
-            get_ev0_dir("platforms/whatsapp/session", "whatsapp/session")
+            get_threev0_dir("platforms/whatsapp/session", "whatsapp/session")
         ))
         self._reply_prefix: Optional[str] = config.extra.get("reply_prefix")
         self._dm_policy = str(config.extra.get("dm_policy") or _wenv("WHATSAPP_DM_POLICY", "pairing")).strip().lower()
@@ -596,7 +596,7 @@ class WhatsAppAdapter(WhatsAppBehaviorMixin, BasePlatformAdapter):
                         capture_output=True,
                         text=True, encoding='utf-8', errors='replace',
                         timeout=npm_install_timeout,
-                        env=with_ev0_node_path(),
+                        env=with_threev0_node_path(),
                     )
                     if install_result.returncode != 0:
                         print(f"[{self.name}] npm install failed: {install_result.stderr}")
@@ -689,7 +689,7 @@ class WhatsAppAdapter(WhatsAppBehaviorMixin, BasePlatformAdapter):
             # Pass WHATSAPP_REPLY_PREFIX from config.yaml so the Node bridge
             # can use it without the user needing to set a separate env var.
             # with_ev0_node_path() copies os.environ when called with no arg.
-            bridge_env = with_ev0_node_path()
+            bridge_env = with_threev0_node_path()
             if self._reply_prefix is not None:
                 bridge_env["WHATSAPP_REPLY_PREFIX"] = self._reply_prefix
             bridge_env["WHATSAPP_SEND_READ_RECEIPTS"] = (

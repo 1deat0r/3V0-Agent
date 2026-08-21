@@ -14,7 +14,7 @@ from scripts import smoke_nemo_relay_shared_metrics as smoke
         Path(".venv") / "Scripts" / "3v0.exe",
     ],
 )
-def test_resolve_ev0_executable_from_repository_venv(
+def test_resolve_threev0_executable_from_repository_venv(
     tmp_path,
     monkeypatch,
     relative_path,
@@ -24,18 +24,18 @@ def test_resolve_ev0_executable_from_repository_venv(
     executable.touch()
     monkeypatch.setattr(smoke.shutil, "which", lambda _name: None)
 
-    assert smoke._resolve_ev0_executable(tmp_path) == executable
+    assert smoke._resolve_threev0_executable(tmp_path) == executable
 
 
-def test_resolve_ev0_executable_falls_back_to_path(tmp_path, monkeypatch):
+def test_resolve_threev0_executable_falls_back_to_path(tmp_path, monkeypatch):
     executable = tmp_path / "bin" / "3v0"
     monkeypatch.setattr(smoke.shutil, "which", lambda _name: str(executable))
 
-    assert smoke._resolve_ev0_executable(tmp_path / "repo") == executable
+    assert smoke._resolve_threev0_executable(tmp_path / "repo") == executable
 
 
-def test_resolve_ev0_executable_reports_missing_binary(tmp_path, monkeypatch):
+def test_resolve_threev0_executable_reports_missing_binary(tmp_path, monkeypatch):
     monkeypatch.setattr(smoke.shutil, "which", lambda _name: None)
 
     with pytest.raises(SystemExit, match="or on PATH"):
-        smoke._resolve_ev0_executable(tmp_path)
+        smoke._resolve_threev0_executable(tmp_path)

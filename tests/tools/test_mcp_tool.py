@@ -345,7 +345,7 @@ class TestLifecycleConfig:
 # ---------------------------------------------------------------------------
 
 class TestSchemaConversion:
-    def test_converts_mcp_tool_to_ev0_schema(self):
+    def test_converts_mcp_tool_to_threev0_schema(self):
         from tools.mcp_tool import _convert_mcp_schema
 
         mcp_tool = _make_mcp_tool(name="read_file", description="Read a file")
@@ -586,7 +586,7 @@ class TestToolHandler:
 
         try:
             handler = _make_tool_handler("test_srv", "greet", 120)
-            with patch("tools.mcp_tool._request_lazy_reconnect", side_effect=fake_lazy_reconnect) as reconnect, \
+            with patch("tools.mcp_tool._request_lazy_reconnect", side_effect=fake_lazy_reconnect) as reconnect,\
                  self._patch_mcp_loop():
                 result = json.loads(handler({"name": "world"}))
             assert result["result"] == "reconnected"
@@ -723,7 +723,7 @@ class TestDiscoverAndRegister:
             server._tools = mock_tools
             return server
 
-        with patch("tools.mcp_tool._connect_server", side_effect=fake_connect), \
+        with patch("tools.mcp_tool._connect_server", side_effect=fake_connect),\
              patch("tools.registry.registry", mock_registry):
             registered = asyncio.run(
                 _discover_and_register_server("fs", {"command": "npx", "args": []})
@@ -753,8 +753,8 @@ class TestDiscoverAndRegister:
         )
         config = {"tools": {"resources": False, "prompts": False}}
 
-        with patch("tools.registry.registry", registry), \
-             patch("tools.mcp_tool._track_mcp_tool_server"), \
+        with patch("tools.registry.registry", registry),\
+             patch("tools.mcp_tool._track_mcp_tool_server"),\
              caplog.at_level(logging.ERROR, logger="tools.mcp_tool"):
             registered = _register_server_tools("srv", server, config)
 
@@ -793,8 +793,8 @@ class TestDiscoverAndRegister:
         # and collides; prompts disabled to keep the candidate set focused.
         config = {"tools": {"prompts": False}}
 
-        with patch("tools.registry.registry", registry), \
-             patch("tools.mcp_tool._track_mcp_tool_server"), \
+        with patch("tools.registry.registry", registry),\
+             patch("tools.mcp_tool._track_mcp_tool_server"),\
              caplog.at_level(logging.INFO, logger="tools.mcp_tool"):
             registered = _register_server_tools("srv", server, config)
 
@@ -935,10 +935,10 @@ class TestToolsetInjection:
 
         fake_config = {"fs": {"command": "npx", "args": []}}
 
-        with patch("tools.mcp_tool._MCP_AVAILABLE", True), \
-             patch("tools.mcp_tool._servers", fresh_servers), \
-             patch("tools.mcp_tool._load_mcp_config", return_value=fake_config), \
-             patch("tools.mcp_tool._connect_server", side_effect=fake_connect), \
+        with patch("tools.mcp_tool._MCP_AVAILABLE", True),\
+             patch("tools.mcp_tool._servers", fresh_servers),\
+             patch("tools.mcp_tool._load_mcp_config", return_value=fake_config),\
+             patch("tools.mcp_tool._connect_server", side_effect=fake_connect),\
              patch("tools.registry.registry", mock_registry):
             from tools.mcp_tool import discover_mcp_tools
             result = discover_mcp_tools()
@@ -979,10 +979,10 @@ class TestToolsetInjection:
             "3v0-cli": {"tools": [], "description": "CLI", "includes": []},
         }
 
-        with patch("tools.mcp_tool._MCP_AVAILABLE", True), \
-             patch("tools.mcp_tool._servers", fresh_servers), \
-             patch("tools.mcp_tool._load_mcp_config", return_value=fake_config), \
-             patch("tools.mcp_tool._connect_server", side_effect=flaky_connect), \
+        with patch("tools.mcp_tool._MCP_AVAILABLE", True),\
+             patch("tools.mcp_tool._servers", fresh_servers),\
+             patch("tools.mcp_tool._load_mcp_config", return_value=fake_config),\
+             patch("tools.mcp_tool._connect_server", side_effect=flaky_connect),\
              patch("toolsets.TOOLSETS", fake_toolsets):
             from tools.mcp_tool import discover_mcp_tools
 
@@ -1401,7 +1401,7 @@ class TestReconnection:
             server = MCPServerTask("test_srv")
             target_server = server
 
-            with patch.object(MCPServerTask, "_run_stdio", patched_run_stdio), \
+            with patch.object(MCPServerTask, "_run_stdio", patched_run_stdio),\
                  patch("asyncio.sleep", new_callable=AsyncMock):
                 await server.run({"command": "test"})
 
@@ -1434,8 +1434,8 @@ class TestReconnection:
             server = MCPServerTask("http_srv")
             target_server = server
 
-            with patch.object(MCPServerTask, "_run_http", patched_run_http), \
-                 patch.object(MCPServerTask, "_preflight_content_type", probe), \
+            with patch.object(MCPServerTask, "_run_http", patched_run_http),\
+                 patch.object(MCPServerTask, "_preflight_content_type", probe),\
                  patch("asyncio.sleep", new_callable=AsyncMock):
                 await server.run({"url": "https://example.com/mcp"})
 
@@ -1506,8 +1506,8 @@ class TestConfigurableTimeouts:
                 handler({})
                 # Verify timeout=180 was passed
                 call_kwargs = mock_run.call_args
-                assert call_kwargs.kwargs.get("timeout") == 180 or \
-                       (len(call_kwargs.args) > 1 and call_kwargs.args[1] == 180) or \
+                assert call_kwargs.kwargs.get("timeout") == 180 or\
+                       (len(call_kwargs.args) > 1 and call_kwargs.args[1] == 180) or\
                        call_kwargs[1].get("timeout") == 180
         finally:
             _servers.pop("test_srv", None)
@@ -1640,7 +1640,7 @@ class TestUtilityToolRegistration:
             server._tools = mock_tools
             return server
 
-        with patch("tools.mcp_tool._connect_server", side_effect=fake_connect), \
+        with patch("tools.mcp_tool._connect_server", side_effect=fake_connect),\
              patch("tools.registry.registry", mock_registry):
             registered = asyncio.run(
                 _discover_and_register_server("fs", {"command": "npx", "args": []})
@@ -2266,9 +2266,9 @@ class TestDiscoveryFailedCount:
             _servers[name] = server
             return [f"mcp__{name}__tool_a"]
 
-        with patch("tools.mcp_tool._load_mcp_config", return_value=fake_config), \
-             patch("tools.mcp_tool._discover_and_register_server", side_effect=fake_register), \
-             patch("tools.mcp_tool._MCP_AVAILABLE", True), \
+        with patch("tools.mcp_tool._load_mcp_config", return_value=fake_config),\
+             patch("tools.mcp_tool._discover_and_register_server", side_effect=fake_register),\
+             patch("tools.mcp_tool._MCP_AVAILABLE", True),\
              patch("tools.mcp_tool._existing_tool_names", return_value=["mcp__good_server__tool_a"]):
             _ensure_mcp_loop()
 
@@ -2310,9 +2310,9 @@ class TestDiscoveryFailedCount:
             _servers[name] = server
             return [f"mcp__{name}__t"]
 
-        with patch("tools.mcp_tool._load_mcp_config", return_value=fake_config), \
-             patch("tools.mcp_tool._discover_and_register_server", side_effect=selective_register), \
-             patch("tools.mcp_tool._MCP_AVAILABLE", True), \
+        with patch("tools.mcp_tool._load_mcp_config", return_value=fake_config),\
+             patch("tools.mcp_tool._discover_and_register_server", side_effect=selective_register),\
+             patch("tools.mcp_tool._MCP_AVAILABLE", True),\
              patch("tools.mcp_tool._existing_tool_names", return_value=["mcp__ok1__t", "mcp__ok2__t"]):
             _ensure_mcp_loop()
 
@@ -2355,8 +2355,8 @@ class TestMCPSelectiveToolLoading:
             return server
 
         async def run():
-            with patch("tools.mcp_tool._connect_server", side_effect=fake_connect), \
-                 patch("tools.registry.registry", mock_registry), \
+            with patch("tools.mcp_tool._connect_server", side_effect=fake_connect),\
+                 patch("tools.registry.registry", mock_registry),\
                  patch("toolsets.create_custom_toolset"):
                 return await _discover_and_register_server(name, config)
 
@@ -2402,10 +2402,10 @@ class TestMCPSelectiveToolLoading:
             "3v0-cli": {"tools": [], "description": "CLI", "includes": []},
         }
 
-        with patch("tools.mcp_tool._MCP_AVAILABLE", True), \
-             patch("tools.mcp_tool._servers", {}), \
-             patch("tools.mcp_tool._load_mcp_config", return_value=fake_config), \
-             patch("tools.mcp_tool._connect_server", side_effect=fake_connect), \
+        with patch("tools.mcp_tool._MCP_AVAILABLE", True),\
+             patch("tools.mcp_tool._servers", {}),\
+             patch("tools.mcp_tool._load_mcp_config", return_value=fake_config),\
+             patch("tools.mcp_tool._connect_server", side_effect=fake_connect),\
              patch("toolsets.TOOLSETS", fake_toolsets):
             result = discover_mcp_tools()
 
@@ -2470,7 +2470,7 @@ class TestMCPBuiltinCollisionGuard:
             server._tools = mock_tools
             return server
 
-        with patch("tools.mcp_tool._connect_server", side_effect=fake_connect), \
+        with patch("tools.mcp_tool._connect_server", side_effect=fake_connect),\
              patch("tools.registry.registry", mock_registry):
             registered = asyncio.run(
                 _discover_and_register_server("abc", {"command": "test", "args": []})
@@ -2509,7 +2509,7 @@ class TestMCPBuiltinCollisionGuard:
             server._tools = mock_tools
             return server
 
-        with patch("tools.mcp_tool._connect_server", side_effect=fake_connect), \
+        with patch("tools.mcp_tool._connect_server", side_effect=fake_connect),\
              patch("tools.registry.registry", mock_registry):
             registered = asyncio.run(
                 _discover_and_register_server("srv", {"command": "test", "args": []})
@@ -2585,8 +2585,8 @@ class TestRegisterMcpServers:
             _servers[name] = server
             return ["mcp__my_server__tool1"]
 
-        with patch("tools.mcp_tool._MCP_AVAILABLE", True), \
-             patch("tools.mcp_tool._discover_and_register_server", side_effect=fake_register), \
+        with patch("tools.mcp_tool._MCP_AVAILABLE", True),\
+             patch("tools.mcp_tool._discover_and_register_server", side_effect=fake_register),\
              patch("tools.mcp_tool._existing_tool_names", return_value=["mcp__my_server__tool1"]):
             _ensure_mcp_loop()
             result = register_mcp_servers(fake_config)
@@ -2614,9 +2614,9 @@ class TestRegisterMcpServers:
             return [f"mcp_{name}_tool"]
 
         try:
-            with patch("tools.mcp_tool._MCP_AVAILABLE", True), \
-                 patch("tools.mcp_tool._discover_and_register_server", side_effect=fake_register), \
-                 patch("tools.mcp_tool._existing_tool_names", return_value=[]), \
+            with patch("tools.mcp_tool._MCP_AVAILABLE", True),\
+                 patch("tools.mcp_tool._discover_and_register_server", side_effect=fake_register),\
+                 patch("tools.mcp_tool._existing_tool_names", return_value=[]),\
                  patch("tools.mcp_tool._connect_cooldown_active", return_value=False):
                 _ensure_mcp_loop()
                 result = register_mcp_servers(fake_config)
@@ -2646,9 +2646,9 @@ class TestRegisterMcpServers:
         # Simulate that srv_a is already connecting from another call
         _server_connecting.add("srv_a")
 
-        with patch("tools.mcp_tool._MCP_AVAILABLE", True), \
-             patch("tools.mcp_tool._run_on_mcp_loop", side_effect=TimeoutError("timed out")), \
-             patch("tools.mcp_tool._existing_tool_names", return_value=[]), \
+        with patch("tools.mcp_tool._MCP_AVAILABLE", True),\
+             patch("tools.mcp_tool._run_on_mcp_loop", side_effect=TimeoutError("timed out")),\
+             patch("tools.mcp_tool._existing_tool_names", return_value=[]),\
              patch("tools.mcp_tool._connect_cooldown_active", return_value=False):
             _ensure_mcp_loop()
 
@@ -2718,9 +2718,9 @@ class TestMcpParallelToolCalls:
                 # no supports_parallel_tool_calls key
             },
         }
-        with patch("tools.mcp_tool._MCP_AVAILABLE", True), \
-             patch("tools.mcp_tool._ensure_mcp_loop"), \
-             patch("tools.mcp_tool._run_on_mcp_loop"), \
+        with patch("tools.mcp_tool._MCP_AVAILABLE", True),\
+             patch("tools.mcp_tool._ensure_mcp_loop"),\
+             patch("tools.mcp_tool._run_on_mcp_loop"),\
              patch("tools.mcp_tool._existing_tool_names", return_value=[]):
             register_mcp_servers(fake_config)
 
@@ -2783,9 +2783,9 @@ class TestMCPDiscoveryCrossProcessLock:
 
         mock_config = {"test_srv": {"command": "echo", "enabled": True}}
         with patch.object(cookie, "release", wraps=cookie.release) as release_spy:
-            with patch("tools.mcp_tool._try_acquire_mcp_discovery_lock", mock_acquire), \
-                 patch("tools.mcp_tool._MCP_AVAILABLE", True), \
-                 patch("tools.mcp_tool._load_mcp_config", return_value=mock_config), \
+            with patch("tools.mcp_tool._try_acquire_mcp_discovery_lock", mock_acquire),\
+                 patch("tools.mcp_tool._MCP_AVAILABLE", True),\
+                 patch("tools.mcp_tool._load_mcp_config", return_value=mock_config),\
                  patch("tools.mcp_tool.register_mcp_servers", return_value=["mcp__test_srv__ping"]) as reg_spy:
                 result = discover_mcp_tools()
             assert result == ["mcp__test_srv__ping"]
@@ -2801,10 +2801,10 @@ class TestMCPDiscoveryCrossProcessLock:
 
         mock_config = {"test_srv": {"command": "echo", "enabled": True}}
         # Every attempt returns None (lock held)
-        with patch("tools.mcp_tool._try_acquire_mcp_discovery_lock", return_value=None), \
-             patch("tools.mcp_tool._MCP_AVAILABLE", True), \
-             patch("tools.mcp_tool._load_mcp_config", return_value=mock_config), \
-             patch("tools.mcp_tool.register_mcp_servers") as reg_spy, \
+        with patch("tools.mcp_tool._try_acquire_mcp_discovery_lock", return_value=None),\
+             patch("tools.mcp_tool._MCP_AVAILABLE", True),\
+             patch("tools.mcp_tool._load_mcp_config", return_value=mock_config),\
+             patch("tools.mcp_tool.register_mcp_servers") as reg_spy,\
              patch("tools.mcp_tool._existing_tool_names", return_value=[]):
             result = discover_mcp_tools()
         # Must still run local discovery
@@ -2825,7 +2825,7 @@ class TestMCPDiscoveryCrossProcessLock:
 
         try:
             fh = open(lock_path, "w", encoding="utf-8")
-            with patch.dict("sys.modules", {"fcntl": mock_fcntl}), \
+            with patch.dict("sys.modules", {"fcntl": mock_fcntl}),\
                  patch("tools.mcp_tool.os.name", "posix"):
                 from tools.mcp_tool import _acquire_lock_on_fh
                 result = _acquire_lock_on_fh(fh)

@@ -63,7 +63,7 @@ def provider(monkeypatch, tmp_path):
     monkeypatch.setenv("SUPERMEMORY_API_KEY", "test-key")
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     p = SupermemoryMemoryProvider()
-    p.initialize("session-1", ev0_home=str(tmp_path), platform="cli")
+    p.initialize("session-1", threev0_home=str(tmp_path), platform="cli")
     return p
 
 
@@ -255,7 +255,7 @@ def test_identity_template_resolved_in_container_tag(monkeypatch, tmp_path):
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     _save_supermemory_config({"container_tag": "3v0-{identity}"}, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", ev0_home=str(tmp_path), platform="cli", agent_identity="coder")
+    p.initialize("s1", threev0_home=str(tmp_path), platform="cli", agent_identity="coder")
     assert p._container_tag == "ev0_coder"
 
 
@@ -265,7 +265,7 @@ def test_container_tag_env_var_override(monkeypatch, tmp_path):
     monkeypatch.setenv("SUPERMEMORY_CONTAINER_TAG", "env-override")
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", ev0_home=str(tmp_path), platform="cli")
+    p.initialize("s1", threev0_home=str(tmp_path), platform="cli")
     assert p._container_tag == "env_override"
 
 
@@ -278,7 +278,7 @@ def test_invalid_search_mode_falls_back_to_default(monkeypatch, tmp_path):
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     _save_supermemory_config({"search_mode": "invalid_mode"}, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", ev0_home=str(tmp_path), platform="cli")
+    p.initialize("s1", threev0_home=str(tmp_path), platform="cli")
     assert p._search_mode == "hybrid"
 
 
@@ -291,7 +291,7 @@ def test_base_url_defaults_to_cloud(monkeypatch, tmp_path):
     monkeypatch.delenv("SUPERMEMORY_BASE_URL", raising=False)
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", ev0_home=str(tmp_path), platform="cli")
+    p.initialize("s1", threev0_home=str(tmp_path), platform="cli")
     assert p._base_url == "https://api.supermemory.ai"
     assert p._client.base_url == "https://api.supermemory.ai"
 
@@ -419,7 +419,7 @@ def test_post_setup_writes_config_and_prints_summary(monkeypatch, tmp_path, caps
     )
     monkeypatch.setattr(
         "plugins.memory.supermemory._probe_supermemory_connection",
-        lambda api_key, ev0_home, **kwargs: {
+        lambda api_key, threev0_home, **kwargs: {
             "ok": True,
             "container_tag": "3v0",
             "profile_facts": 3,

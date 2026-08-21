@@ -24,7 +24,7 @@ from agent.skill_utils import (
 
 
 @pytest.fixture
-def ev0_home_with_config(tmp_path, monkeypatch):
+def threev0_home_with_config(tmp_path, monkeypatch):
     """Isolated ``~/.3V0/`` with a config.yaml referencing one external dir."""
     home = tmp_path / ".3V0"
     home.mkdir()
@@ -50,9 +50,9 @@ def ev0_home_with_config(tmp_path, monkeypatch):
 
 
 
-def test_cache_invalidates_on_mtime_change(ev0_home_with_config):
+def test_cache_invalidates_on_mtime_change(threev0_home_with_config):
     """A config.yaml edit invalidates the cache on the next call."""
-    _home, external, config = ev0_home_with_config
+    _home, external, config = threev0_home_with_config
     other = external.parent / "other_skills"
     other.mkdir()
 

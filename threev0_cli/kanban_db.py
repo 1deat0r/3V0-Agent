@@ -582,8 +582,8 @@ def kanban_home() -> Path:
     override = os.environ.get("EV0_KANBAN_HOME", "").strip()
     if override:
         return Path(override).expanduser()
-    from threev0_constants import get_default_ev0_root
-    return get_default_ev0_root()
+    from threev0_constants import get_default_threev0_root
+    return get_default_threev0_root()
 
 
 def boards_root() -> Path:
@@ -10132,7 +10132,7 @@ def _rotate_worker_log(
         pass
 
 
-def _module_ev0_argv() -> list[str]:
+def _module_threev0_argv() -> list[str]:
     """Return the interpreter-bound 3V0 CLI invocation."""
     # ``threev0_cli.main`` is the console-script target declared in
     # pyproject.toml, NOT a top-level ``3v0`` package — there is no
@@ -10140,7 +10140,7 @@ def _module_ev0_argv() -> list[str]:
     return [sys.executable, "-m", "threev0_cli.main"]
 
 
-def _absolute_ev0_path(path: str) -> str:
+def _absolute_threev0_path(path: str) -> str:
     """Return an absolute filesystem path for a resolved 3V0 shim."""
     expanded = os.path.expanduser(path)
     return expanded if os.path.isabs(expanded) else os.path.abspath(expanded)
@@ -10194,7 +10194,7 @@ def _safe_which_no_cwd(command: str) -> Optional[str]:
     return None
 
 
-def _ev0_path_argv(path: str) -> list[str]:
+def _threev0_path_argv(path: str) -> list[str]:
     """Return argv for a resolved 3V0 executable path.
 
     Windows batch shims (`.cmd` / `.bat`) are not safe as argv[0] for
@@ -10203,11 +10203,11 @@ def _ev0_path_argv(path: str) -> list[str]:
     executable is only a shell shim.
     """
     if _IS_WINDOWS and _is_windows_batch_shim(path):
-        return _module_ev0_argv()
-    return [_absolute_ev0_path(path)]
+        return _module_threev0_argv()
+    return [_absolute_threev0_path(path)]
 
 
-def _resolve_ev0_argv() -> list[str]:
+def _resolve_threev0_argv() -> list[str]:
     """Resolve the ``3v0`` invocation as argv parts for ``Popen``.
 
     Tries in order:
@@ -10236,16 +10236,16 @@ def _resolve_ev0_argv() -> list[str]:
     env_bin = os.environ.get("EV0_BIN", "").strip()
     if env_bin:
         if _looks_like_path(env_bin):
-            return _ev0_path_argv(env_bin)
+            return _threev0_path_argv(env_bin)
         resolved_env_bin = _safe_which_no_cwd(env_bin)
         if resolved_env_bin:
-            return _ev0_path_argv(resolved_env_bin)
-        return _module_ev0_argv()
+            return _threev0_path_argv(resolved_env_bin)
+        return _module_threev0_argv()
 
-    ev0_bin = _safe_which_no_cwd("3v0") if _IS_WINDOWS else shutil.which("3v0")
-    if ev0_bin:
-        return _ev0_path_argv(ev0_bin)
-    return _module_ev0_argv()
+    threev0_bin = _safe_which_no_cwd("3v0") if _IS_WINDOWS else shutil.which("3v0")
+    if threev0_bin:
+        return _threev0_path_argv(threev0_bin)
+    return _module_threev0_argv()
 
 
 def _worker_terminal_timeout_env(
@@ -10278,7 +10278,7 @@ def _worker_terminal_timeout_env(
     return str(desired)
 
 
-def _resolve_worker_cli_toolsets(ev0_home: Optional[str]) -> Optional[list[str]]:
+def _resolve_worker_cli_toolsets(threev0_home: Optional[str]) -> Optional[list[str]]:
     """Return the assigned profile's effective CLI toolsets for a worker.
 
     Dispatcher-spawned workers are launched from a long-lived gateway process,
@@ -10289,24 +10289,24 @@ def _resolve_worker_cli_toolsets(ev0_home: Optional[str]) -> Optional[list[str]]
     is only the kanban orchestrator surface. ``model_tools`` still appends the
     task-scoped kanban lifecycle tools when ``EV0_KANBAN_TASK`` is set.
     """
-    if not ev0_home:
+    if not threev0_home:
         return None
     try:
-        from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+        from threev0_constants import reset_threev0_home_override, set_threev0_home_override
         from threev0_cli.config import load_config
         from threev0_cli.tools_config import _get_platform_tools
 
-        token = set_ev0_home_override(ev0_home)
+        token = set_threev0_home_override(threev0_home)
         try:
             cfg = load_config()
             toolsets = sorted(_get_platform_tools(cfg, "cli"))
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
         return toolsets or None
     except Exception as exc:
         _log.debug(
             "kanban worker: could not resolve CLI toolsets for EV0_HOME=%r (%s)",
-            ev0_home,
+            threev0_home,
             exc,
         )
         return None
@@ -10472,7 +10472,7 @@ def _default_spawn(
     env.pop("EV0_TUI", None)
 
     cmd = [
-        *_resolve_ev0_argv(),
+        *_resolve_threev0_argv(),
         "-p", profile_arg,
         "--cli",
         # Worker subprocesses switch to a profile-scoped EV0_HOME above,
@@ -11583,8 +11583,8 @@ def list_profiles_on_disk() -> list[str]:
     path).
     """
     try:
-        from threev0_constants import get_default_ev0_root
-        default_root = get_default_ev0_root()
+        from threev0_constants import get_default_threev0_root
+        default_root = get_default_threev0_root()
         profiles_dir = default_root / "profiles"
     except Exception:
         return []

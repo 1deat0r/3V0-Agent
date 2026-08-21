@@ -29,7 +29,7 @@ def _seed(tmp_path, monkeypatch, value=False):
     monkeypatch.setenv("EV0_HOME", str(hh))
     import cli
 
-    monkeypatch.setattr(cli, "_ev0_home", hh, raising=False)
+    monkeypatch.setattr(cli, "_threev0_home", hh, raising=False)
     return hh
 
 

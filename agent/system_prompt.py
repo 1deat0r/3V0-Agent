@@ -50,7 +50,7 @@ from agent.prompt_builder import (
     drain_truncation_warnings,
 )
 from agent.runtime_cwd import resolve_context_cwd
-from threev0_constants import get_default_ev0_root, get_ev0_home
+from threev0_constants import get_default_threev0_root, get_threev0_home
 from pathlib import Path
 from utils import is_truthy_value
 
@@ -291,9 +291,9 @@ def _agent_home(agent: Any) -> Optional[Path]:
     Returns None when neither resolves so callers fall back to ambient.
     """
     try:
-        from threev0_constants import get_ev0_home_override
+        from threev0_constants import get_threev0_home_override
 
-        override = get_ev0_home_override()
+        override = get_threev0_home_override()
         if override:
             return Path(override)
     except Exception:
@@ -325,9 +325,9 @@ def _profile_name_for_home(home: Path) -> str:
     profile would misreport as "default".
     """
     try:
-        from threev0_constants import get_default_ev0_root
+        from threev0_constants import get_default_threev0_root
 
-        root = get_default_ev0_root()
+        root = get_default_threev0_root()
         rel = home.resolve().relative_to((root / "profiles").resolve())
         return rel.parts[0] if rel.parts else "default"
     except (ValueError, OSError):
@@ -652,9 +652,9 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
     # to the legacy behavior (and patchable via this module's get_ev0_home).
     if _agent_home_path is not None:
         _home_str = str(_agent_home_path)
-        _root_str = str(get_default_ev0_root())
+        _root_str = str(get_default_threev0_root())
     else:
-        _home_str = _root_str = str(get_ev0_home())
+        _home_str = _root_str = str(get_threev0_home())
     if active_profile == "default":
         post_workspace_parts.append(
             "Active 3V0 profile: default. Other profiles (if any) live "
@@ -673,7 +673,7 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
         # data sits at the ROOT (get_default_ev0_root()), which in ambient
         # profile mode is NOT get_ev0_home().
         profile_home = _home_str
-        default_root = get_default_ev0_root()
+        default_root = get_default_threev0_root()
         post_workspace_parts.append(
             f"Active 3V0 profile: {active_profile}. This session reads "
             f"and writes {profile_home}/. The default "
@@ -806,8 +806,8 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
         _plugin_section_blocks(_frozen_plugin_prompt_sections(agent), "after_memory")
     )
 
-    from threev0_time import get_timezone as _ev0_tz, now as _ev0_now
-    now = _ev0_now()
+    from threev0_time import get_timezone as _threev0_tz, now as _threev0_now
+    now = _threev0_now()
     # Date-only (not minute-precision) so the system prompt is byte-stable
     # for the full day.  Minute-precision changes invalidate prefix-cache KV
     # on every rebuild path (compression boundary, fresh-agent gateway turns,
@@ -824,7 +824,7 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
     # ``get_timezone()`` returns None when no timezone is configured, in which
     # case we fall back to the abbreviation of the server-local (still tz-aware)
     # time.
-    _tz = _ev0_tz()
+    _tz = _threev0_tz()
     _zone_bits = []
     _iana = getattr(_tz, "key", None)
     if _iana:

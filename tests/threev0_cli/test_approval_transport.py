@@ -500,7 +500,7 @@ def register(ctx):
     monkeypatch.setattr(approval, "_YOLO_MODE_FROZEN", False)
     manager = PluginManager()
     monkeypatch.setattr(plugins_module, "_plugin_manager", manager)
-    token = approval.set_ev0_interactive_context(True)
+    token = approval.set_threev0_interactive_context(True)
     approval.clear_session("local")
     approval._permanent_approved.clear()
     try:
@@ -511,17 +511,17 @@ def register(ctx):
         reloaded = approval.check_all_command_guards(
             "rm -rf /tmp/3v0-approval-transport-fixture-reloaded", "local"
         )
-        gateway_token = approval.set_ev0_interactive_context(False)
+        gateway_token = approval.set_threev0_interactive_context(False)
         monkeypatch.setenv("EV0_GATEWAY_SESSION", "1")
         try:
             gateway_routed = approval.check_all_command_guards(
                 "rm -rf /tmp/3v0-approval-transport-fixture-gateway", "local"
             )
         finally:
-            approval.reset_ev0_interactive_context(gateway_token)
+            approval.reset_threev0_interactive_context(gateway_token)
         hardline = approval.check_all_command_guards("rm -rf /", "local")
     finally:
-        approval.reset_ev0_interactive_context(token)
+        approval.reset_threev0_interactive_context(token)
 
     records = [
         json.loads(line)

@@ -21,10 +21,10 @@ from threev0_cli.config import (
     save_config,
     get_env_value,
     save_env_value,
-    get_ev0_home,  # noqa: F401 — used by test mocks
+    get_threev0_home,  # noqa: F401 — used by test mocks
 )
 from threev0_cli.colors import Colors, color
-from threev0_constants import display_ev0_home
+from threev0_constants import display_threev0_home
 from threev0_cli.mcp_security import validate_mcp_server_entry
 from tools.mcp_tool import _ENV_VAR_PATTERN, _env_ref_name
 
@@ -268,8 +268,8 @@ def _resolve_mcp_server_config(config: dict) -> dict:
 
     if current_secret_scope() is None:
         try:
-            from threev0_cli.env_loader import load_ev0_dotenv
-            load_ev0_dotenv()
+            from threev0_cli.env_loader import load_threev0_dotenv
+            load_threev0_dotenv()
         except Exception:  # pragma: no cover — defensive
             pass
     return _interpolate_env_vars(config)
@@ -551,7 +551,7 @@ def cmd_mcp_add(args):
                         server_config["headers"] = _save_bearer_auth_token(
                             name, api_key
                         )
-                        _success(f"Saved to {display_ev0_home()}/.env as {env_key}")
+                        _success(f"Saved to {display_threev0_home()}/.env as {env_key}")
 
                 # Set header with env var interpolation
                 if existing_key:
@@ -636,7 +636,7 @@ def cmd_mcp_add(args):
     server_config["enabled"] = True
     if _save_mcp_server(name, server_config):
         print()
-        _success(f"Saved '{name}' to {display_ev0_home()}/config.yaml ({tool_count}/{total} tools enabled)")
+        _success(f"Saved '{name}' to {display_threev0_home()}/config.yaml ({tool_count}/{total} tools enabled)")
         _info("Start a new session to use these tools.")
 
 

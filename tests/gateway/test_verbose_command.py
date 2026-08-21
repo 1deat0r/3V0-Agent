@@ -47,12 +47,12 @@ class TestVerboseCommand:
     @pytest.mark.asyncio
     async def test_disabled_by_default(self, tmp_path, monkeypatch):
         """When tool_progress_command is false, /verbose returns an info message."""
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir()
-        config_path = ev0_home / "config.yaml"
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir()
+        config_path = threev0_home / "config.yaml"
         config_path.write_text("display:\n  tool_progress: all\n", encoding="utf-8")
 
-        monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
+        monkeypatch.setattr(gateway_run, "_threev0_home", threev0_home)
 
         runner = _make_runner()
         result = await runner._handle_verbose_command(_make_event())
@@ -63,15 +63,15 @@ class TestVerboseCommand:
     @pytest.mark.asyncio
     async def test_enabled_cycles_mode(self, tmp_path, monkeypatch):
         """When enabled, /verbose cycles tool_progress mode per-platform."""
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir()
-        config_path = ev0_home / "config.yaml"
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir()
+        config_path = threev0_home / "config.yaml"
         config_path.write_text(
             "display:\n  tool_progress_command: true\n  tool_progress: all\n",
             encoding="utf-8",
         )
 
-        monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
+        monkeypatch.setattr(gateway_run, "_threev0_home", threev0_home)
 
         runner = _make_runner()
         result = await runner._handle_verbose_command(_make_event())
@@ -87,15 +87,15 @@ class TestVerboseCommand:
     @pytest.mark.asyncio
     async def test_quoted_false_keeps_command_disabled(self, tmp_path, monkeypatch):
         """Quoted false must not enable the /verbose gateway command."""
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir()
-        config_path = ev0_home / "config.yaml"
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir()
+        config_path = threev0_home / "config.yaml"
         config_path.write_text(
             'display:\n  tool_progress_command: "false"\n  tool_progress: all\n',
             encoding="utf-8",
         )
 
-        monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
+        monkeypatch.setattr(gateway_run, "_threev0_home", threev0_home)
 
         runner = _make_runner()
         result = await runner._handle_verbose_command(_make_event())

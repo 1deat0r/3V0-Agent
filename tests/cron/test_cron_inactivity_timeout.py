@@ -232,6 +232,6 @@ class TestSysPathOrdering:
     def test_threev0_time_importable(self):
         """threev0_time should be importable when cron.scheduler loads."""
         # This import would fail if sys.path.insert comes after the import
-        from cron.scheduler import _ev0_now
-        assert callable(_ev0_now)
+        from cron.scheduler import _threev0_now
+        assert callable(_threev0_now)
 

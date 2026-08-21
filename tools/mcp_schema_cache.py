@@ -22,9 +22,9 @@ _cache_lock = threading.Lock()
 
 
 def _cache_path() -> Path:
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home() / "cache" / _CACHE_FILENAME
+    return get_threev0_home() / "cache" / _CACHE_FILENAME
 
 
 def config_fingerprint(config: dict) -> str:

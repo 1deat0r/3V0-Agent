@@ -15,11 +15,11 @@ def test_legacy_plugin_loads_and_ignores_additive_hook_and_manifest_fields(
     tmp_path, monkeypatch
 ):
     """A frozen plugin keeps working as manifests and hook payloads grow."""
-    ev0_home = tmp_path / "3v0-home"
-    plugins_dir = ev0_home / "plugins"
+    threev0_home = tmp_path / "3v0-home"
+    plugins_dir = threev0_home / "plugins"
     plugins_dir.mkdir(parents=True)
     shutil.copytree(LEGACY_PLUGIN, plugins_dir / "legacy-contract-fixture")
-    (ev0_home / "config.yaml").write_text(
+    (threev0_home / "config.yaml").write_text(
         yaml.safe_dump(
             {"plugins": {"enabled": ["legacy-contract-fixture"]}}
         ),
@@ -28,7 +28,7 @@ def test_legacy_plugin_loads_and_ignores_additive_hook_and_manifest_fields(
     empty_bundled = tmp_path / "bundled-plugins"
     empty_bundled.mkdir()
     monkeypatch.setenv("HOME", str(tmp_path / "os-home"))
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.setenv("EV0_BUNDLED_PLUGINS", str(empty_bundled))
 
     manager = PluginManager()

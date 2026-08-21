@@ -28,9 +28,9 @@ def parse_node_kind(node_id: str) -> str:
 
 
 def _memories_dir() -> Path:
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home() / "memories"
+    return get_threev0_home() / "memories"
 
 
 def _parse_memory_id(node_id: str) -> tuple[str, int]:

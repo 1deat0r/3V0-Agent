@@ -428,7 +428,7 @@ def _sandbox_failure_hint(stderr_text: str, enabled_tools=None) -> Optional[str]
     return None
 
 
-def generate_ev0_tools_module(enabled_tools: List[str],
+def generate_threev0_tools_module(enabled_tools: List[str],
                                  transport: str = "uds") -> str:
     """
     Build the source code for the ev0_tools.py stub module.
@@ -1122,7 +1122,7 @@ def _execute_remote(
         rpc_token = secrets.token_urlsafe(32)
 
         # Generate and ship files
-        tools_src = generate_ev0_tools_module(
+        tools_src = generate_threev0_tools_module(
             list(sandbox_tools), transport="file",
         )
         _ship_file_to_remote(env, f"{sandbox_dir}/ev0_tools.py", tools_src)
@@ -1379,7 +1379,7 @@ def execute_code(
         # Python source files are decoded as UTF-8 by default (PEP 3120).
         # sandbox_tools is already the correct set (intersection with session
         # tools, or SANDBOX_ALLOWED_TOOLS as fallback — see lines above).
-        tools_src = generate_ev0_tools_module(list(sandbox_tools))
+        tools_src = generate_threev0_tools_module(list(sandbox_tools))
         with open(os.path.join(tmpdir, "ev0_tools.py"), "w", encoding="utf-8") as f:
             f.write(tools_src)
 
@@ -1483,11 +1483,11 @@ def execute_code(
         # external venv; exposing 3V0's site-packages to that interpreter
         # can mix incompatible compiled extensions (for example, Python 3.12
         # NumPy with a Python 3.9 project interpreter).
-        _ev0_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        _threev0_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         _existing_pp = child_env.get("PYTHONPATH", "")
         _pp_parts = [tmpdir]
-        if _uses_ev0_python_environment(_child_python):
-            _pp_parts.append(_ev0_root)
+        if _uses_threev0_python_environment(_child_python):
+            _pp_parts.append(_threev0_root)
         elif _child_python not in _external_env_logged:
             # Import behavior changes silently otherwise — surface it (once
             # per interpreter path) so "import threev0_constants suddenly
@@ -1924,7 +1924,7 @@ def _python_environment_prefix(python_path: str) -> str:
     return ""
 
 
-def _uses_ev0_python_environment(python_path: str) -> bool:
+def _uses_threev0_python_environment(python_path: str) -> bool:
     """Whether *python_path* belongs to 3V0's active Python environment.
 
     Short-circuits when *python_path* IS the running interpreter (by path or

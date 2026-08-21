@@ -25,10 +25,10 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _isolate_home(tmp_path, monkeypatch):
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
-    yield ev0_home
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
+    yield threev0_home
 
 
 # ---------------------------------------------------------------------------
@@ -157,8 +157,8 @@ def test_stop_signals_process_and_clears_pointer(tmp_path):
     def _kill(pid, sig):
         sent.append((pid, sig))
 
-    with patch.object(pm, "_pid_alive", side_effect=_alive), \
-         patch.object(pm.os, "kill", side_effect=_kill), \
+    with patch.object(pm, "_pid_alive", side_effect=_alive),\
+         patch.object(pm.os, "kill", side_effect=_kill),\
          patch.object(pm.time, "sleep", lambda _s: None):
         res = pm.stop()
 

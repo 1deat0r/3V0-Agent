@@ -71,18 +71,18 @@ def start_background_mcp_discovery(*, logger, thread_name: str) -> None:
         # mcp_servers instead (#67605). The config gate above already runs on
         # the caller's thread, so it sees the same override.
         try:
-            from threev0_constants import get_ev0_home_override
+            from threev0_constants import get_threev0_home_override
 
-            home_override = get_ev0_home_override()
+            home_override = get_threev0_home_override()
         except Exception:
             home_override = None
 
         def _discover() -> None:
             token = None
             try:
-                from threev0_constants import set_ev0_home_override
+                from threev0_constants import set_threev0_home_override
 
-                token = set_ev0_home_override(home_override)
+                token = set_threev0_home_override(home_override)
             except Exception:
                 token = None
             try:
@@ -101,9 +101,9 @@ def start_background_mcp_discovery(*, logger, thread_name: str) -> None:
             finally:
                 if token is not None:
                     try:
-                        from threev0_constants import reset_ev0_home_override
+                        from threev0_constants import reset_threev0_home_override
 
-                        reset_ev0_home_override(token)
+                        reset_threev0_home_override(token)
                     except Exception:
                         pass
                 with _mcp_discovery_lock:

@@ -36,7 +36,7 @@ def _write_skill(skills_dir: Path, name: str, description: str = "") -> Path:
 
 
 @pytest.fixture
-def ev0_home(monkeypatch):
+def threev0_home(monkeypatch):
     """Isolate EV0_HOME for ``reload_skills`` tests.
 
     Rather than popping cache-bearing modules from ``sys.modules``,
@@ -68,10 +68,10 @@ class TestReloadSkillsHelper:
 
 
 
-    def test_detects_removed_skill_carries_description(self, ev0_home):
+    def test_detects_removed_skill_carries_description(self, threev0_home):
         from agent.skill_commands import reload_skills
 
-        skill_dir = _write_skill(ev0_home / "skills", "demo", "soon to be gone")
+        skill_dir = _write_skill(threev0_home / "skills", "demo", "soon to be gone")
         # First reload: demo present
         first = reload_skills()
         assert first["total"] == 1
@@ -88,7 +88,7 @@ class TestReloadSkillsHelper:
 
 
 
-    def test_does_not_invalidate_prompt_cache_snapshot(self, ev0_home):
+    def test_does_not_invalidate_prompt_cache_snapshot(self, threev0_home):
         """reload_skills must NOT delete the skills prompt-cache snapshot.
 
         Skills are called at runtime — the system prompt doesn't need to

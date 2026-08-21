@@ -35,10 +35,10 @@ import tempfile
 from pathlib import Path
 
 from threev0_constants import (
-    bootstrap_ev0_managed_node,
-    get_ev0_home,
+    bootstrap_threev0_managed_node,
+    get_threev0_home,
     managed_node_tree_in_use,
-    with_ev0_node_path,
+    with_threev0_node_path,
 )
 
 __all__ = [
@@ -144,7 +144,7 @@ def managed_npm_prefix(npm: str | os.PathLike[str] | None) -> Path | None:
     """
     if not npm:
         return None
-    prefix = get_ev0_home() / "node"
+    prefix = get_threev0_home() / "node"
     try:
         resolved = Path(npm).resolve()
         prefix_resolved = prefix.resolve()
@@ -156,7 +156,7 @@ def managed_npm_prefix(npm: str | os.PathLike[str] | None) -> Path | None:
 
 
 def _upgrade_env() -> dict[str, str]:
-    env = with_ev0_node_path()
+    env = with_threev0_node_path()
     # The checkout's .npmrc sets `min-release-age`, which would gate the npm
     # release we are trying to install. The upgrade runs from a temp cwd so
     # that file is out of scope; this neutralises a user-level ~/.npmrc too.
@@ -251,7 +251,7 @@ def _probe_version(npm: str) -> str | None:
             encoding="utf-8",
             errors="replace",
             timeout=30,
-            env=with_ev0_node_path(),
+            env=with_threev0_node_path(),
             check=False,
         )
     except (OSError, subprocess.SubprocessError):
@@ -288,7 +288,7 @@ def _provision_managed_npm(npm_range: str | None, *, quiet: bool = False) -> str
             "(the resolved npm belongs to your system and is left alone)…",
             flush=True,
         )
-    managed_npm = bootstrap_ev0_managed_node()
+    managed_npm = bootstrap_threev0_managed_node()
     if not managed_npm:
         if not quiet:
             print("  ✗ Managed Node.js provisioning failed", file=sys.stderr)

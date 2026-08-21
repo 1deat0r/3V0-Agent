@@ -83,10 +83,10 @@ def _write_cmd(path: Path, text: str) -> None:
 def test_venv_sweep_stops_managed_runtime_children_but_not_unrelated_processes(
     tmp_path: Path,
 ) -> None:
-    ev0_home = tmp_path / "3v0-home"
-    install_dir = ev0_home / "3v0-agent"
+    threev0_home = tmp_path / "3v0-home"
+    install_dir = threev0_home / "3v0-agent"
     venv_scripts = install_dir / "venv" / "Scripts"
-    runtime_dir = ev0_home / ".3v0-runtime" / "python" / "generation-test"
+    runtime_dir = threev0_home / ".3v0-runtime" / "python" / "generation-test"
     unrelated_dir = tmp_path / "unrelated"
     fake_bin = tmp_path / "fake-bin"
     for directory in (venv_scripts, runtime_dir, unrelated_dir, fake_bin):
@@ -164,7 +164,7 @@ def test_venv_sweep_stops_managed_runtime_children_but_not_unrelated_processes(
                 "-InstallDir",
                 str(install_dir),
                 "-Ev0Home",
-                str(ev0_home),
+                str(threev0_home),
             ],
             cwd=tmp_path,
             env=env,

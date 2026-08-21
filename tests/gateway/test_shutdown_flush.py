@@ -149,19 +149,19 @@ def test_serialise_object_with_text():
     assert result["session_id"] == "sid"
 
 
-def test_get_flush_dir_uses_get_ev0_home(tmp_path, monkeypatch):
+def test_get_flush_dir_uses_get_threev0_home(tmp_path, monkeypatch):
     """Flush dir must use get_ev0_home(), not hardcoded Path.home()."""
     import gateway.shutdown_flush as mod
 
     captured = {}
 
-    def fake_get_ev0_home():
+    def fake_get_threev0_home():
         from pathlib import Path
         captured["called"] = True
         return tmp_path
 
     monkeypatch.setattr(
-        "threev0_constants.get_ev0_home", fake_get_ev0_home
+        "threev0_constants.get_threev0_home", fake_get_threev0_home
     )
     result = mod._get_flush_dir()
     assert captured.get("called") is True

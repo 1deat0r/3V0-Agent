@@ -143,8 +143,8 @@ class TestSandboxMirrorIsOrthogonalToCrossProfile:
 
     def test_same_profile_mirror_still_flagged(self, tmp_path, monkeypatch):
         import agent.file_safety as fs
-        monkeypatch.setattr(fs, "_ev0_root_path", lambda: tmp_path)
-        monkeypatch.setattr(fs, "_ev0_home_path", lambda: tmp_path / "profiles" / "group1")
+        monkeypatch.setattr(fs, "_threev0_root_path", lambda: tmp_path)
+        monkeypatch.setattr(fs, "_threev0_home_path", lambda: tmp_path / "profiles" / "group1")
 
         target = (
             tmp_path

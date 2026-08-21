@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 # the Feishu comment event handler, which runs long after profile overrides
 # have been applied, so freezing paths here is safe.
 
-RULES_FILE = get_ev0_home() / "feishu_comment_rules.json"
-PAIRING_FILE = get_ev0_home() / "feishu_comment_pairing.json"
+RULES_FILE = get_threev0_home() / "feishu_comment_rules.json"
+PAIRING_FILE = get_threev0_home() / "feishu_comment_pairing.json"
 
 # ---------------------------------------------------------------------------
 # Data models
@@ -351,8 +351,8 @@ def _main() -> int:
     import sys
 
     try:
-        from threev0_cli.env_loader import load_ev0_dotenv
-        load_ev0_dotenv()
+        from threev0_cli.env_loader import load_threev0_dotenv
+        load_threev0_dotenv()
     except Exception:
         pass
 

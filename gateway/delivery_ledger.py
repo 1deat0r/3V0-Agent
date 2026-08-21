@@ -49,7 +49,7 @@ import time
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ RECOVERED_MARKER = (
 
 
 def _db_path():
-    return get_ev0_home() / "state.db"
+    return get_threev0_home() / "state.db"
 
 
 def _connect() -> sqlite3.Connection:

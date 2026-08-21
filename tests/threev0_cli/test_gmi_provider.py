@@ -252,7 +252,7 @@ class TestGmiAuxiliary:
         headers = mock_openai.call_args.kwargs.get("default_headers", {})
         assert headers.get("User-Agent", "").startswith("Ev0Agent/")
 
-    def test_gmi_profile_declares_ev0_user_agent(self):
+    def test_gmi_profile_declares_threev0_user_agent(self):
         """The GMI plugin sets a Ev0Agent/<ver> User-Agent on its profile."""
         from providers import get_provider_profile
 
@@ -321,9 +321,9 @@ class TestGmiMainFlow:
             _model_flow_api_key_provider(load_config(), "gmi", "old-model")
 
         import yaml
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        config = yaml.safe_load((get_ev0_home() / "config.yaml").read_text()) or {}
+        config = yaml.safe_load((get_threev0_home() / "config.yaml").read_text()) or {}
         model_cfg = config.get("model")
         assert isinstance(model_cfg, dict)
         assert model_cfg["provider"] == "gmi"

@@ -242,14 +242,14 @@ def client_install_method(value: Any) -> str:
 
 
 def client_resource(
-    ev0_version: Any,
+    threev0_version: Any,
     *,
     os_name: Any,
     architecture: Any,
     install_method: Any,
 ) -> dict[str, str]:
     """Build the bounded client resource attached to aggregate packages."""
-    normalized_version = str(ev0_version or "").strip()
+    normalized_version = str(threev0_version or "").strip()
     if not normalized_version or len(normalized_version) > 64:
         normalized_version = "unknown"
     return {

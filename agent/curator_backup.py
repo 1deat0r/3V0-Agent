@@ -48,7 +48,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from agent.skill_utils import is_excluded_skill_path
 from threev0_cli.sizefmt import format_bytes
 
@@ -69,16 +69,16 @@ _ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(-\d{2})?$")
 
 
 def _backups_dir() -> Path:
-    return get_ev0_home() / "skills" / ".curator_backups"
+    return get_threev0_home() / "skills" / ".curator_backups"
 
 
 def _skills_dir() -> Path:
-    return get_ev0_home() / "skills"
+    return get_threev0_home() / "skills"
 
 
 def _cron_jobs_file() -> Path:
     """Source path for the live cron jobs store (``~/.3V0/cron/jobs.json``)."""
-    return get_ev0_home() / "cron" / "jobs.json"
+    return get_threev0_home() / "cron" / "jobs.json"
 
 
 CRON_JOBS_FILENAME = "cron-jobs.json"

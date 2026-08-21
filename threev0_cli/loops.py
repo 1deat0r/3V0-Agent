@@ -375,10 +375,10 @@ _DB_CACHE: Dict[str, Any] = {}
 def _get_session_db() -> Optional[Any]:
     """One SessionDB per EV0_HOME (same pattern as goals._get_session_db)."""
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_state import SessionDB
 
-        home = str(get_ev0_home())
+        home = str(get_threev0_home())
     except Exception as exc:  # pragma: no cover
         logger.debug("LoopManager: SessionDB bootstrap failed (%s)", exc)
         return None

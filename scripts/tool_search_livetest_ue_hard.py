@@ -191,10 +191,10 @@ def run_one(scenario, mode, rep, out_dir: Path):
     enabled = mode in ("bridge", "listing")
     model = os.environ.get("TS_UE_MODEL", "anthropic/claude-opus-4.8")
     lmax = int(os.environ.get("TS_UE_LISTING_MAX", "30000"))
-    ev0_home = base.setup_isolated_home(
+    threev0_home = base.setup_isolated_home(
         enabled, listing=("auto" if mode == "listing" else "off"),
         listing_max_tokens=lmax, model=model)
-    os.environ["EV0_HOME"] = str(ev0_home)
+    os.environ["EV0_HOME"] = str(threev0_home)
     base.reset_module_state()
     n_registered = register_epic_tools_adversarial()
 

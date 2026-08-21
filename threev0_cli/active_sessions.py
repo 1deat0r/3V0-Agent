@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ def active_session_limit_message(
 
 
 def _state_dir() -> Path:
-    return Path(get_ev0_home()) / "runtime"
+    return Path(get_threev0_home()) / "runtime"
 
 
 def _state_path() -> Path:

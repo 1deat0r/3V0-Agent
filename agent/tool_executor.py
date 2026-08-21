@@ -692,7 +692,7 @@ def _run_agent_tool_execution_middleware(
             _hb_stop.set()
             _hb_thread.join(timeout=2.0)
 
-    def _ev0_pipeline(relay_args: dict[str, Any]) -> Any:
+    def _threev0_pipeline(relay_args: dict[str, Any]) -> Any:
         request_result = apply_tool_request_middleware(
             function_name,
             relay_args,
@@ -727,7 +727,7 @@ def _run_agent_tool_execution_middleware(
     result, _relay_args = relay_tools.execute(
         function_name,
         function_args,
-        _ev0_pipeline,
+        _threev0_pipeline,
         session_id=str(getattr(agent, "session_id", "") or ""),
         metadata={
             "task_id": effective_task_id or "",

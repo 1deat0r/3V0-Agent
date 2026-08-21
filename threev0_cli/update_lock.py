@@ -90,9 +90,9 @@ def update_marker_path() -> Path:
     desktop pins that same value into the updater's env. A profile-scoped path
     here would put the lock somewhere the other two owners never look.
     """
-    from threev0_constants import get_process_ev0_home
+    from threev0_constants import get_process_threev0_home
 
-    return get_process_ev0_home() / MARKER_NAME
+    return get_process_threev0_home() / MARKER_NAME
 
 
 def _pid_alive(pid: int) -> bool:

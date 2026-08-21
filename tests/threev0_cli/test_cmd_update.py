@@ -70,8 +70,8 @@ def _patch_managed_uv(request):
     def _fake_update_managed_uv(**_kwargs):
         return None  # never actually self-update in tests
 
-    with patch("threev0_cli.managed_uv.resolve_uv", side_effect=_fake_resolve_uv), \
-         patch("threev0_cli.managed_uv.ensure_uv", side_effect=_fake_ensure_uv), \
+    with patch("threev0_cli.managed_uv.resolve_uv", side_effect=_fake_resolve_uv),\
+         patch("threev0_cli.managed_uv.ensure_uv", side_effect=_fake_ensure_uv),\
          patch("threev0_cli.managed_uv.update_managed_uv", side_effect=_fake_update_managed_uv):
         yield
 
@@ -88,17 +88,17 @@ def _patch_gateway_discovery():
     Discovery returning nothing makes the phase a clean no-op for every test
     in this module (none of them assert on gateway restarts).
     """
-    with patch("threev0_cli.gateway.find_gateway_pids", return_value=[]), \
-         patch("threev0_cli.gateway.supports_systemd_services", return_value=False), \
+    with patch("threev0_cli.gateway.find_gateway_pids", return_value=[]),\
+         patch("threev0_cli.gateway.supports_systemd_services", return_value=False),\
          patch("threev0_cli.gateway.find_profile_gateway_processes", return_value=[]):
         yield
 
 
 class TestCmdUpdateNpmLockfileCache:
     @staticmethod
-    def _cache_file(ev0_root, project_root):
+    def _cache_file(threev0_root, project_root):
         cache_key = hashlib.sha256(str(project_root).encode()).hexdigest()[:12]
-        return ev0_root / f".npm_lock_hash_{cache_key}"
+        return threev0_root / f".npm_lock_hash_{cache_key}"
 
 
 
@@ -843,12 +843,12 @@ class TestNodeRuntimeNpmResolution:
         )
         monkeypatch.setenv("PATH", "/mnt/c/Program Files/nodejs")
 
-        with patch("subprocess.run") as mock_run, \
-             patch.object(hm, "_web_ui_build_needed", return_value=True), \
-             patch.object(hm, "_desktop_packaged_executable", return_value=None), \
-             patch.object(hm, "_desktop_dist_exists", return_value=True), \
-             patch.object(hm, "_run_npm_install_deterministic") as mock_npm_install, \
-             patch.object(hm, "_run_with_idle_timeout") as mock_idle_build, \
+        with patch("subprocess.run") as mock_run,\
+             patch.object(hm, "_web_ui_build_needed", return_value=True),\
+             patch.object(hm, "_desktop_packaged_executable", return_value=None),\
+             patch.object(hm, "_desktop_dist_exists", return_value=True),\
+             patch.object(hm, "_run_npm_install_deterministic") as mock_npm_install,\
+             patch.object(hm, "_run_with_idle_timeout") as mock_idle_build,\
              patch.object(hm, "_run_logged_subprocess") as mock_desktop_build:
             mock_run.side_effect = _make_run_side_effect(
                 branch="main", verify_ok=True, commit_count="1"

@@ -263,18 +263,18 @@ class TestYamlConfigLoading:
     """Tests for reply_to_mode loaded from config.yaml discord section."""
 
     def _write_config(self, tmp_path, content: str):
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(content, encoding="utf-8")
-        return ev0_home
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(content, encoding="utf-8")
+        return threev0_home
 
 
     def test_extra_reply_to_mode_off(self, tmp_path, monkeypatch):
         """discord.extra.reply_to_mode is also honoured."""
-        ev0_home = self._write_config(
+        threev0_home = self._write_config(
             tmp_path, "discord:\n  extra:\n    reply_to_mode: \"off\"\n"
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.delenv("DISCORD_REPLY_TO_MODE", raising=False)
 
         load_gateway_config()
@@ -284,11 +284,11 @@ class TestYamlConfigLoading:
 
     def test_top_level_takes_precedence_over_extra(self, tmp_path, monkeypatch):
         """discord.reply_to_mode wins over discord.extra.reply_to_mode."""
-        ev0_home = self._write_config(
+        threev0_home = self._write_config(
             tmp_path,
             "discord:\n  reply_to_mode: all\n  extra:\n    reply_to_mode: \"off\"\n",
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.delenv("DISCORD_REPLY_TO_MODE", raising=False)
 
         load_gateway_config()

@@ -6,7 +6,7 @@ from threev0_cli.main import cmd_update
 from tools.skills_hub import OptionalSkillSource
 
 
-def test_recommended_update_command_defaults_to_ev0_update(monkeypatch):
+def test_recommended_update_command_defaults_to_threev0_update(monkeypatch):
     monkeypatch.delenv("EV0_MANAGED", raising=False)
 
     # Also short-circuit the .managed marker path — CI runners may have an
@@ -14,7 +14,7 @@ def test_recommended_update_command_defaults_to_ev0_update(monkeypatch):
     # somewhere with that marker, which would make get_managed_update_command()
     # return "Update your Nix flake input ..." instead of falling through to
     # detect_install_method().
-    with patch("threev0_cli.config.get_managed_update_command", return_value=None), \
+    with patch("threev0_cli.config.get_managed_update_command", return_value=None),\
          patch("threev0_cli.config.detect_install_method", return_value="git"):
         assert recommended_update_command() == "3v0 update"
 

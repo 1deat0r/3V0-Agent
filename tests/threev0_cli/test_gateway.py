@@ -336,7 +336,7 @@ def test_spawn_detached_gateway_timestamps_stderr(monkeypatch, tmp_path):
         calls.append((cmd, kwargs))
         return SimpleNamespace()
 
-    monkeypatch.setattr(gateway, "get_ev0_home", lambda: tmp_path)
+    monkeypatch.setattr(gateway, "get_threev0_home", lambda: tmp_path)
     monkeypatch.setattr(gateway, "get_python_path", lambda: "/usr/bin/python3")
     monkeypatch.setattr(gateway, "_gateway_run_command", lambda: child_cmd)
     monkeypatch.setattr(gateway.subprocess, "Popen", fake_popen)
@@ -414,7 +414,7 @@ def test_gateway_install_noninteractive_skips_legacy_unit_prompt(monkeypatch, tm
     Covers the second hidden prompt that --start-now/--start-on-login do not
     guard. Originally contributed via PR #42124 (kyssta-exe).
     """
-    monkeypatch.setattr(gateway, "has_legacy_ev0_units", lambda: True)
+    monkeypatch.setattr(gateway, "has_legacy_threev0_units", lambda: True)
 
     calls = []
     monkeypatch.setattr(
@@ -422,7 +422,7 @@ def test_gateway_install_noninteractive_skips_legacy_unit_prompt(monkeypatch, tm
         "prompt_yes_no",
         lambda question, default=True: calls.append(("prompt", question)) or True,
     )
-    monkeypatch.setattr(gateway, "remove_legacy_ev0_units", lambda interactive=False: calls.append(("remove_legacy",)))
+    monkeypatch.setattr(gateway, "remove_legacy_threev0_units", lambda interactive=False: calls.append(("remove_legacy",)))
     monkeypatch.setattr(gateway, "print_legacy_unit_warning", lambda: None)
 
     fake_path = tmp_path / "3v0-gateway.service"

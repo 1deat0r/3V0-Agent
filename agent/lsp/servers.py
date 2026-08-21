@@ -710,9 +710,9 @@ def _find_pses_bundle(ctx: ServerContext) -> Optional[str]:
     env_path = os.environ.get("PSES_BUNDLE_PATH")
     if env_path:
         candidates.append(env_path)
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    home = str(get_ev0_home())
+    home = str(get_threev0_home())
     candidates.append(os.path.join(home, "lsp", "PowerShellEditorServices"))
 
     for cand in candidates:
@@ -760,9 +760,9 @@ def _spawn_powershell_es(root: str, ctx: ServerContext) -> Optional[SpawnSpec]:
     )
     # Session details file: PSES writes connection info here on startup.
     session_path = os.path.join(
-        ev0_lsp_session_dir(), f"pses-session-{os.getpid()}.json"
+        threev0_lsp_session_dir(), f"pses-session-{os.getpid()}.json"
     )
-    log_path = os.path.join(ev0_lsp_session_dir(), "pses.log")
+    log_path = os.path.join(threev0_lsp_session_dir(), "pses.log")
     inner = (
         f"& '{start_script}' "
         f"-BundledModulesPath '{bundle}' "
@@ -794,11 +794,11 @@ def _spawn_powershell_es(root: str, ctx: ServerContext) -> Optional[SpawnSpec]:
     )
 
 
-def ev0_lsp_session_dir() -> str:
+def threev0_lsp_session_dir() -> str:
     """Return (and create) the dir for PSES session/log scratch files."""
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    home = str(get_ev0_home())
+    home = str(get_threev0_home())
     d = os.path.join(home, "lsp", "pses")
     os.makedirs(d, exist_ok=True)
     return d

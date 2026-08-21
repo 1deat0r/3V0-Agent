@@ -34,13 +34,13 @@ def test_dump_surfaces_terminal_env_override(monkeypatch, capsys, tmp_path):
     pin it with a config.yaml that has no explicit backend key.
     """
     from threev0_cli import dump
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
 
     monkeypatch.setenv("TERMINAL_ENV", "docker")
     # Keep run_dump's project-.env fallback from touching the real repo.
     monkeypatch.setattr(dump, "get_project_root", lambda: tmp_path / "noproject")
 
-    home = get_ev0_home()
+    home = get_threev0_home()
     # No explicit terminal.backend in config.yaml — merged default is 'local',
     # the env override is what actually runs.
     _seed(home, config_yaml="display:\n  streaming: true\n", env_text="")
@@ -61,12 +61,12 @@ def test_dump_reports_config_backend_winning_over_stale_env(monkeypatch, capsys,
     the explicit config keys, so the dump reports local with no override
     warning."""
     from threev0_cli import dump
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
 
     monkeypatch.delenv("TERMINAL_ENV", raising=False)
     monkeypatch.setattr(dump, "get_project_root", lambda: tmp_path / "noproject")
 
-    home = get_ev0_home()
+    home = get_threev0_home()
     _seed(home, config_yaml="terminal:\n  backend: local\n", env_text="TERMINAL_ENV=docker\n")
 
     dump.run_dump(SimpleNamespace(show_keys=False))
@@ -78,12 +78,12 @@ def test_dump_reports_config_backend_winning_over_stale_env(monkeypatch, capsys,
 
 def test_dump_reports_config_backend_when_no_override(monkeypatch, capsys, tmp_path):
     from threev0_cli import dump
-    from threev0_cli.config import get_ev0_home
+    from threev0_cli.config import get_threev0_home
 
     monkeypatch.delenv("TERMINAL_ENV", raising=False)
     monkeypatch.setattr(dump, "get_project_root", lambda: tmp_path / "noproject")
 
-    home = get_ev0_home()
+    home = get_threev0_home()
     _seed(home, config_yaml="terminal:\n  backend: docker\n", env_text="")
 
     dump.run_dump(SimpleNamespace(show_keys=False))

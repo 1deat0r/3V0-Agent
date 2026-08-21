@@ -527,14 +527,14 @@ class TestProtectedInstructionFiles:
         res = self._write(deep / "CLAUDE.md")
         assert res.get("error") and "BLOCKED" in res["error"]
 
-    def test_project_local_ev0_dir_is_gated(self, tmp_path, approvals):
+    def test_project_local_threev0_dir_is_gated(self, tmp_path, approvals):
         proj = tmp_path / "proj" / ".3V0"
         proj.mkdir(parents=True)
         approvals["answer"] = "deny"
         res = self._write(proj / "config.yaml")
         assert res.get("error") and "BLOCKED" in res["error"]
 
-    def test_checkout_nested_under_ev0_dir_not_gated(self, tmp_path, approvals):
+    def test_checkout_nested_under_threev0_dir_not_gated(self, tmp_path, approvals):
         """A repo living UNDER a .3V0 dir (e.g. ~/.3V0/3v0-agent)
         must not have every write gated — only files directly inside a
         .3V0 dir count as project config."""
@@ -544,7 +544,7 @@ class TestProtectedInstructionFiles:
         assert not res.get("error"), res
         assert approvals["calls"] == []
 
-    def test_real_ev0_home_not_gated_by_this_check(
+    def test_real_threev0_home_not_gated_by_this_check(
         self, tmp_path, approvals, monkeypatch
     ):
         """~/.3V0 itself is governed by existing guards, not this gate."""
@@ -552,7 +552,7 @@ class TestProtectedInstructionFiles:
         fake_home = tmp_path / ".3V0"
         (fake_home / "notes").mkdir(parents=True)
         monkeypatch.setattr(
-            ft, "_get_real_ev0_home", lambda: str(fake_home.resolve())
+            ft, "_get_real_threev0_home", lambda: str(fake_home.resolve())
         )
         res = self._write(fake_home / "notes" / "scratch.txt", "ok")
         assert not res.get("error"), res

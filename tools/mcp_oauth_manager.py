@@ -103,7 +103,7 @@ class _ProviderEntry:
 # ---------------------------------------------------------------------------
 
 
-def _make_ev0_provider_class() -> Optional[type]:
+def _make_threev0_provider_class() -> Optional[type]:
     """Lazy-import the SDK base class and return our subclass.
 
     Wrapped in a function so this module imports cleanly even when the
@@ -137,14 +137,14 @@ def _make_ev0_provider_class() -> Optional[type]:
             **kwargs: Any,
         ):
             super().__init__(*args, **kwargs)
-            self._ev0_server_name = server_name
-            self._ev0_home = ""
+            self._threev0_server_name = server_name
+            self._threev0_home = ""
             # When the client_id comes from config.yaml (pre-registered), an
             # invalid_client rejection means the *config* is wrong — deleting
             # client.json would just be re-seeded from config and re-running
             # registration can't help. Only auto-heal dynamically-registered
             # clients. See _maybe_flag_poisoned_client.
-            self._ev0_preregistered = preregistered
+            self._threev0_preregistered = preregistered
 
         def _coerce_client_secret_post(self) -> None:
             """Use client_secret_post when dynamic registration returned a secret.
@@ -274,7 +274,7 @@ def _make_ev0_provider_class() -> Optional[type]:
                     logger.debug(
                         "MCP OAuth '%s': restored metadata from disk "
                         "(token_endpoint=%s)",
-                        self._ev0_server_name,
+                        self._threev0_server_name,
                         meta.token_endpoint,
                     )
 
@@ -295,7 +295,7 @@ def _make_ev0_provider_class() -> Optional[type]:
                     logger.debug(
                         "MCP OAuth '%s': pre-flight metadata discovery "
                         "failed (non-fatal): %s",
-                        self._ev0_server_name, exc,
+                        self._threev0_server_name, exc,
                     )
 
         async def _prefetch_oauth_metadata(self) -> None:
@@ -328,7 +328,7 @@ def _make_ev0_provider_class() -> Optional[type]:
                     except httpx.HTTPError as exc:
                         logger.debug(
                             "MCP OAuth '%s': PRM discovery to %s failed: %s",
-                            self._ev0_server_name, url, exc,
+                            self._threev0_server_name, url, exc,
                         )
                         continue
                     prm = await handle_protected_resource_response(resp)
@@ -351,7 +351,7 @@ def _make_ev0_provider_class() -> Optional[type]:
                     except httpx.HTTPError as exc:
                         logger.debug(
                             "MCP OAuth '%s': ASM discovery to %s failed: %s",
-                            self._ev0_server_name, url, exc,
+                            self._threev0_server_name, url, exc,
                         )
                         continue
                     ok, asm = await handle_auth_metadata_response(resp)
@@ -368,7 +368,7 @@ def _make_ev0_provider_class() -> Optional[type]:
                         logger.debug(
                             "MCP OAuth '%s': pre-flight ASM discovered "
                             "token_endpoint=%s",
-                            self._ev0_server_name, asm.token_endpoint,
+                            self._threev0_server_name, asm.token_endpoint,
                         )
                         break
 
@@ -424,7 +424,7 @@ def _make_ev0_provider_class() -> Optional[type]:
             back to ``3v0 mcp reauth``.
             """
             try:
-                if self._ev0_preregistered:
+                if self._threev0_preregistered:
                     return
                 status = getattr(response, "status_code", None)
                 if status not in (400, 401):
@@ -458,7 +458,7 @@ def _make_ev0_provider_class() -> Optional[type]:
             except Exception as exc:  # pragma: no cover — defensive, must not throw
                 logger.debug(
                     "MCP OAuth '%s': invalid_client detection failed (non-fatal): %s",
-                    self._ev0_server_name, exc,
+                    self._threev0_server_name, exc,
                 )
 
         async def async_auth_flow(self, request):  # type: ignore[override]
@@ -467,13 +467,13 @@ def _make_ev0_provider_class() -> Optional[type]:
             # whatever state the SDK already has.
             try:
                 await get_manager().invalidate_if_disk_changed(
-                    self._ev0_server_name,
-                    ev0_home=self._ev0_home,
+                    self._threev0_server_name,
+                    threev0_home=self._threev0_home,
                 )
             except Exception as exc:  # pragma: no cover — defensive
                 logger.debug(
                     "MCP OAuth '%s': pre-flow disk-watch failed (non-fatal): %s",
-                    self._ev0_server_name, exc,
+                    self._threev0_server_name, exc,
                 )
 
             # Manually bridge the bidirectional generator protocol. httpx's
@@ -509,7 +509,7 @@ def _make_ev0_provider_class() -> Optional[type]:
 
 
 # Cached at import time. Tested and used by :class:`MCPOAuthManager`.
-_EV0_PROVIDER_CLS: Optional[type] = _make_ev0_provider_class()
+_EV0_PROVIDER_CLS: Optional[type] = _make_threev0_provider_class()
 
 
 # ---------------------------------------------------------------------------
@@ -569,18 +569,18 @@ class MCPOAuthManager:
             if entry.provider is None:
                 entry.provider = self._build_provider(server_name, entry)
                 if entry.provider is not None:
-                    entry.provider._ev0_home = key[0]
+                    entry.provider._threev0_home = key[0]
 
             return entry.provider
 
     @staticmethod
     def _key(
         server_name: str,
-        ev0_home: str | Path | None = None,
+        threev0_home: str | Path | None = None,
     ) -> tuple[str, str]:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        home = Path(ev0_home) if ev0_home is not None else get_ev0_home()
+        home = Path(threev0_home) if threev0_home is not None else get_threev0_home()
         return (str(home.expanduser().resolve(strict=False)), server_name)
 
     def _build_provider(
@@ -665,7 +665,7 @@ class MCPOAuthManager:
         self,
         server_name: str,
         *,
-        ev0_home: str | Path | None = None,
+        threev0_home: str | Path | None = None,
     ) -> _ProviderEntry | None:
         """Evict the provider from cache AND delete tokens from disk.
 
@@ -673,10 +673,10 @@ class MCPOAuthManager:
         ``3v0 mcp login <name>`` during forced re-auth.
         """
         with self._entries_lock:
-            entry = self._entries.pop(self._key(server_name, ev0_home), None)
+            entry = self._entries.pop(self._key(server_name, threev0_home), None)
 
         from tools.mcp_oauth import remove_oauth_tokens
-        remove_oauth_tokens(server_name, ev0_home=ev0_home)
+        remove_oauth_tokens(server_name, threev0_home=threev0_home)
         logger.info(
             "MCP OAuth '%s': evicted from cache and removed from disk",
             server_name,
@@ -688,23 +688,23 @@ class MCPOAuthManager:
         server_name: str,
         entry: _ProviderEntry | None,
         *,
-        ev0_home: str | Path | None = None,
+        threev0_home: str | Path | None = None,
     ) -> None:
         """Restore a provider entry removed for a failed reauthorization."""
         if entry is None:
             return
         with self._entries_lock:
-            self._entries.setdefault(self._key(server_name, ev0_home), entry)
+            self._entries.setdefault(self._key(server_name, threev0_home), entry)
 
     def evict(
         self,
         server_name: str,
         *,
-        ev0_home: str | Path | None = None,
+        threev0_home: str | Path | None = None,
     ) -> None:
         """Drop only the in-process provider, preserving persisted OAuth state."""
         with self._entries_lock:
-            self._entries.pop(self._key(server_name, ev0_home), None)
+            self._entries.pop(self._key(server_name, threev0_home), None)
 
     # -- Disk watch ----------------------------------------------------------
 
@@ -712,7 +712,7 @@ class MCPOAuthManager:
         self,
         server_name: str,
         *,
-        ev0_home: str | Path | None = None,
+        threev0_home: str | Path | None = None,
     ) -> bool:
         """If the tokens file on disk has a newer mtime than last-seen, force
         the MCP SDK provider to reload its in-memory state.
@@ -724,12 +724,12 @@ class MCPOAuthManager:
         """
         from tools.mcp_oauth import _get_token_dir, _safe_filename
 
-        entry = self._entries.get(self._key(server_name, ev0_home))
+        entry = self._entries.get(self._key(server_name, threev0_home))
         if entry is None or entry.provider is None:
             return False
 
         async with entry.lock:
-            tokens_path = _get_token_dir(ev0_home) / f"{_safe_filename(server_name)}.json"
+            tokens_path = _get_token_dir(threev0_home) / f"{_safe_filename(server_name)}.json"
             try:
                 mtime_ns = tokens_path.stat().st_mtime_ns
             except (FileNotFoundError, OSError):

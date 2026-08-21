@@ -54,9 +54,9 @@ class TestIsWriteDenied:
     )
     def test_oauth_traversal_denied(self, path):
         """Path traversal attempts to protected OAuth files must be blocked."""
-        from threev0_constants import get_ev0_home
-        ev0_home = get_ev0_home()
-        full_path = str(ev0_home / path)
+        from threev0_constants import get_threev0_home
+        threev0_home = get_threev0_home()
+        full_path = str(threev0_home / path)
         assert _is_write_denied(full_path) is True
 
 

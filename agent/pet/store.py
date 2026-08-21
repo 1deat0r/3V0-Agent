@@ -22,7 +22,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class InstalledPet:
 
 def pets_dir() -> Path:
     """Return the profile-scoped pets directory (created on demand)."""
-    path = get_ev0_home() / "pets"
+    path = get_threev0_home() / "pets"
     path.mkdir(parents=True, exist_ok=True)
     return path
 

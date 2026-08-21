@@ -139,7 +139,7 @@ def _set_reasoning_effort(config: Dict[str, Any], effort: str) -> None:
 from threev0_cli.config import (
     cfg_get,
     DEFAULT_CONFIG,
-    get_ev0_home,
+    get_threev0_home,
     get_config_path,
     get_env_path,
     load_config,
@@ -147,9 +147,9 @@ from threev0_cli.config import (
     save_env_value,
     remove_env_value,
     get_env_value,
-    ensure_ev0_home,
+    ensure_threev0_home,
 )
-# display_ev0_home imported lazily at call sites (stale-module safety during 3v0 update)
+# display_threev0_home imported lazily at call sites (stale-module safety during 3v0 update)
 
 from threev0_cli.colors import Colors, color
 
@@ -393,7 +393,7 @@ def _prompt_api_key(var: dict):
         print_warning("  Skipped (configure later with '3v0 setup')")
 
 
-def _print_setup_summary(config: dict, ev0_home):
+def _print_setup_summary(config: dict, threev0_home):
     """Print the setup completion summary."""
     # Provider readiness — the one thing setup absolutely must produce.
     # Previously a user could cancel the API-key prompt mid-wizard (Enter →
@@ -656,7 +656,7 @@ def _print_setup_summary(config: dict, ev0_home):
         print_warning(
             "Some tools are disabled. Run '3v0 setup tools' to configure them,"
         )
-        from threev0_constants import display_ev0_home as _dhh
+        from threev0_constants import display_threev0_home as _dhh
         print_warning(f"or edit {_dhh()}/.env directly to add the missing API keys.")
         print()
 
@@ -680,13 +680,13 @@ def _print_setup_summary(config: dict, ev0_home):
     print()
 
     # Show file locations prominently
-    from threev0_constants import display_ev0_home as _dhh
+    from threev0_constants import display_threev0_home as _dhh
     print(color(f"📁 All your files are in {_dhh()}/:", Colors.CYAN, Colors.BOLD))
     print()
     print(f"   {color('Settings:', Colors.YELLOW)}  {get_config_path()}")
     print(f"   {color('API Keys:', Colors.YELLOW)}  {get_env_path()}")
     print(
-        f"   {color('Data:', Colors.YELLOW)}      {ev0_home}/cron/, sessions/, logs/"
+        f"   {color('Data:', Colors.YELLOW)}      {threev0_home}/cron/, sessions/, logs/"
     )
     print()
 
@@ -1224,7 +1224,7 @@ def _setup_tts_provider(config: dict):
                     save_env_value("XAI_API_KEY", api_key)
                     print_success("xAI TTS API key saved")
                 else:
-                    from threev0_constants import display_ev0_home as _dhh
+                    from threev0_constants import display_threev0_home as _dhh
                     print_warning(
                         "No xAI API key provided for TTS. Configure XAI_API_KEY "
                         f"via 3v0 setup model or {_dhh()}/.env to use xAI TTS. "
@@ -1879,17 +1879,17 @@ def _setup_telegram_auto_result():
 
     profile_name: str | None = None
     try:
-        profile_name = _profile_name_from_ev0_home(Path(get_ev0_home()))
+        profile_name = _profile_name_from_threev0_home(Path(get_threev0_home()))
     except Exception:
         pass
 
     return auto_setup_telegram_bot_result(profile_name=profile_name)
 
 
-def _profile_name_from_ev0_home(ev0_home) -> str | None:
+def _profile_name_from_threev0_home(threev0_home) -> str | None:
     """Return the active profile name when EV0_HOME is a profile dir."""
-    if ev0_home.parent.name == "profiles":
-        return ev0_home.name
+    if threev0_home.parent.name == "profiles":
+        return threev0_home.name
     return None
 
 
@@ -2139,7 +2139,7 @@ def _setup_webhooks():
     save_env_value("WEBHOOK_ENABLED", "true")
     print()
     print_success("Webhooks enabled! Next steps:")
-    from threev0_constants import display_ev0_home as _dhh
+    from threev0_constants import display_threev0_home as _dhh
     print_info(f"   1. Define webhook routes in {_dhh()}/config.yaml")
     print_info("   2. Point your service (GitHub, GitLab, etc.) at:")
     print_info("      http://your-server:8644/webhooks/<route-name>")
@@ -2608,7 +2608,7 @@ def _print_migration_preview(report: dict):
         print()
 
 
-def _offer_openclaw_migration(ev0_home: Path) -> bool:
+def _offer_openclaw_migration(threev0_home: Path) -> bool:
     """Detect ~/.openclaw and offer to migrate during first-time setup.
 
     Runs a dry-run first to show the user exactly what would be imported,
@@ -2656,7 +2656,7 @@ def _offer_openclaw_migration(ev0_home: Path) -> bool:
         selected = mod.resolve_selected_options(None, None, preset="full")
         dry_migrator = mod.Migrator(
             source_root=openclaw_dir.resolve(),
-            target_root=ev0_home.resolve(),
+            target_root=threev0_home.resolve(),
             execute=False,  # dry-run — no files modified
             workspace_target=None,
             overwrite=True,  # show everything including conflicts
@@ -2701,7 +2701,7 @@ def _offer_openclaw_migration(ev0_home: Path) -> bool:
     try:
         migrator = mod.Migrator(
             source_root=openclaw_dir.resolve(),
-            target_root=ev0_home.resolve(),
+            target_root=threev0_home.resolve(),
             execute=True,
             workspace_target=None,
             overwrite=False,  # preserve existing 3V0 config
@@ -2857,7 +2857,7 @@ def run_setup_wizard(args):
     if is_managed():
         managed_error("run setup wizard")
         return
-    ensure_ev0_home()
+    ensure_threev0_home()
 
     reset_requested = bool(getattr(args, "reset", False))
     if reset_requested:
@@ -2868,7 +2868,7 @@ def run_setup_wizard(args):
     quick_requested = bool(getattr(args, "quick", False))
 
     config = load_config()
-    ev0_home = get_ev0_home()
+    threev0_home = get_threev0_home()
 
     # Back up existing config before setup modifies it (#3522)
     config_path = get_config_path()
@@ -2984,7 +2984,7 @@ def run_setup_wizard(args):
         # missing items" flow (useful after a partial OpenClaw migration
         # or when a required API key got cleared).
         if quick_requested:
-            _run_quick_setup(config, ev0_home)
+            _run_quick_setup(config, threev0_home)
             return
 
         print()
@@ -3009,7 +3009,7 @@ def run_setup_wizard(args):
             print()
 
         # Offer OpenClaw migration before configuration begins
-        migration_ran = _offer_openclaw_migration(ev0_home)
+        migration_ran = _offer_openclaw_migration(threev0_home)
         if migration_ran:
             config = load_config()
 
@@ -3024,17 +3024,17 @@ def run_setup_wizard(args):
         )
 
         if setup_mode == 0:
-            _run_first_time_quick_setup(config, ev0_home, is_existing)
+            _run_first_time_quick_setup(config, threev0_home, is_existing)
             return
         if setup_mode == 2:
-            _run_blank_slate_setup(config, ev0_home, is_existing)
+            _run_blank_slate_setup(config, threev0_home, is_existing)
             return
 
     # ── Full Setup — run all sections ──
     print_header("Configuration Location")
     print_info(f"Config file:  {get_config_path()}")
     print_info(f"Secrets file: {get_env_path()}")
-    print_info(f"Data folder:  {ev0_home}")
+    print_info(f"Data folder:  {threev0_home}")
     print_info(f"Install dir:  {PROJECT_ROOT}")
     print()
     print_info("You can edit these files directly or use '3v0 config edit'")
@@ -3078,10 +3078,10 @@ def run_setup_wizard(args):
         print_info(f"Previous config backed up to: {_backup_path}")
         print_info("If setup changed a value you customized, restore it with:")
         print_info(f"  cp {_backup_path} {config_path}")
-    _print_setup_summary(config, ev0_home)
+    _print_setup_summary(config, threev0_home)
 
 
-def _run_first_time_quick_setup(config: dict, ev0_home, is_existing: bool):
+def _run_first_time_quick_setup(config: dict, threev0_home, is_existing: bool):
     """Streamlined first-time setup via Nous Portal: OAuth, model, terminal & messaging.
 
     Routes straight to the Nous Portal provider — runs the device-code OAuth
@@ -3157,7 +3157,7 @@ def _run_first_time_quick_setup(config: dict, ev0_home, is_existing: bool):
         print_info("  Connect Telegram/Discord:  3v0 setup gateway")
     print()
 
-    _print_setup_summary(config, ev0_home)
+    _print_setup_summary(config, threev0_home)
 
 
 def _blank_slate_minimal_toolsets(config: dict):
@@ -3233,7 +3233,7 @@ def _blank_slate_minimize_config(config: dict):
     config.setdefault("display", {})["tool_progress"] = "all"
 
 
-def _run_blank_slate_setup(config: dict, ev0_home, is_existing: bool):
+def _run_blank_slate_setup(config: dict, threev0_home, is_existing: bool):
     """Blank Slate setup — start with everything off except the bare minimum.
 
     Forces only the essentials to run an agent (provider + model, the file and
@@ -3306,14 +3306,14 @@ def _run_blank_slate_setup(config: dict, ev0_home, is_existing: bool):
         print_info("  Enable plugins:      3v0 plugins")
         print_info("  Tune agent settings: 3v0 setup agent")
         print()
-        _print_setup_summary(config, ev0_home)
+        _print_setup_summary(config, threev0_home)
         return
 
     # ── Walkthrough path — opt in to each capability ──
-    _blank_slate_walkthrough(config, ev0_home)
+    _blank_slate_walkthrough(config, threev0_home)
 
 
-def _blank_slate_walkthrough(config: dict, ev0_home):
+def _blank_slate_walkthrough(config: dict, threev0_home):
     """Opt-in walkthrough for Blank Slate: skills, tools, plugins, MCP, gateway."""
     from threev0_cli.config import load_config
 
@@ -3393,10 +3393,10 @@ def _blank_slate_walkthrough(config: dict, ev0_home):
     print_info("  Tune agent settings: 3v0 setup agent")
     print()
 
-    _print_setup_summary(config, ev0_home)
+    _print_setup_summary(config, threev0_home)
 
 
-def _run_quick_setup(config: dict, ev0_home):
+def _run_quick_setup(config: dict, threev0_home):
     """Quick setup — only configure items that are missing."""
     from threev0_cli.config import (
         get_missing_env_vars,
@@ -3559,4 +3559,4 @@ def _run_quick_setup(config: dict, ev0_home):
         save_config(config)
 
     # Jump to summary
-    _print_setup_summary(config, ev0_home)
+    _print_setup_summary(config, threev0_home)

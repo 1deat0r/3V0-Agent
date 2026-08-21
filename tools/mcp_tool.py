@@ -165,8 +165,8 @@ def _get_mcp_stderr_log() -> Any:
         if _mcp_stderr_log_fh is not None:
             return _mcp_stderr_log_fh
         try:
-            from threev0_constants import get_ev0_home
-            log_dir = get_ev0_home() / "logs"
+            from threev0_constants import get_threev0_home
+            log_dir = get_threev0_home() / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
             log_path = log_dir / "mcp-stderr.log"
             # Line-buffered so server output lands on disk promptly; errors=
@@ -818,13 +818,13 @@ def _resolve_stdio_command(command: str, env: dict) -> tuple[str, dict]:
         if which_hit:
             resolved_command = which_hit
         elif resolved_command in {"npx", "npm", "node"}:
-            ev0_home = os.path.expanduser(
+            threev0_home = os.path.expanduser(
                 os.getenv(
                     "EV0_HOME", os.path.join(os.path.expanduser("~"), ".3V0")
                 )
             )
             candidates = [
-                os.path.join(ev0_home, "node", "bin", resolved_command),
+                os.path.join(threev0_home, "node", "bin", resolved_command),
                 os.path.join(os.path.expanduser("~"), ".local", "bin", resolved_command),
                 # /usr/local/bin is the canonical install location for Node on
                 # Linux from-source builds, the upstream node:bookworm-slim
@@ -4683,10 +4683,10 @@ def _try_acquire_mcp_discovery_lock() -> Any:
     """
     global _MCP_DISCOVERY_LOCK_PATH
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         if _MCP_DISCOVERY_LOCK_PATH is None:
             _MCP_DISCOVERY_LOCK_PATH = str(
-                get_ev0_home() / ".mcp-discovery.lock"
+                get_threev0_home() / ".mcp-discovery.lock"
             )
         lock_path = _MCP_DISCOVERY_LOCK_PATH
     except Exception:
@@ -4855,23 +4855,23 @@ def _wrap_with_home_override(coro: "Coroutine") -> "Coroutine":
     """
     try:
         from threev0_constants import (
-            get_ev0_home_override,
-            reset_ev0_home_override,
-            set_ev0_home_override,
+            get_threev0_home_override,
+            reset_threev0_home_override,
+            set_threev0_home_override,
         )
 
-        home_override = get_ev0_home_override()
+        home_override = get_threev0_home_override()
     except Exception:
         return coro
     if not home_override:
         return coro
 
     async def _scoped():
-        token = set_ev0_home_override(home_override)
+        token = set_threev0_home_override(home_override)
         try:
             return await coro
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
     return _scoped()
 
@@ -5115,8 +5115,8 @@ def _load_mcp_config() -> Dict[str, dict]:
             servers = {}
         # Ensure .env vars are available for interpolation
         try:
-            from threev0_cli.env_loader import load_ev0_dotenv
-            load_ev0_dotenv()
+            from threev0_cli.env_loader import load_threev0_dotenv
+            load_threev0_dotenv()
         except Exception:
             pass
         safe_servers: Dict[str, dict] = {}

@@ -205,7 +205,7 @@ def test_write_credential_pool_targets_profile_not_global(profile_env):
 def test_auth_lock_reentrancy_is_scoped_after_profile_context_switch(profile_env):
     """Changing profile context cannot inherit another store's lock depth."""
     import threev0_cli.auth as auth
-    from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+    from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 
     profile_b = profile_env["global"] / "profiles" / "reviewer"
     profile_b.mkdir(parents=True)
@@ -215,7 +215,7 @@ def test_auth_lock_reentrancy_is_scoped_after_profile_context_switch(profile_env
         holder_a = auth._auth_lock_holder_for(profile_env["profile"] / "auth.json")
         assert getattr(holder_a, "depth", 0) == 1
 
-        token = set_ev0_home_override(profile_b)
+        token = set_threev0_home_override(profile_b)
         try:
             holder_b = auth._auth_lock_holder_for(profile_b / "auth.json")
             assert holder_b is not holder_a
@@ -226,7 +226,7 @@ def test_auth_lock_reentrancy_is_scoped_after_profile_context_switch(profile_env
                 assert profile_b_lock.exists()
                 assert getattr(holder_b, "depth", 0) == 1
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
     assert getattr(holder_a, "depth", 0) == 0
 
@@ -242,10 +242,10 @@ def classic_env(tmp_path, monkeypatch):
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: fake_home)
-    ev0_home = tmp_path / "classic"
-    ev0_home.mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
-    return ev0_home
+    threev0_home = tmp_path / "classic"
+    threev0_home.mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
+    return threev0_home
 
 
 def _pool_entry(**overrides) -> dict:

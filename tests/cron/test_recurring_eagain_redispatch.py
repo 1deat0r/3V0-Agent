@@ -36,18 +36,18 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 @pytest.fixture
 def wedge_env(tmp_path, monkeypatch):
     """Isolated cron env + a recurring no_agent interval job, due NOW."""
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    (ev0_home / "cron").mkdir()
-    (ev0_home / "cron" / "output").mkdir()
-    (ev0_home / "scripts").mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    (threev0_home / "cron").mkdir()
+    (threev0_home / "cron" / "output").mkdir()
+    (threev0_home / "scripts").mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     import cron.jobs as jobs_mod
-    monkeypatch.setattr(jobs_mod, "EV0_DIR", ev0_home)
-    monkeypatch.setattr(jobs_mod, "CRON_DIR", ev0_home / "cron")
-    monkeypatch.setattr(jobs_mod, "JOBS_FILE", ev0_home / "cron" / "jobs.json")
-    monkeypatch.setattr(jobs_mod, "OUTPUT_DIR", ev0_home / "cron" / "output")
+    monkeypatch.setattr(jobs_mod, "EV0_DIR", threev0_home)
+    monkeypatch.setattr(jobs_mod, "CRON_DIR", threev0_home / "cron")
+    monkeypatch.setattr(jobs_mod, "JOBS_FILE", threev0_home / "cron" / "jobs.json")
+    monkeypatch.setattr(jobs_mod, "OUTPUT_DIR", threev0_home / "cron" / "output")
 
     # Create a recurring no_agent interval job.
     job = jobs_mod.create_job(
@@ -60,10 +60,10 @@ def wedge_env(tmp_path, monkeypatch):
     now = datetime.now(timezone.utc)
     jobs_mod.update_job(job["id"], {"next_run_at": (now - timedelta(minutes=1)).isoformat()})
 
-    script = ev0_home / "scripts" / "probe.py"
+    script = threev0_home / "scripts" / "probe.py"
     script.write_text("print('ok')\n")
 
-    return {"home": ev0_home, "job_id": job["id"]}
+    return {"home": threev0_home, "job_id": job["id"]}
 
 
 class TestEAGAINRecurringRedispatches:
@@ -106,7 +106,7 @@ class TestEAGAINRecurringRedispatches:
         env = wedge_env
         # Point the executions ledger at the throwaway home.
         monkeypatch.setattr(E, "EXECUTIONS_FILE", env["home"] / "cron" / "executions.db")
-        monkeypatch.setattr(S, "_ev0_home", env["home"])
+        monkeypatch.setattr(S, "_threev0_home", env["home"])
         monkeypatch.setattr(S, "get_due_jobs", S.get_due_jobs)  # no-op, keep real
 
         state = self._make_script_eagain(env, monkeypatch)
@@ -148,7 +148,7 @@ class TestEAGAINRecurringRedispatches:
 
         env = wedge_env
         monkeypatch.setattr(E, "EXECUTIONS_FILE", env["home"] / "cron" / "executions.db")
-        monkeypatch.setattr(S, "_ev0_home", env["home"])
+        monkeypatch.setattr(S, "_threev0_home", env["home"])
 
         self._make_script_eagain(env, monkeypatch)
         n1 = S.tick(verbose=False, sync=True)

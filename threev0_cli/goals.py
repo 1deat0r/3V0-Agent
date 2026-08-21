@@ -673,10 +673,10 @@ def _get_session_db() -> Optional[Any]:
     non-standard launchers can still use the GoalManager.
     """
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_state import SessionDB
 
-        home = str(get_ev0_home())
+        home = str(get_threev0_home())
     except Exception as exc:  # pragma: no cover
         logger.debug("GoalManager: SessionDB bootstrap failed (%s)", exc)
         return None

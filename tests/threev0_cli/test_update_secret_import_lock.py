@@ -109,8 +109,8 @@ def test_dotenv_loading_is_preserved_when_external_secrets_are_skipped(
         lambda path: applied.append(path),
     )
 
-    loaded = env_loader.load_ev0_dotenv(
-        ev0_home=home,
+    loaded = env_loader.load_threev0_dotenv(
+        threev0_home=home,
         load_external_secrets=external_secrets,
     )
 

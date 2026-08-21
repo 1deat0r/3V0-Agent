@@ -116,8 +116,8 @@ def _profile_home(profile: str) -> Optional[str]:
     except Exception:
         if not profile or profile == "default":
             try:
-                from threev0_cli.config import get_ev0_home
-                return str(get_ev0_home())
+                from threev0_cli.config import get_threev0_home
+                return str(get_threev0_home())
             except Exception:
                 return None
         return os.path.expanduser(f"~/.3V0/profiles/{profile}")

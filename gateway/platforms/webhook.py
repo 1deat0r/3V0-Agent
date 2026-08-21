@@ -503,9 +503,9 @@ class WebhookAdapter(BasePlatformAdapter):
 
     def _reload_dynamic_routes(self) -> None:
         """Reload agent-created subscriptions from disk if the file changed."""
-        from threev0_constants import get_ev0_home
-        ev0_home = get_ev0_home()
-        subs_path = ev0_home / _DYNAMIC_ROUTES_FILENAME
+        from threev0_constants import get_threev0_home
+        threev0_home = get_threev0_home()
+        subs_path = threev0_home / _DYNAMIC_ROUTES_FILENAME
         if not subs_path.exists():
             if self._dynamic_routes:
                 self._dynamic_routes = {}

@@ -15,7 +15,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 
 from threev0_cli.auth import AuthError, resolve_provider
 from threev0_cli.colors import Colors, color
-from threev0_cli.config import get_env_path, get_env_value, get_ev0_home, load_config
+from threev0_cli.config import get_env_path, get_env_value, get_threev0_home, load_config
 from threev0_cli.models import provider_label
 from threev0_cli.nous_account import (
     format_nous_portal_entitlement_message,
@@ -582,7 +582,7 @@ def show_status(args):
     print()
     print(color("◆ Scheduled Jobs", Colors.CYAN, Colors.BOLD))
 
-    jobs_file = get_ev0_home() / "cron" / "jobs.json"
+    jobs_file = get_threev0_home() / "cron" / "jobs.json"
     if jobs_file.exists():
         import json
         try:
@@ -631,7 +631,7 @@ def show_status(args):
         if freshest > 0:
             print(f"  Last activity:{_format_relative_ts(freshest):>13}")
     else:
-        sessions_file = get_ev0_home() / "sessions" / "sessions.json"
+        sessions_file = get_threev0_home() / "sessions" / "sessions.json"
         if sessions_file.exists():
             import json
             try:

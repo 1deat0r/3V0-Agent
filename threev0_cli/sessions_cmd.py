@@ -31,8 +31,8 @@ def _m():
     return main
 
 
-def get_ev0_home():
-    return _m().get_ev0_home()
+def get_threev0_home():
+    return _m().get_threev0_home()
 
 
 def _relative_time(ts):
@@ -111,7 +111,7 @@ def _prune_never_active_keyed(db, args):
         print("Aborted.")
         return
 
-    sessions_dir = get_ev0_home() / "sessions"
+    sessions_dir = get_threev0_home() / "sessions"
     deleted, routing_deleted = db.prune_never_active_keyed_sessions(
         older_than_days=days, sessions_dir=sessions_dir
     )
@@ -619,7 +619,7 @@ def cmd_sessions(args, sessions_parser=None):
                     out_dir = (
                         Path(args.output).expanduser()
                         if args.output and args.output != "-"
-                        else get_ev0_home() / "session-exports"
+                        else get_threev0_home() / "session-exports"
                     )
                     out_dir.mkdir(parents=True, exist_ok=True)
                     exported = 0
@@ -709,7 +709,7 @@ def cmd_sessions(args, sessions_parser=None):
             print("Markdown/QMD export writes files; stdout (-) is only supported with --format jsonl.")
             db.close()
             return
-        output_dir = Path(args.output).expanduser() if args.output else get_ev0_home() / "session-exports"
+        output_dir = Path(args.output).expanduser() if args.output else get_threev0_home() / "session-exports"
 
         def _export_one(session_id: str, *, include_lineage: bool = False):
             data = (
@@ -803,7 +803,7 @@ def cmd_sessions(args, sessions_parser=None):
                         )
                         db.close()
                         return
-                sessions_dir = get_ev0_home() / "sessions"
+                sessions_dir = get_threev0_home() / "sessions"
                 if db.delete_session(
                     resolved_session_id,
                     sessions_dir=sessions_dir,
@@ -872,7 +872,7 @@ def cmd_sessions(args, sessions_parser=None):
             ):
                 print("Cancelled.")
                 return
-        sessions_dir = get_ev0_home() / "sessions"
+        sessions_dir = get_threev0_home() / "sessions"
         if db.delete_session(resolved_session_id, sessions_dir=sessions_dir):
             print(f"Deleted session '{resolved_session_id}'.")
         else:
@@ -999,7 +999,7 @@ def cmd_sessions(args, sessions_parser=None):
                 return
 
         if action == "prune":
-            sessions_dir = get_ev0_home() / "sessions"
+            sessions_dir = get_threev0_home() / "sessions"
             count = db.prune_sessions(sessions_dir=sessions_dir, **filters)
             print(f"Pruned {count} session(s).")
         else:

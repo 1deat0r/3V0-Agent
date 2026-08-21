@@ -459,7 +459,7 @@ def synced_env(tmp_path, monkeypatch):
     home = tmp_path / "3v0"
     skills = home / "skills"
     skills.mkdir(parents=True)
-    monkeypatch.setattr(threev0_constants, "get_ev0_home", lambda: home)
+    monkeypatch.setattr(threev0_constants, "get_threev0_home", lambda: home)
     monkeypatch.setattr(ssc, "_skills_dir", lambda: skills)
 
     _write_skill(skills, "alpha", body="alpha v1\n")

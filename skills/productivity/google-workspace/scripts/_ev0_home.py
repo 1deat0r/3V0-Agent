@@ -2,7 +2,7 @@
 
 Skill scripts may run outside the 3V0 process (e.g. system Python,
 nix env, CI) where ``threev0_constants`` is not importable.  This module
-provides the same ``get_ev0_home()`` and ``display_ev0_home()``
+provides the same ``get_ev0_home()`` and ``display_threev0_home()``
 contracts as ``threev0_constants`` without requiring it on ``sys.path``.
 
 When ``threev0_constants`` IS available it is used directly so that any
@@ -20,22 +20,22 @@ import os
 from pathlib import Path
 
 try:
-    from threev0_constants import display_ev0_home as display_ev0_home
-    from threev0_constants import get_ev0_home as get_ev0_home
+    from threev0_constants import display_threev0_home as display_threev0_home
+    from threev0_constants import get_threev0_home as get_threev0_home
 except (ModuleNotFoundError, ImportError):
 
-    def get_ev0_home() -> Path:
+    def get_threev0_home() -> Path:
         """Return the 3V0 home directory (default: ~/.3V0).
 
         Mirrors ``threev0_constants.get_ev0_home()``."""
         val = os.environ.get("EV0_HOME", "").strip()
         return Path(val) if val else Path.home() / ".3V0"
 
-    def display_ev0_home() -> str:
+    def display_threev0_home() -> str:
         """Return a user-friendly ``~/``-shortened display string.
 
-        Mirrors ``threev0_constants.display_ev0_home()``."""
-        home = get_ev0_home()
+        Mirrors ``threev0_constants.display_threev0_home()``."""
+        home = get_threev0_home()
         try:
             return "~/" + str(home.relative_to(Path.home()))
         except ValueError:

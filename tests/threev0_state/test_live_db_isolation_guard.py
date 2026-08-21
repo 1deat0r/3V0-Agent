@@ -85,7 +85,7 @@ class TestHermeticPathsAllowed:
         finally:
             db.close()
 
-    def test_tmp_ev0_home_default_resolution_works(self, tmp_path, monkeypatch):
+    def test_tmp_threev0_home_default_resolution_works(self, tmp_path, monkeypatch):
         """Argless SessionDB() under a hermetic EV0_HOME must succeed."""
         monkeypatch.setenv("EV0_HOME", str(tmp_path / "hermetic-home"))
         monkeypatch.setattr(
@@ -144,7 +144,7 @@ class TestSessionStoreLoudFailure:
 
 
 class TestSubprocessChildCovered:
-    def test_child_without_ev0_home_is_refused(self, tmp_path):
+    def test_child_without_threev0_home_is_refused(self, tmp_path):
         """A subprocess child of a test (no EV0_HOME) must be blocked.
 
         This is the real leak vector: tests spawning ``python -m ...``
@@ -174,7 +174,7 @@ class TestSubprocessChildCovered:
         assert proc.returncode != 0
         assert "live-system guard" in proc.stderr
 
-    def test_child_with_tmp_ev0_home_succeeds(self, tmp_path):
+    def test_child_with_tmp_threev0_home_succeeds(self, tmp_path):
         """Same child, hermetic EV0_HOME: must work — no false positive."""
         env = {
             k: v

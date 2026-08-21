@@ -2882,9 +2882,9 @@ def _estimate_tool_tokens() -> Dict[str, int]:
     Returns an empty dict when tiktoken or the registry is unavailable.
     """
     global _tool_token_cache
-    from threev0_constants import ev0_home_key
+    from threev0_constants import threev0_home_key
 
-    scope = ev0_home_key()
+    scope = threev0_home_key()
 
     try:
         # Trigger full tool discovery (imports all tool modules).
@@ -5496,8 +5496,8 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
         platform_choices[idx] = f"Configure {pinfo['label']}  ({new_count}/{total} enabled)"
 
     print()
-    from threev0_constants import display_ev0_home
-    print(color(f"  Tool configuration saved to {display_ev0_home()}/config.yaml", Colors.DIM))
+    from threev0_constants import display_threev0_home
+    print(color(f"  Tool configuration saved to {display_threev0_home()}/config.yaml", Colors.DIM))
     print(color("  Changes take effect on next '3v0' or gateway restart.", Colors.DIM))
     print()
 

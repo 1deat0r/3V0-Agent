@@ -388,8 +388,8 @@ def _is_container_startup_environment_fast() -> bool:
     return _startup_fast.is_container_startup_environment()
 
 
-def _active_profile_may_override_home_fast(ev0_root: str) -> bool:
-    return _startup_fast.active_profile_may_override_home(ev0_root)
+def _active_profile_may_override_home_fast(threev0_root: str) -> bool:
+    return _startup_fast.active_profile_may_override_home(threev0_root)
 
 
 def _container_mode_may_be_active_fast() -> bool:
@@ -630,9 +630,9 @@ def _apply_profile_override() -> None:
     # still read active_profile — the user may have switched profiles via
     # `3v0 profile use` and the gateway should honour that choice.
     # See issue #22502.
-    ev0_home_env = os.environ.get("EV0_HOME", "")
-    if profile_name is None and ev0_home_env:
-        if Path(ev0_home_env).parent.name == "profiles":
+    threev0_home_env = os.environ.get("EV0_HOME", "")
+    if profile_name is None and threev0_home_env:
+        if Path(threev0_home_env).parent.name == "profiles":
             return
 
     # 2. If no flag, check active_profile in the 3v0 root.
@@ -649,9 +649,9 @@ def _apply_profile_override() -> None:
     # the "Docker & Profiles & Dashboard" report.
     if profile_name is None and not os.environ.get("EV0_S6_SUPERVISED_CHILD"):
         try:
-            from threev0_constants import get_default_ev0_root
+            from threev0_constants import get_default_threev0_root
 
-            active_path = get_default_ev0_root() / "active_profile"
+            active_path = get_default_threev0_root() / "active_profile"
             if active_path.exists():
                 name = active_path.read_text(encoding="utf-8").strip()
                 if name and name != "default":
@@ -665,10 +665,10 @@ def _apply_profile_override() -> None:
         try:
             from threev0_cli.profiles import resolve_profile_env
 
-            ev0_home = resolve_profile_env(profile_name)
+            threev0_home = resolve_profile_env(profile_name)
         except FileNotFoundError as exc:
-            ev0_home = _resolve_sudo_user_profile_env(profile_name)
-            if not ev0_home:
+            threev0_home = _resolve_sudo_user_profile_env(profile_name)
+            if not threev0_home:
                 print(f"Error: {exc}", file=sys.stderr)
                 sys.exit(1)
         except ValueError as exc:
@@ -681,8 +681,8 @@ def _apply_profile_override() -> None:
                 file=sys.stderr,
             )
             return
-        os.environ["EV0_HOME"] = ev0_home
-        os.environ["3V0_HOME"] = ev0_home  # canonical (ADR-0006); EV0_* legacy alias
+        os.environ["EV0_HOME"] = threev0_home
+        os.environ["3V0_HOME"] = threev0_home  # canonical (ADR-0006); EV0_* legacy alias
         # Strip the flag from argv so argparse doesn't choke
         if consume > 0 and profile_index is not None:
             start = profile_index + 1  # +1 because argv is sys.argv[1:]
@@ -693,8 +693,8 @@ _apply_profile_override()
 
 # Load .env from ~/.3V0/.env first, then project root as dev fallback.
 # User-managed env files should override stale shell exports on restart.
-from threev0_cli.config import get_ev0_home
-from threev0_cli.env_loader import load_ev0_dotenv
+from threev0_cli.config import get_threev0_home
+from threev0_cli.env_loader import load_threev0_dotenv
 
 # Updating dependencies must not import optional secret-manager libraries into
 # the updater process before ``uv`` replaces the environment.  On Windows,
@@ -703,7 +703,7 @@ from threev0_cli.env_loader import load_ev0_dotenv
 # flags have already been stripped above, so the first remaining argument is
 # the authoritative argparse subcommand.  Dotenv/managed config still loads;
 # only external secret fetches are unnecessary for installation maintenance.
-load_ev0_dotenv(
+load_threev0_dotenv(
     project_env=PROJECT_ROOT / ".env",
     load_external_secrets=sys.argv[1:2] != ["update"],
 )
@@ -725,7 +725,7 @@ try:
     # 3-4 config.yaml parses per invocation into one.
     from threev0_cli.config import read_raw_config as _read_raw_early
 
-    _cfg_path = get_ev0_home() / "config.yaml"
+    _cfg_path = get_threev0_home() / "config.yaml"
     if _cfg_path.exists():
         _early_cfg_raw = _read_raw_early() or {}
         # Managed scope: overlay administrator-pinned values so a managed
@@ -906,7 +906,7 @@ def _termux_bundled_skills_fingerprint() -> str:
 
 
 def _termux_bundled_skills_stamp_path() -> Path:
-    return get_ev0_home() / "skills" / ".termux_bundled_sync_stamp"
+    return get_threev0_home() / "skills" / ".termux_bundled_sync_stamp"
 
 
 def _termux_bundled_skills_sync_needed() -> bool:
@@ -969,7 +969,7 @@ def _relative_time(ts) -> str:
 
 def _has_any_provider_configured() -> bool:
     """Check if at least one inference provider is usable."""
-    from threev0_cli.config import get_env_path, get_ev0_home, load_config
+    from threev0_cli.config import get_env_path, get_threev0_home, load_config
     from threev0_cli.auth import get_auth_status
 
     # Determine whether 3V0 itself has been explicitly configured (model
@@ -993,7 +993,7 @@ def _has_any_provider_configured() -> bool:
         _model_name = model_cfg.strip()
     else:
         _model_name = ""
-    _has_ev0_config = _model_name and _model_name != _DEFAULT_MODEL
+    _has_threev0_config = _model_name and _model_name != _DEFAULT_MODEL
 
     # Check env vars (may be set by .env or shell).
     # OPENAI_BASE_URL alone counts — local models (vLLM, llama.cpp, etc.)
@@ -1036,7 +1036,7 @@ def _has_any_provider_configured() -> bool:
     # take 15-20s — long enough that desktop setup.status calls time out.
 
     # Check for Nous Portal OAuth credentials
-    auth_file = get_ev0_home() / "auth.json"
+    auth_file = get_threev0_home() / "auth.json"
     if auth_file.exists():
         try:
             import json
@@ -1075,7 +1075,7 @@ def _has_any_provider_configured() -> bool:
     # Check for Claude Code OAuth credentials (~/.claude/.credentials.json)
     # Only count these if 3V0 has been explicitly configured — Claude Code
     # being installed doesn't mean the user wants 3V0 to use their tokens.
-    if _has_ev0_config:
+    if _has_threev0_config:
         try:
             from agent.anthropic_adapter import (
                 read_claude_code_credentials,
@@ -1240,7 +1240,7 @@ def _session_browse_picker(sessions: list, session_db=None) -> Optional[str]:
         if session_db is None:
             return False
         try:
-            sessions_dir = get_ev0_home() / "sessions"
+            sessions_dir = get_threev0_home() / "sessions"
         except Exception:
             sessions_dir = None
         try:
@@ -1656,7 +1656,7 @@ def _exec_in_container(container_info: dict, cli_args: list):
     backend = container_info["backend"]
     container_name = container_info["container_name"]
     exec_user = container_info["exec_user"]
-    ev0_bin = container_info["ev0_bin"]
+    threev0_bin = container_info["ev0_bin"]
 
     runtime = shutil.which(backend)
     if not runtime:
@@ -1726,7 +1726,7 @@ def _exec_in_container(container_info: dict, cli_args: list):
         + tty_flags
         + ["-u", exec_user]
         + env_flags
-        + [container_name, ev0_bin]
+        + [container_name, threev0_bin]
         + cli_args
     )
 
@@ -2205,9 +2205,9 @@ def _ensure_tui_node() -> None:
     if not helper.is_file():
         return
 
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    ev0_home = str(get_ev0_home())
+    threev0_home = str(get_threev0_home())
     try:
         # Helper writes logs to stderr; we ask bash to print `command -v node`
         # on stdout once ensure_node succeeds. Subshell PATH edits don't leak
@@ -2218,7 +2218,7 @@ def _ensure_tui_node() -> None:
                 "-c",
                 f'source "{helper}" >&2 && ensure_node >&2 && command -v node',
             ],
-            env={**os.environ, "EV0_HOME": ev0_home},
+            env={**os.environ, "EV0_HOME": threev0_home},
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -2235,7 +2235,7 @@ def _ensure_tui_node() -> None:
     if resolved:
         extras.append(Path(resolved).resolve().parent)
 
-    extras.extend([Path(ev0_home) / "node" / "bin", Path.home() / ".local" / "bin"])
+    extras.extend([Path(threev0_home) / "node" / "bin", Path.home() / ".local" / "bin"])
 
     for extra in extras:
         s = str(extra)
@@ -2436,7 +2436,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
         ]
 
         def _run_tui_install() -> subprocess.CompletedProcess:
-            from threev0_constants import with_ev0_node_path
+            from threev0_constants import with_threev0_node_path
 
             # Managed tree first on PATH: if the EBADENGINE repair below
             # provisioned a managed Node, npm's shebang/lifecycle scripts must
@@ -2449,7 +2449,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                env=_npm_lifecycle_env(with_ev0_node_path()),
+                env=_npm_lifecycle_env(with_threev0_node_path()),
             )
 
         result = _run_tui_install()
@@ -3219,7 +3219,7 @@ def cmd_whatsapp(args):
     """Set up WhatsApp: choose mode, configure, install bridge, pair via QR."""
     _require_tty("whatsapp")
     from threev0_cli.config import get_env_value, save_env_value
-    from threev0_constants import find_node_executable, with_ev0_node_path
+    from threev0_constants import find_node_executable, with_threev0_node_path
 
     print()
     print("⚕ WhatsApp Setup")
@@ -3347,7 +3347,7 @@ def cmd_whatsapp(args):
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                env=with_ev0_node_path(),
+                env=with_threev0_node_path(),
             )
         except KeyboardInterrupt:
             print("\n  ✗ Install cancelled")
@@ -3363,7 +3363,7 @@ def cmd_whatsapp(args):
         print("✓ Bridge dependencies already installed")
 
     # ── Step 5: Check for existing session ───────────────────────────────
-    session_dir = get_ev0_home() / "whatsapp" / "session"
+    session_dir = get_threev0_home() / "whatsapp" / "session"
     session_dir.mkdir(parents=True, exist_ok=True)
 
     if (session_dir / "creds.json").exists():
@@ -3412,7 +3412,7 @@ def cmd_whatsapp(args):
                 str(session_dir),
             ],
             cwd=str(bridge_dir),
-            env=with_ev0_node_path(),
+            env=with_threev0_node_path(),
         )
     except KeyboardInterrupt:
         pass
@@ -4692,7 +4692,7 @@ _LAZY_COMMAND_EXPORTS = {
         "cmd_sessions",
     ),
     "threev0_cli.dashboard_procs": (
-        "_detect_concurrent_ev0_instances",
+        "_detect_concurrent_threev0_instances",
         "_filter_dashboard_respawn_candidates",
         "_kill_stale_dashboard_processes",
         "_scan_dashboard_processes",
@@ -5093,7 +5093,7 @@ def _run_anthropic_oauth_flow(save_env_value):
         ):
             use_anthropic_claude_code_credentials(save_fn=save_env_value)
             print("  ✓ Claude Code credentials linked.")
-            from threev0_constants import display_ev0_home as _dhh_fn
+            from threev0_constants import display_threev0_home as _dhh_fn
 
             print(
                 f"    3V0 will use Claude's credential store directly instead of copying a setup-token into {_dhh_fn()}/.env."
@@ -5810,8 +5810,8 @@ def _compute_web_ui_content_hash(project_root: Path, web_dir: Path) -> str:
 
 def _web_ui_stamp_path() -> Path:
     """Return the path to the web UI build stamp file under $EV0_HOME."""
-    from threev0_constants import get_ev0_home
-    return get_ev0_home() / "web-ui-build-stamp.json"
+    from threev0_constants import get_threev0_home
+    return get_threev0_home() / "web-ui-build-stamp.json"
 
 
 def _write_web_ui_build_stamp(project_root: Path, web_dir: Path) -> None:
@@ -6061,9 +6061,9 @@ def _run_npm_install_deterministic(
     # The repaired npm may be a freshly provisioned managed one whose shebang
     # and lifecycle scripts resolve `node` from PATH — put the managed tree
     # first so they find the managed Node, not the mismatched system one.
-    from threev0_constants import with_ev0_node_path
+    from threev0_constants import with_threev0_node_path
 
-    run_env["PATH"] = with_ev0_node_path(run_env)["PATH"]
+    run_env["PATH"] = with_threev0_node_path(run_env)["PATH"]
     return _attempt(repaired_npm)
 
 
@@ -6205,7 +6205,7 @@ def _do_build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
             encoding = getattr(sys.stdout, "encoding", None) or "ascii"
             print(text.encode(encoding, errors="replace").decode(encoding, errors="replace"))
 
-    from threev0_constants import with_ev0_node_path
+    from threev0_constants import with_threev0_node_path
 
     npm = _resolve_node_runtime_npm()
     if not npm:
@@ -6213,7 +6213,7 @@ def _do_build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
             _say("Web UI frontend not built and npm is not available.")
             _say("Install Node.js, then run:  cd web && npm install && npm run build")
         return not fatal
-    build_env = _npm_lifecycle_env(with_ev0_node_path())
+    build_env = _npm_lifecycle_env(with_threev0_node_path())
     _say("→ Building web UI...")
 
     def _relay(result: "subprocess.CompletedProcess") -> None:
@@ -6425,8 +6425,8 @@ def _compute_desktop_content_hash(project_root: Path) -> str:
 
 def _desktop_stamp_path() -> Path:
     """Return the path to the desktop build stamp file under $EV0_HOME."""
-    from threev0_constants import get_ev0_home
-    return get_ev0_home() / "desktop-build-stamp.json"
+    from threev0_constants import get_threev0_home
+    return get_threev0_home() / "desktop-build-stamp.json"
 
 
 def _renderer_bundle_dir(desktop_dir: Path, *, source_mode: bool) -> Optional[Path]:
@@ -7100,7 +7100,7 @@ def _redownload_electron_dist(
     installer = electron_dir / "install.js"
     if not installer.is_file():
         return False
-    from threev0_constants import find_node_executable, with_ev0_node_path
+    from threev0_constants import find_node_executable, with_threev0_node_path
 
     node = find_node_executable("node")
     if not node:
@@ -7113,7 +7113,7 @@ def _redownload_electron_dist(
     except OSError:
         pass
 
-    dl_env = with_ev0_node_path(env)
+    dl_env = with_threev0_node_path(env)
     if mirror:
         dl_env["ELECTRON_MIRROR"] = mirror
     try:
@@ -7277,7 +7277,7 @@ def _desktop_macos_has_valid_real_signature(app: Path) -> bool:
             [codesign, "-dv", str(app)], check=False, capture_output=True, text=True
         )
         output = f"{info.stdout}\n{info.stderr}"
-        if info.returncode != 0 or "TeamIdentifier=" not in output \
+        if info.returncode != 0 or "TeamIdentifier=" not in output\
                 or "TeamIdentifier=not set" in output:
             return False
         verify = subprocess.run(
@@ -7990,11 +7990,11 @@ def _respawn_dashboard_processes(commands: list[list[str]]) -> list[list[str]]:
     Desktop ``serve|dashboard --port 0`` backends are not replayed and
     duplicates are capped per profile (#78821).
     """
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
     respawned: list[list[str]] = []
     failed: list[tuple[list[str], str]] = []
-    log_path = get_ev0_home() / "logs" / "dashboard-restart.log"
+    log_path = get_threev0_home() / "logs" / "dashboard-restart.log"
     try:
         log_path.parent.mkdir(parents=True, exist_ok=True)
     except OSError:
@@ -8261,7 +8261,7 @@ def _recover_core_update_marker_locked() -> None:
     # ancestor. Full editable reinstall uses quarantine so the live shim can
     # still be replaced. Package-only import repair may help as first aid but
     # must NEVER clear this core marker on its own (#58004 review).
-    self_locked = _windows_running_ev0_launcher_locked()
+    self_locked = _windows_running_threev0_launcher_locked()
     if self_locked:
         install_prefix, install_env = _default_venv_install_target()
         print(
@@ -8312,7 +8312,7 @@ def _recover_core_update_marker_locked() -> None:
             print(f"    {sys.executable} -m pip install -e '.[all]'")
 
 
-def _windows_running_ev0_launcher_locked() -> bool:
+def _windows_running_threev0_launcher_locked() -> bool:
     """True when a venv ``3v0*.exe`` shim is this process or an ancestor.
 
     Best-effort: returns False when psutil is unavailable or inspection fails.
@@ -8322,7 +8322,7 @@ def _windows_running_ev0_launcher_locked() -> bool:
     scripts_dir = _venv_scripts_dir()
     if scripts_dir is None:
         return False
-    shims = _ev0_exe_shims(scripts_dir)
+    shims = _threev0_exe_shims(scripts_dir)
     if not shims:
         return False
     shim_set: set[str] = set()
@@ -8418,7 +8418,7 @@ def _venv_scripts_dir() -> Path | None:
     return scripts if scripts.is_dir() else None
 
 
-def _ev0_exe_shims(scripts_dir: Path) -> list[Path]:
+def _threev0_exe_shims(scripts_dir: Path) -> list[Path]:
     """Entry-point shims that uv may try to rewrite during ``pip install -e .``.
 
     On Windows these are .exe launchers generated by setuptools/uv. On POSIX
@@ -8435,7 +8435,7 @@ def _ev0_exe_shims(scripts_dir: Path) -> list[Path]:
     return [scripts_dir / f"{name}.exe" for name in sorted(names)]
 
 
-def _quarantine_running_ev0_exe(
+def _quarantine_running_threev0_exe(
     scripts_dir: Path, *, max_attempts: int = 4
 ) -> list[tuple[Path, Path]]:
     """Pre-empt Windows file lock on the running ``3v0.exe``.
@@ -8483,7 +8483,7 @@ def _quarantine_running_ev0_exe(
     backoff_ms = [0, 100, 250, 500, 1000]
     attempts = max(1, min(max_attempts, len(backoff_ms)))
 
-    for shim in _ev0_exe_shims(scripts_dir):
+    for shim in _threev0_exe_shims(scripts_dir):
         if not shim.exists():
             continue
         target = shim.with_suffix(shim.suffix + f".old.{stamp}")
@@ -8606,7 +8606,7 @@ def _run_quarantined_install(
     """
     moved: list[tuple[Path, Path]] = []
     if scripts_dir is not None:
-        moved = _quarantine_running_ev0_exe(scripts_dir)
+        moved = _quarantine_running_threev0_exe(scripts_dir)
     try:
         _run_install_with_heartbeat(cmd, env=env)
     finally:
@@ -9418,9 +9418,9 @@ def _install_hangup_protection(gateway_mode: bool = False):
     try:
         # Late-bound import so tests can monkeypatch
         # threev0_cli.config.get_ev0_home to simulate setup failure.
-        from threev0_cli.config import get_ev0_home as _get_ev0_home
+        from threev0_cli.config import get_threev0_home as _get_threev0_home
 
-        logs_dir = _get_ev0_home() / "logs"
+        logs_dir = _get_threev0_home() / "logs"
         logs_dir.mkdir(parents=True, exist_ok=True)
         log_path = logs_dir / "update.log"
         log_file = open(log_path, "a", buffering=1, encoding="utf-8")
@@ -9659,14 +9659,14 @@ def cmd_profile(args):
         _is_wrapper_dir_in_path,
         _get_wrapper_dir,
     )
-    from threev0_constants import display_ev0_home
+    from threev0_constants import display_threev0_home
 
     action = getattr(args, "profile_action", None)
 
     if action is None:
         # Bare `3v0 profile` — show current profile status
         profile_name = get_active_profile_name()
-        dhh = display_ev0_home()
+        dhh = display_threev0_home()
         print(f"\nActive profile: {profile_name}")
         print(f"Path:           {dhh}")
 
@@ -9895,7 +9895,7 @@ def cmd_profile(args):
         if name and not text_value and not auto_flag:
             try:
                 if _profiles_mod.normalize_profile_name(name) == "default":
-                    from threev0_constants import get_ev0_home as _hh
+                    from threev0_constants import get_threev0_home as _hh
                     profile_dir = Path(_hh())
                 else:
                     profile_dir = _profiles_mod.get_profile_dir(name)
@@ -9918,7 +9918,7 @@ def cmd_profile(args):
         if text_value:
             try:
                 if _profiles_mod.normalize_profile_name(name) == "default":
-                    from threev0_constants import get_ev0_home as _hh
+                    from threev0_constants import get_threev0_home as _hh
                     profile_dir = Path(_hh())
                 else:
                     profile_dir = _profiles_mod.get_profile_dir(name)
@@ -10238,7 +10238,7 @@ def _render_distribution_plan(plan) -> None:
         print(f"  {mf.description}")
     if mf.author:
         print(f"  Author:   {mf.author}")
-    if mf.ev0_requires:
+    if mf.threev0_requires:
         print(f"  Requires: 3V0 {mf.ev0_requires}")
     print(f"  Source:   {plan.provenance}")
     print(f"  Target:   {plan.target_dir}")
@@ -10731,8 +10731,8 @@ def cmd_dashboard(args):
         # and /opt/data for Docker (it strips a trailing profiles/<name>).
         # See the support report for the double-mount workaround this avoids.
         try:
-            from threev0_constants import get_default_ev0_root
-            env["EV0_HOME"] = str(get_default_ev0_root())
+            from threev0_constants import get_default_threev0_root
+            env["EV0_HOME"] = str(get_default_threev0_root())
             env["3V0_HOME"] = env["EV0_HOME"]  # canonical (ADR-0006)
         except Exception:
             # Best-effort: if root resolution fails, fall back to the prior
@@ -11489,9 +11489,9 @@ def cmd_memory(args):
         print("\n  ✓ Memory provider: built-in only")
         print("  Saved to config.yaml\n")
     elif sub == "reset":
-        from threev0_constants import get_ev0_home, display_ev0_home
+        from threev0_constants import get_threev0_home, display_threev0_home
 
-        mem_dir = get_ev0_home() / "memories"
+        mem_dir = get_threev0_home() / "memories"
         target = getattr(args, "target", "all")
         files_to_reset = []
         if target in {"all", "memory"}:
@@ -11505,7 +11505,7 @@ def cmd_memory(args):
         ]
         if not existing:
             print(
-                f"\n  Nothing to reset — no memory files found in {display_ev0_home()}/memories/\n"
+                f"\n  Nothing to reset — no memory files found in {display_threev0_home()}/memories/\n"
             )
             return
 
@@ -11532,7 +11532,7 @@ def cmd_memory(args):
         print(
             "\n  Memory reset complete. New sessions will start with a blank slate."
         )
-        print(f"  Files were in: {display_ev0_home()}/memories/\n")
+        print(f"  Files were in: {display_threev0_home()}/memories/\n")
     else:
         from threev0_cli.memory_setup import memory_command
 

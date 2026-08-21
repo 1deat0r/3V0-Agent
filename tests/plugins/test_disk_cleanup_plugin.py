@@ -28,10 +28,10 @@ def _isolate_env(tmp_path, monkeypatch):
     but we want the plugin to work with a predictable subpath. We reset
     EV0_HOME here for clarity.
     """
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
-    yield ev0_home
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
+    yield threev0_home
 
 
 def _load_lib():
@@ -75,14 +75,14 @@ def _load_plugin_init():
 # ---------------------------------------------------------------------------
 
 class TestIsSafePath:
-    def test_accepts_path_under_ev0_home(self, _isolate_env):
+    def test_accepts_path_under_threev0_home(self, _isolate_env):
         dg = _load_lib()
         p = _isolate_env / "subdir" / "file.txt"
         p.parent.mkdir()
         p.write_text("x")
         assert dg.is_safe_path(p) is True
 
-    def test_rejects_outside_ev0_home(self, _isolate_env):
+    def test_rejects_outside_threev0_home(self, _isolate_env):
         dg = _load_lib()
         assert dg.is_safe_path(Path("/etc/passwd")) is False
 
@@ -371,10 +371,10 @@ class TestSlashCommand:
 # ---------------------------------------------------------------------------
 
 class TestBundledDiscovery:
-    def _write_enabled_config(self, ev0_home, names):
+    def _write_enabled_config(self, threev0_home, names):
         """Write plugins.enabled allow-list to config.yaml."""
         import yaml
-        cfg_path = ev0_home / "config.yaml"
+        cfg_path = threev0_home / "config.yaml"
         cfg_path.write_text(yaml.safe_dump({"plugins": {"enabled": list(names)}}))
 
     def test_disk_cleanup_discovered_but_not_loaded_by_default(self, _isolate_env):

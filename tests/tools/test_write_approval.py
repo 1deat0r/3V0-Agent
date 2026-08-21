@@ -16,7 +16,7 @@ import pytest
 
 
 @pytest.fixture
-def ev0_home(monkeypatch):
+def threev0_home(monkeypatch):
     d = tempfile.mkdtemp(prefix="ev0_wa_test_")
     home = os.path.join(d, ".3V0")
     os.makedirs(home)
@@ -36,14 +36,14 @@ def _set_approval(subsystem, enabled):
 # Config resolution
 # ---------------------------------------------------------------------------
 
-def test_default_gate_is_off(ev0_home):
+def test_default_gate_is_off(threev0_home):
     from tools import write_approval as wa
     # Default: gate off → writes flow freely.
     assert wa.write_approval_enabled("memory") is False
     assert wa.write_approval_enabled("skills") is False
 
 
-def test_invalid_subsystem_is_off(ev0_home):
+def test_invalid_subsystem_is_off(threev0_home):
     from tools import write_approval as wa
     assert wa.write_approval_enabled("bogus") is False
 
@@ -67,7 +67,7 @@ def test_normalize_enabled_coerces_values():
 # Memory gate
 # ---------------------------------------------------------------------------
 
-def test_memory_gate_off_allows_write(ev0_home):
+def test_memory_gate_off_allows_write(threev0_home):
     # Default (gate off) → write straight through, no staging.
     from tools.memory_tool import memory_tool, MemoryStore
     from tools import write_approval as wa
@@ -78,7 +78,7 @@ def test_memory_gate_off_allows_write(ev0_home):
     assert wa.pending_count("memory") == 0
 
 
-def test_cli_memory_approve_without_live_agent_uses_fresh_store(ev0_home, capsys):
+def test_cli_memory_approve_without_live_agent_uses_fresh_store(threev0_home, capsys):
     """#46783: ``/memory approve`` from a context with no live agent (e.g. the
     Desktop GUI) passed ``memory_store=None`` into the shared handler, which
     returned "memory store unavailable" and applied nothing. The CLI handler must
@@ -108,7 +108,7 @@ def test_cli_memory_approve_without_live_agent_uses_fresh_store(ev0_home, capsys
     assert any("remember the launch date" in e for e in reloaded.memory_entries)
 
 
-def test_load_on_disk_store_honors_configured_char_limits(ev0_home, monkeypatch):
+def test_load_on_disk_store_honors_configured_char_limits(threev0_home, monkeypatch):
     """load_on_disk_store() must read memory.memory_char_limit /
     user_char_limit from config so approvals applied without a live agent
     enforce the SAME caps as the live agent (agent_init.py). Falls back to
@@ -155,7 +155,7 @@ _SKILL = (
 # ---------------------------------------------------------------------------
 
 
-def test_handle_approve_all(ev0_home):
+def test_handle_approve_all(threev0_home):
     from threev0_cli.write_approval_commands import handle_pending_subcommand
     from tools.memory_tool import MemoryStore
     from tools import write_approval as wa
@@ -170,7 +170,7 @@ def test_handle_approve_all(ev0_home):
     assert len(store.user_entries) == 2
 
 
-def test_handle_approval_on(ev0_home):
+def test_handle_approval_on(threev0_home):
     from threev0_cli.write_approval_commands import handle_pending_subcommand
     from tools import write_approval as wa
     captured = {}
@@ -182,7 +182,7 @@ def test_handle_approval_on(ev0_home):
     assert "on" in out
 
 
-def test_handle_approval_off(ev0_home):
+def test_handle_approval_off(threev0_home):
     from threev0_cli.write_approval_commands import handle_pending_subcommand
     from tools import write_approval as wa
     captured = {}
@@ -207,7 +207,7 @@ def approval_callback_cleanup():
     set_approval_callback(None)
 
 
-def test_memory_inline_approve_writes(ev0_home, approval_callback_cleanup):
+def test_memory_inline_approve_writes(threev0_home, approval_callback_cleanup):
     from tools.memory_tool import memory_tool, MemoryStore
     from tools.terminal_tool import set_approval_callback
     from tools import write_approval as wa
@@ -230,7 +230,7 @@ def test_memory_inline_approve_writes(ev0_home, approval_callback_cleanup):
     assert "approved fact" in calls[0][0]
 
 
-def test_memory_inline_deny_blocks(ev0_home, approval_callback_cleanup):
+def test_memory_inline_deny_blocks(threev0_home, approval_callback_cleanup):
     from tools.memory_tool import memory_tool, MemoryStore
     from tools.terminal_tool import set_approval_callback
     from tools import write_approval as wa
@@ -245,7 +245,7 @@ def test_memory_inline_deny_blocks(ev0_home, approval_callback_cleanup):
     assert wa.pending_count("memory") == 0  # denied, not staged
 
 
-def test_memory_invalid_params_rejected_before_staging(ev0_home):
+def test_memory_invalid_params_rejected_before_staging(threev0_home):
     # Param validation must run BEFORE the gate so a broken write is rejected
     # immediately instead of staged and failing at approve time.
     from tools.memory_tool import memory_tool, MemoryStore

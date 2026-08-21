@@ -18,14 +18,14 @@ if not _MCP_AVAILABLE:
         _mcp_mod.ClientSession = MagicMock
 
 
-def test_resolve_stdio_command_falls_back_to_ev0_node_bin(tmp_path):
+def test_resolve_stdio_command_falls_back_to_threev0_node_bin(tmp_path):
     node_bin = tmp_path / "node" / "bin"
     node_bin.mkdir(parents=True)
     npx_path = node_bin / "npx"
     npx_path.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
     npx_path.chmod(0o755)
 
-    with patch("tools.mcp_tool.shutil.which", return_value=None), \
+    with patch("tools.mcp_tool.shutil.which", return_value=None),\
          patch.dict("os.environ", {"EV0_HOME": str(tmp_path)}, clear=False):
         command, env = _resolve_stdio_command("npx", {"PATH": "/usr/bin"})
 
@@ -55,8 +55,8 @@ def test_resolve_stdio_command_falls_back_to_usr_local_bin():
     def _fake_access(path, _mode):
         return path == target
 
-    with patch("tools.mcp_tool.shutil.which", return_value=None), \
-         patch("tools.mcp_tool.os.path.isfile", side_effect=_fake_isfile), \
+    with patch("tools.mcp_tool.shutil.which", return_value=None),\
+         patch("tools.mcp_tool.os.path.isfile", side_effect=_fake_isfile),\
          patch("tools.mcp_tool.os.access", side_effect=_fake_access):
         command, env = _resolve_stdio_command("npx", {"PATH": "/opt/data/bin:/usr/bin:/bin"})
 
@@ -105,9 +105,9 @@ def test_run_stdio_malware_check_does_not_block_event_loop():
             ticks["n"] += 1
 
     async def _test():
-        with patch("tools.osv_check.check_package_for_malware", side_effect=slow_check), \
-             patch("tools.mcp_tool.StdioServerParameters"), \
-             patch("tools.mcp_tool.stdio_client", return_value=mock_stdio_cm), \
+        with patch("tools.osv_check.check_package_for_malware", side_effect=slow_check),\
+             patch("tools.mcp_tool.StdioServerParameters"),\
+             patch("tools.mcp_tool.stdio_client", return_value=mock_stdio_cm),\
              patch("tools.mcp_tool.ClientSession", return_value=mock_session_cm):
             server = MCPServerTask("srv")
             ticker = asyncio.create_task(_ticker())
@@ -132,10 +132,10 @@ def test_run_stdio_malware_check_times_out_fail_open():
         return "MALWARE"  # would block startup if awaited to completion
 
     async def _test():
-        with patch("tools.osv_check.check_package_for_malware", side_effect=hung_check), \
-             patch("tools.mcp_tool._OSV_MALWARE_CHECK_TIMEOUT_S", 0.2), \
-             patch("tools.mcp_tool.StdioServerParameters"), \
-             patch("tools.mcp_tool.stdio_client", return_value=mock_stdio_cm), \
+        with patch("tools.osv_check.check_package_for_malware", side_effect=hung_check),\
+             patch("tools.mcp_tool._OSV_MALWARE_CHECK_TIMEOUT_S", 0.2),\
+             patch("tools.mcp_tool.StdioServerParameters"),\
+             patch("tools.mcp_tool.stdio_client", return_value=mock_stdio_cm),\
              patch("tools.mcp_tool.ClientSession", return_value=mock_session_cm):
             server = MCPServerTask("srv")
             start = time.monotonic()

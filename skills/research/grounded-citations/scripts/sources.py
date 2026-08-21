@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _ev0_home import get_ev0_home  # noqa: E402
+from _threev0_home import get_threev0_home  # noqa: E402
 
 SCHEMA_VERSION = 1
 
@@ -68,7 +68,7 @@ def resolve_ledger_path(explicit: str | None = None) -> Path:
     env = os.environ.get("EV0_CITATION_LEDGER", "").strip()
     if env:
         return Path(env).expanduser()
-    return get_ev0_home() / "cache" / "citations" / "ledger.json"
+    return get_threev0_home() / "cache" / "citations" / "ledger.json"
 
 
 def normalize_url(url: str) -> str:

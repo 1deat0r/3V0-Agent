@@ -14,11 +14,11 @@ from collections import OrderedDict
 from pathlib import Path
 
 from threev0_constants import (
-    get_ev0_home,
+    get_threev0_home,
     get_skills_dir,
     is_wsl,
-    reset_ev0_home_override,
-    set_ev0_home_override,
+    reset_threev0_home_override,
+    set_threev0_home_override,
 )
 from typing import List, Optional
 
@@ -101,7 +101,7 @@ def _find_git_root(start: Path) -> Optional[Path]:
 _EV0_MD_NAMES = (".3v0.md", "EV0.md")
 
 
-def _find_ev0_md(cwd: Path) -> Optional[Path]:
+def _find_threev0_md(cwd: Path) -> Optional[Path]:
     """Discover the nearest ``.3v0.md`` or ``EV0.md``.
 
     Search order: *cwd* first, then each parent directory up to (and
@@ -1514,7 +1514,7 @@ _SKILLS_SNAPSHOT_VERSION = 2
 
 
 def _skills_prompt_snapshot_path() -> Path:
-    return get_ev0_home() / ".skills_prompt_snapshot.json"
+    return get_threev0_home() / ".skills_prompt_snapshot.json"
 
 
 def clear_skills_system_prompt_cache(*, clear_snapshot: bool = False) -> None:
@@ -1777,7 +1777,7 @@ def build_skills_system_prompt(
     # dirs are scoped to the same home so nothing reads ambient state.
     if skills_dir_override is not None:
         skills_dir = Path(skills_dir_override)
-        _home_token = set_ev0_home_override(str(skills_dir.parent))
+        _home_token = set_threev0_home_override(str(skills_dir.parent))
     else:
         skills_dir = get_skills_dir()
         _home_token = None
@@ -1796,7 +1796,7 @@ def build_skills_system_prompt(
         )
     finally:
         if _home_token is not None:
-            reset_ev0_home_override(_home_token)
+            reset_threev0_home_override(_home_token)
 
 
 def _build_skills_system_prompt_inner(
@@ -2193,12 +2193,12 @@ def load_soul_md(
     same class as the skills-index leak fixed in #86313).
     """
     try:
-        from threev0_cli.config import ensure_ev0_home
-        ensure_ev0_home()
+        from threev0_cli.config import ensure_threev0_home
+        ensure_threev0_home()
     except Exception as e:
         logger.debug("Could not ensure EV0_HOME before loading SOUL.md: %s", e)
 
-    _home = Path(home_override) if home_override is not None else get_ev0_home()
+    _home = Path(home_override) if home_override is not None else get_threev0_home()
     soul_path = _home / "SOUL.md"
     if not soul_path.exists():
         return None
@@ -2217,29 +2217,29 @@ def load_soul_md(
         return None
 
 
-def _load_ev0_md(cwd_path: Path, context_length: Optional[int] = None) -> str:
+def _load_threev0_md(cwd_path: Path, context_length: Optional[int] = None) -> str:
     """.3v0.md / EV0.md — walk to git root."""
-    ev0_md_path = _find_ev0_md(cwd_path)
-    if not ev0_md_path:
+    threev0_md_path = _find_threev0_md(cwd_path)
+    if not threev0_md_path:
         return ""
     try:
-        content = ev0_md_path.read_text(encoding="utf-8").strip()
+        content = threev0_md_path.read_text(encoding="utf-8").strip()
         if not content:
             return ""
         content = _strip_yaml_frontmatter(content)
-        rel = ev0_md_path.name
+        rel = threev0_md_path.name
         try:
-            rel = str(ev0_md_path.relative_to(cwd_path))
+            rel = str(threev0_md_path.relative_to(cwd_path))
         except ValueError:
             pass
         content = _scan_context_content(content, rel)
         result = f"## {rel}\n\n{content}"
         return _truncate_content(
             result, ".3v0.md", context_length=context_length,
-            read_path=str(ev0_md_path),
+            read_path=str(threev0_md_path),
         )
     except Exception as e:
-        logger.debug("Could not read %s: %s", ev0_md_path, e)
+        logger.debug("Could not read %s: %s", threev0_md_path, e)
         return ""
 
 
@@ -2436,7 +2436,7 @@ def build_context_files_prompt(
     else:
         # Priority-based project context: first match wins
         project_context = (
-            _load_ev0_md(cwd_path, context_length)
+            _load_threev0_md(cwd_path, context_length)
             or _load_agents_md(cwd_path, context_length)
             or _load_claude_md(cwd_path, context_length)
             or _load_cursorrules(cwd_path, context_length)

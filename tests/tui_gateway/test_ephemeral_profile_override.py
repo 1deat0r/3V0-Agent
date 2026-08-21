@@ -65,8 +65,8 @@ def override_calls():
     agent_instance.run_conversation.return_value = {"final_response": "done"}
 
     with patch("tui_gateway.server.threading.Thread", _InlineThread), \
-        patch("tui_gateway.server.set_ev0_home_override", return_value="TOK") as m_set, \
-        patch("tui_gateway.server.reset_ev0_home_override") as m_reset, \
+        patch("tui_gateway.server.set_threev0_home_override", return_value="TOK") as m_set, \
+        patch("tui_gateway.server.reset_threev0_home_override") as m_reset, \
         patch("tui_gateway.server._background_agent_kwargs", return_value={}), \
         patch("tui_gateway.server._ephemeral_preview_agent_kwargs", return_value={}), \
         patch("tui_gateway.server._preview_restart_callbacks", return_value={}), \

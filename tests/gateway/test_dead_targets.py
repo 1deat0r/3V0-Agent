@@ -37,8 +37,8 @@ class TransientFailAdapter:
 
 @pytest.fixture
 def isolate(tmp_path, monkeypatch):
-    monkeypatch.setattr("gateway.delivery.get_ev0_home", lambda: tmp_path)
-    monkeypatch.setattr("gateway.dead_targets.get_ev0_home", lambda: tmp_path)
+    monkeypatch.setattr("gateway.delivery.get_threev0_home", lambda: tmp_path)
+    monkeypatch.setattr("gateway.dead_targets.get_threev0_home", lambda: tmp_path)
     return tmp_path
 
 

@@ -29,7 +29,7 @@ def _isolate_config(tmp_path, monkeypatch):
     """Redirect all config I/O to a temp directory."""
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
     monkeypatch.setattr(
-        "threev0_cli.config.get_ev0_home", lambda: tmp_path
+        "threev0_cli.config.get_threev0_home", lambda: tmp_path
     )
     config_path = tmp_path / "config.yaml"
     env_path = tmp_path / ".env"
@@ -154,7 +154,7 @@ class TestMcpRemove:
         monkeypatch.setattr("builtins.input", lambda _: "y")
         # Also patch get_ev0_home in the mcp_config module namespace
         monkeypatch.setattr(
-            "threev0_cli.mcp_config.get_ev0_home", lambda: tmp_path
+            "threev0_cli.mcp_config.get_threev0_home", lambda: tmp_path
         )
 
         # Create a fake token file
@@ -692,7 +692,7 @@ class TestMcpRemoveEvictsManager:
         })
         monkeypatch.setattr("builtins.input", lambda _: "y")
         monkeypatch.setattr(
-            "threev0_cli.mcp_config.get_ev0_home", lambda: tmp_path
+            "threev0_cli.mcp_config.get_threev0_home", lambda: tmp_path
         )
         monkeypatch.setenv("EV0_HOME", str(tmp_path))
         _set_interactive_stdin(monkeypatch)

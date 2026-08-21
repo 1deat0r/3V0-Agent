@@ -180,9 +180,9 @@ def _(rid, params: dict) -> dict:
         except Exception as e:
             return _err(rid, 5013, str(e))
     if key == "profile":
-        from threev0_constants import display_ev0_home
+        from threev0_constants import display_threev0_home
 
-        return _ok(rid, {"home": str(_ev0_home), "display": display_ev0_home()})
+        return _ok(rid, {"home": str(_threev0_home), "display": display_threev0_home()})
     if key == "project":
         cfg_terminal = _load_cfg().get("terminal") or {}
         raw = str(params.get("cwd", "") or cfg_terminal.get("cwd", "") or "").strip()
@@ -328,7 +328,7 @@ def _(rid, params: dict) -> dict:
         display = _load_cfg().get("display")
         return _ok(rid, {"value": _display_mouse_tracking(display)})
     if key == "mtime":
-        cfg_path = _ev0_home / "config.yaml"
+        cfg_path = _threev0_home / "config.yaml"
         try:
             mtime = cfg_path.stat().st_mtime if cfg_path.exists() else 0
         except Exception:

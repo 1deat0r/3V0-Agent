@@ -38,7 +38,7 @@ def _make_task(kb, *, assignee: str = "w"):
 
 
 def _capture_spawn_env(kb, monkeypatch, workspace: str) -> dict:
-    monkeypatch.setattr(kb, "_resolve_ev0_argv", lambda: ["3v0"])
+    monkeypatch.setattr(kb, "_resolve_threev0_argv", lambda: ["3v0"])
 
     captured: dict = {}
 

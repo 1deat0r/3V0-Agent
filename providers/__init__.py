@@ -100,9 +100,9 @@ def list_providers() -> list[ProviderProfile]:
 def _user_plugins_dir() -> Path | None:
     """Return ``$EV0_HOME/plugins/model-providers/`` if it exists."""
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        d = get_ev0_home() / "plugins" / "model-providers"
+        d = get_threev0_home() / "plugins" / "model-providers"
         return d if d.is_dir() else None
     except Exception:
         return None

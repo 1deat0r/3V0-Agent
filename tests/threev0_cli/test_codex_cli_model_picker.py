@@ -29,16 +29,16 @@ def _make_fake_jwt(expiry_offset: int = 3600) -> str:
 
 
 @pytest.fixture()
-def ev0_auth_only_env(tmp_path, monkeypatch):
+def threev0_auth_only_env(tmp_path, monkeypatch):
     """Tokens already in 3V0 auth store (no Codex CLI needed)."""
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
 
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     # Point CODEX_HOME to nonexistent dir to prove it's not needed
     monkeypatch.setenv("CODEX_HOME", str(tmp_path / "no_codex"))
 
-    (ev0_home / "auth.json").write_text(json.dumps({
+    (threev0_home / "auth.json").write_text(json.dumps({
         "version": 2,
         "providers": {
             "openai-codex": {
@@ -57,10 +57,10 @@ def ev0_auth_only_env(tmp_path, monkeypatch):
     ]:
         monkeypatch.delenv(var, raising=False)
 
-    return ev0_home
+    return threev0_home
 
 
-def test_normal_path_still_works(ev0_auth_only_env):
+def test_normal_path_still_works(threev0_auth_only_env):
     """openai-codex appears when tokens are already in 3V0 auth store."""
     from threev0_cli.model_switch import list_authenticated_providers
 
@@ -79,14 +79,14 @@ def claude_code_only_env(tmp_path, monkeypatch):
     """Set up an environment where Anthropic credentials only exist in
     ~/.claude/.credentials.json (Claude Code) — not in env vars or 3V0
     auth store."""
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
 
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     # No Codex CLI
     monkeypatch.setenv("CODEX_HOME", str(tmp_path / "no_codex"))
 
-    (ev0_home / "auth.json").write_text(
+    (threev0_home / "auth.json").write_text(
         json.dumps({"version": 2, "providers": {}})
     )
 
@@ -111,7 +111,7 @@ def claude_code_only_env(tmp_path, monkeypatch):
     ]:
         monkeypatch.delenv(var, raising=False)
 
-    return ev0_home
+    return threev0_home
 
 
 def test_claude_code_file_detected_by_model_picker(claude_code_only_env):
@@ -134,13 +134,13 @@ def test_claude_code_file_detected_by_model_picker(claude_code_only_env):
 
 def test_no_codex_when_no_credentials(tmp_path, monkeypatch):
     """openai-codex should NOT appear when no credentials exist anywhere."""
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
 
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.setenv("CODEX_HOME", str(tmp_path / "no_codex"))
 
-    (ev0_home / "auth.json").write_text(
+    (threev0_home / "auth.json").write_text(
         json.dumps({"version": 2, "providers": {}})
     )
 

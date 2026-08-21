@@ -66,9 +66,9 @@ SAMPLE = _index_doc(
 
 
 @pytest.fixture()
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
-    monkeypatch.setattr(plugin_index, "get_ev0_home", lambda: tmp_path)
+    monkeypatch.setattr(plugin_index, "get_threev0_home", lambda: tmp_path)
     return tmp_path
 
 
@@ -181,8 +181,8 @@ class TestSearch:
 
 
 class TestLoadIndex:
-    def test_fresh_cache_wins_without_network(self, ev0_home, monkeypatch):
-        _write_cache(ev0_home, SAMPLE)
+    def test_fresh_cache_wins_without_network(self, threev0_home, monkeypatch):
+        _write_cache(threev0_home, SAMPLE)
 
         def boom():  # pragma: no cover - must not be called
             raise AssertionError("network hit despite fresh cache")
@@ -192,8 +192,8 @@ class TestLoadIndex:
         assert source == "cache"
         assert len(entries) == 3
 
-    def test_expired_cache_triggers_remote(self, ev0_home, monkeypatch):
-        _write_cache(ev0_home, SAMPLE, age_seconds=plugin_index.INDEX_CACHE_TTL + 60)
+    def test_expired_cache_triggers_remote(self, threev0_home, monkeypatch):
+        _write_cache(threev0_home, SAMPLE, age_seconds=plugin_index.INDEX_CACHE_TTL + 60)
         remote_doc = _index_doc([{"name": "fresh-plugin", "repo": "o/r", "ref": "b" * 40}])
         monkeypatch.setattr(
             plugin_index, "_fetch_remote", lambda: _parse_entries(remote_doc)
@@ -202,21 +202,21 @@ class TestLoadIndex:
         assert source == "remote"
         assert [e.name for e in entries] == ["fresh-plugin"]
 
-    def test_remote_failure_falls_back_to_stale_cache(self, ev0_home, monkeypatch):
-        _write_cache(ev0_home, SAMPLE, age_seconds=plugin_index.INDEX_CACHE_TTL + 60)
+    def test_remote_failure_falls_back_to_stale_cache(self, threev0_home, monkeypatch):
+        _write_cache(threev0_home, SAMPLE, age_seconds=plugin_index.INDEX_CACHE_TTL + 60)
         monkeypatch.setattr(plugin_index, "_fetch_remote", lambda: None)
         entries, source = load_index()
         assert source == "cache"
         assert len(entries) == 3
 
-    def test_no_cache_no_remote_falls_back_to_seed(self, ev0_home, monkeypatch):
+    def test_no_cache_no_remote_falls_back_to_seed(self, threev0_home, monkeypatch):
         monkeypatch.setattr(plugin_index, "_fetch_remote", lambda: None)
         entries, source = load_index()
         assert source == "seed"
         assert len(entries) >= 3
 
-    def test_refresh_bypasses_fresh_cache(self, ev0_home, monkeypatch):
-        _write_cache(ev0_home, SAMPLE)
+    def test_refresh_bypasses_fresh_cache(self, threev0_home, monkeypatch):
+        _write_cache(threev0_home, SAMPLE)
         remote_doc = _index_doc([{"name": "newer", "repo": "o/r", "ref": "c" * 40}])
         monkeypatch.setattr(
             plugin_index, "_fetch_remote", lambda: _parse_entries(remote_doc)
@@ -225,7 +225,7 @@ class TestLoadIndex:
         assert source == "remote"
         assert [e.name for e in entries] == ["newer"]
 
-    def test_offline_skips_network(self, ev0_home, monkeypatch):
+    def test_offline_skips_network(self, threev0_home, monkeypatch):
         def boom():  # pragma: no cover
             raise AssertionError("network hit in offline mode")
 
@@ -233,15 +233,15 @@ class TestLoadIndex:
         entries, source = load_index(offline=True)
         assert source == "seed"
 
-    def test_corrupt_cache_ignored(self, ev0_home, monkeypatch):
-        cache = ev0_home / "cache" / "plugin_index.json"
+    def test_corrupt_cache_ignored(self, threev0_home, monkeypatch):
+        cache = threev0_home / "cache" / "plugin_index.json"
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_text("{not json", encoding="utf-8")
         monkeypatch.setattr(plugin_index, "_fetch_remote", lambda: None)
         entries, source = load_index()
         assert source == "seed"
 
-    def test_remote_fetch_writes_cache(self, ev0_home, monkeypatch):
+    def test_remote_fetch_writes_cache(self, threev0_home, monkeypatch):
         payload = json.dumps(SAMPLE)
 
         class FakeResponse:
@@ -255,7 +255,7 @@ class TestLoadIndex:
         monkeypatch.setattr(httpx, "get", lambda *a, **k: FakeResponse())
         entries, source = load_index()
         assert source == "remote"
-        cache = ev0_home / "cache" / "plugin_index.json"
+        cache = threev0_home / "cache" / "plugin_index.json"
         assert cache.is_file()
         assert json.loads(cache.read_text(encoding="utf-8")) == SAMPLE
 
@@ -321,7 +321,7 @@ class TestInstallResolution:
         assert not _looks_like_bare_index_name("ssh://git@github.com/o/r.git")
         assert not _looks_like_bare_index_name("file:///tmp/x")
 
-    def test_install_resolves_name_and_pins_ref(self, ev0_home, monkeypatch):
+    def test_install_resolves_name_and_pins_ref(self, threev0_home, monkeypatch):
         from threev0_cli import plugins_cmd
 
         monkeypatch.setattr(
@@ -340,7 +340,7 @@ class TestInstallResolution:
         assert captured["identifier"] == "NousResearch/3v0-media-studio"
         assert captured["ref"] == "e" * 40
 
-    def test_install_explicit_ref_beats_index_pin(self, ev0_home, monkeypatch):
+    def test_install_explicit_ref_beats_index_pin(self, threev0_home, monkeypatch):
         from threev0_cli import plugins_cmd
 
         monkeypatch.setattr(
@@ -358,7 +358,7 @@ class TestInstallResolution:
         assert captured["ref"] == "d" * 40
 
     def test_install_ambiguous_name_lists_candidates_and_exits(
-        self, ev0_home, monkeypatch, capsys
+        self, threev0_home, monkeypatch, capsys
     ):
         from threev0_cli import plugins_cmd
 
@@ -380,7 +380,7 @@ class TestInstallResolution:
         assert "3v0-media-studio" in out
         assert "3v0-telegram-business" in out
 
-    def test_install_unknown_name_exits(self, ev0_home, monkeypatch, capsys):
+    def test_install_unknown_name_exits(self, threev0_home, monkeypatch, capsys):
         from threev0_cli import plugins_cmd
 
         monkeypatch.setattr(
@@ -391,7 +391,7 @@ class TestInstallResolution:
         assert exc.value.code == 1
         assert "not found" in capsys.readouterr().out
 
-    def test_owner_repo_passthrough_skips_index(self, ev0_home, monkeypatch):
+    def test_owner_repo_passthrough_skips_index(self, threev0_home, monkeypatch):
         """Explicit owner/repo installs never consult the index."""
         from threev0_cli import plugins_cmd
 
@@ -419,7 +419,7 @@ class TestInstallResolution:
 
 
 class TestCmdSearch:
-    def test_json_output(self, ev0_home, monkeypatch, capsys):
+    def test_json_output(self, threev0_home, monkeypatch, capsys):
         from threev0_cli import plugins_cmd
 
         monkeypatch.setattr(
@@ -435,7 +435,7 @@ class TestCmdSearch:
         assert "audited" in payload["note"]
 
     def test_table_output_includes_security_footer(
-        self, ev0_home, monkeypatch, capsys
+        self, threev0_home, monkeypatch, capsys
     ):
         from threev0_cli import plugins_cmd
 
@@ -447,7 +447,7 @@ class TestCmdSearch:
         assert "3v0-media-studio" in out
         assert "audited" in out
 
-    def test_no_results_message(self, ev0_home, monkeypatch, capsys):
+    def test_no_results_message(self, threev0_home, monkeypatch, capsys):
         from threev0_cli import plugins_cmd
 
         monkeypatch.setattr(
@@ -473,7 +473,7 @@ class TestCmdSearch:
         assert args.capability == "tools"
         assert args.refresh is True
 
-    def test_dispatch_routes_search(self, ev0_home, monkeypatch):
+    def test_dispatch_routes_search(self, threev0_home, monkeypatch):
         from threev0_cli import plugins_cmd
 
         captured = {}

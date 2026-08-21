@@ -75,7 +75,7 @@ class TestMarkRunningJobsInterrupted:
         import cron.scheduler as sched
 
         sched._running_job_ids.update({"job-1", "job-2"})
-        profile_home = sched._get_ev0_home().resolve()
+        profile_home = sched._get_threev0_home().resolve()
         sched._running_fire_owners.update(
             {
                 "job-1": {object(): ("owner-1", profile_home)},
@@ -113,7 +113,7 @@ class TestMarkRunningJobsInterrupted:
         import cron.scheduler as sched
 
         sched._running_job_ids.update({"job-1", "job-2"})
-        profile_home = sched._get_ev0_home().resolve()
+        profile_home = sched._get_threev0_home().resolve()
         sched._running_fire_owners.update(
             {
                 "job-1": {object(): ("owner-1", profile_home)},
@@ -174,7 +174,7 @@ class TestRunningFireOwnerRegistry:
 
         def _observe_registry(current_job, run):
             assert list(sched._running_fire_owners[current_job["id"]].values()) == [
-                ("owner-1", sched._get_ev0_home().resolve())
+                ("owner-1", sched._get_threev0_home().resolve())
             ]
             return True
 
@@ -308,7 +308,7 @@ class TestExecutionScopedInterruption:
     def test_interruption_targets_only_the_interrupted_execution(self):
         import cron.scheduler as sched
 
-        profile_home = sched._get_ev0_home().resolve()
+        profile_home = sched._get_threev0_home().resolve()
         old_token = object()
         sched._running_fire_owners["job-1"] = {
             old_token: ("owner-1", profile_home),
@@ -328,7 +328,7 @@ class TestExecutionScopedInterruption:
     def test_only_owners_marks_only_targeted_executions(self):
         import cron.scheduler as sched
 
-        profile_home = sched._get_ev0_home().resolve()
+        profile_home = sched._get_threev0_home().resolve()
         token_a, token_b = object(), object()
         sched._running_fire_owners["job-a"] = {token_a: ("owner-a", profile_home)}
         sched._running_fire_owners["job-b"] = {token_b: ("owner-b", profile_home)}
@@ -350,7 +350,7 @@ class TestExecutionScopedInterruption:
         complete through the normal mark path, not the interrupted one."""
         import cron.scheduler as sched
 
-        profile_home = sched._get_ev0_home().resolve()
+        profile_home = sched._get_threev0_home().resolve()
         stale_token = object()
         sched._running_fire_owners["job-1"] = {
             stale_token: ("stale-owner", profile_home),
@@ -365,19 +365,19 @@ class TestExecutionScopedInterruption:
             "prompt": "do work",
             "fire_claim": {"by": "replacement-owner"},
         }
-        with patch("cron.scheduler.claim_dispatch", return_value=True), \
-             patch("agent.secret_scope.set_secret_scope", return_value=None), \
-             patch("agent.secret_scope.build_profile_secret_scope", return_value=None), \
-             patch("agent.secret_scope.reset_secret_scope"), \
+        with patch("cron.scheduler.claim_dispatch", return_value=True),\
+             patch("agent.secret_scope.set_secret_scope", return_value=None),\
+             patch("agent.secret_scope.build_profile_secret_scope", return_value=None),\
+             patch("agent.secret_scope.reset_secret_scope"),\
              patch(
                  "cron.scheduler.run_job",
                  return_value=(True, "full output", "final response", None),
-             ), \
-             patch("cron.scheduler.save_job_output", return_value="/tmp/out.md"), \
-             patch("cron.scheduler._is_cron_silence_response", return_value=False), \
-             patch("cron.scheduler._deliver_result", return_value=None), \
-             patch("cron.scheduler.fire_claim_fence"), \
-             patch("cron.scheduler.heartbeat_fire_claim", return_value=True), \
+             ),\
+             patch("cron.scheduler.save_job_output", return_value="/tmp/out.md"),\
+             patch("cron.scheduler._is_cron_silence_response", return_value=False),\
+             patch("cron.scheduler._deliver_result", return_value=None),\
+             patch("cron.scheduler.fire_claim_fence"),\
+             patch("cron.scheduler.heartbeat_fire_claim", return_value=True),\
              patch("cron.scheduler.mark_job_run", return_value=True) as mock_mark:
             result = sched.run_one_job(job)
 
@@ -451,8 +451,8 @@ class TestBaseExceptionThroughOwnerFencedFlow:
         import cron.scheduler as sched
 
         p1, p2, p3, p4, p5, p6 = self._patches(asyncio.CancelledError())
-        with p1, p2, p3, p4, p5, p6, \
-             patch("cron.scheduler.mark_job_run", return_value=True) as mock_mark, \
+        with p1, p2, p3, p4, p5, p6,\
+             patch("cron.scheduler.mark_job_run", return_value=True) as mock_mark,\
              patch("cron.scheduler.finish_execution") as mock_finish:
             try:
                 sched.run_one_job(self._job())
@@ -470,8 +470,8 @@ class TestBaseExceptionThroughOwnerFencedFlow:
         import cron.scheduler as sched
 
         p1, p2, p3, p4, p5, p6 = self._patches(KeyboardInterrupt())
-        with p1, p2, p3, p4, p5, p6, \
-             patch("cron.scheduler.mark_job_run", return_value=True) as mock_mark, \
+        with p1, p2, p3, p4, p5, p6,\
+             patch("cron.scheduler.mark_job_run", return_value=True) as mock_mark,\
              patch("cron.scheduler.finish_execution"):
             try:
                 sched.run_one_job(self._job())
@@ -491,8 +491,8 @@ class TestBaseExceptionThroughOwnerFencedFlow:
         import cron.scheduler as sched
 
         p1, p2, p3, p4, p5, p6 = self._patches(asyncio.CancelledError())
-        with p1, p2, p3, p4, p5, p6, \
-             patch("cron.scheduler.mark_job_run", return_value=False) as mock_mark, \
+        with p1, p2, p3, p4, p5, p6,\
+             patch("cron.scheduler.mark_job_run", return_value=False) as mock_mark,\
              patch("cron.scheduler.finish_execution"):
             try:
                 sched.run_one_job(self._job())
@@ -550,17 +550,17 @@ class TestRunOneJobHonoursInterruptedFlag:
         job = self._make_job()
         sched._interrupted_job_ids.add(job["id"])
 
-        with patch("cron.scheduler.claim_dispatch", return_value=True), \
-             patch("agent.secret_scope.set_secret_scope", return_value=None), \
-             patch("agent.secret_scope.build_profile_secret_scope", return_value=None), \
-             patch("agent.secret_scope.reset_secret_scope"), \
+        with patch("cron.scheduler.claim_dispatch", return_value=True),\
+             patch("agent.secret_scope.set_secret_scope", return_value=None),\
+             patch("agent.secret_scope.build_profile_secret_scope", return_value=None),\
+             patch("agent.secret_scope.reset_secret_scope"),\
              patch(
                  "cron.scheduler.run_job",
                  return_value=(True, "full output", "final response", None),
-             ), \
-             patch("cron.scheduler.save_job_output", return_value="/tmp/out.md"), \
-             patch("cron.scheduler._is_cron_silence_response", return_value=False), \
-             patch("cron.scheduler._deliver_result", return_value=None), \
+             ),\
+             patch("cron.scheduler.save_job_output", return_value="/tmp/out.md"),\
+             patch("cron.scheduler._is_cron_silence_response", return_value=False),\
+             patch("cron.scheduler._deliver_result", return_value=None),\
              patch("cron.scheduler.mark_job_run") as mock_mark:
             result = sched.run_one_job(job)
 
@@ -585,21 +585,21 @@ class TestRunOneJobHonoursInterruptedFlag:
         job = self._make_job()
         sched._interrupted_job_ids.add(job["id"])
 
-        with patch("cron.scheduler.claim_dispatch", return_value=True), \
-             patch("agent.secret_scope.set_secret_scope", return_value=None), \
-             patch("agent.secret_scope.build_profile_secret_scope", return_value=None), \
-             patch("agent.secret_scope.reset_secret_scope"), \
+        with patch("cron.scheduler.claim_dispatch", return_value=True),\
+             patch("agent.secret_scope.set_secret_scope", return_value=None),\
+             patch("agent.secret_scope.build_profile_secret_scope", return_value=None),\
+             patch("agent.secret_scope.reset_secret_scope"),\
              patch(
                  "cron.scheduler.run_job",
                  return_value=(True, "full output", "a plausible final response", None),
-             ), \
-             patch("cron.scheduler.save_job_output", return_value="/tmp/out.md"), \
+             ),\
+             patch("cron.scheduler.save_job_output", return_value="/tmp/out.md"),\
              patch(
                  "cron.scheduler._summarize_cron_failure_for_delivery",
                  return_value="This run was interrupted.",
-             ) as mock_summarize, \
-             patch("cron.scheduler._is_cron_silence_response", return_value=False), \
-             patch("cron.scheduler._deliver_result", return_value=None) as mock_deliver, \
+             ) as mock_summarize,\
+             patch("cron.scheduler._is_cron_silence_response", return_value=False),\
+             patch("cron.scheduler._deliver_result", return_value=None) as mock_deliver,\
              patch("cron.scheduler.mark_job_run"):
             result = sched.run_one_job(job)
 
@@ -619,11 +619,11 @@ class TestRunOneJobHonoursInterruptedFlag:
         job = self._make_job()
         sched._interrupted_job_ids.add(job["id"])
 
-        with patch("cron.scheduler.claim_dispatch", return_value=True), \
-             patch("agent.secret_scope.set_secret_scope", return_value=None), \
-             patch("agent.secret_scope.build_profile_secret_scope", return_value=None), \
-             patch("agent.secret_scope.reset_secret_scope"), \
-             patch("cron.scheduler.run_job", side_effect=RuntimeError("boom")), \
+        with patch("cron.scheduler.claim_dispatch", return_value=True),\
+             patch("agent.secret_scope.set_secret_scope", return_value=None),\
+             patch("agent.secret_scope.build_profile_secret_scope", return_value=None),\
+             patch("agent.secret_scope.reset_secret_scope"),\
+             patch("cron.scheduler.run_job", side_effect=RuntimeError("boom")),\
              patch("cron.scheduler.mark_job_run") as mock_mark:
             result = sched.run_one_job(job)
 

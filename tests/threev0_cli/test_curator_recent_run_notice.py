@@ -31,12 +31,12 @@ def curator_env(tmp_path, monkeypatch, capsys):
     importlib.reload(threev0_constants)
     from agent import curator
     importlib.reload(curator)
-    from threev0_cli import main as ev0_main
-    importlib.reload(ev0_main)
+    from threev0_cli import main as threev0_main
+    importlib.reload(threev0_main)
 
     yield {
         "curator": curator,
-        "main": ev0_main,
+        "main": threev0_main,
         "capsys": capsys,
     }
 

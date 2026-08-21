@@ -57,7 +57,7 @@ async def test_restart_command_while_busy_requests_drain_without_interrupt(monke
 
 
 def test_load_busy_text_mode_follows_input_mode_and_honors_legacy(tmp_path, monkeypatch):
-    monkeypatch.setattr(gateway_run, "_ev0_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_threev0_home", tmp_path)
     monkeypatch.delenv("EV0_GATEWAY_BUSY_TEXT_MODE", raising=False)
     monkeypatch.delenv("EV0_GATEWAY_BUSY_INPUT_MODE", raising=False)
 
@@ -232,7 +232,7 @@ async def test_windows_detached_restart_scrubs_gateway_marker(monkeypatch, tmp_p
     site_packages = venv_dir / "Lib" / "site-packages"
     site_packages.mkdir(parents=True)
 
-    monkeypatch.setattr(gateway_run, "_resolve_ev0_bin", lambda: ["3v0"])
+    monkeypatch.setattr(gateway_run, "_resolve_threev0_bin", lambda: ["3v0"])
     monkeypatch.setattr(gateway_run.os, "getpid", lambda: 321)
     monkeypatch.setenv("_EV0_GATEWAY", "1")
     monkeypatch.setenv("VIRTUAL_ENV", str(venv_dir))
@@ -281,7 +281,7 @@ async def test_windows_detached_restart_watcher_keeps_console_python(monkeypatch
     site_packages.mkdir(parents=True)
 
     monkeypatch.setattr(gateway_run.sys, "executable", r"C:\venv\Scripts\python.exe")
-    monkeypatch.setattr(gateway_run, "_resolve_ev0_bin", lambda: ["3v0"])
+    monkeypatch.setattr(gateway_run, "_resolve_threev0_bin", lambda: ["3v0"])
     monkeypatch.setattr(gateway_run.os, "getpid", lambda: 321)
     monkeypatch.setenv("VIRTUAL_ENV", str(venv_dir))
 

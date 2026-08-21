@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
 from gateway.restart import GATEWAY_SERVICE_RESTART_EXIT_CODE
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from utils import atomic_json_write
 
 logger = logging.getLogger(__name__)
@@ -209,23 +209,23 @@ def start_loop_liveness_watchdog(
     return _LoopLivenessWatchdogHandle(stop_event, thread)
 
 
-def _process_ev0_home() -> Path:
+def _process_threev0_home() -> Path:
     """EV0_HOME for process-level identity files (ignore profile overrides)."""
     val = os.environ.get("EV0_HOME", "").strip()
     if val:
         return Path(val)
-    return get_ev0_home()
+    return get_threev0_home()
 
 
 def get_loop_heartbeat_path(home: Optional[Path] = None) -> Path:
     """Return ``<EV0_HOME>/state/gateway.heartbeat``."""
-    base = home if home is not None else _process_ev0_home()
+    base = home if home is not None else _process_threev0_home()
     return base.joinpath(*_HEARTBEAT_RELATIVE)
 
 
 def get_shutdown_watchdog_dump_path(home: Optional[Path] = None) -> Path:
     """Return the faulthandler / metadata dump path for a fired watchdog."""
-    base = home if home is not None else _process_ev0_home()
+    base = home if home is not None else _process_threev0_home()
     return base.joinpath(*_WATCHDOG_DUMP_RELATIVE)
 
 

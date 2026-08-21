@@ -19,7 +19,7 @@ import pytest
 
 
 @pytest.fixture()
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     home = tmp_path / ".3V0"
     home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -33,7 +33,7 @@ def ev0_home(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
-def server(ev0_home):
+def server(threev0_home):
     with patch.dict(
         "sys.modules",
         {
@@ -143,7 +143,7 @@ def test_tui_tick_fires_when_idle_and_due(server, session):
     def fake_submit(rid, sid_, session_, text, **kwargs):
         fired["text"] = text
 
-    with patch.object(server, "_run_prompt_submit", fake_submit), \
+    with patch.object(server, "_run_prompt_submit", fake_submit),\
          patch.object(server, "_emit"):
         server._maybe_fire_tui_loop_tick(sid, s)
 
@@ -163,7 +163,7 @@ def test_tui_tick_defers_when_running(server, session):
     save_loop(session_key, mgr.state)
     s["running"] = True
 
-    with patch.object(server, "_run_prompt_submit") as submit, \
+    with patch.object(server, "_run_prompt_submit") as submit,\
          patch.object(server, "_emit"):
         server._maybe_fire_tui_loop_tick(sid, s)
 
@@ -183,7 +183,7 @@ def test_tui_tick_defers_to_active_goal(server, session):
     mgr.state.next_due_at = time.time() - 1
     save_loop(session_key, mgr.state)
 
-    with patch.object(server, "_run_prompt_submit") as submit, \
+    with patch.object(server, "_run_prompt_submit") as submit,\
          patch.object(server, "_emit"):
         server._maybe_fire_tui_loop_tick(sid, s)
 
@@ -197,7 +197,7 @@ def test_tui_tick_noop_when_not_due(server, session):
 
     LoopManager(session_key).set("poll", interval_seconds=300)
 
-    with patch.object(server, "_run_prompt_submit") as submit, \
+    with patch.object(server, "_run_prompt_submit") as submit,\
          patch.object(server, "_emit"):
         server._maybe_fire_tui_loop_tick(sid, s)
 

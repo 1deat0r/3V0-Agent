@@ -8,7 +8,7 @@ import types
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from threev0_cli.profiles import _get_default_ev0_home
+from threev0_cli.profiles import _get_default_threev0_home
 
 import pytest
 
@@ -271,13 +271,13 @@ class TestResolveSessionName:
 
 
 class TestResolveConfigPath:
-    def test_prefers_ev0_home_when_exists(self, tmp_path):
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir()
-        local_cfg = ev0_home / "honcho.json"
+    def test_prefers_threev0_home_when_exists(self, tmp_path):
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir()
+        local_cfg = threev0_home / "honcho.json"
         local_cfg.write_text('{"apiKey": "local"}')
 
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             result = resolve_config_path()
         assert result == local_cfg
 
@@ -298,7 +298,7 @@ class TestResolveConfigPath:
 
         result = resolve_config_path()
 
-        assert _get_default_ev0_home() == default_home
+        assert _get_default_threev0_home() == default_home
         assert result == default_cfg
 
 
@@ -483,9 +483,9 @@ class TestGetHonchoClient:
     )
     def test_timeout_change_triggers_client_rebuild(self):
         """Changing timeout config must rebuild the cached client."""
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        cfg_yaml = get_ev0_home() / "config.yaml"
+        cfg_yaml = get_threev0_home() / "config.yaml"
         cfg_yaml.write_text("honcho:\n  timeout: 30\n")
 
         fake_honcho_1 = MagicMock(name="Honcho_v1")
@@ -684,7 +684,7 @@ class TestGetHonchoClientBaseUrlDoublePrefixFix:
             environment="production",
         )
 
-        with patch("honcho.Honcho", return_value=fake_honcho) as mock_honcho, \
+        with patch("honcho.Honcho", return_value=fake_honcho) as mock_honcho,\
              patch("threev0_cli.config.load_config", return_value={}):
             get_honcho_client(cfg)
 
@@ -711,8 +711,8 @@ class TestGetHonchoClientBaseUrlDoublePrefixFix:
             },
         }))
 
-        with patch.dict(os.environ, {}, clear=True), \
-             patch("threev0_cli.profiles.get_active_profile_name", return_value="default"), \
+        with patch.dict(os.environ, {}, clear=True),\
+             patch("threev0_cli.profiles.get_active_profile_name", return_value="default"),\
              patch("plugins.memory.honcho.client.resolve_config_path", return_value=config_file):
             cfg = HonchoClientConfig.from_global_config(config_path=config_file)
 
@@ -725,7 +725,7 @@ class TestGetHonchoClientBaseUrlDoublePrefixFix:
         fake_honcho = MagicMock(name="Honcho")
         mock_honcho = MagicMock(return_value=fake_honcho)
         fake_honcho_module = types.SimpleNamespace(Honcho=mock_honcho)
-        with patch.dict(sys.modules, {"honcho": fake_honcho_module}), \
+        with patch.dict(sys.modules, {"honcho": fake_honcho_module}),\
              patch("threev0_cli.config.load_config", return_value={}):
             get_honcho_client(cfg)
 
@@ -767,7 +767,7 @@ class TestGetHonchoClientBaseUrlDoublePrefixFix:
             environment="production",
         )
 
-        with patch("honcho.Honcho", return_value=fake_honcho) as mock_honcho, \
+        with patch("honcho.Honcho", return_value=fake_honcho) as mock_honcho,\
              patch("threev0_cli.config.load_config", return_value={}):
             get_honcho_client(cfg)
 

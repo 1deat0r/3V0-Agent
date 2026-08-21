@@ -256,9 +256,9 @@ def slack_manifest_command(args) -> int:
     if write_target is not None:
         if isinstance(write_target, bool) and write_target:
             # --write with no value → default location
-            from threev0_constants import get_ev0_home
+            from threev0_constants import get_threev0_home
 
-            target = Path(get_ev0_home()) / "slack-manifest.json"
+            target = Path(get_threev0_home()) / "slack-manifest.json"
         else:
             target = Path(write_target).expanduser()
         target.parent.mkdir(parents=True, exist_ok=True)

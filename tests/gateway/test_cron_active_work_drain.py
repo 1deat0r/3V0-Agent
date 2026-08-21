@@ -92,7 +92,7 @@ class TestKillToolSubprocessesMarksCronInterrupted:
 
         sched._running_job_ids.add("job-1")
         sched._running_fire_owners["job-1"] = {
-            object(): ("owner-1", sched._get_ev0_home().resolve())
+            object(): ("owner-1", sched._get_threev0_home().resolve())
         }
 
         monkeypatch.setattr(_pr.process_registry, "kill_all", lambda task_id=None: 1)
@@ -109,7 +109,7 @@ class TestKillToolSubprocessesMarksCronInterrupted:
 
         monkeypatch.setattr(sched, "mark_running_jobs_interrupted", _spy)
 
-        with patch("gateway.status.remove_pid_file"), patch("gateway.status.write_runtime_status"), \
+        with patch("gateway.status.remove_pid_file"), patch("gateway.status.write_runtime_status"),\
              patch("cron.scheduler.mark_job_run"):
             await runner.stop()
 

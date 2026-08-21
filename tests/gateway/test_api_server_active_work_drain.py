@@ -266,7 +266,7 @@ def _parked_agent(loop, started: asyncio.Event, release: threading.Event) -> Mag
     agent.session_completion_tokens = 0
     agent.session_total_tokens = 0
     agent._last_compaction_in_place = False
-    agent._ev0_api_runtime = {}
+    agent._threev0_api_runtime = {}
 
     def _park(user_message=None, conversation_history=None, task_id=None):
         loop.call_soon_threadsafe(started.set)
@@ -540,8 +540,8 @@ class TestShutdownSettleWindow:
         monkeypatch.setattr(_tt, "cleanup_all_environments", lambda: None)
         monkeypatch.setattr(_bt, "cleanup_all_browsers", lambda: None)
 
-        with patch("gateway.status.remove_pid_file"), \
-             patch("gateway.status.write_runtime_status"), \
+        with patch("gateway.status.remove_pid_file"),\
+             patch("gateway.status.write_runtime_status"),\
              patch("cron.scheduler.mark_job_run"):
             await runner.stop()
 
@@ -591,8 +591,8 @@ class TestShutdownSettleWindow:
 
         monkeypatch.setattr(type(loop), "time", _fast_time)
         try:
-            with patch("gateway.status.remove_pid_file"), \
-                 patch("gateway.status.write_runtime_status"), \
+            with patch("gateway.status.remove_pid_file"),\
+                 patch("gateway.status.write_runtime_status"),\
                  patch("cron.scheduler.mark_job_run"):
                 await runner.stop()
         finally:

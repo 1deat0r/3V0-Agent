@@ -12,7 +12,7 @@ import time as _time
 from threev0_cli.banner import cprint, _DIM, _RST
 from threev0_cli.config import save_env_value_secure
 from threev0_cli.secret_prompt import masked_secret_prompt
-from threev0_constants import display_ev0_home
+from threev0_constants import display_threev0_home
 
 
 def clarify_callback(cli, question, choices, multi_select=False):
@@ -102,7 +102,7 @@ def prompt_for_secret(cli, var_name: str, prompt: str, metadata=None) -> dict:
             }
 
         stored = save_env_value_secure(var_name, value)
-        _dhh = display_ev0_home()
+        _dhh = display_threev0_home()
         cprint(f"\n{_DIM}  ✓ Stored secret in {_dhh}/.env as {var_name}{_RST}")
         return {
             **stored,
@@ -155,7 +155,7 @@ def prompt_for_secret(cli, var_name: str, prompt: str, metadata=None) -> dict:
                 }
 
             stored = save_env_value_secure(var_name, value)
-            _dhh = display_ev0_home()
+            _dhh = display_threev0_home()
             cprint(f"\n{_DIM}  ✓ Stored secret in {_dhh}/.env as {var_name}{_RST}")
             return {
                 **stored,

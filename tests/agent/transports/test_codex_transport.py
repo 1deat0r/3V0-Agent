@@ -1021,7 +1021,7 @@ class TestCodexTransportXaiReasoningEffort:
         assert kw["reasoning"]["effort"] == "xhigh"
 
     @pytest.mark.parametrize("effort", ["max", "ultra"])
-    def test_grok_46_clamps_ev0_aliases_to_model_ceiling(self, transport, effort):
+    def test_grok_46_clamps_threev0_aliases_to_model_ceiling(self, transport, effort):
         """3V0 ladder aliases mean "this model's ceiling" — on grok-4.6
         that is xhigh, not one rung below it (#87279)."""
         kw = transport.build_kwargs(

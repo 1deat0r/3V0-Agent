@@ -17,7 +17,7 @@ from threev0_cli.model_switch import list_authenticated_providers
 # -- Copilot slug resolution (env var path) ----------------------------------
 
 @patch.dict(os.environ, {"COPILOT_GITHUB_TOKEN": "fake-ghu"}, clear=False)
-def test_copilot_uses_ev0_slug():
+def test_copilot_uses_threev0_slug():
     """github-copilot overlay should resolve to slug='copilot' with curated models."""
     providers = list_authenticated_providers(current_provider="copilot")
 

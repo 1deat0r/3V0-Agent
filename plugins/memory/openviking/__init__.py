@@ -1094,7 +1094,7 @@ def _is_local_openviking_url(value: str) -> bool:
     return scheme == "http" and (parsed.hostname or "").lower() in _LOCAL_OPENVIKING_HOSTS
 
 
-def _load_ev0_openviking_config() -> dict:
+def _load_threev0_openviking_config() -> dict:
     try:
         from threev0_cli.config import load_config_readonly
 
@@ -1436,8 +1436,8 @@ def _local_openviking_bind(endpoint: str) -> tuple[str, int]:
 
 def _openviking_server_log_path() -> Path:
     try:
-        from threev0_constants import get_ev0_home
-        home = get_ev0_home()
+        from threev0_constants import get_threev0_home
+        home = get_threev0_home()
     except Exception:
         home = Path(os.environ.get("EV0_HOME", "")).expanduser() if os.environ.get("EV0_HOME") else Path.home() / ".3V0"
     return home / _OPENVIKING_SERVER_LOG_RELATIVE_PATH
@@ -1988,7 +1988,7 @@ def _link_ovcli_profile(
         os.environ.pop(key, None)
 
 
-def _save_ev0_only_config(
+def _save_threev0_only_config(
     *,
     config: dict,
     provider_config: dict,
@@ -2173,7 +2173,7 @@ def _run_create_profile_setup(
         _print_openviking_ready("Created and linked OpenViking profile.", ovcli_path)
         return True
 
-    _save_ev0_only_config(
+    _save_threev0_only_config(
         config=config,
         provider_config=provider_config,
         env_path=env_path,
@@ -2212,7 +2212,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         self._agent = ""
         self._session_id = ""
         self._turn_count = 0
-        self._ev0_home = ""
+        self._threev0_home = ""
         self._run_id = uuid.uuid4().hex
         self._run_lock_file: Optional[Any] = None
         self._run_lock_path: Optional[Path] = None
@@ -2270,7 +2270,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         """Check if OpenViking endpoint is configured. No network calls."""
         if os.environ.get("OPENVIKING_ENDPOINT"):
             return True
-        provider_config = _load_ev0_openviking_config()
+        provider_config = _load_threev0_openviking_config()
         # A non-secret endpoint saved to config.yaml (e.g. via the Dashboard)
         # counts as configured even without an env var or ovcli config.
         if _clean_config_value(provider_config.get("endpoint")):
@@ -2402,7 +2402,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
             },
         ]
 
-    def save_config(self, values: Dict[str, Any], ev0_home: str) -> None:
+    def save_config(self, values: Dict[str, Any], threev0_home: str) -> None:
         """Validate and persist Dashboard configuration for the active profile."""
         normalized = dict(values or {})
         normalized.pop("api_key", None)
@@ -2459,13 +2459,13 @@ class OpenVikingMemoryProvider(MemoryProvider):
                 display[key] = "(set)"
         return display
 
-    def post_setup(self, ev0_home: str, config: dict) -> None:
+    def post_setup(self, threev0_home: str, config: dict) -> None:
         """Custom setup that can reuse OpenViking's shared CLI config."""
         from threev0_cli.config import save_config
         from threev0_cli.memory_setup import _CANCELLED, _curses_select, _print_cancelled_setup, _prompt
 
-        ev0_home_path = Path(ev0_home)
-        env_path = ev0_home_path / ".env"
+        threev0_home_path = Path(threev0_home)
+        env_path = threev0_home_path / ".env"
         if not isinstance(config.get("memory"), dict):
             config["memory"] = {}
         provider_config = config["memory"].get("openviking", {})
@@ -2700,7 +2700,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         )
         connection_error = ""
         try:
-            settings = _resolve_connection_settings(_load_ev0_openviking_config())
+            settings = _resolve_connection_settings(_load_threev0_openviking_config())
         except _OpenVikingEndpointError as exc:
             connection_error = str(exc)
             settings = {
@@ -2722,14 +2722,14 @@ class OpenVikingMemoryProvider(MemoryProvider):
         self._env_refresh_enabled = True
         self._session_id = session_id
         self._turn_count = 0
-        ev0_home = str(kwargs.get("ev0_home") or "").strip()
-        if not ev0_home:
+        threev0_home = str(kwargs.get("ev0_home") or "").strip()
+        if not threev0_home:
             try:
-                from threev0_constants import get_ev0_home
-                ev0_home = str(get_ev0_home())
+                from threev0_constants import get_threev0_home
+                threev0_home = str(get_threev0_home())
             except Exception:
-                ev0_home = str(Path.home() / ".3V0")
-        self._ev0_home = ev0_home
+                threev0_home = str(Path.home() / ".3V0")
+        self._threev0_home = threev0_home
         self._acquire_run_lock()
         self._profile_prefetched_sessions.clear()
 
@@ -2808,7 +2808,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
             return None
 
         try:
-            settings = _resolve_connection_settings(_load_ev0_openviking_config())
+            settings = _resolve_connection_settings(_load_threev0_openviking_config())
         except _OpenVikingEndpointError as exc:
             failed_key = ("invalid-endpoint", str(exc))
             failed = self._failed_refresh
@@ -3176,9 +3176,9 @@ class OpenVikingMemoryProvider(MemoryProvider):
             self._committed_session_ids.discard(sid)
 
     def _pending_session_dir(self) -> Optional[Path]:
-        if not self._ev0_home:
+        if not self._threev0_home:
             return None
-        return Path(self._ev0_home) / _PENDING_SESSIONS_RELATIVE_DIR
+        return Path(self._threev0_home) / _PENDING_SESSIONS_RELATIVE_DIR
 
     def _pending_session_marker_path(self, sid: str) -> Optional[Path]:
         sid = str(sid or "").strip()
@@ -3188,9 +3188,9 @@ class OpenVikingMemoryProvider(MemoryProvider):
         return directory / f"{quote(sid, safe='')}.json"
 
     def _run_lock_dir(self) -> Optional[Path]:
-        if not self._ev0_home:
+        if not self._threev0_home:
             return None
-        return Path(self._ev0_home) / _RUN_LOCKS_RELATIVE_DIR
+        return Path(self._threev0_home) / _RUN_LOCKS_RELATIVE_DIR
 
     def _run_lock_path_for(self, run_id: str) -> Optional[Path]:
         run_id = str(run_id or "").strip()
@@ -3688,7 +3688,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
     def _recall_config(self) -> Dict[str, Any]:
         # Read from config.yaml → memory.openviking as primary source, env vars
         # as override. Behavioural settings belong in config.yaml (AGENTS.md).
-        provider_config = _load_ev0_openviking_config()
+        provider_config = _load_threev0_openviking_config()
         cfg = provider_config
 
         return {
@@ -3741,7 +3741,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         }
 
     def _profile_token_budget(self) -> int:
-        cfg = _load_ev0_openviking_config()
+        cfg = _load_threev0_openviking_config()
         return self._setting_int(
             "OPENVIKING_PROFILE_TOKEN_BUDGET",
             cfg.get("profile_token_budget", _DEFAULT_PROFILE_TOKEN_BUDGET),

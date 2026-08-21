@@ -102,10 +102,10 @@ class TestSkillsShGroupings:
         resp.status_code = 200
         resp.json.return_value = contents
 
-        with patch.object(src, "_read_cache", return_value=None), \
-             patch.object(src, "_write_cache"), \
-             patch.object(src, "_get_skillsh_groupings", return_value=groupings), \
-             patch.object(src, "inspect", return_value=meta), \
+        with patch.object(src, "_read_cache", return_value=None),\
+             patch.object(src, "_write_cache"),\
+             patch.object(src, "_get_skillsh_groupings", return_value=groupings),\
+             patch.object(src, "inspect", return_value=meta),\
              patch("tools.skills_hub.httpx.get", return_value=resp):
             skills = src._list_skills_in_repo("NVIDIA/skills", "skills/")
 
@@ -925,12 +925,12 @@ class TestQuarantineBundleBinaryAssets:
         import tools.skills_hub as hub
 
         hub_dir = tmp_path / "skills" / ".hub"
-        with patch.object(hub, "SKILLS_DIR", tmp_path / "skills"), \
-             patch.object(hub, "HUB_DIR", hub_dir), \
-             patch.object(hub, "LOCK_FILE", hub_dir / "lock.json"), \
-             patch.object(hub, "QUARANTINE_DIR", hub_dir / "quarantine"), \
-             patch.object(hub, "AUDIT_LOG", hub_dir / "audit.log"), \
-             patch.object(hub, "TAPS_FILE", hub_dir / "taps.json"), \
+        with patch.object(hub, "SKILLS_DIR", tmp_path / "skills"),\
+             patch.object(hub, "HUB_DIR", hub_dir),\
+             patch.object(hub, "LOCK_FILE", hub_dir / "lock.json"),\
+             patch.object(hub, "QUARANTINE_DIR", hub_dir / "quarantine"),\
+             patch.object(hub, "AUDIT_LOG", hub_dir / "audit.log"),\
+             patch.object(hub, "TAPS_FILE", hub_dir / "taps.json"),\
              patch.object(hub, "INDEX_CACHE_DIR", hub_dir / "index-cache"):
             bundle = SkillBundle(
                 name="neutts",
@@ -952,12 +952,12 @@ class TestQuarantineBundleBinaryAssets:
         import tools.skills_hub as hub
 
         hub_dir = tmp_path / "skills" / ".hub"
-        with patch.object(hub, "SKILLS_DIR", tmp_path / "skills"), \
-             patch.object(hub, "HUB_DIR", hub_dir), \
-             patch.object(hub, "LOCK_FILE", hub_dir / "lock.json"), \
-             patch.object(hub, "QUARANTINE_DIR", hub_dir / "quarantine"), \
-             patch.object(hub, "AUDIT_LOG", hub_dir / "audit.log"), \
-             patch.object(hub, "TAPS_FILE", hub_dir / "taps.json"), \
+        with patch.object(hub, "SKILLS_DIR", tmp_path / "skills"),\
+             patch.object(hub, "HUB_DIR", hub_dir),\
+             patch.object(hub, "LOCK_FILE", hub_dir / "lock.json"),\
+             patch.object(hub, "QUARANTINE_DIR", hub_dir / "quarantine"),\
+             patch.object(hub, "AUDIT_LOG", hub_dir / "audit.log"),\
+             patch.object(hub, "TAPS_FILE", hub_dir / "taps.json"),\
              patch.object(hub, "INDEX_CACHE_DIR", hub_dir / "index-cache"):
             bundle = SkillBundle(
                 name="demo",
@@ -980,12 +980,12 @@ class TestQuarantineBundleBinaryAssets:
 
         hub_dir = tmp_path / "skills" / ".hub"
         absolute_target = tmp_path / "outside.txt"
-        with patch.object(hub, "SKILLS_DIR", tmp_path / "skills"), \
-             patch.object(hub, "HUB_DIR", hub_dir), \
-             patch.object(hub, "LOCK_FILE", hub_dir / "lock.json"), \
-             patch.object(hub, "QUARANTINE_DIR", hub_dir / "quarantine"), \
-             patch.object(hub, "AUDIT_LOG", hub_dir / "audit.log"), \
-             patch.object(hub, "TAPS_FILE", hub_dir / "taps.json"), \
+        with patch.object(hub, "SKILLS_DIR", tmp_path / "skills"),\
+             patch.object(hub, "HUB_DIR", hub_dir),\
+             patch.object(hub, "LOCK_FILE", hub_dir / "lock.json"),\
+             patch.object(hub, "QUARANTINE_DIR", hub_dir / "quarantine"),\
+             patch.object(hub, "AUDIT_LOG", hub_dir / "audit.log"),\
+             patch.object(hub, "TAPS_FILE", hub_dir / "taps.json"),\
              patch.object(hub, "INDEX_CACHE_DIR", hub_dir / "index-cache"):
             bundle = SkillBundle(
                 name="demo",
@@ -1011,12 +1011,12 @@ class TestQuarantineBundleBinaryAssets:
         import tools.skills_hub as hub
 
         hub_dir = tmp_path / "skills" / ".hub"
-        with patch.object(hub, "SKILLS_DIR", tmp_path / "skills"), \
-             patch.object(hub, "HUB_DIR", hub_dir), \
-             patch.object(hub, "LOCK_FILE", hub_dir / "lock.json"), \
-             patch.object(hub, "QUARANTINE_DIR", hub_dir / "quarantine"), \
-             patch.object(hub, "AUDIT_LOG", hub_dir / "audit.log"), \
-             patch.object(hub, "TAPS_FILE", hub_dir / "taps.json"), \
+        with patch.object(hub, "SKILLS_DIR", tmp_path / "skills"),\
+             patch.object(hub, "HUB_DIR", hub_dir),\
+             patch.object(hub, "LOCK_FILE", hub_dir / "lock.json"),\
+             patch.object(hub, "QUARANTINE_DIR", hub_dir / "quarantine"),\
+             patch.object(hub, "AUDIT_LOG", hub_dir / "audit.log"),\
+             patch.object(hub, "TAPS_FILE", hub_dir / "taps.json"),\
              patch.object(hub, "INDEX_CACHE_DIR", hub_dir / "index-cache"):
             bundle = SkillBundle(
                 name="demo",
@@ -1327,8 +1327,8 @@ class TestInstallPathSafety:
             verdict="safe",
         )
 
-        with patch.object(hub, "SKILLS_DIR", skills_dir), \
-             patch.object(hub, "QUARANTINE_DIR", quarantine_root), \
+        with patch.object(hub, "SKILLS_DIR", skills_dir),\
+             patch.object(hub, "QUARANTINE_DIR", quarantine_root),\
              patch("tools.skill_usage.record_installed") as record_installed:
             with pytest.raises(ValueError, match="symlink"):
                 hub.install_from_quarantine(
@@ -1381,7 +1381,7 @@ class TestInstallPathSafety:
             verdict="safe",
         )
 
-        with patch.object(hub, "SKILLS_DIR", skills_dir), \
+        with patch.object(hub, "SKILLS_DIR", skills_dir),\
              patch.object(hub, "QUARANTINE_DIR", quarantine_root):
             with pytest.raises(ValueError, match="Refusing to overwrite category directory"):
                 hub.install_from_quarantine(
@@ -1433,7 +1433,7 @@ class TestInstallPathSafety:
             verdict="safe",
         )
 
-        with patch.object(hub, "SKILLS_DIR", skills_dir), \
+        with patch.object(hub, "SKILLS_DIR", skills_dir),\
              patch.object(hub, "QUARANTINE_DIR", quarantine_root):
             installed = hub.install_from_quarantine(
                 q_dir, "my-skill", "", bundle, scan_result,
@@ -1477,7 +1477,7 @@ class TestInstallPathSafety:
             verdict="safe",
         )
 
-        with patch.object(hub, "SKILLS_DIR", skills_dir), \
+        with patch.object(hub, "SKILLS_DIR", skills_dir),\
              patch.object(hub, "QUARANTINE_DIR", quarantine_root):
             installed = hub.install_from_quarantine(
                 q_dir, "research", "", bundle, scan_result,
@@ -1521,7 +1521,7 @@ class TestInstallPathSafety:
             verdict="safe",
         )
 
-        with patch.object(hub, "SKILLS_DIR", skills_dir), \
+        with patch.object(hub, "SKILLS_DIR", skills_dir),\
              patch.object(hub, "QUARANTINE_DIR", quarantine_root):
             with pytest.raises(ValueError, match="category directory"):
                 hub.install_from_quarantine(
@@ -1566,7 +1566,7 @@ class TestInstallPathSafety:
             verdict="safe",
         )
 
-        with patch.object(hub, "SKILLS_DIR", skills_dir), \
+        with patch.object(hub, "SKILLS_DIR", skills_dir),\
              patch.object(hub, "QUARANTINE_DIR", quarantine_root):
             with pytest.raises(ValueError, match="existing skill directory"):
                 hub.install_from_quarantine(
@@ -1607,7 +1607,7 @@ class TestInstallPathSafety:
             verdict="safe",
         )
 
-        with patch.object(hub, "SKILLS_DIR", skills_dir), \
+        with patch.object(hub, "SKILLS_DIR", skills_dir),\
              patch.object(hub, "QUARANTINE_DIR", quarantine_root):
             with pytest.raises(ValueError, match="not a directory"):
                 hub.install_from_quarantine(
@@ -1640,8 +1640,8 @@ class TestInstallPathSafety:
             verdict="safe",
         )
 
-        with patch.object(hub, "SKILLS_DIR", skills_dir), \
-             patch.object(hub, "QUARANTINE_DIR", quarantine_root), \
+        with patch.object(hub, "SKILLS_DIR", skills_dir),\
+             patch.object(hub, "QUARANTINE_DIR", quarantine_root),\
              patch("tools.skill_usage.record_installed") as record_installed:
             installed = hub.install_from_quarantine(
                 q_dir,
@@ -1755,7 +1755,7 @@ class TestLoadEv0Index:
         import tools.skills_hub as hub
 
         cache_file = tmp_path / "3v0-index.json"
-        monkeypatch.setattr(hub, "_ev0_index_cache_file", lambda: cache_file)
+        monkeypatch.setattr(hub, "_threev0_index_cache_file", lambda: cache_file)
         return cache_file
 
     def test_fetch_does_not_request_brotli(self, monkeypatch, tmp_path):
@@ -1775,7 +1775,7 @@ class TestLoadEv0Index:
 
         monkeypatch.setattr(hub.httpx, "get", fake_get)
 
-        data = hub._load_ev0_index()
+        data = hub._load_threev0_index()
         assert data == {"skills": [{"name": "x"}]}
 
         accept = captured["headers"].get("Accept-Encoding", "")
@@ -1802,5 +1802,5 @@ class TestLoadEv0Index:
 
         monkeypatch.setattr(hub.httpx, "get", fake_get)
 
-        data = hub._load_ev0_index()
+        data = hub._load_threev0_index()
         assert data == {"skills": [{"name": "stale"}]}

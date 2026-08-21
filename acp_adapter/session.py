@@ -8,7 +8,7 @@ history.
 """
 from __future__ import annotations
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 import copy
 import json
@@ -402,8 +402,8 @@ class SessionManager:
             return self._db_instance
         try:
             from threev0_state import SessionDB
-            ev0_home = get_ev0_home()
-            self._db_instance = SessionDB(db_path=ev0_home / "state.db")
+            threev0_home = get_threev0_home()
+            self._db_instance = SessionDB(db_path=threev0_home / "state.db")
             return self._db_instance
         except Exception:
             logger.debug("SessionDB unavailable for ACP persistence", exc_info=True)

@@ -143,7 +143,7 @@ class TestGatewayPidState:
         for a named profile), gateway identity files should still be written to
         the process-level EV0_HOME, not the profile's directory.  See #56986.
         """
-        from threev0_constants import set_ev0_home_override, reset_ev0_home_override
+        from threev0_constants import set_threev0_home_override, reset_threev0_home_override
 
         process_home = tmp_path / "default"
         process_home.mkdir()
@@ -152,11 +152,11 @@ class TestGatewayPidState:
         monkeypatch.setenv("EV0_HOME", str(process_home))
 
         # Simulate a profile context override being active during write.
-        token = set_ev0_home_override(str(profile_home))
+        token = set_threev0_home_override(str(profile_home))
         try:
             status.write_pid_file()
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
         # PID file must land in the process-level home, not the profile home.
         assert (process_home / "gateway.pid").exists()
@@ -657,7 +657,7 @@ class TestTakeoverMarker:
         assert not (tmp_path / ".gateway-takeover.json").exists()
 
 
-    def test_write_marker_records_replacer_ev0_home(self, tmp_path, monkeypatch):
+    def test_write_marker_records_replacer_threev0_home(self, tmp_path, monkeypatch):
         """The marker stamps the replacer's EV0_HOME for cross-profile guard (#29092)."""
         monkeypatch.setenv("EV0_HOME", str(tmp_path))
         monkeypatch.setattr(status, "_get_process_start_time", lambda pid: 42)
@@ -665,7 +665,7 @@ class TestTakeoverMarker:
         status.write_takeover_marker(target_pid=12345)
 
         payload = json.loads((tmp_path / ".gateway-takeover.json").read_text())
-        assert payload["replacer_ev0_home"] == str(tmp_path)
+        assert payload["replacer_threev0_home"] == str(tmp_path)
 
     def test_consume_rejects_marker_from_different_profile(self, tmp_path, monkeypatch):
         """Regression (#29092): a marker written by a gateway under a DIFFERENT
@@ -684,7 +684,7 @@ class TestTakeoverMarker:
             "target_pid": os.getpid(),
             "target_start_time": 100,
             "replacer_pid": 99999,
-            "replacer_ev0_home": str(tmp_path / "profiles" / "other"),
+            "replacer_threev0_home": str(tmp_path / "profiles" / "other"),
             "written_at": datetime.now(timezone.utc).isoformat(),
         }))
 
@@ -694,7 +694,7 @@ class TestTakeoverMarker:
         # Left in place for the correct profile, not griefed away.
         assert marker_path.exists()
 
-    def test_consume_accepts_legacy_marker_without_ev0_home(self, tmp_path, monkeypatch):
+    def test_consume_accepts_legacy_marker_without_threev0_home(self, tmp_path, monkeypatch):
         """Back-compat (#29092): markers written by older 3V0 versions have no
         ``replacer_ev0_home`` field; an absent field is treated as same-home so
         single-profile setups and mixed old/new deployments keep working.
@@ -755,8 +755,8 @@ class TestScopedLockTakeover:
             marker_path = target_home / ".gateway-takeover.json"
             assert marker_path.exists()
             payload = json.loads(marker_path.read_text())
-            assert payload["target_ev0_home"] == str(target_home)
-            assert payload["replacer_ev0_home"] == str(replacer_home)
+            assert payload["target_threev0_home"] == str(target_home)
+            assert payload["replacer_threev0_home"] == str(replacer_home)
             calls.append((pid, force))
 
         monkeypatch.setattr(status, "terminate_pid", terminate)

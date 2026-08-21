@@ -25,8 +25,8 @@ def _run_node_deps_stage(
     install_dir = tmp_path / "install"
     tui_dir = install_dir / "ui-tui"
     bin_dir = tmp_path / "bin"
-    ev0_home = tmp_path / "home"
-    managed_bin = ev0_home / "bin"
+    threev0_home = tmp_path / "home"
+    managed_bin = threev0_home / "bin"
     npm_calls = tmp_path / "npm-calls"
 
     tui_dir.mkdir(parents=True)
@@ -61,7 +61,7 @@ exit 0
     env = os.environ.copy()
     env.update(
         {
-            "EV0_HOME": str(ev0_home),
+            "EV0_HOME": str(threev0_home),
             "EV0_INSTALL_DIR": str(install_dir),
             "NPM_CALLS": str(npm_calls),
             "NPM_FAIL_DIRECTORY": fail_directory or "",

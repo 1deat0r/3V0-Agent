@@ -449,7 +449,7 @@ class InProcessCronScheduler(CronScheduler):
             record_ticker_heartbeat,
             use_cron_store,
         )
-        from threev0_constants import set_ev0_home_override, reset_ev0_home_override
+        from threev0_constants import set_threev0_home_override, reset_threev0_home_override
 
         logger = logging.getLogger("cron.scheduler_provider")
         logger.info(
@@ -461,7 +461,7 @@ class InProcessCronScheduler(CronScheduler):
         # Recovery + initial heartbeat for every profile.
         for entry in profile_homes:
             home = entry[1] if isinstance(entry, tuple) else entry
-            home_token = set_ev0_home_override(str(home))
+            home_token = set_threev0_home_override(str(home))
             try:
                 with use_cron_store(home):
                     recovered = self.recover_interrupted()
@@ -473,7 +473,7 @@ class InProcessCronScheduler(CronScheduler):
                         )
                     record_ticker_heartbeat()
             finally:
-                reset_ev0_home_override(home_token)
+                reset_threev0_home_override(home_token)
 
         while not stop_event.is_set():
             ok = False
@@ -483,7 +483,7 @@ class InProcessCronScheduler(CronScheduler):
                 else:
                     for entry in profile_homes:
                         home = entry[1] if isinstance(entry, tuple) else entry
-                        home_token = set_ev0_home_override(str(home))
+                        home_token = set_threev0_home_override(str(home))
                         try:
                             with use_cron_store(home):
                                 cron_tick(
@@ -494,7 +494,7 @@ class InProcessCronScheduler(CronScheduler):
                                     can_dispatch=can_dispatch,
                                 )
                         finally:
-                            reset_ev0_home_override(home_token)
+                            reset_threev0_home_override(home_token)
                 ok = True
             except BaseException as e:
                 logger.error("Cron tick error: %s", e, exc_info=True)
@@ -504,7 +504,7 @@ class InProcessCronScheduler(CronScheduler):
             # Record per-profile heartbeat after each tick cycle.
             for entry in profile_homes:
                 home = entry[1] if isinstance(entry, tuple) else entry
-                home_token = set_ev0_home_override(str(home))
+                home_token = set_threev0_home_override(str(home))
                 try:
                     with use_cron_store(home):
                         record_ticker_heartbeat(success=ok)
@@ -516,5 +516,5 @@ class InProcessCronScheduler(CronScheduler):
                         elif _tick_error:
                             record_ticker_error(_tick_error)
                 finally:
-                    reset_ev0_home_override(home_token)
+                    reset_threev0_home_override(home_token)
             stop_event.wait(interval)

@@ -14,18 +14,18 @@ import gateway.run as gateway_run
 
 
 def _write_home(tmp_path: Path, sessions_cfg: dict, env_text: str = "") -> Path:
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    (ev0_home / "config.yaml").write_text(
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    (threev0_home / "config.yaml").write_text(
         yaml.safe_dump({"sessions": sessions_cfg}), encoding="utf-8"
     )
-    (ev0_home / ".env").write_text(env_text, encoding="utf-8")
-    return ev0_home
+    (threev0_home / ".env").write_text(env_text, encoding="utf-8")
+    return threev0_home
 
 
 def test_cjk_fts_bridged_from_config(tmp_path, monkeypatch):
     home = _write_home(tmp_path, {"cjk_fts": False})
-    monkeypatch.setattr(gateway_run, "_ev0_home", home)
+    monkeypatch.setattr(gateway_run, "_threev0_home", home)
     monkeypatch.setenv("EV0_CJK_FTS", "1")
     gateway_run._reload_runtime_env_preserving_config_authority()
     assert os.environ["EV0_CJK_FTS"] == "False"

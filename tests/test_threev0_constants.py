@@ -10,35 +10,35 @@ import threev0_constants
 from threev0_constants import (
     VALID_REASONING_EFFORTS,
     agent_browser_runnable,
-    find_ev0_node_executable,
+    find_threev0_node_executable,
     find_node_executable,
     find_node_executable_on_path,
-    get_default_ev0_root,
-    get_ev0_dir,
-    get_ev0_home,
-    get_process_ev0_home,
-    heal_ev0_managed_node,
-    ev0_managed_node_tree_present,
-    iter_ev0_node_dirs,
+    get_default_threev0_root,
+    get_threev0_dir,
+    get_threev0_home,
+    get_process_threev0_home,
+    heal_threev0_managed_node,
+    threev0_managed_node_tree_present,
+    iter_threev0_node_dirs,
     is_container,
     node_tool_runnable,
     parse_reasoning_effort,
-    reset_ev0_home_override,
+    reset_threev0_home_override,
     secure_parent_dir,
-    set_ev0_home_override,
-    with_ev0_node_path,
+    set_threev0_home_override,
+    with_threev0_node_path,
 )
 
 
 class TestGetDefaultEv0Root:
     """Tests for get_default_ev0_root() — Docker/custom deployment awareness."""
 
-    def test_no_ev0_home_returns_native(self, tmp_path, monkeypatch):
+    def test_no_threev0_home_returns_native(self, tmp_path, monkeypatch):
         """When EV0_HOME is not set, returns ~/.3V0 (post-migration default)."""
         monkeypatch.delenv("EV0_HOME", raising=False)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
-        assert get_default_ev0_root() == tmp_path / ".3V0"
+        assert get_default_threev0_root() == tmp_path / ".3V0"
 
 
 
@@ -52,17 +52,17 @@ class TestGetDefaultEv0Root:
         profile.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("EV0_HOME", str(profile))
-        assert get_default_ev0_root() == docker_root
+        assert get_default_threev0_root() == docker_root
 
     @pytest.mark.windows_only
-    def test_no_ev0_home_returns_localappdata_root_on_windows(self, tmp_path, monkeypatch):
+    def test_no_threev0_home_returns_localappdata_root_on_windows(self, tmp_path, monkeypatch):
         """Native Windows falls back to %LOCALAPPDATA%\\3v0, not ~/.3v0."""
         local_appdata = tmp_path / "LocalAppData"
         monkeypatch.delenv("EV0_HOME", raising=False)
         monkeypatch.setenv("LOCALAPPDATA", str(local_appdata))
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "Home")
 
-        assert get_default_ev0_root() == local_appdata / "3v0"
+        assert get_default_threev0_root() == local_appdata / "3v0"
 
     def test_result_memoised_until_env_or_home_changes(self, tmp_path, monkeypatch):
         """Repeated calls reuse the memo; EV0_HOME / home changes invalidate.
@@ -97,13 +97,13 @@ class TestGetDefaultEv0Root:
         # (that IS the fix); the reset is a no-op there so the measured-work
         # assertion below fails genuinely instead of erroring.
         monkeypatch.setattr(
-            threev0_constants, "_default_ev0_root_memo", None, raising=False
+            threev0_constants, "_default_threev0_root_memo", None, raising=False
         )
 
-        first = get_default_ev0_root()
+        first = get_default_threev0_root()
         first_count = resolve_calls["n"]
         for _ in range(10):
-            get_default_ev0_root()
+            get_default_threev0_root()
         assert resolve_calls["n"] == first_count, (
             "repeated calls must be memo hits (no path resolution on hits), "
             f"resolve went {first_count} -> {resolve_calls['n']}"
@@ -115,7 +115,7 @@ class TestGetDefaultEv0Root:
         other_profile.mkdir(parents=True)
         monkeypatch.setenv("EV0_HOME", str(other_profile))
         before = resolve_calls["n"]
-        assert get_default_ev0_root() == docker_root
+        assert get_default_threev0_root() == docker_root
         assert resolve_calls["n"] > before, (
             "EV0_HOME change must force a fresh resolution"
         )
@@ -136,7 +136,7 @@ class TestGetEv0Home:
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "Home")
         monkeypatch.setattr(threev0_constants, "_profile_fallback_warned", False)
 
-        assert get_ev0_home() == local_appdata / "3v0"
+        assert get_threev0_home() == local_appdata / "3v0"
 
 
 class TestGetProcessEv0Home:
@@ -150,7 +150,7 @@ class TestGetProcessEv0Home:
     def test_env_set_returns_that_path(self, tmp_path, monkeypatch):
         home = tmp_path / "launch-home"
         monkeypatch.setenv("EV0_HOME", str(home))
-        assert get_process_ev0_home() == home
+        assert get_process_threev0_home() == home
 
 
 
@@ -165,7 +165,7 @@ class TestEv0ManagedNode:
         bin_dir.mkdir()
         monkeypatch.setenv("EV0_HOME", str(home))
 
-        assert iter_ev0_node_dirs() == [node_dir, bin_dir]
+        assert iter_threev0_node_dirs() == [node_dir, bin_dir]
 
     @pytest.mark.windows_only
     def test_windows_finds_npm_cmd_before_path(self, tmp_path, monkeypatch):
@@ -177,7 +177,7 @@ class TestEv0ManagedNode:
         monkeypatch.setenv("EV0_HOME", str(home))
         monkeypatch.setattr(threev0_constants, "node_tool_runnable", lambda path: True)
 
-        assert find_ev0_node_executable("npm") == str(npm_cmd)
+        assert find_threev0_node_executable("npm") == str(npm_cmd)
 
 
 
@@ -194,14 +194,14 @@ class TestEv0ManagedNode:
         monkeypatch.setenv("EV0_HOME", str(home))
         monkeypatch.setenv("PATH", str(bin_dir))
         monkeypatch.setattr(threev0_constants, "_managed_node_heal_attempted", False)
-        monkeypatch.setattr(threev0_constants, "heal_ev0_managed_node", lambda: False)
+        monkeypatch.setattr(threev0_constants, "heal_threev0_managed_node", lambda: False)
         monkeypatch.setattr(
             threev0_constants,
             "node_tool_runnable",
             lambda path: False,
         )
 
-        assert ev0_managed_node_tree_present() is True
+        assert threev0_managed_node_tree_present() is True
         assert find_node_executable("npm") is None
         assert find_node_executable("npm") != str(path_npm)
 
@@ -246,7 +246,7 @@ class TestNodeToolRunnable:
             broken_npm.chmod(0o755)
             return True
 
-        monkeypatch.setattr(threev0_constants, "heal_ev0_managed_node", _heal)
+        monkeypatch.setattr(threev0_constants, "heal_threev0_managed_node", _heal)
 
         resolved = find_node_executable("npm")
         assert heal_called["value"] is True
@@ -267,7 +267,7 @@ class TestNodeToolRunnable:
         monkeypatch.setenv("EV0_HOME", str(profile_home))
         monkeypatch.setenv("PATH", str(system_bin))
         monkeypatch.setattr(threev0_constants, "_managed_node_heal_attempted", False)
-        monkeypatch.setattr(threev0_constants, "heal_ev0_managed_node", lambda: False)
+        monkeypatch.setattr(threev0_constants, "heal_threev0_managed_node", lambda: False)
 
         assert find_node_executable("npm") is None
 
@@ -292,9 +292,9 @@ class TestNodeToolRunnable:
             old_node.chmod(0o755)
             return True
 
-        monkeypatch.setattr(threev0_constants, "heal_ev0_managed_node", _heal)
+        monkeypatch.setattr(threev0_constants, "heal_threev0_managed_node", _heal)
 
-        resolved = threev0_constants.find_ev0_node_executable("node")
+        resolved = threev0_constants.find_threev0_node_executable("node")
         assert heal_called["value"] is True
         assert resolved == str(old_node)
 
@@ -311,9 +311,9 @@ class TestNodeToolRunnable:
         monkeypatch.setenv("EV0_HOME", str(profile_home))
         monkeypatch.setenv("PATH", "")
         monkeypatch.setattr(threev0_constants, "_managed_node_heal_attempted", False)
-        monkeypatch.setattr(threev0_constants, "heal_ev0_managed_node", lambda: False)
+        monkeypatch.setattr(threev0_constants, "heal_threev0_managed_node", lambda: False)
 
-        assert threev0_constants.find_ev0_node_executable("node") == str(old_node)
+        assert threev0_constants.find_threev0_node_executable("node") == str(old_node)
 
     def test_target_major_managed_node_does_not_heal(self, tmp_path, monkeypatch):
         """A tree already at the target major never triggers the heal."""
@@ -332,9 +332,9 @@ class TestNodeToolRunnable:
         def _heal():
             raise AssertionError("heal must not run for an up-to-date tree")
 
-        monkeypatch.setattr(threev0_constants, "heal_ev0_managed_node", _heal)
+        monkeypatch.setattr(threev0_constants, "heal_threev0_managed_node", _heal)
 
-        assert threev0_constants.find_ev0_node_executable("node") == str(node)
+        assert threev0_constants.find_threev0_node_executable("node") == str(node)
 
 
 
@@ -651,7 +651,7 @@ class TestGetEv0Dir:
 
     def test_neither_exists_returns_new(self, tmp_path, monkeypatch):
         self._set_home(tmp_path, monkeypatch)
-        result = get_ev0_dir("platforms/pairing", "pairing")
+        result = get_threev0_dir("platforms/pairing", "pairing")
         assert result == tmp_path / "platforms/pairing"
 
 
@@ -667,7 +667,7 @@ class TestGetEv0Dir:
         self._set_home(tmp_path, monkeypatch)
         legacy = tmp_path / "image_cache"
         legacy.write_bytes(b"sentinel")
-        result = get_ev0_dir("cache/images", "image_cache")
+        result = get_threev0_dir("cache/images", "image_cache")
         assert result == legacy
 
 
@@ -687,7 +687,7 @@ class TestGetEv0Dir:
         new = tmp_path / "platforms" / "pairing"
         new.mkdir(parents=True)
         (new / "discord-approved.json").write_text("[]")
-        result = get_ev0_dir("platforms/pairing", "pairing")
+        result = get_threev0_dir("platforms/pairing", "pairing")
         assert result == new
 
     def test_symlink_to_populated_dir_returns_legacy(self, tmp_path, monkeypatch):
@@ -698,7 +698,7 @@ class TestGetEv0Dir:
         (real / "cached.png").write_bytes(b"x")
         legacy = tmp_path / "image_cache"
         legacy.symlink_to(real)
-        result = get_ev0_dir("cache/images", "image_cache")
+        result = get_threev0_dir("cache/images", "image_cache")
         assert result == legacy
 
 
@@ -1073,10 +1073,10 @@ class TestHealAttemptFlagSemantics:
 
         monkeypatch.setattr(threev0_constants, "_heal_managed_node_windows", fake_heal)
 
-        assert heal_ev0_managed_node() is False
+        assert heal_threev0_managed_node() is False
         assert threev0_constants._managed_node_heal_attempted is False
         # The flag stayed clear, so the next call retries the heal.
-        assert heal_ev0_managed_node() is False
+        assert heal_threev0_managed_node() is False
         assert calls["n"] == 2
 
     def test_real_failure_records_attempt(self, tmp_path, monkeypatch):
@@ -1094,8 +1094,8 @@ class TestHealAttemptFlagSemantics:
 
         monkeypatch.setattr(threev0_constants, "_heal_managed_node_windows", fake_heal)
 
-        assert heal_ev0_managed_node() is False
+        assert heal_threev0_managed_node() is False
         assert threev0_constants._managed_node_heal_attempted is True
         # The flag is set, so the once-per-process budget is spent.
-        assert heal_ev0_managed_node() is False
+        assert heal_threev0_managed_node() is False
         assert calls["n"] == 1

@@ -68,20 +68,20 @@ class OwnedTwilioNumber:
     capabilities: dict[str, Any]
 
 
-def _ev0_home() -> Path:
+def _threev0_home() -> Path:
     return Path(os.environ.get("EV0_HOME", "~/.3V0")).expanduser()
 
 
 def _env_path() -> Path:
-    return _ev0_home() / ".env"
+    return _threev0_home() / ".env"
 
 
 def _config_path() -> Path:
-    return _ev0_home() / "config.yaml"
+    return _threev0_home() / "config.yaml"
 
 
 def _state_path() -> Path:
-    return _ev0_home() / "telephony_state.json"
+    return _threev0_home() / "telephony_state.json"
 
 
 def _load_root_config() -> dict[str, Any]:

@@ -38,9 +38,9 @@ WORK_DURATION_S = 2.0  # longer than TTL => reclaimer wins
 WT = str(Path(__file__).resolve().parents[2])
 
 
-def worker_loop(worker_id: int, ev0_home: str, result_file: str) -> None:
-    os.environ["EV0_HOME"] = ev0_home
-    os.environ["HOME"] = ev0_home
+def worker_loop(worker_id: int, threev0_home: str, result_file: str) -> None:
+    os.environ["EV0_HOME"] = threev0_home
+    os.environ["HOME"] = threev0_home
     sys.path.insert(0, WT)
     from threev0_cli import kanban_db as kb
 
@@ -95,9 +95,9 @@ def worker_loop(worker_id: int, ev0_home: str, result_file: str) -> None:
         json.dump(events, f)
 
 
-def reclaimer_loop(ev0_home: str, result_file: str) -> None:
-    os.environ["EV0_HOME"] = ev0_home
-    os.environ["HOME"] = ev0_home
+def reclaimer_loop(threev0_home: str, result_file: str) -> None:
+    os.environ["EV0_HOME"] = threev0_home
+    os.environ["HOME"] = threev0_home
     sys.path.insert(0, WT)
     from threev0_cli import kanban_db as kb
 

@@ -34,9 +34,9 @@ from gateway.whatsapp_identity import (
     normalize_whatsapp_identifier,
 )
 from threev0_constants import (
-    get_default_ev0_root,
-    get_ev0_dir,
-    get_ev0_home,
+    get_default_threev0_root,
+    get_threev0_dir,
+    get_threev0_home,
 )
 from utils import atomic_replace
 
@@ -56,7 +56,7 @@ LOCKOUT_SECONDS = 3600              # Lockout duration after too many failures
 MAX_PENDING_PER_PLATFORM = 3        # Max pending codes per platform
 MAX_FAILED_ATTEMPTS = 5             # Failed approvals before lockout
 
-PAIRING_DIR = get_ev0_dir("platforms/pairing", "pairing")
+PAIRING_DIR = get_threev0_dir("platforms/pairing", "pairing")
 
 
 # Platform value -> its per-platform allowlist env var. When an operator has
@@ -368,7 +368,7 @@ def _migrate_split_pairing_dirs(
     home: Optional[Path] = None,
     active: Optional[Path] = None,
 ) -> None:
-    home = home or get_ev0_home()
+    home = home or get_threev0_home()
     old_dir = home / "pairing"
     new_dir = home / "platforms" / "pairing"
     active = active or PAIRING_DIR
@@ -422,13 +422,13 @@ class PairingStore:
         # Resolve storage directory lazily — tests use a temp EV0_HOME
         # and PairingStore may be constructed before the env is set.
         if profile:
-            root = get_default_ev0_root()
+            root = get_default_threev0_root()
             profile_home = (
                 root
                 if profile == "default"
                 else root / "profiles" / profile
             )
-            self._dir = get_ev0_dir(
+            self._dir = get_threev0_dir(
                 "platforms/pairing",
                 "pairing",
                 home=profile_home,

@@ -16,18 +16,18 @@ from gateway import run as gateway_run
 
 
 def test_reload_runtime_env_preserves_config_max_turns(tmp_path: Path, monkeypatch) -> None:
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    (ev0_home / "config.yaml").write_text(
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    (threev0_home / "config.yaml").write_text(
         yaml.safe_dump({"agent": {"max_turns": 9000}}),
         encoding="utf-8",
     )
-    (ev0_home / ".env").write_text(
+    (threev0_home / ".env").write_text(
         "EV0_MAX_ITERATIONS=90\nOPENROUTER_API_KEY=fresh-key\n",
         encoding="utf-8",
     )
 
-    monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
+    monkeypatch.setattr(gateway_run, "_threev0_home", threev0_home)
     monkeypatch.setenv("EV0_MAX_ITERATIONS", "9000")
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
 
@@ -49,16 +49,16 @@ def test_reload_runtime_env_preserves_config_terminal_backend(
     execute_code / read_file call starts trying Docker — while
     ``3v0 config get terminal.backend`` still says local.
     """
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    (ev0_home / "config.yaml").write_text(
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    (threev0_home / "config.yaml").write_text(
         yaml.safe_dump({"terminal": {"backend": "local"}}),
         encoding="utf-8",
     )
-    (ev0_home / ".env").write_text("TERMINAL_ENV=docker\n", encoding="utf-8")
+    (threev0_home / ".env").write_text("TERMINAL_ENV=docker\n", encoding="utf-8")
 
-    monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setattr(gateway_run, "_threev0_home", threev0_home)
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     # Startup bridge already ran: the effective backend is local.
     monkeypatch.setenv("TERMINAL_ENV", "local")
 

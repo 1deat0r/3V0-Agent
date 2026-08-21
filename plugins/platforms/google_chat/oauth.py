@@ -78,17 +78,17 @@ logger = logging.getLogger("gateway.platforms.google_chat_user_oauth")
 # Use the project's EV0_HOME helper so the token follows the user's
 # profile (e.g. tests can override via EV0_HOME=/tmp/...).
 try:
-    from threev0_constants import display_ev0_home, get_ev0_home
+    from threev0_constants import display_threev0_home, get_threev0_home
 except (ModuleNotFoundError, ImportError):
     # Fallback for environments where threev0_constants isn't importable
     # (mirrors the same fallback used by the google-workspace skill's
     # _ev0_home.py shim).
-    def get_ev0_home() -> Path:
+    def get_threev0_home() -> Path:
         val = os.environ.get("EV0_HOME", "").strip()
         return Path(val) if val else Path.home() / ".3V0"
 
-    def display_ev0_home() -> str:
-        home = get_ev0_home()
+    def display_threev0_home() -> str:
+        home = get_threev0_home()
         try:
             return "~/" + str(home.relative_to(Path.home()))
         except ValueError:
@@ -97,14 +97,14 @@ except (ModuleNotFoundError, ImportError):
 from utils import atomic_replace
 
 
-def _ev0_home() -> Path:
+def _threev0_home() -> Path:
     """Resolve EV0_HOME at call time (NOT module import).
 
     Tests and ``EV0_HOME=...`` env overrides need this to be late-
     binding. If we cached the path at import time, switching profiles
     or tweaking env vars in tests would silently keep using the old
     path."""
-    return get_ev0_home()
+    return get_threev0_home()
 
 
 # Filesystem-safe key: lowercase, allow ``[a-z0-9._-@]``, replace anything
@@ -120,19 +120,19 @@ def _sanitize_email(email: str) -> str:
 
 
 def _legacy_token_path() -> Path:
-    return _ev0_home() / "google_chat_user_token.json"
+    return _threev0_home() / "google_chat_user_token.json"
 
 
 def _user_tokens_dir() -> Path:
-    return _ev0_home() / "google_chat_user_tokens"
+    return _threev0_home() / "google_chat_user_tokens"
 
 
 def _legacy_pending_path() -> Path:
-    return _ev0_home() / "google_chat_user_oauth_pending.json"
+    return _threev0_home() / "google_chat_user_oauth_pending.json"
 
 
 def _user_pending_dir() -> Path:
-    return _ev0_home() / "google_chat_user_oauth_pending"
+    return _threev0_home() / "google_chat_user_oauth_pending"
 
 
 def _token_path(email: Optional[str] = None) -> Path:
@@ -143,7 +143,7 @@ def _token_path(email: Optional[str] = None) -> Path:
 
 
 def _client_secret_path() -> Path:
-    return _ev0_home() / "google_chat_user_client_secret.json"
+    return _threev0_home() / "google_chat_user_client_secret.json"
 
 
 def _pending_auth_path(email: Optional[str] = None) -> Path:
@@ -610,9 +610,9 @@ def exchange_auth_code(code: str, email: Optional[str] = None) -> None:
 
     print(f"OK: Authenticated. Token saved to {token_path}")
     rel_label = (
-        f"{display_ev0_home()}/google_chat_user_tokens/{_sanitize_email(email)}.json"
+        f"{display_threev0_home()}/google_chat_user_tokens/{_sanitize_email(email)}.json"
         if email
-        else f"{display_ev0_home()}/google_chat_user_token.json"
+        else f"{display_threev0_home()}/google_chat_user_token.json"
     )
     print(f"Profile path: {rel_label}")
 

@@ -15,13 +15,13 @@ import re
 import sys
 from pathlib import Path
 
-from threev0_constants import display_ev0_home, get_ev0_home
+from threev0_constants import display_threev0_home, get_threev0_home
 
 _HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 def _skins_dir() -> Path:
-    return get_ev0_home() / "skins"
+    return get_threev0_home() / "skins"
 
 
 def _active_skin() -> str:
@@ -81,7 +81,7 @@ def _skin_set(key: str, value: str, skin: str | None) -> int:
     if target != name:
         _use(target)
 
-    print(f"✓ {key} = {value} in {display_ev0_home()}/skins/{target}.yaml (live within ~1s)")
+    print(f"✓ {key} = {value} in {display_threev0_home()}/skins/{target}.yaml (live within ~1s)")
     return 0
 
 

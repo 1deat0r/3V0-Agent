@@ -40,7 +40,7 @@ class TestFireworksIdentity:
 
 
 class TestFireworksHeaders:
-    def test_attribution_matches_canonical_ev0_values(self, fireworks_profile):
+    def test_attribution_matches_canonical_threev0_values(self, fireworks_profile):
         """Fireworks requests carry the same attribution identity 3V0 sends
         everywhere else.
 

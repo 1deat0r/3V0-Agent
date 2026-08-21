@@ -6,9 +6,9 @@ import json
 
 
 def _write_auth_store(tmp_path, payload: dict) -> None:
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir(parents=True, exist_ok=True)
-    (ev0_home / "auth.json").write_text(json.dumps(payload, indent=2))
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir(parents=True, exist_ok=True)
+    (threev0_home / "auth.json").write_text(json.dumps(payload, indent=2))
 
 
 def test_key_rotation_clears_exhausted_status(tmp_path, monkeypatch):

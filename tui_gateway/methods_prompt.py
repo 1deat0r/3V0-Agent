@@ -1220,7 +1220,7 @@ def _(rid, params: dict) -> dict:
             # prompt turn does, and restore it afterward.
             _profile_home_str = session.get("profile_home")
             home_token = (
-                set_ev0_home_override(_profile_home_str)
+                set_threev0_home_override(_profile_home_str)
                 if _profile_home_str
                 else None
             )
@@ -1233,7 +1233,7 @@ def _(rid, params: dict) -> dict:
                 )
             finally:
                 if home_token is not None:
-                    reset_ev0_home_override(home_token)
+                    reset_threev0_home_override(home_token)
             _emit(
                 "background.complete",
                 parent,
@@ -1350,7 +1350,7 @@ def _(rid, params: dict) -> dict:
             # down the very server the restart just started.
             _profile_home_str = session.get("profile_home")
             home_token = (
-                set_ev0_home_override(_profile_home_str)
+                set_threev0_home_override(_profile_home_str)
                 if _profile_home_str
                 else None
             )
@@ -1365,7 +1365,7 @@ def _(rid, params: dict) -> dict:
                 )
             finally:
                 if home_token is not None:
-                    reset_ev0_home_override(home_token)
+                    reset_threev0_home_override(home_token)
             text = (
                 result.get("final_response", str(result))
                 if isinstance(result, dict)

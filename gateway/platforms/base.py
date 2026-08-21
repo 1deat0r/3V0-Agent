@@ -148,7 +148,7 @@ def _reply_anchor_for_event(event) -> str | None:
     if (
         platform == "slack"
         and isinstance(raw_message, dict)
-        and raw_message.get("_ev0_no_thread_response")
+        and raw_message.get("_threev0_no_thread_response")
     ):
         # Slack reaction handoffs into a configured target channel are meant
         # to create a new top-level message there. Returning the synthetic
@@ -578,7 +578,7 @@ sys.path.insert(0, str(_Path(__file__).resolve().parents[2]))
 
 from gateway.config import Platform, PlatformConfig
 from gateway.session import SessionSource, build_session_key
-from threev0_constants import get_default_ev0_root, get_ev0_dir, get_ev0_home
+from threev0_constants import get_default_threev0_root, get_threev0_dir, get_threev0_home
 
 if TYPE_CHECKING:
     from agent.display import ToolPreview
@@ -723,13 +723,13 @@ async def _ssrf_redirect_guard(response):
 
 # Import-time default. Tests monkeypatch this; the get_*_cache_dir() getters
 # re-resolve per call so the active profile override is honored.
-IMAGE_CACHE_DIR = get_ev0_dir("cache/images", "image_cache")
+IMAGE_CACHE_DIR = get_threev0_dir("cache/images", "image_cache")
 
 
 def _resolve_cache_dir(constant_name: str, new_subpath: str, old_name: str) -> Path:
     """Resolve fresh via get_ev0_dir (active profile), unless a test has
     monkeypatched the constant away from its import-time default."""
-    fresh = get_ev0_dir(new_subpath, old_name)
+    fresh = get_threev0_dir(new_subpath, old_name)
     current = globals().get(constant_name)
     default = _CACHE_DIR_IMPORT_DEFAULTS.get(constant_name)
     if current is not None and default is not None and current != default:
@@ -980,7 +980,7 @@ def cleanup_image_cache(max_age_hours: int = 24) -> int:
 # here so the STT tool (OpenAI Whisper) can transcribe them from local files.
 # ---------------------------------------------------------------------------
 
-AUDIO_CACHE_DIR = get_ev0_dir("cache/audio", "audio_cache")
+AUDIO_CACHE_DIR = get_threev0_dir("cache/audio", "audio_cache")
 
 
 def get_audio_cache_dir() -> Path:
@@ -1101,7 +1101,7 @@ def cleanup_audio_cache(max_age_hours: int = 24) -> int:
 # here so the agent can reference them by local file path.
 # ---------------------------------------------------------------------------
 
-VIDEO_CACHE_DIR = get_ev0_dir("cache/videos", "video_cache")
+VIDEO_CACHE_DIR = get_threev0_dir("cache/videos", "video_cache")
 
 SUPPORTED_VIDEO_TYPES = {
     ".mp4": "video/mp4",
@@ -1145,8 +1145,8 @@ def cleanup_video_cache(max_age_hours: int = 24) -> int:
 # here so the agent can reference them by local file path.
 # ---------------------------------------------------------------------------
 
-DOCUMENT_CACHE_DIR = get_ev0_dir("cache/documents", "document_cache")
-SCREENSHOT_CACHE_DIR = get_ev0_dir("cache/screenshots", "browser_screenshots")
+DOCUMENT_CACHE_DIR = get_threev0_dir("cache/documents", "document_cache")
+SCREENSHOT_CACHE_DIR = get_threev0_dir("cache/screenshots", "browser_screenshots")
 
 
 def get_screenshot_cache_dir() -> Path:
@@ -1175,8 +1175,8 @@ _CACHE_DIR_IMPORT_DEFAULTS = {
     "SCREENSHOT_CACHE_DIR": SCREENSHOT_CACHE_DIR,
 }
 
-_EV0_HOME = get_ev0_home()
-_EV0_ROOT = get_default_ev0_root()
+_EV0_HOME = get_threev0_home()
+_EV0_ROOT = get_default_threev0_root()
 MEDIA_DELIVERY_ALLOW_DIRS_ENV = "EV0_MEDIA_ALLOW_DIRS"
 MEDIA_DELIVERY_TRUST_RECENT_ENV = "EV0_MEDIA_TRUST_RECENT_FILES"
 MEDIA_DELIVERY_TRUST_RECENT_SECONDS_ENV = "EV0_MEDIA_TRUST_RECENT_SECONDS"
@@ -1411,11 +1411,11 @@ def _media_delivery_denied_paths() -> List[Path]:
         "pairing",
         "mcp-tokens",
     )
-    for ev0_root in (_EV0_HOME, _EV0_ROOT):
+    for threev0_root in (_EV0_HOME, _EV0_ROOT):
         for rel in _ROOT_CREDENTIAL_FILES:
-            denied.append(ev0_root / rel)
+            denied.append(threev0_root / rel)
         for rel in _ROOT_CREDENTIAL_DIRS:
-            denied.append(ev0_root / rel)
+            denied.append(threev0_root / rel)
     return denied
 
 
@@ -6389,7 +6389,7 @@ class BasePlatformAdapter(ABC):
                         and not media_files
                         and not self._streaming_tts_turn_completed(
                             session_key,
-                            getattr(interrupt_event, "_ev0_run_generation", None),
+                            getattr(interrupt_event, "_threev0_run_generation", None),
                             event=event,
                         )):
                     try:
@@ -6726,7 +6726,7 @@ class BasePlatformAdapter(ABC):
             self._streaming_tts_completed_turns.discard(
                 self._streaming_tts_turn_key(
                     session_key,
-                    getattr(interrupt_event, "_ev0_run_generation", None),
+                    getattr(interrupt_event, "_threev0_run_generation", None),
                     event=event,
                 )
                 or ""
@@ -6836,7 +6836,7 @@ class BasePlatformAdapter(ABC):
             # fresher run's callbacks.
             _callback_generation = getattr(
                 interrupt_event,
-                "_ev0_run_generation",
+                "_threev0_run_generation",
                 None,
             )
             if hasattr(self, "pop_post_delivery_callback"):

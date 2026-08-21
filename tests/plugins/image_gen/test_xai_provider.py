@@ -160,7 +160,7 @@ class TestGenerate:
             "data": [{"url": "https://imgen.x.ai/xai-tmp-imgen-already-404.jpeg"}],
         }
 
-        with patch("plugins.image_gen.xai.requests.post", return_value=mock_resp), \
+        with patch("plugins.image_gen.xai.requests.post", return_value=mock_resp),\
              patch(
                  "plugins.image_gen.xai.save_url_image",
                  side_effect=req_lib.HTTPError("404 from CDN"),
@@ -267,7 +267,7 @@ class TestGenerate:
         mock_resp.raise_for_status = MagicMock()
         mock_resp.json.return_value = {"data": [{"url": "https://xai.image/edited.png"}]}
 
-        with patch("plugins.image_gen.xai.requests.post", return_value=mock_resp) as mock_post, \
+        with patch("plugins.image_gen.xai.requests.post", return_value=mock_resp) as mock_post,\
              patch("plugins.image_gen.xai.save_url_image", return_value="/tmp/edited.png"):
             provider = XAIImageGenProvider()
             result = provider.generate(
@@ -288,7 +288,7 @@ class TestGenerate:
         mock_resp.raise_for_status = MagicMock()
         mock_resp.json.return_value = {"data": [{"url": "https://xai.image/edited.png"}]}
 
-        with patch("plugins.image_gen.xai.requests.post", return_value=mock_resp) as mock_post, \
+        with patch("plugins.image_gen.xai.requests.post", return_value=mock_resp) as mock_post,\
              patch("plugins.image_gen.xai.save_url_image", return_value="/tmp/edited.png"):
             provider = XAIImageGenProvider()
             result = provider.generate(
@@ -313,7 +313,7 @@ class TestGenerate:
         mock_resp.raise_for_status = MagicMock()
         mock_resp.json.return_value = {"data": [{"b64_json": "dGVzdA=="}]}
 
-        with patch("plugins.image_gen.xai.requests.post", return_value=mock_resp) as mock_post, \
+        with patch("plugins.image_gen.xai.requests.post", return_value=mock_resp) as mock_post,\
              patch("plugins.image_gen.xai.save_b64_image", return_value="/tmp/test.png"):
             provider = XAIImageGenProvider()
             provider.generate(prompt="test")
@@ -341,7 +341,7 @@ class TestGenerate:
             }],
         }
 
-        with patch("plugins.image_gen.xai.requests.post", return_value=mock_resp), \
+        with patch("plugins.image_gen.xai.requests.post", return_value=mock_resp),\
              patch("plugins.image_gen.xai.save_url_image") as mock_save_url:
             provider = XAIImageGenProvider()
             result = provider.generate(prompt="A cat playing piano")
@@ -394,11 +394,11 @@ class TestXAIImageFieldReadGuard:
     def test_xai_image_field_blocks_credential_store(self, tmp_path, monkeypatch):
         from plugins.image_gen.xai import _xai_image_field
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        auth_json = ev0_home / "auth.json"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        auth_json = threev0_home / "auth.json"
         auth_json.write_text('{"api_key":"sk-secret"}', encoding="utf-8")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         with pytest.raises(ValueError, match="credential store"):
             _xai_image_field(str(auth_json))

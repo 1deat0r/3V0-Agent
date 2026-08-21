@@ -42,16 +42,16 @@ import pytest
 def isolated_home(monkeypatch):
     """Temp EV0_HOME with config + clean credential env vars."""
     test_home = tempfile.mkdtemp(prefix="ev0_test_31179_")
-    ev0_home = os.path.join(test_home, ".3V0")
-    os.makedirs(ev0_home)
-    monkeypatch.setenv("EV0_HOME", ev0_home)
+    threev0_home = os.path.join(test_home, ".3V0")
+    os.makedirs(threev0_home)
+    monkeypatch.setenv("EV0_HOME", threev0_home)
 
     # Strip all credential-shaped env vars so each scenario starts hermetic.
     for k in list(os.environ.keys()):
         if k.endswith("_API_KEY") or k.endswith("_TOKEN"):
             monkeypatch.delenv(k, raising=False)
 
-    yield ev0_home
+    yield threev0_home
     shutil.rmtree(test_home, ignore_errors=True)
 
 

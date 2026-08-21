@@ -162,7 +162,7 @@ def aux_probe_mode():
 
 from agent.credential_pool import load_pool
 from agent.model_metadata import MINIMUM_CONTEXT_LENGTH, get_model_context_length
-from threev0_cli.config import get_ev0_home
+from threev0_cli.config import get_threev0_home
 from threev0_constants import OPENROUTER_BASE_URL
 from utils import base_url_host_matches, base_url_hostname, env_float, is_truthy_value, model_forces_max_completion_tokens, normalize_proxy_env_vars
 
@@ -1178,7 +1178,7 @@ _OPENROUTER_MODEL = "google/gemini-3.6-flash"
 _NOUS_MODEL = "google/gemini-3.6-flash"
 _NOUS_DEFAULT_BASE_URL = "https://inference-api.nousresearch.com/v1"
 _ANTHROPIC_DEFAULT_BASE_URL = "https://api.anthropic.com"
-_AUTH_JSON_PATH = get_ev0_home() / "auth.json"
+_AUTH_JSON_PATH = get_threev0_home() / "auth.json"
 
 # Codex OAuth endpoint used when a caller explicitly requests
 # provider="openai-codex".  There is deliberately no hardcoded default
@@ -3651,12 +3651,12 @@ def _build_xai_oauth_aux_client(model: str) -> Tuple[Optional[Any], Optional[str
         return None, None
     api_key, base_url = resolved
     logger.debug("Auxiliary client: xAI OAuth (%s via Responses API)", model)
-    from tools.xai_http import ev0_xai_default_headers
+    from tools.xai_http import threev0_xai_default_headers
 
     real_client = _create_openai_client(
         api_key=api_key,
         base_url=base_url,
-        default_headers=ev0_xai_default_headers(),
+        default_headers=threev0_xai_default_headers(),
     )
     return CodexAuxiliaryClient(real_client, model), model
 
@@ -4972,7 +4972,7 @@ def _fallback_destination(
     fb_label: str,
 ) -> _FallbackDestination:
     """Return the resolved route identity used by a fallback request."""
-    attached = getattr(fb_client, "_ev0_fallback_destination", None)
+    attached = getattr(fb_client, "_threev0_fallback_destination", None)
     if isinstance(attached, _FallbackDestination):
         return attached
 
@@ -5634,7 +5634,7 @@ def _resolve_fallback_entry(entry: Dict[str, Any]) -> Tuple[Optional[Any], Optio
     )
     if client is not None:
         try:
-            client._ev0_fallback_destination = _fallback_destination_from_entry(
+            client._threev0_fallback_destination = _fallback_destination_from_entry(
                 entry, client, resolved_model
             )
         except Exception:
@@ -5953,7 +5953,7 @@ def _tag_effective_provider(client: Any, provider: str) -> None:
     if client is None or not provider:
         return
     try:
-        setattr(client, "_ev0_aux_effective_provider", provider)
+        setattr(client, "_threev0_aux_effective_provider", provider)
     except (AttributeError, TypeError):
         logger.debug(
             "Auxiliary client %s cannot retain effective provider %s",
@@ -5963,7 +5963,7 @@ def _tag_effective_provider(client: Any, provider: str) -> None:
 
 def _effective_provider_for_client(client: Any, fallback: str) -> str:
     """Return the concrete provider selected for an auto-routed client."""
-    effective_provider = getattr(client, "_ev0_aux_effective_provider", "")
+    effective_provider = getattr(client, "_threev0_aux_effective_provider", "")
     if isinstance(effective_provider, str) and effective_provider:
         return effective_provider
     return str(fallback or "")
@@ -6030,9 +6030,9 @@ def _to_async_client(sync_client, model: str, is_vision: bool = False):
     elif base_url_host_matches(sync_base_url, "integrate.api.nvidia.com"):
         async_kwargs["default_headers"] = build_nvidia_nim_headers(sync_base_url)
     elif base_url_host_matches(sync_base_url, "x.ai"):
-        from tools.xai_http import ev0_xai_default_headers
+        from tools.xai_http import threev0_xai_default_headers
 
-        async_kwargs["default_headers"] = ev0_xai_default_headers()
+        async_kwargs["default_headers"] = threev0_xai_default_headers()
     else:
         # Fall back to profile.default_headers for providers that declare
         # client-level headers on their ProviderProfile (e.g. attribution
@@ -6711,9 +6711,9 @@ def resolve_provider_client(
         elif base_url_host_matches(base_url, "integrate.api.nvidia.com"):
             headers.update(build_nvidia_nim_headers(base_url))
         elif base_url_host_matches(base_url, "x.ai"):
-            from tools.xai_http import ev0_xai_default_headers
+            from tools.xai_http import threev0_xai_default_headers
 
-            headers.update(ev0_xai_default_headers())
+            headers.update(threev0_xai_default_headers())
         else:
             # Fall back to profile.default_headers for providers that declare
             # client-level attribution headers on their profile (e.g. GMI

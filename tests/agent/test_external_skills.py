@@ -20,7 +20,7 @@ def external_skills_dir(tmp_path):
 
 
 @pytest.fixture
-def ev0_home(tmp_path):
+def threev0_home(tmp_path):
     """Create a minimal EV0_HOME with config."""
     home = tmp_path / ".3V0"
     home.mkdir()
@@ -29,19 +29,19 @@ def ev0_home(tmp_path):
 
 
 class TestGetExternalSkillsDirs:
-    def test_empty_config(self, ev0_home):
-        (ev0_home / "config.yaml").write_text("skills:\n  external_dirs: []\n")
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+    def test_empty_config(self, threev0_home):
+        (threev0_home / "config.yaml").write_text("skills:\n  external_dirs: []\n")
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             from agent.skill_utils import get_external_skills_dirs
             result = get_external_skills_dirs()
         assert result == []
 
 
-    def test_valid_dir_returned(self, ev0_home, external_skills_dir):
-        (ev0_home / "config.yaml").write_text(
+    def test_valid_dir_returned(self, threev0_home, external_skills_dir):
+        (threev0_home / "config.yaml").write_text(
             f"skills:\n  external_dirs:\n    - {external_skills_dir}\n"
         )
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             from agent.skill_utils import get_external_skills_dirs
             result = get_external_skills_dirs()
         assert len(result) == 1
@@ -53,25 +53,25 @@ class TestGetExternalSkillsDirs:
 
 
 class TestGetAllSkillsDirs:
-    def test_local_always_first(self, ev0_home, external_skills_dir):
-        (ev0_home / "config.yaml").write_text(
+    def test_local_always_first(self, threev0_home, external_skills_dir):
+        (threev0_home / "config.yaml").write_text(
             f"skills:\n  external_dirs:\n    - {external_skills_dir}\n"
         )
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             from agent.skill_utils import get_all_skills_dirs
             result = get_all_skills_dirs()
-        assert result[0] == ev0_home / "skills"
+        assert result[0] == threev0_home / "skills"
         assert result[1] == external_skills_dir.resolve()
 
 
 class TestExternalSkillsInFindAll:
-    def test_external_skills_found(self, ev0_home, external_skills_dir):
-        (ev0_home / "config.yaml").write_text(
+    def test_external_skills_found(self, threev0_home, external_skills_dir):
+        (threev0_home / "config.yaml").write_text(
             f"skills:\n  external_dirs:\n    - {external_skills_dir}\n"
         )
-        local_skills = ev0_home / "skills"
+        local_skills = threev0_home / "skills"
         with (
-            patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}),
+            patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}),
             patch("tools.skills_tool.SKILLS_DIR", local_skills),
         ):
             from tools.skills_tool import _find_all_skills
@@ -79,19 +79,19 @@ class TestExternalSkillsInFindAll:
         names = [s["name"] for s in skills]
         assert "my-external-skill" in names
 
-    def test_local_takes_precedence(self, ev0_home, external_skills_dir):
+    def test_local_takes_precedence(self, threev0_home, external_skills_dir):
         """If the same skill name exists locally and externally, local wins."""
-        local_skills = ev0_home / "skills"
+        local_skills = threev0_home / "skills"
         local_skill = local_skills / "my-external-skill"
         local_skill.mkdir(parents=True)
         (local_skill / "SKILL.md").write_text(
             "---\nname: my-external-skill\ndescription: Local version\n---\n\nLocal.\n"
         )
-        (ev0_home / "config.yaml").write_text(
+        (threev0_home / "config.yaml").write_text(
             f"skills:\n  external_dirs:\n    - {external_skills_dir}\n"
         )
         with (
-            patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}),
+            patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}),
             patch("tools.skills_tool.SKILLS_DIR", local_skills),
         ):
             from tools.skills_tool import _find_all_skills
@@ -102,13 +102,13 @@ class TestExternalSkillsInFindAll:
 
 
 class TestExternalSkillView:
-    def test_skill_view_finds_external(self, ev0_home, external_skills_dir):
-        (ev0_home / "config.yaml").write_text(
+    def test_skill_view_finds_external(self, threev0_home, external_skills_dir):
+        (threev0_home / "config.yaml").write_text(
             f"skills:\n  external_dirs:\n    - {external_skills_dir}\n"
         )
-        local_skills = ev0_home / "skills"
+        local_skills = threev0_home / "skills"
         with (
-            patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}),
+            patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}),
             patch("tools.skills_tool.SKILLS_DIR", local_skills),
         ):
             from tools.skills_tool import skill_view

@@ -190,13 +190,13 @@ def _fake_popen_capture(captured):
 
 
 def test_run_prompt_preserves_real_home_when_profile_home_available(monkeypatch, tmp_path):
-    ev0_home = tmp_path / "3v0"
-    (ev0_home / "home").mkdir(parents=True)
+    threev0_home = tmp_path / "3v0"
+    (threev0_home / "home").mkdir(parents=True)
     real_home = tmp_path / "real-home"
     real_home.mkdir()
 
     monkeypatch.setenv("HOME", str(real_home))
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     # Hermeticity: an ambient EV0_REAL_HOME (exported by 3V0' own
     # terminal contract on dev boxes) outranks HOME in the candidate ladder,
     # and an ambient TERMINAL_HOME_MODE would change the policy under test.

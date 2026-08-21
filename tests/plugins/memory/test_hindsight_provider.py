@@ -107,11 +107,11 @@ def _provider_for_mode(tmp_path, monkeypatch, mode: str):
     config_path.write_text(json.dumps(config))
 
     monkeypatch.setattr(
-        "plugins.memory.hindsight.get_ev0_home", lambda: tmp_path
+        "plugins.memory.hindsight.get_threev0_home", lambda: tmp_path
     )
 
     provider = HindsightMemoryProvider()
-    provider.initialize(session_id="test-session", ev0_home=str(tmp_path), platform="cli")
+    provider.initialize(session_id="test-session", threev0_home=str(tmp_path), platform="cli")
     return provider
 
 
@@ -176,11 +176,11 @@ def provider(tmp_path, monkeypatch):
     config_path.write_text(json.dumps(config))
 
     monkeypatch.setattr(
-        "plugins.memory.hindsight.get_ev0_home", lambda: tmp_path
+        "plugins.memory.hindsight.get_threev0_home", lambda: tmp_path
     )
 
     p = HindsightMemoryProvider()
-    p.initialize(session_id="test-session", ev0_home=str(tmp_path), platform="cli")
+    p.initialize(session_id="test-session", threev0_home=str(tmp_path), platform="cli")
     p._client = _make_mock_client()
     return p
 
@@ -203,11 +203,11 @@ def provider_with_config(tmp_path, monkeypatch):
         config_path.write_text(json.dumps(config))
 
         monkeypatch.setattr(
-            "plugins.memory.hindsight.get_ev0_home", lambda: tmp_path
+            "plugins.memory.hindsight.get_threev0_home", lambda: tmp_path
         )
 
         p = HindsightMemoryProvider()
-        p.initialize(session_id="test-session", ev0_home=str(tmp_path), platform="cli")
+        p.initialize(session_id="test-session", threev0_home=str(tmp_path), platform="cli")
         p._client = _make_mock_client()
         return p
     return _make
@@ -372,11 +372,11 @@ class TestConfig:
 
 class TestPostSetup:
     def test_setup_cancel_at_mode_picker_writes_nothing(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / "3v0-home"
+        threev0_home = tmp_path / "3v0-home"
         user_home = tmp_path / "user-home"
         user_home.mkdir()
         monkeypatch.setenv("HOME", str(user_home))
-        monkeypatch.setattr("plugins.memory.hindsight.get_ev0_home", lambda: ev0_home)
+        monkeypatch.setattr("plugins.memory.hindsight.get_threev0_home", lambda: threev0_home)
 
         save_config = MagicMock()
         which = MagicMock(return_value="/usr/bin/uv")
@@ -389,18 +389,18 @@ class TestPostSetup:
         monkeypatch.setattr("threev0_cli.config.save_config", save_config)
 
         provider = HindsightMemoryProvider()
-        provider.post_setup(str(ev0_home), {"memory": {"provider": "builtin"}})
+        provider.post_setup(str(threev0_home), {"memory": {"provider": "builtin"}})
 
         save_config.assert_not_called()
         which.assert_not_called()
         run.assert_not_called()
-        assert not (ev0_home / ".env").exists()
-        assert not (ev0_home / "hindsight" / "config.json").exists()
+        assert not (threev0_home / ".env").exists()
+        assert not (threev0_home / "hindsight" / "config.json").exists()
         assert not (user_home / ".hindsight" / "profiles" / "3v0.env").exists()
 
 
     def test_local_embedded_setup_materializes_profile_env(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / "3v0-home"
+        threev0_home = tmp_path / "3v0-home"
         user_home = tmp_path / "user-home"
         user_home.mkdir()
         monkeypatch.setenv("HOME", str(user_home))
@@ -415,10 +415,10 @@ class TestPostSetup:
         monkeypatch.setattr("threev0_cli.config.save_config", lambda cfg: saved_configs.append(cfg.copy()))
 
         provider = HindsightMemoryProvider()
-        provider.post_setup(str(ev0_home), {"memory": {}})
+        provider.post_setup(str(threev0_home), {"memory": {}})
 
         assert saved_configs[-1]["memory"]["provider"] == "hindsight"
-        env_text = (ev0_home / ".env").read_text()
+        env_text = (threev0_home / ".env").read_text()
         assert "HINDSIGHT_LLM_API_KEY=sk-local-test\n" in env_text
         assert "HINDSIGHT_TIMEOUT=120\n" in env_text
         assert "HINDSIGHT_IDLE_TIMEOUT=300\n" in env_text
@@ -905,17 +905,17 @@ class TestSyncTurn:
         config_path = tmp_path / "hindsight" / "config.json"
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(json.dumps(config))
-        monkeypatch.setattr("plugins.memory.hindsight.get_ev0_home", lambda: tmp_path)
+        monkeypatch.setattr("plugins.memory.hindsight.get_threev0_home", lambda: tmp_path)
 
         p1 = HindsightMemoryProvider()
-        p1.initialize(session_id="resumed-session", ev0_home=str(tmp_path), platform="cli")
+        p1.initialize(session_id="resumed-session", threev0_home=str(tmp_path), platform="cli")
 
         # Sleep just enough that the microsecond timestamp differs
         import time
         time.sleep(0.001)
 
         p2 = HindsightMemoryProvider()
-        p2.initialize(session_id="resumed-session", ev0_home=str(tmp_path), platform="cli")
+        p2.initialize(session_id="resumed-session", threev0_home=str(tmp_path), platform="cli")
 
         # Same session, but each process gets its own document_id
         assert p1._document_id != p2._document_id
@@ -975,7 +975,7 @@ class TestRetainIndicator:
     def test_status_callback_wired_from_initialize(self, tmp_path, monkeypatch):
         cb = lambda _m: None
         p = _provider_for_mode(tmp_path, monkeypatch, "cloud")
-        p.initialize(session_id="s", ev0_home=str(tmp_path), status_callback=cb)
+        p.initialize(session_id="s", threev0_home=str(tmp_path), status_callback=cb)
         assert p._status_callback is cb
 
 
@@ -1286,12 +1286,12 @@ class TestBankIdTemplate:
         config_path = tmp_path / "hindsight" / "config.json"
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(json.dumps(config))
-        monkeypatch.setattr("plugins.memory.hindsight.get_ev0_home", lambda: tmp_path)
+        monkeypatch.setattr("plugins.memory.hindsight.get_threev0_home", lambda: tmp_path)
 
         p = HindsightMemoryProvider()
         p.initialize(
             session_id="s1",
-            ev0_home=str(tmp_path),
+            threev0_home=str(tmp_path),
             platform="cli",
             agent_identity="coder",
             agent_workspace="3v0",
@@ -1308,7 +1308,7 @@ class TestBankIdTemplate:
 class TestAvailability:
     def test_available_with_api_key(self, tmp_path, monkeypatch):
         monkeypatch.setattr(
-            "plugins.memory.hindsight.get_ev0_home",
+            "plugins.memory.hindsight.get_threev0_home",
             lambda: tmp_path / "nonexistent",
         )
         monkeypatch.setenv("HINDSIGHT_API_KEY", "test-key")
@@ -1318,7 +1318,7 @@ class TestAvailability:
 
     def test_local_mode_unavailable_when_runtime_import_fails(self, tmp_path, monkeypatch):
         monkeypatch.setattr(
-            "plugins.memory.hindsight.get_ev0_home",
+            "plugins.memory.hindsight.get_threev0_home",
             lambda: tmp_path / "nonexistent",
         )
         monkeypatch.setenv("HINDSIGHT_MODE", "local")
@@ -1341,7 +1341,7 @@ class TestAvailability:
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(json.dumps(config))
         monkeypatch.setattr(
-            "plugins.memory.hindsight.get_ev0_home", lambda: tmp_path
+            "plugins.memory.hindsight.get_threev0_home", lambda: tmp_path
         )
 
         def _raise(_name):
@@ -1353,7 +1353,7 @@ class TestAvailability:
         )
 
         p = HindsightMemoryProvider()
-        p.initialize(session_id="test-session", ev0_home=str(tmp_path), platform="cli")
+        p.initialize(session_id="test-session", threev0_home=str(tmp_path), platform="cli")
         assert p._mode == "disabled"
 
 
@@ -1516,7 +1516,7 @@ class TestClientAutoUpgradeRoutesThroughLazyDeps:
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(json.dumps({"mode": "cloud"}))
         monkeypatch.setattr(
-            "plugins.memory.hindsight.get_ev0_home", lambda: tmp_path
+            "plugins.memory.hindsight.get_threev0_home", lambda: tmp_path
         )
 
         # Simulate an installed-but-outdated client.
@@ -1534,7 +1534,7 @@ class TestClientAutoUpgradeRoutesThroughLazyDeps:
         monkeypatch.setattr(subprocess_mod, "run", _no_subprocess)
 
         provider = HindsightMemoryProvider()
-        provider.initialize(session_id="s", ev0_home=str(tmp_path), platform="cli")
+        provider.initialize(session_id="s", threev0_home=str(tmp_path), platform="cli")
         return calls
 
     def test_upgrade_uses_install_specs_not_subprocess(self, tmp_path, monkeypatch):

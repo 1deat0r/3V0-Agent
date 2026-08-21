@@ -212,7 +212,7 @@ class TestSetupTelegramAuto:
         profile_home = tmp_path / ".3V0" / "profiles" / "oracle"
         profile_home.mkdir(parents=True)
 
-        monkeypatch.setattr(setup, "get_ev0_home", lambda: profile_home)
+        monkeypatch.setattr(setup, "get_threev0_home", lambda: profile_home)
 
         def fake_auto_setup_telegram_bot_result(*, profile_name=None):
             seen["profile_name"] = profile_name
@@ -227,10 +227,10 @@ class TestSetupTelegramAuto:
         assert seen["profile_name"] == "oracle"
 
     def test_profile_name_from_home_path_handles_windows_separators(self):
-        from threev0_cli.setup import _profile_name_from_ev0_home
+        from threev0_cli.setup import _profile_name_from_threev0_home
 
         assert (
-            _profile_name_from_ev0_home(
+            _profile_name_from_threev0_home(
                 PureWindowsPath(r"C:\Users\test\AppData\Local\3v0\profiles\oracle")
             )
             == "oracle"

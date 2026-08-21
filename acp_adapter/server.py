@@ -80,8 +80,8 @@ from agent.context_compressor import (
 )
 from agent.interrupt_compat import request_hard_interrupt
 from tools.approval import (
-    reset_ev0_interactive_context,
-    set_ev0_interactive_context,
+    reset_threev0_interactive_context,
+    set_threev0_interactive_context,
 )
 
 logger = logging.getLogger(__name__)
@@ -895,16 +895,16 @@ class Ev0ACPAgent(acp.Agent):
     def _provenance_meta(
         self,
         acp_session_id: str,
-        current_ev0_session_id: str,
-        previous_ev0_session_id: Optional[str] = None,
+        current_threev0_session_id: str,
+        previous_threev0_session_id: Optional[str] = None,
     ) -> Optional[dict]:
         """Best-effort ``_meta.3v0.sessionProvenance`` for an ACP session."""
         try:
             return session_provenance_meta(
                 self.session_manager._get_db(),
                 acp_session_id,
-                current_ev0_session_id,
-                previous_ev0_session_id=previous_ev0_session_id,
+                current_threev0_session_id,
+                previous_threev0_session_id=previous_threev0_session_id,
             )
         except Exception:
             logger.debug(
@@ -916,8 +916,8 @@ class Ev0ACPAgent(acp.Agent):
         self,
         session_id: str,
         *,
-        current_ev0_session_id: Optional[str] = None,
-        previous_ev0_session_id: Optional[str] = None,
+        current_threev0_session_id: Optional[str] = None,
+        previous_threev0_session_id: Optional[str] = None,
     ) -> None:
         """Send ACP native session metadata after 3V0 changes it.
 
@@ -943,8 +943,8 @@ class Ev0ACPAgent(acp.Agent):
         updated_at = datetime.now(timezone.utc).isoformat()
         meta = self._provenance_meta(
             session_id,
-            current_ev0_session_id or session_id,
-            previous_ev0_session_id,
+            current_threev0_session_id or session_id,
+            previous_threev0_session_id,
         )
         update = SessionInfoUpdate(
             session_update="session_info_update",
@@ -1896,7 +1896,7 @@ class Ev0ACPAgent(acp.Agent):
             # and the non-interactive auto-approve path must not fire. Uses a
             # contextvar (not os.environ) so concurrent executor workers don't
             # race on the flag (GHSA-96vc-wcxf-jjff).
-            interactive_token = set_ev0_interactive_context(True)
+            interactive_token = set_threev0_interactive_context(True)
             # Propagate the originating ACP session id to tools that want to
             # tag side-effects with it (e.g. ``kanban_create`` stamps it on
             # the new task so clients can render a per-session board). Save
@@ -1929,7 +1929,7 @@ class Ev0ACPAgent(acp.Agent):
             finally:
                 # Restore the interactive contextvar for this context.
                 if interactive_token is not None:
-                    reset_ev0_interactive_context(interactive_token)
+                    reset_threev0_interactive_context(interactive_token)
                 # Restore EV0_SESSION_ID symmetrically.
                 if previous_session_id is None:
                     os.environ.pop("EV0_SESSION_ID", None)
@@ -1959,7 +1959,7 @@ class Ev0ACPAgent(acp.Agent):
             # can detect a compression-driven session rotation afterwards. The
             # ACP `session_id` stays the stable client handle; agent.session_id
             # is the live internal head that compression may rotate.
-            pre_turn_ev0_id = getattr(state.agent, "session_id", None)
+            pre_turn_threev0_id = getattr(state.agent, "session_id", None)
             # Wrap the executor call in a fresh copy of the current context so
             # concurrent ACP sessions on the shared ThreadPoolExecutor don't
             # stomp on each other's ContextVar writes (EV0_SESSION_KEY in
@@ -1982,18 +1982,18 @@ class Ev0ACPAgent(acp.Agent):
         # DB head moved during the turn, emit a session_info_update carrying
         # _meta.3v0.sessionProvenance so ACP clients can render the boundary
         # and keep old/new ids in lineage. The ACP session_id is unchanged.
-        post_turn_ev0_id = getattr(state.agent, "session_id", None)
+        post_turn_threev0_id = getattr(state.agent, "session_id", None)
         if (
             conn
-            and post_turn_ev0_id
-            and pre_turn_ev0_id
-            and post_turn_ev0_id != pre_turn_ev0_id
+            and post_turn_threev0_id
+            and pre_turn_threev0_id
+            and post_turn_threev0_id != pre_turn_threev0_id
         ):
             try:
                 await self._send_session_info_update(
                     session_id,
-                    current_ev0_session_id=post_turn_ev0_id,
-                    previous_ev0_session_id=pre_turn_ev0_id,
+                    current_threev0_session_id=post_turn_threev0_id,
+                    previous_threev0_session_id=pre_turn_threev0_id,
                 )
             except Exception:
                 logger.debug(

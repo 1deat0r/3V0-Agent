@@ -38,7 +38,7 @@ _EXAMPLE_PLUGIN_FIXTURE = (
 
 
 @pytest.fixture
-def _install_example_plugin(_isolate_ev0_home):
+def _install_example_plugin(_isolate_threev0_home):
     """Drop the example-dashboard fixture into the per-test EV0_HOME
     user-plugins directory and force the web_server's dashboard plugin
     cache + API mount to rediscover it.
@@ -58,10 +58,10 @@ def _install_example_plugin(_isolate_ev0_home):
     all). User plugins are first in the discovery search order, so
     laying down the fixture here is enough.
     """
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
     from threev0_cli import web_server
 
-    user_plugins_dir = get_ev0_home() / "plugins"
+    user_plugins_dir = get_threev0_home() / "plugins"
     user_plugins_dir.mkdir(parents=True, exist_ok=True)
     dst = user_plugins_dir / "example-dashboard"
     if dst.exists():
@@ -242,7 +242,7 @@ class TestWebServerEndpoints:
     """Test the FastAPI REST endpoints using Starlette TestClient."""
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
+    def _setup_test_client(self, monkeypatch, _isolate_threev0_home):
         """Create a TestClient and isolate the state DB under the test EV0_HOME."""
         try:
             from starlette.testclient import TestClient
@@ -250,10 +250,10 @@ class TestWebServerEndpoints:
             pytest.skip("fastapi/starlette not installed")
 
         import threev0_state
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
-        monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
+        monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db")
 
         self.client = TestClient(app)
         self.client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
@@ -264,11 +264,11 @@ class TestWebServerEndpoints:
         import sqlite3
 
         from threev0_cli import web_server
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_state import SessionDB
 
         web_server._last_auto_archive_check.clear()
-        db_path = get_ev0_home() / "state.db"
+        db_path = get_threev0_home() / "state.db"
         wal_path = Path(f"{db_path}-wal")
         writer = SessionDB(db_path=db_path)
         monitor = None
@@ -354,10 +354,10 @@ class TestWebServerEndpoints:
     def test_get_sessions_auto_archive_uses_maintenance_writer(self):
         from threev0_cli import web_server
         from threev0_cli.config import load_config, save_config
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_state import SessionDB
 
-        db_path = get_ev0_home() / "state.db"
+        db_path = get_threev0_home() / "state.db"
         seed = SessionDB(db_path=db_path)
         try:
             seed.create_session("stale", source="cli")
@@ -404,10 +404,10 @@ class TestWebServerEndpoints:
     def test_get_sessions_heals_stale_schema_store(self, missing_column):
         import sqlite3
 
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_state import SessionDB
 
-        db_path = get_ev0_home() / "state.db"
+        db_path = get_threev0_home() / "state.db"
         seed = SessionDB(db_path=db_path)
         try:
             seed.create_session("stale-schema", source="cli")
@@ -447,10 +447,10 @@ class TestWebServerEndpoints:
         """
         import sqlite3
 
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_state import SessionDB
 
-        db_path = get_ev0_home() / "state.db"
+        db_path = get_threev0_home() / "state.db"
         seed = SessionDB(db_path=db_path)
         try:
             seed.create_session("sidebar-stale", source="cli")
@@ -489,10 +489,10 @@ class TestWebServerEndpoints:
         import sqlite3
 
         from threev0_cli import web_server
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_state import SessionDB
 
-        db_path = get_ev0_home() / "state.db"
+        db_path = get_threev0_home() / "state.db"
         seed = SessionDB(db_path=db_path)
         try:
             seed.create_session("eager-stale", source="cli")
@@ -550,10 +550,10 @@ class TestWebServerEndpoints:
         once, and never pay the writable open for that store again.
         """
         from threev0_cli import web_server
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_state import SessionDB
 
-        db_path = get_ev0_home() / "state.db"
+        db_path = get_threev0_home() / "state.db"
         seed = SessionDB(db_path=db_path)
         try:
             seed.create_session("unfixable", source="cli")
@@ -604,9 +604,9 @@ class TestWebServerEndpoints:
         assert len(writable_opens) == 1
 
     def test_get_sessions_zero_byte_store_returns_empty_list(self):
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        db_path = get_ev0_home() / "state.db"
+        db_path = get_threev0_home() / "state.db"
         db_path.parent.mkdir(parents=True, exist_ok=True)
         db_path.touch()
 
@@ -771,7 +771,7 @@ class TestWebServerEndpoints:
 
 
     def test_declared_surface_put_writes_config_and_secret(self):
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.config import load_env
 
         resp = self.client.put(
@@ -789,7 +789,7 @@ class TestWebServerEndpoints:
         assert resp.json() == {"ok": True}
         assert load_env()["HINDSIGHT_API_KEY"] == "hs-declared-key"
 
-        config_path = get_ev0_home() / "hindsight" / "config.json"
+        config_path = get_threev0_home() / "hindsight" / "config.json"
         provider_config = json.loads(config_path.read_text(encoding="utf-8"))
         assert provider_config["mode"] == "local_external"
         assert provider_config["api_url"] == "http://localhost:8888"
@@ -849,7 +849,7 @@ class TestWebServerEndpoints:
 
 
     def test_put_memory_provider_config_writes_config_and_secret(self):
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.config import load_config, load_env
 
         resp = self.client.put(
@@ -870,7 +870,7 @@ class TestWebServerEndpoints:
         assert load_config()["memory"]["provider"] == "hindsight"
         assert load_env()["HINDSIGHT_API_KEY"] == "hs-test-key"
 
-        config_path = get_ev0_home() / "hindsight" / "config.json"
+        config_path = get_threev0_home() / "hindsight" / "config.json"
         provider_config = json.loads(config_path.read_text(encoding="utf-8"))
         assert provider_config["mode"] == "local_external"
         assert provider_config["api_url"] == "http://localhost:8888"
@@ -911,9 +911,9 @@ class TestWebServerEndpoints:
     def _isolate_honcho_config(self):
         # Honcho tests write the suite-wide EV0_HOME honcho.json; snapshot and
         # restore it so provider status/config state never leaks across tests.
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        path = get_ev0_home() / "honcho.json"
+        path = get_threev0_home() / "honcho.json"
         before = path.read_bytes() if path.exists() else None
         yield
         if before is None:
@@ -923,9 +923,9 @@ class TestWebServerEndpoints:
 
     @staticmethod
     def _seed_local_honcho(cfg=None):
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        path = get_ev0_home() / "honcho.json"
+        path = get_threev0_home() / "honcho.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(cfg if cfg is not None else {}), encoding="utf-8")
         return path
@@ -936,7 +936,7 @@ class TestWebServerEndpoints:
         monkeypatch.setenv("HONCHO_API_KEY", "guard")
         monkeypatch.delenv("HONCHO_API_KEY")
         self._seed_local_honcho()
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.config import load_config, load_env
 
         resp = self.client.put(
@@ -959,7 +959,7 @@ class TestWebServerEndpoints:
         assert load_config()["memory"]["provider"] == "honcho"
         assert load_env()["HONCHO_API_KEY"] == "hch-test-key"
 
-        cfg = json.loads((get_ev0_home() / "honcho.json").read_text(encoding="utf-8"))
+        cfg = json.loads((get_threev0_home() / "honcho.json").read_text(encoding="utf-8"))
         # baseUrl is root-scoped; the rest live in the active host block.
         assert cfg["baseUrl"] == "https://honcho.example.dev"
         assert cfg["hosts"]["3v0"]["workspace"] == "myws"
@@ -1136,7 +1136,7 @@ class TestWebServerEndpoints:
 
 
 
-    def test_update_ev0_returns_docker_guidance_without_spawning(self, monkeypatch):
+    def test_update_threev0_returns_docker_guidance_without_spawning(self, monkeypatch):
         import threev0_cli.web_server as web_server
 
         spawned = False
@@ -1149,7 +1149,7 @@ class TestWebServerEndpoints:
         # Bypass the managed-externally gate so we reach the docker install check.
         monkeypatch.setattr(web_server, "_dashboard_local_update_managed_externally", lambda: False)
         monkeypatch.setattr(web_server, "detect_install_method", lambda _root: "docker")
-        monkeypatch.setattr(web_server, "_spawn_ev0_action", fail_spawn)
+        monkeypatch.setattr(web_server, "_spawn_threev0_action", fail_spawn)
         web_server._ACTION_PROCS.pop("3v0-update", None)
         web_server._ACTION_RESULTS.pop("3v0-update", None)
 
@@ -1172,7 +1172,7 @@ class TestWebServerEndpoints:
         assert status_data["pid"] is None
         assert any("docker pull nousresearch/3v0-agent:latest" in line for line in status_data["lines"])
 
-    def test_update_ev0_spawns_with_action_id(self, monkeypatch):
+    def test_update_threev0_spawns_with_action_id(self, monkeypatch):
         import threev0_cli.web_server as web_server
 
         class Proc:
@@ -1187,7 +1187,7 @@ class TestWebServerEndpoints:
         monkeypatch.setattr(web_server, "_dashboard_local_update_managed_externally", lambda: False)
         monkeypatch.setattr(web_server, "detect_install_method", lambda _root: "git")
         monkeypatch.setattr(web_server.secrets, "token_hex", lambda _size: "a" * 32)
-        monkeypatch.setattr(web_server, "_spawn_ev0_action", fake_spawn)
+        monkeypatch.setattr(web_server, "_spawn_threev0_action", fake_spawn)
         web_server._ACTION_PROCS.pop("3v0-update", None)
         web_server._ACTION_RESULTS.pop("3v0-update", None)
 
@@ -1204,7 +1204,7 @@ class TestWebServerEndpoints:
             (["update"], "3v0-update", {"EV0_ACTION_ID": "a" * 32})
         ]
 
-    def test_update_ev0_reuses_running_action(self, monkeypatch):
+    def test_update_threev0_reuses_running_action(self, monkeypatch):
         import threev0_cli.web_server as web_server
 
         class Proc:
@@ -1217,7 +1217,7 @@ class TestWebServerEndpoints:
         monkeypatch.setattr(web_server, "detect_install_method", lambda _root: "git")
         monkeypatch.setattr(
             web_server,
-            "_spawn_ev0_action",
+            "_spawn_threev0_action",
             lambda *_args, **_kwargs: pytest.fail("must not spawn a duplicate update"),
         )
         web_server._ACTION_PROCS["3v0-update"] = Proc()
@@ -1454,7 +1454,7 @@ class TestWebServerEndpoints:
             assert name == "gateway-restart"
             raise RuntimeError("supervisor unavailable")
 
-        monkeypatch.setattr(ws, "_spawn_ev0_action", fail_spawn_action)
+        monkeypatch.setattr(ws, "_spawn_threev0_action", fail_spawn_action)
 
         start = self.client.post("/api/messaging/telegram/onboarding/start", json={})
         assert start.status_code == 200
@@ -1654,9 +1654,9 @@ class TestWebServerEndpoints:
         """
         from threev0_cli import profiles as profiles_mod
         from threev0_cli.config import custom_endpoint_key_env
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        default_home = get_ev0_home()
+        default_home = get_threev0_home()
         worker_home = profiles_mod.get_profile_dir("worker")
         worker_home.mkdir(parents=True)
 
@@ -2275,9 +2275,9 @@ class TestConfigRoundTrip:
 
         on_disk = read_raw_config()
         assert on_disk.get("agent", {}).get("max_turns") == 75
-        assert on_disk.get("agent", {}).get("x_dashboard_invisible_test_key") \
-            == {"nested": "value"}, \
-            "Shallow-merge regression: agent.x_dashboard_invisible_test_key " \
+        assert on_disk.get("agent", {}).get("x_dashboard_invisible_test_key")\
+            == {"nested": "value"},\
+            "Shallow-merge regression: agent.x_dashboard_invisible_test_key "\
             "was wiped when the frontend sent a partial agent dict."
 
     def test_schema_types_match_config_values(self):
@@ -2341,17 +2341,17 @@ class TestNewEndpoints:
     """Tests for session detail, logs, cron, skills, tools, raw config, analytics."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, monkeypatch, _isolate_ev0_home):
+    def _setup(self, monkeypatch, _isolate_threev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import threev0_state
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
-        monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
+        monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db")
 
         self.client = TestClient(app)
         self.client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
@@ -2369,7 +2369,7 @@ class TestNewEndpoints:
     def test_profiles_create_builder_mcp_auth_is_profile_scoped(
         self, monkeypatch
     ):
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         import threev0_cli.profiles as profiles_mod
 
         monkeypatch.setattr(profiles_mod, "create_wrapper_script", lambda name: None)
@@ -2414,7 +2414,7 @@ class TestNewEndpoints:
         assert resp.status_code == 200
         assert resp.json()["mcp_written"] == 3
 
-        root = get_ev0_home()
+        root = get_threev0_home()
         profile_dir = root / "profiles" / "builder-auth"
         config_text = (profile_dir / "config.yaml").read_text(encoding="utf-8")
         config = yaml.safe_load(config_text)
@@ -3376,16 +3376,16 @@ class TestDiscoverUserThemes:
         other.mkdir()
 
         from threev0_constants import (
-            reset_ev0_home_override,
-            set_ev0_home_override,
+            reset_threev0_home_override,
+            set_threev0_home_override,
         )
         from threev0_cli import web_server
 
-        token = set_ev0_home_override(str(other))
+        token = set_threev0_home_override(str(other))
         try:
             results = web_server._discover_user_themes()
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
         assert [r["name"] for r in results] == ["mine"]
 
@@ -3396,8 +3396,8 @@ class TestThemeBootstrapCSS:
     the default-teal first-paint flash for user YAML themes."""
 
     @staticmethod
-    def _write_theme(ev0_home, name="ocean"):
-        themes_dir = ev0_home / "dashboard-themes"
+    def _write_theme(threev0_home, name="ocean"):
+        themes_dir = threev0_home / "dashboard-themes"
         themes_dir.mkdir(exist_ok=True)
         (themes_dir / f"{name}.yaml").write_text(
             f"name: {name}\n"
@@ -3544,18 +3544,18 @@ class TestDeleteSessionEndpoint:
     """
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
+    def _setup_test_client(self, monkeypatch, _isolate_threev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import threev0_state
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
         monkeypatch.setattr(
-            threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db"
+            threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db"
         )
 
         self.auth_client = TestClient(app)
@@ -3607,18 +3607,18 @@ class TestBulkDeleteSessionsEndpoint:
     """
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
+    def _setup_test_client(self, monkeypatch, _isolate_threev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import threev0_state
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
         monkeypatch.setattr(
-            threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db"
+            threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db"
         )
 
         self.client = TestClient(app)
@@ -3694,20 +3694,20 @@ class TestDeleteEmptySessionsEndpoint:
     """
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
+    def _setup_test_client(self, monkeypatch, _isolate_threev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import threev0_state
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
         # Pin the SessionDB to the isolated EV0_HOME so each test
         # starts with a clean state.db.
         monkeypatch.setattr(
-            threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db"
+            threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db"
         )
 
         self.client = TestClient(app)
@@ -3804,7 +3804,7 @@ class TestPluginAPIAuth:
     """Tests that plugin API routes require the session token (issue #19533)."""
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_ev0_home, _install_example_plugin):
+    def _setup_test_client(self, monkeypatch, _isolate_threev0_home, _install_example_plugin):
         """Create a TestClient without the session token header.
 
         Pulls in ``_install_example_plugin`` so ``test_plugin_route_allows_auth``
@@ -3818,10 +3818,10 @@ class TestPluginAPIAuth:
             pytest.skip("fastapi/starlette not installed")
 
         import threev0_state
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
-        monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
+        monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db")
 
         self.client = TestClient(app)
         self.auth_client = TestClient(app)
@@ -3939,8 +3939,8 @@ class TestDashboardPluginManifestExtensions:
         (like theme YAML), so they must stay visible after a context-local
         EV0_HOME override scopes a request to another profile."""
         from threev0_constants import (
-            reset_ev0_home_override,
-            set_ev0_home_override,
+            reset_threev0_home_override,
+            set_threev0_home_override,
         )
         launch_home = tmp_path / "launch"
         launch_home.mkdir()
@@ -3955,11 +3955,11 @@ class TestDashboardPluginManifestExtensions:
 
         monkeypatch.setenv("EV0_HOME", str(launch_home))
         from threev0_cli import web_server
-        token = set_ev0_home_override(str(other))
+        token = set_threev0_home_override(str(other))
         try:
             plugins = web_server._discover_dashboard_plugins()
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
         assert any(p["name"] == "skin-home" for p in plugins)
 
     def test_user_plugins_found_under_profile_scoped_process(self, tmp_path, monkeypatch):
@@ -4030,7 +4030,7 @@ skip_on_windows = pytest.mark.skipif(
 @skip_on_windows
 class TestPtyWebSocket:
     @pytest.fixture(autouse=True)
-    def _setup(self, monkeypatch, _isolate_ev0_home):
+    def _setup(self, monkeypatch, _isolate_threev0_home):
         from starlette.testclient import TestClient
 
         import threev0_cli.web_server as ws
@@ -4261,7 +4261,7 @@ class TestDashboardPluginStaticAssetAllowlist:
     """
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_ev0_home, _install_example_plugin):
+    def _setup_test_client(self, monkeypatch, _isolate_threev0_home, _install_example_plugin):
         """Create a TestClient and install the example-dashboard fixture.
 
         The static-asset allowlist tests need a plugin to point at —
@@ -4344,7 +4344,7 @@ class TestValidateProviderCredential:
     """Live-probe credential validation (/api/providers/validate)."""
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
+    def _setup_test_client(self, monkeypatch, _isolate_threev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
@@ -4534,7 +4534,7 @@ class TestDesktopCronTicker:
 
         return TestClient(app)
 
-    def test_ticker_runs_when_desktop(self, monkeypatch, _isolate_ev0_home):
+    def test_ticker_runs_when_desktop(self, monkeypatch, _isolate_threev0_home):
         import threading
         import cron.scheduler as sched
 
@@ -4678,17 +4678,17 @@ class TestDashboardComponentHealth:
     """Component-health rollup: error middleware, /api/status components, self-test."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, monkeypatch, _isolate_ev0_home):
+    def _setup(self, monkeypatch, _isolate_threev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import threev0_state
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         import threev0_cli.web_server as ws
 
-        monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
+        monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db")
         # Fresh state holder per test so counters don't leak across tests.
         monkeypatch.setattr(ws, "DASHBOARD_HEALTH", ws.DashboardHealth())
         self.ws = ws
@@ -4749,18 +4749,18 @@ class TestSessionPatchUnread:
     read/unread, and GET /api/sessions surfaces the derived flag."""
 
     @pytest.fixture(autouse=True)
-    def _setup_test_client(self, monkeypatch, _isolate_ev0_home):
+    def _setup_test_client(self, monkeypatch, _isolate_threev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import threev0_state
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
         monkeypatch.setattr(
-            threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db"
+            threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db"
         )
 
         self.client = TestClient(app)

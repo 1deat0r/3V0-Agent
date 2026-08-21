@@ -43,7 +43,7 @@ from typing import Any, List, Optional, Protocol
 # the module) fail with ModuleNotFoundError for threev0_time et al.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from threev0_cli._subprocess_compat import windows_hide_flags
 from threev0_cli.config import (
     _expand_env_vars,
@@ -53,7 +53,7 @@ from threev0_cli.config import (
     resolve_cron_model_drift_defaults,
 )
 from threev0_cli.fallback_config import get_fallback_chain
-from threev0_time import now as _ev0_now
+from threev0_time import now as _threev0_now
 from agent.interrupt_compat import request_hard_interrupt
 from agent.delegation_context import (
     enter_non_dispatcher_owned_context,
@@ -773,13 +773,13 @@ def _record_forced_release(job_id: str, name: str, age_seconds: float, allowance
         "name": name,
         "age_seconds": round(age_seconds, 1),
         "allowance_seconds": round(allowance_seconds, 1),
-        "at": _ev0_now().isoformat(),
+        "at": _threev0_now().isoformat(),
     }
     with _running_lock:
         _forced_releases.append(entry)
         del _forced_releases[:-_FORCED_RELEASE_HISTORY]
     try:
-        path = _get_ev0_home() / "cron" / "inflight_forced_releases.jsonl"
+        path = _get_threev0_home() / "cron" / "inflight_forced_releases.jsonl"
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(entry) + "\n")
@@ -944,7 +944,7 @@ def mark_running_jobs_interrupted(
         registered_ids = {job_id for _t, job_id, _o, _p in active_fires}
         if only_owners is None:
             active_fires.extend(
-                (None, job_id, None, _get_ev0_home())
+                (None, job_id, None, _get_threev0_home())
                 for job_id in _running_job_ids - registered_ids
             )
         _interrupted_job_ids.update(
@@ -1211,7 +1211,7 @@ atexit.register(_shutdown_parallel_pool)
 # Per-fire usage audit log for cron token spend instrumentation.
 # Resolves through _get_ev0_home() so profile-scoped paths work correctly.
 def _usage_audit_path() -> Path:
-    return _get_ev0_home() / "cron" / "usage_audit.jsonl"
+    return _get_threev0_home() / "cron" / "usage_audit.jsonl"
 
 
 def _utcnow_iso_ms() -> str:
@@ -1270,10 +1270,10 @@ def _interpreter_shutting_down(exc: Optional[BaseException] = None) -> bool:
 
 
 # Backward-compatible module override used by tests and emergency monkeypatches.
-_ev0_home: Path | None = None
+_threev0_home: Path | None = None
 
 
-def _get_ev0_home() -> Path:
+def _get_threev0_home() -> Path:
     """Resolve 3V0 home dynamically while preserving test monkeypatch hooks.
 
     Cron is per-profile by design (#4707): the in-process ticker runs inside a
@@ -1282,13 +1282,13 @@ def _get_ev0_home() -> Path:
     (its .env, config.yaml, scripts, skills). Do not freeze this at import or
     anchor it at the shared default root — either re-breaks profile isolation.
     """
-    return _ev0_home or get_ev0_home()
+    return _threev0_home or get_threev0_home()
 
 
 def _get_lock_paths() -> tuple[Path, Path]:
     """Resolve cron lock paths at call time so profile/env changes are honored."""
-    ev0_home = _get_ev0_home()
-    lock_dir = ev0_home / "cron"
+    threev0_home = _get_threev0_home()
+    lock_dir = threev0_home / "cron"
     return lock_dir, lock_dir / ".tick.lock"
 
 
@@ -3195,7 +3195,7 @@ def _run_job_script(
         (success, output) — on failure *output* contains the error message so the
         LLM can report the problem to the user.
     """
-    scripts_dir = _get_ev0_home() / "scripts"
+    scripts_dir = _get_threev0_home() / "scripts"
     scripts_dir.mkdir(parents=True, exist_ok=True)
     scripts_dir_resolved = scripts_dir.resolve()
 
@@ -4293,9 +4293,9 @@ def run_job(
         # "no delivery target resolved". load_ev0_dotenv does not override
         # already-set vars, so the gateway's in-process tick is unaffected.
         try:
-            from threev0_cli.env_loader import load_ev0_dotenv
+            from threev0_cli.env_loader import load_threev0_dotenv
 
-            load_ev0_dotenv(ev0_home=_get_ev0_home())
+            load_threev0_dotenv(threev0_home=_get_threev0_home())
         except Exception:
             logger.debug(
                 "Job '%s': no_agent .env reload failed", job_id, exc_info=True
@@ -4329,7 +4329,7 @@ def run_job(
             )
             ok, output = False, f"Script execution failed: {exc}"
 
-        now_iso = _ev0_now().strftime("%Y-%m-%d %H:%M:%S")
+        now_iso = _threev0_now().strftime("%Y-%m-%d %H:%M:%S")
 
         if not ok:
             # Script crashed / timed out / exited non-zero.  Deliver the
@@ -4396,7 +4396,7 @@ def run_job(
     _monitor_context: Optional[str] = None
     if job_has_monitor(job):
         _mon = check_monitor(job)
-        _mon_now = _ev0_now().strftime("%Y-%m-%d %H:%M:%S")
+        _mon_now = _threev0_now().strftime("%Y-%m-%d %H:%M:%S")
         if not _mon.ok:
             # Source failure is an ERROR, never a change: alert the user so
             # a broken monitor can't silently stop watching. Stored hash is
@@ -4544,7 +4544,7 @@ def run_job(
             silent_doc = (
                 f"# Cron Job: {job_name}\n\n"
                 f"**Job ID:** {job_id}\n"
-                f"**Run Time:** {_ev0_now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                f"**Run Time:** {_threev0_now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
                 "Script gate returned `wakeAgent=false` — agent skipped.\n"
             )
             return True, silent_doc, SILENT_MARKER, None
@@ -4565,7 +4565,7 @@ def run_job(
         blocked_doc = (
             f"# Cron Job: {job_name}\n\n"
             f"**Job ID:** {job_id}\n"
-            f"**Run Time:** {_ev0_now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"**Run Time:** {_threev0_now().strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"**Status:** BLOCKED\n\n"
             "The assembled prompt (user prompt + loaded skill content) tripped "
             "the cron injection scanner and the agent was NOT run.\n\n"
@@ -4579,7 +4579,7 @@ def run_job(
     if prompt is None:
         logger.info("Job '%s': script produced no output, skipping AI call.", job_name)
         return True, "", SILENT_MARKER, None
-    _cron_session_id = f"cron_{job_id}_{_ev0_now().strftime('%Y%m%d_%H%M%S')}"
+    _cron_session_id = f"cron_{job_id}_{_threev0_now().strftime('%Y%m%d_%H%M%S')}"
 
     logger.info("Running job '%s' (ID: %s)", job_name, job_id)
     logger.info("Prompt: %s", prompt[:100])
@@ -4754,11 +4754,11 @@ def run_job(
         # forced re-pull off the network. load_ev0_dotenv also handles the
         # utf-8/latin-1 encoding fallback internally.
         from threev0_cli.env_loader import (
-            load_ev0_dotenv,
+            load_threev0_dotenv,
             reset_secret_source_cache,
         )
         reset_secret_source_cache()
-        load_ev0_dotenv(ev0_home=_get_ev0_home())
+        load_threev0_dotenv(threev0_home=_get_threev0_home())
 
         delivery_target = _resolve_delivery_target(job)
         if delivery_target:
@@ -4790,7 +4790,7 @@ def run_job(
         _model_cfg = {}
         try:
             from threev0_cli.config import read_user_config_raw
-            _cfg_path = str(_get_ev0_home() / "config.yaml")
+            _cfg_path = str(_get_threev0_home() / "config.yaml")
             if os.path.exists(_cfg_path):
                 _cfg = read_user_config_raw(Path(_cfg_path))
                 # Managed scope: a scheduled job must honor administrator-pinned
@@ -4867,7 +4867,7 @@ def run_job(
         if prefill_file:
             pfpath = Path(prefill_file).expanduser()
             if not pfpath.is_absolute():
-                pfpath = _get_ev0_home() / pfpath
+                pfpath = _get_threev0_home() / pfpath
             if pfpath.exists():
                 try:
                     with open(pfpath, "r", encoding="utf-8") as _pf:
@@ -4955,7 +4955,7 @@ def run_job(
             blocked_doc = (
                 f"# Cron Job: {job_name}\n\n"
                 f"**Job ID:** {job_id}\n"
-                f"**Run Time:** {_ev0_now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                f"**Run Time:** {_threev0_now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                 f"**Status:** BLOCKED (configuration)\n\n"
                 "Pre-dispatch validation found a configuration problem and "
                 "the agent was NOT run (no tokens spent).\n\n"
@@ -5463,7 +5463,7 @@ def run_job(
         output = f"""# Cron Job: {job_name}
 
 **Job ID:** {job_id}
-**Run Time:** {_ev0_now().strftime('%Y-%m-%d %H:%M:%S')}
+**Run Time:** {_threev0_now().strftime('%Y-%m-%d %H:%M:%S')}
 **Schedule:** {job.get('schedule_display', 'N/A')}
 
 ## Prompt
@@ -5520,7 +5520,7 @@ def run_job(
         output = f"""# Cron Job: {job_name} (FAILED)
 
 **Job ID:** {job_id}
-**Run Time:** {_ev0_now().strftime('%Y-%m-%d %H:%M:%S')}
+**Run Time:** {_threev0_now().strftime('%Y-%m-%d %H:%M:%S')}
 **Schedule:** {job.get('schedule_display', 'N/A')}
 
 ## Prompt
@@ -5599,7 +5599,7 @@ def run_job(
             # except-fallback below guarantees a non-blank title (#50535).
             try:
                 _title_base = " ".join(job_name.split())[:60].strip() or f"cron {job_id}"
-                _cron_title = f"{_title_base} · {_ev0_now().strftime('%b %d %H:%M')}"
+                _cron_title = f"{_title_base} · {_threev0_now().strftime('%b %d %H:%M')}"
                 if not _set_cron_session_title(
                     _session_db, _final_cron_session_id, _cron_title
                 ):
@@ -5818,7 +5818,7 @@ def run_one_job(
     claim = job.get("fire_claim")
     fire_owner = str(claim.get("by") or "") if isinstance(claim, dict) else ""
     execution_token = object()
-    profile_home = _get_ev0_home().resolve()
+    profile_home = _get_threev0_home().resolve()
     with _running_lock:
         _running_fire_owners.setdefault(job["id"], {})[execution_token] = (
             fire_owner or None,
@@ -5933,7 +5933,7 @@ def _run_one_job_body(
         )
 
         _scope_token = set_secret_scope(
-            build_profile_secret_scope(_get_ev0_home())
+            build_profile_secret_scope(_get_threev0_home())
         )
         # Defer the cron agent's async-resource teardown until AFTER delivery.
         # run_job normally closes the agent (and reaps stale async clients) in
@@ -6498,7 +6498,7 @@ def tick(
             # sweeps on idle ticks so orphaned stdio children from crashed
             # jobs are reaped even when nothing is due.
             if verbose:
-                logger.info("%s - No jobs due", _ev0_now().strftime('%H:%M:%S'))
+                logger.info("%s - No jobs due", _threev0_now().strftime('%H:%M:%S'))
             try:
                 from tools.mcp_tool import _kill_orphaned_mcp_children
                 _kill_orphaned_mcp_children()
@@ -6507,7 +6507,7 @@ def tick(
             return 0
 
         if verbose:
-            logger.info("%s - %s job(s) due", _ev0_now().strftime('%H:%M:%S'), len(due_jobs))
+            logger.info("%s - %s job(s) due", _threev0_now().strftime('%H:%M:%S'), len(due_jobs))
 
         # Advance next_run_at for all recurring jobs FIRST, under the file lock,
         # before any execution begins.  This preserves at-most-once semantics.

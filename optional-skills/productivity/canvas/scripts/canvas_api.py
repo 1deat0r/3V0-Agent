@@ -28,12 +28,12 @@ def _check_config():
     if not CANVAS_BASE_URL:
         missing.append("CANVAS_BASE_URL")
     if missing:
-        ev0_env = os.path.join(
+        threev0_env = os.path.join(
             os.environ.get("EV0_HOME", os.path.expanduser("~/.3V0")), ".env"
         )
         print(
             f"Missing required environment variables: {', '.join(missing)}\n"
-            f"Set them in {ev0_env} or export them in your shell.\n"
+            f"Set them in {threev0_env} or export them in your shell.\n"
             "See the canvas skill SKILL.md for setup instructions.",
             file=sys.stderr,
         )

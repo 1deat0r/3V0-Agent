@@ -42,8 +42,8 @@ def _make_broken_dotenv_shadow(tmp_path: Path) -> Path:
 
 def _run_lifecycle_subprocess(tmp_path: Path, *, repair: bool) -> subprocess.CompletedProcess:
     shadow = _make_broken_dotenv_shadow(tmp_path)
-    ev0_home = tmp_path / "ev0_home"
-    ev0_home.mkdir()
+    threev0_home = tmp_path / "ev0_home"
+    threev0_home.mkdir()
     script = tmp_path / "lifecycle.py"
     script.write_text(
         textwrap.dedent(
@@ -76,7 +76,7 @@ def _run_lifecycle_subprocess(tmp_path: Path, *, repair: bool) -> subprocess.Com
     env = {
         **os.environ,
         "PYTHONPATH": str(REPO_ROOT),
-        "EV0_HOME": str(ev0_home),
+        "EV0_HOME": str(threev0_home),
     }
     return subprocess.run(
         [sys.executable, str(script)],

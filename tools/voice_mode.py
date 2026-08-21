@@ -1765,14 +1765,14 @@ def _play_audio_file_impl(file_path: str) -> bool:
             try:
                 # Sibling of TTS/STT credential scrub (#70342 / #56332): system
                 # audio players must not inherit gateway tokens / API keys.
-                from tools.environments.local import ev0_subprocess_env
+                from tools.environments.local import threev0_subprocess_env
 
                 proc = subprocess.Popen(
                     cmd,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     stdin=subprocess.DEVNULL,
-                    env=ev0_subprocess_env(inherit_credentials=False),
+                    env=threev0_subprocess_env(inherit_credentials=False),
                 )
                 with _playback_lock:
                     _active_playback = proc

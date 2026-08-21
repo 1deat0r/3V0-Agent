@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from threev0_state import SessionDB
 from run_agent import AIAgent
 
@@ -110,9 +110,9 @@ def test_codex_gpt55_autoraise_notice_deduped_across_agent_inits(monkeypatch, tm
 # ── per-profile dedupe marker (#54432) ───────────────────────────────────────
 
 
-def test_marker_lives_under_ev0_home() -> None:
+def test_marker_lives_under_threev0_home() -> None:
     marker = _codex_gpt55_autoraise_notice_marker()
-    assert marker.parent == get_ev0_home()
+    assert marker.parent == get_threev0_home()
     assert marker.name == ".codex_gpt55_autoraise_notice"
 
 

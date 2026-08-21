@@ -54,7 +54,7 @@ class TestNamedProfileMultiplexerGuard:
         from threev0_cli import gateway as gw
         monkeypatch.setattr(gw, "_profile_suffix", lambda: "coder")
         monkeypatch.setattr(
-            "threev0_constants.get_default_ev0_root", lambda: tmp_path
+            "threev0_constants.get_default_threev0_root", lambda: tmp_path
         )
         # No gateway.pid in tmp_path => no running default gateway => no raise.
         gw._guard_named_profile_under_multiplexer(force=False)
@@ -66,7 +66,7 @@ class TestNamedProfileMultiplexerGuard:
 
         monkeypatch.setattr(gw, "_profile_suffix", lambda: "coder")
         monkeypatch.setattr(
-            "threev0_constants.get_default_ev0_root", lambda: tmp_path
+            "threev0_constants.get_default_threev0_root", lambda: tmp_path
         )
         (tmp_path / "gateway.pid").write_text("12345", encoding="utf-8")
         monkeypatch.setattr(status, "_read_pid_record", lambda p: {"pid": 12345})

@@ -10,7 +10,7 @@ import pytest
 
 
 @pytest.fixture
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     home = tmp_path / "ev0_home"
     home.mkdir()
     monkeypatch.setenv("EV0_HOME", str(home))
@@ -34,11 +34,11 @@ def _write_user_config(home, body: str):
     cfg._RAW_CONFIG_CACHE.clear()
 
 
-def test_user_config_overrides_default(ev0_home, monkeypatch):
+def test_user_config_overrides_default(threev0_home, monkeypatch):
     from threev0_cli.config import load_config, cfg_get
 
     _write_user_config(
-        ev0_home,
+        threev0_home,
         """
         model:
           default: user/model-x
@@ -48,12 +48,12 @@ def test_user_config_overrides_default(ev0_home, monkeypatch):
     assert cfg_get(cfg, "model", "default") == "user/model-x"
 
 
-def test_env_expansion_in_user_config(ev0_home, monkeypatch):
+def test_env_expansion_in_user_config(threev0_home, monkeypatch):
     from threev0_cli.config import load_config, cfg_get
 
     monkeypatch.setenv("MY_BASE", "https://example.test")
     _write_user_config(
-        ev0_home,
+        threev0_home,
         """
         providers:
           custom:
@@ -65,13 +65,13 @@ def test_env_expansion_in_user_config(ev0_home, monkeypatch):
 
 
 def test_user_env_overrides_shell(tmp_path, monkeypatch):
-    from threev0_cli.env_loader import load_ev0_dotenv
+    from threev0_cli.env_loader import load_threev0_dotenv
 
     home = tmp_path / "home"
     home.mkdir()
     (home / ".env").write_text("FOO_TOKEN=from_user_env\n", encoding="utf-8")
     monkeypatch.setenv("FOO_TOKEN", "from_shell")
-    load_ev0_dotenv(ev0_home=str(home))
+    load_threev0_dotenv(threev0_home=str(home))
     assert os.environ["FOO_TOKEN"] == "from_user_env"
 
 

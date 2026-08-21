@@ -1871,9 +1871,9 @@ class SlackAdapter(BasePlatformAdapter):
         bot_tokens = [t.strip() for t in raw_token.split(",") if t.strip()]
 
         # Also load tokens from OAuth token file
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        tokens_file = get_ev0_home() / "slack_tokens.json"
+        tokens_file = get_threev0_home() / "slack_tokens.json"
         if tokens_file.exists():
             try:
                 # Warn if the token file is world- or group-readable — it
@@ -2120,7 +2120,7 @@ class SlackAdapter(BasePlatformAdapter):
                 _slash_pattern = _re.compile(r"^/3v0$")
 
             @self._app.command(_slash_pattern)
-            async def handle_ev0_command(ack, command):
+            async def handle_threev0_command(ack, command):
                 slash = (command.get("command") or "").lstrip("/")
                 await ack(
                     response_type="ephemeral",
@@ -5433,11 +5433,11 @@ class SlackAdapter(BasePlatformAdapter):
             # trigger emoji) is definitionally addressed to the bot — skip
             # the mention requirement the way Feishu/Photon reaction routing
             # does. User authorization and allowed_channels still apply.
-            "_ev0_force_process": True,
+            "_threev0_force_process": True,
             # Surfaced for any downstream code that wants to know this was a
             # reaction rather than a typed message; not used by the default
             # pipeline.
-            "_ev0_reaction": {
+            "_threev0_reaction": {
                 "name": reaction_name,
                 "action": action,
                 "reacted_to_ts": msg_ts,
@@ -5457,12 +5457,12 @@ class SlackAdapter(BasePlatformAdapter):
             synthetic["channel_type"] = (
                 "im" if target_channel.startswith("D") else "channel"
             )
-            synthetic["_ev0_reaction_source_channel"] = channel_id
+            synthetic["_threev0_reaction_source_channel"] = channel_id
             if target_thread:
                 synthetic["thread_ts"] = target_thread
             else:
                 synthetic.pop("thread_ts", None)
-                synthetic["_ev0_no_thread_response"] = True
+                synthetic["_threev0_no_thread_response"] = True
 
         await self._handle_slack_message(synthetic)
 
@@ -6068,7 +6068,7 @@ class SlackAdapter(BasePlatformAdapter):
             thread_ts = event.get("thread_ts") or assistant_meta.get("thread_ts")
             if not thread_ts and self._dm_top_level_threads_as_sessions():
                 thread_ts = ts
-        elif event.get("_ev0_no_thread_response"):
+        elif event.get("_threev0_no_thread_response"):
             # Reaction handoff into a configured target channel (#45265):
             # the response should be a new top-level message in the target
             # channel, never a thread under the synthetic ts (which is the
@@ -6132,7 +6132,7 @@ class SlackAdapter(BasePlatformAdapter):
         # Internal routing paths (reaction triggers) are pre-authorized as
         # "addressed to the bot" — they skip the mention requirement but NOT
         # the allowed_channels whitelist or user authorization above.
-        force_process = bool(event.get("_ev0_force_process"))
+        force_process = bool(event.get("_threev0_force_process"))
 
         # Some Slack bot posts arrive as ordinary-looking message events with a
         # bot *user* id but without ``bot_id``/``subtype=bot_message``.  This is
@@ -9141,9 +9141,9 @@ async def _standalone_send(
     # string, which Slack rejects as ``invalid_auth`` (#47547).
     tokens = [t.strip() for t in str(raw_token or "").split(",") if t.strip()]
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        _tokens_file = get_ev0_home() / "slack_tokens.json"
+        _tokens_file = get_threev0_home() / "slack_tokens.json"
         if _tokens_file.exists():
             _saved = json.loads(_tokens_file.read_text(encoding="utf-8"))
             for _entry in _saved.values():
@@ -9389,14 +9389,14 @@ def interactive_setup() -> None:
         paste-into-Slack instructions. Failures are non-fatal."""
         try:
             from threev0_cli.slack_cli import _build_full_manifest
-            from threev0_constants import get_ev0_home
+            from threev0_constants import get_threev0_home
             import json as _json
 
             manifest = _build_full_manifest(
                 bot_name="3V0",
                 bot_description="Your 3V0 agent on Slack",
             )
-            target = Path(get_ev0_home()) / "slack-manifest.json"
+            target = Path(get_threev0_home()) / "slack-manifest.json"
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(
                 _json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",

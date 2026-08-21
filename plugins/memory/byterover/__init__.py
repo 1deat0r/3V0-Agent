@@ -164,8 +164,8 @@ def _run_brv(args: List[str], timeout: int = _QUERY_TIMEOUT,
 
 def _get_brv_cwd() -> Path:
     """Profile-scoped working directory for the brv context tree."""
-    from threev0_constants import get_ev0_home
-    return get_ev0_home() / "byterover"
+    from threev0_constants import get_threev0_home
+    return get_threev0_home() / "byterover"
 
 
 # ---------------------------------------------------------------------------

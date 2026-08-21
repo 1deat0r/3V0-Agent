@@ -78,7 +78,7 @@ def test_show_session_status_prints_gateway_style_summary():
         "started_at": 1775791440,
     }
 
-    with patch("cli.display_ev0_home", return_value="~/.3V0"):
+    with patch("cli.display_threev0_home", return_value="~/.3V0"):
         cli_obj._show_session_status()
 
     printed = "\n".join(str(call.args[0]) for call in cli_obj.console.print.call_args_list)

@@ -68,7 +68,7 @@ def test_install_psutil_android_compat_uses_patched_tree(tmp_path):
     archive = tmp_path / "psutil.tar.gz"
     _build_psutil_archive(archive, malicious_symlink=False)
 
-    from threev0_cli import main as ev0_main
+    from threev0_cli import main as threev0_main
 
     captured: dict[str, object] = {}
 
@@ -85,9 +85,9 @@ def test_install_psutil_android_compat_uses_patched_tree(tmp_path):
             encoding="utf-8"
         )
 
-    with patch("urllib.request.urlretrieve", side_effect=fake_urlretrieve), \
-         patch.object(ev0_main, "_run_install_with_heartbeat", side_effect=fake_run_install):
-        ev0_main._install_psutil_android_compat(
+    with patch("urllib.request.urlretrieve", side_effect=fake_urlretrieve),\
+         patch.object(threev0_main, "_run_install_with_heartbeat", side_effect=fake_run_install):
+        threev0_main._install_psutil_android_compat(
             ["uv", "pip"],
             env={"EV0_TEST": "1"},
         )
@@ -118,7 +118,7 @@ def test_install_psutil_android_script_uses_patched_tree(tmp_path, monkeypatch, 
     monkeypatch.setattr(installer.sys, "argv", ["install_psutil_android.py"])
     monkeypatch.setattr(installer, "_resolve_install_cmd", lambda *_args: ["python", "-m", "pip"])
 
-    with patch("urllib.request.urlretrieve", side_effect=fake_urlretrieve), \
+    with patch("urllib.request.urlretrieve", side_effect=fake_urlretrieve),\
          patch.object(installer.subprocess, "run", side_effect=fake_subprocess_run):
         assert installer.main() == 0
 

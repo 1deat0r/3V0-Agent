@@ -9,13 +9,13 @@ import os
 from pathlib import Path
 
 
-def ev0_home() -> Path:
+def threev0_home() -> Path:
     return Path(os.environ.get("EV0_HOME") or (Path.home() / ".3V0"))
 
 
 def data_dir() -> Path:
     override = os.environ.get("PDD_DATA_DIR")
-    return Path(override) if override else ev0_home() / "unbroker"
+    return Path(override) if override else threev0_home() / "unbroker"
 
 
 def config_path() -> Path:

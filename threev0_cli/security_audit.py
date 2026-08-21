@@ -30,7 +30,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 OSV_BATCH_URL = "https://api.osv.dev/v1/querybatch"
 OSV_VULN_URL = "https://api.osv.dev/v1/vulns/{vid}"
@@ -164,14 +164,14 @@ def _parse_pyproject_pins(text: str) -> list[tuple[str, str]]:
     return pins
 
 
-def _discover_plugins(ev0_home: Path) -> list[Component]:
+def _discover_plugins(threev0_home: Path) -> list[Component]:
     """Python deps declared by plugins under ``~/.3V0/plugins``.
 
     Plugins typically don't install into the venv (they're directory-based
     with relative imports), so their stated requirements are useful audit
     surface even when the venv scan misses them.
     """
-    plugins_dir = ev0_home / "plugins"
+    plugins_dir = threev0_home / "plugins"
     if not plugins_dir.is_dir():
         return []
 
@@ -416,10 +416,10 @@ def _discover_components(
     skip_venv: bool = False,
     skip_plugins: bool = False,
     skip_mcp: bool = False,
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
 ) -> list[Component]:
     """Discover all scannable components across the enabled sources."""
-    home = ev0_home or Path(get_ev0_home())
+    home = threev0_home or Path(get_threev0_home())
     components: list[Component] = []
     if not skip_venv:
         components.extend(_discover_venv())
@@ -435,7 +435,7 @@ def run_audit(
     skip_venv: bool = False,
     skip_plugins: bool = False,
     skip_mcp: bool = False,
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
     components: Optional[list[Component]] = None,
 ) -> list[Finding]:
     """Query OSV for the given (or freshly discovered) components.
@@ -449,7 +449,7 @@ def run_audit(
             skip_venv=skip_venv,
             skip_plugins=skip_plugins,
             skip_mcp=skip_mcp,
-            ev0_home=ev0_home,
+            threev0_home=threev0_home,
         )
 
     if not components:
@@ -538,7 +538,7 @@ def _render_json(findings: list[Finding], total_components: int) -> str:
 
 def cmd_security_audit(args: argparse.Namespace) -> int:
     """Implementation of `3v0 security audit`."""
-    home = Path(get_ev0_home())
+    home = Path(get_threev0_home())
     skip_venv = bool(getattr(args, "skip_venv", False))
     skip_plugins = bool(getattr(args, "skip_plugins", False))
     skip_mcp = bool(getattr(args, "skip_mcp", False))
@@ -553,7 +553,7 @@ def cmd_security_audit(args: argparse.Namespace) -> int:
         return 2
 
     components = _discover_components(
-        skip_venv=skip_venv, skip_plugins=skip_plugins, skip_mcp=skip_mcp, ev0_home=home
+        skip_venv=skip_venv, skip_plugins=skip_plugins, skip_mcp=skip_mcp, threev0_home=home
     )
     total = len(components)
     if total == 0:
@@ -569,7 +569,7 @@ def cmd_security_audit(args: argparse.Namespace) -> int:
             skip_venv=skip_venv,
             skip_plugins=skip_plugins,
             skip_mcp=skip_mcp,
-            ev0_home=home,
+            threev0_home=home,
             components=components,
         )
     except RuntimeError as exc:

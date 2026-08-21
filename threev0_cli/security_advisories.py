@@ -326,8 +326,8 @@ _BANNER_REPEAT_HOURS = 24
 
 def _banner_cache_path() -> Optional[Path]:
     try:
-        from threev0_constants import get_ev0_home
-        cache_dir = Path(get_ev0_home()) / "cache"
+        from threev0_constants import get_threev0_home
+        cache_dir = Path(get_threev0_home()) / "cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
         return cache_dir / _BANNER_CACHE_FILE
     except Exception:

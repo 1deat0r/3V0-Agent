@@ -25,7 +25,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from threev0_cli._subprocess_compat import windows_hide_flags
 from agent.skill_utils import is_excluded_skill_path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -60,13 +60,13 @@ def _override(name: str):
     return globals().get(name)
 
 
-def _ev0_home() -> Path:
-    return get_ev0_home()
+def _threev0_home() -> Path:
+    return get_threev0_home()
 
 
 def _skills_dir() -> Path:
     forced = _override("SKILLS_DIR")
-    return Path(forced) if forced is not None else _ev0_home() / "skills"
+    return Path(forced) if forced is not None else _threev0_home() / "skills"
 
 
 def _hub_dir() -> Path:
@@ -100,7 +100,7 @@ def _index_cache_dir() -> Path:
 
 
 _DYNAMIC_PATH_RESOLVERS = {
-    "EV0_HOME": _ev0_home,
+    "EV0_HOME": _threev0_home,
     "SKILLS_DIR": _skills_dir,
     "HUB_DIR": _hub_dir,
     "LOCK_FILE": _lock_file,
@@ -734,9 +734,9 @@ class GitHubSource(SkillSource):
         tags = []
         metadata = fm.get("metadata", {})
         if isinstance(metadata, dict):
-            ev0_meta = metadata.get("3v0", {})
-            if isinstance(ev0_meta, dict):
-                tags = ev0_meta.get("tags", [])
+            threev0_meta = metadata.get("3v0", {})
+            if isinstance(threev0_meta, dict):
+                tags = threev0_meta.get("tags", [])
         if not tags:
             raw_tags = fm.get("tags", [])
             tags = raw_tags if isinstance(raw_tags, list) else []
@@ -1487,9 +1487,9 @@ class UrlSource(SkillSource):
         tags: List[str] = []
         metadata = fm.get("metadata", {})
         if isinstance(metadata, dict):
-            ev0_meta = metadata.get("3v0", {})
-            if isinstance(ev0_meta, dict):
-                raw_tags = ev0_meta.get("tags", [])
+            threev0_meta = metadata.get("3v0", {})
+            if isinstance(threev0_meta, dict):
+                raw_tags = threev0_meta.get("tags", [])
                 if isinstance(raw_tags, list):
                     tags = [str(t) for t in raw_tags]
         return SkillMeta(
@@ -3582,9 +3582,9 @@ class OptionalSkillSource(SkillSource):
             tags = []
             meta_block = fm.get("metadata", {})
             if isinstance(meta_block, dict):
-                ev0_meta = meta_block.get("3v0", {})
-                if isinstance(ev0_meta, dict):
-                    tags = ev0_meta.get("tags", [])
+                threev0_meta = meta_block.get("3v0", {})
+                if isinstance(threev0_meta, dict):
+                    tags = threev0_meta.get("tags", [])
 
             rel_path = parent.relative_to(self._optional_dir).as_posix()
 
@@ -4171,11 +4171,11 @@ EV0_INDEX_URL = "https://github.com/1deat0r/3V0-Agent/docs/api/skills-index.json
 EV0_INDEX_TTL = 6 * 3600  # 6 hours
 
 
-def _ev0_index_cache_file() -> Path:
+def _threev0_index_cache_file() -> Path:
     return _index_cache_dir() / "3v0-index.json"
 
 
-def _load_ev0_index() -> Optional[dict]:
+def _load_threev0_index() -> Optional[dict]:
     """Fetch the centralized skills index, with local cache.
 
     The index is a JSON file hosted on the docs site, rebuilt daily by CI.
@@ -4183,12 +4183,12 @@ def _load_ev0_index() -> Optional[dict]:
     downloads within a session.
     """
     # Check local cache
-    ev0_index_cache_file = _ev0_index_cache_file()
-    if ev0_index_cache_file.exists():
+    threev0_index_cache_file = _threev0_index_cache_file()
+    if threev0_index_cache_file.exists():
         try:
-            age = time.time() - ev0_index_cache_file.stat().st_mtime
+            age = time.time() - threev0_index_cache_file.stat().st_mtime
             if age < EV0_INDEX_TTL:
-                return json.loads(ev0_index_cache_file.read_text(encoding="utf-8"))
+                return json.loads(threev0_index_cache_file.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             pass
 
@@ -4241,8 +4241,8 @@ def _load_ev0_index() -> Optional[dict]:
 
     # Cache locally
     try:
-        ev0_index_cache_file.parent.mkdir(parents=True, exist_ok=True)
-        ev0_index_cache_file.write_text(json.dumps(data), encoding="utf-8")
+        threev0_index_cache_file.parent.mkdir(parents=True, exist_ok=True)
+        threev0_index_cache_file.write_text(json.dumps(data), encoding="utf-8")
     except OSError:
         pass
 
@@ -4251,10 +4251,10 @@ def _load_ev0_index() -> Optional[dict]:
 
 def _load_stale_index_cache() -> Optional[dict]:
     """Fall back to stale cache when the network fetch fails."""
-    ev0_index_cache_file = _ev0_index_cache_file()
-    if ev0_index_cache_file.exists():
+    threev0_index_cache_file = _threev0_index_cache_file()
+    if threev0_index_cache_file.exists():
         try:
-            return json.loads(ev0_index_cache_file.read_text(encoding="utf-8"))
+            return json.loads(threev0_index_cache_file.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             pass
     return None
@@ -4282,7 +4282,7 @@ class Ev0IndexSource(SkillSource):
 
     def _ensure_loaded(self) -> dict:
         if not self._loaded:
-            self._index = _load_ev0_index()
+            self._index = _load_threev0_index()
             self._loaded = True
         return self._index or {}
 

@@ -13,7 +13,7 @@ from datetime import datetime
 from unittest.mock import patch
 import yaml
 
-from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 from gateway.config import GatewayConfig, Platform
 from gateway.session import SessionSource, SessionStore, build_session_key
 

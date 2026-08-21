@@ -55,7 +55,7 @@ def test_termux_skips_bundled_skill_sync_when_stamp_fresh(monkeypatch, tmp_path,
     calls = []
 
     monkeypatch.setenv("TERMUX_VERSION", "1")
-    monkeypatch.setattr(main_mod, "get_ev0_home", lambda: tmp_path)
+    monkeypatch.setattr(main_mod, "get_threev0_home", lambda: tmp_path)
     monkeypatch.setattr(main_mod, "_termux_bundled_skills_fingerprint", lambda: "fp1")
     main_mod._mark_termux_bundled_skills_synced()
     monkeypatch.setitem(
@@ -256,7 +256,7 @@ def test_launch_tui_exports_model_provider_and_toolsets(monkeypatch, main_mod):
 
 
 
-def test_make_tui_argv_dev_prebuilds_ev0_ink(monkeypatch, main_mod, tmp_path):
+def test_make_tui_argv_dev_prebuilds_threev0_ink(monkeypatch, main_mod, tmp_path):
     tui_dir = tmp_path / "ui-tui"
     tsx = tui_dir / "node_modules" / ".bin" / "tsx"
     ink_dir = tui_dir / "packages" / "3v0-ink"

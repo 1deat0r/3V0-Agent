@@ -36,7 +36,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from threev0_cli.config import get_ev0_home
+from threev0_cli.config import get_threev0_home
 from threev0_constants import venv_python_path
 
 logger = logging.getLogger(__name__)
@@ -326,9 +326,9 @@ def _gateway_prompt(prompt_text: str, default: str = "", timeout: float = 300.0)
     """
     import json as _json
     import uuid as _uuid
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    home = get_ev0_home()
+    home = get_threev0_home()
     prompt_path = home / ".update_prompt.json"
     response_path = home / ".update_response"
 
@@ -460,11 +460,11 @@ def _print_fts_optimize_available_notice() -> None:
         return
 
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_state import SessionDB
     except Exception:
         return
-    db_path = get_ev0_home() / "state.db"
+    db_path = get_threev0_home() / "state.db"
     if not db_path.exists():
         return
     try:
@@ -1142,7 +1142,7 @@ def _update_via_zip(args, *, had_desktop_app_before_update: bool = False):
     try:
         from threev0_cli.backup import _quick_snapshot_root, verify_sqlite_integrity
 
-        _state_path = get_ev0_home() / "state.db"
+        _state_path = get_threev0_home() / "state.db"
         if _state_path.exists():
             _state_ok = verify_sqlite_integrity(
                 _state_path, check_header=True, run_pragma=True
@@ -1153,7 +1153,7 @@ def _update_via_zip(args, *, had_desktop_app_before_update: bool = False):
                     "⚠ state.db is corrupted after update: "
                     + _state_ok.get("message", "unknown error")
                 )
-                _snap_root = _quick_snapshot_root(get_ev0_home())
+                _snap_root = _quick_snapshot_root(get_threev0_home())
                 if _snap_root.exists():
                     _snap_dirs = sorted(
                         (d for d in _snap_root.iterdir() if d.is_dir()),
@@ -1692,16 +1692,16 @@ def _count_commits_between(git_cmd: list[str], cwd: Path, base: str, head: str) 
 
 def _should_skip_upstream_prompt() -> bool:
     """Check if user previously declined to add upstream."""
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return (get_ev0_home() / SKIP_UPSTREAM_PROMPT_FILE).exists()
+    return (get_threev0_home() / SKIP_UPSTREAM_PROMPT_FILE).exists()
 
 def _mark_skip_upstream_prompt():
     """Create marker file to skip future upstream prompts."""
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        (get_ev0_home() / SKIP_UPSTREAM_PROMPT_FILE).touch()
+        (get_threev0_home() / SKIP_UPSTREAM_PROMPT_FILE).touch()
     except Exception:
         pass
 
@@ -1845,9 +1845,9 @@ def _invalidate_update_cache():
     """
     homes = []
     # Default profile home (Docker-aware — uses /opt/data in Docker)
-    from threev0_constants import get_default_ev0_root
+    from threev0_constants import get_default_threev0_root
 
-    default_home = get_default_ev0_root()
+    default_home = get_default_threev0_root()
     homes.append(default_home)
     # Named profiles under <root>/profiles/
     profiles_root = default_home / "profiles"
@@ -2314,7 +2314,7 @@ def _npm_manifests_digest() -> str | None:
             h.update(b"<missing>")
     return h.hexdigest()
 
-def _npm_lockfile_changed(ev0_root: Path) -> bool:
+def _npm_lockfile_changed(threev0_root: Path) -> bool:
     current = _npm_manifests_digest()
     if current is None:
         return True
@@ -2334,20 +2334,20 @@ def _npm_lockfile_changed(ev0_root: Path) -> bool:
     try:
         # Key the cache by PROJECT_ROOT so parallel worktrees don't collide.
         cache_key = hashlib.sha256(str(_m().PROJECT_ROOT).encode()).hexdigest()[:12]
-        cache_file = ev0_root / f".npm_lock_hash_{cache_key}"
+        cache_file = threev0_root / f".npm_lock_hash_{cache_key}"
         if not cache_file.exists():
             return True
         return cache_file.read_text(encoding="utf-8").strip() != current
     except OSError:
         return True
 
-def _record_npm_lockfile_hash(ev0_root: Path) -> None:
+def _record_npm_lockfile_hash(threev0_root: Path) -> None:
     digest = _npm_manifests_digest()
     if digest is None:
         return
     try:
         cache_key = hashlib.sha256(str(_m().PROJECT_ROOT).encode()).hexdigest()[:12]
-        cache_file = ev0_root / f".npm_lock_hash_{cache_key}"
+        cache_file = threev0_root / f".npm_lock_hash_{cache_key}"
         cache_file.write_text(digest, encoding="utf-8")
     except OSError:
         logger.debug("Could not write npm lockfile hash cache")
@@ -2412,12 +2412,12 @@ def _update_node_dependencies() -> list[str]:
             return failed
         return []
 
-    from threev0_constants import get_default_ev0_root
+    from threev0_constants import get_default_threev0_root
 
     # This cache describes PROJECT_ROOT/node_modules, which is shared by every
     # 3V0 profile using this checkout. Keep one per-checkout cache under the
     # shared 3V0 root rather than rerunning npm once per named profile.
-    shared_ev0_root = get_default_ev0_root()
+    shared_threev0_root = get_default_threev0_root()
 
     # Best-effort: warm npx's cache for agent-browser (#43564). Runs before
     # the lockfile-unchanged early return below since that's the common
@@ -2430,7 +2430,7 @@ def _update_node_dependencies() -> list[str]:
     except Exception:
         pass
 
-    if not _m()._npm_lockfile_changed(shared_ev0_root):
+    if not _m()._npm_lockfile_changed(shared_threev0_root):
         logger.info("npm lockfile unchanged, skipping npm install")
         return []
 
@@ -2465,9 +2465,9 @@ def _update_node_dependencies() -> list[str]:
         "--include-workspace-root",
     ]
 
-    from threev0_constants import with_ev0_node_path
+    from threev0_constants import with_threev0_node_path
 
-    nixos_env = with_ev0_node_path(_m()._nixos_build_env())
+    nixos_env = with_threev0_node_path(_m()._nixos_build_env())
 
     # NOTE: capture_output=False here is deliberate (#18840) — optional
     # postinstall scripts print download progress, and capturing it makes a
@@ -2482,7 +2482,7 @@ def _update_node_dependencies() -> list[str]:
         env=nixos_env,
     )
     if result.returncode == 0:
-        _record_npm_lockfile_hash(shared_ev0_root)
+        _record_npm_lockfile_hash(shared_threev0_root)
         print("  ✓ ui-tui, web workspaces installed (desktop skipped)")
         failures: list[str] = []
     else:
@@ -2841,10 +2841,10 @@ def _ensure_acp_launcher() -> None:
     if _m().sys.platform == "win32":
         return
     for bin_dir in (Path.home() / ".local" / "bin", Path("/usr/local/bin")):
-        ev0_cmd = bin_dir / "3v0"
+        threev0_cmd = bin_dir / "3v0"
         acp_cmd = bin_dir / "3v0-acp"
         try:
-            if not (ev0_cmd.is_file() or ev0_cmd.is_symlink()):
+            if not (threev0_cmd.is_file() or threev0_cmd.is_symlink()):
                 continue
             # Already present — a console script (pip/pipx install), an
             # earlier shim, or a symlink. is_symlink() catches broken
@@ -2857,7 +2857,7 @@ def _ensure_acp_launcher() -> None:
                 "# 3V0 Agent — ACP launcher (written by `3v0 update`).\n"
                 "# ACP hosts (Zed, JetBrains, Buzz) resolve the agent by this\n"
                 "# command name on the login-shell PATH.\n"
-                f'exec "{ev0_cmd}" acp "$@"\n'
+                f'exec "{threev0_cmd}" acp "$@"\n'
             )
             acp_cmd.write_text(shim, encoding="utf-8")
             acp_cmd.chmod(acp_cmd.stat().st_mode | 0o755)
@@ -2961,7 +2961,7 @@ def _run_pre_update_backup(args) -> Optional[str]:
         # NOTE: this function later does `from threev0_constants import
         # get_ev0_home`, which makes the name function-local — the
         # module-level import is shadowed and unbound here. Alias explicitly.
-        from threev0_cli.config import get_ev0_home as _get_home
+        from threev0_cli.config import get_threev0_home as _get_home
 
         snapshot_id = create_quick_snapshot(
             label="pre-update",
@@ -3067,13 +3067,13 @@ def _run_pre_update_backup(args) -> Optional[str]:
 
     size_str = format_bytes(size_bytes)
 
-    # Render path using display_ev0_home so the user sees ~/.3V0/...
+    # Render path using display_threev0_home so the user sees ~/.3V0/...
     try:
-        from threev0_constants import get_ev0_home, display_ev0_home
+        from threev0_constants import get_threev0_home, display_threev0_home
 
-        home = get_ev0_home()
+        home = get_threev0_home()
         try:
-            display_path = f"{display_ev0_home()}/{out_path.relative_to(home)}"
+            display_path = f"{display_threev0_home()}/{out_path.relative_to(home)}"
         except ValueError:
             display_path = str(out_path)
     except Exception:
@@ -4118,7 +4118,7 @@ def _refresh_bootstrap_cache_scripts(branch: str = "main") -> None:
     try:
         import re as _re
 
-        cache_dir = Path(_m().get_ev0_home()) / "bootstrap-cache"
+        cache_dir = Path(_m().get_threev0_home()) / "bootstrap-cache"
         if not cache_dir.is_dir():
             return
         # Mirror install_script.rs::sanitize_ref().
@@ -4430,9 +4430,9 @@ def _rebuild_desktop_after_update(
     # Start the build subprocess with the 3V0-managed Node on PATH: when
     # `3v0 update` runs in a chained updater flow, shell PATH customizations
     # are lost, so a bare-PATH child would fail with `node: not found`.
-    from threev0_constants import with_ev0_node_path
+    from threev0_constants import with_threev0_node_path
 
-    build_env = with_ev0_node_path()
+    build_env = with_threev0_node_path()
     build_result = _m()._run_logged_subprocess(
         desktop_build_cmd, cwd=_m().PROJECT_ROOT, env=build_env
     )
@@ -4445,7 +4445,7 @@ def _rebuild_desktop_after_update(
         tail = "\n".join((build_result.stdout or "").strip().splitlines()[-15:])
         if tail:
             print(tail)
-        from threev0_constants import display_ev0_home as _dhh
+        from threev0_constants import display_threev0_home as _dhh
 
         print(f"  Full build log: {_dhh()}/logs/update.log")
     else:
@@ -4503,7 +4503,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
     if _m()._is_windows() and not getattr(args, "force", False):
         scripts_dir = _m()._venv_scripts_dir()
         if scripts_dir is not None:
-            concurrent = _m()._detect_concurrent_ev0_instances(scripts_dir)
+            concurrent = _m()._detect_concurrent_threev0_instances(scripts_dir)
             if concurrent:
                 print(_format_concurrent_instances_message(concurrent, scripts_dir))
                 sys.exit(2)
@@ -5276,7 +5276,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
         try:
             from threev0_cli.backup import _quick_snapshot_root, verify_sqlite_integrity
 
-            _state_path = get_ev0_home() / "state.db"
+            _state_path = get_threev0_home() / "state.db"
             if _state_path.exists():
                 _state_ok = verify_sqlite_integrity(
                     _state_path,
@@ -5297,7 +5297,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
                     _pre_snap_id = pre_update_snapshot_id
                     if _pre_snap_id:
                         _snap_state = (
-                            _quick_snapshot_root(get_ev0_home())
+                            _quick_snapshot_root(get_threev0_home())
                             / _pre_snap_id
                             / "state.db"
                         )
@@ -5753,7 +5753,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
         # before we attempt the restart — ensures the new gateway sees it
         # regardless of how we die.
         if gateway_mode:
-            _exit_code_path = get_ev0_home() / ".update_exit_code"
+            _exit_code_path = get_threev0_home() / ".update_exit_code"
             try:
                 _exit_code_path.write_text("0", encoding="utf-8")
             except OSError:
@@ -6445,7 +6445,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
             if failed_or_stale_units:
                 gateway_fleet_restart_incomplete = True
                 if gateway_mode:
-                    _exit_code_path = get_ev0_home() / ".update_exit_code"
+                    _exit_code_path = get_threev0_home() / ".update_exit_code"
                     try:
                         _exit_code_path.write_text("1", encoding="utf-8")
                     except OSError:
@@ -6517,7 +6517,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
                 gateway_fleet_restart_incomplete = True
                 _warn_gateway_restart_phase_aborted(e, _surviving)
                 if gateway_mode:
-                    _exit_code_path = get_ev0_home() / ".update_exit_code"
+                    _exit_code_path = get_threev0_home() / ".update_exit_code"
                     try:
                         _exit_code_path.write_text("1", encoding="utf-8")
                     except OSError:
@@ -6532,15 +6532,15 @@ def _cmd_update_impl(args, gateway_mode: bool):
         # every `3v0 update` surfaces the issue until the user migrates.
         try:
             from threev0_cli.gateway import (
-                has_legacy_ev0_units,
-                _find_legacy_ev0_units,
+                has_legacy_threev0_units,
+                _find_legacy_threev0_units,
                 supports_systemd_services,
             )
 
-            if supports_systemd_services() and has_legacy_ev0_units():
+            if supports_systemd_services() and has_legacy_threev0_units():
                 print()
                 print("⚠ Legacy 3V0 gateway unit(s) detected:")
-                for name, path, is_sys in _find_legacy_ev0_units():
+                for name, path, is_sys in _find_legacy_threev0_units():
                     scope = "system" if is_sys else "user"
                     print(f"    {path}  ({scope} scope)")
                 print()

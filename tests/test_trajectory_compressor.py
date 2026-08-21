@@ -16,7 +16,7 @@ from trajectory_compressor import (
 )
 
 
-def test_import_loads_env_from_ev0_home(tmp_path, monkeypatch):
+def test_import_loads_env_from_threev0_home(tmp_path, monkeypatch):
     home = tmp_path / ".3V0"
     home.mkdir()
     (home / ".env").write_text("OPENROUTER_API_KEY=from-3v0-home\n", encoding="utf-8")
@@ -193,7 +193,7 @@ def _make_compressor(config=None):
     """Create a TrajectoryCompressor with mocked tokenizer and summarizer."""
     if config is None:
         config = CompressionConfig()
-    with patch.object(TrajectoryCompressor, '_init_tokenizer'), \
+    with patch.object(TrajectoryCompressor, '_init_tokenizer'),\
          patch.object(TrajectoryCompressor, '_init_summarizer'):
         compressor = TrajectoryCompressor(config)
     # Provide a simple token counter for tests (1 token per 4 chars)

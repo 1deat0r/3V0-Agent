@@ -52,8 +52,8 @@ def _make_tool_defs(*names: str) -> list:
 
 
 def _make_agent():
-    ev0_home = Path(tempfile.mkdtemp(prefix="3v0-test-home-"))
-    (ev0_home / "logs").mkdir(parents=True, exist_ok=True)
+    threev0_home = Path(tempfile.mkdtemp(prefix="3v0-test-home-"))
+    (threev0_home / "logs").mkdir(parents=True, exist_ok=True)
     with (
         patch(
             "run_agent.get_tool_definitions",
@@ -61,7 +61,7 @@ def _make_agent():
         ),
         patch("run_agent.check_toolset_requirements", return_value={}),
         patch("run_agent.OpenAI"),
-        patch("run_agent._ev0_home", ev0_home),
+        patch("run_agent._threev0_home", threev0_home),
         patch("agent.model_metadata.fetch_model_metadata", return_value={}),
     ):
         agent = AIAgent(

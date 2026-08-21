@@ -122,7 +122,7 @@ def _dimensions() -> dict[str, str]:
 
 
 def _resource(
-    ev0_version: str = "test-version",
+    threev0_version: str = "test-version",
     *,
     os_family: str = "linux",
     architecture: str = "x86_64",
@@ -130,7 +130,7 @@ def _resource(
 ) -> dict[str, str]:
     return {
         "architecture": architecture,
-        "ev0_version": ev0_version,
+        "ev0_version": threev0_version,
         "install_method": install_method,
         "os_family": os_family,
     }

@@ -78,7 +78,7 @@ _open_session_db_at_path = late("_open_session_db_at_path")
 _profile_setup_command = late("_profile_setup_command")
 _profile_to_dict = late("_profile_to_dict")
 _resolve_profile_dir = late("_resolve_profile_dir")
-_spawn_ev0_action = late("_spawn_ev0_action")
+_spawn_threev0_action = late("_spawn_threev0_action")
 _strip_session_list_rows = late("_strip_session_list_rows")
 _write_profile_mcp_servers = late("_write_profile_mcp_servers")
 _write_profile_model = late("_write_profile_model")
@@ -639,7 +639,7 @@ def get_profiles_projects_tree(preview_limit: int = 3, session_limit: int = 2000
     profile the user is not driving.
     """
     from threev0_cli import profiles as profiles_mod
-    from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+    from threev0_constants import reset_threev0_home_override, set_threev0_home_override
     from tui_gateway import server as gateway_server
 
     try:
@@ -667,7 +667,7 @@ def get_profiles_projects_tree(preview_limit: int = 3, session_limit: int = 2000
             errors.append({"profile": name, "error": str(exc)})
             continue
 
-        token = set_ev0_home_override(str(home))
+        token = set_threev0_home_override(str(home))
         try:
             tree, _active_id = gateway_server._build_project_tree(
                 db,
@@ -682,7 +682,7 @@ def get_profiles_projects_tree(preview_limit: int = 3, session_limit: int = 2000
             _warn_profile_read_error(name, exc)
             errors.append({"profile": name, "error": str(exc)})
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
             db.close()
 
     projects = sorted(merged.values(), key=lambda p: p.get("lastActive") or 0, reverse=True)
@@ -874,7 +874,7 @@ async def create_profile_endpoint(body: ProfileCreate):
         if not ident:
             continue
         try:
-            proc = _spawn_ev0_action(
+            proc = _spawn_threev0_action(
                 ["-p", body.name, "skills", "install", ident, "--yes"],
                 _hub_action_name("install", ident),
             )
@@ -1155,8 +1155,8 @@ async def export_profile_endpoint(name: str, body: ProfileExport):
 
     output = (body.output or "").strip()
     if not output:
-        from threev0_constants import get_ev0_home
-        staging = get_ev0_home() / "profile-exports"
+        from threev0_constants import get_threev0_home
+        staging = get_threev0_home() / "profile-exports"
         try:
             staging.mkdir(parents=True, exist_ok=True)
         except OSError as exc:

@@ -45,15 +45,15 @@ from utils import base_url_host_matches, base_url_hostname
 import fire
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeElapsedColumn, TimeRemainingColumn
 from rich.console import Console
-from threev0_constants import OPENROUTER_BASE_URL, get_ev0_home
+from threev0_constants import OPENROUTER_BASE_URL, get_threev0_home
 from agent.retry_utils import jittered_backoff
 
 # Load .env from EV0_HOME first, then project root as a dev fallback.
-from threev0_cli.env_loader import load_ev0_dotenv
+from threev0_cli.env_loader import load_threev0_dotenv
 
-_ev0_home = get_ev0_home()
+_threev0_home = get_threev0_home()
 _project_env = Path(__file__).parent / ".env"
-load_ev0_dotenv(ev0_home=_ev0_home, project_env=_project_env)
+load_threev0_dotenv(threev0_home=_threev0_home, project_env=_project_env)
 
 
 def _effective_temperature_for_model(

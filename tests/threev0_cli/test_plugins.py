@@ -89,16 +89,16 @@ def _make_plugin_dir(base: Path, name: str, *, register_body: str = "pass",
         # Config is always read from EV0_HOME (not from the project
         # dir for project plugins), so that's where we opt in.
         if home is not None:
-            ev0_home = Path(home)
+            threev0_home = Path(home)
         else:
             import os
-            ev0_home_str = os.environ.get("EV0_HOME")
-            if ev0_home_str:
-                ev0_home = Path(ev0_home_str)
+            threev0_home_str = os.environ.get("EV0_HOME")
+            if threev0_home_str:
+                threev0_home = Path(threev0_home_str)
             else:
-                ev0_home = base.parent
-        ev0_home.mkdir(parents=True, exist_ok=True)
-        cfg_path = ev0_home / "config.yaml"
+                threev0_home = base.parent
+        threev0_home.mkdir(parents=True, exist_ok=True)
+        cfg_path = threev0_home / "config.yaml"
         cfg: dict = {}
         if cfg_path.exists():
             try:
@@ -449,11 +449,11 @@ class TestPluginLoading:
         )
         # Even if the user explicitly enables it in config, the loader
         # should still treat it as exclusive and skip general loading.
-        ev0_home = tmp_path / "ev0_test"
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / "ev0_test"
+        (threev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["mempalace"]}})
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -511,11 +511,11 @@ class TestPluginLoading:
         # Even if the user explicitly enables it, the loader must treat it
         # as exclusive and skip the import (the bug: eager import of a
         # module with no register() function).
-        ev0_home = tmp_path / "ev0_test"
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / "ev0_test"
+        (threev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["mempalace_ep"]}})
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -561,11 +561,11 @@ class TestPluginLoading:
             ),
         )
 
-        ev0_home = tmp_path / "ev0_test"
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / "ev0_test"
+        (threev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["fakeprovider"]}})
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -624,8 +624,8 @@ class TestPluginLoading:
         )
 
         # Same-name directory provider under $EV0_HOME/plugins/.
-        ev0_home = tmp_path / "ev0_test"
-        plugins_dir = ev0_home / "plugins"
+        threev0_home = tmp_path / "ev0_test"
+        plugins_dir = threev0_home / "plugins"
         provider_dir = plugins_dir / "mempalace_dup"
         provider_dir.mkdir(parents=True)
         (provider_dir / "__init__.py").write_text(
@@ -642,10 +642,10 @@ class TestPluginLoading:
         (provider_dir / "plugin.yaml").write_text(
             "name: mempalace_dup\ndescription: dup\n"
         )
-        (ev0_home / "config.yaml").write_text(
+        (threev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["mempalace_dup"]}})
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(
             "plugins.memory._get_user_plugins_dir", lambda: plugins_dir
         )
@@ -716,11 +716,11 @@ class TestPluginLoading:
             ),
         )
 
-        ev0_home = tmp_path / "ev0_test"
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / "ev0_test"
+        (threev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["mempalace_dotted"]}})
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -1372,13 +1372,13 @@ class TestPluginContext:
                 '        override=True,\n'
                 '    )\n'
             )
-            ev0_home = tmp_path / "ev0_test"
+            threev0_home = tmp_path / "ev0_test"
             # No allow_tool_override entry — plugin enabled but operator
             # has NOT opted in to letting it replace built-ins.
-            (ev0_home / "config.yaml").write_text(
+            (threev0_home / "config.yaml").write_text(
                 yaml.safe_dump({"plugins": {"enabled": ["evil_override_plugin"]}})
             )
-            monkeypatch.setenv("EV0_HOME", str(ev0_home))
+            monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
             mgr = PluginManager()
             # PluginManager catches and logs the registration error, so the
@@ -1448,11 +1448,11 @@ class TestPluginContext:
                 "def register(ctx):\n"
                 "    _pending.append(_do_override)\n"
             )
-            ev0_home = tmp_path / "ev0_test"
-            (ev0_home / "config.yaml").write_text(
+            threev0_home = tmp_path / "ev0_test"
+            (threev0_home / "config.yaml").write_text(
                 yaml.safe_dump({"plugins": {"enabled": ["delayed_override_plugin"]}})
             )
-            monkeypatch.setenv("EV0_HOME", str(ev0_home))
+            monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
             mgr = PluginManager()
             mgr.discover_and_load()
@@ -1505,11 +1505,11 @@ class TestPluginToolVisibility:
             '        handler=lambda args, **kw: "ok",\n'
             '    )\n'
         )
-        ev0_home = tmp_path / "ev0_test"
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / "ev0_test"
+        (threev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["vis_plugin"]}})
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         mgr = PluginManager()
         mgr.discover_and_load()
@@ -1704,8 +1704,8 @@ class TestPluginCommands:
 
     def test_get_plugin_context_engine_discovers_plugins_lazily(self, tmp_path, monkeypatch):
         """Context engine lookup should work before any explicit discover_plugins() call."""
-        ev0_home = tmp_path / "ev0_test"
-        plugins_dir = ev0_home / "plugins"
+        threev0_home = tmp_path / "ev0_test"
+        plugins_dir = threev0_home / "plugins"
         plugin_dir = plugins_dir / "engine-plugin"
         plugin_dir.mkdir(parents=True, exist_ok=True)
         (plugin_dir / "plugin.yaml").write_text(
@@ -1731,10 +1731,10 @@ class TestPluginCommands:
             "    ctx.register_context_engine(StubEngine())\n"
         )
         # Opt-in: plugins are opt-in by default, so enable in config.yaml
-        (ev0_home / "config.yaml").write_text(
+        (threev0_home / "config.yaml").write_text(
             yaml.safe_dump({"plugins": {"enabled": ["engine-plugin"]}})
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         import threev0_cli.plugins as plugins_mod
 
@@ -1743,7 +1743,7 @@ class TestPluginCommands:
             assert engine is not None
             assert engine.name == "stub-engine"
 
-    def test_plugin_manager_scoped_by_ev0_home_override(self, tmp_path):
+    def test_plugin_manager_scoped_by_threev0_home_override(self, tmp_path):
         """set_ev0_home_override() must get its own manager per profile.
 
         This is the production path used by the gateway multiplexer
@@ -1754,7 +1754,7 @@ class TestPluginCommands:
         NOT touch ``os.environ``. A regression test that only flips the
         ``EV0_HOME`` env var never exercises this path.
         """
-        from threev0_constants import set_ev0_home_override, reset_ev0_home_override
+        from threev0_constants import set_threev0_home_override, reset_threev0_home_override
         import threev0_cli.plugins as plugins_mod
 
         def write_engine_plugin(home: Path) -> None:
@@ -1794,21 +1794,21 @@ class TestPluginCommands:
         # so we set the env var to home_a as a baseline and only use the
         # context-local override to *switch away* to home_b — proving the
         # override, not the env var, is what get_plugin_manager() keys on.
-        token_a = set_ev0_home_override(str(home_a))
+        token_a = set_threev0_home_override(str(home_a))
         try:
             manager_a = plugins_mod.get_plugin_manager()
             manager_a.discover_and_load()
             engine_a = manager_a._context_engine
         finally:
-            reset_ev0_home_override(token_a)
+            reset_threev0_home_override(token_a)
 
-        token_b = set_ev0_home_override(str(home_b))
+        token_b = set_threev0_home_override(str(home_b))
         try:
             manager_b = plugins_mod.get_plugin_manager()
             manager_b.discover_and_load()
             engine_b = manager_b._context_engine
         finally:
-            reset_ev0_home_override(token_b)
+            reset_threev0_home_override(token_b)
 
         assert engine_a is not None
         assert engine_b is not None
@@ -1818,11 +1818,11 @@ class TestPluginCommands:
         # Re-entering home_a's override must return the SAME cached manager
         # (and engine) rather than rebuilding — proves the cache is keyed,
         # not last-write-wins.
-        token_a2 = set_ev0_home_override(str(home_a))
+        token_a2 = set_threev0_home_override(str(home_a))
         try:
             manager_a2 = plugins_mod.get_plugin_manager()
         finally:
-            reset_ev0_home_override(token_a2)
+            reset_threev0_home_override(token_a2)
         assert manager_a2 is manager_a
 
     def test_relative_import_not_leaked_across_home_switch(self, tmp_path):
@@ -1838,7 +1838,7 @@ class TestPluginCommands:
         leaking the previous profile's module-level state (and code) into
         the new profile.
         """
-        from threev0_constants import set_ev0_home_override, reset_ev0_home_override
+        from threev0_constants import set_threev0_home_override, reset_threev0_home_override
         import threev0_cli.plugins as plugins_mod
 
         def write_stateful_plugin(home: Path, marker: str) -> None:
@@ -1870,26 +1870,26 @@ class TestPluginCommands:
         write_stateful_plugin(home_a, "marker-a")
         write_stateful_plugin(home_b, "marker-b")
 
-        token_a = set_ev0_home_override(str(home_a))
+        token_a = set_threev0_home_override(str(home_a))
         try:
             manager_a = plugins_mod.get_plugin_manager()
             manager_a.discover_and_load()
             module_a = manager_a._plugins["stateful-plugin"].module
         finally:
-            reset_ev0_home_override(token_a)
+            reset_threev0_home_override(token_a)
 
         assert module_a is not None
         module_a_state = f"{module_a.__name__}.state"
         assert module_a_state in sys.modules
         assert sys.modules[module_a_state].MARKER == "marker-a"
 
-        token_b = set_ev0_home_override(str(home_b))
+        token_b = set_threev0_home_override(str(home_b))
         try:
             manager_b = plugins_mod.get_plugin_manager()
             manager_b.discover_and_load()
             module_b = manager_b._plugins["stateful-plugin"].module
         finally:
-            reset_ev0_home_override(token_b)
+            reset_threev0_home_override(token_b)
 
         # Each profile keeps a stable namespace, so concurrent/runtime relative
         # imports cannot resolve another profile's package or submodules.

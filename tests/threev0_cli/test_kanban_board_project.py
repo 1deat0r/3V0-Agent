@@ -30,7 +30,7 @@ def fresh_home(tmp_path, monkeypatch):
         monkeypatch.delenv(var, raising=False)
     try:
         import threev0_constants
-        threev0_constants._cached_default_ev0_root = None  # type: ignore[attr-defined]
+        threev0_constants._cached_default_threev0_root = None  # type: ignore[attr-defined]
     except Exception:
         pass
     kb._INITIALIZED_PATHS.clear()

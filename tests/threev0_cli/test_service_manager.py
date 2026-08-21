@@ -350,7 +350,7 @@ def _log_run_setup_fragment(rendered: str) -> str:
     return "#!/bin/sh\n" + "".join(keep)
 
 
-def test_s6_log_run_creates_leaf_as_ev0_without_chown(
+def test_s6_log_run_creates_leaf_as_threev0_without_chown(
     s6_scandir, fake_subprocess_run,
 ) -> None:
     """log/run must not root-chown/unlink volume paths; create leaf as 3v0.
@@ -375,10 +375,10 @@ def test_s6_log_run_creates_leaf_as_ev0_without_chown(
     after_fi = log_text.split("fi\n", 1)[-1]
     assert 'rm -f "$log_dir/lock"' not in after_fi
 
-    mkdir_as_ev0_idx = log_text.index('s6-setuidgid 3v0 mkdir -p "$log_dir"')
-    rm_as_ev0_idx = log_text.index('s6-setuidgid 3v0 rm -f "$log_dir/lock"')
+    mkdir_as_threev0_idx = log_text.index('s6-setuidgid 3v0 mkdir -p "$log_dir"')
+    rm_as_threev0_idx = log_text.index('s6-setuidgid 3v0 rm -f "$log_dir/lock"')
     exec_idx = log_text.index("s6-log 1 ")
-    assert mkdir_as_ev0_idx < rm_as_ev0_idx < exec_idx
+    assert mkdir_as_threev0_idx < rm_as_threev0_idx < exec_idx
 
     # Runtime path expansion, never a baked-in absolute path.
     assert '/opt/data/logs/gateways"' not in log_text
@@ -397,8 +397,8 @@ def test_s6_log_run_never_invokes_chown_with_symlinked_log_dir(tmp_path) -> None
     if os.name == "nt":
         pytest.skip("POSIX symlink + /bin/sh required")
 
-    ev0_home = tmp_path / "3v0"
-    gateways = ev0_home / "logs" / "gateways"
+    threev0_home = tmp_path / "3v0"
+    gateways = threev0_home / "logs" / "gateways"
     gateways.mkdir(parents=True)
     leaf = gateways / "coder"
     leaf.mkdir()
@@ -483,7 +483,7 @@ def test_s6_log_run_never_invokes_chown_with_symlinked_log_dir(tmp_path) -> None
             time.sleep(0.001)
 
     env = os.environ.copy()
-    env["EV0_HOME"] = str(ev0_home)
+    env["EV0_HOME"] = str(threev0_home)
     env["PATH"] = f"{bin_dir.as_posix()}{os.pathsep}{env.get('PATH', '')}"
 
     racer = threading.Thread(target=_swap_race, daemon=True)

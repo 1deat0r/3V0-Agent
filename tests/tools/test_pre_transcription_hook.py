@@ -110,10 +110,10 @@ class TestPromptThreading:
         mock_model.transcribe.return_value = ([mock_segment], mock_info)
 
         cfg_patch, prov_patch = _dispatch_ctx({"provider": "local"}, "local")
-        with cfg_patch, prov_patch, \
-             patch("tools.transcription_tools._HAS_FASTER_WHISPER", True), \
+        with cfg_patch, prov_patch,\
+             patch("tools.transcription_tools._HAS_FASTER_WHISPER", True),\
              patch("tools.transcription_tools._load_local_whisper_model",
-                   return_value=mock_model), \
+                   return_value=mock_model),\
              patch("tools.transcription_tools._local_model", None):
             result = transcription_tools.transcribe_audio(audio)
 
@@ -130,8 +130,8 @@ class TestPromptThreading:
         mock_client.audio.transcriptions.create.return_value = "hello"
 
         cfg_patch, prov_patch = _dispatch_ctx({"provider": "openai"}, "openai")
-        with cfg_patch, prov_patch, \
-             patch("tools.transcription_tools._HAS_OPENAI", True), \
+        with cfg_patch, prov_patch,\
+             patch("tools.transcription_tools._HAS_OPENAI", True),\
              patch("openai.OpenAI", return_value=mock_client):
             result = transcription_tools.transcribe_audio(audio)
 
@@ -149,8 +149,8 @@ class TestPromptThreading:
         mock_client.audio.transcriptions.create.return_value = "hello"
 
         cfg_patch, prov_patch = _dispatch_ctx({"provider": "groq"}, "groq")
-        with cfg_patch, prov_patch, \
-             patch("tools.transcription_tools._HAS_OPENAI", True), \
+        with cfg_patch, prov_patch,\
+             patch("tools.transcription_tools._HAS_OPENAI", True),\
              patch("openai.OpenAI", return_value=mock_client):
             result = transcription_tools.transcribe_audio(audio)
 
@@ -200,7 +200,7 @@ class TestHookMergeMechanics:
 
         backend = MagicMock(return_value={"success": True, "transcript": "hi"})
         cfg_patch, prov_patch = _dispatch_ctx({"provider": "openai"}, "openai")
-        with cfg_patch, prov_patch, \
+        with cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             transcription_tools.transcribe_audio(audio)
 
@@ -214,7 +214,7 @@ class TestHookMergeMechanics:
 
         backend = MagicMock(return_value={"success": True, "transcript": "hi"})
         cfg_patch, prov_patch = _dispatch_ctx({"provider": "openai"}, "openai")
-        with cfg_patch, prov_patch, \
+        with cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             transcription_tools.transcribe_audio(audio)
 
@@ -232,8 +232,8 @@ class TestHookMergeMechanics:
 
         backend = MagicMock(return_value={"success": True, "transcript": "hi"})
         cfg_patch, prov_patch = _dispatch_ctx({"provider": "openai"}, "openai")
-        with caplog.at_level(logging.WARNING, logger="tools.transcription_tools"), \
-             cfg_patch, prov_patch, \
+        with caplog.at_level(logging.WARNING, logger="tools.transcription_tools"),\
+             cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             transcription_tools.transcribe_audio(audio)
 
@@ -249,7 +249,7 @@ class TestHookMergeMechanics:
 
         backend = MagicMock(return_value={"success": True, "transcript": "hi"})
         cfg_patch, prov_patch = _dispatch_ctx({"provider": "openai"}, "openai")
-        with cfg_patch, prov_patch, \
+        with cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             transcription_tools.transcribe_audio(audio)
 
@@ -265,7 +265,7 @@ class TestHookMergeMechanics:
         cfg_patch, prov_patch = _dispatch_ctx(
             {"provider": "openai", "prompt": "config base"}, "openai",
         )
-        with cfg_patch, prov_patch, \
+        with cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             transcription_tools.transcribe_audio(
                 audio, model="whisper-1", source="gateway",
@@ -295,7 +295,7 @@ class TestNoHookPath:
 
         backend = MagicMock(return_value={"success": True, "transcript": "hi"})
         cfg_patch, prov_patch = _dispatch_ctx({"provider": "openai"}, "openai")
-        with cfg_patch, prov_patch, \
+        with cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             transcription_tools.transcribe_audio(audio)
 
@@ -316,9 +316,9 @@ class TestNoHookPath:
         mock_client = MagicMock()
         mock_client.audio.transcriptions.create.return_value = "hello"
 
-        with patch("tools.transcription_tools._HAS_OPENAI", True), \
+        with patch("tools.transcription_tools._HAS_OPENAI", True),\
              patch("tools.transcription_tools._resolve_stt_language",
-                   return_value=None), \
+                   return_value=None),\
              patch("openai.OpenAI", return_value=mock_client):
             transcription_tools._transcribe_openai(audio, "whisper-1")
 
@@ -340,7 +340,7 @@ class TestSttPromptConfig:
         cfg_patch, prov_patch = _dispatch_ctx(
             {"provider": "openai", "prompt": PROMPT}, "openai",
         )
-        with cfg_patch, prov_patch, \
+        with cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             transcription_tools.transcribe_audio(audio)
 
@@ -355,7 +355,7 @@ class TestSttPromptConfig:
         cfg_patch, prov_patch = _dispatch_ctx(
             {"provider": "openai", "prompt": "config base"}, "openai",
         )
-        with cfg_patch, prov_patch, \
+        with cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             transcription_tools.transcribe_audio(audio)
 
@@ -376,8 +376,8 @@ class TestSttPromptConfig:
         cfg_patch, prov_patch = _dispatch_ctx(
             {"provider": "openai", "prompt": "config base"}, "openai",
         )
-        with caplog.at_level(logging.WARNING, logger="tools.transcription_tools"), \
-             cfg_patch, prov_patch, \
+        with caplog.at_level(logging.WARNING, logger="tools.transcription_tools"),\
+             cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             result = transcription_tools.transcribe_audio(audio)
 
@@ -405,7 +405,7 @@ class TestSttPromptConfig:
         cfg_patch, prov_patch = _dispatch_ctx(
             {"provider": "mistral", "prompt": "config base"}, "mistral",
         )
-        with cfg_patch, prov_patch, \
+        with cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_mistral", backend):
             transcription_tools.transcribe_audio(audio)
 
@@ -420,7 +420,7 @@ class TestSttPromptConfig:
         cfg_patch, prov_patch = _dispatch_ctx(
             {"provider": "openai", "prompt": "config base"}, "openai",
         )
-        with cfg_patch, prov_patch, \
+        with cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             transcription_tools.transcribe_audio(audio)
 
@@ -435,7 +435,7 @@ class TestSttPromptConfig:
         cfg_patch, prov_patch = _dispatch_ctx(
             {"provider": "openai", "prompt": "   "}, "openai",
         )
-        with cfg_patch, prov_patch, \
+        with cfg_patch, prov_patch,\
              patch("tools.transcription_tools._transcribe_openai", backend):
             transcription_tools.transcribe_audio(audio)
 
@@ -458,7 +458,7 @@ class TestUnsupportedBackends:
             lambda: {"api_key": "xk-test", "base_url": None},
         )
         monkeypatch.setattr(
-            "tools.xai_http.ev0_xai_user_agent", lambda: "test-ua",
+            "tools.xai_http.threev0_xai_user_agent", lambda: "test-ua",
         )
 
         response = MagicMock(status_code=200)
@@ -466,7 +466,7 @@ class TestUnsupportedBackends:
         fake_requests = SimpleNamespace(post=MagicMock(return_value=response))
         monkeypatch.setitem(sys.modules, "requests", fake_requests)
 
-        with caplog.at_level(logging.DEBUG, logger="tools.transcription_tools"), \
+        with caplog.at_level(logging.DEBUG, logger="tools.transcription_tools"),\
              patch("tools.transcription_tools._load_stt_config", return_value={}):
             result = transcription_tools._transcribe_xai(
                 audio, "grok-stt", prompt=PROMPT,
@@ -488,7 +488,7 @@ class TestUnsupportedBackends:
         fake_requests = SimpleNamespace(post=MagicMock(return_value=response))
         monkeypatch.setitem(sys.modules, "requests", fake_requests)
 
-        with caplog.at_level(logging.DEBUG, logger="tools.transcription_tools"), \
+        with caplog.at_level(logging.DEBUG, logger="tools.transcription_tools"),\
              patch("tools.transcription_tools._load_stt_config", return_value={}):
             result = transcription_tools._transcribe_elevenlabs(
                 audio, "scribe_v2", prompt=PROMPT,
@@ -583,8 +583,8 @@ def test_real_fixture_plugins_thread_prompt_in_registration_order(
 
     import yaml
 
-    ev0_home = Path(os.environ["EV0_HOME"])
-    plugin_dir = ev0_home / "plugins" / "stt_vocab"
+    threev0_home = Path(os.environ["EV0_HOME"])
+    plugin_dir = threev0_home / "plugins" / "stt_vocab"
     plugin_dir.mkdir(parents=True)
     (plugin_dir / "plugin.yaml").write_text("name: stt_vocab\n", encoding="utf-8")
     (plugin_dir / "__init__.py").write_text(
@@ -595,7 +595,7 @@ def test_real_fixture_plugins_thread_prompt_in_registration_order(
         f'lambda **kw: {{"prompt": "{PROMPT}"}})\n',
         encoding="utf-8",
     )
-    cfg_path = ev0_home / "config.yaml"
+    cfg_path = threev0_home / "config.yaml"
     cfg_path.write_text(
         yaml.safe_dump({"plugins": {"enabled": ["stt_vocab"]}}),
         encoding="utf-8",
@@ -614,12 +614,12 @@ def test_real_fixture_plugins_thread_prompt_in_registration_order(
         mock_model.transcribe.return_value = ([mock_segment], mock_info)
 
         with patch("tools.transcription_tools._load_stt_config",
-                   return_value={"provider": "local"}), \
+                   return_value={"provider": "local"}),\
              patch("tools.transcription_tools._get_provider",
-                   return_value="local"), \
-             patch("tools.transcription_tools._HAS_FASTER_WHISPER", True), \
+                   return_value="local"),\
+             patch("tools.transcription_tools._HAS_FASTER_WHISPER", True),\
              patch("tools.transcription_tools._load_local_whisper_model",
-                   return_value=mock_model), \
+                   return_value=mock_model),\
              patch("tools.transcription_tools._local_model", None):
             result = transcription_tools.transcribe_audio(audio)
     finally:

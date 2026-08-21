@@ -49,7 +49,7 @@ def _get_json(url: str) -> dict:
         return json.loads(resp.read().decode("utf-8"))
 
 
-def fetch_ev0_templates(url: str | None = None) -> list[dict]:
+def fetch_threev0_templates(url: str | None = None) -> list[dict]:
     """Return catalog entries tagged for the ``3v0`` integration."""
     catalog = _get_json(url or catalog_url())
     entries = catalog.get("templates", []) if isinstance(catalog, dict) else []
@@ -112,7 +112,7 @@ def run_template_step(
     if skipped/blank/failed. Never raises — the template is a nice-to-have.
     """
     try:
-        entries = fetch_ev0_templates()
+        entries = fetch_threev0_templates()
     except Exception as e:  # network/parse — non-fatal
         logger.debug("Hindsight: could not fetch templates: %s", e)
         return None

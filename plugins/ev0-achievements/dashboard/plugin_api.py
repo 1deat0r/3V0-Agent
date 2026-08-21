@@ -13,10 +13,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 try:
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 except ImportError:
     import os as _os
-    def get_ev0_home() -> Path:  # type: ignore[misc]
+    def get_threev0_home() -> Path:  # type: ignore[misc]
         val = (_os.environ.get("EV0_HOME") or "").strip()
         return Path(val) if val else Path.home() / ".3V0"
 
@@ -143,15 +143,15 @@ ACHIEVEMENTS: List[Dict[str, Any]] = [
 
 
 def state_path() -> Path:
-    return get_ev0_home() / "plugins" / "3v0-achievements" / "state.json"
+    return get_threev0_home() / "plugins" / "3v0-achievements" / "state.json"
 
 
 def snapshot_path() -> Path:
-    return get_ev0_home() / "plugins" / "3v0-achievements" / "scan_snapshot.json"
+    return get_threev0_home() / "plugins" / "3v0-achievements" / "scan_snapshot.json"
 
 
 def checkpoint_path() -> Path:
-    return get_ev0_home() / "plugins" / "3v0-achievements" / "scan_checkpoint.json"
+    return get_threev0_home() / "plugins" / "3v0-achievements" / "scan_checkpoint.json"
 
 
 def load_state() -> Dict[str, Any]:

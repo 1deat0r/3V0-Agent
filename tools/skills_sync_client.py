@@ -444,9 +444,9 @@ def sync_default_opt_in() -> bool:
 # ---------------------------------------------------------------------------
 
 def _skills_dir() -> Path:
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home() / "skills"
+    return get_threev0_home() / "skills"
 
 
 def is_sync_eligible(skill_name: str) -> bool:

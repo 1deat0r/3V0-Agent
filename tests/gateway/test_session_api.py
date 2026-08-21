@@ -623,7 +623,7 @@ async def test_run_agent_reports_actual_agent_runtime_not_requested_metadata(ada
             self.session_id = "runtime-session"
             self.provider = "actual-provider"
             self.model = "actual-model"
-            self._ev0_api_runtime = {
+            self._threev0_api_runtime = {
                 "provider": "requested-provider",
                 "model": "requested-model",
                 "route_source": "raw_request",

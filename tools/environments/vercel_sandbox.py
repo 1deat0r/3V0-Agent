@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from tools.environments.base import (
     BaseEnvironment,
     _ThreadedProcessHandle,
@@ -161,7 +161,7 @@ def _extract_result_returncode(result: Any) -> int:
 
 
 def _snapshot_store_path() -> Path:
-    return get_ev0_home() / _SNAPSHOT_STORE_NAME
+    return get_threev0_home() / _SNAPSHOT_STORE_NAME
 
 
 def _load_snapshots() -> dict:

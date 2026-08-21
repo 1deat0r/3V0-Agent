@@ -32,7 +32,7 @@ import pytest
 
 
 @pytest.fixture()
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     home = tmp_path / ".3V0"
     home.mkdir()
     monkeypatch.setenv("EV0_HOME", str(home))
@@ -107,11 +107,11 @@ def _approval_module():
 
 @pytest.mark.parametrize("yaml_text,expected_mode,expected_timeout", CASES)
 def test_mode_and_timeout_parity_across_surfaces(
-    ev0_home, tui_server, yaml_text, expected_mode, expected_timeout
+    threev0_home, tui_server, yaml_text, expected_mode, expected_timeout
 ):
     approval_mod = _approval_module()
 
-    _write_config(ev0_home, yaml_text)
+    _write_config(threev0_home, yaml_text)
 
     core_mode = approval_mod._get_approval_mode()
     core_timeout = approval_mod._get_approval_timeout()
@@ -136,7 +136,7 @@ def test_mode_and_timeout_parity_across_surfaces(
             )
 
 
-def test_tui_loader_delegates_to_core(ev0_home, tui_server):
+def test_tui_loader_delegates_to_core(threev0_home, tui_server):
     """The TUI must not re-resolve mode itself — it delegates to the core.
 
     Pin the delegation seam directly: patching the core resolver changes

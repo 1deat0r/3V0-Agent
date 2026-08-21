@@ -201,8 +201,8 @@ class TestCollectKanbanNotifications:
         needs no per-profile home binding.
         """
         from threev0_constants import (
-            reset_ev0_home_override,
-            set_ev0_home_override,
+            reset_threev0_home_override,
+            set_threev0_home_override,
         )
 
         tid = _create_subscribed_task()
@@ -216,11 +216,11 @@ class TestCollectKanbanNotifications:
         }
         # Simulate the strictest case: a context-local profile override is
         # active while the poller collects (as a profile-bound RPC would set).
-        token = set_ev0_home_override(str(other_profile_home))
+        token = set_threev0_home_override(str(other_profile_home))
         try:
             texts = _collect_kanban_notifications(session)
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
         assert len(texts) == 1
         assert tid in texts[0]

@@ -107,9 +107,9 @@ class TestAgentCloseMethod:
             agent._active_children_lock = threading.Lock()
             agent.client = None
 
-            with patch("tools.process_registry.process_registry") as mock_registry, \
-                 patch("run_agent.cleanup_vm") as mock_cleanup_vm, \
-                 patch("run_agent.cleanup_browser") as mock_cleanup_browser, \
+            with patch("tools.process_registry.process_registry") as mock_registry,\
+                 patch("run_agent.cleanup_vm") as mock_cleanup_vm,\
+                 patch("run_agent.cleanup_browser") as mock_cleanup_browser,\
                  patch("tools.computer_use.release_computer_use_session") as mock_cleanup_cua:
                 agent.close()
 
@@ -328,9 +328,9 @@ class TestGatewayCleanupWiring:
 
         loop = asyncio.new_event_loop()
         try:
-            with patch("gateway.status.remove_pid_file"), \
-                 patch("gateway.status.write_runtime_status"), \
-                 patch("tools.terminal_tool.cleanup_all_environments"), \
+            with patch("gateway.status.remove_pid_file"),\
+                 patch("gateway.status.write_runtime_status"),\
+                 patch("tools.terminal_tool.cleanup_all_environments"),\
                  patch("tools.browser_tool.cleanup_all_browsers"):
                 loop.run_until_complete(GatewayRunner.stop(runner))
         finally:
@@ -366,9 +366,9 @@ class TestDelegationCleanup:
         """_run_single_child finally block should call close() on child."""
         from unittest.mock import MagicMock
         from threev0_constants import (
-            get_ev0_home,
-            reset_ev0_home_override,
-            set_ev0_home_override,
+            get_threev0_home,
+            reset_threev0_home_override,
+            set_threev0_home_override,
         )
         from threev0_cli.observability import relay_runtime
         from tools.delegate_tool import _run_single_child
@@ -383,7 +383,7 @@ class TestDelegationCleanup:
         observed = {}
 
         def run_conversation(**_kwargs):
-            observed["ev0_home"] = get_ev0_home()
+            observed["ev0_home"] = get_threev0_home()
             raise RuntimeError("test abort")
 
         child.run_conversation.side_effect = run_conversation
@@ -393,7 +393,7 @@ class TestDelegationCleanup:
         parent._active_children.append(child)
 
         profile_home = tmp_path / "profile-a"
-        token = set_ev0_home_override(profile_home)
+        token = set_threev0_home_override(profile_home)
         try:
             result = _run_single_child(
                 task_index=0,
@@ -402,7 +402,7 @@ class TestDelegationCleanup:
                 parent_agent=parent,
             )
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
         child.close.assert_called_once()
         assert observed["ev0_home"] == profile_home
@@ -451,14 +451,14 @@ class TestDelegationCleanup:
 
         from agent import relay_runtime
         from threev0_constants import (
-            reset_ev0_home_override,
-            set_ev0_home_override,
+            reset_threev0_home_override,
+            set_threev0_home_override,
         )
         from tools.delegate_tool import _run_single_child
 
         relay_runtime._reset_for_tests()
         profile_home = tmp_path / "profile-timeout"
-        profile_token = set_ev0_home_override(profile_home)
+        profile_token = set_threev0_home_override(profile_home)
         child_started = threading.Event()
         release_child = threading.Event()
         child_finished = threading.Event()
@@ -528,5 +528,5 @@ class TestDelegationCleanup:
             )
         finally:
             release_child.set()
-            reset_ev0_home_override(profile_token)
+            reset_threev0_home_override(profile_token)
             relay_runtime._reset_for_tests()

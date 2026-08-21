@@ -27,7 +27,7 @@ SCRIPT_PATH = (
 
 
 def _load():
-    spec = importlib.util.spec_from_file_location("openclaw_to_ev0_hard", SCRIPT_PATH)
+    spec = importlib.util.spec_from_file_location("openclaw_to_threev0_hard", SCRIPT_PATH)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     sys.modules[spec.name] = module

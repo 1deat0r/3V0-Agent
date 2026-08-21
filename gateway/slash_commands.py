@@ -367,7 +367,7 @@ class GatewaySlashCommandsMixin:
         ``_run_agent`` and ``_reset_notice_session_info`` — and the command
         reports the active profile and default home, byte-identical to before.
         """
-        from threev0_constants import display_ev0_home
+        from threev0_constants import display_threev0_home
         from threev0_cli.slash_exec import CommandContext, execute_command
 
         multiplexed = getattr(
@@ -384,9 +384,9 @@ class GatewaySlashCommandsMixin:
 
                 profile_home = self._resolve_profile_home_for_source(source)
                 with _profile_runtime_scope(profile_home):
-                    display = display_ev0_home()
+                    display = display_threev0_home()
             except Exception:
-                display = display_ev0_home()
+                display = display_threev0_home()
 
         # Shared executor resolves process-level fallbacks; the multiplexed
         # per-source overrides (when any) ride in via options.
@@ -1581,7 +1581,7 @@ class GatewaySlashCommandsMixin:
 
     async def _handle_restart_command(self, event: MessageEvent) -> Union[str, EphemeralReply]:
         """Handle /restart command - drain active work, then restart the gateway."""
-        from gateway.run import _ev0_home
+        from gateway.run import _threev0_home
         # Defensive idempotency check: if the previous gateway process
         # recorded this same /restart (same platform + update_id) and the new
         # process is seeing it *again*, this is a re-delivery caused by PTB's
@@ -1638,7 +1638,7 @@ class GatewaySlashCommandsMixin:
                     self._restart_command_source = event.source
             await asyncio.to_thread(
                 atomic_json_write,
-                _ev0_home / ".restart_notify.json",
+                _threev0_home / ".restart_notify.json",
                 notify_data,
                 indent=None,
             )
@@ -1659,7 +1659,7 @@ class GatewaySlashCommandsMixin:
                 dedup_data["update_id"] = event.platform_update_id
             await asyncio.to_thread(
                 atomic_json_write,
-                _ev0_home / ".restart_last_processed.json",
+                _threev0_home / ".restart_last_processed.json",
                 dedup_data,
                 indent=None,
             )
@@ -1740,7 +1740,7 @@ class GatewaySlashCommandsMixin:
           /model <name> --provider <provider> — switch provider + model
           /model --provider <provider>        — switch to provider, auto-detect model
         """
-        from gateway.run import _ev0_home, _load_gateway_config
+        from gateway.run import _threev0_home, _load_gateway_config
         from threev0_cli.model_switch import (
             switch_model as _switch_model, parse_model_switch_args,
             resolve_persist_behavior,
@@ -1792,7 +1792,7 @@ class GatewaySlashCommandsMixin:
         user_provs = None
         custom_provs = None
         excluded_provs = []
-        config_path = (_command_profile_home or _ev0_home) / "config.yaml"
+        config_path = (_command_profile_home or _threev0_home) / "config.yaml"
         try:
             cfg = _load_gateway_config(config_path=config_path)
             if cfg:
@@ -3475,9 +3475,9 @@ class GatewaySlashCommandsMixin:
     def _save_gateway_config_key(self, key_path: str, value) -> bool:
         """Save a dot-separated key to config.yaml (shared by /reasoning, /fast
         and their interactive pickers)."""
-        from gateway.run import _ev0_home
+        from gateway.run import _threev0_home
         from threev0_cli.config import read_user_config_raw
-        config_path = _ev0_home / "config.yaml"
+        config_path = _threev0_home / "config.yaml"
         try:
             # Write-back round-trip: raw read is correct (merged defaults must
             # not be persisted back to the user's file).
@@ -3719,7 +3719,7 @@ class GatewaySlashCommandsMixin:
         Gate changes persist to config.yaml and evict the cached agent so the
         new setting takes effect on the next message.
         """
-        from gateway.run import _ev0_home
+        from gateway.run import _threev0_home
         from threev0_cli.write_approval_commands import handle_pending_subcommand
         from tools import write_approval as wa
         from tools.memory_tool import load_on_disk_store
@@ -3727,7 +3727,7 @@ class GatewaySlashCommandsMixin:
         raw_args = event.get_command_args().strip()
         args = raw_args.split() if raw_args else []
         session_key = self._session_key_for_source(event.source)
-        config_path = _ev0_home / "config.yaml"
+        config_path = _threev0_home / "config.yaml"
 
         def _set_approval(enabled: bool):
             # Write-back round-trip: raw read is correct (merged defaults must
@@ -3768,14 +3768,14 @@ class GatewaySlashCommandsMixin:
         the write-approval ``diff <id>``; the CLI also has an unrelated
         ``3v0 skills diff <name>`` that diffs a bundled skill vs stock.)
         """
-        from gateway.run import _ev0_home
+        from gateway.run import _threev0_home
         from threev0_cli.write_approval_commands import handle_pending_subcommand
         from tools import write_approval as wa
 
         raw_args = event.get_command_args().strip()
         args = raw_args.split() if raw_args else []
         session_key = self._session_key_for_source(event.source)
-        config_path = _ev0_home / "config.yaml"
+        config_path = _threev0_home / "config.yaml"
 
         gate_on = wa.write_approval_enabled(wa.SKILLS)
         wants_toggle = bool(args) and args[0].lower() in {"approval", "mode"}
@@ -3941,9 +3941,9 @@ class GatewaySlashCommandsMixin:
         ``display.platforms.<platform>.tool_progress`` so each channel can
         have its own verbosity level independently.
         """
-        from gateway.run import _ev0_home, _load_gateway_config, _platform_config_key
+        from gateway.run import _threev0_home, _load_gateway_config, _platform_config_key
 
-        config_path = _ev0_home / "config.yaml"
+        config_path = _threev0_home / "config.yaml"
         platform_key = _platform_config_key(event.source.platform)
 
         # --- check config gate ------------------------------------------------
@@ -4010,10 +4010,10 @@ class GatewaySlashCommandsMixin:
         are respected but not modified here — edit config.yaml directly for
         per-platform control.
         """
-        from gateway.run import _ev0_home, _load_gateway_config, _platform_config_key, _resolve_gateway_model
+        from gateway.run import _threev0_home, _load_gateway_config, _platform_config_key, _resolve_gateway_model
         from gateway.runtime_footer import resolve_footer_config
 
-        config_path = _ev0_home / "config.yaml"
+        config_path = _threev0_home / "config.yaml"
         platform_key = _platform_config_key(event.source.platform)
 
         # --- parse argument -------------------------------------------------
@@ -5811,7 +5811,7 @@ class GatewaySlashCommandsMixin:
         files are written so either the current gateway process or the next one
         can notify the user when the update finishes.
         """
-        from gateway.run import _ev0_home, _resolve_ev0_bin
+        from gateway.run import _threev0_home, _resolve_threev0_bin
         import json
         import shutil
         import subprocess
@@ -5840,13 +5840,13 @@ class GatewaySlashCommandsMixin:
         if not git_dir.exists():
             return t("gateway.update.not_git_repo")
 
-        ev0_cmd = _resolve_ev0_bin()
-        if not ev0_cmd:
-            return t("gateway.update.ev0_cmd_not_found")
+        threev0_cmd = _resolve_threev0_bin()
+        if not threev0_cmd:
+            return t("gateway.update.threev0_cmd_not_found")
 
-        pending_path = _ev0_home / ".update_pending.json"
-        output_path = _ev0_home / ".update_output.txt"
-        exit_code_path = _ev0_home / ".update_exit_code"
+        pending_path = _threev0_home / ".update_pending.json"
+        output_path = _threev0_home / ".update_output.txt"
+        exit_code_path = _threev0_home / ".update_exit_code"
         session_key = self._session_key_for_source(event.source)
         pending = {
             "platform": event.source.platform.value,
@@ -5915,16 +5915,16 @@ class GatewaySlashCommandsMixin:
                     [
                         sys.executable, "-c", helper,
                         str(output_path), str(exit_code_path),
-                        *ev0_cmd, "update", "--gateway",
+                        *threev0_cmd, "update", "--gateway",
                     ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     **windows_detach_popen_kwargs(),
                 )
             else:
-                ev0_cmd_str = " ".join(shlex.quote(part) for part in ev0_cmd)
+                threev0_cmd_str = " ".join(shlex.quote(part) for part in threev0_cmd)
                 update_cmd = (
-                    f"PYTHONUNBUFFERED=1 {ev0_cmd_str} update --gateway"
+                    f"PYTHONUNBUFFERED=1 {threev0_cmd_str} update --gateway"
                     f" > {shlex.quote(str(output_path))} 2>&1; "
                     # Avoid `status=$?`: `status` is a read-only special parameter
                     # in zsh, and this command string is copied/reused in macOS/zsh

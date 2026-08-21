@@ -20,9 +20,9 @@ _CATALOG = {
 }
 
 
-def test_fetch_ev0_templates_filters_to_ev0(monkeypatch):
+def test_fetch_threev0_templates_filters_to_ev0(monkeypatch):
     monkeypatch.setattr(tpl, "_get_json", lambda url: _CATALOG)
-    entries = tpl.fetch_ev0_templates("https://example/templates.json")
+    entries = tpl.fetch_threev0_templates("https://example/templates.json")
     ids = [e["id"] for e in entries]
     assert ids == ["conversation", "3v0-gateway-bot"]  # coding-agent excluded
 
@@ -108,7 +108,7 @@ def test_supported_for_mode():
 
 
 def test_run_template_step_applies_selected(monkeypatch):
-    monkeypatch.setattr(tpl, "fetch_ev0_templates", lambda url=None: [
+    monkeypatch.setattr(tpl, "fetch_threev0_templates", lambda url=None: [
         {"id": "3v0-gateway-bot", "name": "Gateway Bot", "manifest_file": "templates/x.json"},
     ])
     monkeypatch.setattr(tpl, "fetch_manifest", lambda entry, url=None: {"version": "1"})
@@ -127,7 +127,7 @@ def test_run_template_step_applies_selected(monkeypatch):
 
 def test_run_template_step_blank_selection_skips(monkeypatch):
     entries = [{"id": "3v0-gateway-bot", "name": "Gateway Bot", "manifest_file": "templates/x.json"}]
-    monkeypatch.setattr(tpl, "fetch_ev0_templates", lambda url=None: entries)
+    monkeypatch.setattr(tpl, "fetch_threev0_templates", lambda url=None: entries)
     called = {"applied": False}
     monkeypatch.setattr(tpl, "apply_template",
                         lambda *a, **k: called.update(applied=True))
@@ -141,7 +141,7 @@ def test_run_template_step_blank_selection_skips(monkeypatch):
 
 
 def test_run_template_step_no_templates_is_noop(monkeypatch):
-    monkeypatch.setattr(tpl, "fetch_ev0_templates", lambda url=None: [])
+    monkeypatch.setattr(tpl, "fetch_threev0_templates", lambda url=None: [])
     result = tpl.run_template_step(
         api_url="https://api", bank_id="3v0", api_key="k",
         select=_select_returning(0), cancelled=-1, log=lambda *_: None,
@@ -153,7 +153,7 @@ def test_run_template_step_swallows_fetch_errors(monkeypatch):
     def _boom(url=None):
         raise RuntimeError("network down")
 
-    monkeypatch.setattr(tpl, "fetch_ev0_templates", _boom)
+    monkeypatch.setattr(tpl, "fetch_threev0_templates", _boom)
     # must not raise
     assert tpl.run_template_step(
         api_url="https://api", bank_id="3v0", api_key="k",
@@ -165,7 +165,7 @@ def test_run_template_step_swallows_apply_errors(monkeypatch):
     # gap 1: a failed apply (e.g. 401 for an OAuth-only user) must not crash setup.
     import urllib.error
 
-    monkeypatch.setattr(tpl, "fetch_ev0_templates", lambda url=None: [
+    monkeypatch.setattr(tpl, "fetch_threev0_templates", lambda url=None: [
         {"id": "3v0-gateway-bot", "name": "Gateway Bot", "manifest_file": "templates/x.json"},
     ])
     monkeypatch.setattr(tpl, "fetch_manifest", lambda entry, url=None: {"version": "1"})
@@ -217,7 +217,7 @@ def test_probe_existing_customization_false_on_error(monkeypatch):
 
 
 def _wire_apply(monkeypatch, customized):
-    monkeypatch.setattr(tpl, "fetch_ev0_templates", lambda url=None: [
+    monkeypatch.setattr(tpl, "fetch_threev0_templates", lambda url=None: [
         {"id": "3v0-gateway-bot", "name": "Gateway Bot", "manifest_file": "templates/x.json"},
     ])
     monkeypatch.setattr(tpl, "fetch_manifest", lambda entry, url=None: {"version": "1"})

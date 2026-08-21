@@ -391,7 +391,7 @@ def test_doctor_warns_without_adding_issues(monkeypatch, tmp_path, capsys):
     home = tmp_path / ".3V0"
     home.mkdir()
     monkeypatch.setenv("EV0_HOME", str(home))
-    monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: home)
+    monkeypatch.setattr("threev0_constants.get_threev0_home", lambda: home)
     monkeypatch.setattr(
         threev0_state, "is_sqlite_wal_reset_vulnerable", lambda version_info=None: True
     )

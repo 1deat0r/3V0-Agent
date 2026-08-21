@@ -41,7 +41,7 @@ def marker(tmp_path):
     return tmp_path / ".3v0-update-in-progress"
 
 
-def test_marker_path_follows_process_ev0_home(tmp_path, monkeypatch):
+def test_marker_path_follows_process_threev0_home(tmp_path, monkeypatch):
     """The lock must land where the Rust updater and Electron gate look.
 
     All three resolve the *process* EV0_HOME; a profile-scoped path would

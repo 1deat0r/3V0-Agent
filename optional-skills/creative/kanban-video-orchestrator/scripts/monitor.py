@@ -26,7 +26,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 
-def ev0_available() -> bool:
+def threev0_available() -> bool:
     return shutil.which("3v0") is not None
 
 
@@ -147,9 +147,9 @@ def print_snapshot(tasks: list[dict], issues: list[str]):
           + " | ".join(f"{k}: {v}" for k, v in sorted(counts.items())))
 
     for t in tasks:
-        bar = "✓" if str(t.get("status", "")).lower() == "done" else \
-              "▶" if str(t.get("status", "")).lower() == "running" else \
-              "·" if str(t.get("status", "")).lower() == "ready" else \
+        bar = "✓" if str(t.get("status", "")).lower() == "done" else\
+              "▶" if str(t.get("status", "")).lower() == "running" else\
+              "·" if str(t.get("status", "")).lower() == "ready" else\
               "✗" if str(t.get("status", "")).lower() == "failed" else "?"
         print(f"  {bar} {t.get('id', '?'):14} {t.get('assignee', '?'):20}  "
               f"{t.get('title', '')[:60]}")
@@ -171,7 +171,7 @@ def main():
                     help="Print one snapshot and exit (no polling loop)")
     args = ap.parse_args()
 
-    if not ev0_available():
+    if not threev0_available():
         print("ERROR: '3v0' CLI not found in PATH", file=sys.stderr)
         sys.exit(1)
 

@@ -47,11 +47,11 @@ def test_build_gateway_argv_keeps_venv_console_python_for_uv_venv(monkeypatch, t
     project = tmp_path / "project"
     scripts = project / "venv" / "Scripts"
     site_packages = project / "venv" / "Lib" / "site-packages"
-    ev0_home = tmp_path / "3v0-home"
+    threev0_home = tmp_path / "3v0-home"
     base = tmp_path / "uv" / "python" / "cpython-3.11-windows-x86_64-none"
     scripts.mkdir(parents=True)
     site_packages.mkdir(parents=True)
-    ev0_home.mkdir()
+    threev0_home.mkdir()
     base.mkdir(parents=True)
 
     venv_python = scripts / "python.exe"
@@ -68,13 +68,13 @@ def test_build_gateway_argv_keeps_venv_console_python_for_uv_venv(monkeypatch, t
 
     monkeypatch.setattr(gateway, "PROJECT_ROOT", project)
     monkeypatch.setattr(gateway, "get_python_path", lambda: str(venv_python))
-    monkeypatch.setattr(gateway, "_profile_arg", lambda ev0_home: "")
-    monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: str(ev0_home))
+    monkeypatch.setattr(gateway, "_profile_arg", lambda threev0_home: "")
+    monkeypatch.setattr("threev0_cli.config.get_threev0_home", lambda: str(threev0_home))
 
     argv, cwd, env_overlay = gateway_windows._build_gateway_argv()
 
     assert argv[:3] == [str(venv_python), "-m", "threev0_cli.main"]
-    assert cwd == str(ev0_home.resolve())
+    assert cwd == str(threev0_home.resolve())
     assert env_overlay["VIRTUAL_ENV"] == str(project / "venv")
     assert str(project) in env_overlay["PYTHONPATH"].split(gateway_windows.os.pathsep)
 
@@ -95,7 +95,7 @@ def test_spawn_detached_marks_primary_breakaway_success(monkeypatch, tmp_path, c
         "_build_gateway_argv",
         lambda: (argv, cwd, {"EV0_GATEWAY_DETACHED": "1"}),
     )
-    monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: tmp_path)
+    monkeypatch.setattr("threev0_cli.config.get_threev0_home", lambda: tmp_path)
     monkeypatch.setattr(gateway_windows.subprocess, "Popen", fake_popen)
     caplog.set_level(logging.WARNING, logger=gateway_windows.__name__)
 
@@ -137,7 +137,7 @@ def test_spawn_detached_warns_and_marks_no_breakaway_fallback(
             {"EV0_GATEWAY_DETACHED": "1", "SECRET_SENTINEL": "do-not-log"},
         ),
     )
-    monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: tmp_path)
+    monkeypatch.setattr("threev0_cli.config.get_threev0_home", lambda: tmp_path)
     monkeypatch.setattr(gateway_windows.subprocess, "Popen", fake_popen)
     caplog.set_level(logging.WARNING, logger=gateway_windows.__name__)
 
@@ -175,16 +175,16 @@ def test_spawn_detached_warns_and_marks_no_breakaway_fallback(
 
 
 class TestStableWindowsGatewayWorkingDir:
-    def test_stable_gateway_working_dir_uses_ev0_home(self, tmp_path, monkeypatch):
+    def test_stable_gateway_working_dir_uses_threev0_home(self, tmp_path, monkeypatch):
         home = tmp_path / ".3V0"
         home.mkdir()
-        monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: home)
+        monkeypatch.setattr("threev0_cli.config.get_threev0_home", lambda: home)
         assert gateway_windows._stable_gateway_working_dir(tmp_path / "checkout") == str(home.resolve())
 
     def test_stable_gateway_working_dir_falls_back_to_project_root(self, tmp_path, monkeypatch):
         missing = tmp_path / "missing" / ".3V0"
         project = tmp_path / "checkout"
-        monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: missing)
+        monkeypatch.setattr("threev0_cli.config.get_threev0_home", lambda: missing)
         assert gateway_windows._stable_gateway_working_dir(project) == str(project)
 
 

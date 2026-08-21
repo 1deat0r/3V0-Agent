@@ -16,8 +16,8 @@ from threev0_cli.prompt_size import (
 )
 
 
-def _seed_memory(ev0_home, memory_text="", user_text=""):
-    mem_dir = ev0_home / "memories"
+def _seed_memory(threev0_home, memory_text="", user_text=""):
+    mem_dir = threev0_home / "memories"
     mem_dir.mkdir(parents=True, exist_ok=True)
     if memory_text:
         (mem_dir / "MEMORY.md").write_text(memory_text, encoding="utf-8")
@@ -25,8 +25,8 @@ def _seed_memory(ev0_home, memory_text="", user_text=""):
         (mem_dir / "USER.md").write_text(user_text, encoding="utf-8")
 
 
-def _seed_skill(ev0_home, name, description):
-    skill_dir = ev0_home / "skills" / "demo" / name
+def _seed_skill(threev0_home, name, description):
+    skill_dir = threev0_home / "skills" / "demo" / name
     skill_dir.mkdir(parents=True, exist_ok=True)
     (skill_dir / "SKILL.md").write_text(
         f"---\nname: {name}\ndescription: {description}\n---\n# {name}\nbody\n",
@@ -36,11 +36,11 @@ def _seed_skill(ev0_home, name, description):
 
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.chdir(tmp_path)  # avoid picking up the repo's AGENTS.md
-    return ev0_home
+    return threev0_home
 
 
 

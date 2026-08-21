@@ -219,13 +219,13 @@ PROVIDER_TO_MODELS_DEV: Dict[str, str] = {
 _MODELS_DEV_TO_PROVIDER: Optional[Dict[str, List[str]]] = None
 
 
-def _models_dev_to_ev0_ids(mdev_id: str) -> List[str]:
+def _models_dev_to_threev0_ids(mdev_id: str) -> List[str]:
     """Return the 3V0 provider ids that map to *mdev_id* (may be [])."""
     global _MODELS_DEV_TO_PROVIDER
     if _MODELS_DEV_TO_PROVIDER is None:
         reverse: Dict[str, List[str]] = {}
-        for ev0_id, mapped in PROVIDER_TO_MODELS_DEV.items():
-            reverse.setdefault(mapped, []).append(ev0_id)
+        for threev0_id, mapped in PROVIDER_TO_MODELS_DEV.items():
+            reverse.setdefault(mapped, []).append(threev0_id)
         _MODELS_DEV_TO_PROVIDER = reverse
     return _MODELS_DEV_TO_PROVIDER.get(mdev_id, [])
 
@@ -233,14 +233,14 @@ def _models_dev_to_ev0_ids(mdev_id: str) -> List[str]:
 
 def _get_cache_path() -> Path:
     """Return path to disk cache file."""
-    from threev0_constants import get_ev0_home
-    return get_ev0_home() / "models_dev_cache.json"
+    from threev0_constants import get_threev0_home
+    return get_threev0_home() / "models_dev_cache.json"
 
 
 def _get_etag_path() -> Path:
     """Return path to the ETag sidecar file for conditional GET."""
-    from threev0_constants import get_ev0_home
-    return get_ev0_home() / "models_dev_cache.etag"
+    from threev0_constants import get_threev0_home
+    return get_threev0_home() / "models_dev_cache.etag"
 
 
 def _load_etag() -> str:
@@ -917,9 +917,9 @@ def _provider_override_section(provider: str) -> Optional[Dict[str, Any]]:
     if mapped and mapped != provider_key:
         candidates.append(mapped)
     # Reverse: caller passed a models.dev id, config keyed by 3V0 id.
-    for ev0_id in _models_dev_to_ev0_ids(provider_key):
-        if ev0_id != provider_key:
-            candidates.append(ev0_id)
+    for threev0_id in _models_dev_to_threev0_ids(provider_key):
+        if threev0_id != provider_key:
+            candidates.append(threev0_id)
 
     for key in candidates:
         section = overrides.get(key)

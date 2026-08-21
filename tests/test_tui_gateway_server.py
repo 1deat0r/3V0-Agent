@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 from threev0_cli.active_sessions import active_session_registry_snapshot
 from threev0_cli.browser_connect import ChromeDebugLaunch
 from tools import async_delegation as ad
@@ -95,7 +95,7 @@ def test_session_slot_is_claimed_on_first_turn_not_on_create(monkeypatch, tmp_pa
     home = tmp_path / ".3V0"
     home.mkdir()
     (home / "config.yaml").write_text("max_concurrent_sessions: 1\n", encoding="utf-8")
-    token = set_ev0_home_override(home)
+    token = set_threev0_home_override(home)
 
     def _clear_server_sessions():
         for session in list(server._sessions.values()):
@@ -140,7 +140,7 @@ def test_session_slot_is_claimed_on_first_turn_not_on_create(monkeypatch, tmp_pa
         server._cfg_cache = None
         server._cfg_mtime = None
         server._cfg_path = None
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
 
 def test_session_context_uses_session_cwd(monkeypatch, tmp_path):
@@ -655,7 +655,7 @@ def _write_profile_cfg(home: Path, cwd: str | None) -> Path:
 def test_profile_scoped_mcp_discovery_uses_target_home(monkeypatch, tmp_path):
     """MCP discovery must start under the selected profile's EV0_HOME."""
     from threev0_cli import mcp_startup
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
     from tui_gateway import entry
 
     profile_home = tmp_path / "profiles" / "sheepyr"
@@ -669,7 +669,7 @@ def test_profile_scoped_mcp_discovery_uses_target_home(monkeypatch, tmp_path):
     )
 
     monkeypatch.setenv("EV0_HOME", str(tmp_path / "default"))
-    token = set_ev0_home_override(str(profile_home))
+    token = set_threev0_home_override(str(profile_home))
 
     seen = []
 
@@ -681,7 +681,7 @@ def test_profile_scoped_mcp_discovery_uses_target_home(monkeypatch, tmp_path):
     monkeypatch.setattr(
         mcp_startup,
         "_discover_mcp_tools_without_interactive_oauth",
-        lambda: seen.append(str(get_ev0_home())),
+        lambda: seen.append(str(get_threev0_home())),
     )
 
     try:
@@ -690,7 +690,7 @@ def test_profile_scoped_mcp_discovery_uses_target_home(monkeypatch, tmp_path):
         assert thread is not None
         thread.join(timeout=2)
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
         mcp_startup._mcp_discovery_thread = None
         mcp_startup._mcp_discovery_started = False
 
@@ -704,7 +704,7 @@ def test_profile_scoped_agent_build_starts_mcp_discovery_in_profile_home(
     import threading
     import uuid
 
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
     profile_home = tmp_path / "profiles" / "sheepyr"
     profile_home.mkdir(parents=True)
@@ -722,7 +722,7 @@ def test_profile_scoped_agent_build_starts_mcp_discovery_in_profile_home(
     )
     monkeypatch.setattr(
         "tui_gateway.entry.ensure_mcp_discovery_started",
-        lambda: seen.append(str(get_ev0_home())),
+        lambda: seen.append(str(get_threev0_home())),
     )
     monkeypatch.setattr(server, "_wire_callbacks", lambda _sid: None)
     monkeypatch.setattr(server, "_SlashWorker", lambda *args: None)
@@ -7096,7 +7096,7 @@ def test_config_set_yolo_global_scope_writes_approvals_mode(tmp_path, monkeypatc
 
     cfg_path = tmp_path / "config.yaml"
     cfg_path.write_text(yaml.safe_dump({"approvals": {"mode": "manual"}}))
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
 
     resp_on = server.handle_request(
         {
@@ -7125,7 +7125,7 @@ def test_config_get_approval_mode_uses_smart_default_when_key_is_missing(
 ):
     import yaml
 
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     # Point the canonical resolver (load_config → env EV0_HOME) at the
     # temp home too, so the smart default is asserted against THIS config
     # rather than whatever the developer's real ~/.3V0 happens to hold.
@@ -7145,7 +7145,7 @@ def test_config_get_approval_mode_fails_safe_to_manual_for_invalid_explicit_valu
 ):
     import yaml
 
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     # _load_approval_mode delegates to the canonical resolver in
     # tools.approval, which reads via threev0_cli.config.load_config —
     # that path resolves EV0_HOME from the environment, not
@@ -7164,7 +7164,7 @@ def test_config_get_approval_mode_fails_safe_to_manual_for_invalid_explicit_valu
 def test_config_get_approval_mode_normalizes_yaml_off(tmp_path, monkeypatch):
     import yaml
 
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     # See fail-safe test above: the canonical resolver reads via
     # load_config, which resolves EV0_HOME from the environment.
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
@@ -7183,7 +7183,7 @@ def test_config_set_approval_mode_persists_three_way_value_and_emits_live_status
 ):
     import yaml
 
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     # config.set writes via server._ev0_home, but the post-write
     # session.info emit resolves the effective mode through the canonical
     # tools.approval resolver (load_config → env EV0_HOME).
@@ -7218,7 +7218,7 @@ def test_pet_gallery_quoted_false_enabled_reports_disabled(tmp_path, monkeypatch
     """
     import yaml
 
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
     (tmp_path / "config.yaml").write_text(
         yaml.safe_dump({"display": {"pet": {"enabled": "false"}}})
@@ -7301,7 +7301,7 @@ def test_config_set_yolo_global_scope_honors_explicit_value(tmp_path, monkeypatc
 
     cfg_path = tmp_path / "config.yaml"
     cfg_path.write_text(yaml.safe_dump({"approvals": {"mode": "manual"}}))
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
 
     resp = server.handle_request(
         {
@@ -7545,7 +7545,7 @@ def test_config_set_statusbar_survives_non_dict_display(tmp_path, monkeypatch):
 
     cfg_path = tmp_path / "config.yaml"
     cfg_path.write_text(yaml.safe_dump({"display": "broken"}))
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
 
     resp = server.handle_request(
         {
@@ -7569,7 +7569,7 @@ def test_config_set_details_mode_pins_all_sections(tmp_path, monkeypatch):
             {"display": {"sections": {"tools": "expanded", "activity": "hidden"}}}
         )
     )
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
 
     resp = server.handle_request(
         {
@@ -7594,7 +7594,7 @@ def test_config_set_section_writes_per_section_override(tmp_path, monkeypatch):
     import yaml
 
     cfg_path = tmp_path / "config.yaml"
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
 
     resp = server.handle_request(
         {
@@ -7618,7 +7618,7 @@ def test_config_set_section_clears_override_on_empty_value(tmp_path, monkeypatch
             {"display": {"sections": {"activity": "hidden", "tools": "expanded"}}}
         )
     )
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
 
     resp = server.handle_request(
         {
@@ -7634,7 +7634,7 @@ def test_config_set_section_clears_override_on_empty_value(tmp_path, monkeypatch
 
 
 def test_config_set_section_rejects_unknown_section_or_mode(tmp_path, monkeypatch):
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
 
     bad_section = server.handle_request(
         {
@@ -8029,7 +8029,7 @@ def test_complete_slash_leaves_argument_stages_alone(monkeypatch):
 
 
 def test_config_set_reasoning_updates_live_session_and_agent(tmp_path, monkeypatch):
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     (tmp_path / "config.yaml").write_text("agent:\n  reasoning_effort: medium\n", encoding="utf-8")
     agent = types.SimpleNamespace(reasoning_config=None)
     server._sessions["sid"] = _session(agent=agent)
@@ -8126,7 +8126,7 @@ def test_config_set_reasoning_updates_live_session_and_agent(tmp_path, monkeypat
 
 
 def test_config_set_reasoning_global_scope_clears_session_override(tmp_path, monkeypatch):
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     (tmp_path / "config.yaml").write_text("agent:\n  reasoning_effort: medium\n", encoding="utf-8")
     agent = types.SimpleNamespace(reasoning_config=None)
     server._sessions["sid"] = _session(agent=agent)
@@ -8156,7 +8156,7 @@ def test_config_set_reasoning_global_scope_clears_session_override(tmp_path, mon
 
 
 def test_config_set_verbose_updates_session_mode_and_agent(tmp_path, monkeypatch):
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     agent = types.SimpleNamespace(verbose_logging=False)
     server._sessions["sid"] = _session(agent=agent)
 
@@ -14818,7 +14818,7 @@ def test_verification_status_returns_recorded_evidence(tmp_path, monkeypatch):
     profile_home = tmp_path / "profiles" / "verify"
     profile_home.mkdir(parents=True)
     monkeypatch.setattr(server, "_profile_home", lambda p: profile_home if p == "verify" else None)
-    token = set_ev0_home_override(profile_home)
+    token = set_threev0_home_override(profile_home)
     project = tmp_path / "project"
     project.mkdir()
     (project / ".git").mkdir()
@@ -14846,7 +14846,7 @@ def test_verification_status_returns_recorded_evidence(tmp_path, monkeypatch):
             }
         )
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
     verification = resp["result"]["verification"]
     assert verification["status"] == "passed"
@@ -14867,7 +14867,7 @@ def test_verification_status_outside_workspace_is_not_applicable(monkeypatch, tm
 
     home = tmp_path / ".3V0"
     home.mkdir()
-    token = set_ev0_home_override(home)
+    token = set_threev0_home_override(home)
     try:
         resp = server.handle_request(
             {
@@ -14877,7 +14877,7 @@ def test_verification_status_outside_workspace_is_not_applicable(monkeypatch, tm
             }
         )
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
     assert resp["result"]["verification"]["status"] == "not_applicable"
 
@@ -16089,7 +16089,7 @@ def test_notification_poller_requeues_when_busy(monkeypatch):
             process_registry.completion_queue.get_nowait()
 
 
-def test_session_save_writes_under_ev0_home_with_system_prompt(monkeypatch, tmp_path):
+def test_session_save_writes_under_threev0_home_with_system_prompt(monkeypatch, tmp_path):
     """TUI /save (session.save RPC) must snapshot under the 3V0 profile
     home — not the project/workspace CWD — and include the system prompt,
     mirroring the classic CLI /save and the dashboard save export.
@@ -16281,7 +16281,7 @@ def _attach_bytes_cli(monkeypatch):
 def test_image_attach_bytes_writes_to_gateway_dir(monkeypatch, tmp_path):
     """Remote client uploads base64 bytes; gateway writes them to its own disk."""
     _attach_bytes_cli(monkeypatch)
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     server._sessions["abx"] = _session()
 
     resp = server.handle_request(
@@ -16308,7 +16308,7 @@ def test_image_attach_bytes_writes_to_gateway_dir(monkeypatch, tmp_path):
 
 def test_image_attach_bytes_accepts_data_url_prefix(monkeypatch, tmp_path):
     _attach_bytes_cli(monkeypatch)
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     server._sessions["abx2"] = _session()
 
     resp = server.handle_request(
@@ -16327,7 +16327,7 @@ def test_image_attach_bytes_accepts_data_url_prefix(monkeypatch, tmp_path):
 def test_image_attach_bytes_data_alias_and_magic_sniff(monkeypatch, tmp_path):
     """Older desktop builds send `data` (not content_base64); ext sniffed from bytes."""
     _attach_bytes_cli(monkeypatch)
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     server._sessions["abx3"] = _session()
 
     resp = server.handle_request(
@@ -16344,7 +16344,7 @@ def test_image_attach_bytes_data_alias_and_magic_sniff(monkeypatch, tmp_path):
 
 def test_image_attach_bytes_rejects_invalid_base64(monkeypatch, tmp_path):
     _attach_bytes_cli(monkeypatch)
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     server._sessions["abx4"] = _session()
 
     resp = server.handle_request(
@@ -16362,7 +16362,7 @@ def test_image_attach_bytes_rejects_oversize(monkeypatch, tmp_path):
     import base64 as _b64
 
     _attach_bytes_cli(monkeypatch)
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     monkeypatch.setattr(server, "_ATTACH_BYTES_MAX_BYTES", 10)
     server._sessions["abx5"] = _session()
 
@@ -16380,7 +16380,7 @@ def test_image_attach_bytes_rejects_oversize(monkeypatch, tmp_path):
 
 def test_image_attach_bytes_rejects_unsupported_extension(monkeypatch, tmp_path):
     _attach_bytes_cli(monkeypatch)
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     server._sessions["abx6"] = _session()
 
     # filename hint forces a non-image extension; magic sniff is bypassed by hint
@@ -16402,7 +16402,7 @@ def test_image_attach_bytes_rejects_unsupported_extension(monkeypatch, tmp_path)
 def test_pdf_attach_requires_poppler(monkeypatch, tmp_path):
     """Without pdftoppm on PATH, pdf.attach returns a clear 5028."""
     _attach_bytes_cli(monkeypatch)
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     monkeypatch.setattr("shutil.which", lambda _name: None)
     server._sessions["pdf1"] = _session()
 
@@ -16421,7 +16421,7 @@ def test_pdf_attach_rejects_non_pdf_bytes(monkeypatch, tmp_path):
     import base64 as _b64
 
     _attach_bytes_cli(monkeypatch)
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     monkeypatch.setattr("shutil.which", lambda _name: "/usr/bin/pdftoppm")
     server._sessions["pdf2"] = _session()
 
@@ -16439,7 +16439,7 @@ def test_pdf_attach_rejects_non_pdf_bytes(monkeypatch, tmp_path):
 
 def test_pdf_attach_requires_path_or_bytes(monkeypatch, tmp_path):
     _attach_bytes_cli(monkeypatch)
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
     monkeypatch.setattr("shutil.which", lambda _name: "/usr/bin/pdftoppm")
     server._sessions["pdf3"] = _session()
 
@@ -17477,7 +17477,7 @@ def test_persist_model_switch_preserves_sibling_model_keys(tmp_path, monkeypatch
     # save_config_value() resolves the config path from get_ev0_home() (live
     # env var), always targeting EV0_HOME/config.yaml — point it at tmp_path.
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
-    monkeypatch.setattr(cli, "_ev0_home", tmp_path)
+    monkeypatch.setattr(cli, "_threev0_home", tmp_path)
 
     result = types.SimpleNamespace(
         new_model="new-model", target_provider="anthropic", base_url=None
@@ -17510,7 +17510,7 @@ def test_persist_model_switch_clears_stale_base_url(tmp_path, monkeypatch):
         "  base_url: http://localhost:1234/v1\n"
     )
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
-    monkeypatch.setattr(cli, "_ev0_home", tmp_path)
+    monkeypatch.setattr(cli, "_threev0_home", tmp_path)
 
     # Switch to a native provider with no base_url.
     result = types.SimpleNamespace(
@@ -18464,10 +18464,10 @@ def test_prompt_submit_releases_old_history_before_heap_trim(monkeypatch):
         monkeypatch.setattr(server, "_get_usage", lambda _a: {})
         monkeypatch.setattr(server, "render_message", lambda _t, _c: "")
         monkeypatch.setattr(server, "_emit", lambda *a: None)
-        monkeypatch.setattr(server, "set_ev0_home_override", lambda _home: object())
+        monkeypatch.setattr(server, "set_threev0_home_override", lambda _home: object())
         monkeypatch.setattr(
             server,
-            "reset_ev0_home_override",
+            "reset_threev0_home_override",
             lambda _token: cleanup_order.append("reset_home"),
         )
         monkeypatch.setattr("threev0_cli.mem_trim.trim_memory", _inspect_trim_frame)
@@ -18691,7 +18691,7 @@ def test_save_cfg_preserves_user_comments(tmp_path, monkeypatch):
         "  skin: default  # trailing skin note\n",
         encoding="utf-8",
     )
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
 
     server._save_cfg(
         {
@@ -18726,7 +18726,7 @@ def test_save_cfg_preserves_top_level_key_order(tmp_path, monkeypatch):
         "  skin: default\n",
         encoding="utf-8",
     )
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
 
     # Caller's dict iteration order is intentionally alphabetical to confirm
     # the helper consults disk order, not caller order.
@@ -18761,7 +18761,7 @@ def test_save_cfg_keeps_unicode_personalities_readable(tmp_path, monkeypatch):
         "  skin: default\n",
         encoding="utf-8",
     )
-    monkeypatch.setattr(server, "_ev0_home", tmp_path)
+    monkeypatch.setattr(server, "_threev0_home", tmp_path)
 
     # Simulate an unrelated /skin write — must not corrupt the catgirl
     # personality string sitting in agent.personalities.
@@ -19661,8 +19661,8 @@ def test_persist_live_session_system_prompt_uses_profile_home(monkeypatch, tmp_p
         _session_db = None
 
         def _build_system_prompt(self, system_message=None):
-            from threev0_constants import get_ev0_home
-            home = get_ev0_home()
+            from threev0_constants import get_threev0_home
+            home = get_threev0_home()
             built_homes.append(str(home))
             soul = (
                 (home / "SOUL.md").read_text(encoding="utf-8")
@@ -19694,8 +19694,8 @@ def test_persist_live_session_system_prompt_uses_profile_home(monkeypatch, tmp_p
     assert "Work persona" in agent._cached_system_prompt
 
     # The override must have been reset after the call.
-    from threev0_constants import get_ev0_home_override
-    assert get_ev0_home_override() is None
+    from threev0_constants import get_threev0_home_override
+    assert get_threev0_home_override() is None
 
 
 def test_persist_live_session_system_prompt_no_profile_is_unchanged(monkeypatch):
@@ -19731,7 +19731,7 @@ def test_persist_live_session_system_prompt_restores_pre_existing_override(tmp_p
     not just the unset case: when a caller already holds an override, the
     persist call must scope to the session's profile and then hand the
     caller's override back, rather than clearing it to None."""
-    from threev0_constants import get_ev0_home_override
+    from threev0_constants import get_threev0_home_override
 
     outer_home = tmp_path / "profile-outer"
     outer_home.mkdir()
@@ -19750,8 +19750,8 @@ def test_persist_live_session_system_prompt_restores_pre_existing_override(tmp_p
         _session_db = None
 
         def _build_system_prompt(self, system_message=None):
-            from threev0_constants import get_ev0_home
-            built_homes.append(str(get_ev0_home()))
+            from threev0_constants import get_threev0_home
+            built_homes.append(str(get_threev0_home()))
             return "inner prompt"
 
     class FakeDB:
@@ -19766,7 +19766,7 @@ def test_persist_live_session_system_prompt_restores_pre_existing_override(tmp_p
         "profile_home": str(inner_home),
     }
 
-    outer_token = set_ev0_home_override(outer_home)
+    outer_token = set_threev0_home_override(outer_home)
     try:
         server._persist_live_session_system_prompt(session)
 
@@ -19774,10 +19774,10 @@ def test_persist_live_session_system_prompt_restores_pre_existing_override(tmp_p
         assert built_homes == [str(inner_home)]
         # The caller's pre-existing override survived, instead of being reset
         # to None.
-        assert get_ev0_home_override() == str(outer_home)
+        assert get_threev0_home_override() == str(outer_home)
     finally:
-        reset_ev0_home_override(outer_token)
-    assert get_ev0_home_override() is None
+        reset_threev0_home_override(outer_token)
+    assert get_threev0_home_override() is None
 
 
 def test_workspace_move_rehomes_running_session(monkeypatch, tmp_path):

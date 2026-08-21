@@ -143,9 +143,9 @@ class Proposal:
 # ---------------------------------------------------------------------------
 
 def default_db_path() -> Path:
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home() / "state.db"
+    return get_threev0_home() / "state.db"
 
 
 def _connect_readonly(db_path: Path) -> sqlite3.Connection:
@@ -257,11 +257,11 @@ def normalize_command(command: str) -> str:
     across machines/users (``/home/alice/x`` -> ``~/x``).
     """
     from tools.approval import (
-        _rewrite_resolved_ev0_home,
+        _rewrite_resolved_threev0_home,
         _rewrite_resolved_user_home,
     )
 
-    folded = _rewrite_resolved_user_home(_rewrite_resolved_ev0_home(command))
+    folded = _rewrite_resolved_user_home(_rewrite_resolved_threev0_home(command))
     return " ".join(folded.split())
 
 

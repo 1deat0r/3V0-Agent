@@ -60,12 +60,12 @@ def test_prefetch_does_not_spawn_when_previous_batch_is_alive(monkeypatch):
     assert not created
 
 
-def test_upload_file_rejects_ev0_credential_store(tmp_path, monkeypatch):
-    ev0_home = tmp_path / "ev0_home"
-    ev0_home.mkdir()
-    auth_json = ev0_home / "auth.json"
+def test_upload_file_rejects_threev0_credential_store(tmp_path, monkeypatch):
+    threev0_home = tmp_path / "ev0_home"
+    threev0_home.mkdir()
+    auth_json = threev0_home / "auth.json"
     auth_json.write_text('{"OPENAI_API_KEY":"sk-test-secret"}', encoding="utf-8")
-    monkeypatch.setattr(fs, "_ev0_home_path", lambda: ev0_home)
+    monkeypatch.setattr(fs, "_threev0_home_path", lambda: threev0_home)
 
     provider = RetainDBMemoryProvider()
     provider._client = MagicMock()
@@ -110,7 +110,7 @@ def _capture_initialized_client(monkeypatch, tmp_path):
 
     monkeypatch.setattr(retaindb_module, "_Client", _FakeClient)
     monkeypatch.setattr(retaindb_module, "_WriteQueue", lambda *a, **k: MagicMock())
-    monkeypatch.setattr(threev0_constants, "get_ev0_home", lambda: tmp_path)
+    monkeypatch.setattr(threev0_constants, "get_threev0_home", lambda: tmp_path)
     return retaindb_module, captured
 
 

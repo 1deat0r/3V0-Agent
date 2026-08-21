@@ -300,8 +300,8 @@ def test_shared_metrics_and_rich_plugin_share_one_core_session(
     from agent import relay_llm
 
     fake = _FakeNemoRelay()
-    ev0_home = tmp_path / "3v0-home"
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / "3v0-home"
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.setenv("EV0_NEMO_RELAY_ATIF_ENABLED", "1")
     monkeypatch.setenv(
         "EV0_NEMO_RELAY_ATIF_OUTPUT_DIRECTORY", str(tmp_path / "atif")
@@ -388,7 +388,7 @@ def test_shared_metrics_and_rich_plugin_share_one_core_session(
     assert not plugin_runtime.sessions
     assert relay_runtime.get_session_handle("s1") is None
     packages = list(
-        (ev0_home / "telemetry" / "shared_metrics" / "outbox").glob("*.json")
+        (threev0_home / "telemetry" / "shared_metrics" / "outbox").glob("*.json")
     )
     assert len(packages) == 1
     package = json.loads(packages[0].read_text(encoding="utf-8"))
@@ -460,7 +460,7 @@ def test_real_binding_shares_plugin_configuration_across_two_profiles(
         original_clear()
 
 
-def test_relay_tool_request_rewrite_precedes_ev0_authorization_boundary(
+def test_relay_tool_request_rewrite_precedes_threev0_authorization_boundary(
     tmp_path,
     monkeypatch,
 ):

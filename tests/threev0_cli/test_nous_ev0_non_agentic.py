@@ -15,8 +15,8 @@ import pytest
 
 from threev0_cli.model_switch import (
     _EV0_MODEL_WARNING,
-    _check_ev0_model_warning,
-    is_nous_ev0_non_agentic,
+    _check_threev0_model_warning,
+    is_nous_threev0_non_agentic,
 )
 
 
@@ -36,10 +36,10 @@ from threev0_cli.model_switch import (
         "3v0-3.1",
     ],
 )
-def test_matches_real_nous_ev0_chat_models(model_name: str) -> None:
-    assert is_nous_ev0_non_agentic(model_name), (
+def test_matches_real_nous_threev0_chat_models(model_name: str) -> None:
+    assert is_nous_threev0_non_agentic(model_name), (
         f"expected {model_name!r} to be flagged as Nous 3V0 3/4"
     )
-    assert _check_ev0_model_warning(model_name) == _EV0_MODEL_WARNING
+    assert _check_threev0_model_warning(model_name) == _EV0_MODEL_WARNING
 
 

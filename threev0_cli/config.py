@@ -365,7 +365,7 @@ def get_managed_system() -> Optional[str]:
             return "NixOS"
         return _MANAGED_SYSTEM_NAMES.get(normalized, raw)
 
-    managed_marker = get_ev0_home() / ".managed"
+    managed_marker = get_threev0_home() / ".managed"
     if managed_marker.exists():
         return "NixOS"
     return None
@@ -470,7 +470,7 @@ def detect_install_method(project_root: Optional[Path] = None) -> str:
     #    container, and honouring it wrongly blocks ``3v0 update``.
     try:
         method = (
-            (get_ev0_home() / ".install_method")
+            (get_threev0_home() / ".install_method")
             .read_text(encoding="utf-8")
             .strip()
             .lower()
@@ -658,7 +658,7 @@ def get_container_exec_info() -> Optional[dict]:
     if is_container():
         return None
 
-    container_mode_file = get_ev0_home() / ".container-mode"
+    container_mode_file = get_threev0_home() / ".container-mode"
 
     try:
         info = {}
@@ -675,13 +675,13 @@ def get_container_exec_info() -> Optional[dict]:
     backend = info.get("backend", "docker")
     container_name = info.get("container_name", "3v0-agent")
     exec_user = info.get("exec_user", "3v0")
-    ev0_bin = info.get("ev0_bin", "/data/current-package/bin/3v0")
+    threev0_bin = info.get("ev0_bin", "/data/current-package/bin/3v0")
 
     return {
         "backend": backend,
         "container_name": container_name,
         "exec_user": exec_user,
-        "ev0_bin": ev0_bin,
+        "ev0_bin": threev0_bin,
     }
 
 
@@ -690,22 +690,22 @@ def get_container_exec_info() -> Optional[dict]:
 # =============================================================================
 
 # Re-export from threev0_constants — canonical definition lives there.
-from threev0_constants import get_ev0_home, get_process_ev0_home  # noqa: F811,E402
+from threev0_constants import get_threev0_home, get_process_threev0_home  # noqa: F811,E402
 from utils import atomic_replace, fast_safe_load
 
 def get_config_path() -> Path:
     """Get the main config file path."""
-    return get_ev0_home() / "config.yaml"
+    return get_threev0_home() / "config.yaml"
 
 def get_env_path() -> Path:
     """Get the .env file path (for API keys)."""
-    return get_ev0_home() / ".env"
+    return get_threev0_home() / ".env"
 
 def get_project_root() -> Path:
     """Get the project installation directory."""
     return Path(__file__).parent.parent.resolve()
 
-def _resolve_ev0_uid_gid() -> tuple[Optional[int], Optional[int]]:
+def _resolve_threev0_uid_gid() -> tuple[Optional[int], Optional[int]]:
     """Read the EV0_UID / EV0_GID env vars set by Docker deployments.
 
     Docker containers running 3V0 commonly set these to map the in-container
@@ -735,7 +735,7 @@ def _resolve_ev0_uid_gid() -> tuple[Optional[int], Optional[int]]:
     return uid, gid
 
 
-def _chown_to_ev0_uid(path) -> None:
+def _chown_to_threev0_uid(path) -> None:
     """Chown ``path`` to ``EV0_UID:EV0_GID`` if those env vars are set.
 
     No-op when:
@@ -747,7 +747,7 @@ def _chown_to_ev0_uid(path) -> None:
     directories created by :func:`ensure_ev0_home` on Docker deployments.
     See #34107.
     """
-    uid, gid = _resolve_ev0_uid_gid()
+    uid, gid = _resolve_threev0_uid_gid()
     if uid is None and gid is None:
         return
     try:
@@ -793,7 +793,7 @@ def _secure_dir(path):
         os.chmod(path, mode)
     except (OSError, NotImplementedError):
         pass
-    _chown_to_ev0_uid(path)
+    _chown_to_threev0_uid(path)
 
 
 def _is_container() -> bool:
@@ -866,7 +866,7 @@ def _ensure_default_soul_md(home: Path) -> None:
 _EV0_HOME_ENSURED: set = set()
 
 
-def ensure_ev0_home():
+def ensure_threev0_home():
     """Ensure ~/.3V0 directory structure exists with secure permissions.
 
     In managed mode (NixOS), dirs are created by the activation script with
@@ -881,7 +881,7 @@ def ensure_ev0_home():
     recreated on the next load, as before). Profile switches change
     ``get_ev0_home()`` and therefore re-run for the new path.
     """
-    home = get_ev0_home()
+    home = get_threev0_home()
     key = str(home)
 
     if key in _EV0_HOME_ENSURED and home.is_dir():
@@ -898,7 +898,7 @@ def ensure_ev0_home():
     if is_managed():
         old_umask = os.umask(0o007)
         try:
-            _ensure_ev0_home_managed(home)
+            _ensure_threev0_home_managed(home)
         finally:
             os.umask(old_umask)
     else:
@@ -916,7 +916,7 @@ def ensure_ev0_home():
     _EV0_HOME_ENSURED.add(key)
 
 
-def _ensure_ev0_home_managed(home: Path):
+def _ensure_threev0_home_managed(home: Path):
     """Managed-mode variant: verify dirs exist (activation creates them), seed SOUL.md."""
     if not home.is_dir():
         raise RuntimeError(
@@ -2212,9 +2212,9 @@ def warn_deprecated_cwd_env_vars(config: Optional[Dict[str, Any]] = None) -> Non
             f"this is deprecated."
         )
     if lines:
-        from threev0_constants import display_ev0_home
+        from threev0_constants import display_threev0_home
 
-        hint_path = display_ev0_home()
+        hint_path = display_threev0_home()
         lines.insert(0, "\033[33m⚠ Deprecated .env settings detected:\033[0m")
         lines.append(
             "  \033[2mMove to config.yaml instead:  "
@@ -3496,7 +3496,7 @@ def apply_terminal_config_to_env(
 
 def _load_config_impl(*, want_deepcopy: bool) -> Dict[str, Any]:
     with _CONFIG_LOCK:
-        ensure_ev0_home()
+        ensure_threev0_home()
         config_path = get_config_path()
         path_key = str(config_path)
 
@@ -3770,7 +3770,7 @@ def save_config(
                 )
         from utils import atomic_yaml_write
 
-        ensure_ev0_home()
+        ensure_threev0_home()
         config_path = get_config_path()
         require_readable_config_before_write(config_path)
         # Compute explicit user paths BEFORE any normalisation --------
@@ -4111,7 +4111,7 @@ def save_env_value(key: str, value: str):
     value = value.replace("\n", "").replace("\r", "")
     # API keys / tokens must be ASCII — strip non-ASCII with a warning.
     value = _check_non_ascii_credential(key, value)
-    ensure_ev0_home()
+    ensure_threev0_home()
     env_path = get_env_path()
 
     # On Windows, open() defaults to the system locale (cp1252) which can
@@ -5372,7 +5372,7 @@ def set_config_value(key: str, value: str, force: bool = False):
         key = "model.base_url"
         print("  (note: 'api_base' is an alias — saved as model.base_url)")
     # Write only user config back (not the full merged defaults)
-    ensure_ev0_home()
+    ensure_threev0_home()
     from utils import atomic_yaml_write
     atomic_yaml_write(config_path, user_config, sort_keys=False)
     
@@ -5389,7 +5389,7 @@ def set_config_value(key: str, value: str, force: bool = False):
     # their signature.
     if key == "display.skin" and isinstance(value, str) and value:
         try:
-            skin_file = get_ev0_home() / "skins" / f"{value}.yaml"
+            skin_file = get_threev0_home() / "skins" / f"{value}.yaml"
             if skin_file.exists():
                 skin_file.touch()
         except Exception:
@@ -5500,7 +5500,7 @@ def unset_config_value(key: str):
         print(f"Config key not set: {key}", file=sys.stderr)
         sys.exit(1)
 
-    ensure_ev0_home()
+    ensure_threev0_home()
     from utils import atomic_yaml_write
     atomic_yaml_write(config_path, user_config, sort_keys=False)
     print(f"✓ Unset {key} from {config_path}")

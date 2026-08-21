@@ -38,9 +38,9 @@ from typing import Any
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 try:
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 except ImportError:
-    def get_ev0_home() -> Path:  # type: ignore[misc]
+    def get_threev0_home() -> Path:  # type: ignore[misc]
         val = (os.environ.get("EV0_HOME") or "").strip()
         return Path(val) if val else Path.home() / ".3V0"
 
@@ -48,8 +48,8 @@ DEFAULT_TUI_DIR = Path(
     os.environ.get("EV0_TUI_DIR")
     or str(Path(__file__).resolve().parent.parent / "ui-tui")
 )
-DEFAULT_LOG = Path(os.environ.get("EV0_PERF_LOG", str(get_ev0_home() / "perf.log")))
-DEFAULT_STATE_DB = get_ev0_home() / "state.db"
+DEFAULT_LOG = Path(os.environ.get("EV0_PERF_LOG", str(get_threev0_home() / "perf.log")))
+DEFAULT_STATE_DB = get_threev0_home() / "state.db"
 
 # Keystroke escape sequences.  Matches what xterm/VT220 send when the
 # terminal has bracketed-paste disabled and the key-repeat handler fires.

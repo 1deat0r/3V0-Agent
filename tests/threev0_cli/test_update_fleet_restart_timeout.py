@@ -91,7 +91,7 @@ class TestFleetRestartTimeoutIsolation:
 
         assert seen == ["3v0-gateway-coder"]
 
-    def test_ev0_serve_units_are_included(self):
+    def test_threev0_serve_units_are_included(self):
         # #83438 — 3v0 update restarted 3v0-gateway* units but left
         # 3v0-serve* (the Desktop app's backend) on stale pre-update code.
         seen: list[str] = []
@@ -112,7 +112,7 @@ class TestFleetRestartTimeoutIsolation:
 
         assert seen == ["3v0-serve", "3v0-serve-work", "3v0-gateway"]
 
-    def test_ev0_server_near_prefix_is_rejected(self):
+    def test_threev0_server_near_prefix_is_rejected(self):
         # Review on #83595: a bare ``startswith("3v0-serve")`` gate also
         # accepts the unrelated ``3v0-server.service``. Only the exact
         # base unit or the hyphenated profile family should pass.
@@ -126,7 +126,7 @@ class TestFleetRestartTimeoutIsolation:
 
         assert seen == []
 
-    def test_ev0_gateway_near_prefix_is_rejected(self):
+    def test_threev0_gateway_near_prefix_is_rejected(self):
         # Same strict shape on the gateway side: profile units are
         # ``3v0-gateway-<profile>``, so a hypothetical
         # ``3v0-gatewayd.service`` must not enter the restart path.

@@ -1908,11 +1908,11 @@ def _home_thread_env_var(platform_name: str) -> str:
 
 def _restart_notification_pending() -> bool:
     """Return True when a /restart completion marker is waiting to be delivered."""
-    return (_ev0_home / ".restart_notify.json").exists()
+    return (_threev0_home / ".restart_notify.json").exists()
 
 
 def _planned_restart_notification_path() -> Path:
-    return _ev0_home / ".restart_pending.json"
+    return _threev0_home / ".restart_pending.json"
 
 
 def _planned_restart_notification_pending() -> bool:
@@ -1934,16 +1934,16 @@ _ensure_ssl_certs()
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Resolve 3V0 home directory (respects EV0_HOME override)
-from threev0_constants import get_ev0_home, get_ev0_home_override
+from threev0_constants import get_threev0_home, get_threev0_home_override
 from utils import atomic_json_write, base_url_hostname, is_truthy_value
-_ev0_home = get_ev0_home()
+_threev0_home = get_threev0_home()
 
 # Load environment variables from ~/.3V0/.env first.
 # User-managed env files should override stale shell exports on restart.
 from dotenv import load_dotenv  # noqa: F401  # backward-compat for tests that monkeypatch this symbol
-from threev0_cli.env_loader import load_ev0_dotenv
-_env_path = _ev0_home / '.env'
-load_ev0_dotenv(ev0_home=_ev0_home, project_env=Path(__file__).resolve().parents[1] / '.env')
+from threev0_cli.env_loader import load_threev0_dotenv
+_env_path = _threev0_home / '.env'
+load_threev0_dotenv(threev0_home=_threev0_home, project_env=Path(__file__).resolve().parents[1] / '.env')
 
 
 def _reload_runtime_env_preserving_config_authority() -> None:
@@ -1965,14 +1965,14 @@ def _reload_runtime_env_preserving_config_authority() -> None:
         # Credentials are resolved from the active profile's secret scope, not
         # os.environ. Still honor config.yaml's agent.max_turns bridge below
         # using the scoped home, but never reload .env into global env.
-        _bridge_max_turns_from_config(_ev0_home)
+        _bridge_max_turns_from_config(_threev0_home)
         return
 
-    load_ev0_dotenv(
-        ev0_home=_ev0_home,
+    load_threev0_dotenv(
+        threev0_home=_threev0_home,
         project_env=Path(__file__).resolve().parents[1] / '.env',
     )
-    _bridge_max_turns_from_config(_ev0_home)
+    _bridge_max_turns_from_config(_threev0_home)
 
 
 def _bridge_max_turns_from_config(home: "Path") -> None:
@@ -2082,7 +2082,7 @@ def _profile_runtime_scope(profile_home: "Path"):
     returns an isolated dict — which is what keeps subprocesses (MCP, kanban)
     from inheriting cross-profile secrets.
     """
-    from threev0_constants import set_ev0_home_override, reset_ev0_home_override
+    from threev0_constants import set_threev0_home_override, reset_threev0_home_override
     from agent.secret_scope import (
         build_profile_secret_scope,
         set_secret_scope,
@@ -2090,14 +2090,14 @@ def _profile_runtime_scope(profile_home: "Path"):
     )
     from threev0_cli.env_loader import hydrate_profile_secret_sources
 
-    home_token = set_ev0_home_override(str(profile_home))
+    home_token = set_threev0_home_override(str(profile_home))
     hydrate_profile_secret_sources(Path(profile_home))
     secret_token = set_secret_scope(build_profile_secret_scope(Path(profile_home)))
     try:
         yield
     finally:
         reset_secret_scope(secret_token)
-        reset_ev0_home_override(home_token)
+        reset_threev0_home_override(home_token)
 
 
 def load_gateway_config_for_runner() -> "GatewayConfig":
@@ -2121,7 +2121,7 @@ def load_gateway_config_for_runner() -> "GatewayConfig":
     if not getattr(cfg, "multiplex_profiles", False):
         return cfg
     try:
-        home = get_ev0_home()
+        home = get_threev0_home()
     except Exception:
         return cfg
     try:
@@ -2169,7 +2169,7 @@ os.environ["EV0_TURN_LEASE_TIMEOUT"] = str(
 
 # Bridge config.yaml values into the environment so os.getenv() picks them up.
 # config.yaml is authoritative for terminal settings — overrides .env.
-_config_path = _ev0_home / 'config.yaml'
+_config_path = _threev0_home / 'config.yaml'
 if _config_path.exists():
     try:
         # Presence-sensitive env bridge: raw read is deliberate — only keys the
@@ -3380,10 +3380,10 @@ def _teams_pipeline_plugin_enabled() -> bool:
 
 def _gateway_config_home() -> Path:
     """Return the 3V0 home that gateway config reads should use."""
-    override = get_ev0_home_override()
+    override = get_threev0_home_override()
     if override:
         return Path(override)
-    return _ev0_home
+    return _threev0_home
 
 
 def _load_gateway_config(config_path: "Path | None" = None) -> dict:
@@ -3568,7 +3568,7 @@ def _get_channel_override(
     return None
 
 
-def _resolve_ev0_bin() -> Optional[list[str]]:
+def _resolve_threev0_bin() -> Optional[list[str]]:
     """Resolve the 3V0 update command as argv parts.
 
     Tries in order:
@@ -3580,9 +3580,9 @@ def _resolve_ev0_bin() -> Optional[list[str]]:
     """
     import shutil
 
-    ev0_bin = shutil.which("3v0")
-    if ev0_bin:
-        return [ev0_bin]
+    threev0_bin = shutil.which("3v0")
+    if threev0_bin:
+        return [threev0_bin]
 
     try:
         import importlib.util
@@ -4110,7 +4110,7 @@ class TurnRunner:
                     if gate_on and not is_seen(_cfg, TOOL_PROGRESS_FLAG):
                         ctx.long_tool_hint_fired[0] = True
                         ctx.progress_queue.put(tool_progress_hint_gateway())
-                        mark_seen(_ev0_home / "config.yaml", TOOL_PROGRESS_FLAG)
+                        mark_seen(_threev0_home / "config.yaml", TOOL_PROGRESS_FLAG)
             except Exception as _hint_err:
                 logger.debug("tool-progress onboarding hint failed: %s", _hint_err)
             return
@@ -7014,7 +7014,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
 
     # -- Voice mode persistence ------------------------------------------
 
-    _VOICE_MODE_PATH = _ev0_home / "gateway_voice_mode.json"
+    _VOICE_MODE_PATH = _threev0_home / "gateway_voice_mode.json"
 
     def _voice_key(self, platform: Platform, chat_id: str) -> str:
         """Return a platform-namespaced key for voice mode state."""
@@ -8217,7 +8217,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         with the gateway owning the suspend it became load-bearing.
         """
         if any(
-            not t.done() and not getattr(t, "_ev0_supervised_watcher", False)
+            not t.done() and not getattr(t, "_threev0_supervised_watcher", False)
             for t in self._background_tasks
         ):
             return True
@@ -8878,7 +8878,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             return []
         path = Path(file_path).expanduser()
         if not path.is_absolute():
-            path = _ev0_home / path
+            path = _threev0_home / path
         if not path.exists():
             logger.warning("Prefill messages file not found: %s", path)
             return []
@@ -9386,7 +9386,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         """
         try:
             from threev0_cli.config import read_user_config_raw
-            cfg_path = _ev0_home / "config.yaml"
+            cfg_path = _threev0_home / "config.yaml"
             if not cfg_path.exists():
                 self._fallback_model = None
                 return self._fallback_model
@@ -10136,7 +10136,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     f"{message}\n\n"
                     f"{busy_input_hint_gateway(_hint_mode)}"
                 )
-                mark_seen(_ev0_home / "config.yaml", BUSY_INPUT_FLAG)
+                mark_seen(_threev0_home / "config.yaml", BUSY_INPUT_FLAG)
         except Exception as _onb_err:
             logger.debug("Failed to apply busy-input onboarding hint: %s", _onb_err)
 
@@ -10863,7 +10863,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         """
         import json
 
-        path = _ev0_home / self._STUCK_LOOP_FILE
+        path = _threev0_home / self._STUCK_LOOP_FILE
         try:
             counts = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
         except Exception:
@@ -10890,7 +10890,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         """
         import json
 
-        path = _ev0_home / self._STUCK_LOOP_FILE
+        path = _threev0_home / self._STUCK_LOOP_FILE
         if not path.exists():
             return 0
 
@@ -10939,7 +10939,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         """
         import json
 
-        path = _ev0_home / self._STUCK_LOOP_FILE
+        path = _threev0_home / self._STUCK_LOOP_FILE
         if not path.exists():
             return
         try:
@@ -10957,8 +10957,8 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         import shutil
         import subprocess
 
-        ev0_cmd = _resolve_ev0_bin()
-        if not ev0_cmd:
+        threev0_cmd = _resolve_threev0_bin()
+        if not threev0_cmd:
             logger.error("Could not locate 3v0 binary for detached /restart")
             return
         if self._detached_restart_helper_started:
@@ -10980,7 +10980,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                 windows_detach_popen_kwargs,
             )
 
-            cmd_argv = [*ev0_cmd, "gateway", "restart"]
+            cmd_argv = [*threev0_cmd, "gateway", "restart"]
             watcher = textwrap.dedent(
                 """
                 import os, subprocess, sys, time
@@ -11108,7 +11108,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     )
             return
 
-        cmd = " ".join(shlex.quote(part) for part in ev0_cmd)
+        cmd = " ".join(shlex.quote(part) for part in threev0_cmd)
         shell_cmd = (
             f"deadline=$(( $(date +%s) + {int(restart_after_s)} )); "
             f"while kill -0 {current_pid} 2>/dev/null && [ $(date +%s) -lt $deadline ]; do sleep 0.2; done; "
@@ -11492,7 +11492,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             # Mark this replay so _handle_message does not queue it again while
             # the restore gate remains closed for any fresh inbound arrivals.
             try:
-                setattr(event, "_ev0_startup_restore_replay", True)
+                setattr(event, "_threev0_startup_restore_replay", True)
             except Exception:
                 pass
             await adapter.handle_message(event)
@@ -11941,7 +11941,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         except (RuntimeError, ValueError, OSError):
             try:
                 _fh_log_dir = getattr(self.config, "log_dir", None) or os.path.join(
-                    str(get_ev0_home()),
+                    str(get_threev0_home()),
                     "logs",
                 )
                 os.makedirs(_fh_log_dir, exist_ok=True)
@@ -11960,7 +11960,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         if _sigusr2 is not None and hasattr(faulthandler, "register"):
             try:
                 _log_dir = getattr(self.config, "log_dir", None) or os.path.join(
-                    str(get_ev0_home()),
+                    str(get_threev0_home()),
                     "logs",
                 )
                 _faulthandler_path = os.path.join(_log_dir, "gateway_faulthandler.log")
@@ -12269,7 +12269,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         # process already drained active agents, so sessions aren't stuck.
         # This prevents unwanted auto-resets after `3v0 update`,
         # `3v0 gateway restart`, or `/restart`.
-        _clean_marker = _ev0_home / ".clean_shutdown"
+        _clean_marker = _threev0_home / ".clean_shutdown"
         if _clean_marker.exists():
             logger.info("Previous gateway exited cleanly — skipping session suspension")
             try:
@@ -12736,8 +12736,8 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         if not notified and any(
             path.exists()
             for path in (
-                _ev0_home / ".update_pending.json",
-                _ev0_home / ".update_pending.claimed.json",
+                _threev0_home / ".update_pending.json",
+                _threev0_home / ".update_pending.claimed.json",
             )
         ):
             self._schedule_update_notification_watch()
@@ -12961,7 +12961,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         # background work" would make the gateway consider itself busy forever
         # and never go dormant/suspend. Transient tasks added to
         # _background_tasks elsewhere (startup-resume events etc.) stay counted.
-        task._ev0_supervised_watcher = True  # type: ignore[attr-defined]
+        task._threev0_supervised_watcher = True  # type: ignore[attr-defined]
         self._background_tasks.add(task)
         if on_spawn is not None:
             # Record the live handle NOW so an external tracker (e.g.
@@ -14565,7 +14565,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             # of resuming a half-finished tool loop.
             if not timed_out:
                 try:
-                    (_ev0_home / ".clean_shutdown").touch()
+                    (_threev0_home / ".clean_shutdown").touch()
                 except Exception:
                     pass
             else:
@@ -15134,7 +15134,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
 
     def _make_default_profile_message_handler(self):
         """Scope a multiplexed default-profile message from ingress onward."""
-        profile_home = Path(get_ev0_home())
+        profile_home = Path(get_threev0_home())
 
         async def _handler(event):
             with _profile_runtime_scope(profile_home):
@@ -16037,7 +16037,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         if (
             getattr(self, "_startup_restore_in_progress", False)
             and not is_internal
-            and not getattr(event, "_ev0_startup_restore_replay", False)
+            and not getattr(event, "_threev0_startup_restore_replay", False)
         ):
             self._queue_startup_restore_event(event)
             return None
@@ -16276,8 +16276,8 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                 else:
                     response_text = raw
             if response_text:
-                response_path = _ev0_home / ".update_response"
-                prompt_path = _ev0_home / ".update_prompt.json"
+                response_path = _threev0_home / ".update_response"
+                prompt_path = _threev0_home / ".update_prompt.json"
                 try:
                     tmp = response_path.with_suffix(".tmp")
                     tmp.write_text(response_text, encoding="utf-8")
@@ -16296,8 +16296,8 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             # blocking on stdin until the 30-minute watcher timeout.
             # The slash command then falls through to normal dispatch.
             if _recognized_cmd:
-                response_path = _ev0_home / ".update_response"
-                prompt_path = _ev0_home / ".update_prompt.json"
+                response_path = _threev0_home / ".update_response"
+                prompt_path = _threev0_home / ".update_prompt.json"
                 try:
                     tmp = response_path.with_suffix(".tmp")
                     tmp.write_text("", encoding="utf-8")
@@ -19482,7 +19482,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     and not is_seen(_onb_cfg, PROFILE_BUILD_FLAG)
                 ):
                     turn_sidecar_notes.append(profile_build_directive().strip())
-                    mark_seen(_ev0_home / "config.yaml", PROFILE_BUILD_FLAG)
+                    mark_seen(_threev0_home / "config.yaml", PROFILE_BUILD_FLAG)
                 else:
                     turn_sidecar_notes.append(_intro_note)
             except Exception as _pb_err:
@@ -20671,7 +20671,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             return False
 
         try:
-            marker_path = _ev0_home / ".restart_last_processed.json"
+            marker_path = _threev0_home / ".restart_last_processed.json"
             if not marker_path.exists():
                 # Belt-and-suspenders for when the dedup marker goes missing
                 # (manually cleaned up, or the previous cycle's write failed).
@@ -20999,7 +20999,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                 generation = None
                 active = getattr(adapter, "_active_sessions", {}).get(session_key)
                 if active is not None:
-                    generation = getattr(active, "_ev0_run_generation", None)
+                    generation = getattr(active, "_threev0_run_generation", None)
                 adapter.register_post_delivery_callback(
                     session_key,
                     _deliver,
@@ -23275,11 +23275,11 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         the messenger.  The user's next message is intercepted by
         ``_handle_message`` and written to ``.update_response``.
         """
-        pending_path = _ev0_home / ".update_pending.json"
-        claimed_path = _ev0_home / ".update_pending.claimed.json"
-        output_path = _ev0_home / ".update_output.txt"
-        exit_code_path = _ev0_home / ".update_exit_code"
-        prompt_path = _ev0_home / ".update_prompt.json"
+        pending_path = _threev0_home / ".update_pending.json"
+        claimed_path = _threev0_home / ".update_pending.claimed.json"
+        output_path = _threev0_home / ".update_output.txt"
+        exit_code_path = _threev0_home / ".update_exit_code"
+        prompt_path = _threev0_home / ".update_prompt.json"
 
         loop = asyncio.get_running_loop()
         deadline = loop.time() + timeout
@@ -23415,7 +23415,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                 for p in (pending_path, claimed_path, output_path,
                           exit_code_path, prompt_path):
                     p.unlink(missing_ok=True)
-                (_ev0_home / ".update_response").unlink(missing_ok=True)
+                (_threev0_home / ".update_response").unlink(missing_ok=True)
                 _up_done = self._peek_session_state(session_key)
                 if _up_done is not None:
                     _up_done.persistent.update_prompt_pending = False
@@ -23510,7 +23510,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             for p in (pending_path, claimed_path, output_path,
                       exit_code_path, prompt_path):
                 p.unlink(missing_ok=True)
-            (_ev0_home / ".update_response").unlink(missing_ok=True)
+            (_threev0_home / ".update_response").unlink(missing_ok=True)
             _up_timeout_state = self._peek_session_state(session_key)
             if _up_timeout_state is not None:
                 _up_timeout_state.persistent.update_prompt_pending = False
@@ -23525,10 +23525,10 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         cannot resolve the adapter (e.g. after a gateway restart where the
         platform hasn't reconnected yet).
         """
-        pending_path = _ev0_home / ".update_pending.json"
-        claimed_path = _ev0_home / ".update_pending.claimed.json"
-        output_path = _ev0_home / ".update_output.txt"
-        exit_code_path = _ev0_home / ".update_exit_code"
+        pending_path = _threev0_home / ".update_pending.json"
+        claimed_path = _threev0_home / ".update_pending.claimed.json"
+        output_path = _threev0_home / ".update_output.txt"
+        exit_code_path = _threev0_home / ".update_exit_code"
 
         if not pending_path.exists() and not claimed_path.exists():
             return False
@@ -23636,7 +23636,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
 
     async def _send_restart_notification(self) -> Optional[tuple[str, str, Optional[str]]]:
         """Notify the chat that initiated /restart that the gateway is back."""
-        notify_path = _ev0_home / ".restart_notify.json"
+        notify_path = _threev0_home / ".restart_notify.json"
         if not notify_path.exists():
             return None
 
@@ -26013,7 +26013,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         try:
             interrupt_event = getattr(adapter, "_active_sessions", {}).get(session_key)
             if interrupt_event is not None:
-                setattr(interrupt_event, "_ev0_run_generation", int(generation))
+                setattr(interrupt_event, "_threev0_run_generation", int(generation))
         except Exception:
             pass
 
@@ -26292,9 +26292,9 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             slack_tools = "1" if _slack_tools_loaded() else "0"
 
         try:
-            from threev0_constants import display_ev0_home
+            from threev0_constants import display_threev0_home
 
-            home_display = str(display_ev0_home())
+            home_display = str(display_threev0_home())
         except Exception:
             home_display = ""
 
@@ -27386,7 +27386,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             get_profile_dir,
             profile_exists,
         )
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         
         # Track whether a profile was explicitly requested (vs. falling back to default)
         explicit_profile = None
@@ -27412,7 +27412,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     source.chat_id,
                     getattr(source, "guild_id", None),
                 )
-                return get_ev0_home()
+                return get_threev0_home()
             return profile_dir
         except ProfileRouteRejected:
             raise
@@ -27427,7 +27427,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                 explicit_profile or "(no profile)",
                 exc_info=True,
             )
-            return get_ev0_home()
+            return get_threev0_home()
 
     async def _run_agent_inner(
         self,
@@ -27876,7 +27876,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
 
             from agent.redact import RedactingFormatter
 
-            log_dir = _ev0_home / "logs"
+            log_dir = _threev0_home / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
             file_handler = RotatingFileHandler(
                 log_dir / "tool_calls.log",
@@ -29742,7 +29742,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
             # remove_pid_file() is a no-op when the PID doesn't match.
             # Force-unlink to cover the old-process-crashed case.
             try:
-                (get_ev0_home() / "gateway.pid").unlink(missing_ok=True)
+                (get_threev0_home() / "gateway.pid").unlink(missing_ok=True)
             except Exception:
                 pass
             # Clean up any takeover marker the old process didn't consume
@@ -29766,11 +29766,11 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
             except Exception:
                 pass
         else:
-            ev0_home = str(get_ev0_home())
+            threev0_home = str(get_threev0_home())
             logger.error(
                 "Another gateway instance is already running (PID %d, EV0_HOME=%s). "
                 "Use '3v0 gateway restart' to replace it, or '3v0 gateway stop' first.",
-                existing_pid, ev0_home,
+                existing_pid, threev0_home,
             )
             print(
                 f"\n❌ Gateway already running (PID {existing_pid}).\n"
@@ -29791,7 +29791,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
     # and gateway.log (INFO+, gateway-component records only).
     # Idempotent, so repeated calls from AIAgent.__init__ won't duplicate.
     from threev0_logging import setup_logging, _safe_stderr
-    setup_logging(ev0_home=_ev0_home, mode="gateway")
+    setup_logging(threev0_home=_threev0_home, mode="gateway")
 
     # Startup security posture audit — warn-on-load, never blocks. Surfaces
     # root / weak-SSH / ephemeral-container / unauthenticated-listener posture
@@ -29807,7 +29807,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
             _audit_cfg = read_raw_config()
         except Exception:
             _audit_cfg = None
-        log_startup_security_warnings(ev0_home=_ev0_home, config=_audit_cfg)
+        log_startup_security_warnings(threev0_home=_threev0_home, config=_audit_cfg)
     except Exception as _audit_exc:
         logger.debug("Startup security audit failed (non-fatal): %s", _audit_exc)
 
@@ -29926,7 +29926,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
             # if our cgroup is being torn down.  Bounded by an internal
             # timeout; never blocks the event loop here.
             try:
-                _diag_log = _ev0_home / "logs" / "gateway-shutdown-diag.log"
+                _diag_log = _threev0_home / "logs" / "gateway-shutdown-diag.log"
                 spawn_async_diagnostic(
                     _diag_log, _shutdown_ctx["signal"], timeout_seconds=5.0
                 )

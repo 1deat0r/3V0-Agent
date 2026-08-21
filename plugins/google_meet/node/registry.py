@@ -24,11 +24,11 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 
 def _default_path() -> Path:
-    return Path(get_ev0_home()) / "workspace" / "meetings" / "nodes.json"
+    return Path(get_threev0_home()) / "workspace" / "meetings" / "nodes.json"
 
 
 class NodeRegistry:

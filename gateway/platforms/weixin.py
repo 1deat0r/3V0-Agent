@@ -66,7 +66,7 @@ from gateway.platforms.base import (
     cache_document_from_bytes,
     cache_image_from_bytes,
 )
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from utils import atomic_json_write
 from agent.secret_scope import UnscopedSecretError, get_secret
 
@@ -251,18 +251,18 @@ def _headers(token: Optional[str], body: str) -> Dict[str, str]:
     return headers
 
 
-def _account_dir(ev0_home: str) -> Path:
-    path = Path(ev0_home) / "weixin" / "accounts"
+def _account_dir(threev0_home: str) -> Path:
+    path = Path(threev0_home) / "weixin" / "accounts"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
-def _account_file(ev0_home: str, account_id: str) -> Path:
-    return _account_dir(ev0_home) / f"{account_id}.json"
+def _account_file(threev0_home: str, account_id: str) -> Path:
+    return _account_dir(threev0_home) / f"{account_id}.json"
 
 
 def save_weixin_account(
-    ev0_home: str,
+    threev0_home: str,
     *,
     account_id: str,
     token: str,
@@ -276,7 +276,7 @@ def save_weixin_account(
         "user_id": user_id,
         "saved_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
-    path = _account_file(ev0_home, account_id)
+    path = _account_file(threev0_home, account_id)
     atomic_json_write(path, payload)
     try:
         path.chmod(0o600)
@@ -284,9 +284,9 @@ def save_weixin_account(
         pass
 
 
-def load_weixin_account(ev0_home: str, account_id: str) -> Optional[Dict[str, Any]]:
+def load_weixin_account(threev0_home: str, account_id: str) -> Optional[Dict[str, Any]]:
     """Load persisted account credentials."""
-    path = _account_file(ev0_home, account_id)
+    path = _account_file(threev0_home, account_id)
     if not path.exists():
         return None
     try:
@@ -298,8 +298,8 @@ def load_weixin_account(ev0_home: str, account_id: str) -> Optional[Dict[str, An
 class ContextTokenStore:
     """Disk-backed ``context_token`` cache keyed by account + peer."""
 
-    def __init__(self, ev0_home: str):
-        self._root = _account_dir(ev0_home)
+    def __init__(self, threev0_home: str):
+        self._root = _account_dir(threev0_home)
         self._cache: Dict[str, str] = {}
 
     def _path(self, account_id: str) -> Path:
@@ -1015,12 +1015,12 @@ def _message_type_from_media(media_types: List[str], text: str) -> MessageType:
     return MessageType.TEXT
 
 
-def _sync_buf_path(ev0_home: str, account_id: str) -> Path:
-    return _account_dir(ev0_home) / f"{account_id}.sync.json"
+def _sync_buf_path(threev0_home: str, account_id: str) -> Path:
+    return _account_dir(threev0_home) / f"{account_id}.sync.json"
 
 
-def _load_sync_buf(ev0_home: str, account_id: str) -> str:
-    path = _sync_buf_path(ev0_home, account_id)
+def _load_sync_buf(threev0_home: str, account_id: str) -> str:
+    path = _sync_buf_path(threev0_home, account_id)
     if not path.exists():
         return ""
     try:
@@ -1029,13 +1029,13 @@ def _load_sync_buf(ev0_home: str, account_id: str) -> str:
         return ""
 
 
-def _save_sync_buf(ev0_home: str, account_id: str, sync_buf: str) -> None:
-    path = _sync_buf_path(ev0_home, account_id)
+def _save_sync_buf(threev0_home: str, account_id: str, sync_buf: str) -> None:
+    path = _sync_buf_path(threev0_home, account_id)
     atomic_json_write(path, {"get_updates_buf": sync_buf})
 
 
 async def qr_login(
-    ev0_home: str,
+    threev0_home: str,
     *,
     bot_type: str = "3",
     timeout_seconds: int = 480,
@@ -1150,7 +1150,7 @@ async def qr_login(
                     logger.error("weixin: QR confirmed but credential payload was incomplete")
                     return None
                 save_weixin_account(
-                    ev0_home,
+                    threev0_home,
                     account_id=account_id,
                     token=token,
                     base_url=base_url,
@@ -1184,9 +1184,9 @@ class WeixinAdapter(BasePlatformAdapter):
     def __init__(self, config: PlatformConfig):
         super().__init__(config, Platform.WEIXIN)
         extra = config.extra or {}
-        ev0_home = str(get_ev0_home())
-        self._ev0_home = ev0_home
-        self._token_store = ContextTokenStore(ev0_home)
+        threev0_home = str(get_threev0_home())
+        self._threev0_home = threev0_home
+        self._token_store = ContextTokenStore(threev0_home)
         self._typing_cache = TypingTicketCache()
         self._poll_session: Optional[aiohttp.ClientSession] = None
         self._send_session: Optional[aiohttp.ClientSession] = None
@@ -1261,7 +1261,7 @@ class WeixinAdapter(BasePlatformAdapter):
         self._pending_text_batch_tasks: Dict[str, asyncio.Task] = {}
 
         if self._account_id and not self._token:
-            persisted = load_weixin_account(ev0_home, self._account_id)
+            persisted = load_weixin_account(threev0_home, self._account_id)
             if persisted:
                 self._token = str(persisted.get("token") or "").strip()
                 self._base_url = str(persisted.get("base_url") or self._base_url).strip().rstrip("/")
@@ -1370,7 +1370,7 @@ class WeixinAdapter(BasePlatformAdapter):
 
     async def _poll_loop(self) -> None:
         assert self._poll_session is not None
-        sync_buf = _load_sync_buf(self._ev0_home, self._account_id)
+        sync_buf = _load_sync_buf(self._threev0_home, self._account_id)
         timeout_ms = LONG_POLL_TIMEOUT_MS
         consecutive_failures = 0
 
@@ -1415,7 +1415,7 @@ class WeixinAdapter(BasePlatformAdapter):
                 new_sync_buf = str(response.get("get_updates_buf") or "")
                 if new_sync_buf:
                     sync_buf = new_sync_buf
-                    _save_sync_buf(self._ev0_home, self._account_id, sync_buf)
+                    _save_sync_buf(self._threev0_home, self._account_id, sync_buf)
 
                 for message in response.get("msgs") or []:
                     asyncio.create_task(self._process_message_safe(message))
@@ -2370,7 +2370,7 @@ async def send_weixin_direct(
     if not account_id:
         return {"error": "Weixin account ID missing. Configure WEIXIN_ACCOUNT_ID or platforms.weixin.extra.account_id."}
 
-    token_store = ContextTokenStore(str(get_ev0_home()))
+    token_store = ContextTokenStore(str(get_threev0_home()))
     token_store.restore(account_id)
     context_token = token_store.get(account_id, chat_id)
 

@@ -110,9 +110,9 @@ def _as_bool(value: Any, default: bool) -> bool:
     return default
 
 
-def _load_supermemory_config(ev0_home: str) -> dict:
+def _load_supermemory_config(threev0_home: str) -> dict:
     config = _default_config()
-    config_path = Path(ev0_home) / "supermemory.json"
+    config_path = Path(threev0_home) / "supermemory.json"
     if config_path.exists():
         try:
             raw = json.loads(config_path.read_text(encoding="utf-8"))
@@ -157,8 +157,8 @@ def _load_supermemory_config(ev0_home: str) -> dict:
     return config
 
 
-def _save_supermemory_config(values: dict, ev0_home: str) -> None:
-    config_path = Path(ev0_home) / "supermemory.json"
+def _save_supermemory_config(values: dict, threev0_home: str) -> None:
+    config_path = Path(threev0_home) / "supermemory.json"
     existing = {}
     if config_path.exists():
         try:
@@ -418,20 +418,20 @@ class _SupermemoryClient:
             return
 
 
-def _resolve_container_tag_for_setup(ev0_home: str, *, identity: str = "default") -> str:
-    config = _load_supermemory_config(ev0_home)
+def _resolve_container_tag_for_setup(threev0_home: str, *, identity: str = "default") -> str:
+    config = _load_supermemory_config(threev0_home)
     env_tag = os.environ.get("SUPERMEMORY_CONTAINER_TAG", "").strip()
     raw_tag = env_tag or config["container_tag"]
     return _sanitize_tag(raw_tag.replace("{identity}", identity))
 
 
-def _probe_supermemory_connection(api_key: str, ev0_home: str, *, identity: str = "default") -> dict:
-    config = _load_supermemory_config(ev0_home)
+def _probe_supermemory_connection(api_key: str, threev0_home: str, *, identity: str = "default") -> dict:
+    config = _load_supermemory_config(threev0_home)
     base_url = _resolve_base_url(config["base_url"])
     status = {
         "ok": False,
         "error": "",
-        "container_tag": _resolve_container_tag_for_setup(ev0_home, identity=identity),
+        "container_tag": _resolve_container_tag_for_setup(threev0_home, identity=identity),
         "profile_facts": 0,
         "auto_recall": bool(config["auto_recall"]),
         "auto_capture": bool(config["auto_capture"]),
@@ -551,7 +551,7 @@ class SupermemoryMemoryProvider(MemoryProvider):
         self._entity_context = _DEFAULT_ENTITY_CONTEXT
         self._api_timeout = _DEFAULT_API_TIMEOUT
         self._base_url = _DEFAULT_BASE_URL
-        self._ev0_home = ""
+        self._threev0_home = ""
         self._write_enabled = True
         self._active = False
         # Multi-container support
@@ -583,24 +583,24 @@ class SupermemoryMemoryProvider(MemoryProvider):
             {"key": "api_key", "description": "Supermemory API key", "secret": True, "required": True, "env_var": "SUPERMEMORY_API_KEY", "url": _API_KEY_URL},
         ]
 
-    def save_config(self, values, ev0_home):
+    def save_config(self, values, threev0_home):
         sanitized = dict(values or {})
         if "container_tag" in sanitized:
             sanitized["container_tag"] = _sanitize_tag(str(sanitized["container_tag"]))
         if "entity_context" in sanitized:
             sanitized["entity_context"] = _clamp_entity_context(str(sanitized["entity_context"]))
-        _save_supermemory_config(sanitized, ev0_home)
+        _save_supermemory_config(sanitized, threev0_home)
 
     def get_status_config(self, provider_config: dict) -> dict:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
         del provider_config
-        ev0_home = str(get_ev0_home())
+        threev0_home = str(get_threev0_home())
         api_key = get_secret("SUPERMEMORY_API_KEY", "") or ""
-        status = _probe_supermemory_connection(api_key, ev0_home)
+        status = _probe_supermemory_connection(api_key, threev0_home)
         return {"summary": _format_connection_summary(status)}
 
-    def post_setup(self, ev0_home: str, config: dict) -> None:
+    def post_setup(self, threev0_home: str, config: dict) -> None:
         from pathlib import Path
 
         from threev0_cli.config import save_config
@@ -625,7 +625,7 @@ class SupermemoryMemoryProvider(MemoryProvider):
         save_config(config)
 
         if env_writes:
-            _write_env_vars(Path(ev0_home) / ".env", env_writes)
+            _write_env_vars(Path(threev0_home) / ".env", env_writes)
 
         api_key = env_writes.get("SUPERMEMORY_API_KEY") or existing
         # Make the freshly-entered key visible to the connection probe below.
@@ -642,7 +642,7 @@ class SupermemoryMemoryProvider(MemoryProvider):
         ):
             os.environ["SUPERMEMORY_API_KEY"] = api_key
 
-        status = _probe_supermemory_connection(api_key, ev0_home)
+        status = _probe_supermemory_connection(api_key, threev0_home)
         print(f"\n  {_format_connection_summary(status)}")
         print("\n  Memory provider: supermemory")
         print("  Activation saved to config.yaml")
@@ -651,11 +651,11 @@ class SupermemoryMemoryProvider(MemoryProvider):
         print("\n  Start a new session to activate.\n")
 
     def initialize(self, session_id: str, **kwargs) -> None:
-        from threev0_constants import get_ev0_home
-        self._ev0_home = kwargs.get("ev0_home") or str(get_ev0_home())
+        from threev0_constants import get_threev0_home
+        self._threev0_home = kwargs.get("ev0_home") or str(get_threev0_home())
         self._session_id = session_id
         self._turn_count = 0
-        self._config = _load_supermemory_config(self._ev0_home)
+        self._config = _load_supermemory_config(self._threev0_home)
         self._api_key = get_secret("SUPERMEMORY_API_KEY", "") or ""
 
         # Resolve container tag: env var > config > default.

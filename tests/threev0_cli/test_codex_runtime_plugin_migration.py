@@ -8,7 +8,7 @@ import pytest
 from threev0_cli.codex_runtime_plugin_migration import (
     MIGRATION_MARKER,
     MIGRATION_END_MARKER,
-    _build_ev0_tools_mcp_entry,
+    _build_threev0_tools_mcp_entry,
     _format_toml_value,
     _looks_like_test_tempdir,
     _strip_existing_managed_block,
@@ -66,7 +66,7 @@ class TestTomlValueFormatter:
         migrate({"mcp_servers": {"x": {"command": "y"}}},
                 codex_home=tmp_path,
                 discover_plugins=False,
-                expose_ev0_tools=False,
+                expose_threev0_tools=False,
                 default_permission_profile=None)
         # config.toml should exist
         assert (tmp_path / "config.toml").exists()
@@ -90,7 +90,7 @@ class TestTomlValueFormatter:
             {"mcp_servers": {"x": {"command": "y"}}},
             codex_home=tmp_path,
             discover_plugins=False,
-            expose_ev0_tools=False,
+            expose_threev0_tools=False,
             default_permission_profile=None,
         )
         # Error surfaced
@@ -197,7 +197,7 @@ class TestMigrate:
         monkeypatch.setattr(crpm, "_query_codex_plugins", fake_query_fails)
 
         report = migrate({"mcp_servers": {"x": {"command": "y"}}},
-                         codex_home=tmp_path, discover_plugins=True, expose_ev0_tools=False)
+                         codex_home=tmp_path, discover_plugins=True, expose_threev0_tools=False)
         assert report.written
         assert report.migrated == ["x"]
         assert report.plugin_query_error == "codex CLI not available"
@@ -210,7 +210,7 @@ class TestMigrate:
 
 
     def test_full_migration_round_trip(self, tmp_path):
-        ev0_cfg = {
+        threev0_cfg = {
             "mcp_servers": {
                 "filesystem": {
                     "command": "npx",
@@ -222,7 +222,7 @@ class TestMigrate:
                 },
             }
         }
-        report = migrate(ev0_cfg, codex_home=tmp_path, expose_ev0_tools=False)
+        report = migrate(threev0_cfg, codex_home=tmp_path, expose_threev0_tools=False)
         assert report.written
         text = (tmp_path / "config.toml").read_text()
         assert "[mcp_servers.filesystem]" in text
@@ -247,7 +247,7 @@ class TestMigrate:
         # First migrate — adds managed block below user content
         migrate({"mcp_servers": {"3v0-mcp": {"command": "npx"}}},
                 codex_home=tmp_path, discover_plugins=False,
-                expose_ev0_tools=False)
+                expose_threev0_tools=False)
         text = target.read_text()
         assert "user-above" in text, "user MCP server above managed block got nuked"
         assert 'command = "/usr/bin/above-server"' in text
@@ -259,7 +259,7 @@ class TestMigrate:
         # Re-migrate — both should survive
         migrate({"mcp_servers": {"3v0-mcp": {"command": "npx"}}},
                 codex_home=tmp_path, discover_plugins=False,
-                expose_ev0_tools=False)
+                expose_threev0_tools=False)
         final = target.read_text()
         assert "user-above" in final
         assert "user-below" in final
@@ -271,7 +271,7 @@ class TestMigrate:
     def test_summary_reports_migration_count(self, tmp_path):
         report = migrate({
             "mcp_servers": {"a": {"command": "x"}, "b": {"command": "y"}}
-        }, codex_home=tmp_path, expose_ev0_tools=False)
+        }, codex_home=tmp_path, expose_threev0_tools=False)
         summary = report.summary()
         assert "Migrated 2 MCP server(s)" in summary
         assert "- a" in summary
@@ -365,7 +365,7 @@ class TestStripUnmanagedPluginTables:
             "threev0_cli.codex_runtime_plugin_migration._query_codex_plugins",
             fake_query,
         )
-        migrate({}, codex_home=tmp_path, discover_plugins=True, expose_ev0_tools=False)
+        migrate({}, codex_home=tmp_path, discover_plugins=True, expose_threev0_tools=False)
         new_text = target.read_text()
         # Only ONE [plugins."tasks@openai-curated"] header should remain — inside
         # the managed block — not the original outside-the-block copy.
@@ -395,7 +395,7 @@ class TestEv0HomeLeakGuard:
 
 
 
-    def test_real_ev0_home_propagates(self, monkeypatch, tmp_path):
+    def test_real_threev0_home_propagates(self, monkeypatch, tmp_path):
         """A legitimate EV0_HOME (not a tempdir path) DOES propagate so the
         MCP subprocess sees the same config as the parent CLI."""
         # Use a path that looks real — under /Users or /home, not /var/folders.
@@ -404,18 +404,18 @@ class TestEv0HomeLeakGuard:
         # markers, not for path existence.
         real_path = "/Users/alice/.3V0"
         monkeypatch.setenv("EV0_HOME", real_path)
-        entry = _build_ev0_tools_mcp_entry()
+        entry = _build_threev0_tools_mcp_entry()
         env = entry.get("env", {})
         assert env.get("EV0_HOME") == real_path
 
-    def test_unset_ev0_home_omits_env_key(self, monkeypatch):
+    def test_unset_threev0_home_omits_env_key(self, monkeypatch):
         """When EV0_HOME is unset in the environment, the MCP entry MUST
         NOT bake in a resolved-default path. The codex subprocess should
         inherit whatever EV0_HOME its launcher (systemd, gateway, shell)
         sets at runtime, rather than being pinned to migrate-time defaults.
         Regression guard for issue #26250 follow-up review."""
         monkeypatch.delenv("EV0_HOME", raising=False)
-        entry = _build_ev0_tools_mcp_entry()
+        entry = _build_threev0_tools_mcp_entry()
         env = entry.get("env", {})
         assert "EV0_HOME" not in env, (
             f"EV0_HOME should not be set when env var is unset, got: "

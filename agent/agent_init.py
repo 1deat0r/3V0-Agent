@@ -51,7 +51,7 @@ from agent.tool_guardrails import (
 from threev0_cli.config import cfg_get
 from threev0_cli.route_identity import normalize_route_base_url
 from threev0_cli.timeouts import get_provider_request_timeout
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from utils import base_url_host_matches, is_truthy_value
 
 # Use the same logger name as run_agent so tests patching ``run_agent.logger``
@@ -349,7 +349,7 @@ def _codex_gpt55_autoraise_notice_marker():
     internal markers like ``.container-mode`` — so it is not a user-facing config
     key, and every profile tracks its own notice state independently.
     """
-    return get_ev0_home() / ".codex_gpt55_autoraise_notice"
+    return get_threev0_home() / ".codex_gpt55_autoraise_notice"
 
 
 def _codex_gpt55_autoraise_notice_state(autoraise: Dict[str, Any]) -> str:
@@ -785,7 +785,7 @@ def init_agent(
     # AIAgent is created for every gateway request, so without the guard
     # each message leaks one OS thread and the process eventually exhausts
     # the system thread limit (RuntimeError: can't start new thread).
-    if (agent.provider == "openrouter" or agent._is_openrouter_url()) and \
+    if (agent.provider == "openrouter" or agent._is_openrouter_url()) and\
             not _ra()._openrouter_prewarm_done.is_set():
         _ra()._openrouter_prewarm_done.set()
         threading.Thread(
@@ -991,7 +991,7 @@ def init_agent(
     # both live under ~/.3V0/logs/.  Idempotent, so gateway mode
     # (which creates a new AIAgent per message) won't duplicate handlers.
     from threev0_logging import setup_logging, setup_verbose_logging
-    setup_logging(ev0_home=_ra()._ev0_home)
+    setup_logging(threev0_home=_ra()._threev0_home)
 
     if agent.verbose_logging:
         setup_verbose_logging()
@@ -1250,9 +1250,9 @@ def init_agent(
                 from agent.auxiliary_client import _codex_cloudflare_headers
                 client_kwargs["default_headers"] = _codex_cloudflare_headers(api_key)
             elif base_url_host_matches(effective_base, "x.ai"):
-                from tools.xai_http import ev0_xai_default_headers
+                from tools.xai_http import threev0_xai_default_headers
 
-                client_kwargs["default_headers"] = ev0_xai_default_headers()
+                client_kwargs["default_headers"] = threev0_xai_default_headers()
             elif "default_headers" not in client_kwargs:
                 # Fall back to profile.default_headers for providers that
                 # declare custom headers (e.g. Vercel AI Gateway attribution,
@@ -1586,8 +1586,8 @@ def init_agent(
             os.environ["EV0_SESSION_ID"] = agent.session_id
 
     # Session logs go into ~/.3V0/sessions/ alongside gateway sessions
-    ev0_home = get_ev0_home()
-    agent.logs_dir = ev0_home / "sessions"
+    threev0_home = get_threev0_home()
+    agent.logs_dir = threev0_home / "sessions"
     agent.logs_dir.mkdir(parents=True, exist_ok=True)
     # Per-session JSON snapshot writer (~/.3V0/sessions/session_{sid}.json)
     # is opt-in via sessions.write_json_snapshots (default False).  state.db
@@ -1799,7 +1799,7 @@ def init_agent(
                     _init_kwargs = {
                         "session_id": agent.session_id,
                         "platform": platform or "cli",
-                        "ev0_home": str(get_ev0_home()),
+                        "ev0_home": str(get_threev0_home()),
                         "agent_context": "primary",
                     }
                     if _init_kwargs["platform"] == "cli":
@@ -2687,10 +2687,10 @@ def init_agent(
     # non-CLI surface to still surface the warning.)
     if not agent.quiet_mode and (agent.platform or "cli") != "cli":
         try:
-            from threev0_cli.model_switch import _check_ev0_model_warning
+            from threev0_cli.model_switch import _check_threev0_model_warning
 
-            _ev0_warn = _check_ev0_model_warning(agent.model or "")
-            if _ev0_warn:
+            _threev0_warn = _check_threev0_model_warning(agent.model or "")
+            if _threev0_warn:
                 _user_msg = (
                     "⚠ Nous Research 3V0 3 & 4 models are NOT agentic — they "
                     "lack reliable tool-calling for agent workflows (delegation, "
@@ -2701,7 +2701,7 @@ def init_agent(
                     agent._emit_warning(_user_msg)
                 else:
                     print(f"\n{_user_msg}\n", file=sys.stderr)
-                _ra().logger.warning(_ev0_warn)
+                _ra().logger.warning(_threev0_warn)
         except Exception:
             pass
 
@@ -2761,7 +2761,7 @@ def init_agent(
         try:
             agent.context_compressor.on_session_start(
                 agent.session_id,
-                ev0_home=str(get_ev0_home()),
+                threev0_home=str(get_threev0_home()),
                 platform=agent.platform or "cli",
                 model=agent.model,
                 context_length=getattr(agent.context_compressor, "context_length", 0),

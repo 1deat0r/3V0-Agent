@@ -82,7 +82,7 @@ def _load_config() -> dict:
     individual keys.  This avoids a silent failure when the JSON file exists
     but is missing fields like ``api_key`` that the user set in ``.env``.
     """
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
     config = {
         "mode": os.environ.get("MEM0_MODE", "platform"),
@@ -98,7 +98,7 @@ def _load_config() -> dict:
     if env_user_id:
         config["user_id"] = env_user_id
 
-    config_path = get_ev0_home() / "mem0.json"
+    config_path = get_threev0_home() / "mem0.json"
     if config_path.exists():
         try:
             file_cfg = json.loads(config_path.read_text(encoding="utf-8"))
@@ -233,11 +233,11 @@ class Mem0MemoryProvider(MemoryProvider):
         # when the server runs with AUTH_DISABLED).
         return bool(cfg.get("api_key") or cfg.get("host"))
 
-    def save_config(self, values, ev0_home):
+    def save_config(self, values, threev0_home):
         """Write config to $EV0_HOME/mem0.json."""
         import json
         from pathlib import Path
-        config_path = Path(ev0_home) / "mem0.json"
+        config_path = Path(threev0_home) / "mem0.json"
         existing = {}
         if config_path.exists():
             try:
@@ -260,9 +260,9 @@ class Mem0MemoryProvider(MemoryProvider):
             {"key": "rerank", "description": "Enable reranking for recall", "default": "false", "choices": ["true", "false"]},
         ]
 
-    def post_setup(self, ev0_home: str, config: dict) -> None:
+    def post_setup(self, threev0_home: str, config: dict) -> None:
         from ._setup import post_setup
-        post_setup(ev0_home, config)
+        post_setup(threev0_home, config)
 
     def _create_backend(self):
         # Lazy-install the mem0 SDK on demand before either backend imports

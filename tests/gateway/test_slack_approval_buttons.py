@@ -658,11 +658,11 @@ class TestSlackReactionForwarding:
         # Distinct synthetic ts so dedup doesn't merge with anything else.
         assert synth["ts"] == "3000.0"
         # Reaction metadata preserved for downstream introspection.
-        assert synth["_ev0_reaction"]["name"] == "thumbsup"
-        assert synth["_ev0_reaction"]["action"] == "added"
-        assert synth["_ev0_reaction"]["reacted_to_ts"] == "2000.0"
+        assert synth["_threev0_reaction"]["name"] == "thumbsup"
+        assert synth["_threev0_reaction"]["action"] == "added"
+        assert synth["_threev0_reaction"]["reacted_to_ts"] == "2000.0"
         # Pre-authorized as addressed-to-the-bot (skips mention gate only).
-        assert synth["_ev0_force_process"] is True
+        assert synth["_threev0_force_process"] is True
 
 
     @pytest.mark.asyncio
@@ -695,8 +695,8 @@ class TestSlackReactionForwarding:
         synth = forwarded[0]
         assert synth["channel"] == "C_TRAIN"
         assert "thread_ts" not in synth
-        assert synth["_ev0_no_thread_response"] is True
-        assert synth["_ev0_reaction_source_channel"] == "C1"
+        assert synth["_threev0_no_thread_response"] is True
+        assert synth["_threev0_reaction_source_channel"] == "C1"
 
     @pytest.mark.asyncio
     async def test_target_channel_with_thread_routes_to_thread(self):
@@ -726,7 +726,7 @@ class TestSlackReactionForwarding:
         assert len(forwarded) == 1
         assert forwarded[0]["channel"] == "C_TRAIN"
         assert forwarded[0]["thread_ts"] == "1719.0001"
-        assert "_ev0_no_thread_response" not in forwarded[0]
+        assert "_threev0_no_thread_response" not in forwarded[0]
 
     @pytest.mark.asyncio
     async def test_hook_fires_even_when_routing_disabled(self):

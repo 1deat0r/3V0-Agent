@@ -33,12 +33,12 @@ except ImportError:  # pragma: no cover - non-Windows
     msvcrt = None
 from datetime import datetime, timedelta
 from pathlib import Path
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from typing import Optional, Dict, List, Any, Set, Tuple, Union, Collection
 
 logger = logging.getLogger(__name__)
 
-from threev0_time import now as _ev0_now
+from threev0_time import now as _threev0_now
 from utils import atomic_replace, atomic_write_text
 
 # ``croniter`` compiles ~15 ms of regexes at import and only matters for
@@ -77,7 +77,7 @@ def _ensure_croniter() -> bool:
 # profiles (the security boundary #4707 was filed for). Do NOT change this to
 # the default root: that re-breaks per-profile isolation. See also the dynamic
 # `_get_ev0_home()` / `_get_lock_paths()` resolution in cron/scheduler.py.
-EV0_DIR = get_ev0_home().resolve()
+EV0_DIR = get_threev0_home().resolve()
 # These constants remain the default-profile fallback and a compatibility
 # surface for existing callers/tests. Cross-profile callers must scope paths
 # with use_cron_store() instead of mutating them process-wide.
@@ -162,7 +162,7 @@ def _current_cron_store() -> _CronStorePaths:
     live_constants = _CronStorePaths(CRON_DIR, JOBS_FILE, OUTPUT_DIR)
     if live_constants != _IMPORT_STORE:
         return live_constants
-    home = get_ev0_home().resolve()
+    home = get_threev0_home().resolve()
     if home == EV0_DIR:
         return live_constants
     cron_dir = home / "cron"
@@ -760,8 +760,8 @@ def parse_schedule(schedule: str) -> Dict[str, Any]:
             # the configured zone makes "20:07" mean 20:07 on the same clock the
             # scheduler checks against (#51021).
             if dt.tzinfo is None:
-                ev0_tz = _ev0_now().tzinfo
-                dt = dt.replace(tzinfo=ev0_tz)
+                threev0_tz = _threev0_now().tzinfo
+                dt = dt.replace(tzinfo=threev0_tz)
             return {
                 "kind": "once",
                 "run_at": dt.isoformat(),
@@ -773,7 +773,7 @@ def parse_schedule(schedule: str) -> Dict[str, Any]:
     # Duration like "30m", "2h", "1d" → one-shot from now
     try:
         minutes = parse_duration(schedule)
-        run_at = _ev0_now() + timedelta(minutes=minutes)
+        run_at = _threev0_now() + timedelta(minutes=minutes)
         return {
             "kind": "once",
             "run_at": run_at.isoformat(),
@@ -803,7 +803,7 @@ def _ensure_aware(dt: datetime) -> datetime:
     This preserves relative ordering for legacy naive timestamps across
     timezone changes and avoids false not-due results.
     """
-    target_tz = _ev0_now().tzinfo
+    target_tz = _threev0_now().tzinfo
     if dt.tzinfo is None:
         local_tz = datetime.now().astimezone().tzinfo
         return dt.replace(tzinfo=local_tz).astimezone(target_tz)
@@ -886,7 +886,7 @@ def _compute_grace_seconds(schedule: dict) -> int:
         expr = schedule.get("expr")
         if expr:
             try:
-                now = _ev0_now()
+                now = _threev0_now()
                 cron = croniter(expr, now)
                 first = cron.get_next(datetime)
                 second = cron.get_next(datetime)
@@ -905,7 +905,7 @@ def compute_next_run(schedule: Dict[str, Any], last_run_at: Optional[str] = None
 
     Returns ISO timestamp string, or None if no more runs.
     """
-    now = _ev0_now()
+    now = _threev0_now()
 
     if not isinstance(schedule, dict):
         return None
@@ -1373,7 +1373,7 @@ def _save_jobs_unlocked(
             try:
                 with os.fdopen(fd, "w", encoding="utf-8") as f:
                     json.dump(
-                        {"jobs": jobs, "updated_at": _ev0_now().isoformat()},
+                        {"jobs": jobs, "updated_at": _threev0_now().isoformat()},
                         f,
                         indent=2,
                         ensure_ascii=False,
@@ -1442,7 +1442,7 @@ def _save_jobs_unlocked(
         )
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(
-                {"jobs": jobs, "updated_at": _ev0_now().isoformat()},
+                {"jobs": jobs, "updated_at": _threev0_now().isoformat()},
                 f,
                 indent=2,
                 ensure_ascii=False,
@@ -1525,7 +1525,7 @@ def _resolve_default_model_snapshot() -> Optional[str]:
     try:
         from threev0_cli.config import _expand_env_vars, read_user_config_raw
 
-        cfg_path = get_ev0_home() / "config.yaml"
+        cfg_path = get_threev0_home() / "config.yaml"
         if not cfg_path.exists():
             return None
         cfg = read_user_config_raw(cfg_path)
@@ -1744,7 +1744,7 @@ def create_job(
         deliver = "origin" if origin else "local"
 
     job_id = uuid.uuid4().hex[:12]
-    now = _ev0_now().isoformat()
+    now = _threev0_now().isoformat()
 
     normalized_skills = _normalize_skill_list(skill, skills)
     normalized_model = _normalize_job_optional_text(model)
@@ -2073,7 +2073,7 @@ def pause_job(job_id: str, reason: Optional[str] = None) -> Optional[Dict[str, A
         {
             "enabled": False,
             "state": "paused",
-            "paused_at": _ev0_now().isoformat(),
+            "paused_at": _threev0_now().isoformat(),
             "paused_reason": reason,
         },
     )
@@ -2116,7 +2116,7 @@ def trigger_job(job_id: str) -> Optional[Dict[str, Any]]:
             "state": "scheduled",
             "paused_at": None,
             "paused_reason": None,
-            "next_run_at": _ev0_now().isoformat(),
+            "next_run_at": _threev0_now().isoformat(),
         },
     )
 
@@ -2270,7 +2270,7 @@ def _mark_job_run_locked(
                             job_id,
                         )
                         return False
-                now = _ev0_now().isoformat()
+                now = _threev0_now().isoformat()
                 job["last_run_at"] = now
                 job["last_status"] = status or ("ok" if success else "error")
                 job["last_error"] = error if not success else None
@@ -2394,7 +2394,7 @@ def _write_wedged_oneshot_diagnostic(job: Dict[str, Any]) -> None:
             f"- name: {job.get('name')}\n"
             f"- dispatch claimed: {repeat.get('completed', '?')}/{repeat.get('times', '?')}\n"
             f"- run claimed at: {claim.get('at', 'unknown')} by {claim.get('by', 'unknown')}\n"
-            f"- removed at: {_ev0_now().isoformat()}\n\n"
+            f"- removed at: {_threev0_now().isoformat()}\n\n"
             "This one-shot job's dispatch was claimed, but the run never "
             "completed (`last_run_at` was never written) — the scheduler "
             "process was most likely killed or restarted mid-execution. The "
@@ -2522,7 +2522,7 @@ def heartbeat_run_claim(job_id: str, *, expected_owner: str) -> bool:
             claim = job.get("run_claim")
             if not isinstance(claim, dict) or claim.get("by") != expected_owner:
                 return False
-            claim["at"] = _ev0_now().isoformat()
+            claim["at"] = _threev0_now().isoformat()
             save_jobs(jobs)
             return True
     return False
@@ -2548,7 +2548,7 @@ def advance_next_runs(job_ids) -> int:
         return 0
     with _jobs_lock():
         jobs = load_jobs()
-        now = _ev0_now().isoformat()
+        now = _threev0_now().isoformat()
         advanced = 0
         for job in jobs:
             if job["id"] not in ids:
@@ -2658,7 +2658,7 @@ def _claim_job_for_fire_locked(
             # gate and atomically resumes the job below.
             if not force and not is_job_runnable(job):
                 return False
-            now = _ev0_now()
+            now = _threev0_now()
             existing = job.get("fire_claim")
             if existing:
                 try:
@@ -2807,7 +2807,7 @@ def _heartbeat_fire_claim_locked(job_id: str, *, expected_owner: str) -> bool:
             claim = job.get("fire_claim")
             if not isinstance(claim, dict) or claim.get("by") != expected_owner:
                 return False
-            claim["at"] = _ev0_now().isoformat()
+            claim["at"] = _threev0_now().isoformat()
             save_jobs(jobs)
             return True
     return False
@@ -2833,7 +2833,7 @@ def get_due_jobs() -> List[Dict[str, Any]]:
 
 def _get_due_jobs_locked() -> List[Dict[str, Any]]:
     """Inner implementation of get_due_jobs(); must be called with _jobs_lock held."""
-    now = _ev0_now()
+    now = _threev0_now()
     raw_jobs = load_jobs()
     needs_save = False
     intentionally_removed: Set[str] = set()
@@ -3267,7 +3267,7 @@ def save_job_output(job_id: str, output: str):
     job_output_dir.mkdir(parents=True, exist_ok=True)
     _secure_dir(job_output_dir)
 
-    timestamp = _ev0_now().strftime("%Y-%m-%d_%H-%M-%S")
+    timestamp = _threev0_now().strftime("%Y-%m-%d_%H-%M-%S")
     output_file = job_output_dir / f"{timestamp}.md"
 
     fd, tmp_path = tempfile.mkstemp(dir=str(job_output_dir), suffix='.tmp', prefix='.output_')

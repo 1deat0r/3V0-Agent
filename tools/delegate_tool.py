@@ -1963,14 +1963,14 @@ def _dump_subagent_timeout_diagnostic(
     Returns the absolute path to the diagnostic file, or None on failure.
     """
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         import datetime as _dt
         import sys as _sys
         import traceback as _traceback
         import threading as _threading
 
-        ev0_home = get_ev0_home()
-        logs_dir = ev0_home / "logs"
+        threev0_home = get_threev0_home()
+        logs_dir = threev0_home / "logs"
         try:
             logs_dir.mkdir(parents=True, exist_ok=True)
         except Exception:
@@ -2031,8 +2031,8 @@ def _dump_subagent_timeout_diagnostic(
 
         _w("## Prompt / schema sizes")
         try:
-            sys_prompt = getattr(child, "ephemeral_system_prompt", None) \
-                or getattr(child, "system_prompt", None) \
+            sys_prompt = getattr(child, "ephemeral_system_prompt", None)\
+                or getattr(child, "system_prompt", None)\
                 or ""
             _w(f"  system_prompt_bytes: {len(sys_prompt.encode('utf-8')) if isinstance(sys_prompt, str) else 'n/a'}")
             _w(f"  system_prompt_chars: {len(sys_prompt) if isinstance(sys_prompt, str) else 'n/a'}")
@@ -2129,10 +2129,10 @@ def _spill_summary_to_file(task_index: int, summary: str) -> Optional[str]:
     the trimmed head+tail is still returned to the parent regardless).
     """
     try:
-        from threev0_constants import get_ev0_dir
+        from threev0_constants import get_threev0_dir
         import datetime as _dt
 
-        cache_dir = get_ev0_dir("cache/delegation", "delegation_cache")
+        cache_dir = get_threev0_dir("cache/delegation", "delegation_cache")
         cache_dir.mkdir(parents=True, exist_ok=True)
         ts = _dt.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         path = cache_dir / f"subagent-summary-{task_index}-{ts}.txt"

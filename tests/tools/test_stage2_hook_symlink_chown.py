@@ -19,7 +19,7 @@ def stage2_text() -> str:
     return STAGE2_HOOK.read_text()
 
 
-def _chown_ev0_tree_function(text: str) -> str:
+def _chown_threev0_tree_function(text: str) -> str:
     start = text.index("path_has_symlink_component() {")
     end = text.index("\n\nneeds_chown=false", start)
     return text[start:end]
@@ -30,16 +30,16 @@ def _run_helper(
     target: Path,
     log_path: Path,
     *,
-    ev0_home: Path | None = None,
+    threev0_home: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
     shell = shutil.which("sh")
     if shell is None:
         pytest.skip("sh not available")
-    ev0_home = target if ev0_home is None else ev0_home
+    threev0_home = target if threev0_home is None else threev0_home
     script = (
         "set -eu\n"
-        f'EV0_HOME="{ev0_home}"\n'
-        f"{_chown_ev0_tree_function(text)}\n"
+        f'EV0_HOME="{threev0_home}"\n'
+        f"{_chown_threev0_tree_function(text)}\n"
         f'chown() {{ printf "%s\\n" "$*" >> "{log_path}"; }}\n'
         f'chown_ev0_tree "{target}"\n'
     )
@@ -93,7 +93,7 @@ def test_chown_helper_refuses_target_under_symlinked_home(
         stage2_text,
         linked_home / "cron",
         log_path,
-        ev0_home=linked_home,
+        threev0_home=linked_home,
     )
 
     assert proc.returncode == 0, proc.stderr
@@ -101,7 +101,7 @@ def test_chown_helper_refuses_target_under_symlinked_home(
     assert "refusing recursive chown through symlinked path" in proc.stdout
 
 
-def test_stage2_uses_symlink_safe_helper_for_ev0_home_trees(stage2_text: str) -> None:
+def test_stage2_uses_symlink_safe_helper_for_threev0_home_trees(stage2_text: str) -> None:
     assert 'chown_ev0_tree "$EV0_HOME/$sub"' in stage2_text
     assert 'chown_ev0_tree "$EV0_HOME/profiles"' in stage2_text
     assert 'chown_ev0_tree "$EV0_HOME/cron"' in stage2_text
@@ -110,7 +110,7 @@ def test_stage2_uses_symlink_safe_helper_for_ev0_home_trees(stage2_text: str) ->
     assert 'chown -R 3v0:3v0 "$EV0_HOME/cron"' not in stage2_text
 
 
-def test_stage2_skips_top_level_chown_for_symlinked_ev0_home(
+def test_stage2_skips_top_level_chown_for_symlinked_threev0_home(
     stage2_text: str,
 ) -> None:
     assert 'refuse_symlinked_path "chown" "$EV0_HOME"' in stage2_text

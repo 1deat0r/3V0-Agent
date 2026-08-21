@@ -43,7 +43,7 @@ from tools.code_execution_tool import (
     _usable_python_cache,
     _resolve_child_cwd,
     _resolve_child_python,
-    _uses_ev0_python_environment,
+    _uses_threev0_python_environment,
     build_execute_code_schema,
     execute_code,
 )
@@ -156,7 +156,7 @@ class TestResolveChildCwd(unittest.TestCase):
         with tempfile.TemporaryDirectory() as reg:
             task_id = "stale-record-test"
             with patch.dict(os.environ, {"TERMINAL_CWD": "/does/not/exist"}):
-                with patch.object(terminal_tool, "_task_env_overrides", {}, create=False), \
+                with patch.object(terminal_tool, "_task_env_overrides", {}, create=False),\
                      patch.object(terminal_tool, "_session_cwd", {}, create=False):
                     terminal_tool.register_task_env_overrides(task_id, {"cwd": reg})
                     terminal_tool.record_session_cwd(task_id, "/deleted/dir/gone")
@@ -254,7 +254,7 @@ class TestExecuteCodeModeIntegration(unittest.TestCase):
                 f"project-mode python should be under VIRTUAL_ENV={ve} or sys.executable={sys.executable}, got {output}",
             )
 
-    def test_project_mode_can_still_import_ev0_tools(self):
+    def test_project_mode_can_still_import_threev0_tools(self):
         """Regression: ev0_tools still importable from non-tmpdir CWD.
 
         This is the PYTHONPATH fix — without it, switching to session CWD
@@ -271,7 +271,7 @@ class TestExecuteCodeModeIntegration(unittest.TestCase):
             self.assertEqual(result["status"], "success")
             self.assertIn("mock", result["output"])
 
-    def test_strict_mode_can_still_import_ev0_tools(self):
+    def test_strict_mode_can_still_import_threev0_tools(self):
         """Regression: strict mode's tmpdir CWD still works for imports."""
         code = (
             "from ev0_tools import terminal\n"
@@ -483,7 +483,7 @@ class TestUsesEv0PythonEnvironment(unittest.TestCase):
 
     def test_true_for_current_interpreter(self):
         """sys.executable always belongs to the current environment."""
-        self.assertTrue(_uses_ev0_python_environment(sys.executable))
+        self.assertTrue(_uses_threev0_python_environment(sys.executable))
 
     def test_true_for_current_interpreter_without_probe(self):
         """sys.executable short-circuits — no subprocess probe on the default path.
@@ -493,26 +493,26 @@ class TestUsesEv0PythonEnvironment(unittest.TestCase):
         """
         with patch("subprocess.run",
                    side_effect=subprocess.TimeoutExpired(cmd=[], timeout=5)) as mock_run:
-            self.assertTrue(_uses_ev0_python_environment(sys.executable))
+            self.assertTrue(_uses_threev0_python_environment(sys.executable))
         mock_run.assert_not_called()
 
     def test_false_for_different_prefix(self):
         """An interpreter reporting a different prefix is external."""
         with patch("tools.code_execution_tool._python_environment_prefix",
                    return_value="/some/other/venv"):
-            self.assertFalse(_uses_ev0_python_environment("/other/python"))
+            self.assertFalse(_uses_threev0_python_environment("/other/python"))
 
     def test_false_when_prefix_is_empty(self):
         """If prefix cannot be determined (error path), treat as external."""
         with patch("tools.code_execution_tool._python_environment_prefix",
                    return_value=""):
-            self.assertFalse(_uses_ev0_python_environment("/bad/python"))
+            self.assertFalse(_uses_threev0_python_environment("/bad/python"))
 
     def test_true_when_prefix_matches_sys_prefix(self):
-        ev0_prefix = os.path.realpath(sys.prefix)
+        threev0_prefix = os.path.realpath(sys.prefix)
         with patch("tools.code_execution_tool._python_environment_prefix",
-                   return_value=ev0_prefix):
-            self.assertTrue(_uses_ev0_python_environment("/same/env/python"))
+                   return_value=threev0_prefix):
+            self.assertTrue(_uses_threev0_python_environment("/same/env/python"))
 
 
 # ---------------------------------------------------------------------------
@@ -544,10 +544,10 @@ class TestPythonPathComposition(unittest.TestCase):
             mock_proc.poll.return_value = 0
             return mock_proc
 
-        with patch("tools.code_execution_tool._load_config", return_value={"mode": "strict"}), \
-             patch("model_tools.handle_function_call", side_effect=_mock_handle_function_call), \
-             patch("tools.code_execution_tool._uses_ev0_python_environment",
-                   return_value=same_env), \
+        with patch("tools.code_execution_tool._load_config", return_value={"mode": "strict"}),\
+             patch("model_tools.handle_function_call", side_effect=_mock_handle_function_call),\
+             patch("tools.code_execution_tool._uses_threev0_python_environment",
+                   return_value=same_env),\
              patch("subprocess.Popen", side_effect=_fake_popen):
             execute_code(code="pass", task_id="test-pp", enabled_tools=[])
 
@@ -557,23 +557,23 @@ class TestPythonPathComposition(unittest.TestCase):
                       "execute_code never spawned the child process")
         return captured["PYTHONPATH"], captured["staging_dir"]
 
-    def _ev0_root(self) -> str:
+    def _threev0_root(self) -> str:
         import tools.code_execution_tool as _cet
         tools_dir = os.path.dirname(os.path.abspath(_cet.__file__))
         return os.path.dirname(tools_dir)
 
-    def test_ev0_root_included_when_same_env(self):
+    def test_threev0_root_included_when_same_env(self):
         """When interpreter is in the 3V0 env, 3v0 root is in PYTHONPATH."""
         pythonpath, _ = self._capture_pythonpath(same_env=True)
         parts = pythonpath.split(os.pathsep)
-        self.assertIn(self._ev0_root(), parts,
+        self.assertIn(self._threev0_root(), parts,
                       "3v0 root must be in PYTHONPATH for same-env interpreters")
 
-    def test_ev0_root_excluded_when_external_env(self):
+    def test_threev0_root_excluded_when_external_env(self):
         """When interpreter is external, 3v0 root must NOT be in PYTHONPATH."""
         pythonpath, _ = self._capture_pythonpath(same_env=False)
         parts = pythonpath.split(os.pathsep)
-        self.assertNotIn(self._ev0_root(), parts,
+        self.assertNotIn(self._threev0_root(), parts,
                          "3v0 root must not leak into an external interpreter's PYTHONPATH")
 
     def test_staging_dir_always_first(self):

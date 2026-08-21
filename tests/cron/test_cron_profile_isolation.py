@@ -26,7 +26,7 @@ def _set_profile_env(monkeypatch, root: Path, profile_home: Path) -> None:
     import threev0_constants
 
     monkeypatch.setattr(
-        threev0_constants, "_get_platform_default_ev0_home", lambda: root
+        threev0_constants, "_get_platform_default_threev0_home", lambda: root
     )
     monkeypatch.setenv("EV0_HOME", str(profile_home))
 
@@ -43,8 +43,8 @@ def test_cron_storage_anchors_at_profile_home(tmp_path, monkeypatch):
     import threev0_constants
 
     # Sanity: the override is wired the way the gateway sees it.
-    assert threev0_constants.get_ev0_home().resolve() == profile_home.resolve()
-    assert threev0_constants.get_default_ev0_root().resolve() == root.resolve()
+    assert threev0_constants.get_threev0_home().resolve() == profile_home.resolve()
+    assert threev0_constants.get_default_threev0_root().resolve() == root.resolve()
 
     # cron/jobs.py computes EV0_DIR from get_ev0_home() at import, so a
     # fresh import under this env anchors the store at <profile>/cron.

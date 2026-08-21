@@ -19,8 +19,8 @@ PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 JPEG = b"\xff\xd8\xff" + b"\x00" * 64
 
 
-def _reload(monkeypatch, ev0_home: Path):
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+def _reload(monkeypatch, threev0_home: Path):
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     import threev0_constants
     importlib.reload(threev0_constants)
     import tools.image_source as isrc

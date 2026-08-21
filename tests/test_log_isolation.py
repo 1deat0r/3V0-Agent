@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 
-def _real_ev0_home() -> Path:
+def _real_threev0_home() -> Path:
     """Where the operator's logs live, ignoring any test sandboxing."""
     return Path.home() / ".3V0"
 
@@ -63,7 +63,7 @@ def _all_file_destinations() -> list[str]:
 
 
 class TestLogIsolation:
-    def test_ev0_home_is_sandboxed_before_imports(self):
+    def test_threev0_home_is_sandboxed_before_imports(self):
         # Deliberately NOT os.environ: by test time the per-test `_isolate_env`
         # fixture has sandboxed EV0_HOME, so reading it here would pass even
         # with the conftest block deleted. Assert the value captured at conftest
@@ -71,7 +71,7 @@ class TestLogIsolation:
         from tests.conftest import EV0_HOME_AT_CONFTEST_IMPORT as home
 
         assert home, "conftest must set EV0_HOME before test modules import"
-        assert Path(home).resolve() != _real_ev0_home().resolve(), (
+        assert Path(home).resolve() != _real_threev0_home().resolve(), (
             f"EV0_HOME pointed at the operator's real home ({home}) when "
             "conftest loaded; import-time setup_logging() writes to their agent.log"
         )
@@ -79,7 +79,7 @@ class TestLogIsolation:
     def test_importing_the_cli_does_not_target_the_real_logs(self):
         pytest.importorskip("threev0_cli.main")
 
-        real_logs = str(_real_ev0_home() / "logs")
+        real_logs = str(_real_threev0_home() / "logs")
         offenders = [p for p in _all_file_destinations() if p.startswith(real_logs)]
 
         assert offenders == [], (

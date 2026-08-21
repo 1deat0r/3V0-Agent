@@ -117,9 +117,9 @@ def _resolve_spill_dir(directory_override: Optional[str], session_id: Optional[s
     if directory_override:
         base = Path(os.path.expanduser(directory_override))
     else:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        base = Path(get_ev0_home()) / "hook_outputs"
+        base = Path(get_threev0_home()) / "hook_outputs"
 
     # Group by session so spills are contained per conversation.
     session_segment = session_id or "no-session"

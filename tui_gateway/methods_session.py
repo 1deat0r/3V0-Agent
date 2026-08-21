@@ -686,7 +686,7 @@ def _(rid, params: dict) -> dict:
         lease = None  # claimed lazily on the first turn (_ensure_active_session_slot)
         _enable_gateway_prompts()
         home_token = (
-            set_ev0_home_override(str(profile_home)) if profile_home is not None else None
+            set_threev0_home_override(str(profile_home)) if profile_home is not None else None
         )
         secret_token = (
             set_secret_scope(build_profile_secret_scope(Path(str(profile_home))))
@@ -741,7 +741,7 @@ def _(rid, params: dict) -> dict:
             return _err(rid, 5000, f"resume failed: {e}")
         finally:
             if home_token is not None:
-                reset_ev0_home_override(home_token)
+                reset_threev0_home_override(home_token)
             if secret_token is not None:
                 reset_secret_scope(secret_token)
 
@@ -771,7 +771,7 @@ def _(rid, params: dict) -> dict:
                 return _ok(rid, payload)
             try:
                 init_home_token = (
-                    set_ev0_home_override(str(profile_home))
+                    set_threev0_home_override(str(profile_home))
                     if profile_home is not None
                     else None
                 )
@@ -816,7 +816,7 @@ def _(rid, params: dict) -> dict:
                     owns_db = False
                 finally:
                     if init_home_token is not None:
-                        reset_ev0_home_override(init_home_token)
+                        reset_threev0_home_override(init_home_token)
                     if init_secret_token is not None:
                         reset_secret_scope(init_secret_token)
                 if sid in _sessions:
@@ -1086,7 +1086,7 @@ def _(rid, params: dict) -> dict:
         if profile_home is not None:
             sessions_dir = Path(profile_home) / "sessions"
         else:
-            sessions_dir = get_ev0_home() / "sessions"
+            sessions_dir = get_threev0_home() / "sessions"
         try:
             deleted = db.delete_session(target, sessions_dir=sessions_dir)
         except Exception as e:
@@ -2487,7 +2487,7 @@ def _(rid, params: dict) -> dict:
     if err:
         return err
 
-    from threev0_constants import display_ev0_home
+    from threev0_constants import display_threev0_home
 
     key = session.get("session_key") or params.get("session_id") or ""
     agent = session.get("agent")
@@ -2538,7 +2538,7 @@ def _(rid, params: dict) -> dict:
         "3V0 TUI Status",
         "",
         f"Session ID: {key}",
-        f"Path: {display_ev0_home()}",
+        f"Path: {display_threev0_home()}",
     ]
     if project:
         lines.append(f"Project: {project['name']}")
@@ -2826,7 +2826,7 @@ def _(rid, params: dict) -> dict:
     # Mirror the classic CLI /save: snapshot under the 3V0 profile home
     # (~/.3V0/sessions/saved/) rather than the project/workspace CWD, and
     # include the system prompt so the export matches the dashboard save.
-    saved_dir = get_ev0_home() / "sessions" / "saved"
+    saved_dir = get_threev0_home() / "sessions" / "saved"
     try:
         saved_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
@@ -3027,7 +3027,7 @@ def _(rid, params: dict) -> dict:
             branch_db = SessionDB(db_path=Path(parent_home) / "state.db")
             branch_owns_db = True
         home_token = (
-            set_ev0_home_override(parent_home) if parent_home else None
+            set_threev0_home_override(parent_home) if parent_home else None
         )
         # The home override alone only moves config/skills/memory; credentials
         # resolve through get_secret(), which without a scope falls through to
@@ -3073,7 +3073,7 @@ def _(rid, params: dict) -> dict:
             if secret_token is not None:
                 reset_secret_scope(secret_token)
             if home_token is not None:
-                reset_ev0_home_override(home_token)
+                reset_threev0_home_override(home_token)
         if new_sid in _sessions:
             _sessions[new_sid]["active_session_lease"] = lease
     except Exception as e:

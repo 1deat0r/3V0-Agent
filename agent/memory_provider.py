@@ -349,7 +349,7 @@ class MemoryProvider(ABC):
         """
         return []
 
-    def save_config(self, values: Dict[str, Any], ev0_home: str) -> None:
+    def save_config(self, values: Dict[str, Any], threev0_home: str) -> None:
         """Write non-secret config to the provider's native location.
 
         Called by '3v0 memory setup' after collecting user inputs.

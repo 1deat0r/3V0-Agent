@@ -3137,7 +3137,7 @@ class TestSlashCommands:
 
 
     @pytest.mark.asyncio
-    async def test_legacy_ev0_prefix_still_works(self, adapter):
+    async def test_legacy_threev0_prefix_still_works(self, adapter):
         """Backward compat: /3v0 btw foo must still route to /btw foo.
 
         Old workspace manifests only declared /3v0 as the single slash.
@@ -4098,7 +4098,7 @@ class TestTrackingStructureBounds:
     @pytest.mark.asyncio
     async def test_slash_command_contexts_bounded(self, adapter):
         adapter._SLASH_CTX_MAX = 4
-        adapter.handle_ev0_command = AsyncMock(return_value=None)
+        adapter.handle_threev0_command = AsyncMock(return_value=None)
         for i in range(10):
             command = {
                 "command": "/3v0",
@@ -4554,7 +4554,7 @@ class TestSlackUserAgent:
     drops either kwarg would silently break attribution otherwise.
     """
 
-    def test_ev0_slack_user_agent_prefix_format(self):
+    def test_threev0_slack_user_agent_prefix_format(self):
         """Module constant matches the Ev0Agent/<version> convention used
         elsewhere in the codebase for platform-partner attribution."""
         assert _slack_mod._EV0_SLACK_USER_AGENT_PREFIX.startswith("Ev0Agent/")

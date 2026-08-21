@@ -27,7 +27,7 @@ NEW_KEY = "zk-" + "c" * 24
 
 
 @pytest.fixture
-def ev0_home(monkeypatch, tmp_path):
+def threev0_home(monkeypatch, tmp_path):
     """Fresh EV0_HOME with .env + auth.json + config.yaml fixtures."""
     home = tmp_path / "cred_home"
     home.mkdir()
@@ -89,10 +89,10 @@ def _zai_pool_fixture():
 
 
 
-def test_delete_clears_provider_models_cache(ev0_home):
-    _write_env(ev0_home, ZAI_API_KEY=FAKE_ZAI_KEY)
-    _write_auth(ev0_home, {"zai": [_zai_pool_fixture()["zai"][0]]})
-    cache_path = ev0_home / "provider_models_cache.json"
+def test_delete_clears_provider_models_cache(threev0_home):
+    _write_env(threev0_home, ZAI_API_KEY=FAKE_ZAI_KEY)
+    _write_auth(threev0_home, {"zai": [_zai_pool_fixture()["zai"][0]]})
+    cache_path = threev0_home / "provider_models_cache.json"
     cache_path.write_text(
         json.dumps({"zai": {"models": ["glm-5"], "ts": 0}}), encoding="utf-8"
     )
@@ -115,12 +115,12 @@ def _write_config(home, text):
     home.joinpath("config.yaml").write_text(text, encoding="utf-8")
 
 
-def test_update_rotates_config_yaml_model_mirror(ev0_home):
+def test_update_rotates_config_yaml_model_mirror(threev0_home):
     old = "sk-oe-" + "f" * 24
     new = "sk-oe-" + "g" * 24
-    _write_env(ev0_home, OPENAI_API_KEY=old)
+    _write_env(threev0_home, OPENAI_API_KEY=old)
     _write_config(
-        ev0_home,
+        threev0_home,
         "model:\n"
         "  provider: custom\n"
         "  default: my-model\n"
@@ -134,7 +134,7 @@ def test_update_rotates_config_yaml_model_mirror(ev0_home):
     assert resp.status_code == 200
     assert "model.api_key" in resp.json().get("config_updates", [])
 
-    cfg_text = ev0_home.joinpath("config.yaml").read_text(encoding="utf-8")
+    cfg_text = threev0_home.joinpath("config.yaml").read_text(encoding="utf-8")
     assert old not in cfg_text, "stale old key left in config.yaml (#62269)"
     assert new in cfg_text, "config.yaml mirror not rotated to the new key"
 

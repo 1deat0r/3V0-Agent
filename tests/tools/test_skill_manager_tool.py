@@ -31,7 +31,7 @@ from agent.skill_utils import (
 def _skill_dir(tmp_path):
     """Patch both SKILLS_DIR and get_all_skills_dirs so _find_skill searches
     only the temp directory — not the real ~/.3V0/skills/."""
-    with patch("tools.skill_manager_tool.SKILLS_DIR", tmp_path), \
+    with patch("tools.skill_manager_tool.SKILLS_DIR", tmp_path),\
          patch("agent.skill_utils.get_all_skills_dirs", return_value=[tmp_path]):
         yield
 
@@ -167,7 +167,7 @@ class TestCreateSkill:
         skills_dir = tmp_path / "skills"
         skills_dir.mkdir()
 
-        with patch("tools.skill_manager_tool.SKILLS_DIR", skills_dir), \
+        with patch("tools.skill_manager_tool.SKILLS_DIR", skills_dir),\
              patch("agent.skill_utils.get_all_skills_dirs", return_value=[skills_dir]):
             result = _create_skill("my-skill", VALID_SKILL_CONTENT, category="../escape")
 
@@ -443,9 +443,9 @@ class TestSkillManageDispatcher:
 
         token = set_current_write_origin(BACKGROUND_REVIEW)
         try:
-            with _skill_dir(tmp_path), \
-                 patch("tools.skill_usage.is_protected_builtin", return_value=False), \
-                 patch("tools.skill_usage.is_hub_installed", return_value=False), \
+            with _skill_dir(tmp_path),\
+                 patch("tools.skill_usage.is_protected_builtin", return_value=False),\
+                 patch("tools.skill_usage.is_hub_installed", return_value=False),\
                  patch("tools.skill_usage.is_bundled",
                        side_effect=lambda skill_name: skill_name == "bundled"):
                 skill_manage(action="create", name="umbrella", content=VALID_SKILL_CONTENT)
@@ -471,7 +471,7 @@ class TestSecurityScanGate:
         """Default config (flag off) short-circuits before running scan_skill."""
         from tools.skill_manager_tool import _security_scan_skill
 
-        with patch("tools.skill_manager_tool._guard_agent_created_enabled", return_value=False), \
+        with patch("tools.skill_manager_tool._guard_agent_created_enabled", return_value=False),\
              patch("tools.skill_manager_tool.scan_skill") as mock_scan:
             result = _security_scan_skill(tmp_path)
 
@@ -495,7 +495,7 @@ class TestSecurityScanGate:
             findings=[finding],
             summary="dangerous",
         )
-        with patch("tools.skill_manager_tool._guard_agent_created_enabled", return_value=True), \
+        with patch("tools.skill_manager_tool._guard_agent_created_enabled", return_value=True),\
              patch("tools.skill_manager_tool.scan_skill", return_value=fake_result):
             result = _security_scan_skill(tmp_path)
 
@@ -516,7 +516,7 @@ class TestSecurityScanGate:
         for quoted in ("false", "False", "0", "no", "off"):
             with patch("threev0_cli.config.load_config",
                        return_value={"skills": {"guard_agent_created": quoted}}):
-                assert _guard_agent_created_enabled() is False, \
+                assert _guard_agent_created_enabled() is False,\
                     f"guard_agent_created={quoted!r} must coerce to False"
 
 
@@ -529,7 +529,7 @@ class TestSecurityScanGate:
 def _two_roots(local_dir: Path, external_dir: Path):
     """Patch the skill manager so local SKILLS_DIR = local_dir and
     get_all_skills_dirs() returns [local_dir, external_dir] in order."""
-    with patch("tools.skill_manager_tool.SKILLS_DIR", local_dir), \
+    with patch("tools.skill_manager_tool.SKILLS_DIR", local_dir),\
          patch("agent.skill_utils.get_all_skills_dirs",
                return_value=[local_dir, external_dir]):
         yield
@@ -803,8 +803,8 @@ class TestDeleteSkillRmtreeGuard:
         evil = skills / "evil-skill"
         evil.symlink_to(victim, target_is_directory=True)
         try:
-            with patch("tools.skill_manager_tool.SKILLS_DIR", skills), \
-                 patch("agent.skill_utils.get_all_skills_dirs", return_value=[skills]), \
+            with patch("tools.skill_manager_tool.SKILLS_DIR", skills),\
+                 patch("agent.skill_utils.get_all_skills_dirs", return_value=[skills]),\
                  patch("tools.skill_manager_tool._find_skill",
                        return_value={"path": evil}):
                 result = _delete_skill("evil-skill", absorbed_into="")
@@ -823,8 +823,8 @@ class TestDeleteSkillRmtreeGuard:
         outside = tmp_path / "outside_skill"
         outside.mkdir()
         (outside / "SKILL.md").write_text("x")
-        with patch("tools.skill_manager_tool.SKILLS_DIR", skills), \
-             patch("agent.skill_utils.get_all_skills_dirs", return_value=[skills]), \
+        with patch("tools.skill_manager_tool.SKILLS_DIR", skills),\
+             patch("agent.skill_utils.get_all_skills_dirs", return_value=[skills]),\
              patch("tools.skill_manager_tool._find_skill",
                    return_value={"path": outside}):
             result = _delete_skill("outside", absorbed_into="")
@@ -856,14 +856,14 @@ def _curator_pass(tmp_path, *, monkeypatch):
     here; tests that specifically exercise the ownership guard set their own
     records instead.
     """
-    ev0_home = tmp_path / ".3V0"
-    skills_root = ev0_home / "skills"
+    threev0_home = tmp_path / ".3V0"
+    skills_root = threev0_home / "skills"
     skills_root.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
-    with patch("tools.skill_manager_tool.SKILLS_DIR", skills_root), \
-         patch("tools.skills_tool.SKILLS_DIR", skills_root), \
-         patch("agent.skill_utils.get_all_skills_dirs", return_value=[skills_root]), \
-         patch("tools.skill_usage._is_curator_managed_record", return_value=True), \
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
+    with patch("tools.skill_manager_tool.SKILLS_DIR", skills_root),\
+         patch("tools.skills_tool.SKILLS_DIR", skills_root),\
+         patch("agent.skill_utils.get_all_skills_dirs", return_value=[skills_root]),\
+         patch("tools.skill_usage._is_curator_managed_record", return_value=True),\
          patch("tools.skill_provenance.is_background_review", return_value=True):
         yield skills_root
 

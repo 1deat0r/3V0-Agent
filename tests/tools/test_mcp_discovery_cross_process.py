@@ -29,8 +29,8 @@ def _wait_for_file(path: Path, *, timeout: float = 10.0) -> None:
 
 def test_two_processes_each_complete_local_mcp_discovery(tmp_path):
     """A lock loser waits, acquires the lock, and builds its own registry."""
-    ev0_home = tmp_path / "3v0-home"
-    ev0_home.mkdir()
+    threev0_home = tmp_path / "3v0-home"
+    threev0_home.mkdir()
 
     holder_ready = tmp_path / "holder-ready"
     release_holder = tmp_path / "release-holder"
@@ -115,7 +115,7 @@ def test_two_processes_each_complete_local_mcp_discovery(tmp_path):
     )
 
     env = os.environ.copy()
-    env["EV0_HOME"] = str(ev0_home)
+    env["EV0_HOME"] = str(threev0_home)
 
     holder_started = tmp_path / "holder-started"
     holder = subprocess.Popen(

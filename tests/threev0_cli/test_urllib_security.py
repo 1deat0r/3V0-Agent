@@ -391,7 +391,7 @@ def _clear_ca_bundle_env(monkeypatch) -> None:
         monkeypatch.delenv(name, raising=False)
 
 
-def test_ev0_owned_opener_uses_resolved_https_context(monkeypatch):
+def test_threev0_owned_opener_uses_resolved_https_context(monkeypatch):
     import threev0_cli.urllib_security as urllib_security
 
     context = ssl.create_default_context()

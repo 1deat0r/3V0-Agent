@@ -33,8 +33,8 @@ def _state_dir() -> Path:
     if override:
         return Path(override)
     # Default: $EV0_HOME/watcher-state/, falling back to ~/.3V0/watcher-state/.
-    ev0_home = os.environ.get("EV0_HOME") or str(Path.home() / ".3V0")
-    return Path(ev0_home) / "watcher-state"
+    threev0_home = os.environ.get("EV0_HOME") or str(Path.home() / ".3V0")
+    return Path(threev0_home) / "watcher-state"
 
 
 class Watermark:

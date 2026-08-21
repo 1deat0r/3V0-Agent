@@ -19,7 +19,7 @@ from unittest.mock import MagicMock
 import pytest
 
 
-def _fresh_run_agent(ev0_home):
+def _fresh_run_agent(threev0_home):
     for mod in list(sys.modules):
         if mod == "run_agent" or mod.startswith("agent.") or mod.startswith("tools.") or mod.startswith("ev0_"):
             del sys.modules[mod]

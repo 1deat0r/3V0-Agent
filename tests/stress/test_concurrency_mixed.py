@@ -30,9 +30,9 @@ RUN_DURATION_S = 30
 WT = str(Path(__file__).resolve().parents[2])
 
 
-def worker_loop(worker_id: int, ev0_home: str, result_file: str) -> None:
-    os.environ["EV0_HOME"] = ev0_home
-    os.environ["HOME"] = ev0_home
+def worker_loop(worker_id: int, threev0_home: str, result_file: str) -> None:
+    os.environ["EV0_HOME"] = threev0_home
+    os.environ["HOME"] = threev0_home
     sys.path.insert(0, WT)
     from threev0_cli import kanban_db as kb
 
@@ -141,10 +141,10 @@ def worker_loop(worker_id: int, ev0_home: str, result_file: str) -> None:
         json.dump(events, f)
 
 
-def reclaimer_loop(ev0_home: str, result_file: str) -> None:
+def reclaimer_loop(threev0_home: str, result_file: str) -> None:
     """Background dispatcher-like loop that reclaims stale tasks."""
-    os.environ["EV0_HOME"] = ev0_home
-    os.environ["HOME"] = ev0_home
+    os.environ["EV0_HOME"] = threev0_home
+    os.environ["HOME"] = threev0_home
     sys.path.insert(0, WT)
     from threev0_cli import kanban_db as kb
 

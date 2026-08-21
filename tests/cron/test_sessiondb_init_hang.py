@@ -81,9 +81,9 @@ class TestSessionDbInitTimeout:
         job = {"id": "wedged-sessiondb", "name": "test", "prompt": "hello"}
         timeouts: list = []
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB"), \
              patch(
@@ -116,9 +116,9 @@ class TestSessionDbInitTimeout:
         job = {"id": "bad-timeout-env", "name": "test", "prompt": "hello"}
         timeouts: list = []
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch(
@@ -159,9 +159,9 @@ class TestSessionDbInitTimeout:
         job = {"id": "config-timeout", "name": "test", "prompt": "hello"}
         timeouts: list = []
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB"), \
              patch(
@@ -209,9 +209,9 @@ class TestDispatchGuardReleasedAfterHang:
         timeouts: list = []
 
         try:
-            with patch("cron.scheduler._ev0_home", tmp_path), \
+            with patch("cron.scheduler._threev0_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+                 patch("threev0_cli.env_loader.load_threev0_dotenv"), \
                  patch("threev0_cli.env_loader.reset_secret_source_cache"), \
                  patch("threev0_state.SessionDB"), \
                  patch(
@@ -307,9 +307,9 @@ class TestLateSessionDbClosedAfterTimeout:
         job = {"id": "late-close-test", "name": "test", "prompt": "hello"}
 
         try:
-            with patch("cron.scheduler._ev0_home", tmp_path), \
+            with patch("cron.scheduler._threev0_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+                 patch("threev0_cli.env_loader.load_threev0_dotenv"), \
                  patch("threev0_cli.env_loader.reset_secret_source_cache"), \
                  patch("threev0_state.SessionDB", side_effect=_hanging_then_capture), \
                  patch(

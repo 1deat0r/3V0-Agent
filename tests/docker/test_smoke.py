@@ -15,7 +15,7 @@ from __future__ import annotations
 import subprocess
 
 
-def test_ev0_help(built_image: str) -> None:
+def test_threev0_help(built_image: str) -> None:
     """``docker run --rm <image> --help`` must exit 0.
 
     Uses the image's real ENTRYPOINT (``/init`` + ``main-wrapper.sh``)
@@ -60,7 +60,7 @@ def test_dashboard_subcommand_present(built_image: str) -> None:
     )
 
 
-def test_ev0_help_under_wrapped_init(built_image: str) -> None:
+def test_threev0_help_under_wrapped_init(built_image: str) -> None:
     """``docker run --init --rm <image> --help`` must exit 0.
 
     Regression guard for #38349: platforms whose own init owns PID 1

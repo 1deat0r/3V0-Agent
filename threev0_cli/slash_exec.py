@@ -96,9 +96,9 @@ def _exec_profile(ctx: CommandContext) -> CommandReply:
 
         profile_name = get_active_profile_name()
     if not home_display:
-        from threev0_constants import display_ev0_home
+        from threev0_constants import display_threev0_home
 
-        home_display = display_ev0_home()
+        home_display = display_threev0_home()
 
     return CommandReply(
         f"Profile: {profile_name}\nHome: {home_display}",

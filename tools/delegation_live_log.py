@@ -60,9 +60,9 @@ _STREAM_BUFFER_FLUSH_CHARS = 4000
 
 def live_transcript_root() -> Path:
     """Root directory for live transcripts (profile-safe, never ~/.3V0)."""
-    from threev0_constants import get_ev0_dir
+    from threev0_constants import get_threev0_dir
 
-    return get_ev0_dir("cache/delegation", "delegation_cache") / "live"
+    return get_threev0_dir("cache/delegation", "delegation_cache") / "live"
 
 
 def new_live_delegation_id() -> str:

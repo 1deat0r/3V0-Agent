@@ -30,7 +30,7 @@ class TestApplyIPv4Preference:
         original = socket.getaddrinfo
         apply_ipv4_preference(force=True)
         assert socket.getaddrinfo is not original
-        assert getattr(socket.getaddrinfo, "_ev0_ipv4_patched", False) is True
+        assert getattr(socket.getaddrinfo, "_threev0_ipv4_patched", False) is True
 
     def test_double_patch_is_safe(self):
         """Calling apply twice doesn't double-wrap."""

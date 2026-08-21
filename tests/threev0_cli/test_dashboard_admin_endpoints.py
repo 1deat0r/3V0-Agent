@@ -16,20 +16,20 @@ def _client():
     except ImportError:
         pytest.skip("fastapi/starlette not installed")
     import threev0_state
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
     from threev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
     client = TestClient(app)
     client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
     # Keep the state DB under the isolated EV0_HOME for any handler that
     # touches it.
-    threev0_state.DEFAULT_DB_PATH = get_ev0_home() / "state.db"
+    threev0_state.DEFAULT_DB_PATH = get_threev0_home() / "state.db"
     return client, _SESSION_HEADER_NAME
 
 
 class TestMcpEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, self.header = _client()
 
 
@@ -47,9 +47,9 @@ class TestMcpEndpoints:
         assert srv["env"]["API_KEY"] != "sk-secret-1234567890"
 
     def test_http_bearer_auth_separates_secret_from_config(
-        self, _isolate_ev0_home
+        self, _isolate_threev0_home
     ):
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
         secret = "dashboard-secret-value"
         response = self.client.post(
@@ -66,9 +66,9 @@ class TestMcpEndpoints:
         assert response.json()["auth"] == "header"
         assert "bearer_token" not in response.json()
 
-        ev0_home = get_ev0_home()
-        config_text = (ev0_home / "config.yaml").read_text()
-        env_text = (ev0_home / ".env").read_text()
+        threev0_home = get_threev0_home()
+        config_text = (threev0_home / "config.yaml").read_text()
+        env_text = (threev0_home / ".env").read_text()
         assert secret not in config_text
         assert "Bearer ${MCP_BEARER_SERVER_API_KEY}" in config_text
         assert f"MCP_BEARER_SERVER_API_KEY={secret}" in env_text
@@ -144,7 +144,7 @@ class TestMcpEndpoints:
 
 class TestCredentialPoolEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
 
@@ -214,11 +214,11 @@ class TestCredentialPoolEndpoints:
 
 class TestMemoryEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        (get_ev0_home() / "memories").mkdir(parents=True, exist_ok=True)
+        (get_threev0_home() / "memories").mkdir(parents=True, exist_ok=True)
 
     def test_status_and_select(self):
         data = self.client.get("/api/memory").json()
@@ -233,9 +233,9 @@ class TestMemoryEndpoints:
         assert r.status_code == 400
 
     def test_reset_targets(self):
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        mem = get_ev0_home() / "memories"
+        mem = get_threev0_home() / "memories"
         (mem / "MEMORY.md").write_text("notes")
         (mem / "USER.md").write_text("user")
 
@@ -250,7 +250,7 @@ class TestMemoryEndpoints:
 
 class TestPairingEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
     def test_approve_pending_request_id(self):
@@ -282,9 +282,9 @@ class TestPairingEndpoints:
         as approved.
         """
         from gateway.pairing import PairingStore
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        (get_ev0_home() / "profiles" / "work").mkdir(parents=True, exist_ok=True)
+        (get_threev0_home() / "profiles" / "work").mkdir(parents=True, exist_ok=True)
         PairingStore().generate_code("telegram", "global-1", "GlobalGuy")
         PairingStore(profile="work").generate_code("telegram", "work-1", "WorkGal")
 
@@ -319,7 +319,7 @@ class TestPairingEndpoints:
 
 class TestWebhookEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
 
@@ -361,7 +361,7 @@ class TestWebhookEndpoints:
             restart_calls.append((subcommand, name))
             return FakeRestartProc()
 
-        monkeypatch.setattr(ws, "_spawn_ev0_action", fake_spawn_action)
+        monkeypatch.setattr(ws, "_spawn_threev0_action", fake_spawn_action)
 
         r = self.client.post("/api/webhooks/enable")
 
@@ -397,7 +397,7 @@ class TestWebhookEndpoints:
         def fail_spawn_action(subcommand, name):
             raise AssertionError("must not spawn a second concurrent restart")
 
-        monkeypatch.setattr(ws, "_spawn_ev0_action", fail_spawn_action)
+        monkeypatch.setattr(ws, "_spawn_threev0_action", fail_spawn_action)
 
         r = self.client.post("/api/webhooks/enable")
 
@@ -411,7 +411,7 @@ class TestWebhookEndpoints:
 
 class TestOpsEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
 
@@ -467,7 +467,7 @@ class TestOpsEndpoints:
 
 class TestSystemStatsEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
     def test_stats_shape(self):
@@ -483,19 +483,19 @@ class TestSystemStatsEndpoint:
 
 class TestCuratorEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
 
 class TestPortalEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
 
 class TestSessionManagementEndpoints:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
         from threev0_state import SessionDB
 
@@ -579,7 +579,7 @@ class TestSessionManagementEndpoints:
 
 class TestSkillsHubSearchEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
 
@@ -618,7 +618,7 @@ class _FakeBundle:
 
 class TestSkillsHubSourcesEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
     def test_sources_lists_configured_hubs(self, monkeypatch):
@@ -663,7 +663,7 @@ class TestSkillsHubSourcesEndpoint:
 
 class TestSkillsHubPreviewEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
 
@@ -702,7 +702,7 @@ class TestSkillsHubPreviewEndpoint:
 
 class TestSkillsHubScanEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
 
@@ -765,7 +765,7 @@ class TestSkillsHubScanEndpoint:
 
 class TestWebhookToggleEndpoint:
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
         # Enable the webhook platform so a subscription can be created.
         from threev0_cli.config import load_config, save_config
@@ -782,7 +782,7 @@ class TestAdminEndpointsAuthGate:
     """Every admin endpoint must sit behind the dashboard session-token gate."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         from starlette.testclient import TestClient
         from threev0_cli.web_server import app
 
@@ -799,7 +799,7 @@ class TestUpdateCheckEndpoint:
     """
 
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, _ = _client()
 
     def test_git_install_reports_behind_count(self, monkeypatch):
@@ -858,11 +858,11 @@ class TestDebugShareEndpoint:
     dashboard can render them as copyable links (not a backgrounded log tail)."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, self.header = _client()
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        logs = get_ev0_home() / "logs"
+        logs = get_threev0_home() / "logs"
         logs.mkdir(parents=True, exist_ok=True)
         (logs / "agent.log").write_text("agent line\n")
         (logs / "errors.log").write_text("err line\n")
@@ -920,7 +920,7 @@ class TestToolsConfigEndpoints:
     the dashboard surface that replicates the `3v0 tools` configurator."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_ev0_home):
+    def _setup(self, _isolate_threev0_home):
         self.client, self.header = _client()
 
 
@@ -967,7 +967,7 @@ class TestToolsConfigEndpoints:
 # _spawn_ev0_action env scrubbing (#52470)
 # ---------------------------------------------------------------------------
 
-def test_spawn_ev0_action_scrubs_gateway_loop_guard_env(monkeypatch, tmp_path):
+def test_spawn_threev0_action_scrubs_gateway_loop_guard_env(monkeypatch, tmp_path):
     """The dashboard runs inside the gateway, so os.environ has
     _EV0_GATEWAY=1. Spawned actions (e.g. `gateway restart`) must NOT inherit
     it, or the in-process restart-loop guard rejects the restart and it silently
@@ -993,7 +993,7 @@ def test_spawn_ev0_action_scrubs_gateway_loop_guard_env(monkeypatch, tmp_path):
 
     monkeypatch.setattr(ws.subprocess, "Popen", _fake_popen)
 
-    ws._spawn_ev0_action(["gateway", "restart"], "gateway-restart")
+    ws._spawn_threev0_action(["gateway", "restart"], "gateway-restart")
 
     assert "_EV0_GATEWAY" not in captured["env"]
     assert captured["env"]["EV0_NONINTERACTIVE"] == "1"
@@ -1004,7 +1004,7 @@ def test_spawn_ev0_action_scrubs_gateway_loop_guard_env(monkeypatch, tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_desktop_lifespan_reaps_orphan_gateways_on_startup(
-    monkeypatch, _isolate_ev0_home
+    monkeypatch, _isolate_threev0_home
 ):
     """Starting a Desktop serve backend should reap orphan gateways left by a
     previous serve session before forking a fresh one (#77276).

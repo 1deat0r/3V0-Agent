@@ -142,7 +142,7 @@ class TestInstallHangupProtection:
 
         # Patch the import inside _install_hangup_protection.
         monkeypatch.setattr(
-            "threev0_cli.config.get_ev0_home", _boom, raising=True
+            "threev0_cli.config.get_threev0_home", _boom, raising=True
         )
 
         original_handler = (

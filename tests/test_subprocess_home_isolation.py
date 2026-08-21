@@ -41,20 +41,20 @@ class TestGetSubprocessHome:
         """Host installs should not hide real ~/.ssh, ~/.gitconfig, ~/.azure, etc."""
         self._host_mode(monkeypatch)
         real_home = tmp_path / "real-home"
-        ev0_home = real_home / ".3V0" / "profiles" / "coder"
-        profile_home = ev0_home / "home"
+        threev0_home = real_home / ".3V0" / "profiles" / "coder"
+        profile_home = threev0_home / "home"
         profile_home.mkdir(parents=True)
         monkeypatch.setenv("HOME", str(real_home))
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         from threev0_constants import get_subprocess_home
         assert get_subprocess_home() is None
 
     def test_container_auto_uses_profile_home_when_home_dir_exists(self, tmp_path, monkeypatch):
         self._container_mode(monkeypatch)
-        ev0_home = tmp_path / ".3V0"
-        profile_home = ev0_home / "home"
+        threev0_home = tmp_path / ".3V0"
+        profile_home = threev0_home / "home"
         profile_home.mkdir(parents=True)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         from threev0_constants import get_subprocess_home
         assert get_subprocess_home() == str(profile_home)
 
@@ -120,13 +120,13 @@ class TestMakeRunEnvHomeInjection:
     """Verify _make_run_env() applies the subprocess HOME policy."""
 
     def test_host_auto_preserves_real_home_when_profile_home_exists(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir()
-        (ev0_home / "home").mkdir()
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir()
+        (threev0_home / "home").mkdir()
         real_home = tmp_path / "real-home"
         real_home.mkdir()
         monkeypatch.setattr(threev0_constants, "is_container", lambda: False)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setenv("HOME", str(real_home))
         monkeypatch.setenv("PATH", "/usr/bin:/bin")
 
@@ -137,28 +137,28 @@ class TestMakeRunEnvHomeInjection:
         assert result["EV0_REAL_HOME"] == str(real_home)
 
     def test_profile_mode_injects_profile_home_when_profile_home_exists(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir()
-        (ev0_home / "home").mkdir()
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir()
+        (threev0_home / "home").mkdir()
         real_home = tmp_path / "real-home"
         real_home.mkdir()
         monkeypatch.setattr(threev0_constants, "is_container", lambda: False)
         monkeypatch.setenv("TERMINAL_HOME_MODE", "profile")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setenv("HOME", str(real_home))
         monkeypatch.setenv("PATH", "/usr/bin:/bin")
 
         from tools.environments.local import _make_run_env
         result = _make_run_env({})
 
-        assert result["HOME"] == str(ev0_home / "home")
+        assert result["HOME"] == str(threev0_home / "home")
         assert result["EV0_REAL_HOME"] == str(real_home)
 
     def test_no_injection_when_home_dir_missing(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir()
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir()
         # No home/ subdirectory
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setenv("HOME", "/root")
         monkeypatch.setenv("PATH", "/usr/bin:/bin")
 
@@ -167,7 +167,7 @@ class TestMakeRunEnvHomeInjection:
 
         assert result["HOME"] == "/root"
 
-    def test_no_injection_when_ev0_home_unset(self, monkeypatch):
+    def test_no_injection_when_threev0_home_unset(self, monkeypatch):
         monkeypatch.delenv("EV0_HOME", raising=False)
         monkeypatch.setenv("HOME", "/home/user")
         monkeypatch.setenv("PATH", "/usr/bin:/bin")
@@ -187,13 +187,13 @@ class TestSanitizeSubprocessEnvHomeInjection:
     """Verify _sanitize_subprocess_env() applies the subprocess HOME policy."""
 
     def test_host_auto_preserves_real_home_when_profile_home_exists(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir()
-        (ev0_home / "home").mkdir()
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir()
+        (threev0_home / "home").mkdir()
         real_home = tmp_path / "real-home"
         real_home.mkdir()
         monkeypatch.setattr(threev0_constants, "is_container", lambda: False)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         base_env = {"HOME": str(real_home), "PATH": "/usr/bin", "USER": "root"}
         from tools.environments.local import _sanitize_subprocess_env
@@ -203,26 +203,26 @@ class TestSanitizeSubprocessEnvHomeInjection:
         assert result["EV0_REAL_HOME"] == str(real_home)
 
     def test_profile_mode_injects_profile_home_when_profile_home_exists(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir()
-        (ev0_home / "home").mkdir()
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir()
+        (threev0_home / "home").mkdir()
         real_home = tmp_path / "real-home"
         real_home.mkdir()
         monkeypatch.setattr(threev0_constants, "is_container", lambda: False)
         monkeypatch.setenv("TERMINAL_HOME_MODE", "profile")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         base_env = {"HOME": str(real_home), "PATH": "/usr/bin", "USER": "root"}
         from tools.environments.local import _sanitize_subprocess_env
         result = _sanitize_subprocess_env(base_env)
 
-        assert result["HOME"] == str(ev0_home / "home")
+        assert result["HOME"] == str(threev0_home / "home")
         assert result["EV0_REAL_HOME"] == str(real_home)
 
     def test_no_injection_when_home_dir_missing(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / "3v0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / "3v0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         base_env = {"HOME": "/root", "PATH": "/usr/bin"}
         from tools.environments.local import _sanitize_subprocess_env

@@ -32,27 +32,27 @@ def _clean_state():
 
 class TestRegisterCredentialFiles:
     def test_dict_with_path_key(self, tmp_path):
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "token.json").write_text("{}")
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "token.json").write_text("{}")
 
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             missing = register_credential_files([{"path": "token.json"}])
 
         assert missing == []
         mounts = get_credential_file_mounts()
         assert len(mounts) == 1
-        assert mounts[0]["host_path"] == str(ev0_home / "token.json")
+        assert mounts[0]["host_path"] == str(threev0_home / "token.json")
         assert mounts[0]["container_path"] == "/root/.3V0/token.json"
 
 
     def test_path_takes_precedence_over_name(self, tmp_path):
         """When both path and name are present, path wins."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "real.json").write_text("{}")
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "real.json").write_text("{}")
 
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             missing = register_credential_files([
                 {"path": "real.json", "name": "wrong.json"},
             ])
@@ -64,13 +64,13 @@ class TestRegisterCredentialFiles:
 
 class TestSkillsDirectoryMount:
     def test_returns_mount_when_skills_dir_exists(self, tmp_path):
-        ev0_home = tmp_path / ".3V0"
-        skills_dir = ev0_home / "skills"
+        threev0_home = tmp_path / ".3V0"
+        skills_dir = threev0_home / "skills"
         skills_dir.mkdir(parents=True)
         (skills_dir / "test-skill").mkdir()
         (skills_dir / "test-skill" / "SKILL.md").write_text("# test")
 
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             mounts = get_skills_directory_mount()
 
         assert len(mounts) >= 1
@@ -79,18 +79,18 @@ class TestSkillsDirectoryMount:
 
 
     def test_custom_container_base(self, tmp_path):
-        ev0_home = tmp_path / ".3V0"
-        (ev0_home / "skills").mkdir(parents=True)
+        threev0_home = tmp_path / ".3V0"
+        (threev0_home / "skills").mkdir(parents=True)
 
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             mounts = get_skills_directory_mount(container_base="/home/user/.3V0")
 
         assert mounts[0]["container_path"] == "/home/user/.3V0/skills"
 
     def test_symlinks_are_sanitized(self, tmp_path):
         """Symlinks in skills dir should be excluded from the mount."""
-        ev0_home = tmp_path / ".3V0"
-        skills_dir = ev0_home / "skills"
+        threev0_home = tmp_path / ".3V0"
+        skills_dir = threev0_home / "skills"
         skills_dir.mkdir(parents=True)
         (skills_dir / "legit.md").write_text("# real skill")
         # Create a symlink pointing outside the skills tree
@@ -98,7 +98,7 @@ class TestSkillsDirectoryMount:
         secret.write_text("TOP SECRET")
         (skills_dir / "evil_link").symlink_to(secret)
 
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             mounts = get_skills_directory_mount()
 
         assert len(mounts) >= 1
@@ -114,12 +114,12 @@ class TestSkillsDirectoryMount:
 
     def test_no_symlinks_returns_original_dir(self, tmp_path):
         """When no symlinks exist, the original dir is returned (no copy)."""
-        ev0_home = tmp_path / ".3V0"
-        skills_dir = ev0_home / "skills"
+        threev0_home = tmp_path / ".3V0"
+        skills_dir = threev0_home / "skills"
         skills_dir.mkdir(parents=True)
         (skills_dir / "skill.md").write_text("ok")
 
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             mounts = get_skills_directory_mount()
 
         assert mounts[0]["host_path"] == str(skills_dir)
@@ -127,8 +127,8 @@ class TestSkillsDirectoryMount:
 
 class TestIterSkillsFiles:
     def test_returns_files_skipping_symlinks(self, tmp_path):
-        ev0_home = tmp_path / ".3V0"
-        skills_dir = ev0_home / "skills"
+        threev0_home = tmp_path / ".3V0"
+        skills_dir = threev0_home / "skills"
         (skills_dir / "cat" / "myskill").mkdir(parents=True)
         (skills_dir / "cat" / "myskill" / "SKILL.md").write_text("# skill")
         (skills_dir / "cat" / "myskill" / "scripts").mkdir()
@@ -138,7 +138,7 @@ class TestIterSkillsFiles:
         secret.write_text("nope")
         (skills_dir / "cat" / "myskill" / "evil").symlink_to(secret)
 
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             files = iter_skills_files()
 
         paths = {f["container_path"] for f in files}
@@ -148,10 +148,10 @@ class TestIterSkillsFiles:
         assert not any("evil" in f["container_path"] for f in files)
 
     def test_empty_when_no_skills_dir(self, tmp_path):
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
 
-        with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+        with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
             assert iter_skills_files() == []
 
 class TestPathTraversalSecurity:
@@ -182,9 +182,9 @@ class TestPathTraversalSecurity:
 
     def test_deep_traversal_rejected(self, tmp_path, monkeypatch):
         """'../../etc/passwd' style traversal must be rejected."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         # Create a fake sensitive file outside ev0_home
         ssh_dir = tmp_path / ".ssh"
@@ -198,9 +198,9 @@ class TestPathTraversalSecurity:
 
     def test_absolute_path_rejected(self, tmp_path, monkeypatch):
         """Absolute paths must be rejected regardless of whether they exist."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         # Create a file at an absolute path
         sensitive = tmp_path / "absolute.json"
@@ -212,14 +212,14 @@ class TestPathTraversalSecurity:
         assert get_credential_file_mounts() == []
 
 
-    def test_nested_subdir_inside_ev0_home_allowed(self, tmp_path, monkeypatch):
+    def test_nested_subdir_inside_threev0_home_allowed(self, tmp_path, monkeypatch):
         """Files in subdirectories of EV0_HOME must be allowed."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        subdir = ev0_home / "creds"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        subdir = threev0_home / "creds"
         subdir.mkdir()
         (subdir / "oauth.json").write_text("{}")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         result = register_credential_file("creds/oauth.json")
 
@@ -227,16 +227,16 @@ class TestPathTraversalSecurity:
 
     def test_symlink_traversal_rejected(self, tmp_path, monkeypatch):
         """A symlink inside EV0_HOME pointing outside must be rejected."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         # Create a sensitive file outside ev0_home
         sensitive = tmp_path / "sensitive.json"
         sensitive.write_text('{"secret": "value"}')
 
         # Create a symlink inside ev0_home pointing outside
-        symlink = ev0_home / "evil_link.json"
+        symlink = threev0_home / "evil_link.json"
         try:
             symlink.symlink_to(sensitive)
         except (OSError, NotImplementedError):
@@ -256,20 +256,20 @@ class TestPathTraversalSecurity:
 class TestConfigPathTraversal:
     """terminal.credential_files in config.yaml must also reject traversal."""
 
-    def _write_config(self, ev0_home: Path, cred_files: list):
+    def _write_config(self, threev0_home: Path, cred_files: list):
         import yaml
-        config_path = ev0_home / "config.yaml"
+        config_path = threev0_home / "config.yaml"
         config_path.write_text(yaml.dump({"terminal": {"credential_files": cred_files}}))
 
     def test_config_traversal_rejected(self, tmp_path, monkeypatch):
         """'../secret' in config.yaml must not escape EV0_HOME."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         sensitive = tmp_path / "secret.json"
         sensitive.write_text("{}")
-        self._write_config(ev0_home, ["../secret.json"])
+        self._write_config(threev0_home, ["../secret.json"])
 
         mounts = get_credential_file_mounts()
         host_paths = [m["host_path"] for m in mounts]
@@ -278,25 +278,25 @@ class TestConfigPathTraversal:
 
     def test_config_absolute_path_rejected(self, tmp_path, monkeypatch):
         """Absolute paths in config.yaml must be rejected."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         sensitive = tmp_path / "abs.json"
         sensitive.write_text("{}")
-        self._write_config(ev0_home, [str(sensitive)])
+        self._write_config(threev0_home, [str(sensitive)])
 
         mounts = get_credential_file_mounts()
         assert mounts == []
 
     def test_config_legitimate_file_works(self, tmp_path, monkeypatch):
         """Normal files inside EV0_HOME via config must still mount."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
-        (ev0_home / "oauth.json").write_text("{}")
-        self._write_config(ev0_home, ["oauth.json"])
+        (threev0_home / "oauth.json").write_text("{}")
+        self._write_config(threev0_home, ["oauth.json"])
 
         mounts = get_credential_file_mounts()
         assert len(mounts) == 1
@@ -312,12 +312,12 @@ class TestCacheDirectoryMounts:
 
     def test_returns_existing_cache_dirs(self, tmp_path, monkeypatch):
         """Existing cache dirs are returned with correct container paths."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "cache" / "documents").mkdir(parents=True)
-        (ev0_home / "cache" / "audio").mkdir(parents=True)
-        (ev0_home / "cache" / "videos").mkdir(parents=True)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "cache" / "documents").mkdir(parents=True)
+        (threev0_home / "cache" / "audio").mkdir(parents=True)
+        (threev0_home / "cache" / "videos").mkdir(parents=True)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         mounts = get_cache_directory_mounts()
         paths = {m["container_path"] for m in mounts}
@@ -333,36 +333,36 @@ class TestCacheDirectoryMounts:
         ``has content`` for ``get_ev0_dir``'s populated-legacy check
         (see #27602 — empty legacy stubs are no longer honoured).
         """
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
         # Use legacy dir name with content — get_ev0_dir prefers
         # populated old over new.
-        legacy_doc = ev0_home / "document_cache"
-        legacy_img = ev0_home / "image_cache"
+        legacy_doc = threev0_home / "document_cache"
+        legacy_img = threev0_home / "image_cache"
         legacy_doc.mkdir()
         legacy_img.mkdir()
         (legacy_doc / "cached.txt").write_bytes(b"x")
         (legacy_img / "cached.png").write_bytes(b"x")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         mounts = get_cache_directory_mounts()
         host_paths = {m["host_path"] for m in mounts}
-        assert str(ev0_home / "document_cache") in host_paths
-        assert str(ev0_home / "image_cache") in host_paths
+        assert str(threev0_home / "document_cache") in host_paths
+        assert str(threev0_home / "image_cache") in host_paths
         # Container paths always use the new layout
         container_paths = {m["container_path"] for m in mounts}
         assert "/root/.3V0/cache/documents" in container_paths
         assert "/root/.3V0/cache/images" in container_paths
 
-    def test_empty_ev0_home(self, tmp_path, monkeypatch):
+    def test_empty_threev0_home(self, tmp_path, monkeypatch):
         """Empty home → every staging dir is created and mounted (#76577).
 
         Docker snapshots the mount list at container creation; skipping
         not-yet-existing dirs meant the first attachment/clipboard file after
         container start dangled forever. All _CACHE_DIRS entries mount."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         mounts = get_cache_directory_mounts()
         container_paths = {m["container_path"] for m in mounts}
@@ -379,14 +379,14 @@ class TestCacheDirectoryMounts:
         under ``cache/``. Without this entry vision_analyze on a desktop upload
         fails because the file is not reachable inside the sandbox.
         """
-        ev0_home = tmp_path / ".3V0"
-        (ev0_home / "images").mkdir(parents=True)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        (threev0_home / "images").mkdir(parents=True)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         mounts = get_cache_directory_mounts()
         by_container = {m["container_path"]: m["host_path"] for m in mounts}
         assert "/root/.3V0/images" in by_container
-        assert by_container["/root/.3V0/images"] == str(ev0_home / "images")
+        assert by_container["/root/.3V0/images"] == str(threev0_home / "images")
 
     def test_images_upload_file_maps_into_container(self, tmp_path, monkeypatch):
         """A concrete upload under ``images/`` maps to its container path.
@@ -394,11 +394,11 @@ class TestCacheDirectoryMounts:
         This is the reverse mapping vision uses to translate a container-visible
         path back to the host mount; it must recognise the ``images/`` dir.
         """
-        ev0_home = tmp_path / ".3V0"
-        (ev0_home / "images").mkdir(parents=True)
-        upload = ev0_home / "images" / "upload_20260722_181019_1.png"
+        threev0_home = tmp_path / ".3V0"
+        (threev0_home / "images").mkdir(parents=True)
+        upload = threev0_home / "images" / "upload_20260722_181019_1.png"
         upload.write_bytes(bytes.fromhex("89504e470d0a1a0a"))
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         assert (
             map_cache_path_to_container(str(upload))
@@ -410,11 +410,11 @@ class TestMapCachePathToContainer:
     """Tests for map_cache_path_to_container() — the backend-agnostic mapper."""
 
     def test_maps_path_under_cache_dir(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / ".3V0"
-        img_dir = ev0_home / "cache" / "images"
+        threev0_home = tmp_path / ".3V0"
+        img_dir = threev0_home / "cache" / "images"
         img_dir.mkdir(parents=True)
         host_path = str(img_dir / "generated.png")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         assert (
             map_cache_path_to_container(host_path)
@@ -427,13 +427,13 @@ class TestMapCachePathToContainer:
         Docker snapshots mounts at container creation, so a dir that appears
         later would dangle for the container's whole life. The map must
         therefore succeed (and the dir exist) even before first use."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
-        mapped = map_cache_path_to_container(str(ev0_home / "cache" / "images" / "x.png"))
+        mapped = map_cache_path_to_container(str(threev0_home / "cache" / "images" / "x.png"))
         assert mapped == "/root/.3V0/cache/images/x.png"
-        assert (ev0_home / "cache" / "images").is_dir()
+        assert (threev0_home / "cache" / "images").is_dir()
 
 
 class TestToAgentVisiblePathPerBackend:
@@ -442,10 +442,10 @@ class TestToAgentVisiblePathPerBackend:
     stays correct (local; singularity auto-binds the host home)."""
 
     def _staged(self, tmp_path, monkeypatch):
-        ev0_home = tmp_path / ".3V0"
-        (ev0_home / "attachments").mkdir(parents=True)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
-        return str(ev0_home / "attachments" / "drop.zip")
+        threev0_home = tmp_path / ".3V0"
+        (threev0_home / "attachments").mkdir(parents=True)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
+        return str(threev0_home / "attachments" / "drop.zip")
 
     def test_docker_maps_to_root_ev0(self, tmp_path, monkeypatch):
         staged = self._staged(tmp_path, monkeypatch)
@@ -478,12 +478,12 @@ class TestIterCacheFiles:
 
     def test_enumerates_files(self, tmp_path, monkeypatch):
         """Regular files in cache dirs are returned."""
-        ev0_home = tmp_path / ".3V0"
-        doc_dir = ev0_home / "cache" / "documents"
+        threev0_home = tmp_path / ".3V0"
+        doc_dir = threev0_home / "cache" / "documents"
         doc_dir.mkdir(parents=True)
         (doc_dir / "upload.zip").write_bytes(b"PK\x03\x04")
         (doc_dir / "report.pdf").write_bytes(b"%PDF-1.4")
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         entries = iter_cache_files()
         names = {Path(e["container_path"]).name for e in entries}
@@ -492,13 +492,13 @@ class TestIterCacheFiles:
 
     def test_skips_symlinks(self, tmp_path, monkeypatch):
         """Symlinks inside cache dirs are skipped."""
-        ev0_home = tmp_path / ".3V0"
-        doc_dir = ev0_home / "cache" / "documents"
+        threev0_home = tmp_path / ".3V0"
+        doc_dir = threev0_home / "cache" / "documents"
         doc_dir.mkdir(parents=True)
         real_file = doc_dir / "real.txt"
         real_file.write_text("content")
         (doc_dir / "link.txt").symlink_to(real_file)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         entries = iter_cache_files()
         names = [Path(e["container_path"]).name for e in entries]
@@ -508,9 +508,9 @@ class TestIterCacheFiles:
 
     def test_empty_cache(self, tmp_path, monkeypatch):
         """No cache dirs → empty list."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         assert iter_cache_files() == []
 
@@ -602,7 +602,7 @@ class TestMasterCredentialStoresAreNeverMountable:
         import tools.credential_files as cf
 
         home = self._home(tmp_path)
-        with patch.dict(os.environ, {"EV0_HOME": str(home)}), \
+        with patch.dict(os.environ, {"EV0_HOME": str(home)}),\
                 patch.object(cf, "get_read_block_error", None):
             with caplog.at_level("ERROR", logger="tools.credential_files"):
                 assert cf.register_credential_file("google_token.json") is False
@@ -618,7 +618,7 @@ class TestMasterCredentialStoresAreNeverMountable:
         def _boom(path):
             raise RuntimeError("guard exploded")
 
-        with patch.dict(os.environ, {"EV0_HOME": str(home)}), \
+        with patch.dict(os.environ, {"EV0_HOME": str(home)}),\
                 patch.object(cf, "get_read_block_error", _boom):
             with caplog.at_level("ERROR", logger="tools.credential_files"):
                 assert cf.register_credential_file("google_token.json") is False

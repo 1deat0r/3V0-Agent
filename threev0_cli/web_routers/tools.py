@@ -39,7 +39,7 @@ _probe_terminal_backend = late("_probe_terminal_backend")
 _profile_cli_args = late("_profile_cli_args")
 _profile_scope = late("_profile_scope")
 _resolve_toolset_model_plugin = late("_resolve_toolset_model_plugin")
-_spawn_ev0_action = late("_spawn_ev0_action")
+_spawn_threev0_action = late("_spawn_threev0_action")
 _toolset_model_catalog = late("_toolset_model_catalog")
 load_config = late("load_config")
 save_config = late("save_config")
@@ -207,7 +207,7 @@ async def toggle_toolset(name: str, body: ToolsetToggle, profile: Optional[str] 
         try:
             pending_key = await asyncio.to_thread(_pending_install_key)
             if pending_key:
-                _spawn_ev0_action(
+                _spawn_threev0_action(
                     _profile_cli_args(body.profile or profile)
                     + ["tools", "post-setup", pending_key],
                     "tools-post-setup",
@@ -694,7 +694,7 @@ async def run_toolset_post_setup(
         )
 
     try:
-        proc = _spawn_ev0_action(
+        proc = _spawn_threev0_action(
             _profile_cli_args(body.profile or profile)
             + ["tools", "post-setup", body.key],
             "tools-post-setup",
@@ -811,7 +811,7 @@ async def grant_computer_use_permissions(profile: Optional[str] = None):
             detail="Computer Use permission grants are a macOS concept.",
         )
     try:
-        proc = _spawn_ev0_action(
+        proc = _spawn_threev0_action(
             _profile_cli_args(profile)
             + ["computer-use", "permissions", "grant"],
             "computer-use-grant",

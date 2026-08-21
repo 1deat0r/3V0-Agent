@@ -442,7 +442,7 @@ async def test_safe_sync_slash_commands_only_mutates_diffs():
 @pytest.mark.asyncio
 async def test_post_connect_initialization_retries_fingerprint_after_timeout(tmp_path, monkeypatch):
     adapter = DiscordAdapter(PlatformConfig(enabled=True, token="test-token"))
-    monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: tmp_path)
+    monkeypatch.setattr("threev0_constants.get_threev0_home", lambda: tmp_path)
 
     class _DesiredCommand:
         def to_dict(self, tree):

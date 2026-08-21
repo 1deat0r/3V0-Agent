@@ -48,7 +48,7 @@ def test_root_start_works(
     assert "OK" in r.stdout
 
 
-def test_user_pinned_to_ev0_uid_works(
+def test_user_pinned_to_threev0_uid_works(
     built_image: str,
 ) -> None:
     """docker run --user 10000:10000 (the 3v0 UID) must be allowed.

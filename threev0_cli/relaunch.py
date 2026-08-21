@@ -77,7 +77,7 @@ def _extract_inherited_flags(argv: Sequence[str]) -> list[str]:
     return flags
 
 
-def resolve_ev0_bin() -> Optional[str]:
+def resolve_threev0_bin() -> Optional[str]:
     """Find the 3v0 entry point.
 
     Priority:
@@ -136,7 +136,7 @@ def build_relaunch_argv(
         original_argv: The original argv to scan for flags (defaults to
             ``sys.argv[1:]``).
     """
-    bin_path = resolve_ev0_bin()
+    bin_path = resolve_threev0_bin()
 
     if bin_path:
         argv = [bin_path]

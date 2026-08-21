@@ -525,9 +525,9 @@ class TestRunJobSessionPersistence:
         fake_db = MagicMock()
         fake_db.get_compression_tip.side_effect = lambda session_id: session_id
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch(
@@ -583,9 +583,9 @@ class TestRunJobSessionPersistence:
         mock_agent = MagicMock()
         mock_agent.run_conversation.return_value = {"final_response": "ok"}
         base = [
-            patch("cron.scheduler._ev0_home", tmp_path),
+            patch("cron.scheduler._threev0_home", tmp_path),
             patch("cron.scheduler._resolve_origin", return_value=None),
-            patch("threev0_cli.env_loader.load_ev0_dotenv"),
+            patch("threev0_cli.env_loader.load_threev0_dotenv"),
             patch("threev0_cli.env_loader.reset_secret_source_cache"),
             patch("threev0_state.SessionDB", return_value=fake_db),
             patch(
@@ -689,7 +689,7 @@ class TestRunJobSessionPersistence:
 
         fake_db = MagicMock()
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler.get_due_jobs", return_value=[job]), \
              patch("cron.scheduler.claim_job_for_fire", return_value=True), \
              patch("cron.scheduler.mark_job_run") as mock_mark, \
@@ -732,7 +732,7 @@ class TestRunJobSessionPersistence:
                 seen["thread_id"] = get_session_env("EV0_CRON_AUTO_DELIVER_THREAD_ID") or None
                 return {"final_response": "ok"}
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._preflight_job_config", return_value=None), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch(
@@ -792,7 +792,7 @@ class TestRunJobSessionPersistence:
                 seen["thread_id"] = get_session_env("EV0_CRON_AUTO_DELIVER_THREAD_ID") or None
                 return {"final_response": "ok"}
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._preflight_job_config", return_value=None), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch(
@@ -853,7 +853,7 @@ class TestRunJobSessionPersistence:
         monotonic_ticks = itertools.count(step=61.0)
         monkeypatch.setenv("EV0_CRON_TIMEOUT", timeout_value)
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._preflight_job_config", return_value=None), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch(
@@ -901,10 +901,10 @@ class TestRunJobSessionPersistence:
             call_order.append("load")
             return []
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
              patch("threev0_cli.env_loader.reset_secret_source_cache", _record_reset), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv", _record_load), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv", _record_load), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch(
                  "threev0_cli.runtime_provider.resolve_runtime_provider",
@@ -964,7 +964,7 @@ class TestRunJobSessionPersistence:
                 )
                 return {"final_response": "ok"}
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._preflight_job_config", return_value=None), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch(
@@ -1021,9 +1021,9 @@ class TestRunJobConfigLogging:
         # resolution and MCP discovery, both of which can spawn subprocesses
         # / hit the network and have caused this test to time out on CI
         # (>30s wall clock) under load. See PR #33661 follow-up.
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_cli.runtime_provider.resolve_runtime_provider",
                    return_value={"provider": "openrouter", "api_key": "x",
@@ -1060,9 +1060,9 @@ class TestRunJobConfigEnvVarExpansion:
         job = {"id": "env-job", "name": "env test", "prompt": "hi"}
         fake_db = MagicMock()
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch("threev0_cli.runtime_provider.resolve_runtime_provider",
@@ -1124,9 +1124,9 @@ class TestRunJobConfigEnvVarExpansion:
             assert kwargs["target_model"] == "grok-4.5"
             return {**self._RUNTIME, "provider": "xai", "api_mode": "chat_completions"}
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch("threev0_cli.runtime_provider.resolve_runtime_provider",
@@ -1180,9 +1180,9 @@ class TestRunJobConfigEnvVarExpansion:
             assert kwargs["target_model"] == "z-ai/glm-5.2"
             return {**self._RUNTIME, "provider": "openrouter"}
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch("threev0_cli.runtime_provider.resolve_runtime_provider",
@@ -1210,9 +1210,9 @@ class TestRunJobConfigEnvVarExpansion:
         job = {"id": "unset-job", "name": "unset var test", "prompt": "hi"}
         fake_db = MagicMock()
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch("threev0_cli.runtime_provider.resolve_runtime_provider",
@@ -1255,9 +1255,9 @@ class TestRunJobModelResolution:
         job = {"id": "null-model-job", "name": "null model", "prompt": "hi", "model": None}
         fake_db = MagicMock()
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch("threev0_cli.runtime_provider.resolve_runtime_provider",
@@ -1281,9 +1281,9 @@ class TestRunJobModelResolution:
         job = {"id": "no-model-job", "name": "no model anywhere", "prompt": "hi", "model": None}
         fake_db = MagicMock()
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch("threev0_cli.runtime_provider.resolve_runtime_provider",
@@ -1313,9 +1313,9 @@ class TestRunJobModelResolution:
         job = {"id": "alias-job", "name": "alias", "prompt": "hi", "model": None}
         fake_db = MagicMock()
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch("threev0_cli.runtime_provider.resolve_runtime_provider",
@@ -1338,9 +1338,9 @@ class TestRunJobModelResolution:
         job = {"id": "corrupt-job", "name": "corrupt", "prompt": "hi", "model": "explicit-model"}
         fake_db = MagicMock()
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch("threev0_cli.runtime_provider.resolve_runtime_provider",
@@ -1381,9 +1381,9 @@ class TestRunJobSkillBacked:
             assert "NOTION_API_KEY" in get_all_passthrough()
             return {"final_response": "ok"}
 
-        with patch("cron.scheduler._ev0_home", tmp_path), \
+        with patch("cron.scheduler._threev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.load_threev0_dotenv"), \
              patch("threev0_cli.env_loader.reset_secret_source_cache"), \
              patch("threev0_state.SessionDB", return_value=fake_db), \
              patch(

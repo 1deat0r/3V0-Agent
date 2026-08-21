@@ -450,9 +450,9 @@ class TestSandboxWritesUtf8:
         sandbox does, and it must succeed even when the stub contains
         em-dashes (which it does — check the transport-header docstring).
         """
-        from tools.code_execution_tool import generate_ev0_tools_module
+        from tools.code_execution_tool import generate_threev0_tools_module
         import tempfile, ast
-        stub = generate_ev0_tools_module(
+        stub = generate_threev0_tools_module(
             ["terminal", "read_file", "write_file"], transport="uds"
         )
         # Sanity: stub actually contains a non-ASCII character, otherwise
@@ -487,10 +487,10 @@ class TestSandboxWritesUtf8:
         test ever starts failing (i.e. default write succeeds), it means
         Python's default encoding has changed and the explicit UTF-8
         requirement may be obsolete — reconsider the fix."""
-        from tools.code_execution_tool import generate_ev0_tools_module
+        from tools.code_execution_tool import generate_threev0_tools_module
         import tempfile
 
-        stub = generate_ev0_tools_module(["terminal"], transport="uds")
+        stub = generate_threev0_tools_module(["terminal"], transport="uds")
         # Find a non-ASCII character we can use to prove the corruption.
         non_ascii = [c for c in stub if ord(c) > 127]
         if not non_ascii:

@@ -23,8 +23,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from agent.secret_scope import get_secret
-from threev0_constants import get_ev0_home
-from threev0_cli.profiles import _get_default_ev0_home
+from threev0_constants import get_threev0_home
+from threev0_cli.profiles import _get_default_threev0_home
 from plugins.plugin_utils import SingletonSlot
 from typing import Any, TYPE_CHECKING
 
@@ -127,12 +127,12 @@ def resolve_config_path() -> Path:
 
     Returns the global path if none exist (for first-time setup writes).
     """
-    local_path = get_ev0_home() / "honcho.json"
+    local_path = get_threev0_home() / "honcho.json"
     if local_path.exists():
         return local_path
 
     # Default profile's config — host blocks accumulate here via setup/clone
-    default_path = _get_default_ev0_home() / "honcho.json"
+    default_path = _get_default_threev0_home() / "honcho.json"
     if default_path != local_path and default_path.exists():
         return default_path
 
@@ -488,7 +488,7 @@ class HonchoClientConfig:
     # ContextVar that background threads cannot see, so re-resolution from a
     # daemon thread silently lands on the DEFAULT profile (#69123, #74065).
     config_path: Path | None = None
-    ev0_home: Path | None = None
+    threev0_home: Path | None = None
 
     def bound_config_path(self) -> Path:
         """Return the config path this config was resolved from.
@@ -531,7 +531,7 @@ class HonchoClientConfig:
             ai_peer=resolved_host,
             enabled=bool(api_key or base_url),
             config_path=_resolved_path,
-            ev0_home=get_ev0_home(),
+            threev0_home=get_threev0_home(),
         )
 
     @classmethod
@@ -815,7 +815,7 @@ class HonchoClientConfig:
             raw=raw,
             explicitly_configured=_explicitly_configured,
             config_path=path,
-            ev0_home=get_ev0_home(),
+            threev0_home=get_threev0_home(),
         )
 
     @staticmethod
@@ -1043,7 +1043,7 @@ def _client_cache_key(config: HonchoClientConfig | None) -> tuple:
             config.base_url or "",
             config.environment,
             str(config.config_path) if config.config_path is not None else "",
-            str(config.ev0_home) if config.ev0_home is not None else "",
+            str(config.threev0_home) if config.threev0_home is not None else "",
             _resolve_timeout_from_sources(config),
             _credential_fingerprint(config),
         )
@@ -1282,8 +1282,8 @@ def get_honcho_client(config: HonchoClientConfig | None = None) -> Honcho:
         if not resolved_base_url or resolved_timeout is None:
             try:
                 from threev0_cli.config import load_config
-                ev0_cfg = load_config()
-                honcho_cfg = ev0_cfg.get("honcho", {})
+                threev0_cfg = load_config()
+                honcho_cfg = threev0_cfg.get("honcho", {})
                 if isinstance(honcho_cfg, dict):
                     if not resolved_base_url:
                         resolved_base_url = _sanitize_url(honcho_cfg.get("base_url", "").strip() or None)

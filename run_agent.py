@@ -63,7 +63,7 @@ from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 
 def _launch_cwd_for_session(source: str) -> Optional[str]:
@@ -118,15 +118,15 @@ from agent.iteration_budget import IterationBudget
 from agent.interrupt_compat import request_hard_interrupt
 
 
-from threev0_cli.env_loader import load_ev0_dotenv
+from threev0_cli.env_loader import load_threev0_dotenv
 from threev0_cli.timeouts import (
     get_provider_request_timeout,
     get_provider_stale_timeout,
 )
 
-_ev0_home = get_ev0_home()
+_threev0_home = get_threev0_home()
 _project_env = Path(__file__).parent / '.env'
-_loaded_env_paths = load_ev0_dotenv(ev0_home=_ev0_home, project_env=_project_env)
+_loaded_env_paths = load_threev0_dotenv(threev0_home=_threev0_home, project_env=_project_env)
 if _loaded_env_paths:
     for _env_path in _loaded_env_paths:
         logger.info("Loaded environment variables from %s", _env_path)
@@ -6265,9 +6265,9 @@ class AIAgent:
             )
         elif base_url_host_matches(base_url, "x.ai"):
             # Cover both provider=xai and provider=xai-oauth (api.x.ai).
-            from tools.xai_http import ev0_xai_default_headers
+            from tools.xai_http import threev0_xai_default_headers
 
-            self._client_kwargs["default_headers"] = ev0_xai_default_headers()
+            self._client_kwargs["default_headers"] = threev0_xai_default_headers()
         else:
             # No URL-specific headers — check profile.default_headers before clearing.
             _ph_headers = None

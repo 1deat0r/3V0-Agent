@@ -46,13 +46,13 @@ def catalog_dir(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _isolate_ev0_home(tmp_path, monkeypatch):
+def _isolate_threev0_home(tmp_path, monkeypatch):
     """Redirect all config I/O to a temp EV0_HOME."""
     hh = tmp_path / "3v0-home"
     hh.mkdir()
     monkeypatch.setenv("EV0_HOME", str(hh))
     monkeypatch.setattr(
-        "threev0_cli.config.get_ev0_home", lambda: hh
+        "threev0_cli.config.get_threev0_home", lambda: hh
     )
     monkeypatch.setattr(
         "threev0_cli.config.get_config_path", lambda: hh / "config.yaml"
@@ -62,7 +62,7 @@ def _isolate_ev0_home(tmp_path, monkeypatch):
     )
     # mcp_catalog grabs get_ev0_home() lazily through threev0_constants
     monkeypatch.setattr(
-        "threev0_constants.get_ev0_home", lambda: hh
+        "threev0_constants.get_threev0_home", lambda: hh
     )
     return hh
 

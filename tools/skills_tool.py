@@ -71,7 +71,7 @@ import logging
 import time
 import threading
 
-from threev0_constants import get_ev0_home, display_ev0_home
+from threev0_constants import get_threev0_home, display_threev0_home
 import os
 import re
 from enum import Enum
@@ -140,7 +140,7 @@ def _skills_scan_signature(dirs_to_scan, disabled) -> tuple:
 # All skills live in ~/.3V0/skills/ (seeded from bundled skills/ on install).
 # This is the single source of truth -- agent edits, hub installs, and bundled
 # skills all coexist here without polluting the git repo.
-EV0_HOME = get_ev0_home()
+EV0_HOME = get_threev0_home()
 SKILLS_DIR = EV0_HOME / "skills"
 _SKILLS_DIR_AT_IMPORT = SKILLS_DIR
 
@@ -156,7 +156,7 @@ def _skills_dir() -> Path:
     configured = Path(SKILLS_DIR)
     if configured != _SKILLS_DIR_AT_IMPORT:
         return configured
-    return get_ev0_home() / "skills"
+    return get_threev0_home() / "skills"
 
 
 # Anthropic-recommended limits for progressive disclosure efficiency
@@ -206,7 +206,7 @@ def _skill_lookup_path_error(name: str) -> Optional[str]:
 
 def load_env() -> Dict[str, str]:
     """Load profile-scoped environment variables from EV0_HOME/.env."""
-    env_path = get_ev0_home() / ".env"
+    env_path = get_threev0_home() / ".env"
     env_vars: Dict[str, str] = {}
     if not env_path.exists():
         return env_vars
@@ -531,7 +531,7 @@ def _gateway_setup_hint() -> str:
 
         return GATEWAY_SECRET_CAPTURE_UNSUPPORTED_MESSAGE
     except Exception:
-        return f"Secure secret entry is not available. Load this skill in the local CLI to be prompted, or add the key to {display_ev0_home()}/.env manually."
+        return f"Secure secret entry is not available. Load this skill in the local CLI to be prompted, or add the key to {display_threev0_home()}/.env manually."
 
 
 def _build_setup_note(
@@ -1585,14 +1585,14 @@ def skill_view(
 
         # Read tags/related_skills with backward compat:
         # Check metadata.3v0.* first (agentskills.io convention), fall back to top-level
-        ev0_meta = {}
+        threev0_meta = {}
         metadata = frontmatter.get("metadata")
         if isinstance(metadata, dict):
-            ev0_meta = metadata.get("3v0", {}) or {}
+            threev0_meta = metadata.get("3v0", {}) or {}
 
-        tags = _parse_tags(ev0_meta.get("tags") or frontmatter.get("tags", ""))
+        tags = _parse_tags(threev0_meta.get("tags") or frontmatter.get("tags", ""))
         related_skills = _parse_tags(
-            ev0_meta.get("related_skills") or frontmatter.get("related_skills", "")
+            threev0_meta.get("related_skills") or frontmatter.get("related_skills", "")
         )
 
         # Build linked files structure for clear discovery
@@ -1999,8 +1999,8 @@ def _check_skill_view_dedup(task_id, name, file_path) -> str | None:
             rec_name, rec_fp = key
             if rec_fp != (file_path or ""):
                 continue
-            if rec_name != str(name) and not str(name).endswith("/" + rec_name) \
-                    and not rec_name.endswith("/" + str(name)) \
+            if rec_name != str(name) and not str(name).endswith("/" + rec_name)\
+                    and not rec_name.endswith("/" + str(name))\
                     and str(name).split(":")[-1] != rec_name:
                 continue
             try:

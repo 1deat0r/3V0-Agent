@@ -24,23 +24,23 @@ def test_unsupported_allocator_is_noop_without_gc(monkeypatch):
 
 
 def test_config_kill_switch_overrides_force_from_config_file(monkeypatch, tmp_path):
-    from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+    from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir()
-    (ev0_home / "config.yaml").write_text(
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir()
+    (threev0_home / "config.yaml").write_text(
         "context:\n  memory_trim:\n    enabled: false\n",
         encoding="utf-8",
     )
     trim = Mock(return_value=1)
     monkeypatch.setattr(mem_trim, "_malloc_trim", trim)
-    token = set_ev0_home_override(ev0_home)
+    token = set_threev0_home_override(threev0_home)
 
     try:
         assert mem_trim.trim_memory(force=True) is False
         trim.assert_not_called()
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
 
 def test_default_config_declares_memory_trim_controls():

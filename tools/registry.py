@@ -25,7 +25,7 @@ import time
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set
 
-from threev0_constants import ev0_home_key
+from threev0_constants import threev0_home_key
 
 logger = logging.getLogger(__name__)
 
@@ -167,9 +167,9 @@ def _discovery_cache_path() -> Optional[Path]:
     try:
         # Deferred import keeps tools/registry.py a no-deps leaf at module
         # import time (threev0_constants itself is stdlib-only, so no cycle).
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        return Path(get_ev0_home()) / "cache" / "tool_discovery_cache.json"
+        return Path(get_threev0_home()) / "cache" / "tool_discovery_cache.json"
     except Exception:
         return None
 
@@ -309,9 +309,9 @@ def check_fn_cache_scope() -> Optional[str]:
 
         if not is_multiplex_active():
             return None
-        from threev0_constants import get_ev0_home_override
+        from threev0_constants import get_threev0_home_override
 
-        override = get_ev0_home_override()
+        override = get_threev0_home_override()
         if not override:
             return CHECK_FN_CACHE_BYPASS
         return str(Path(override).expanduser().resolve())
@@ -457,7 +457,7 @@ class ToolRegistry:
     @staticmethod
     def current_scope_key() -> str:
         """Return the active profile's canonical registry scope."""
-        return ev0_home_key()
+        return threev0_home_key()
 
     def _merged_tools(self, scope: Optional[str] = None) -> Dict[str, ToolEntry]:
         """Return global tools overlaid with one profile's plugin tools."""

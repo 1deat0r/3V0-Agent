@@ -20,7 +20,7 @@ import tui_gateway.server as server
 
 
 @pytest.fixture
-def ev0_root(tmp_path, monkeypatch):
+def threev0_root(tmp_path, monkeypatch):
     """A temp EV0_HOME root with two named profiles: 'work' and 'other'.
 
     Pointing EV0_HOME at a dir outside ~/.3V0 makes it the profile ROOT
@@ -32,9 +32,9 @@ def ev0_root(tmp_path, monkeypatch):
     (root / "profiles" / "other").mkdir(parents=True)
     monkeypatch.setenv("EV0_HOME", str(root))
     # Make sure no stale process-wide home override leaks in from another test.
-    from threev0_constants import get_ev0_home_override
+    from threev0_constants import get_threev0_home_override
 
-    assert get_ev0_home_override() is None
+    assert get_threev0_home_override() is None
     return root
 
 
@@ -58,8 +58,8 @@ def _read_yaml(path: Path) -> dict:
         return yaml.safe_load(f) or {}
 
 
-def test_add_lands_in_named_profile_only(ev0_root):
-    root = ev0_root
+def test_add_lands_in_named_profile_only(threev0_root):
+    root = threev0_root
     resp = _call(
         "mcp.servers.add",
         {
@@ -84,7 +84,7 @@ def test_add_lands_in_named_profile_only(ev0_root):
     assert "weather" not in other_cfg.get("mcp_servers", {})
 
 
-def test_list_reflects_the_scoped_profile(ev0_root):
+def test_list_reflects_the_scoped_profile(threev0_root):
     _result(
         _call(
             "mcp.servers.add",
@@ -110,8 +110,8 @@ def test_list_reflects_the_scoped_profile(ev0_root):
     assert work_server["command"] == "svc-a-bin"
 
 
-def test_set_api_key_writes_env_and_header_to_right_profile(ev0_root):
-    root = ev0_root
+def test_set_api_key_writes_env_and_header_to_right_profile(threev0_root):
+    root = threev0_root
     _result(
         _call(
             "mcp.servers.add",
@@ -147,8 +147,8 @@ def test_set_api_key_writes_env_and_header_to_right_profile(ev0_root):
     assert "sk-secret-123" not in str(work_cfg)
 
 
-def test_set_api_key_stdio_references_env_block(ev0_root):
-    root = ev0_root
+def test_set_api_key_stdio_references_env_block(threev0_root):
+    root = threev0_root
     _result(
         _call(
             "mcp.servers.add",
@@ -175,8 +175,8 @@ def test_set_api_key_stdio_references_env_block(ev0_root):
     assert "LOCALTOOL_TOKEN=tok-xyz" in work_env
 
 
-def test_remove_scoped_to_profile(ev0_root):
-    root = ev0_root
+def test_remove_scoped_to_profile(threev0_root):
+    root = threev0_root
     _result(
         _call(
             "mcp.servers.add",
@@ -199,7 +199,7 @@ def test_remove_scoped_to_profile(ev0_root):
     assert "temp" in _read_yaml(root / "profiles" / "other" / "config.yaml").get("mcp_servers", {})
 
 
-def test_add_duplicate_and_missing_errors(ev0_root):
+def test_add_duplicate_and_missing_errors(threev0_root):
     _result(
         _call(
             "mcp.servers.add",
@@ -225,14 +225,14 @@ def test_add_duplicate_and_missing_errors(ev0_root):
     assert bad_profile["error"]["code"] == 4064
 
 
-def test_add_requires_transport(ev0_root):
+def test_add_requires_transport(threev0_root):
     resp = _call("mcp.servers.add", {"profile": "work", "name": "empty", "config": {}})
     assert "error" in resp
     assert resp["error"]["code"] == 4063
 
 
-def test_default_profile_add_when_profile_omitted(ev0_root):
-    root = ev0_root
+def test_default_profile_add_when_profile_omitted(threev0_root):
+    root = threev0_root
     _result(
         _call(
             "mcp.servers.add",

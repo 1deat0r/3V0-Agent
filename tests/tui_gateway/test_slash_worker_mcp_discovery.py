@@ -95,7 +95,7 @@ def test_profile_local_mcp_tool_is_visible_in_slash_worker(tmp_path):
             pytest.fail("slash worker produced no /tools response within 10 seconds")
         response = json.loads(line)
         assert response["ok"] is True
-        assert "mcp__profileprobe__ev0_61922_profile_probe" in response["output"]
+        assert "mcp__profileprobe__threev0_61922_profile_probe" in response["output"]
     finally:
         proc.terminate()
         try:

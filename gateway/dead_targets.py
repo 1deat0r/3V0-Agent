@@ -31,7 +31,7 @@ import time
 from pathlib import Path
 from typing import Dict, Optional
 
-from threev0_cli.config import get_ev0_home
+from threev0_cli.config import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class DeadTargetRegistry:
         if path is not None:
             self._path = path
         else:
-            self._path = get_ev0_home() / "gateway" / "dead_targets.json"
+            self._path = get_threev0_home() / "gateway" / "dead_targets.json"
         self._load()
 
     # -- persistence -------------------------------------------------------

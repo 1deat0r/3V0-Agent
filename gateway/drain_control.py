@@ -70,7 +70,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from utils import atomic_json_write
 
 _log = logging.getLogger(__name__)
@@ -157,7 +157,7 @@ def current_instantiation_epoch() -> str:
 
 def drain_request_path(home: Optional[Path] = None) -> Path:
     """Absolute path to the drain-request marker, respecting EV0_HOME."""
-    base = home if home is not None else get_ev0_home()
+    base = home if home is not None else get_threev0_home()
     return Path(base) / _DRAIN_REQUEST_FILENAME
 
 

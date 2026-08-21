@@ -14,11 +14,11 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from threev0_cli.config import get_ev0_home
+from threev0_cli.config import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
-_SESSIONS_DIR = get_ev0_home() / "sessions"
+_SESSIONS_DIR = get_threev0_home() / "sessions"
 _SESSIONS_INDEX = _SESSIONS_DIR / "sessions.json"
 
 

@@ -25,7 +25,7 @@ NEW_PAT = "ghp_" + "B" * 36
 
 
 @pytest.fixture
-def ev0_home(monkeypatch, tmp_path):
+def threev0_home(monkeypatch, tmp_path):
     home = tmp_path / "pat_home"
     home.mkdir()
     monkeypatch.setenv("EV0_HOME", str(home))
@@ -42,7 +42,7 @@ def _write_env_raw(home, text):
     invalidate_env_cache()
 
 
-def test_classic_pat_save_via_endpoint_succeeds(ev0_home):
+def test_classic_pat_save_via_endpoint_succeeds(threev0_home):
     """Saving a ghp_* classic PAT through the env endpoint must not 500 —
     GITHUB_TOKEN is a REST/Skills-Hub credential, not a Copilot one."""
     resp = client.put(
@@ -59,14 +59,14 @@ def test_classic_pat_save_via_endpoint_succeeds(ev0_home):
 
 
 
-def test_plain_line_save_and_remove_still_work(ev0_home):
+def test_plain_line_save_and_remove_still_work(threev0_home):
     """Sanity: the ordinary KEY= path is unchanged."""
     from threev0_cli.config import load_env, remove_env_value, save_env_value
 
     save_env_value("GITHUB_TOKEN", OLD_PAT)
     assert load_env()["GITHUB_TOKEN"] == OLD_PAT
     save_env_value("GITHUB_TOKEN", NEW_PAT)
-    env_text = ev0_home.joinpath(".env").read_text(encoding="utf-8")
+    env_text = threev0_home.joinpath(".env").read_text(encoding="utf-8")
     assert env_text.count("GITHUB_TOKEN") == 1
     assert remove_env_value("GITHUB_TOKEN") is True
     assert "GITHUB_TOKEN" not in load_env()

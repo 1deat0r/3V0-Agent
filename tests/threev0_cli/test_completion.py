@@ -80,8 +80,8 @@ class TestWalk:
 class TestGenerateBash:
     def test_contains_completion_function_and_register(self):
         out = generate_bash(_make_parser())
-        assert "_ev0_completion()" in out
-        assert "complete -F _ev0_completion 3v0" in out
+        assert "_threev0_completion()" in out
+        assert "complete -F _threev0_completion 3v0" in out
 
 
     def test_valid_bash_syntax(self):
@@ -108,7 +108,7 @@ class TestGenerateZsh:
         out = generate_zsh(_make_parser())
         assert "'(-)'{-h,--help}'[Show help and exit]'" in out
         assert "'(-)'{-V,--version}'[Show version and exit]'" in out
-        assert "'(-)'{-p,--profile}'[Profile name]:profile:_ev0_profiles'" in out
+        assert "'(-)'{-p,--profile}'[Profile name]:profile:_threev0_profiles'" in out
         assert "'(-h --help){-h,--help}[Show help and exit]'" not in out
         assert '"(-h --help)"{-h,--help}"[Show help and exit]"' not in out
 
@@ -149,23 +149,23 @@ class TestProfileCompletion:
     def test_bash_profile_actions_complete_profile_names(self):
         """After '3v0 profile use', complete with profile names."""
         out = generate_bash(_make_parser())
-        # The profile case should have _ev0_profiles for name-taking actions
+        # The profile case should have _threev0_profiles for name-taking actions
         lines = out.split("\n")
         in_profile_case = False
         has_profiles_in_action = False
         for line in lines:
             if "profile)" in line:
                 in_profile_case = True
-            if in_profile_case and "_ev0_profiles" in line:
+            if in_profile_case and "_threev0_profiles" in line:
                 has_profiles_in_action = True
                 break
-        assert has_profiles_in_action, "profile actions should complete with _ev0_profiles"
+        assert has_profiles_in_action, "profile actions should complete with _threev0_profiles"
 
 
     def test_fish_profile_actions_complete_names(self):
         out = generate_fish(_make_parser())
         # Should have profile name completion for actions like use, delete, etc.
-        assert "__ev0_profiles" in out
-        count = out.count("(__ev0_profiles)")
+        assert "__threev0_profiles" in out
+        count = out.count("(__threev0_profiles)")
         # At least the -p flag + the profile action completions
         assert count >= 2, f"Expected >=2 profile completion entries, got {count}"

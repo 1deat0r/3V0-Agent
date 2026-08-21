@@ -25,7 +25,7 @@ from threev0_cli.profile_distribution import (
     _env_template_from_manifest,
     _looks_like_git_url,
     _parse_semver,
-    check_ev0_requires,
+    check_threev0_requires,
     describe_distribution,
     install_distribution,
     plan_install,
@@ -161,10 +161,10 @@ class TestVersionRequires:
     ])
     def test_check_matrix(self, spec, cur, ok):
         if ok:
-            check_ev0_requires(spec, cur)
+            check_threev0_requires(spec, cur)
         else:
             with pytest.raises(DistributionError, match="requires 3V0"):
-                check_ev0_requires(spec, cur)
+                check_threev0_requires(spec, cur)
 
     def test_parse_semver_handles_prerelease(self):
         assert _parse_semver("0.12.0-rc1") == (0, 12, 0)
@@ -248,13 +248,13 @@ class TestInstall:
         assert (plan.target_dir / "skills").is_dir()
         assert (plan.target_dir / "skills" / "demo" / "SKILL.md").exists()
         # NOT-owned paths must NOT be copied from staging
-        assert not (plan.target_dir / "mcp.json").exists(), \
+        assert not (plan.target_dir / "mcp.json").exists(),\
             "mcp.json should NOT be copied (not in distribution_owned)"
         # cron/ is created by _bootstrap_user_dirs, but the staged cron/ content
         # must NOT leak through
         if (plan.target_dir / "cron").exists():
             cron_content = list((plan.target_dir / "cron").iterdir())
-            assert not cron_content, \
+            assert not cron_content,\
                 f"cron/ should be empty (staged content skipped): {cron_content}"
         # distribution.yaml is always written by write_manifest
         assert (plan.target_dir / "distribution.yaml").exists()
@@ -265,7 +265,7 @@ class TestInstall:
         plan = install_distribution(str(staged), name="default_owned")
         for path in DEFAULT_DIST_OWNED:
             full = plan.target_dir / path
-            assert full.exists() or full.is_dir(), \
+            assert full.exists() or full.is_dir(),\
                 f"DEFAULT_DIST_OWNED '{path}' not found in target"
 
     def test_install_omitted_allowlist_copies_everything(self, profile_env):
@@ -279,9 +279,9 @@ class TestInstall:
         (staged / "tools" / "helper.py").write_text("# helper\n")
 
         plan = install_distribution(str(staged), name="legacy_all")
-        assert (plan.target_dir / "extra.txt").read_text() == "bonus\n", \
+        assert (plan.target_dir / "extra.txt").read_text() == "bonus\n",\
             "omitted distribution_owned must keep copying undeclared files"
-        assert (plan.target_dir / "tools" / "helper.py").exists(), \
+        assert (plan.target_dir / "tools" / "helper.py").exists(),\
             "omitted distribution_owned must keep copying undeclared dirs"
 
     def test_install_allowlist_supports_nested_paths(self, profile_env):
@@ -304,9 +304,9 @@ class TestInstall:
         assert (plan.target_dir / "skills" / "research" / "SKILL.md").exists()
         assert (plan.target_dir / "cron" / "digest.json").exists()
         # Sibling paths under the same parents are NOT dragged along
-        assert not (plan.target_dir / "skills" / "demo").exists(), \
+        assert not (plan.target_dir / "skills" / "demo").exists(),\
             "skills/demo is not allowlisted and must not be copied"
-        assert not (plan.target_dir / "cron" / "daily.json").exists(), \
+        assert not (plan.target_dir / "cron" / "daily.json").exists(),\
             "cron/daily.json is not allowlisted and must not be copied"
         # Unrelated top-level entries stay out too
         assert not (plan.target_dir / "mcp.json").exists()
@@ -342,7 +342,7 @@ class TestInstall:
         # 5. Formerly-owned paths (mcp.json, cron/) should NOT be copied on update
         #    Note: mcp.json existed before so it stays (not removed). The guard is
         #    about what gets COPIED, not what's cleaned up.
-        assert not (plan.target_dir / "new_config.toml").exists(), \
+        assert not (plan.target_dir / "new_config.toml").exists(),\
             "new_config.toml should not be copied (not in distribution_owned)"
 
     def test_install_rejects_non_distribution_directory(self, profile_env, tmp_path):
@@ -353,7 +353,7 @@ class TestInstall:
             plan_install(str(bogus), tmp_path / "work", override_name="x")
 
 
-    def test_install_enforces_ev0_requires(self, profile_env, monkeypatch):
+    def test_install_enforces_threev0_requires(self, profile_env, monkeypatch):
         # Pin current 3V0 version to something well below the requirement
         import threev0_cli
         monkeypatch.setattr(threev0_cli, "__version__", "0.1.0", raising=False)
@@ -361,7 +361,7 @@ class TestInstall:
         mf = DistributionManifest(
             name="future",
             version="1.0.0",
-            ev0_requires=">=99.0.0",
+            threev0_requires=">=99.0.0",
         )
         staged = _make_staging_dir(profile_env, "future", manifest=mf)
         with pytest.raises(DistributionError, match="requires 3V0"):
@@ -556,7 +556,7 @@ class TestNestedUserOwnedExcludeNotFiltered:
         assert not (plan.target_dir / "bin").exists(), "top-level bin/ should be filtered"
         # logs/ is created by _bootstrap_user_dirs even on a clean profile,
         # so check that the staged file did NOT land there.
-        assert not (plan.target_dir / "logs" / "shipped.log").exists(), \
+        assert not (plan.target_dir / "logs" / "shipped.log").exists(),\
             "staged logs/ content should not leak into target"
 
     def test_both_nested_and_top_level_coexist(self, profile_env):

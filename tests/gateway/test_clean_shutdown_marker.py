@@ -61,7 +61,7 @@ class TestCleanShutdownMarker:
 
     def test_marker_written_on_graceful_stop(self, tmp_path, monkeypatch):
         """stop() should write .clean_shutdown marker."""
-        monkeypatch.setattr("gateway.run._ev0_home", tmp_path)
+        monkeypatch.setattr("gateway.run._threev0_home", tmp_path)
         marker = tmp_path / ".clean_shutdown"
         assert not marker.exists()
 
@@ -104,7 +104,7 @@ class TestCleanShutdownMarker:
 
     def test_no_marker_triggers_suspension(self, tmp_path, monkeypatch):
         """Without .clean_shutdown marker (crash), suspension should fire."""
-        monkeypatch.setattr("gateway.run._ev0_home", tmp_path)
+        monkeypatch.setattr("gateway.run._threev0_home", tmp_path)
 
         marker = tmp_path / ".clean_shutdown"
         assert not marker.exists()

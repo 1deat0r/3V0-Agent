@@ -28,7 +28,7 @@ import logging
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from typing import Dict, Any, List, Optional, Tuple
 
 from utils import atomic_write_text
@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 # happened after the first import.
 def get_memory_dir() -> Path:
     """Return the profile-scoped memories directory."""
-    return get_ev0_home() / "memories"
+    return get_threev0_home() / "memories"
 
 # Stable header prefixes for the system-prompt memory blocks rendered by
 # MemoryStore._render_block. Exported so compression's prompt-retention check

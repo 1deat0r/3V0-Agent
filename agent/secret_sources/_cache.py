@@ -82,9 +82,9 @@ def resolve_cache_home(home_path: Optional[Path] = None) -> Path:
     (and tests that don't thread a home through) working.
     """
     if home_path is None:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        home_path = get_ev0_home()
+        home_path = get_threev0_home()
     return home_path
 
 

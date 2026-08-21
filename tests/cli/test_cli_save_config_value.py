@@ -14,9 +14,9 @@ class TestSaveConfigValueAtomic:
     @pytest.fixture
     def config_env(self, tmp_path, monkeypatch):
         """Isolated config environment with a writable config.yaml."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        config_path = ev0_home / "config.yaml"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        config_path = threev0_home / "config.yaml"
         config_path.write_text(yaml.dump({
             "model": {"default": "test-model", "provider": "openrouter"},
             "display": {"skin": "default"},
@@ -24,8 +24,8 @@ class TestSaveConfigValueAtomic:
         # save_config_value resolves the target live via get_ev0_home(), so
         # point EV0_HOME at the temp dir (the _ev0_home import-time
         # constant is no longer consulted).
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
-        monkeypatch.setattr("cli._ev0_home", ev0_home)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
+        monkeypatch.setattr("cli._threev0_home", threev0_home)
         return config_path
 
     def test_calls_roundtrip_yaml_update(self, config_env, monkeypatch):
@@ -90,15 +90,15 @@ class TestSaveConfigValueTargetsUserConfig:
 
     def test_creates_user_config_when_absent(self, tmp_path, monkeypatch):
         # Fresh EV0_HOME with NO config.yaml (managed/desktop first launch).
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         from cli import save_config_value
 
         assert save_config_value("wake_word.enabled", True) is True
 
-        config_path = ev0_home / "config.yaml"
+        config_path = threev0_home / "config.yaml"
         assert config_path.exists(), "user config.yaml must be created, not skipped"
         result = yaml.safe_load(config_path.read_text())
         assert result["wake_word"]["enabled"] is True
@@ -111,9 +111,9 @@ class TestSaveConfigValueTargetsUserConfig:
         repo_cli_config = Path(cli_module.__file__).parent / "cli-config.yaml"
         before = repo_cli_config.read_text() if repo_cli_config.exists() else None
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
         from cli import save_config_value
 
@@ -123,5 +123,5 @@ class TestSaveConfigValueTargetsUserConfig:
         after = repo_cli_config.read_text() if repo_cli_config.exists() else None
         assert after == before
         # …and the value landed in the user config.
-        result = yaml.safe_load((ev0_home / "config.yaml").read_text())
+        result = yaml.safe_load((threev0_home / "config.yaml").read_text())
         assert result["wake_word"]["enabled"] is True

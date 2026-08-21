@@ -23,11 +23,11 @@ def _load_script_module():
     return module
 
 
-def _run_migration(ev0_home: Path, **env_overrides: str) -> subprocess.CompletedProcess[str]:
+def _run_migration(threev0_home: Path, **env_overrides: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.update(
         {
-            "EV0_HOME": str(ev0_home),
+            "EV0_HOME": str(threev0_home),
             "EV0_SKIP_CHMOD": "1",
             "PYTHONPATH": str(REPO_ROOT),
         }

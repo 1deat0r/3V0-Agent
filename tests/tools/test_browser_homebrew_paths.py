@@ -58,14 +58,14 @@ class TestDiscoverHomebrewNodeDirs:
 
     def test_excludes_plain_node(self):
         """'node' (unversioned) should be excluded — covered by /opt/homebrew/bin."""
-        with patch("os.path.isdir", return_value=True), \
+        with patch("os.path.isdir", return_value=True),\
              patch("os.listdir", return_value=["node"]):
             result = _discover_homebrew_node_dirs()
         assert result == ()
 
     def test_handles_oserror_gracefully(self):
         """Should return empty list if listdir raises OSError."""
-        with patch("os.path.isdir", return_value=True), \
+        with patch("os.path.isdir", return_value=True),\
              patch("os.listdir", side_effect=OSError("Permission denied")):
             assert _discover_homebrew_node_dirs() == ()
 
@@ -75,7 +75,7 @@ class TestFindAgentBrowser:
 
     def test_finds_in_current_path(self):
         """Should return result from shutil.which if available on current PATH."""
-        with patch("shutil.which", return_value="/usr/local/bin/agent-browser"), \
+        with patch("shutil.which", return_value="/usr/local/bin/agent-browser"),\
              patch("tools.browser_tool.agent_browser_runnable", return_value=True):
             assert _find_agent_browser() == "/usr/local/bin/agent-browser"
 
@@ -89,9 +89,9 @@ class TestFindAgentBrowser:
                 return False
             return original_path_exists(self)
 
-        with patch("shutil.which", return_value=None), \
-             patch("os.path.isdir", return_value=False), \
-             patch.object(Path, "exists", mock_path_exists), \
+        with patch("shutil.which", return_value=None),\
+             patch("os.path.isdir", return_value=False),\
+             patch.object(Path, "exists", mock_path_exists),\
              patch(
                  "tools.browser_tool._discover_homebrew_node_dirs",
                  return_value=[],
@@ -118,10 +118,10 @@ class TestFindAgentBrowser:
                 return True
             return original_is_dir(self)
 
-        with patch("shutil.which", side_effect=mock_which), \
-             patch("os.path.isdir", return_value=False), \
-             patch.object(Path, "is_dir", mock_is_dir), \
-             patch("tools.browser_tool.agent_browser_runnable", return_value=True), \
+        with patch("shutil.which", side_effect=mock_which),\
+             patch("os.path.isdir", return_value=False),\
+             patch.object(Path, "is_dir", mock_is_dir),\
+             patch("tools.browser_tool.agent_browser_runnable", return_value=True),\
              patch(
                  "tools.browser_tool._discover_homebrew_node_dirs",
                  return_value=[],
@@ -144,14 +144,14 @@ class TestFindAgentBrowser:
                 return str(fake_binary)
             return None  # bare (path=None) PATH lookup misses
 
-        with patch("shutil.which", side_effect=mock_which), \
-             patch("os.path.isdir", return_value=True), \
+        with patch("shutil.which", side_effect=mock_which),\
+             patch("os.path.isdir", return_value=True),\
              patch(
                  "tools.browser_tool.agent_browser_runnable",
                  side_effect=AssertionError(
                      "validate=False must not call agent_browser_runnable"
                  ),
-             ), \
+             ),\
              patch(
                  "tools.browser_tool._discover_homebrew_node_dirs",
                  return_value=["/opt/homebrew/bin"],
@@ -183,15 +183,15 @@ class TestFindAgentBrowser:
                 return True
             return original_is_dir(self)
 
-        with patch("shutil.which", side_effect=mock_which), \
-             patch("os.path.isdir", return_value=False), \
-             patch.object(Path, "is_dir", mock_is_dir), \
+        with patch("shutil.which", side_effect=mock_which),\
+             patch("os.path.isdir", return_value=False),\
+             patch.object(Path, "is_dir", mock_is_dir),\
              patch(
                  "tools.browser_tool.agent_browser_runnable",
                  side_effect=AssertionError(
                      "validate=False must not call agent_browser_runnable"
                  ),
-             ), \
+             ),\
              patch(
                  "tools.browser_tool._discover_homebrew_node_dirs",
                  return_value=[],
@@ -217,10 +217,10 @@ class TestFindAgentBrowser:
                 return False
             return original_path_exists(self)
 
-        with patch("shutil.which", side_effect=mock_which), \
-             patch("os.path.isdir", return_value=False), \
-             patch.object(Path, "exists", mock_path_exists), \
-             patch("tools.browser_tool.node_tool_runnable", return_value=True), \
+        with patch("shutil.which", side_effect=mock_which),\
+             patch("os.path.isdir", return_value=False),\
+             patch.object(Path, "exists", mock_path_exists),\
+             patch("tools.browser_tool.node_tool_runnable", return_value=True),\
              patch(
                  "tools.browser_tool._discover_homebrew_node_dirs",
                  return_value=[],
@@ -318,24 +318,24 @@ class TestRunBrowserCommandPathConstruction:
         }
         fake_json = json.dumps({"success": True})
         browser_path = "/Users/test/Library/Application Support/3v0/node_modules/.bin/agent-browser"
-        ev0_home = str(tmp_path / "3v0-home")
+        threev0_home = str(tmp_path / "3v0-home")
 
-        with patch("tools.browser_tool._find_agent_browser", return_value=browser_path), \
- patch("tools.browser_tool._chromium_installed", return_value=True), \
-             patch("tools.browser_tool._get_session_info", return_value=fake_session), \
-             patch("tools.browser_tool._socket_safe_tmpdir", return_value=str(tmp_path)), \
-             patch("tools.browser_tool._discover_homebrew_node_dirs", return_value=[]), \
-             patch("threev0_constants.Path.home", return_value=tmp_path), \
-             patch("subprocess.Popen", side_effect=capture_popen), \
-             patch("os.open", return_value=99), \
-             patch("os.close"), \
-             patch("tools.interrupt.is_interrupted", return_value=False), \
+        with patch("tools.browser_tool._find_agent_browser", return_value=browser_path),\
+ patch("tools.browser_tool._chromium_installed", return_value=True),\
+             patch("tools.browser_tool._get_session_info", return_value=fake_session),\
+             patch("tools.browser_tool._socket_safe_tmpdir", return_value=str(tmp_path)),\
+             patch("tools.browser_tool._discover_homebrew_node_dirs", return_value=[]),\
+             patch("threev0_constants.Path.home", return_value=tmp_path),\
+             patch("subprocess.Popen", side_effect=capture_popen),\
+             patch("os.open", return_value=99),\
+             patch("os.close"),\
+             patch("tools.interrupt.is_interrupted", return_value=False),\
              patch.dict(
                  os.environ,
                  {
                      "PATH": "/usr/bin:/bin",
                      "HOME": "/home/test",
-                     "EV0_HOME": ev0_home,
+                     "EV0_HOME": threev0_home,
                  },
                  clear=True,
              ):
@@ -374,25 +374,25 @@ class TestRunBrowserCommandPathConstruction:
             "cdp_url": None,
         }
         fake_json = json.dumps({"success": True})
-        ev0_home = str(tmp_path / "3v0-home")
+        threev0_home = str(tmp_path / "3v0-home")
 
-        with patch("tools.browser_tool._find_agent_browser", return_value="npx agent-browser"), \
-             patch("tools.browser_tool._resolve_npx_bin", return_value="/opt/3v0/node/bin/npx"), \
-             patch("tools.browser_tool._chromium_installed", return_value=True), \
-             patch("tools.browser_tool._get_session_info", return_value=fake_session), \
-             patch("tools.browser_tool._socket_safe_tmpdir", return_value=str(tmp_path)), \
-             patch("tools.browser_tool._discover_homebrew_node_dirs", return_value=[]), \
-             patch("threev0_constants.Path.home", return_value=tmp_path), \
-             patch("subprocess.Popen", side_effect=capture_popen), \
-             patch("os.open", return_value=99), \
-             patch("os.close"), \
-             patch("tools.interrupt.is_interrupted", return_value=False), \
+        with patch("tools.browser_tool._find_agent_browser", return_value="npx agent-browser"),\
+             patch("tools.browser_tool._resolve_npx_bin", return_value="/opt/3v0/node/bin/npx"),\
+             patch("tools.browser_tool._chromium_installed", return_value=True),\
+             patch("tools.browser_tool._get_session_info", return_value=fake_session),\
+             patch("tools.browser_tool._socket_safe_tmpdir", return_value=str(tmp_path)),\
+             patch("tools.browser_tool._discover_homebrew_node_dirs", return_value=[]),\
+             patch("threev0_constants.Path.home", return_value=tmp_path),\
+             patch("subprocess.Popen", side_effect=capture_popen),\
+             patch("os.open", return_value=99),\
+             patch("os.close"),\
+             patch("tools.interrupt.is_interrupted", return_value=False),\
              patch.dict(
                  os.environ,
                  {
                      "PATH": "/usr/bin:/bin",
                      "HOME": "/home/test",
-                     "EV0_HOME": ev0_home,
+                     "EV0_HOME": threev0_home,
                  },
                  clear=True,
              ):
@@ -437,16 +437,16 @@ class TestRunBrowserCommandPathConstruction:
                 return True
             return real_isdir(path)
 
-        with patch("tools.browser_tool._find_agent_browser", return_value="/usr/local/bin/agent-browser"), \
- patch("tools.browser_tool._chromium_installed", return_value=True), \
-             patch("tools.browser_tool._get_session_info", return_value=fake_session), \
-             patch("tools.browser_tool._socket_safe_tmpdir", return_value=str(tmp_path)), \
-             patch("tools.browser_tool._discover_homebrew_node_dirs", return_value=[]), \
-             patch("os.path.isdir", side_effect=selective_isdir), \
-             patch("subprocess.Popen", side_effect=capture_popen), \
-             patch("os.open", return_value=99), \
-             patch("os.close"), \
-             patch("tools.interrupt.is_interrupted", return_value=False), \
+        with patch("tools.browser_tool._find_agent_browser", return_value="/usr/local/bin/agent-browser"),\
+ patch("tools.browser_tool._chromium_installed", return_value=True),\
+             patch("tools.browser_tool._get_session_info", return_value=fake_session),\
+             patch("tools.browser_tool._socket_safe_tmpdir", return_value=str(tmp_path)),\
+             patch("tools.browser_tool._discover_homebrew_node_dirs", return_value=[]),\
+             patch("os.path.isdir", side_effect=selective_isdir),\
+             patch("subprocess.Popen", side_effect=capture_popen),\
+             patch("os.open", return_value=99),\
+             patch("os.close"),\
+             patch("tools.interrupt.is_interrupted", return_value=False),\
              patch.dict(os.environ, {"PATH": "/usr/bin:/bin", "HOME": "/home/test"}, clear=True):
             with patch("builtins.open", mock_open(read_data=fake_json)):
                 _run_browser_command("test-task", "navigate", ["https://example.com"])
@@ -475,12 +475,12 @@ class TestRunChromeFallbackCommandNpxResolution:
 
         url_result = {"success": True, "data": {"result": "https://example.com"}}
 
-        with patch("tools.browser_tool._run_browser_command", return_value=url_result), \
-             patch("tools.browser_tool._find_agent_browser", return_value="npx agent-browser"), \
-             patch("tools.browser_tool._resolve_npx_bin", return_value="/opt/3v0/node/bin/npx"), \
-             patch("tools.browser_tool._chromium_installed", return_value=True), \
-             patch("tools.browser_tool._running_in_docker", return_value=False), \
-             patch("tools.browser_tool._socket_safe_tmpdir", return_value=str(tmp_path)), \
+        with patch("tools.browser_tool._run_browser_command", return_value=url_result),\
+             patch("tools.browser_tool._find_agent_browser", return_value="npx agent-browser"),\
+             patch("tools.browser_tool._resolve_npx_bin", return_value="/opt/3v0/node/bin/npx"),\
+             patch("tools.browser_tool._chromium_installed", return_value=True),\
+             patch("tools.browser_tool._running_in_docker", return_value=False),\
+             patch("tools.browser_tool._socket_safe_tmpdir", return_value=str(tmp_path)),\
              patch("subprocess.Popen", side_effect=capture_popen):
             _run_chrome_fallback_command("test-task", "navigate", ["https://example.com"], timeout=10)
 

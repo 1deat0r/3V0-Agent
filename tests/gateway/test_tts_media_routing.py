@@ -545,7 +545,7 @@ async def test_queued_resend_branch_delivers_media_and_preserves_protected_examp
         group_sessions_per_user=False,
         stt_enabled=False,
     )
-    monkeypatch.setattr(gateway_run, "_ev0_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_threev0_home", tmp_path)
     monkeypatch.setattr(gateway_run, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "***"})
 
     source = SessionSource(

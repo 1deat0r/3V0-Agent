@@ -483,20 +483,20 @@ class TestOwnTabPreamble:
     def test_named_shared_browser_gets_preamble(self, tmp_path, monkeypatch):
         result = self._run(tmp_path, monkeypatch, session="r7k2")
         assert result["success"] is True
-        assert "_ev0_ensure_own_tab" in result["output"]
+        assert "_threev0_ensure_own_tab" in result["output"]
         # model code still present, after the preamble
-        assert result["output"].index("_ev0_ensure_own_tab") < result["output"].index("print('payload')")
+        assert result["output"].index("_threev0_ensure_own_tab") < result["output"].index("print('payload')")
 
     def test_unnamed_session_gets_no_preamble(self, tmp_path, monkeypatch):
         result = self._run(tmp_path, monkeypatch, session="")
         assert result["success"] is True
-        assert "_ev0_ensure_own_tab" not in result["output"]
+        assert "_threev0_ensure_own_tab" not in result["output"]
 
     def test_named_provider_browser_skips_preamble(self, tmp_path, monkeypatch):
         """Per-name provider browsers are private — preamble would leak a tab."""
         result = self._run(tmp_path, monkeypatch, session="r7k2", provider=True)
         assert result["success"] is True
-        assert "_ev0_ensure_own_tab" not in result["output"]
+        assert "_threev0_ensure_own_tab" not in result["output"]
 
     def test_sentinel_never_reaches_subprocess_env(self, tmp_path, monkeypatch):
         import tools.browser_tool as bt

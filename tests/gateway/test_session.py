@@ -256,7 +256,7 @@ class TestBuildSessionContextPrompt:
         assert "current turn's sender prefix" not in prompt
 
 
-    def test_local_delivery_path_uses_display_ev0_home(self):
+    def test_local_delivery_path_uses_display_threev0_home(self):
         config = GatewayConfig()
         source = SessionSource(
             platform=Platform.LOCAL, chat_id="cli",
@@ -264,7 +264,7 @@ class TestBuildSessionContextPrompt:
         )
         ctx = build_session_context(source, config)
 
-        with patch("threev0_constants.display_ev0_home", return_value="~/.3V0/profiles/coder"):
+        with patch("threev0_constants.display_threev0_home", return_value="~/.3V0/profiles/coder"):
             prompt = build_session_context_prompt(ctx)
 
         assert "~/.3V0/profiles/coder/cron/output/" in prompt

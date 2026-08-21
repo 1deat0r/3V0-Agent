@@ -20,7 +20,7 @@ def all_assignees_spawnable(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _suppress_concurrent_ev0_gate(request, monkeypatch):
+def _suppress_concurrent_threev0_gate(request, monkeypatch):
     """Default ``_detect_concurrent_ev0_instances`` to ``[]`` for every test.
 
     The Windows update path now refuses to proceed when another
@@ -50,7 +50,7 @@ def _suppress_concurrent_ev0_gate(request, monkeypatch):
     # transiently absent is the correct, race-free default.
     monkeypatch.setattr(
         _cli_main,
-        "_detect_concurrent_ev0_instances",
+        "_detect_concurrent_threev0_instances",
         lambda *_a, **_k: [],
         raising=False,
     )

@@ -5,16 +5,16 @@ import pytest
 
 
 def _write_config(tmp_path, config: dict) -> None:
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir(parents=True, exist_ok=True)
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir(parents=True, exist_ok=True)
     import yaml
-    (ev0_home / "config.yaml").write_text(yaml.dump(config))
+    (threev0_home / "config.yaml").write_text(yaml.dump(config))
 
 
 def _write_auth_store(tmp_path, payload: dict) -> None:
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir(parents=True, exist_ok=True)
-    (ev0_home / "auth.json").write_text(json.dumps(payload, indent=2))
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir(parents=True, exist_ok=True)
+    (threev0_home / "auth.json").write_text(json.dumps(payload, indent=2))
 
 
 @pytest.fixture(autouse=True)

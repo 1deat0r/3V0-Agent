@@ -53,7 +53,7 @@ def test_install_tree_not_writable_by_ev0(
     )
 
 
-def test_ev0_disable_lazy_installs_and_dont_write_bytecode(
+def test_threev0_disable_lazy_installs_and_dont_write_bytecode(
     built_image: str, container_name: str,
 ) -> None:
     """The container must set PYTHONDONTWRITEBYTECODE and

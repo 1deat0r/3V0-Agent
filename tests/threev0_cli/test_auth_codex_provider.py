@@ -22,9 +22,9 @@ from threev0_cli.auth import (
 )
 
 
-def _setup_ev0_auth(ev0_home: Path, *, access_token: str = "access", refresh_token: str = "refresh"):
+def _setup_threev0_auth(threev0_home: Path, *, access_token: str = "access", refresh_token: str = "refresh"):
     """Write Codex tokens into the 3V0 auth store."""
-    ev0_home.mkdir(parents=True, exist_ok=True)
+    threev0_home.mkdir(parents=True, exist_ok=True)
     auth_store = {
         "version": 1,
         "active_provider": "openai-codex",
@@ -39,7 +39,7 @@ def _setup_ev0_auth(ev0_home: Path, *, access_token: str = "access", refresh_tok
             },
         },
     }
-    auth_file = ev0_home / "auth.json"
+    auth_file = threev0_home / "auth.json"
     auth_file.write_text(json.dumps(auth_store, indent=2))
     return auth_file
 
@@ -55,9 +55,9 @@ def _jwt_with_exp(exp_epoch: int) -> str:
 
 
 def test_resolve_codex_runtime_credentials_missing_access_token(tmp_path, monkeypatch):
-    ev0_home = tmp_path / "3v0"
-    _setup_ev0_auth(ev0_home, access_token="")
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / "3v0"
+    _setup_threev0_auth(threev0_home, access_token="")
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.setenv("CODEX_HOME", str(tmp_path / "missing-codex"))
 
     with pytest.raises(AuthError) as exc:
@@ -76,8 +76,8 @@ def test_resolve_codex_runtime_credentials_falls_back_to_pool_when_singleton_emp
     re-auth, restore from backup) hit a bare HTTP 401 on chat but worked fine on
     auxiliary calls.  The fallback closes that divergence.
     """
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir(parents=True, exist_ok=True)
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir(parents=True, exist_ok=True)
     # Singleton: empty tokens (would normally raise AuthError).
     # Pool: valid access_token.
     auth_store = {
@@ -95,8 +95,8 @@ def test_resolve_codex_runtime_credentials_falls_back_to_pool_when_singleton_emp
             ],
         },
     }
-    (ev0_home / "auth.json").write_text(json.dumps(auth_store))
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    (threev0_home / "auth.json").write_text(json.dumps(auth_store))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     resolved = resolve_codex_runtime_credentials()
     assert resolved["api_key"] == "pool-fallback-token"
@@ -114,9 +114,9 @@ def test_save_codex_tokens_syncs_credential_pool(tmp_path, monkeypatch):
     holding a consumed refresh token and stale error markers, causing an
     immediate 401 token_invalidated on the next request.
     """
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir(parents=True, exist_ok=True)
-    (ev0_home / "auth.json").write_text(json.dumps({
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir(parents=True, exist_ok=True)
+    (threev0_home / "auth.json").write_text(json.dumps({
         "version": 1,
         "providers": {
             "openai-codex": {
@@ -148,12 +148,12 @@ def test_save_codex_tokens_syncs_credential_pool(tmp_path, monkeypatch):
             ],
         },
     }))
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     _save_codex_tokens({"access_token": "new-at", "refresh_token": "new-rt"},
                        last_refresh="2026-05-27T00:00:00Z")
 
-    auth = json.loads((ev0_home / "auth.json").read_text())
+    auth = json.loads((threev0_home / "auth.json").read_text())
     pool = auth["credential_pool"]["openai-codex"]
     seeded = next(e for e in pool if e["source"] == "device_code")
     assert seeded["access_token"] == "new-at"
@@ -192,9 +192,9 @@ def test_save_codex_tokens_syncs_manual_device_code_entries(tmp_path, monkeypatc
     the *previous* singleton access_token (true legacy aliases), and leaves
     distinct-token entries alone (independent accounts).
     """
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir(parents=True, exist_ok=True)
-    (ev0_home / "auth.json").write_text(json.dumps({
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir(parents=True, exist_ok=True)
+    (threev0_home / "auth.json").write_text(json.dumps({
         "version": 1,
         "providers": {
             "openai-codex": {
@@ -245,12 +245,12 @@ def test_save_codex_tokens_syncs_manual_device_code_entries(tmp_path, monkeypatc
             ],
         },
     }))
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     _save_codex_tokens({"access_token": "fresh-at", "refresh_token": "fresh-rt"},
                        last_refresh="2026-05-28T00:00:00Z")
 
-    auth = json.loads((ev0_home / "auth.json").read_text())
+    auth = json.loads((threev0_home / "auth.json").read_text())
     pool = auth["credential_pool"]["openai-codex"]
 
     # Singleton-seeded device_code entry: refreshed and error markers cleared.
@@ -295,9 +295,9 @@ def test_save_codex_tokens_does_not_overwrite_independent_manual_entries(tmp_pat
     entries whose tokens never matched the singleton are independent accounts
     and must be left alone.
     """
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir(parents=True, exist_ok=True)
-    (ev0_home / "auth.json").write_text(json.dumps({
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir(parents=True, exist_ok=True)
+    (threev0_home / "auth.json").write_text(json.dumps({
         "version": 1,
         "providers": {
             "openai-codex": {
@@ -343,7 +343,7 @@ def test_save_codex_tokens_does_not_overwrite_independent_manual_entries(tmp_pat
             ],
         },
     }))
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     # User re-authenticates account A — fresh device-code login produces new
     # tokens.  The legitimate update is the seeded singleton mirror; the
@@ -353,7 +353,7 @@ def test_save_codex_tokens_does_not_overwrite_independent_manual_entries(tmp_pat
         last_refresh="2026-06-05T00:00:00Z",
     )
 
-    auth = json.loads((ev0_home / "auth.json").read_text())
+    auth = json.loads((threev0_home / "auth.json").read_text())
     pool = auth["credential_pool"]["openai-codex"]
 
     # Singleton-seeded entry: refreshed (legitimate sync).
@@ -383,9 +383,9 @@ def test_save_codex_tokens_clears_error_markers_only_on_refreshed_entries(tmp_pa
     with their own stale-error markers must be left alone (their stale state
     is not the current re-auth's business).
     """
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir(parents=True, exist_ok=True)
-    (ev0_home / "auth.json").write_text(json.dumps({
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir(parents=True, exist_ok=True)
+    (threev0_home / "auth.json").write_text(json.dumps({
         "version": 1,
         "providers": {
             "openai-codex": {
@@ -417,14 +417,14 @@ def test_save_codex_tokens_clears_error_markers_only_on_refreshed_entries(tmp_pa
             ],
         },
     }))
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     _save_codex_tokens(
         {"access_token": "fresh-at", "refresh_token": "fresh-rt"},
         last_refresh="2026-06-05T00:00:00Z",
     )
 
-    auth = json.loads((ev0_home / "auth.json").read_text())
+    auth = json.loads((threev0_home / "auth.json").read_text())
     pool = auth["credential_pool"]["openai-codex"]
 
     # Singleton: refreshed AND error markers cleared.
@@ -446,13 +446,13 @@ def test_save_codex_tokens_clears_error_markers_only_on_refreshed_entries(tmp_pa
 
 def test_codex_tokens_not_written_to_shared_file(tmp_path, monkeypatch):
     """Verify _save_codex_tokens writes only to 3V0 auth store, not ~/.codex/."""
-    ev0_home = tmp_path / "3v0"
+    threev0_home = tmp_path / "3v0"
     codex_home = tmp_path / "codex-cli"
-    ev0_home.mkdir(parents=True, exist_ok=True)
+    threev0_home.mkdir(parents=True, exist_ok=True)
     codex_home.mkdir(parents=True, exist_ok=True)
 
-    (ev0_home / "auth.json").write_text(json.dumps({"version": 1, "providers": {}}))
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    (threev0_home / "auth.json").write_text(json.dumps({"version": 1, "providers": {}}))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
 
     _save_codex_tokens({"access_token": "3v0-at", "refresh_token": "3v0-rt"})
@@ -465,10 +465,10 @@ def test_codex_tokens_not_written_to_shared_file(tmp_path, monkeypatch):
     assert data["tokens"]["access_token"] == "3v0-at"
 
 
-def test_resolve_returns_ev0_auth_store_source(tmp_path, monkeypatch):
-    ev0_home = tmp_path / "3v0"
-    _setup_ev0_auth(ev0_home)
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+def test_resolve_returns_threev0_auth_store_source(tmp_path, monkeypatch):
+    threev0_home = tmp_path / "3v0"
+    _setup_threev0_auth(threev0_home)
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     creds = resolve_codex_runtime_credentials()
     assert creds["source"] == "3v0-auth-store"

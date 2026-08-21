@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import Dict, List, Optional, Any, Callable
 from enum import Enum
 
-from threev0_cli.config import get_ev0_home
+from threev0_cli.config import get_threev0_home
 from agent.secret_scope import current_secret_scope, get_secret as _get_secret
 from utils import is_truthy_value
 
@@ -936,7 +936,7 @@ class GatewayConfig:
     quick_commands: Dict[str, Any] = field(default_factory=dict)
     
     # Storage paths
-    sessions_dir: Path = field(default_factory=lambda: get_ev0_home() / "sessions")
+    sessions_dir: Path = field(default_factory=lambda: get_threev0_home() / "sessions")
 
     # Whether to keep writing the legacy sessions.json mirror of the gateway
     # routing index. The primary copy lives in state.db (gateway_routing
@@ -1163,7 +1163,7 @@ class GatewayConfig:
         if "default_reset_policy" in data:
             default_policy = SessionResetPolicy.from_dict(data["default_reset_policy"])
         
-        sessions_dir = get_ev0_home() / "sessions"
+        sessions_dir = get_threev0_home() / "sessions"
         if "sessions_dir" in data:
             sessions_dir = Path(data["sessions_dir"])
         
@@ -1316,7 +1316,7 @@ def load_gateway_config() -> GatewayConfig:
     3. ~/.3V0/gateway.json (legacy — provides defaults under config.yaml)
     4. Built-in defaults
     """
-    _home = get_ev0_home()
+    _home = get_threev0_home()
     gw_data: dict = {}
 
     # Legacy fallback: gateway.json provides the base layer.

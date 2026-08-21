@@ -22,7 +22,7 @@ from collections import deque
 from pathlib import Path
 from typing import IO, Callable, Iterable, Protocol
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from threev0_cli._subprocess_compat import windows_hide_flags
 from tools.interrupt import is_interrupted
 
@@ -289,7 +289,7 @@ def get_sandbox_dir() -> Path:
     if custom:
         p = Path(custom)
     else:
-        p = get_ev0_home() / "sandboxes"
+        p = get_threev0_home() / "sandboxes"
     p.mkdir(parents=True, exist_ok=True)
     return p
 
@@ -326,7 +326,7 @@ def _pipe_stdin(proc: subprocess.Popen, data: str) -> None:
     """
 
     errors: list[BaseException] = []
-    proc._ev0_stdin_errors = errors
+    proc._threev0_stdin_errors = errors
 
     def _write():
         if proc.stdin is None:
@@ -357,7 +357,7 @@ def _pipe_stdin(proc: subprocess.Popen, data: str) -> None:
                 pass
 
     thread = threading.Thread(target=_write, daemon=True)
-    proc._ev0_stdin_thread = thread
+    proc._threev0_stdin_thread = thread
     thread.start()
 
 
@@ -1017,7 +1017,7 @@ class BaseEnvironment(ABC):
             # truncated result is recoverable without re-running (the file
             # only gets created if output actually exceeds the cap).
             try:
-                spill_dir = get_ev0_home() / "cache" / "terminal-output"
+                spill_dir = get_threev0_home() / "cache" / "terminal-output"
                 spill_path = spill_dir / f"out-{int(time.time())}-{os.getpid()}-{id(proc) & 0xffff:x}.log"
                 # Opportunistic cleanup of spills older than 7 days.
                 if spill_dir.is_dir():
@@ -1297,12 +1297,12 @@ class BaseEnvironment(ABC):
         # recorded encode failure, silently dropping it. The thread cannot
         # block long after child exit (write raises BrokenPipeError once the
         # pipe closes); the timeout is a pure safety net.
-        stdin_thread = getattr(proc, "_ev0_stdin_thread", None)
+        stdin_thread = getattr(proc, "_threev0_stdin_thread", None)
         if stdin_thread is not None:
             stdin_thread.join(timeout=5)
         rendered = output.render()
         result = self._finalize_wait_result(output, rendered, proc.returncode)
-        stdin_errors = getattr(proc, "_ev0_stdin_errors", None)
+        stdin_errors = getattr(proc, "_threev0_stdin_errors", None)
         if stdin_errors:
             err = str(stdin_errors[0])
             result["stdin_error"] = err

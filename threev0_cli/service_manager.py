@@ -348,11 +348,11 @@ def _profile_dir_for_gateway_service(name: str) -> Path:
 
     profile = name[len(S6_SERVICE_PREFIX):] if name.startswith(S6_SERVICE_PREFIX) else name
     validate_profile_name(profile)
-    ev0_home = Path(os.environ.get("EV0_HOME", "/opt/data"))
-    if ev0_home.parent.name == "profiles":
-        root = ev0_home.parent.parent
+    threev0_home = Path(os.environ.get("EV0_HOME", "/opt/data"))
+    if threev0_home.parent.name == "profiles":
+        root = threev0_home.parent.parent
     else:
-        root = ev0_home
+        root = threev0_home
     return root if profile == "default" else root / "profiles" / profile
 
 

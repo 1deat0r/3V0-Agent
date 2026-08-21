@@ -14,7 +14,7 @@ import threading
 from pathlib import Path
 from typing import Any, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from tools.environments.base import (
     BaseEnvironment,
     _ThreadedProcessHandle,
@@ -31,7 +31,7 @@ from tools.environments.file_sync import (
 
 logger = logging.getLogger(__name__)
 
-_SNAPSHOT_STORE = get_ev0_home() / "modal_snapshots.json"
+_SNAPSHOT_STORE = get_threev0_home() / "modal_snapshots.json"
 _DIRECT_SNAPSHOT_NAMESPACE = "direct"
 
 

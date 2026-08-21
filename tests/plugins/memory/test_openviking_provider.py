@@ -107,7 +107,7 @@ def test_openviking_provider_config_loader_uses_readonly_config(monkeypatch):
     monkeypatch.setattr(config_mod, "load_config_readonly", load_config_readonly)
     monkeypatch.setattr(config_mod, "load_config", load_config)
 
-    config = openviking_module._load_ev0_openviking_config()
+    config = openviking_module._load_threev0_openviking_config()
 
     assert calls == ["readonly"]
     assert config == {
@@ -119,9 +119,9 @@ def test_openviking_provider_config_loader_uses_readonly_config(monkeypatch):
 
 def test_connection_settings_read_dashboard_config_file(tmp_path, monkeypatch):
     _clear_openviking_env(monkeypatch)
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir()
-    (ev0_home / "config.yaml").write_text(
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir()
+    (threev0_home / "config.yaml").write_text(
         """\
 memory:
   provider: openviking
@@ -133,10 +133,10 @@ memory:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     settings = openviking_module._resolve_connection_settings(
-        openviking_module._load_ev0_openviking_config()
+        openviking_module._load_threev0_openviking_config()
     )
 
     assert settings["endpoint"] == "http://saved.test:1933"
@@ -273,9 +273,9 @@ def test_link_ovcli_profile_removes_stale_inline_config(tmp_path):
 
 def test_post_setup_existing_profile_picker_validates_and_links_saved_profile(tmp_path, monkeypatch):
     _clear_openviking_env(monkeypatch)
-    ev0_home = tmp_path / "3v0"
-    ev0_home.mkdir()
-    env_path = ev0_home / ".env"
+    threev0_home = tmp_path / "3v0"
+    threev0_home.mkdir()
+    env_path = threev0_home / ".env"
     env_path.write_text("OPENVIKING_ENDPOINT=http://old.test\nOTHER_KEY=keep\n", encoding="utf-8")
     openviking_home = tmp_path / ".openviking"
     openviking_home.mkdir()
@@ -286,7 +286,7 @@ def test_post_setup_existing_profile_picker_validates_and_links_saved_profile(tm
         json.dumps({"url": "https://vps.example", "api_key": "user-key"}),
         encoding="utf-8",
     )
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.setattr(openviking_module.Path, "home", staticmethod(lambda: tmp_path))
 
     from threev0_cli import memory_setup
@@ -307,7 +307,7 @@ def test_post_setup_existing_profile_picker_validates_and_links_saved_profile(tm
     monkeypatch.setattr(memory_setup, "_curses_select", lambda *args, **kwargs: next(choices))
     config = {"memory": {}}
 
-    OpenVikingMemoryProvider().post_setup(str(ev0_home), config)
+    OpenVikingMemoryProvider().post_setup(str(threev0_home), config)
 
     assert validate_calls == [{
         "endpoint": "https://vps.example",
@@ -679,14 +679,14 @@ def test_tool_search_sorts_by_raw_score_across_buckets():
     assert result["total"] == 3
 
 
-def test_tool_add_resource_rejects_ev0_credential_file_upload(tmp_path, monkeypatch):
+def test_tool_add_resource_rejects_threev0_credential_file_upload(tmp_path, monkeypatch):
     import agent.file_safety as fs
 
-    ev0_home = tmp_path / "ev0_home"
-    ev0_home.mkdir()
-    auth_json = ev0_home / "auth.json"
+    threev0_home = tmp_path / "ev0_home"
+    threev0_home.mkdir()
+    auth_json = threev0_home / "auth.json"
     auth_json.write_text('{"OPENROUTER_API_KEY":"sk-test-secret"}', encoding="utf-8")
-    monkeypatch.setattr(fs, "_ev0_home_path", lambda: ev0_home)
+    monkeypatch.setattr(fs, "_threev0_home_path", lambda: threev0_home)
 
     provider = OpenVikingMemoryProvider()
     provider._client = MagicMock()
@@ -1200,7 +1200,7 @@ def test_concurrent_providers_claim_unlocked_pending_owner_once(
     scan_barrier = threading.Barrier(len(providers))
     for provider in providers:
         provider._client = StubClient()
-        provider._ev0_home = str(tmp_path)
+        provider._threev0_home = str(tmp_path)
         pending_sessions = provider._pending_sessions
 
         def _scan_together(scan=pending_sessions):
@@ -1618,7 +1618,7 @@ def test_blocked_endpoint_does_not_fall_back_or_construct_client(monkeypatch, tm
 
     provider.initialize(
         "session-1",
-        ev0_home=str(tmp_path),
+        threev0_home=str(tmp_path),
         platform="cli",
         warning_callback=warnings.append,
     )
@@ -1672,7 +1672,7 @@ def test_runtime_rejects_unrelated_json_health_response(
 
     provider.initialize(
         "session-1",
-        ev0_home=str(tmp_path),
+        threev0_home=str(tmp_path),
         platform="cli",
         warning_callback=warnings.append,
     )
@@ -1688,7 +1688,7 @@ def test_is_available_true_for_config_yaml_endpoint(monkeypatch):
     _clear_openviking_env(monkeypatch)
     monkeypatch.setattr(
         openviking_module,
-        "_load_ev0_openviking_config",
+        "_load_threev0_openviking_config",
         lambda: {"endpoint": "http://saved.test:1933"},
     )
     assert OpenVikingMemoryProvider().is_available() is True
@@ -1697,6 +1697,6 @@ def test_is_available_true_for_config_yaml_endpoint(monkeypatch):
 def test_is_available_false_without_any_endpoint(monkeypatch):
     _clear_openviking_env(monkeypatch)
     monkeypatch.setattr(
-        openviking_module, "_load_ev0_openviking_config", lambda: {}
+        openviking_module, "_load_threev0_openviking_config", lambda: {}
     )
     assert OpenVikingMemoryProvider().is_available() is False

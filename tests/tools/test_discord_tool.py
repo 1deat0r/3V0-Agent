@@ -354,7 +354,7 @@ class TestRegistration:
 # ---------------------------------------------------------------------------
 
 class TestToolsetInclusion:
-    def test_discord_tools_only_in_ev0_discord_toolset(self):
+    def test_discord_tools_only_in_threev0_discord_toolset(self):
         from toolsets import TOOLSETS, _EV0_CORE_TOOLS
         assert "discord" in TOOLSETS["3v0-discord"]["tools"]
         assert "discord_admin" in TOOLSETS["3v0-discord"]["tools"]
@@ -458,8 +458,8 @@ class TestNonBlockingCapabilityDetection:
             "threev0_cli.config.load_config",
             lambda: {"discord": {"server_actions": ""}},
         )
-        with patch("tools.discord_tool._load_caps_from_disk", return_value=None), \
-             patch("tools.discord_tool.threading.Thread") as mock_thread, \
+        with patch("tools.discord_tool._load_caps_from_disk", return_value=None),\
+             patch("tools.discord_tool.threading.Thread") as mock_thread,\
              patch("tools.discord_tool._discord_request") as mock_req:
             schema = get_dynamic_schema_core()
         # No blocking HTTP call happened on the schema-build path

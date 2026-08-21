@@ -10,7 +10,7 @@ import logging
 import threading
 from typing import List, Optional
 
-from threev0_constants import ev0_home_key
+from threev0_constants import threev0_home_key
 from threev0_cli.dashboard_auth.base import (
     DashboardAuthProvider,
     assert_protocol_compliance,
@@ -24,7 +24,7 @@ _scoped_providers: dict[str, dict[str, DashboardAuthProvider]] = {}
 
 def _merged(scope: Optional[str] = None) -> dict[str, DashboardAuthProvider]:
     providers = dict(_providers)
-    providers.update(_scoped_providers.get(scope or ev0_home_key(), {}))
+    providers.update(_scoped_providers.get(scope or threev0_home_key(), {}))
     return providers
 
 

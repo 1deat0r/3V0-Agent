@@ -719,12 +719,12 @@ class GoogleChatAdapter(BasePlatformAdapter):
         # made the in-memory version of this heuristic flaky for
         # multi-restart sessions).
         try:
-            from threev0_constants import get_ev0_home as _get_ev0_home
-            _ev0_home = _get_ev0_home()
+            from threev0_constants import get_threev0_home as _get_threev0_home
+            _threev0_home = _get_threev0_home()
         except (ModuleNotFoundError, ImportError):
-            _ev0_home = _Path.home() / ".3V0"
+            _threev0_home = _Path.home() / ".3V0"
         self._thread_count_store = _ThreadCountStore(
-            _ev0_home / "google_chat_thread_counts.json"
+            _threev0_home / "google_chat_thread_counts.json"
         )
         # In-flight typing-card creates per chat_id. send_typing() reserves
         # an Event here BEFORE starting the API call so concurrent calls

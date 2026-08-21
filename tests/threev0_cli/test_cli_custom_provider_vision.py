@@ -37,8 +37,8 @@ class _RuntimeCLI(CLIAgentSetupMixin):
         return False
 
 
-def _write_profile_config(ev0_home) -> None:
-    (ev0_home / "config.yaml").write_text(
+def _write_profile_config(threev0_home) -> None:
+    (threev0_home / "config.yaml").write_text(
         """
 model:
   default: ollama-cloud/glm-5.2
@@ -60,9 +60,9 @@ agent:
 
 def _resolve_cli_route():
     from threev0_cli._parser import build_top_level_parser
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    _write_profile_config(get_ev0_home())
+    _write_profile_config(get_threev0_home())
     parser, _subparsers, _chat = build_top_level_parser()
     args, _unknown = parser.parse_known_args(
         ["-m", MODEL, "--provider", REQUESTED_PROVIDER, "chat"]

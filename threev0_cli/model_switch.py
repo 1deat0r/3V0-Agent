@@ -273,7 +273,7 @@ def format_model_for_display(model_name: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-def is_nous_ev0_non_agentic(model_name: str) -> bool:
+def is_nous_threev0_non_agentic(model_name: str) -> bool:
     """Return True if *model_name* is a real Nous 3V0 3/4 chat model.
 
     Used to decide whether to surface the non-agentic warning at startup.
@@ -285,9 +285,9 @@ def is_nous_ev0_non_agentic(model_name: str) -> bool:
     return bool(_NOUS_EV0_NON_AGENTIC_RE.search(model_name))
 
 
-def _check_ev0_model_warning(model_name: str) -> str:
+def _check_threev0_model_warning(model_name: str) -> str:
     """Return a warning string if *model_name* is a Nous 3V0 3/4 chat model."""
-    if is_nous_ev0_non_agentic(model_name):
+    if is_nous_threev0_non_agentic(model_name):
         return _EV0_MODEL_WARNING
     return ""
 
@@ -1704,7 +1704,7 @@ def switch_model(
             if _user_pdef is None:
                 _user_pdef = _ruser(target_provider, user_providers)
         if _user_pdef is not None and _user_pdef.base_url:
-            _ucfg = (user_providers or {}).get(explicit_provider.strip().lower()) \
+            _ucfg = (user_providers or {}).get(explicit_provider.strip().lower())\
                 or (user_providers or {}).get(target_provider) or {}
             _ukey = str(_ucfg.get("api_key", "") or "").strip()
             if _ukey.startswith("${") and _ukey.endswith("}"):
@@ -1923,9 +1923,9 @@ def switch_model(
     warnings: list[str] = []
     if validation.get("message"):
         warnings.append(validation["message"])
-    ev0_warn = _check_ev0_model_warning(new_model)
-    if ev0_warn:
-        warnings.append(ev0_warn)
+    threev0_warn = _check_threev0_model_warning(new_model)
+    if threev0_warn:
+        warnings.append(threev0_warn)
 
     # --- Build result ---
     return ModelSwitchResult(
@@ -2177,36 +2177,36 @@ def _collect_authed_provider_slugs(
     seen: set[str] = set()
 
     # --- Section 1: 3V0-mapped providers (PROVIDER_TO_MODELS_DEV) ---
-    for ev0_id, mdev_id in PROVIDER_TO_MODELS_DEV.items():
-        _alias_target = _PROVIDER_ALIAS_TABLE.get(ev0_id)
+    for threev0_id, mdev_id in PROVIDER_TO_MODELS_DEV.items():
+        _alias_target = _PROVIDER_ALIAS_TABLE.get(threev0_id)
         if (
             _alias_target
-            and _alias_target != ev0_id
+            and _alias_target != threev0_id
             and _alias_target in _AGG_PROVIDERS
         ):
             continue
-        _canonical = ev0_id
+        _canonical = threev0_id
         try:
             from providers import get_provider_profile as _gpp
-            _prof = _gpp(ev0_id)
+            _prof = _gpp(threev0_id)
             if _prof is not None:
                 _canonical = _prof.name
         except Exception:
             pass
-        if _canonical != ev0_id:
+        if _canonical != threev0_id:
             continue
-        if ev0_id.lower() in seen:
+        if threev0_id.lower() in seen:
             continue
-        if ev0_id.lower() in _excluded_set or mdev_id.lower() in _excluded_set:
+        if threev0_id.lower() in _excluded_set or mdev_id.lower() in _excluded_set:
             continue
         pdata = models_dev_data.get(mdev_id)
         if not isinstance(pdata, dict):
             continue
-        pconfig = PROVIDER_REGISTRY.get(ev0_id)
+        pconfig = PROVIDER_REGISTRY.get(threev0_id)
         if pconfig and pconfig.auth_type != "api_key":
             continue
         from threev0_cli.auth import is_runtime_provider_routable
-        if not is_runtime_provider_routable(ev0_id):
+        if not is_runtime_provider_routable(threev0_id):
             continue
         if pconfig and pconfig.api_key_env_vars:
             env_vars = list(pconfig.api_key_env_vars)
@@ -2219,27 +2219,27 @@ def _collect_authed_provider_slugs(
             try:
                 store = _load_auth_store()
                 raw_pool_present = bool(
-                    store and store.get("credential_pool", {}).get(ev0_id)
+                    store and store.get("credential_pool", {}).get(threev0_id)
                 )
                 if raw_pool_present:
                     has_creds = _credential_pool_is_usable(
-                        ev0_id, raw_pool_present=True
+                        threev0_id, raw_pool_present=True
                     )
             except Exception:
                 pass
         if has_creds:
-            slugs.append(ev0_id)
-            seen.add(ev0_id.lower())
+            slugs.append(threev0_id)
+            seen.add(threev0_id.lower())
 
     # --- Section 2: 3V0-only providers (EV0_OVERLAYS) ---
     _mdev_to_ev0 = {v: k for k, v in PROVIDER_TO_MODELS_DEV.items()}
     for pid, overlay in EV0_OVERLAYS.items():
         if pid.lower() in seen:
             continue
-        ev0_slug = _mdev_to_ev0.get(pid, pid)
-        if ev0_slug.lower() in seen:
+        threev0_slug = _mdev_to_ev0.get(pid, pid)
+        if threev0_slug.lower() in seen:
             continue
-        if pid.lower() in _excluded_set or ev0_slug.lower() in _excluded_set:
+        if pid.lower() in _excluded_set or threev0_slug.lower() in _excluded_set:
             continue
         has_creds = False
         if overlay.auth_type == "aws_sdk":
@@ -2254,7 +2254,7 @@ def _collect_authed_provider_slugs(
         elif overlay.extra_env_vars:
             has_creds = any(_scoped_key_env(ev) for ev in overlay.extra_env_vars)
         if not has_creds and overlay.auth_type == "api_key":
-            for _key in (pid, ev0_slug):
+            for _key in (pid, threev0_slug):
                 pcfg = PROVIDER_REGISTRY.get(_key)
                 if pcfg and pcfg.api_key_env_vars:
                     if any(_scoped_key_env(ev) for ev in pcfg.api_key_env_vars):
@@ -2264,20 +2264,20 @@ def _collect_authed_provider_slugs(
             try:
                 store = _load_auth_store()
                 providers_store = store.get("providers", {}) if store else {}
-                if pid in providers_store or ev0_slug in providers_store:
+                if pid in providers_store or threev0_slug in providers_store:
                     has_creds = True
             except Exception:
                 pass
         if not has_creds:
             try:
-                if _credential_pool_is_usable(ev0_slug):
+                if _credential_pool_is_usable(threev0_slug):
                     has_creds = True
             except Exception:
                 pass
         if has_creds:
-            slugs.append(ev0_slug)
+            slugs.append(threev0_slug)
             seen.add(pid.lower())
-            seen.add(ev0_slug.lower())
+            seen.add(threev0_slug.lower())
 
     # --- Section 2b: Canonical providers cross-check ---
     for _cp in CANONICAL_PROVIDERS:
@@ -2541,7 +2541,7 @@ def list_authenticated_providers(
     # --- 1. Check 3V0-mapped providers ---
     from threev0_cli.models import _AGGREGATOR_PROVIDERS as _AGG_PROVIDERS
     from threev0_cli.providers import ALIASES as _PROVIDER_ALIAS_TABLE
-    for ev0_id, mdev_id in PROVIDER_TO_MODELS_DEV.items():
+    for threev0_id, mdev_id in PROVIDER_TO_MODELS_DEV.items():
         # Skip vendor names that are merely aliases routing through an
         # aggregator (e.g. bare "openai" → "openrouter"). These are NOT
         # directly-routable providers: emitting them as their own picker
@@ -2550,10 +2550,10 @@ def list_authenticated_providers(
         # switching a user off their real provider onto an endpoint they
         # may have no key for (HTTP 401). The user's real provider (e.g.
         # openai-api, or a providers.openai config row) covers this vendor.
-        _alias_target = _PROVIDER_ALIAS_TABLE.get(ev0_id)
+        _alias_target = _PROVIDER_ALIAS_TABLE.get(threev0_id)
         if (
             _alias_target
-            and _alias_target != ev0_id
+            and _alias_target != threev0_id
             and _alias_target in _AGG_PROVIDERS
         ):
             continue
@@ -2563,15 +2563,15 @@ def list_authenticated_providers(
         # entries whose ev0_id matches the canonical profile name so
         # distinct profiles (e.g. kimi-coding, kimi-coding-cn) each get
         # their own picker row.
-        _canonical = ev0_id
+        _canonical = threev0_id
         try:
             from providers import get_provider_profile as _gpp
-            _prof = _gpp(ev0_id)
+            _prof = _gpp(threev0_id)
             if _prof is not None:
                 _canonical = _prof.name
         except Exception:
             pass
-        if _canonical != ev0_id:
+        if _canonical != threev0_id:
             continue
 
         # Skip duplicates: another entry with the same slug was already
@@ -2579,10 +2579,10 @@ def list_authenticated_providers(
         # same ev0_id).  Distinct canonical profiles that share a
         # models.dev ID (e.g. kimi-coding and kimi-coding-cn → kimi-for-coding)
         # are both allowed through since they have different slugs.
-        slug = ev0_id
+        slug = threev0_id
         if slug.lower() in seen_slugs:
             continue
-        if ev0_id.lower() in _excluded or mdev_id.lower() in _excluded:
+        if threev0_id.lower() in _excluded or mdev_id.lower() in _excluded:
             continue
         pdata = data.get(mdev_id)
         if not isinstance(pdata, dict):
@@ -2591,7 +2591,7 @@ def list_authenticated_providers(
         # Prefer auth.py PROVIDER_REGISTRY for env var names — it's our
         # source of truth.  models.dev can have wrong mappings (e.g.
         # minimax-cn → MINIMAX_API_KEY instead of MINIMAX_CN_API_KEY).
-        pconfig = PROVIDER_REGISTRY.get(ev0_id)
+        pconfig = PROVIDER_REGISTRY.get(threev0_id)
         # Skip non-API-key auth providers here — they are handled in
         # section 2 (EV0_OVERLAYS) with proper auth store checking.
         if pconfig and pconfig.auth_type != "api_key":
@@ -2600,7 +2600,7 @@ def list_authenticated_providers(
         # Gate on runtime capability rather than registry membership: special
         # providers and plugin aliases can be routable without a registry row.
         from threev0_cli.auth import is_runtime_provider_routable
-        if not is_runtime_provider_routable(ev0_id):
+        if not is_runtime_provider_routable(threev0_id):
             continue
         if pconfig and pconfig.api_key_env_vars:
             env_vars = list(pconfig.api_key_env_vars)
@@ -2616,11 +2616,11 @@ def list_authenticated_providers(
                 from threev0_cli.auth import _load_auth_store
                 store = _load_auth_store()
                 raw_pool_present = bool(
-                    store and store.get("credential_pool", {}).get(ev0_id)
+                    store and store.get("credential_pool", {}).get(threev0_id)
                 )
                 if raw_pool_present:
                     has_creds = _credential_pool_is_usable(
-                        ev0_id, raw_pool_present=True
+                        threev0_id, raw_pool_present=True
                     )
             except Exception:
                 pass
@@ -2631,22 +2631,22 @@ def list_authenticated_providers(
         # /model picker sees the SAME list `3v0 model` would build, with
         # disk caching to keep the picker open snappy. Falls back to the
         # curated static list when the live fetcher returns nothing.
-        model_ids = cached_provider_model_ids(ev0_id)
+        model_ids = cached_provider_model_ids(threev0_id)
         if not model_ids:
-            model_ids = curated.get(ev0_id, [])
-            if ev0_id in _MODELS_DEV_PREFERRED:
-                model_ids = _merge_with_models_dev(ev0_id, model_ids)
+            model_ids = curated.get(threev0_id, [])
+            if threev0_id in _MODELS_DEV_PREFERRED:
+                model_ids = _merge_with_models_dev(threev0_id, model_ids)
         # A providers.<built-in>.models block extends the provider's discovered
         # catalog. Section 3 cannot emit it later because this built-in row owns
         # the slug, so merge declarations here before applying max_models.
         configured_models: list[str] = []
         if isinstance(user_providers, dict):
-            configured = user_providers.get(ev0_id)
+            configured = user_providers.get(threev0_id)
             if isinstance(configured, dict):
                 configured_models = _declared_model_ids(configured.get("models"))
         model_ids = list(dict.fromkeys([*configured_models, *model_ids]))
         total = len(model_ids)
-        if ev0_id in _UNCAPPED_PICKER_PROVIDERS:
+        if threev0_id in _UNCAPPED_PICKER_PROVIDERS:
             top = model_ids  # Aggregator: show full catalog regardless of max_models
         else:
             top = model_ids[:max_models] if max_models is not None else model_ids
@@ -2659,7 +2659,7 @@ def list_authenticated_providers(
             "name": display_name,
             "is_current": (
                 slug == current_provider
-                or ev0_id == current_provider
+                or threev0_id == current_provider
                 or mdev_id == current_provider
             ),
             "is_user_defined": False,
@@ -2684,16 +2684,16 @@ def list_authenticated_providers(
             continue
 
         # Resolve 3V0 slug — e.g. "github-copilot" → "copilot"
-        ev0_slug = _mdev_to_ev0.get(pid, pid)
-        if ev0_slug.lower() in seen_slugs:
+        threev0_slug = _mdev_to_ev0.get(pid, pid)
+        if threev0_slug.lower() in seen_slugs:
             continue
-        if pid.lower() in _excluded or ev0_slug.lower() in _excluded:
+        if pid.lower() in _excluded or threev0_slug.lower() in _excluded:
             continue
 
         # Check if credentials exist
         has_creds = False
         if overlay.auth_type == "aws_sdk":
-            has_creds = _has_aws_sdk_creds_for_listing(ev0_slug)
+            has_creds = _has_aws_sdk_creds_for_listing(threev0_slug)
         elif overlay.auth_type == "vertex":
             # Vertex authenticates via OAuth2 (service-account JSON / ADC),
             # not an API key — mirror the aws_sdk gate above, otherwise the
@@ -2708,7 +2708,7 @@ def list_authenticated_providers(
             has_creds = any(os.environ.get(ev) for ev in overlay.extra_env_vars)
         # Also check api_key_env_vars from PROVIDER_REGISTRY for api_key auth_type
         if not has_creds and overlay.auth_type == "api_key":
-            for _key in (pid, ev0_slug):
+            for _key in (pid, threev0_slug):
                 pcfg = _auth_registry.get(_key)
                 if pcfg and pcfg.api_key_env_vars:
                     if any(os.environ.get(ev) for ev in pcfg.api_key_env_vars):
@@ -2723,7 +2723,7 @@ def list_authenticated_providers(
                 from threev0_cli.auth import _load_auth_store
                 store = _load_auth_store()
                 providers_store = store.get("providers", {})
-                if store and (pid in providers_store or ev0_slug in providers_store):
+                if store and (pid in providers_store or threev0_slug in providers_store):
                     has_creds = True
             except Exception as exc:
                 logger.debug("Auth store check failed for %s: %s", pid, exc)
@@ -2733,7 +2733,7 @@ def list_authenticated_providers(
         # imports on demand but aren't in the raw auth.json yet.
         if not has_creds:
             try:
-                if _credential_pool_is_usable(ev0_slug):
+                if _credential_pool_is_usable(threev0_slug):
                     has_creds = True
                 elif for_picker:
                     # For the interactive /model picker, also show providers
@@ -2744,13 +2744,13 @@ def list_authenticated_providers(
                     # are in cooldown.
                     try:
                         from agent.credential_pool import load_pool
-                        _pool = load_pool(ev0_slug)
+                        _pool = load_pool(threev0_slug)
                         if _pool.has_credentials():
                             has_creds = True
                     except Exception:
                         pass
             except Exception as exc:
-                logger.debug("Credential pool check failed for %s: %s", ev0_slug, exc)
+                logger.debug("Credential pool check failed for %s: %s", threev0_slug, exc)
         # Fallback: check external credential files directly.
         # The credential pool gates anthropic behind
         # is_provider_explicitly_configured() to prevent auxiliary tasks
@@ -2758,15 +2758,15 @@ def list_authenticated_providers(
         # But the /model picker is discovery-oriented — we WANT to show
         # providers the user can switch to, even if they aren't currently
         # configured.
-        if not has_creds and ev0_slug == "anthropic":
+        if not has_creds and threev0_slug == "anthropic":
             try:
                 from agent.anthropic_adapter import (
                     read_claude_code_credentials,
-                    read_ev0_oauth_credentials,
+                    read_threev0_oauth_credentials,
                 )
-                ev0_creds = read_ev0_oauth_credentials()
+                threev0_creds = read_threev0_oauth_credentials()
                 cc_creds = read_claude_code_credentials()
-                if (ev0_creds and ev0_creds.get("accessToken")) or \
+                if (threev0_creds and threev0_creds.get("accessToken")) or\
                    (cc_creds and cc_creds.get("accessToken")):
                     has_creds = True
             except Exception as exc:
@@ -2774,7 +2774,7 @@ def list_authenticated_providers(
         if not has_creds:
             continue
 
-        if ev0_slug in {"openai-codex", "copilot", "copilot-acp"}:
+        if threev0_slug in {"openai-codex", "copilot", "copilot-acp"}:
             # Use live OAuth-backed discovery so the gateway /model picker
             # matches what the user's authenticated Codex/Copilot backend
             # actually serves — including ChatGPT-Pro-only Codex slugs
@@ -2782,16 +2782,16 @@ def list_authenticated_providers(
             # catalog. ``cached_provider_model_ids()`` falls back to the
             # curated list when the live endpoint is unreachable, so this
             # is safe for unauthenticated and offline cases too.
-            model_ids = cached_provider_model_ids(ev0_slug)
+            model_ids = cached_provider_model_ids(threev0_slug)
         # For aws_sdk providers (bedrock), use live discovery so the list
         # reflects the active region (eu.*, ap.*) not the static us.* list.
         elif overlay.auth_type == "aws_sdk":
             try:
-                _ids = cached_provider_model_ids(ev0_slug)
-                model_ids = _ids if _ids else (curated.get(ev0_slug, []) or curated.get(pid, []))
+                _ids = cached_provider_model_ids(threev0_slug)
+                model_ids = _ids if _ids else (curated.get(threev0_slug, []) or curated.get(pid, []))
             except Exception:
-                model_ids = curated.get(ev0_slug, []) or curated.get(pid, [])
-        elif ev0_slug == "nous":
+                model_ids = curated.get(threev0_slug, []) or curated.get(pid, [])
+        elif threev0_slug == "nous":
             # Nous serves a large live /v1/models catalog (vendor-prefixed
             # models from many providers, returned alphabetically). The
             # `3v0 model` picker deliberately shows ONLY the curated agentic
@@ -2832,29 +2832,29 @@ def list_authenticated_providers(
             # Unified pathway — see Section 1 rationale. Fall back to the
             # curated dict (with models.dev merge for preferred providers)
             # when the live fetcher comes up empty.
-            model_ids = cached_provider_model_ids(ev0_slug)
+            model_ids = cached_provider_model_ids(threev0_slug)
             if not model_ids:
-                model_ids = curated.get(ev0_slug, []) or curated.get(pid, [])
-                if ev0_slug in _MODELS_DEV_PREFERRED:
-                    model_ids = _merge_with_models_dev(ev0_slug, model_ids)
+                model_ids = curated.get(threev0_slug, []) or curated.get(pid, [])
+                if threev0_slug in _MODELS_DEV_PREFERRED:
+                    model_ids = _merge_with_models_dev(threev0_slug, model_ids)
         total = len(model_ids)
-        if ev0_slug in _UNCAPPED_PICKER_PROVIDERS:
+        if threev0_slug in _UNCAPPED_PICKER_PROVIDERS:
             top = model_ids  # Aggregator: show full catalog regardless of max_models
         else:
             top = model_ids[:max_models] if max_models is not None else model_ids
 
         results.append({
-            "slug": ev0_slug,
-            "name": get_label(ev0_slug),
-            "is_current": ev0_slug == current_provider or pid == current_provider,
+            "slug": threev0_slug,
+            "name": get_label(threev0_slug),
+            "is_current": threev0_slug == current_provider or pid == current_provider,
             "is_user_defined": False,
             "models": top,
             "total_models": total,
             "source": "3v0",
         })
         seen_slugs.add(pid.lower())
-        seen_slugs.add(ev0_slug.lower())
-        _record_builtin_endpoint(ev0_slug)
+        seen_slugs.add(threev0_slug.lower())
+        _record_builtin_endpoint(threev0_slug)
 
     # --- 2b. Cross-check canonical provider list ---
     # Catches providers that are in CANONICAL_PROVIDERS but weren't found

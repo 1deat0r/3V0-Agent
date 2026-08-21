@@ -13,7 +13,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from threev0_cli import main as ev0_main
+from threev0_cli import main as threev0_main
 
 
 def _make_head_moved_side_effect(pre_sha="abc123", post_sha="def456"):
@@ -81,52 +81,52 @@ def _patch_update_deps(monkeypatch, tmp_path, run_side_effect):
     attributes on that module is the canonical test surface (matches
     tests/threev0_cli/test_cmd_update.py).
     """
-    monkeypatch.setattr(ev0_main.subprocess, "run", run_side_effect)
-    monkeypatch.setattr(ev0_main, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(threev0_main.subprocess, "run", run_side_effect)
+    monkeypatch.setattr(threev0_main, "PROJECT_ROOT", tmp_path)
     (tmp_path / ".git").mkdir()  # pass the "is a git repo" gate
     monkeypatch.setattr(
-        ev0_main, "_resolve_update_branch", lambda args: "main"
+        threev0_main, "_resolve_update_branch", lambda args: "main"
     )
-    monkeypatch.setattr(ev0_main, "_is_windows", lambda: False)
+    monkeypatch.setattr(threev0_main, "_is_windows", lambda: False)
     monkeypatch.setattr(
-        ev0_main, "_get_origin_url",
+        threev0_main, "_get_origin_url",
         lambda *a, **k: "https://github.com/1deat0r/3V0-Agent.git",
     )
-    monkeypatch.setattr(ev0_main, "_is_fork", lambda *a, **k: False)
+    monkeypatch.setattr(threev0_main, "_is_fork", lambda *a, **k: False)
     monkeypatch.setattr(
-        ev0_main, "_stash_local_changes_if_needed", lambda *a, **k: None
+        threev0_main, "_stash_local_changes_if_needed", lambda *a, **k: None
     )
-    monkeypatch.setattr(ev0_main, "_clear_bytecode_cache", lambda *a, **k: 0)
+    monkeypatch.setattr(threev0_main, "_clear_bytecode_cache", lambda *a, **k: 0)
     monkeypatch.setattr(
-        ev0_main, "_record_bytecode_fingerprint", lambda *a, **k: None
-    )
-    monkeypatch.setattr(
-        ev0_main, "_run_pre_update_backup", lambda *a, **k: None
+        threev0_main, "_record_bytecode_fingerprint", lambda *a, **k: None
     )
     monkeypatch.setattr(
-        ev0_main, "_pause_windows_gateways_for_update", lambda: None
+        threev0_main, "_run_pre_update_backup", lambda *a, **k: None
     )
     monkeypatch.setattr(
-        ev0_main, "_resume_windows_gateways_after_update", lambda *a, **k: None
+        threev0_main, "_pause_windows_gateways_for_update", lambda: None
+    )
+    monkeypatch.setattr(
+        threev0_main, "_resume_windows_gateways_after_update", lambda *a, **k: None
     )
     # Short-circuit the long tail: dependency install + desktop build.
-    monkeypatch.setattr(ev0_main, "_write_update_incomplete_marker", lambda: None)
-    monkeypatch.setattr(ev0_main, "_clear_update_incomplete_marker", lambda: None)
+    monkeypatch.setattr(threev0_main, "_write_update_incomplete_marker", lambda: None)
+    monkeypatch.setattr(threev0_main, "_clear_update_incomplete_marker", lambda: None)
     # Gateway restart path (called after a successful update).
-    monkeypatch.setattr(ev0_main, "_finish_dashboard_update_cleanup", lambda *a: None)
+    monkeypatch.setattr(threev0_main, "_finish_dashboard_update_cleanup", lambda *a: None)
     # Keep the (now surfaced — #78574) gateway auto-restart phase away from
     # this machine's real gateways: discovery returns nothing, systemd is
     # unsupported, so the phase is a clean no-op for both snapshots.
-    import threev0_cli.gateway as ev0_gateway
+    import threev0_cli.gateway as threev0_gateway
 
     monkeypatch.setattr(
-        ev0_gateway, "find_gateway_pids", lambda all_profiles=False: []
+        threev0_gateway, "find_gateway_pids", lambda all_profiles=False: []
     )
     monkeypatch.setattr(
-        ev0_gateway, "supports_systemd_services", lambda: False
+        threev0_gateway, "supports_systemd_services", lambda: False
     )
     monkeypatch.setattr(
-        ev0_gateway, "find_profile_gateway_processes", lambda *a, **k: []
+        threev0_gateway, "find_profile_gateway_processes", lambda *a, **k: []
     )
 
 
@@ -135,7 +135,7 @@ def test_update_success_when_head_moves(monkeypatch, tmp_path, capsys):
     args = SimpleNamespace(branch=None, yes=False, force=False, force_venv=False)
     _patch_update_deps(monkeypatch, tmp_path, _make_head_moved_side_effect())
 
-    ev0_main.cmd_update(args)  # completes normally (no SystemExit)
+    threev0_main.cmd_update(args)  # completes normally (no SystemExit)
 
     out = capsys.readouterr().out
     assert "✓ Code updated!" in out
@@ -149,7 +149,7 @@ def test_update_fails_loudly_when_head_pinned(monkeypatch, tmp_path, capsys):
     _patch_update_deps(monkeypatch, tmp_path, _make_head_pinned_side_effect())
 
     with pytest.raises(SystemExit) as exc_info:
-        ev0_main.cmd_update(args)
+        threev0_main.cmd_update(args)
 
     assert exc_info.value.code == 1
     out = capsys.readouterr().out

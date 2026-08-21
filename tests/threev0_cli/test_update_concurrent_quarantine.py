@@ -123,7 +123,7 @@ def test_detect_concurrent_parents_call_robust_to_one_bad_hop(_winp, tmp_path):
         ancestor_exe=None,
     )
     with patch.dict(sys.modules, {"psutil": fake_psutil}):
-        result = cli_main._detect_concurrent_ev0_instances(scripts_dir)
+        result = cli_main._detect_concurrent_threev0_instances(scripts_dir)
 
     # No crash; helper completes. (Degenerate stub: launcher exe unreadable.)
     assert result == [(launcher_pid, "3v0.exe")]
@@ -149,7 +149,7 @@ def test_quarantine_succeeds_first_attempt(_winp, tmp_path):
     shim = tmp_path / "3v0.exe"
     shim.write_bytes(b"old")
 
-    pairs = cli_main._quarantine_running_ev0_exe(tmp_path)
+    pairs = cli_main._quarantine_running_threev0_exe(tmp_path)
 
     assert len(pairs) == 1
     orig, quarantine = pairs[0]
@@ -174,11 +174,11 @@ def test_quarantine_falls_back_to_reboot_schedule(_winp, tmp_path, capsys, monke
         scheduled_calls.append((s, q))
         return True
 
-    monkeypatch.setattr(cli_main, "_ev0_exe_shims", lambda d: [shim])
+    monkeypatch.setattr(cli_main, "_threev0_exe_shims", lambda d: [shim])
     with patch.object(Path, "rename", always_fails), patch.object(
         cli_main, "_schedule_replace_on_reboot", fake_schedule
     ), patch("time.sleep", lambda *_a, **_k: None):
-        pairs = cli_main._quarantine_running_ev0_exe(tmp_path)
+        pairs = cli_main._quarantine_running_threev0_exe(tmp_path)
 
     captured = capsys.readouterr().out
 

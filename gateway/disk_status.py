@@ -100,9 +100,9 @@ def collect_disk_status(home: Optional[Path] = None) -> Dict[str, Any]:
     }
     try:
         if home is None:
-            from threev0_constants import get_ev0_home
+            from threev0_constants import get_threev0_home
 
-            home = get_ev0_home()
+            home = get_threev0_home()
         usage = shutil.disk_usage(home)
     except Exception:
         return status

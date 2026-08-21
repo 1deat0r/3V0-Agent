@@ -32,16 +32,16 @@ def test_output_path_rejects_bare_dotdot():
     assert "traversal" in result["error"].lower()
 
 
-def test_output_path_rejects_ev0_oauth_store(tmp_path, monkeypatch):
+def test_output_path_rejects_threev0_oauth_store(tmp_path, monkeypatch):
     """TTS output_path must not bypass the shared protected-file write guard."""
     import agent.file_safety as file_safety
 
-    ev0_home = tmp_path / "3v0-home"
-    ev0_home.mkdir()
-    monkeypatch.setattr(file_safety, "_ev0_home_path", lambda: ev0_home)
-    monkeypatch.setattr(file_safety, "_ev0_root_path", lambda: ev0_home)
+    threev0_home = tmp_path / "3v0-home"
+    threev0_home.mkdir()
+    monkeypatch.setattr(file_safety, "_threev0_home_path", lambda: threev0_home)
+    monkeypatch.setattr(file_safety, "_threev0_root_path", lambda: threev0_home)
 
-    target = ev0_home / ".anthropic_oauth.json"
+    target = threev0_home / ".anthropic_oauth.json"
     result = json.loads(text_to_speech_tool(
         text="hello",
         output_path=str(target),
@@ -56,11 +56,11 @@ def test_output_path_rejects_mcp_token_directory(tmp_path, monkeypatch):
     """TTS output_path must not write synthesized audio over MCP token files."""
     import agent.file_safety as file_safety
 
-    ev0_home = tmp_path / "3v0-home"
-    token_dir = ev0_home / "mcp-tokens"
+    threev0_home = tmp_path / "3v0-home"
+    token_dir = threev0_home / "mcp-tokens"
     token_dir.mkdir(parents=True)
-    monkeypatch.setattr(file_safety, "_ev0_home_path", lambda: ev0_home)
-    monkeypatch.setattr(file_safety, "_ev0_root_path", lambda: ev0_home)
+    monkeypatch.setattr(file_safety, "_threev0_home_path", lambda: threev0_home)
+    monkeypatch.setattr(file_safety, "_threev0_root_path", lambda: threev0_home)
 
     target = token_dir / "server.mp3"
     result = json.loads(text_to_speech_tool(

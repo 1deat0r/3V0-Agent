@@ -29,19 +29,19 @@ def notepad(monkeypatch, tmp_path):
 @pytest.fixture
 def cron_env(tmp_path, monkeypatch, notepad):
     """Isolated cron environment with temp EV0_HOME (mirrors test_cron_context_from)."""
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    (ev0_home / "cron").mkdir()
-    (ev0_home / "cron" / "output").mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    (threev0_home / "cron").mkdir()
+    (threev0_home / "cron" / "output").mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     import cron.jobs as jobs_mod
 
-    monkeypatch.setattr(jobs_mod, "EV0_DIR", ev0_home)
-    monkeypatch.setattr(jobs_mod, "CRON_DIR", ev0_home / "cron")
-    monkeypatch.setattr(jobs_mod, "JOBS_FILE", ev0_home / "cron" / "jobs.json")
-    monkeypatch.setattr(jobs_mod, "OUTPUT_DIR", ev0_home / "cron" / "output")
-    return ev0_home
+    monkeypatch.setattr(jobs_mod, "EV0_DIR", threev0_home)
+    monkeypatch.setattr(jobs_mod, "CRON_DIR", threev0_home / "cron")
+    monkeypatch.setattr(jobs_mod, "JOBS_FILE", threev0_home / "cron" / "jobs.json")
+    monkeypatch.setattr(jobs_mod, "OUTPUT_DIR", threev0_home / "cron" / "output")
+    return threev0_home
 
 
 class TestNotepadCrud:

@@ -14,7 +14,7 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from tools.environments.base import (
     BaseEnvironment,
     _load_json_store,
@@ -24,7 +24,7 @@ from tools.environments.base import (
 
 logger = logging.getLogger(__name__)
 
-_SNAPSHOT_STORE = get_ev0_home() / "singularity_snapshots.json"
+_SNAPSHOT_STORE = get_threev0_home() / "singularity_snapshots.json"
 
 
 def _find_singularity_executable() -> str:

@@ -42,7 +42,7 @@ def test_slash_worker_popen_uses_utf8_replace():
     """
     with patch.dict("sys.modules", {
         "threev0_constants": MagicMock(
-            get_ev0_home=MagicMock(return_value="/tmp/ev0_test")
+            get_threev0_home=MagicMock(return_value="/tmp/ev0_test")
         ),
     }):
         with patch("subprocess.Popen") as mock_popen:
@@ -95,7 +95,7 @@ def test_shell_exec_uses_utf8_replace():
     handler = server._methods["shell.exec"]
     with patch("subprocess.run", return_value=_make_completed_process()) as mock_run:
         # A harmless, non-dangerous command that passes the approval gate.
-        with patch("tools.approval.detect_hardline_command", return_value=(False, "")), \
+        with patch("tools.approval.detect_hardline_command", return_value=(False, "")),\
              patch("tools.approval.detect_dangerous_command", return_value=(False, None, "")):
             resp = handler(1, {"command": "echo hello"})
         assert mock_run.called, "subprocess.run was not invoked"
@@ -116,10 +116,10 @@ def test_quick_command_exec_uses_utf8_replace():
     errors="replace" (#53137)."""
     handler = server._methods["command.dispatch"]
     fake_cp = _make_completed_process()
-    with patch("subprocess.run", return_value=fake_cp) as mock_run, \
+    with patch("subprocess.run", return_value=fake_cp) as mock_run,\
          patch("tui_gateway.server._load_cfg", return_value={
              "quick_commands": {"runcmd": {"type": "exec", "command": "echo hi"}}
-         }), \
+         }),\
          patch("tools.environments.local._sanitize_subprocess_env", return_value={"PATH": "/usr/bin"}):
         resp = handler(1, {"name": "runcmd", "arg": "", "session_id": ""})
         assert mock_run.called, "subprocess.run was not invoked for quick-command exec"

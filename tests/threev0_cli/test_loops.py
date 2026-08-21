@@ -14,7 +14,7 @@ import pytest
 
 
 @pytest.fixture
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     """Isolated EV0_HOME so SessionDB.state_meta writes don't clobber the real one."""
     from pathlib import Path
 
@@ -233,7 +233,7 @@ class TestLoopStateSerde:
 
 
 class TestPersistence:
-    def test_save_load_clear(self, ev0_home):
+    def test_save_load_clear(self, threev0_home):
         from threev0_cli.loops import LoopManager, load_loop
 
         mgr = LoopManager(session_id="sess-1")
@@ -247,7 +247,7 @@ class TestPersistence:
         cleared = load_loop("sess-1")
         assert cleared is not None and cleared.status == "cleared"
 
-    def test_list_active_loops(self, ev0_home):
+    def test_list_active_loops(self, threev0_home):
         from threev0_cli.loops import LoopManager, list_active_loops
 
         LoopManager(session_id="a").set("task a", interval_seconds=60)
@@ -259,7 +259,7 @@ class TestPersistence:
         assert "a" in active
         assert "b" not in active
 
-    def test_migrate_to_session(self, ev0_home):
+    def test_migrate_to_session(self, threev0_home):
         from threev0_cli.loops import LoopManager, load_loop, migrate_loop_to_session
 
         LoopManager(session_id="parent").set("watch it", interval_seconds=60)
@@ -269,13 +269,13 @@ class TestPersistence:
         parent = load_loop("parent")
         assert parent is not None and parent.status == "cleared"
 
-    def test_migrate_no_source(self, ev0_home):
+    def test_migrate_no_source(self, threev0_home):
         from threev0_cli.loops import migrate_loop_to_session
 
         assert migrate_loop_to_session("nope", "child2") is False
         assert migrate_loop_to_session("same", "same") is False
 
-    def test_migrate_does_not_clobber_child(self, ev0_home):
+    def test_migrate_does_not_clobber_child(self, threev0_home):
         from threev0_cli.loops import LoopManager, load_loop, migrate_loop_to_session
 
         LoopManager(session_id="p2").set("parent loop", interval_seconds=60)
@@ -290,14 +290,14 @@ class TestPersistence:
 
 
 class TestTickLifecycle:
-    def test_not_due_immediately(self, ev0_home):
+    def test_not_due_immediately(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t1")
         mgr.set("poll", interval_seconds=300)
         assert mgr.is_due() is False
 
-    def test_due_after_interval(self, ev0_home):
+    def test_due_after_interval(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t2")
@@ -305,7 +305,7 @@ class TestTickLifecycle:
         state.next_due_at = time.time() - 1
         assert mgr.is_due() is True
 
-    def test_fire_marks_awaiting_and_blocks_refire(self, ev0_home):
+    def test_fire_marks_awaiting_and_blocks_refire(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t3")
@@ -320,7 +320,7 @@ class TestTickLifecycle:
         assert mgr.is_due() is False  # can't double-fire mid-turn
         assert mgr.fire_tick() is None
 
-    def test_slash_prompt_returned_raw(self, ev0_home):
+    def test_slash_prompt_returned_raw(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t4")
@@ -328,7 +328,7 @@ class TestTickLifecycle:
         state.next_due_at = time.time() - 1
         assert mgr.fire_tick() == "/recap"
 
-    def test_abandon_tick_rolls_back(self, ev0_home):
+    def test_abandon_tick_rolls_back(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t5")
@@ -339,7 +339,7 @@ class TestTickLifecycle:
         assert mgr.state.awaiting_response is False
         assert mgr.state.ticks_fired == 0
 
-    def test_complete_tick_marker_stops(self, ev0_home):
+    def test_complete_tick_marker_stops(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t6")
@@ -350,7 +350,7 @@ class TestTickLifecycle:
         assert decision["stopped"] is True
         assert decision["status"] == "done"
 
-    def test_complete_tick_times_cap(self, ev0_home):
+    def test_complete_tick_times_cap(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t7")
@@ -362,7 +362,7 @@ class TestTickLifecycle:
         assert decision["status"] == "done"
         assert "1/1" in decision["message"]
 
-    def test_complete_tick_continues_and_reschedules(self, ev0_home):
+    def test_complete_tick_continues_and_reschedules(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t8")
@@ -375,7 +375,7 @@ class TestTickLifecycle:
         assert mgr.state.awaiting_response is False
         assert mgr.state.next_due_at > time.time() + 250
 
-    def test_complete_tick_max_ticks_pauses(self, ev0_home):
+    def test_complete_tick_max_ticks_pauses(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t9")
@@ -387,7 +387,7 @@ class TestTickLifecycle:
         assert decision["stopped"] is True
         assert decision["status"] == "paused"
 
-    def test_until_judge_done_stops(self, ev0_home):
+    def test_until_judge_done_stops(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t10")
@@ -399,7 +399,7 @@ class TestTickLifecycle:
         assert decision["stopped"] is True
         assert decision["status"] == "done"
 
-    def test_until_judge_continue_loops(self, ev0_home):
+    def test_until_judge_continue_loops(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t11")
@@ -410,7 +410,7 @@ class TestTickLifecycle:
             decision = mgr.complete_tick("3 tests still failing")
         assert decision["stopped"] is False
 
-    def test_until_judge_error_fails_open(self, ev0_home):
+    def test_until_judge_error_fails_open(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="t12")
@@ -423,7 +423,7 @@ class TestTickLifecycle:
 
 
 class TestSelfPacedBackoff:
-    def test_backoff_doubles_on_unchanged_and_resets_on_change(self, ev0_home):
+    def test_backoff_doubles_on_unchanged_and_resets_on_change(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="sp1")
@@ -455,7 +455,7 @@ class TestSelfPacedBackoff:
         mgr.complete_tick("queue depth is 2 — draining")
         assert mgr.state.current_delay == floor
 
-    def test_timestamp_only_changes_do_not_reset(self, ev0_home):
+    def test_timestamp_only_changes_do_not_reset(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="sp2")
@@ -476,14 +476,14 @@ class TestSelfPacedBackoff:
 
 
 class TestControls:
-    def test_min_interval_enforced(self, ev0_home):
+    def test_min_interval_enforced(self, threev0_home):
         from threev0_cli.loops import LoopManager, min_interval_seconds
 
         mgr = LoopManager(session_id="c1")
         state = mgr.set("poll", interval_seconds=1)
         assert state.interval_seconds >= min_interval_seconds()
 
-    def test_pause_resume(self, ev0_home):
+    def test_pause_resume(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="c2")
@@ -495,7 +495,7 @@ class TestControls:
         mgr.resume()
         assert mgr.is_active() is True
 
-    def test_paused_mid_tick_clears_awaiting(self, ev0_home):
+    def test_paused_mid_tick_clears_awaiting(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="c3")
@@ -505,7 +505,7 @@ class TestControls:
         mgr.pause(reason="user-interrupted")
         assert mgr.state.awaiting_response is False
 
-    def test_status_line_shapes(self, ev0_home):
+    def test_status_line_shapes(self, threev0_home):
         from threev0_cli.loops import LoopManager
 
         mgr = LoopManager(session_id="c4")
@@ -525,19 +525,19 @@ class TestControls:
 
 
 class TestGoalMixing:
-    def test_active_goal_blocks_tick(self, ev0_home):
+    def test_active_goal_blocks_tick(self, threev0_home):
         from threev0_cli.goals import GoalManager
         from threev0_cli.loops import goal_blocks_loop_tick
 
         GoalManager(session_id="g1").set("finish the migration")
         assert goal_blocks_loop_tick("g1") is True
 
-    def test_no_goal_does_not_block(self, ev0_home):
+    def test_no_goal_does_not_block(self, threev0_home):
         from threev0_cli.loops import goal_blocks_loop_tick
 
         assert goal_blocks_loop_tick("g2") is False
 
-    def test_paused_goal_does_not_block(self, ev0_home):
+    def test_paused_goal_does_not_block(self, threev0_home):
         from threev0_cli.goals import GoalManager
         from threev0_cli.loops import goal_blocks_loop_tick
 
@@ -546,7 +546,7 @@ class TestGoalMixing:
         gm.pause()
         assert goal_blocks_loop_tick("g3") is False
 
-    def test_parked_goal_does_not_block(self, ev0_home):
+    def test_parked_goal_does_not_block(self, threev0_home):
         from threev0_cli.goals import GoalManager
         from threev0_cli.loops import goal_blocks_loop_tick
 
@@ -562,7 +562,7 @@ class TestGoalMixing:
 
 
 class TestDispatchLoopCommand:
-    def test_create_fixed(self, ev0_home):
+    def test_create_fixed(self, threev0_home):
         from threev0_cli.loops import LoopManager, dispatch_loop_command
 
         mgr = LoopManager(session_id="d1")
@@ -571,7 +571,7 @@ class TestDispatchLoopCommand:
         assert "Loop set" in result["output"]
         assert "every 5m" in result["output"]
 
-    def test_create_self_paced(self, ev0_home):
+    def test_create_self_paced(self, threev0_home):
         from threev0_cli.loops import LoopManager, dispatch_loop_command
 
         mgr = LoopManager(session_id="d2")
@@ -579,7 +579,7 @@ class TestDispatchLoopCommand:
         assert result["created"] is True
         assert "Self-paced" in result["output"]
 
-    def test_status_empty(self, ev0_home):
+    def test_status_empty(self, threev0_home):
         from threev0_cli.loops import LoopManager, dispatch_loop_command
 
         mgr = LoopManager(session_id="d3")
@@ -587,7 +587,7 @@ class TestDispatchLoopCommand:
         assert result["created"] is False
         assert "No loop set" in result["output"]
 
-    def test_pause_resume_stop(self, ev0_home):
+    def test_pause_resume_stop(self, threev0_home):
         from threev0_cli.loops import LoopManager, dispatch_loop_command
 
         mgr = LoopManager(session_id="d4")
@@ -597,7 +597,7 @@ class TestDispatchLoopCommand:
         assert "stopped" in dispatch_loop_command(mgr, "stop")["output"].lower()
         assert "No active loop" in dispatch_loop_command(mgr, "stop")["output"]
 
-    def test_route_stored(self, ev0_home):
+    def test_route_stored(self, threev0_home):
         from threev0_cli.loops import LoopManager, dispatch_loop_command, load_loop
 
         mgr = LoopManager(session_id="d5")
@@ -605,7 +605,7 @@ class TestDispatchLoopCommand:
         dispatch_loop_command(mgr, "5m ping", route=route)
         assert load_loop("d5").route == route
 
-    def test_help(self, ev0_home):
+    def test_help(self, threev0_home):
         from threev0_cli.loops import LoopManager, dispatch_loop_command
 
         mgr = LoopManager(session_id="d6")
@@ -613,7 +613,7 @@ class TestDispatchLoopCommand:
         assert "Usage" in out
         assert "--times" in out
 
-    def test_bad_times_error(self, ev0_home):
+    def test_bad_times_error(self, threev0_home):
         from threev0_cli.loops import LoopManager, dispatch_loop_command
 
         mgr = LoopManager(session_id="d7")
@@ -645,7 +645,7 @@ class TestCommandRegistry:
 
 
 class TestListMetaPrefix:
-    def test_prefix_scan(self, ev0_home):
+    def test_prefix_scan(self, threev0_home):
         from threev0_state import SessionDB
 
         db = SessionDB()
@@ -655,7 +655,7 @@ class TestListMetaPrefix:
         rows = dict(db.list_meta_prefix("lmp-test:"))
         assert rows == {"lmp-test:aaa": "1", "lmp-test:bbb": "2"}
 
-    def test_wildcards_escaped(self, ev0_home):
+    def test_wildcards_escaped(self, threev0_home):
         from threev0_state import SessionDB
 
         db = SessionDB()
@@ -663,7 +663,7 @@ class TestListMetaPrefix:
         db.set_meta("prefix:y", "2")
         assert db.list_meta_prefix("pre%") == [("pre%fix:x", "1")]
 
-    def test_empty_prefix(self, ev0_home):
+    def test_empty_prefix(self, threev0_home):
         from threev0_state import SessionDB
 
         db = SessionDB()

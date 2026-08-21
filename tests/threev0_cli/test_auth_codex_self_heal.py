@@ -59,11 +59,11 @@ def test_self_heals_on_stale_refresh_token(monkeypatch):
 
 def test_self_heals_missing_singleton_access_token_from_codex_cli(tmp_path, monkeypatch):
     """Exact cron failure path: 3V0 auth has refresh_token but missing access_token."""
-    ev0_home = tmp_path / "3v0"
+    threev0_home = tmp_path / "3v0"
     codex_home = tmp_path / "codex"
-    ev0_home.mkdir()
+    threev0_home.mkdir()
     codex_home.mkdir()
-    (ev0_home / "auth.json").write_text(json.dumps({
+    (threev0_home / "auth.json").write_text(json.dumps({
         "version": 1,
         "providers": {
             "openai-codex": {
@@ -79,14 +79,14 @@ def test_self_heals_missing_singleton_access_token_from_codex_cli(tmp_path, monk
             "refresh_token": "fresh-refresh",
         },
     }))
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
 
     resolved = resolve_codex_runtime_credentials()
 
     assert resolved["api_key"] == "fresh-access"
     assert resolved["source"] == "3v0-auth-store"
-    stored = json.loads((ev0_home / "auth.json").read_text())
+    stored = json.loads((threev0_home / "auth.json").read_text())
     tokens = stored["providers"]["openai-codex"]["tokens"]
     assert tokens["access_token"] == "fresh-access"
     assert tokens["refresh_token"] == "fresh-refresh"

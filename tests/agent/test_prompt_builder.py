@@ -13,7 +13,7 @@ from agent.prompt_builder import (
     _truncate_content,
     _parse_skill_file,
     _skill_should_show,
-    _find_ev0_md,
+    _find_threev0_md,
     _find_git_root,
     _strip_yaml_frontmatter,
     build_skills_system_prompt,
@@ -536,9 +536,9 @@ class TestBuildContextFilesPrompt:
 
     def test_empty_soul_md_adds_nothing(self, tmp_path, monkeypatch):
         monkeypatch.setenv("EV0_HOME", str(tmp_path / "ev0_home"))
-        ev0_home = tmp_path / "ev0_home"
-        ev0_home.mkdir()
-        (ev0_home / "SOUL.md").write_text("\n\n", encoding="utf-8")
+        threev0_home = tmp_path / "ev0_home"
+        threev0_home.mkdir()
+        (threev0_home / "SOUL.md").write_text("\n\n", encoding="utf-8")
         result = build_context_files_prompt(cwd=str(tmp_path))
         assert result == ""
 
@@ -592,7 +592,7 @@ class TestBuildContextFilesPrompt:
 class TestFindEv0Md:
     def test_finds_in_cwd(self, tmp_path):
         (tmp_path / ".3v0.md").write_text("rules")
-        assert _find_ev0_md(tmp_path) == tmp_path / ".3v0.md"
+        assert _find_threev0_md(tmp_path) == tmp_path / ".3v0.md"
 
 
 
@@ -601,7 +601,7 @@ class TestFindEv0Md:
         (tmp_path / ".3v0.md").write_text("root rules")
         sub = tmp_path / "a" / "b"
         sub.mkdir(parents=True)
-        assert _find_ev0_md(sub) == tmp_path / ".3v0.md"
+        assert _find_threev0_md(sub) == tmp_path / ".3v0.md"
 
 
 
@@ -621,7 +621,7 @@ class TestFindEv0Md:
         cwd.mkdir()
         # No git root anywhere up the tree.
         with patch("agent.prompt_builder._find_git_root", return_value=None):
-            assert _find_ev0_md(cwd) is None
+            assert _find_threev0_md(cwd) is None
 
 
 

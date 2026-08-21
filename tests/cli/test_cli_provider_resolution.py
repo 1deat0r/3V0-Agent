@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from threev0_cli.auth import AuthError
-from threev0_cli import main as ev0_main
+from threev0_cli import main as threev0_main
 
 
 # ---------------------------------------------------------------------------
@@ -344,7 +344,7 @@ def test_model_flow_nous_does_not_restore_stale_custom_api_key(tmp_path, monkeyp
         lambda config: None,
     )
 
-    ev0_main._model_flow_nous(stale_config, current_model="glm-5.2")
+    threev0_main._model_flow_nous(stale_config, current_model="glm-5.2")
 
     config = yaml.safe_load(config_path.read_text()) or {}
     model = config.get("model")
@@ -471,7 +471,7 @@ def test_model_flow_custom_saves_verified_v1_base_url(monkeypatch, capsys):
     monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
     monkeypatch.setattr("threev0_cli.secret_prompt.masked_secret_prompt", lambda _prompt="": next(answers))
 
-    ev0_main._model_flow_custom({})
+    threev0_main._model_flow_custom({})
     output = capsys.readouterr().out
 
     assert "Saving the working base URL instead" in output
@@ -535,7 +535,7 @@ def test_model_flow_custom_persists_selected_api_mode(monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
     monkeypatch.setattr("threev0_cli.secret_prompt.masked_secret_prompt", lambda _prompt="": "test-key")
 
-    ev0_main._model_flow_custom({"model": {"provider": "custom"}})
+    threev0_main._model_flow_custom({"model": {"provider": "custom"}})
 
     assert saved_cfg["model"]["provider"] == "custom"
     assert saved_cfg["model"]["base_url"] == "https://codex.example.com/v1"
@@ -549,7 +549,7 @@ def test_model_flow_custom_persists_selected_api_mode(monkeypatch):
 
 
 def test_cmd_model_forwards_nous_login_tls_options(monkeypatch):
-    monkeypatch.setattr(ev0_main, "_require_tty", lambda *a: None)
+    monkeypatch.setattr(threev0_main, "_require_tty", lambda *a: None)
     monkeypatch.setattr(
         "threev0_cli.config.load_config",
         lambda: {"model": {"default": "gpt-5", "provider": "nous"}},
@@ -559,7 +559,7 @@ def test_cmd_model_forwards_nous_login_tls_options(monkeypatch):
     monkeypatch.setattr("threev0_cli.config.save_env_value", lambda key, value: None)
     monkeypatch.setattr("threev0_cli.auth.resolve_provider", lambda requested, **kwargs: "nous")
     monkeypatch.setattr("threev0_cli.auth.get_provider_auth_state", lambda provider_id: None)
-    monkeypatch.setattr(ev0_main, "_prompt_provider_choice", lambda choices, **kwargs: 0)
+    monkeypatch.setattr(threev0_main, "_prompt_provider_choice", lambda choices, **kwargs: 0)
 
     captured = {}
 
@@ -575,7 +575,7 @@ def test_cmd_model_forwards_nous_login_tls_options(monkeypatch):
 
     monkeypatch.setattr("threev0_cli.auth._login_nous", _fake_login)
 
-    ev0_main.cmd_model(
+    threev0_main.cmd_model(
         SimpleNamespace(
             portal_url="https://portal.nousresearch.com",
             inference_url="https://inference.nousresearch.com/v1",

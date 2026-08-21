@@ -212,12 +212,12 @@ def _remove_claude_code(provider: str, removed) -> RemovalResult:
     ])
 
 
-def _remove_ev0_pkce(provider: str, removed) -> RemovalResult:
+def _remove_threev0_pkce(provider: str, removed) -> RemovalResult:
     """~/.3V0/.anthropic_oauth.json is ours — delete it outright."""
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
     result = RemovalResult()
-    oauth_file = get_ev0_home() / ".anthropic_oauth.json"
+    oauth_file = get_threev0_home() / ".anthropic_oauth.json"
     if oauth_file.exists():
         try:
             oauth_file.unlink()
@@ -411,7 +411,7 @@ def _register_all_sources() -> None:
     ))
     register(RemovalStep(
         provider="anthropic", source_id="ev0_pkce",
-        remove_fn=_remove_ev0_pkce,
+        remove_fn=_remove_threev0_pkce,
         description="~/.3V0/.anthropic_oauth.json",
     ))
     register(RemovalStep(

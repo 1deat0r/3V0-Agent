@@ -25,21 +25,21 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 @pytest.fixture
 def cron_env(tmp_path, monkeypatch):
     """Isolated cron environment with temp EV0_HOME."""
-    ev0_home = tmp_path / ".3V0"
-    ev0_home.mkdir()
-    (ev0_home / "cron").mkdir()
-    (ev0_home / "cron" / "output").mkdir()
-    (ev0_home / "scripts").mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / ".3V0"
+    threev0_home.mkdir()
+    (threev0_home / "cron").mkdir()
+    (threev0_home / "cron" / "output").mkdir()
+    (threev0_home / "scripts").mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
 
     # Clear cached module-level paths
     import cron.jobs as jobs_mod
-    monkeypatch.setattr(jobs_mod, "EV0_DIR", ev0_home)
-    monkeypatch.setattr(jobs_mod, "CRON_DIR", ev0_home / "cron")
-    monkeypatch.setattr(jobs_mod, "JOBS_FILE", ev0_home / "cron" / "jobs.json")
-    monkeypatch.setattr(jobs_mod, "OUTPUT_DIR", ev0_home / "cron" / "output")
+    monkeypatch.setattr(jobs_mod, "EV0_DIR", threev0_home)
+    monkeypatch.setattr(jobs_mod, "CRON_DIR", threev0_home / "cron")
+    monkeypatch.setattr(jobs_mod, "JOBS_FILE", threev0_home / "cron" / "jobs.json")
+    monkeypatch.setattr(jobs_mod, "OUTPUT_DIR", threev0_home / "cron" / "output")
 
-    return ev0_home
+    return threev0_home
 
 
 class TestJobScriptField:
@@ -73,7 +73,7 @@ def test_cronjob_tool_rejects_stale_past_one_shot(cron_env, monkeypatch):
     from tools.cronjob_tools import cronjob
 
     now = datetime(2026, 3, 18, 4, 30, 0, tzinfo=timezone.utc)
-    monkeypatch.setattr("cron.jobs._ev0_now", lambda: now)
+    monkeypatch.setattr("cron.jobs._threev0_now", lambda: now)
     stale = (now - timedelta(minutes=5)).isoformat()
 
     result = json.loads(cronjob(action="create", prompt="Too late", schedule=stale))

@@ -132,7 +132,7 @@ def _load_console_script_names(root: Path) -> list[str]:
         return []
 
 
-def _quarantine_running_ev0_exe(scripts_dir: Path) -> list[tuple[Path, Path]]:
+def _quarantine_running_threev0_exe(scripts_dir: Path) -> list[tuple[Path, Path]]:
     """Rename live 3v0*.exe shims aside so the installer can rewrite them.
 
     Windows blocks REPLACE on a running .exe but allows RENAME. Best-effort:
@@ -180,7 +180,7 @@ def _run_install_cmd(cmd: list[str], *, env: dict | None, root: Path) -> None:
     per-extra fallback ladder).
     """
     scripts_dir = _venv_scripts_dir(root) if _is_windows() else None
-    moved = _quarantine_running_ev0_exe(scripts_dir) if scripts_dir else []
+    moved = _quarantine_running_threev0_exe(scripts_dir) if scripts_dir else []
     try:
         subprocess.run(cmd, cwd=root, check=True, env=env)
     finally:

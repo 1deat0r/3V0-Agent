@@ -910,11 +910,11 @@ class TestDefaultInteractionDispatch:
     async def test_update_prompt_click_writes_response_file(self, tmp_path, monkeypatch):
         """update_prompt:y click writes 'y' to ~/.3V0/.update_response."""
         adapter = self._make_adapter()
-        ev0_home = tmp_path / "ev0_home"
-        ev0_home.mkdir()
+        threev0_home = tmp_path / "ev0_home"
+        threev0_home.mkdir()
         monkeypatch.setattr(
-            "threev0_constants.get_ev0_home",
-            lambda: ev0_home,
+            "threev0_constants.get_threev0_home",
+            lambda: threev0_home,
         )
 
         from gateway.platforms.qqbot.keyboards import parse_interaction_event
@@ -924,7 +924,7 @@ class TestDefaultInteractionDispatch:
         })
         await adapter._default_interaction_dispatch(event)
 
-        response = ev0_home / ".update_response"
+        response = threev0_home / ".update_response"
         assert response.exists()
         assert response.read_text() == "y"
 

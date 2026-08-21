@@ -29,11 +29,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 except Exception:  # pragma: no cover — plugin may load before constants resolves
     import os
 
-    def get_ev0_home() -> Path:  # type: ignore[no-redef]
+    def get_threev0_home() -> Path:  # type: ignore[no-redef]
         val = (os.environ.get("EV0_HOME") or "").strip()
         return Path(val).resolve() if val else (Path.home() / ".3V0").resolve()
 
@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 def get_state_dir() -> Path:
     """State dir — separate from ``$EV0_HOME/logs/``."""
-    return get_ev0_home() / "disk-cleanup"
+    return get_threev0_home() / "disk-cleanup"
 
 
 def get_tracked_file() -> Path:
@@ -68,9 +68,9 @@ def is_safe_path(path: Path) -> bool:
 
     Rejects Windows mounts (``/mnt/c`` etc.) and any system directory.
     """
-    ev0_home = get_ev0_home()
+    threev0_home = get_threev0_home()
     try:
-        path.resolve().relative_to(ev0_home)
+        path.resolve().relative_to(threev0_home)
         return True
     except (ValueError, OSError):
         pass
@@ -180,9 +180,9 @@ def _is_protected_cron_path(p: Path) -> bool:
     # Lazily build the set once per process so EV0_HOME is resolved
     # exactly once.
     if not _PROTECTED_CRON_PATHS:
-        ev0_home = get_ev0_home()
+        threev0_home = get_threev0_home()
         for parent in ("cron", "cronjobs"):
-            base = ev0_home / parent
+            base = threev0_home / parent
             _PROTECTED_CRON_PATHS.add(str(base))
             _PROTECTED_CRON_PATHS.add(str(base / "output"))
             _PROTECTED_CRON_PATHS.add(str(base / "jobs.json"))
@@ -386,11 +386,11 @@ def quick() -> Dict[str, Any]:
     # durable state trees.  Some installs place the 3V0 checkout, venv,
     # and desktop build under EV0_HOME; a full rglob over that tree can
     # stall the gateway event loop for minutes.
-    ev0_home = get_ev0_home()
+    threev0_home = get_threev0_home()
     empty_removed = 0
     sweep_stack: List[Tuple[Path, bool]] = []
     try:
-        for top in ev0_home.iterdir():
+        for top in threev0_home.iterdir():
             if (
                 top.is_dir()
                 and not top.is_symlink()
@@ -573,9 +573,9 @@ def guess_category(path: Path) -> Optional[str]:
         return None
 
     # Skip the state dir itself, logs, memory files, sessions, config.
-    ev0_home = get_ev0_home()
+    threev0_home = get_threev0_home()
     try:
-        rel = path.resolve().relative_to(ev0_home)
+        rel = path.resolve().relative_to(threev0_home)
         top = rel.parts[0] if rel.parts else ""
         if top in {
             "disk-cleanup", "logs", "memories", "sessions", "config.yaml",

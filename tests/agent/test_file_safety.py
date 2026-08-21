@@ -74,24 +74,24 @@ class TestCacheFileReadBlocking:
 
     def test_hub_index_cache_blocked(self, tmp_path):
         """Hub index-cache reads are blocked."""
-        ev0_home = tmp_path / ".3V0"
-        cache = ev0_home / "skills" / ".hub" / "index-cache" / "data.json"
+        threev0_home = tmp_path / ".3V0"
+        cache = threev0_home / "skills" / ".hub" / "index-cache" / "data.json"
         cache.parent.mkdir(parents=True)
         cache.write_text("{}")
 
-        with patch("agent.file_safety._ev0_home_path", return_value=ev0_home):
+        with patch("agent.file_safety._threev0_home_path", return_value=threev0_home):
             error = get_read_block_error(str(cache))
             assert error is not None
             assert "internal 3V0 cache" in error
 
     def test_hub_directory_blocked(self, tmp_path):
         """Hub directory reads are blocked."""
-        ev0_home = tmp_path / ".3V0"
-        hub = ev0_home / "skills" / ".hub" / "metadata.json"
+        threev0_home = tmp_path / ".3V0"
+        hub = threev0_home / "skills" / ".hub" / "metadata.json"
         hub.parent.mkdir(parents=True)
         hub.write_text("{}")
 
-        with patch("agent.file_safety._ev0_home_path", return_value=ev0_home):
+        with patch("agent.file_safety._threev0_home_path", return_value=threev0_home):
             error = get_read_block_error(str(hub))
             assert error is not None
 
@@ -104,12 +104,12 @@ class TestCacheFileReadBlocking:
 class TestCombinedGuards:
     """Both guards should work independently without interference."""
 
-    def test_env_guard_works_regardless_of_ev0_home(self, tmp_path):
+    def test_env_guard_works_regardless_of_threev0_home(self, tmp_path):
         """The env basename guard does not depend on EV0_HOME resolution."""
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
 
-        with patch("agent.file_safety._ev0_home_path", return_value=ev0_home):
+        with patch("agent.file_safety._threev0_home_path", return_value=threev0_home):
             # Regular project .env should still be blocked
             error = get_read_block_error("/workspace/.env")
             assert error is not None
@@ -120,12 +120,12 @@ class TestCombinedGuards:
 
     def test_cache_guard_still_works_with_env_guard(self, tmp_path):
         """Cache file blocking still works when env guard is active."""
-        ev0_home = tmp_path / ".3V0"
-        cache = ev0_home / "skills" / ".hub" / "index-cache" / "x"
+        threev0_home = tmp_path / ".3V0"
+        cache = threev0_home / "skills" / ".hub" / "index-cache" / "x"
         cache.parent.mkdir(parents=True)
         cache.write_text("")
 
-        with patch("agent.file_safety._ev0_home_path", return_value=ev0_home):
+        with patch("agent.file_safety._threev0_home_path", return_value=threev0_home):
             error = get_read_block_error(str(cache))
             assert error is not None
             assert "internal 3V0 cache" in error

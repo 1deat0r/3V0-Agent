@@ -172,8 +172,8 @@ def test_terminal_output_transform_does_not_change_approval_or_exit_code_meaning
 def test_terminal_output_transform_integration_with_real_plugin(monkeypatch, tmp_path):
     import yaml
 
-    ev0_home = Path(os.environ["EV0_HOME"])
-    plugins_dir = ev0_home / "plugins"
+    threev0_home = Path(os.environ["EV0_HOME"])
+    plugins_dir = threev0_home / "plugins"
     plugin_dir = plugins_dir / "terminal_transform"
     plugin_dir.mkdir(parents=True)
     (plugin_dir / "plugin.yaml").write_text("name: terminal_transform\n", encoding="utf-8")
@@ -184,7 +184,7 @@ def test_terminal_output_transform_integration_with_real_plugin(monkeypatch, tmp
         encoding="utf-8",
     )
     # Plugins are opt-in — must be listed in plugins.enabled to load.
-    cfg_path = ev0_home / "config.yaml"
+    cfg_path = threev0_home / "config.yaml"
     cfg_path.write_text(
         yaml.safe_dump({"plugins": {"enabled": ["terminal_transform"]}}),
         encoding="utf-8",

@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from threev0_cli import config as ev0_config
-from threev0_cli import main as ev0_main
+from threev0_cli import config as threev0_config
+from threev0_cli import main as threev0_main
 
 
 # ---------------------------------------------------------------------------
@@ -34,8 +34,8 @@ def _patch_managed_uv(request):
     def _fake_update_managed_uv(**kwargs):
         return None  # never actually self-update in tests
 
-    with patch("threev0_cli.managed_uv.resolve_uv", side_effect=_fake_resolve_uv), \
-         patch("threev0_cli.managed_uv.ensure_uv", side_effect=_fake_ensure_uv), \
+    with patch("threev0_cli.managed_uv.resolve_uv", side_effect=_fake_resolve_uv),\
+         patch("threev0_cli.managed_uv.ensure_uv", side_effect=_fake_ensure_uv),\
          patch("threev0_cli.managed_uv.update_managed_uv", side_effect=_fake_update_managed_uv):
         yield
 
@@ -58,15 +58,15 @@ def _patch_managed_uv(request):
 def _setup_update_mocks(monkeypatch, tmp_path):
     """Common setup for cmd_update tests."""
     (tmp_path / ".git").mkdir()
-    monkeypatch.setattr(ev0_main, "PROJECT_ROOT", tmp_path)
-    monkeypatch.setattr(ev0_main, "_stash_local_changes_if_needed", lambda *a, **kw: None)
-    monkeypatch.setattr(ev0_main, "_restore_stashed_changes", lambda *a, **kw: True)
-    monkeypatch.setattr(ev0_config, "get_missing_env_vars", lambda required_only=True: [])
-    monkeypatch.setattr(ev0_config, "get_missing_config_fields", lambda: [])
-    monkeypatch.setattr(ev0_config, "check_config_version", lambda: (5, 5))
-    monkeypatch.setattr(ev0_config, "migrate_config", lambda **kw: {"env_added": [], "config_added": []})
-    monkeypatch.setattr(ev0_main, "_upgrade_pip_before_lazy_refresh", lambda *a, **kw: None)
-    monkeypatch.setattr(ev0_main, "_refresh_active_lazy_features", lambda *a, **kw: True)
+    monkeypatch.setattr(threev0_main, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(threev0_main, "_stash_local_changes_if_needed", lambda *a, **kw: None)
+    monkeypatch.setattr(threev0_main, "_restore_stashed_changes", lambda *a, **kw: True)
+    monkeypatch.setattr(threev0_config, "get_missing_env_vars", lambda required_only=True: [])
+    monkeypatch.setattr(threev0_config, "get_missing_config_fields", lambda: [])
+    monkeypatch.setattr(threev0_config, "check_config_version", lambda: (5, 5))
+    monkeypatch.setattr(threev0_config, "migrate_config", lambda **kw: {"env_added": [], "config_added": []})
+    monkeypatch.setattr(threev0_main, "_upgrade_pip_before_lazy_refresh", lambda *a, **kw: None)
+    monkeypatch.setattr(threev0_main, "_refresh_active_lazy_features", lambda *a, **kw: True)
 
 
 
@@ -84,7 +84,7 @@ def test_refresh_active_memory_provider_dependencies_reinstalls_active_provider(
         lambda provider_name, force=False: recorded.append((provider_name, force)),
     )
 
-    ev0_main._refresh_active_memory_provider_dependencies()
+    threev0_main._refresh_active_memory_provider_dependencies()
 
     assert recorded == [("mem0", True)]
 
@@ -98,7 +98,7 @@ def test_reload_updated_runtime_modules_restores_new_threev0_constants_symbol(mo
     monkeypatch.delattr(threev0_constants, "apply_subprocess_home_env", raising=False)
     assert not hasattr(threev0_constants, "apply_subprocess_home_env")
 
-    ev0_main._reload_updated_runtime_modules()
+    threev0_main._reload_updated_runtime_modules()
 
     assert callable(threev0_constants.apply_subprocess_home_env)
 
@@ -173,20 +173,20 @@ def test_cmd_update_skips_stash_restore_when_reset_fails(monkeypatch, tmp_path, 
     _setup_update_mocks(monkeypatch, tmp_path)
     # Re-enable stash so it actually returns a ref
     monkeypatch.setattr(
-        ev0_main, "_stash_local_changes_if_needed",
+        threev0_main, "_stash_local_changes_if_needed",
         lambda *a, **kw: "abc123deadbeef",
     )
     restore_calls = []
     monkeypatch.setattr(
-        ev0_main, "_restore_stashed_changes",
+        threev0_main, "_restore_stashed_changes",
         lambda *a, **kw: restore_calls.append(1) or True,
     )
 
     side_effect, _ = _make_update_side_effect(ff_only_fails=True, reset_fails=True)
-    monkeypatch.setattr(ev0_main.subprocess, "run", side_effect)
+    monkeypatch.setattr(threev0_main.subprocess, "run", side_effect)
 
     with pytest.raises(SystemExit, match="1"):
-        ev0_main.cmd_update(SimpleNamespace())
+        threev0_main.cmd_update(SimpleNamespace())
 
     # Stash restore should NOT have been called
     assert len(restore_calls) == 0
@@ -209,25 +209,25 @@ def _setup_setting_test(monkeypatch, tmp_path, mode):
     _setup_update_mocks(monkeypatch, tmp_path)
     monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/uv" if name == "uv" else None)
     monkeypatch.setattr(
-        ev0_main, "_stash_local_changes_if_needed",
+        threev0_main, "_stash_local_changes_if_needed",
         lambda *a, **kw: "abc123deadbeef",
     )
     restore_calls = []
     discard_calls = []
     monkeypatch.setattr(
-        ev0_main, "_restore_stashed_changes",
+        threev0_main, "_restore_stashed_changes",
         lambda *a, **kw: restore_calls.append(1) or True,
     )
     monkeypatch.setattr(
-        ev0_main, "_discard_stashed_changes",
+        threev0_main, "_discard_stashed_changes",
         lambda *a, **kw: discard_calls.append(1) or True,
     )
     monkeypatch.setattr(
-        ev0_config, "load_config",
+        threev0_config, "load_config",
         lambda *a, **kw: {"updates": {"non_interactive_local_changes": mode}},
     )
     side_effect, recorded = _make_update_side_effect()
-    monkeypatch.setattr(ev0_main.subprocess, "run", side_effect)
+    monkeypatch.setattr(threev0_main.subprocess, "run", side_effect)
     return restore_calls, discard_calls, recorded
 
 
@@ -250,7 +250,7 @@ def test_bootstrap_marker_not_autostashed_by_update(tmp_path):
     if shutil.which("git") is None:
         pytest.skip("git not available")
 
-    repo_gitignore = Path(ev0_main.__file__).resolve().parents[1] / ".gitignore"
+    repo_gitignore = Path(threev0_main.__file__).resolve().parents[1] / ".gitignore"
 
     def git(*args):
         return subprocess.run(
@@ -325,13 +325,13 @@ def test_update_autostash_survives_undeletable_untracked_dir(tmp_path):
     (pkg / "3v0-agent.rb").write_text("formula\n")
     os.chmod(pkg, 0o555)  # undeletable contents, like a root-owned dir
     try:
-        stash_ref = ev0_main._stash_local_changes_if_needed(["git"], tmp_path)
+        stash_ref = threev0_main._stash_local_changes_if_needed(["git"], tmp_path)
         assert stash_ref
 
         # The tracked change is stashed; simulate the updater's checkout window.
         assert (tmp_path / "tracked.txt").read_text() == "v1\n"
 
-        restored = ev0_main._restore_stashed_changes(
+        restored = threev0_main._restore_stashed_changes(
             ["git"], tmp_path, stash_ref, prompt_user=False
         )
         assert restored is True

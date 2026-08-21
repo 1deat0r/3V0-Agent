@@ -226,7 +226,7 @@ async def test_start_gateway_replace_reaps_old_gateway_children_posix(
     monkeypatch.setattr("time.sleep", lambda _: None)
     monkeypatch.setattr("tools.skills_sync.sync_skills", lambda quiet=True: None)
     monkeypatch.setattr(
-        "threev0_logging.setup_logging", lambda ev0_home, mode: tmp_path
+        "threev0_logging.setup_logging", lambda threev0_home, mode: tmp_path
     )
     monkeypatch.setattr(
         "threev0_logging._add_rotating_handler", lambda *args, **kwargs: None

@@ -29,8 +29,8 @@ _STATE_FILENAME = "nous.json"
 def _state_path() -> str:
     """Return the path to the Nous rate limit state file."""
     try:
-        from threev0_constants import get_ev0_home
-        base = get_ev0_home()
+        from threev0_constants import get_threev0_home
+        base = get_threev0_home()
     except ImportError:
         base = os.path.join(os.path.expanduser("~"), ".3V0")
     return os.path.join(base, _STATE_SUBDIR, _STATE_FILENAME)

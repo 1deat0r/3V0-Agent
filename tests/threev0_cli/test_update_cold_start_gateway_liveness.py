@@ -10,7 +10,7 @@ same as every other ``_spawn_detached`` caller.
 
 from __future__ import annotations
 
-from threev0_cli import gateway as ev0_gateway
+from threev0_cli import gateway as threev0_gateway
 from threev0_cli import gateway_windows
 from threev0_cli import main as cli_main
 from threev0_cli import update_cmd
@@ -22,7 +22,7 @@ def _run_cold_start(monkeypatch, capsys, *, surviving_pids):
     # The pre-spawn re-check (``all_profiles=True``) must find nothing
     # running so the cold-start path proceeds and actually spawns.
     monkeypatch.setattr(
-        ev0_gateway,
+        threev0_gateway,
         "find_gateway_pids",
         lambda all_profiles=False: [] if all_profiles else surviving_pids,
     )

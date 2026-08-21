@@ -43,10 +43,10 @@ class TestGoogleWorkspaceCredentialFiles:
         )
 
     def test_entries_are_registered_when_files_exist(self, tmp_path):
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "google_token.json").write_text("{}")
-        (ev0_home / "google_client_secret.json").write_text("{}")
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "google_token.json").write_text("{}")
+        (threev0_home / "google_client_secret.json").write_text("{}")
 
         from tools.credential_files import (
             clear_credential_files,
@@ -60,7 +60,7 @@ class TestGoogleWorkspaceCredentialFiles:
             fm = _parse_frontmatter(content)
             entries = fm.get("required_credential_files", [])
 
-            with patch.dict(os.environ, {"EV0_HOME": str(ev0_home)}):
+            with patch.dict(os.environ, {"EV0_HOME": str(threev0_home)}):
                 missing = register_credential_files(entries)
 
             assert missing == [], f"Unexpected missing files: {missing}"

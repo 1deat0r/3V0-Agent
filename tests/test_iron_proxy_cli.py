@@ -21,7 +21,7 @@ from threev0_cli import proxy_cli
 
 
 @pytest.fixture
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     """Point EV0_HOME at a temp dir so the wizard doesn't touch the
     operator's real config.  Also blanks any provider env vars so we
     don't accidentally read a real key."""
@@ -58,14 +58,14 @@ def _args(**overrides):
 # ---------------------------------------------------------------------------
 
 
-def test_cmd_install_success_returns_0(ev0_home, monkeypatch):
-    monkeypatch.setattr(ip, "install_iron_proxy", lambda **kw: ev0_home / "iron-proxy")
+def test_cmd_install_success_returns_0(threev0_home, monkeypatch):
+    monkeypatch.setattr(ip, "install_iron_proxy", lambda **kw: threev0_home / "iron-proxy")
     monkeypatch.setattr(ip, "iron_proxy_version", lambda b: "v0.39.0-test")
     rc = proxy_cli.cmd_install(_args())
     assert rc == 0
 
 
-def test_cmd_install_failure_returns_1(ev0_home, monkeypatch):
+def test_cmd_install_failure_returns_1(threev0_home, monkeypatch):
     def boom(**kw):
         raise RuntimeError("download failed")
     monkeypatch.setattr(ip, "install_iron_proxy", boom)
@@ -82,7 +82,7 @@ def test_cmd_install_failure_returns_1(ev0_home, monkeypatch):
 
 
 
-def test_cmd_setup_from_bitwarden_refuses_on_empty_vault(ev0_home, monkeypatch):
+def test_cmd_setup_from_bitwarden_refuses_on_empty_vault(threev0_home, monkeypatch):
     """If BW returns {} (empty vault / scoped wrong / unreachable), fail
     loud rather than silently writing credential_source: bitwarden."""
 
@@ -97,11 +97,11 @@ def test_cmd_setup_from_bitwarden_refuses_on_empty_vault(ev0_home, monkeypatch):
     save_config(cfg)
     monkeypatch.setenv("BWS_ACCESS_TOKEN", "bwsk-test-token")
 
-    monkeypatch.setattr(ip, "find_iron_proxy", lambda **kw: ev0_home / "iron-proxy")
+    monkeypatch.setattr(ip, "find_iron_proxy", lambda **kw: threev0_home / "iron-proxy")
     monkeypatch.setattr(ip, "iron_proxy_version", lambda b: "test")
     monkeypatch.setattr(
         ip, "ensure_ca_cert",
-        lambda **kw: (ev0_home / "ca.crt", ev0_home / "ca.key"),
+        lambda **kw: (threev0_home / "ca.crt", threev0_home / "ca.key"),
     )
 
     # Mock fetch_bitwarden_secrets to return an empty dict (empty vault).
@@ -128,7 +128,7 @@ def test_cmd_setup_from_bitwarden_refuses_on_empty_vault(ev0_home, monkeypatch):
 
 
 def test_cmd_start_passes_bitwarden_refresh_flag_when_credential_source_is_bitwarden(
-    ev0_home, monkeypatch,
+    threev0_home, monkeypatch,
 ):
     """When credential_source=bitwarden, cmd_start must wire
     refresh_secrets_from_bitwarden=True into start_proxy.  That's what
@@ -188,7 +188,7 @@ def test_cmd_start_passes_bitwarden_refresh_flag_when_credential_source_is_bitwa
 
 
 
-def test_cmd_restart_propagates_start_failure(ev0_home, monkeypatch):
+def test_cmd_restart_propagates_start_failure(threev0_home, monkeypatch):
     monkeypatch.setattr(ip, "stop_proxy", lambda: True)
     monkeypatch.setattr(proxy_cli, "cmd_start", lambda args: 1)
     rc = proxy_cli.cmd_restart(_args())
@@ -204,7 +204,7 @@ def test_cmd_restart_propagates_start_failure(ev0_home, monkeypatch):
 
 
 
-def test_cmd_status_returns_0(ev0_home, monkeypatch):
+def test_cmd_status_returns_0(threev0_home, monkeypatch):
     monkeypatch.setattr(ip, "get_status", lambda: ip.ProxyStatus())
     monkeypatch.setattr(ip, "load_mappings", lambda: [])
     monkeypatch.setattr(ip, "discover_uncovered_providers", lambda **kw: [])
@@ -213,7 +213,7 @@ def test_cmd_status_returns_0(ev0_home, monkeypatch):
 
 
 def test_cmd_disable_uses_public_status_pid_not_private_read_pid(
-    ev0_home, monkeypatch,
+    threev0_home, monkeypatch,
 ):
     """cmd_disable must read status.pid (which incorporates the _pid_alive
     check) — NOT ip._read_pid() directly (which would fire a spurious
@@ -256,9 +256,9 @@ def test_cmd_disable_uses_public_status_pid_not_private_read_pid(
     assert cfg2["proxy"]["enabled"] is False
 
 
-def test_cmd_config_returns_0_when_present(ev0_home, monkeypatch):
+def test_cmd_config_returns_0_when_present(threev0_home, monkeypatch):
     fake = ip.ProxyStatus()
-    fake.config_path = ev0_home / "proxy.yaml"
+    fake.config_path = threev0_home / "proxy.yaml"
     monkeypatch.setattr(ip, "get_status", lambda: fake)
     rc = proxy_cli.cmd_config(_args())
     assert rc == 0
@@ -295,7 +295,7 @@ def test_register_cli_uses_egress_command_dest():
 # ---------------------------------------------------------------------------
 
 
-def test_cmd_start_refuses_when_bitwarden_mode_but_disabled(ev0_home, monkeypatch):
+def test_cmd_start_refuses_when_bitwarden_mode_but_disabled(threev0_home, monkeypatch):
     """config keeps credential_source: bitwarden but secrets.bitwarden.enabled
     later flips to false — cmd_start must refuse, not silently start on
     host env (the silent-degrade class strict mode is meant to close)."""
@@ -318,11 +318,11 @@ def test_cmd_start_refuses_when_bitwarden_mode_but_disabled(ev0_home, monkeypatc
 
 
 
-def test_cmd_setup_audit_log_failure_is_warning_not_abort(ev0_home, monkeypatch):
+def test_cmd_setup_audit_log_failure_is_warning_not_abort(threev0_home, monkeypatch):
     """On the pinned v0.39 the daemon never writes audit.log, so a
     pre-create failure must not abort the wizard."""
 
-    monkeypatch.setattr(ip, "find_iron_proxy", lambda **kw: ev0_home / "iron-proxy")
+    monkeypatch.setattr(ip, "find_iron_proxy", lambda **kw: threev0_home / "iron-proxy")
     monkeypatch.setattr(ip, "discover_provider_mappings", lambda **kw: [
         ip.TokenMapping(
             proxy_token="3v0-proxy-deadbeef",

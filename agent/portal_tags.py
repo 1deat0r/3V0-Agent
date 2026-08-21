@@ -82,7 +82,7 @@ def get_conversation_context() -> Optional[str]:
     return _conversation_id.get()
 
 
-def _ev0_version() -> str:
+def _threev0_version() -> str:
     """Return the current 3V0 release version, e.g. ``"0.13.0"``.
 
     Falls back to ``"unknown"`` if ``threev0_cli`` cannot be imported (should
@@ -100,7 +100,7 @@ def threev0_client_tag() -> str:
 
     Format: ``client=3v0-client-v<MAJOR>.<MINOR>.<PATCH>``.
     """
-    return f"client=3v0-client-v{_ev0_version()}"
+    return f"client=3v0-client-v{_threev0_version()}"
 
 
 def conversation_tag(session_id: str) -> str:

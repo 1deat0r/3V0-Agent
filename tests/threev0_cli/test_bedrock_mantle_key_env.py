@@ -34,10 +34,10 @@ def _run_wizard(monkeypatch, selected="openai.gpt-5.6-terra"):
 
     _model_flow_bedrock_api_key({}, REGION)
 
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    return get_ev0_home(), yaml.safe_load(
-        (get_ev0_home() / "config.yaml").read_text(encoding="utf-8")
+    return get_threev0_home(), yaml.safe_load(
+        (get_threev0_home() / "config.yaml").read_text(encoding="utf-8")
     )
 
 

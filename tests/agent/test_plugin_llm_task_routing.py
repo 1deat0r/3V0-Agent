@@ -474,9 +474,9 @@ class TestOwnershipIntegration:
         from agent import auxiliary_client as auxiliary_mod
         from threev0_cli import config as config_mod
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
             """
 auxiliary:
   classifier:
@@ -487,7 +487,7 @@ auxiliary:
 """,
             encoding="utf-8",
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(config_mod, "_LOAD_CONFIG_CACHE", {})
         monkeypatch.setattr(config_mod, "_RAW_CONFIG_CACHE", {})
 
@@ -557,9 +557,9 @@ auxiliary:
     def test_sync_fallback_reports_the_successful_route(self, tmp_path, monkeypatch):
         from threev0_cli import config as config_mod
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
             """
 auxiliary:
   classifier:
@@ -571,7 +571,7 @@ auxiliary:
 """,
             encoding="utf-8",
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(config_mod, "_LOAD_CONFIG_CACHE", {})
         monkeypatch.setattr(config_mod, "_RAW_CONFIG_CACHE", {})
         _set_registry(monkeypatch, [{"key": "classifier", "plugin": "my-plugin"}])
@@ -605,9 +605,9 @@ auxiliary:
     def test_async_fallback_reports_the_successful_route(self, tmp_path, monkeypatch):
         from threev0_cli import config as config_mod
 
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        (ev0_home / "config.yaml").write_text(
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
             """
 auxiliary:
   classifier:
@@ -619,7 +619,7 @@ auxiliary:
 """,
             encoding="utf-8",
         )
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         monkeypatch.setattr(config_mod, "_LOAD_CONFIG_CACHE", {})
         monkeypatch.setattr(config_mod, "_RAW_CONFIG_CACHE", {})
         _set_registry(monkeypatch, [{"key": "classifier", "plugin": "my-plugin"}])

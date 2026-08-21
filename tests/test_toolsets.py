@@ -200,7 +200,7 @@ class TestToolsetConsistency:
             assert "includes" in ts, f"{name} missing includes"
 
 
-    def test_ev0_platforms_share_core_tools(self):
+    def test_threev0_platforms_share_core_tools(self):
         """All 3v0-* platform toolsets share the same core tools.
 
         Platform-specific additions (e.g. ``discord`` / ``discord_admin``
@@ -237,7 +237,7 @@ class TestPluginToolsets:
 
 
 class TestDefaultPlatformWebSearchCoverage:
-    def test_ev0_whatsapp_toolset_includes_web_search(self):
+    def test_threev0_whatsapp_toolset_includes_web_search(self):
         assert "web_search" in resolve_toolset("3v0-whatsapp")
 
 

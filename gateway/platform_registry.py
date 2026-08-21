@@ -34,7 +34,7 @@ import threading
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Optional
 
-from threev0_constants import ev0_home_key
+from threev0_constants import threev0_home_key
 
 logger = logging.getLogger(__name__)
 
@@ -271,7 +271,7 @@ class PlatformRegistry:
 
     @staticmethod
     def current_scope_key() -> str:
-        return ev0_home_key()
+        return threev0_home_key()
 
     def _scope_maps(
         self,

@@ -611,7 +611,7 @@ class TestLaunchdServiceRecovery:
         monkeypatch.setattr(gateway_cli.subprocess, "run", fake_run)
         monkeypatch.setattr("gateway.status.get_running_pid", lambda cleanup_stale=False: 88888)
         # Pre-seed the unsupported marker
-        monkeypatch.setattr(gateway_cli, "get_ev0_home", lambda: tmp_path)
+        monkeypatch.setattr(gateway_cli, "get_threev0_home", lambda: tmp_path)
         gateway_cli._write_launchd_unsupported_marker()
 
         gateway_cli.launchd_status()
@@ -898,7 +898,7 @@ class TestSystemUnitEv0Home:
             "_system_service_identity",
             lambda run_as_user=None: ("alice", "alice", str(target_home)),
         )
-        monkeypatch.setattr(gateway_cli, "get_ev0_home", lambda: root_ev0)
+        monkeypatch.setattr(gateway_cli, "get_threev0_home", lambda: root_ev0)
         monkeypatch.setattr(gateway_cli, "_build_service_path_dirs", lambda: [])
 
         monkeypatch.setattr(gateway_cli.shutil, "which", lambda name: "/root/bin/node")
@@ -916,10 +916,10 @@ class TestSystemUnitEv0Home:
     ):
         """External Node installs still work when the managed tree is absent."""
         monkeypatch.setattr(
-            "threev0_constants.iter_ev0_node_dirs", lambda root=None: []
+            "threev0_constants.iter_threev0_node_dirs", lambda root=None: []
         )
         monkeypatch.setattr(
-            "threev0_constants.ev0_managed_node_tree_present",
+            "threev0_constants.threev0_managed_node_tree_present",
             lambda root=None: False,
         )
         monkeypatch.setattr(
@@ -954,14 +954,14 @@ class TestSystemUnitEv0Home:
         # User-scope units should still use the calling user's EV0_HOME
         unit = gateway_cli.generate_systemd_unit(system=False)
 
-        ev0_home = str(gateway_cli.get_ev0_home().resolve())
-        assert f'EV0_HOME={ev0_home}' in unit
+        threev0_home = str(gateway_cli.get_threev0_home().resolve())
+        assert f'EV0_HOME={threev0_home}' in unit
 
 
 class TestSystemUnitRefreshSyncsEv0Home:
     """sudo system refresh must not flip TimeoutStopSec via /root/.3v0."""
 
-    def test_refresh_adopts_unit_ev0_home_before_rewriting(self, tmp_path, monkeypatch):
+    def test_refresh_adopts_unit_threev0_home_before_rewriting(self, tmp_path, monkeypatch):
         root_home = tmp_path / "root"
         alice_home = tmp_path / "alice"
         root_ev0 = root_home / ".3V0"
@@ -1027,7 +1027,7 @@ class TestSystemUnitRefreshSyncsEv0Home:
                 order.append("read")
             return real_read_text(self, *a, **k)
 
-        monkeypatch.setattr(gateway_cli, "_sync_ev0_home_from_systemd_unit", tracking_sync)
+        monkeypatch.setattr(gateway_cli, "_sync_threev0_home_from_systemd_unit", tracking_sync)
         monkeypatch.setattr(Path, "read_text", tracking_read_text)
         # Avoid a real generate/compare — we only assert sync precedes read.
         monkeypatch.setattr(gateway_cli, "generate_systemd_unit", lambda **k: "[Unit]\n")
@@ -1054,7 +1054,7 @@ class TestSystemUnitRefreshSyncsEv0Home:
             )
             monkeypatch.setattr(
                 gateway_cli,
-                "_sync_ev0_home_from_systemd_unit",
+                "_sync_threev0_home_from_systemd_unit",
                 lambda system: calls.append("sync"),
             )
             monkeypatch.setattr(
@@ -1096,7 +1096,7 @@ class TestEv0HomeForTargetUser:
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
         monkeypatch.delenv("EV0_HOME", raising=False)
 
-        result = gateway_cli._ev0_home_for_target_user("/home/alice")
+        result = gateway_cli._threev0_home_for_target_user("/home/alice")
         assert result == "/home/alice/.3V0"
 
 
@@ -1296,7 +1296,7 @@ class TestProfileArg:
 
         monkeypatch.setattr(Path, "home", lambda: root_home)
         monkeypatch.setenv("EV0_HOME", str(root_profile))
-        monkeypatch.setattr(gateway_cli, "get_ev0_home", lambda: root_profile)
+        monkeypatch.setattr(gateway_cli, "get_threev0_home", lambda: root_profile)
         monkeypatch.setattr(
             gateway_cli,
             "_system_service_identity",
@@ -1314,7 +1314,7 @@ class TestProfileArg:
         profile_dir.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("EV0_HOME", str(profile_dir))
-        monkeypatch.setattr(gateway_cli, "get_ev0_home", lambda: profile_dir)
+        monkeypatch.setattr(gateway_cli, "get_threev0_home", lambda: profile_dir)
         monkeypatch.setattr(gateway_cli, "get_python_path", lambda: "/usr/bin/python3")
 
         plist = gateway_cli.generate_launchd_plist()
@@ -1348,7 +1348,7 @@ class TestProfileArg:
 
         monkeypatch.setattr(Path, "home", lambda: profile_home)
         monkeypatch.setenv("EV0_HOME", str(profile_dir))
-        monkeypatch.setattr(gateway_cli, "get_ev0_home", lambda: profile_dir)
+        monkeypatch.setattr(gateway_cli, "get_threev0_home", lambda: profile_dir)
         monkeypatch.setattr(pwd, "getpwuid", lambda uid: SimpleNamespace(pw_dir=str(machine_home)))
 
         plist_path = gateway_cli.get_launchd_plist_path()
@@ -1385,7 +1385,7 @@ class TestSystemUnitPathRemapping:
 
         monkeypatch.setattr(Path, "home", lambda: root_home)
         monkeypatch.setenv("EV0_HOME", str(root_home / ".3V0"))
-        monkeypatch.setattr(gateway_cli, "get_ev0_home", lambda: root_home / ".3V0")
+        monkeypatch.setattr(gateway_cli, "get_threev0_home", lambda: root_home / ".3V0")
         monkeypatch.setattr(gateway_cli, "PROJECT_ROOT", project)
         monkeypatch.setattr(gateway_cli, "_detect_venv_dir", lambda: project / "venv")
         monkeypatch.setattr(gateway_cli, "get_python_path", lambda: str(venv_bin / "python"))
@@ -1505,7 +1505,7 @@ class TestLegacyEv0UnitDetection:
         (user_dir / "3v0.service").write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
         (system_dir / "3v0.service").write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        results = gateway_cli._find_legacy_ev0_units()
+        results = gateway_cli._find_legacy_threev0_units()
 
         scopes = sorted(is_system for _, _, is_system in results)
         assert scopes == [False, True]
@@ -1533,7 +1533,7 @@ class TestLegacyEv0UnitDetection:
                 f"[Unit]\nDescription=Old 3V0\n[Service]\n{execstart}\n",
                 encoding="utf-8",
             )
-            results = gateway_cli._find_legacy_ev0_units()
+            results = gateway_cli._find_legacy_threev0_units()
             assert len(results) == 1, f"Variant {i} not detected: {execstart!r}"
 
 
@@ -1587,7 +1587,7 @@ class TestRemoveLegacyEv0Units:
         legacy = user_dir / "3v0.service"
         legacy.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        removed, remaining = gateway_cli.remove_legacy_ev0_units(interactive=False)
+        removed, remaining = gateway_cli.remove_legacy_threev0_units(interactive=False)
 
         assert removed == 1
         assert remaining == []
@@ -1612,7 +1612,7 @@ class TestRemoveLegacyEv0Units:
         default_unit = user_dir / "3v0-gateway.service"
         default_unit.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        removed, remaining = gateway_cli.remove_legacy_ev0_units(interactive=False)
+        removed, remaining = gateway_cli.remove_legacy_threev0_units(interactive=False)
 
         assert removed == 0
         assert remaining == []
@@ -1663,7 +1663,7 @@ class TestMigrateLegacyCommand:
             called["dry_run"] = dry_run
             return 0, []
 
-        monkeypatch.setattr(gateway_cli, "remove_legacy_ev0_units", fake_remove)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_threev0_units", fake_remove)
         monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: True)
         monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
 
@@ -1723,8 +1723,8 @@ class TestSystemdInstallOffersLegacyRemoval:
             return 1, []
 
         # has_legacy_ev0_units must return True
-        monkeypatch.setattr(gateway_cli, "has_legacy_ev0_units", lambda: True)
-        monkeypatch.setattr(gateway_cli, "remove_legacy_ev0_units", fake_remove)
+        monkeypatch.setattr(gateway_cli, "has_legacy_threev0_units", lambda: True)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_threev0_units", fake_remove)
         monkeypatch.setattr(gateway_cli, "print_legacy_unit_warning", lambda: None)
         # Answer "yes" to the legacy-removal prompt
         monkeypatch.setattr(gateway_cli, "prompt_yes_no", lambda *a, **k: True)
@@ -1762,8 +1762,8 @@ class TestSystemdInstallOffersLegacyRemoval:
             remove_called["invoked"] = True
             return 0, []
 
-        monkeypatch.setattr(gateway_cli, "has_legacy_ev0_units", lambda: True)
-        monkeypatch.setattr(gateway_cli, "remove_legacy_ev0_units", fake_remove)
+        monkeypatch.setattr(gateway_cli, "has_legacy_threev0_units", lambda: True)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_threev0_units", fake_remove)
         monkeypatch.setattr(gateway_cli, "print_legacy_unit_warning", lambda: None)
         monkeypatch.setattr(gateway_cli, "prompt_yes_no", lambda *a, **k: False)
 
@@ -1807,8 +1807,8 @@ class TestSystemdInstallOffersLegacyRemoval:
             remove_called["invoked"] = True
             return 0, []
 
-        monkeypatch.setattr(gateway_cli, "has_legacy_ev0_units", lambda: False)
-        monkeypatch.setattr(gateway_cli, "remove_legacy_ev0_units", fake_remove)
+        monkeypatch.setattr(gateway_cli, "has_legacy_threev0_units", lambda: False)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_threev0_units", fake_remove)
         monkeypatch.setattr(gateway_cli, "prompt_yes_no", counting_prompt)
 
         unit_path = tmp_path / "3v0-gateway.service"
@@ -1968,10 +1968,10 @@ class TestServiceWorkingDirIsStable:
 
 
 
-    def test_user_unit_workingdirectory_is_ev0_home_not_checkout(self, tmp_path, monkeypatch):
+    def test_user_unit_workingdirectory_is_threev0_home_not_checkout(self, tmp_path, monkeypatch):
         home = tmp_path / ".3V0"
         home.mkdir()
-        monkeypatch.setattr(gateway_cli, "get_ev0_home", lambda: home)
+        monkeypatch.setattr(gateway_cli, "get_threev0_home", lambda: home)
         unit = gateway_cli.generate_systemd_unit(system=False)
         wd = [l for l in unit.splitlines() if l.startswith("WorkingDirectory=")]
         assert wd, "unit has no WorkingDirectory line"
@@ -1980,12 +1980,12 @@ class TestServiceWorkingDirIsStable:
         # The bug class: never pin cwd inside a transient worktree checkout.
         assert "/.worktrees/" not in value
 
-    def test_launchd_workingdirectory_is_ev0_home(self, tmp_path, monkeypatch):
+    def test_launchd_workingdirectory_is_threev0_home(self, tmp_path, monkeypatch):
         import re
 
         home = tmp_path / ".3V0"
         home.mkdir()
-        monkeypatch.setattr(gateway_cli, "get_ev0_home", lambda: home)
+        monkeypatch.setattr(gateway_cli, "get_threev0_home", lambda: home)
         plist = gateway_cli.generate_launchd_plist()
         m = re.search(r"<key>WorkingDirectory</key>\s*<string>(.*?)</string>", plist)
         assert m, "plist has no WorkingDirectory entry"
@@ -2156,7 +2156,7 @@ class TestServiceNameOverrides:
         monkeypatch.setenv("EV0_HOME", str(tmp_path / "3v0" / "profiles" / "3v0"))
         assert gateway_cli.get_service_name() == "3v0-gateway"
 
-    def test_regular_profile_keeps_ev0_unit_name(self, monkeypatch, tmp_path):
+    def test_regular_profile_keeps_threev0_unit_name(self, monkeypatch, tmp_path):
         monkeypatch.setenv("EV0_HOME", str(tmp_path / "3v0" / "profiles" / "coder"))
         assert gateway_cli.get_service_name() == "3v0-gateway-coder"
 

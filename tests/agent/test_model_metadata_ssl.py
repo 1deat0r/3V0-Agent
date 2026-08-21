@@ -43,7 +43,7 @@ class TestResolveRequestsVerify:
 
 
 
-    def test_priority_ev0_over_requests(self, clean_env, tmp_path, bundle_file):
+    def test_priority_threev0_over_requests(self, clean_env, tmp_path, bundle_file):
         other = tmp_path / "other.pem"
         other.write_text("stub")
         clean_env.setenv("EV0_CA_BUNDLE", bundle_file)

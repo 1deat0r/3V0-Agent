@@ -34,7 +34,7 @@ class TestGetEv0HomeProfileWarning:
         self, fresh_constants, tmp_path, capsys
     ):
         """Classic mode: no active_profile file → silent, returns ~/.3v0."""
-        result = fresh_constants.get_ev0_home()
+        result = fresh_constants.get_threev0_home()
         assert result == tmp_path / ".3V0"
         assert "EV0_HOME fallback" not in capsys.readouterr().err
 
@@ -43,11 +43,11 @@ class TestGetEv0HomeProfileWarning:
         self, fresh_constants, tmp_path, capsys
     ):
         """active_profile=coder + EV0_HOME unset → warn loudly, still return fallback."""
-        ev0_dir = tmp_path / ".3V0"
-        ev0_dir.mkdir()
-        (ev0_dir / "active_profile").write_text("coder\n")
+        threev0_dir = tmp_path / ".3V0"
+        threev0_dir.mkdir()
+        (threev0_dir / "active_profile").write_text("coder\n")
 
-        result = fresh_constants.get_ev0_home()
+        result = fresh_constants.get_threev0_home()
 
         # 1. Still returns the fallback — no import-time crash
         assert result == tmp_path / ".3V0"
@@ -58,12 +58,12 @@ class TestGetEv0HomeProfileWarning:
         assert "#18594" in err
 
         # 3. One-shot: second and third calls don't re-warn
-        fresh_constants.get_ev0_home()
-        fresh_constants.get_ev0_home()
+        fresh_constants.get_threev0_home()
+        fresh_constants.get_threev0_home()
         err2 = capsys.readouterr().err
         assert "EV0_HOME fallback" not in err2
 
-    def test_ev0_home_set_suppresses_warning(
+    def test_threev0_home_set_suppresses_warning(
         self, fresh_constants, tmp_path, capsys, monkeypatch
     ):
         """Even if active_profile is 'coder', setting EV0_HOME suppresses warning."""
@@ -72,7 +72,7 @@ class TestGetEv0HomeProfileWarning:
         (tmp_path / ".3V0" / "active_profile").write_text("coder\n")
         monkeypatch.setenv("EV0_HOME", str(profile_dir))
 
-        result = fresh_constants.get_ev0_home()
+        result = fresh_constants.get_threev0_home()
 
         assert result == profile_dir
         assert "EV0_HOME fallback" not in capsys.readouterr().err
@@ -81,12 +81,12 @@ class TestGetEv0HomeProfileWarning:
         self, fresh_constants, tmp_path, capsys
     ):
         """active_profile that can't be decoded → fall through silently."""
-        ev0_dir = tmp_path / ".3V0"
-        ev0_dir.mkdir()
+        threev0_dir = tmp_path / ".3V0"
+        threev0_dir.mkdir()
         # Write bytes that aren't valid utf-8
-        (ev0_dir / "active_profile").write_bytes(b"\xff\xfe\x00\x00")
+        (threev0_dir / "active_profile").write_bytes(b"\xff\xfe\x00\x00")
 
-        result = fresh_constants.get_ev0_home()
+        result = fresh_constants.get_threev0_home()
 
         assert result == tmp_path / ".3V0"
         # Shouldn't crash; shouldn't warn either (can't tell what profile was intended)

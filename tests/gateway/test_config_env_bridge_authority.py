@@ -21,7 +21,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
-def _run_gateway_import(ev0_home: Path, initial_env: dict[str, str]) -> dict[str, str]:
+def _run_gateway_import(threev0_home: Path, initial_env: dict[str, str]) -> dict[str, str]:
     """Import gateway.run in a clean subprocess and return the post-import env.
 
     The bridge runs at module-import time, so simply importing is enough
@@ -57,7 +57,7 @@ def _run_gateway_import(ev0_home: Path, initial_env: dict[str, str]) -> dict[str
         """
     )
     env = dict(initial_env)
-    env["EV0_HOME"] = str(ev0_home)
+    env["EV0_HOME"] = str(threev0_home)
     # Keep interpreter paths plus the Windows bootstrap variables required by
     # stdlib platform detection and native dependency loading.  The child is
     # otherwise intentionally clean so stale 3V0 settings cannot leak in.
@@ -119,58 +119,58 @@ def _write_env(home: Path, entries: dict[str, str]) -> None:
 
 
 @pytest.fixture
-def ev0_home(tmp_path: Path) -> Path:
+def threev0_home(tmp_path: Path) -> Path:
     home = tmp_path / ".3V0"
     home.mkdir()
     return home
 
 
-def test_config_gateway_timeout_wins_over_stale_env(ev0_home: Path) -> None:
+def test_config_gateway_timeout_wins_over_stale_env(threev0_home: Path) -> None:
     """Every agent.* bridge key must be config-authoritative, not .env-authoritative."""
-    _write_config(ev0_home, agent_cfg={
+    _write_config(threev0_home, agent_cfg={
         "gateway_timeout": 1800,
         "gateway_timeout_warning": 900,
         "session_stall_timeout": 300,
     })
-    _write_env(ev0_home, {
+    _write_env(threev0_home, {
         "EV0_AGENT_TIMEOUT": "60",
         "EV0_AGENT_TIMEOUT_WARNING": "30",
         "EV0_SESSION_STALL_TIMEOUT": "15",
     })
 
-    env = _run_gateway_import(ev0_home, initial_env={})
+    env = _run_gateway_import(threev0_home, initial_env={})
 
     assert env.get("EV0_AGENT_TIMEOUT") == "1800"
     assert env.get("EV0_AGENT_TIMEOUT_WARNING") == "900"
     assert env.get("EV0_SESSION_STALL_TIMEOUT") == "300"
 
 
-def test_config_turn_lease_timeout_wins_over_stale_env(ev0_home: Path) -> None:
+def test_config_turn_lease_timeout_wins_over_stale_env(threev0_home: Path) -> None:
     """The user-facing lease wait budget belongs to config.yaml."""
     _write_config(
-        ev0_home,
+        threev0_home,
         agent_cfg={"gateway_turn_lease_timeout": 600},
     )
     _write_env(
-        ev0_home,
+        threev0_home,
         {"EV0_TURN_LEASE_TIMEOUT": "60"},
     )
 
-    env = _run_gateway_import(ev0_home, initial_env={})
+    env = _run_gateway_import(threev0_home, initial_env={})
 
     assert env.get("EV0_TURN_LEASE_TIMEOUT") == "600"
 
 
 def test_default_turn_lease_timeout_overrides_stale_env_when_key_is_omitted(
-    ev0_home: Path,
+    threev0_home: Path,
 ) -> None:
     """The internal env mirror must never become a second config source."""
     _write_env(
-        ev0_home,
+        threev0_home,
         {"EV0_TURN_LEASE_TIMEOUT": "60"},
     )
 
-    env = _run_gateway_import(ev0_home, initial_env={})
+    env = _run_gateway_import(threev0_home, initial_env={})
 
     assert env.get("EV0_TURN_LEASE_TIMEOUT") == "1800"
 
@@ -190,26 +190,26 @@ def test_default_turn_lease_timeout_matches_the_runtime_fallback() -> None:
     )
 
 
-def test_config_platform_connect_timeout_supplies_env_when_unset(ev0_home: Path) -> None:
+def test_config_platform_connect_timeout_supplies_env_when_unset(threev0_home: Path) -> None:
     """config.yaml:gateway.platform_connect_timeout supplies the env var when
     it isn't already set (#19776 — config surface for the Discord connect
     timeout, replacing the undocumented env-var-only workaround)."""
-    _write_config(ev0_home, gateway_cfg={"platform_connect_timeout": 90})
+    _write_config(threev0_home, gateway_cfg={"platform_connect_timeout": 90})
 
-    env = _run_gateway_import(ev0_home, initial_env={})
+    env = _run_gateway_import(threev0_home, initial_env={})
 
     assert env.get("EV0_GATEWAY_PLATFORM_CONNECT_TIMEOUT") == "90"
 
 
-def test_env_platform_connect_timeout_wins_over_config(ev0_home: Path) -> None:
+def test_env_platform_connect_timeout_wins_over_config(threev0_home: Path) -> None:
     """Unlike the agent.*/display.*/timezone bridges (config-authoritative),
     EV0_GATEWAY_PLATFORM_CONNECT_TIMEOUT is the manual-override escape hatch:
     an explicitly-set env var WINS over config.yaml. This divergence is
     intentional (#19776) — the env var is the operator's emergency knob."""
-    _write_config(ev0_home, gateway_cfg={"platform_connect_timeout": 90})
+    _write_config(threev0_home, gateway_cfg={"platform_connect_timeout": 90})
 
     env = _run_gateway_import(
-        ev0_home,
+        threev0_home,
         initial_env={"EV0_GATEWAY_PLATFORM_CONNECT_TIMEOUT": "120"},
     )
 

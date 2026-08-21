@@ -26,7 +26,7 @@ def fake_home(tmp_path, monkeypatch):
 
     home = tmp_path / "ev0_home"
     home.mkdir()
-    monkeypatch.setattr(fs, "_ev0_home_path", lambda: home)
+    monkeypatch.setattr(fs, "_threev0_home_path", lambda: home)
     return home
 
 
@@ -46,7 +46,7 @@ def _create(home: Path, rel: str | Path) -> Path:
 
 
 
-def test_arbitrary_ev0_home_file_not_blocked(fake_home):
+def test_arbitrary_threev0_home_file_not_blocked(fake_home):
     """Non-credential files inside EV0_HOME stay readable."""
     from agent.file_safety import get_read_block_error
 
@@ -190,7 +190,7 @@ def test_webhook_subscriptions_blocked(fake_home):
 
 
 
-def test_identically_named_ev0_files_outside_home_not_blocked(
+def test_identically_named_threev0_files_outside_home_not_blocked(
     fake_home, tmp_path
 ):
     """3V0-specific filenames (``auth.json``, ``mcp-tokens/``, ``google_oauth.json``)
@@ -248,8 +248,8 @@ def test_profile_mode_blocks_root_credentials(tmp_path, monkeypatch):
     root = tmp_path / "3v0"
     profile = root / "profiles" / "coder"
     profile.mkdir(parents=True)
-    monkeypatch.setattr(fs, "_ev0_home_path", lambda: profile)
-    monkeypatch.setattr(fs, "_ev0_root_path", lambda: root)
+    monkeypatch.setattr(fs, "_threev0_home_path", lambda: profile)
+    monkeypatch.setattr(fs, "_threev0_root_path", lambda: root)
 
     from agent.file_safety import get_read_block_error
 

@@ -104,8 +104,8 @@ def isolated_home(tmp_path, monkeypatch):
     return ev0
 
 
-def _env_value(ev0_home: Path, key: str) -> str | None:
-    env_file = ev0_home / ".env"
+def _env_value(threev0_home: Path, key: str) -> str | None:
+    env_file = threev0_home / ".env"
     if not env_file.exists():
         return None
     for line in env_file.read_text().splitlines():

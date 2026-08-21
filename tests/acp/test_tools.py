@@ -29,7 +29,7 @@ COMMON_EV0_TOOLS = ["read_file", "search_files", "terminal", "patch", "write_fil
 
 
 class TestToolKindMap:
-    def test_all_ev0_tools_have_kind(self):
+    def test_all_threev0_tools_have_kind(self):
         """Every common 3v0 tool should appear in TOOL_KIND_MAP."""
         for tool in COMMON_EV0_TOOLS:
             assert tool in TOOL_KIND_MAP, f"{tool} missing from TOOL_KIND_MAP"

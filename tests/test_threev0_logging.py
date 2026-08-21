@@ -55,7 +55,7 @@ def _reset_logging_state():
 
 
 @pytest.fixture
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     """Provide an isolated EV0_HOME for logging tests.
 
     Uses the same tmp_path as the autouse _isolate_ev0_home from conftest,
@@ -68,13 +68,13 @@ def ev0_home(tmp_path, monkeypatch):
 class TestSetupLogging:
     """setup_logging() creates agent.log + errors.log with RotatingFileHandler."""
 
-    def test_creates_log_directory(self, ev0_home):
-        log_dir = threev0_logging.setup_logging(ev0_home=ev0_home)
-        assert log_dir == ev0_home / "logs"
+    def test_creates_log_directory(self, threev0_home):
+        log_dir = threev0_logging.setup_logging(threev0_home=threev0_home)
+        assert log_dir == threev0_home / "logs"
         assert log_dir.is_dir()
 
-    def test_creates_agent_log_handler(self, ev0_home):
-        threev0_logging.setup_logging(ev0_home=ev0_home)
+    def test_creates_agent_log_handler(self, threev0_home):
+        threev0_logging.setup_logging(threev0_home=threev0_home)
         root = logging.getLogger()
 
         agent_handlers = [
@@ -86,9 +86,9 @@ class TestSetupLogging:
         assert agent_handlers[0].level == logging.INFO
 
 
-    def test_idempotent_no_duplicate_handlers(self, ev0_home):
-        threev0_logging.setup_logging(ev0_home=ev0_home)
-        threev0_logging.setup_logging(ev0_home=ev0_home)  # second call — should be no-op
+    def test_idempotent_no_duplicate_handlers(self, threev0_home):
+        threev0_logging.setup_logging(threev0_home=threev0_home)
+        threev0_logging.setup_logging(threev0_home=threev0_home)  # second call — should be no-op
 
         root = logging.getLogger()
         agent_handlers = [
@@ -102,8 +102,8 @@ class TestSetupLogging:
 
 
 
-    def test_writes_to_agent_log(self, ev0_home):
-        threev0_logging.setup_logging(ev0_home=ev0_home)
+    def test_writes_to_agent_log(self, threev0_home):
+        threev0_logging.setup_logging(threev0_home=threev0_home)
 
         test_logger = logging.getLogger("test_threev0_logging.write_test")
         test_logger.info("test message for agent.log")
@@ -111,7 +111,7 @@ class TestSetupLogging:
         # Flush handlers
         threev0_logging.flush_log_queue()
 
-        agent_log = ev0_home / "logs" / "agent.log"
+        agent_log = threev0_home / "logs" / "agent.log"
         assert agent_log.exists()
         content = agent_log.read_text()
         assert "test message for agent.log" in content
@@ -119,13 +119,13 @@ class TestSetupLogging:
 
 
 
-    def test_explicit_params_override_config(self, ev0_home):
+    def test_explicit_params_override_config(self, threev0_home):
         """Explicit function params take precedence over config.yaml."""
         import yaml
         config = {"logging": {"level": "DEBUG"}}
-        (ev0_home / "config.yaml").write_text(yaml.dump(config))
+        (threev0_home / "config.yaml").write_text(yaml.dump(config))
 
-        threev0_logging.setup_logging(ev0_home=ev0_home, log_level="WARNING")
+        threev0_logging.setup_logging(threev0_home=threev0_home, log_level="WARNING")
 
         root = logging.getLogger()
         agent_handlers = [
@@ -140,8 +140,8 @@ class TestSetupLogging:
 class TestGatewayMode:
     """setup_logging(mode='gateway') creates a filtered gateway.log."""
 
-    def test_gateway_log_created(self, ev0_home):
-        threev0_logging.setup_logging(ev0_home=ev0_home, mode="gateway")
+    def test_gateway_log_created(self, threev0_home):
+        threev0_logging.setup_logging(threev0_home=threev0_home, mode="gateway")
         root = logging.getLogger()
 
         gw_handlers = [
@@ -151,8 +151,8 @@ class TestGatewayMode:
         ]
         assert len(gw_handlers) == 1
 
-    def test_gateway_log_not_created_in_cli_mode(self, ev0_home):
-        threev0_logging.setup_logging(ev0_home=ev0_home, mode="cli")
+    def test_gateway_log_not_created_in_cli_mode(self, threev0_home):
+        threev0_logging.setup_logging(threev0_home=threev0_home, mode="cli")
         root = logging.getLogger()
 
         gw_handlers = [
@@ -164,22 +164,22 @@ class TestGatewayMode:
 
 
 
-    def test_gateway_log_receives_gateway_records(self, ev0_home):
+    def test_gateway_log_receives_gateway_records(self, threev0_home):
         """gateway.log captures records from gateway.* loggers."""
-        threev0_logging.setup_logging(ev0_home=ev0_home, mode="gateway")
+        threev0_logging.setup_logging(threev0_home=threev0_home, mode="gateway")
 
         gw_logger = logging.getLogger("plugins.platforms.telegram.adapter")
         gw_logger.info("telegram connected")
 
         threev0_logging.flush_log_queue()
 
-        gw_log = ev0_home / "logs" / "gateway.log"
+        gw_log = threev0_home / "logs" / "gateway.log"
         assert gw_log.exists()
         assert "telegram connected" in gw_log.read_text()
 
-    def test_gateway_log_rejects_non_gateway_records(self, ev0_home):
+    def test_gateway_log_rejects_non_gateway_records(self, threev0_home):
         """gateway.log does NOT capture records from tools.*, agent.*, etc."""
-        threev0_logging.setup_logging(ev0_home=ev0_home, mode="gateway")
+        threev0_logging.setup_logging(threev0_home=threev0_home, mode="gateway")
 
         tool_logger = logging.getLogger("tools.terminal_tool")
         tool_logger.info("running command")
@@ -189,7 +189,7 @@ class TestGatewayMode:
 
         threev0_logging.flush_log_queue()
 
-        gw_log = ev0_home / "logs" / "gateway.log"
+        gw_log = threev0_home / "logs" / "gateway.log"
         if gw_log.exists():
             content = gw_log.read_text()
             assert "running command" not in content
@@ -200,8 +200,8 @@ class TestGatewayMode:
 class TestGuiMode:
     """setup_logging(mode='gui') creates a filtered gui.log."""
 
-    def test_gui_log_created(self, ev0_home):
-        threev0_logging.setup_logging(ev0_home=ev0_home, mode="gui")
+    def test_gui_log_created(self, threev0_home):
+        threev0_logging.setup_logging(threev0_home=threev0_home, mode="gui")
         root = logging.getLogger()
 
         gui_handlers = [
@@ -212,8 +212,8 @@ class TestGuiMode:
         assert len(gui_handlers) == 1
 
 
-    def test_gui_log_receives_only_gui_components(self, ev0_home):
-        threev0_logging.setup_logging(ev0_home=ev0_home, mode="gui")
+    def test_gui_log_receives_only_gui_components(self, threev0_home):
+        threev0_logging.setup_logging(threev0_home=threev0_home, mode="gui")
 
         logging.getLogger("threev0_cli.web_server").info("dashboard online")
         logging.getLogger("tui_gateway.ws").info("ws connected")
@@ -221,7 +221,7 @@ class TestGuiMode:
 
         threev0_logging.flush_log_queue()
 
-        gui_log = ev0_home / "logs" / "gui.log"
+        gui_log = threev0_home / "logs" / "gui.log"
         assert gui_log.exists()
         content = gui_log.read_text()
         assert "dashboard online" in content
@@ -232,9 +232,9 @@ class TestGuiMode:
 class TestSessionContext:
     """set_session_context / clear_session_context + _SessionFilter."""
 
-    def test_session_tag_in_log_output(self, ev0_home):
+    def test_session_tag_in_log_output(self, threev0_home):
         """When session context is set, log lines include [session_id]."""
-        threev0_logging.setup_logging(ev0_home=ev0_home)
+        threev0_logging.setup_logging(threev0_home=threev0_home)
         threev0_logging.set_session_context("abc123")
 
         test_logger = logging.getLogger("test.session_tag")
@@ -242,7 +242,7 @@ class TestSessionContext:
 
         threev0_logging.flush_log_queue()
 
-        agent_log = ev0_home / "logs" / "agent.log"
+        agent_log = threev0_home / "logs" / "agent.log"
         content = agent_log.read_text()
         assert "[abc123]" in content
         assert "tagged message" in content
@@ -278,8 +278,8 @@ class TestComponentFilter:
 class TestSetupVerboseLogging:
     """setup_verbose_logging() adds a DEBUG-level console handler."""
 
-    def test_adds_stream_handler(self, ev0_home):
-        threev0_logging.setup_logging(ev0_home=ev0_home)
+    def test_adds_stream_handler(self, threev0_home):
+        threev0_logging.setup_logging(threev0_home=threev0_home)
         threev0_logging.setup_verbose_logging()
 
         root = logging.getLogger()
@@ -287,7 +287,7 @@ class TestSetupVerboseLogging:
             h for h in root.handlers
             if isinstance(h, logging.StreamHandler)
             and not isinstance(h, RotatingFileHandler)
-            and getattr(h, "_ev0_verbose", False)
+            and getattr(h, "_threev0_verbose", False)
         ]
         assert len(verbose_handlers) == 1
         assert verbose_handlers[0].level == logging.DEBUG
@@ -454,16 +454,16 @@ class TestWindowsConcurrentLogLockTimeout:
 class TestReadLoggingConfig:
     """_read_logging_config() reads from config.yaml."""
 
-    def test_returns_none_when_no_config(self, ev0_home):
+    def test_returns_none_when_no_config(self, threev0_home):
         level, max_size, backup = threev0_logging._read_logging_config()
         assert level is None
         assert max_size is None
         assert backup is None
 
-    def test_reads_logging_section(self, ev0_home):
+    def test_reads_logging_section(self, threev0_home):
         import yaml
         config = {"logging": {"level": "DEBUG", "max_size_mb": 10, "backup_count": 5}}
-        (ev0_home / "config.yaml").write_text(yaml.dump(config))
+        (threev0_home / "config.yaml").write_text(yaml.dump(config))
 
         level, max_size, backup = threev0_logging._read_logging_config()
         assert level == "DEBUG"
@@ -557,7 +557,7 @@ class TestExternalRotationRecovery:
 
 
     def test_gateway_log_attached_after_external_rotation_then_re_setup(
-        self, ev0_home,
+        self, threev0_home,
     ):
         """End-to-end Allen-reproduction: gateway.log gets externally rotated,
         ``setup_logging(mode='gateway')`` is re-called, the handler keeps
@@ -567,9 +567,9 @@ class TestExternalRotationRecovery:
         records leaking to agent.log) when something external rotates the
         file between setup_logging() calls.
         """
-        threev0_logging.setup_logging(ev0_home=ev0_home, mode="gateway")
-        gw_path = ev0_home / "logs" / "gateway.log"
-        rotated = ev0_home / "logs" / "gateway.log.1"
+        threev0_logging.setup_logging(threev0_home=threev0_home, mode="gateway")
+        gw_path = threev0_home / "logs" / "gateway.log"
+        rotated = threev0_home / "logs" / "gateway.log.1"
 
         logging.getLogger("gateway.run").info("line BEFORE rotation")
         threev0_logging.flush_log_queue()
@@ -582,7 +582,7 @@ class TestExternalRotationRecovery:
         # Caller (or some restart path) re-enters setup_logging.  This used
         # to silently no-op due to the per-path dedup check, leaving the
         # stale fd in place.
-        threev0_logging.setup_logging(ev0_home=ev0_home, mode="gateway")
+        threev0_logging.setup_logging(threev0_home=threev0_home, mode="gateway")
 
         logging.getLogger("gateway.run").info("line AFTER rotation")
         threev0_logging.flush_log_queue()
@@ -661,14 +661,14 @@ class TestAsyncQueueLogging:
     """File logging runs through a QueueListener so emits never block on the
     cross-process rotation lock (Windows event-loop-stall fix)."""
 
-    def test_file_handlers_not_on_root(self, ev0_home):
-        threev0_logging.setup_logging(ev0_home=ev0_home)
+    def test_file_handlers_not_on_root(self, threev0_home):
+        threev0_logging.setup_logging(threev0_home=threev0_home)
         root = logging.getLogger()
         # Rotating file handlers live on the async listener, never on root.
         assert not any(isinstance(h, RotatingFileHandler) for h in root.handlers)
         # Exactly one queue handler funnels records to the listener.
         queue_handlers = [
-            h for h in root.handlers if getattr(h, "_ev0_queue", False)
+            h for h in root.handlers if getattr(h, "_threev0_queue", False)
         ]
         assert len(queue_handlers) == 1
         # The real file handlers are discoverable via the accessor.

@@ -52,7 +52,7 @@ _REGISTERED_MEMORY_PROVIDER_SKILLS: dict[str, Path] = {}
 
 # Synthetic parent package for user-installed providers, so they don't
 # collide with bundled providers in sys.modules.
-_USER_NAMESPACE = "_ev0_user_memory"
+_USER_NAMESPACE = "_threev0_user_memory"
 
 
 def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
@@ -62,7 +62,7 @@ def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
     dotted name whose parents exist nowhere on disk.  Unless those parents
     are present in ``sys.modules``, any relative import inside the plugin
     (``from . import config``) fails with
-    ``ModuleNotFoundError: No module named '_ev0_user_memory'`` — the
+    ``ModuleNotFoundError: No module named '_threev0_user_memory'`` — the
     same reason the loader already registers ``plugins`` and
     ``plugins.memory`` for bundled providers.
     """
@@ -80,8 +80,8 @@ def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
 def _get_user_plugins_dir() -> Optional[Path]:
     """Return ``$EV0_HOME/plugins/`` or None if unavailable."""
     try:
-        from threev0_constants import get_ev0_home
-        d = get_ev0_home() / "plugins"
+        from threev0_constants import get_threev0_home
+        d = get_threev0_home() / "plugins"
         return d if d.is_dir() else None
     except Exception:
         return None
@@ -761,7 +761,7 @@ def discover_plugin_cli_commands() -> List[dict]:
             except Exception:
                 pass
 
-        handler_fn = getattr(cli_mod, f"{active_provider}_command", None) or \
+        handler_fn = getattr(cli_mod, f"{active_provider}_command", None) or\
                      getattr(cli_mod, "honcho_command", None)
 
         results.append({

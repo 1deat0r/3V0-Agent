@@ -229,7 +229,7 @@ def test_source_tags_the_authorize_link(fake_as):
     assert "source=" not in untagged
 
 
-def test_client_id_defaults_to_ev0_agent(monkeypatch):
+def test_client_id_defaults_to_threev0_agent(monkeypatch):
     # One client for every surface; the env var overrides for unusual deployments.
     monkeypatch.delenv("HONCHO_OAUTH_CLIENT_ID", raising=False)
     common = {"environment": "production", "base_url": "https://api.honcho.dev"}

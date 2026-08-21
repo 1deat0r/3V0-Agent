@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 from typing import Dict
 
-from threev0_constants import display_ev0_home
+from threev0_constants import display_threev0_home
 from utils import atomic_replace
 from threev0_cli.config import cfg_get
 
@@ -28,13 +28,13 @@ _SUBSCRIPTIONS_FILENAME = "webhook_subscriptions.json"
 _SUBSCRIPTIONS_FILE_MODE = 0o600
 
 
-def _ev0_home() -> Path:
-    from threev0_constants import get_ev0_home
-    return get_ev0_home()
+def _threev0_home() -> Path:
+    from threev0_constants import get_threev0_home
+    return get_threev0_home()
 
 
 def _subscriptions_path() -> Path:
-    return _ev0_home() / _SUBSCRIPTIONS_FILENAME
+    return _threev0_home() / _SUBSCRIPTIONS_FILENAME
 
 
 def _load_subscriptions() -> Dict[str, dict]:
@@ -105,7 +105,7 @@ def _get_webhook_base_url() -> str:
 
 
 def _setup_hint() -> str:
-    _dhh = display_ev0_home()
+    _dhh = display_threev0_home()
     return f"""
   Webhook platform is not enabled. To set it up:
 

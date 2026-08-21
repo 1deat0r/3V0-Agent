@@ -9,7 +9,7 @@ from __future__ import annotations
 import pytest
 
 from agent import learning_mutations as lm
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 _SKILL = """---
 name: my-skill
@@ -24,7 +24,7 @@ Body.
 
 @pytest.fixture
 def home():
-    base = get_ev0_home()
+    base = get_threev0_home()
     (base / "memories").mkdir(parents=True, exist_ok=True)
     (base / "memories" / "MEMORY.md").write_text("alpha note\nline two\n§\nbeta note", encoding="utf-8")
     (base / "memories" / "USER.md").write_text("user profile note", encoding="utf-8")

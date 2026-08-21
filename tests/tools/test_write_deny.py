@@ -22,7 +22,7 @@ class TestWriteDenyExactPaths:
         assert _is_write_denied(path) is True
 
 
-    def test_ev0_root_env_when_running_under_profile(self, tmp_path, monkeypatch):
+    def test_threev0_root_env_when_running_under_profile(self, tmp_path, monkeypatch):
         """Top-level ``<root>/.env`` stays write-denied even when running under
         a profile (#15981).
 
@@ -41,9 +41,9 @@ class TestWriteDenyExactPaths:
         monkeypatch.setenv("EV0_HOME", str(profile_home))
 
         # Sanity check: EV0_HOME does point to the profile dir, not the root.
-        from threev0_constants import get_ev0_home, get_default_ev0_root
-        assert get_ev0_home() == profile_home
-        assert get_default_ev0_root() == root
+        from threev0_constants import get_threev0_home, get_default_threev0_root
+        assert get_threev0_home() == profile_home
+        assert get_default_threev0_root() == root
 
         assert _is_write_denied(str(global_env)) is True
 
@@ -87,9 +87,9 @@ class TestWriteAllowed:
         assert _is_write_denied("/tmp/safe_file.txt") is False
 
 
-    def test_ev0_control_files_requested_writable(self):
-        from threev0_constants import get_ev0_home
+    def test_threev0_control_files_requested_writable(self):
+        from threev0_constants import get_threev0_home
 
-        home = get_ev0_home()
+        home = get_threev0_home()
         for name in ["auth.json", "config.yaml", "webhook_subscriptions.json"]:
             assert _is_write_denied(str(home / name)) is False, f"{name} should be writable"

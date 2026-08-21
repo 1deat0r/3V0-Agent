@@ -26,14 +26,14 @@ from agent.secret_scope import (
 from threev0_constants import (
     DEFAULT_INDICATOR_STYLE,
     INDICATOR_STYLES,
-    get_ev0_home,
-    get_ev0_home_override,
-    reset_ev0_home_override,
-    set_ev0_home_override,
+    get_threev0_home,
+    get_threev0_home_override,
+    reset_threev0_home_override,
+    set_threev0_home_override,
 )
-from threev0_cli.env_loader import load_ev0_dotenv
+from threev0_cli.env_loader import load_threev0_dotenv
 from utils import is_truthy_value
-from tools.environments.local import ev0_subprocess_env
+from tools.environments.local import threev0_subprocess_env
 from agent.replay_cleanup import sanitize_replay_history
 from agent.skill_commands import describe_skill_invocation
 from agent.conversation_loop import INTERRUPT_WAITING_FOR_MODEL_PREFIX
@@ -53,9 +53,9 @@ from tui_gateway.transport import (
 
 logger = logging.getLogger(__name__)
 
-_ev0_home = get_ev0_home()
-load_ev0_dotenv(
-    ev0_home=_ev0_home, project_env=Path(__file__).parent.parent / ".env"
+_threev0_home = get_threev0_home()
+load_threev0_dotenv(
+    threev0_home=_threev0_home, project_env=Path(__file__).parent.parent / ".env"
 )
 
 
@@ -68,7 +68,7 @@ load_ev0_dotenv(
 # AND re-emits a one-line summary to stderr so the TUI can surface it in
 # Activity — exactly what was missing when the voice-mode turns started
 # exiting the gateway mid-TTS.
-_CRASH_LOG = os.path.join(_ev0_home, "logs", "tui_gateway_crash.log")
+_CRASH_LOG = os.path.join(_threev0_home, "logs", "tui_gateway_crash.log")
 
 
 def _panic_hook(exc_type, exc_value, exc_tb):
@@ -378,9 +378,9 @@ def _prepend_tool_paths(env: dict[str, str]) -> dict[str, str]:
     resolution policy for the Browser Use CLI."""
     managed_bin = ""
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        managed_bin = str(Path(get_ev0_home()) / "bin")
+        managed_bin = str(Path(get_threev0_home()) / "bin")
     except Exception:
         pass
     venv_bin = str(Path(sys.executable).parent)  # <venv>/bin (POSIX) or <venv>/Scripts (Windows)
@@ -424,7 +424,7 @@ class _SlashWorker:
         # instead of a hand-rolled env["EV0_HOME"] assignment.
         from tools.environments.local import build_subprocess_env
         env = build_subprocess_env(
-            ev0_subprocess_env(inherit_credentials=True),
+            threev0_subprocess_env(inherit_credentials=True),
             scrub_secrets=False,
             inherit_profile_home=False,  # base already carries the HOME contract
             extra={"EV0_HOME": str(profile_home)} if profile_home else None,
@@ -1524,7 +1524,7 @@ def _profile_home(profile: str | None) -> Path | None:
     except Exception:
         return None
     # Already the launch profile? No override needed.
-    if home.resolve() == Path(_ev0_home).resolve():
+    if home.resolve() == Path(_threev0_home).resolve():
         return None
     return home if (home / "state.db").exists() or home.exists() else None
 
@@ -1543,11 +1543,11 @@ def _profile_scoped(handler):
         home = _profile_home(params.get("profile") if isinstance(params, dict) else None)
         if home is None:
             return handler(rid, params)
-        token = set_ev0_home_override(home)
+        token = set_threev0_home_override(home)
         try:
             return handler(rid, params)
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
     return wrapper
 
@@ -2319,7 +2319,7 @@ def _start_agent_build(sid: str, session: dict) -> None:
             # agent that profile's db so turns persist to the right state.db.
             session_db = None
             if profile_home:
-                home_token = set_ev0_home_override(profile_home)
+                home_token = set_threev0_home_override(profile_home)
                 try:
                     from agent.secret_scope import build_profile_secret_scope, set_secret_scope
 
@@ -2458,7 +2458,7 @@ def _start_agent_build(sid: str, session: dict) -> None:
             _emit("error", sid, {"message": f"agent init failed: {e}"})
         finally:
             if home_token is not None:
-                reset_ev0_home_override(home_token)
+                reset_threev0_home_override(home_token)
             if secret_token is not None:
                 try:
                     from agent.secret_scope import reset_secret_scope
@@ -3292,8 +3292,8 @@ def _load_cfg_raw() -> dict:
         # remote profile loads ITS config (model, skills, prompt); otherwise the
         # launch profile's _ev0_home. Cache is keyed on the resolved path, so
         # profiles don't clobber each other.
-        override = get_ev0_home_override()
-        home = override if isinstance(override, str) and override else _ev0_home
+        override = get_threev0_home_override()
+        home = override if isinstance(override, str) and override else _threev0_home
         p = Path(home) / "config.yaml"
         mtime = p.stat().st_mtime if p.exists() else None
         with _cfg_lock:
@@ -3364,7 +3364,7 @@ def _save_cfg(cfg: dict):
 
     from utils import atomic_roundtrip_yaml_save
 
-    path = _ev0_home / "config.yaml"
+    path = _threev0_home / "config.yaml"
     # Comment-, ordering-, and Unicode-preserving full-state write.
     # Replaces the previous `yaml.safe_dump(cfg, f)` (and later
     # `atomic_config_write`, which is not comment-preserving) which clobbered
@@ -3577,8 +3577,8 @@ def _skin_sig() -> tuple[str, float | None]:
     """(active skin name, its user-file mtime). Built-ins have no file, so only
     their name moves; a user skin's mtime lets an in-place color edit repaint too."""
     name = str((_load_cfg().get("display") or {}).get("skin") or "default")
-    override = get_ev0_home_override()
-    home = override if isinstance(override, str) and override else _ev0_home
+    override = get_threev0_home_override()
+    home = override if isinstance(override, str) and override else _threev0_home
     try:
         mtime: float | None = (Path(home) / "skins" / f"{name}.yaml").stat().st_mtime
     except OSError:
@@ -3621,8 +3621,8 @@ def _broadcast_skin_if_changed() -> None:
 
 def _watcher_home() -> Path:
     """Active profile home for the change watcher's signature probes."""
-    override = get_ev0_home_override()
-    return Path(override if isinstance(override, str) and override else _ev0_home)
+    override = get_threev0_home_override()
+    return Path(override if isinstance(override, str) and override else _threev0_home)
 
 
 def _pet_sig() -> tuple:
@@ -4175,7 +4175,7 @@ def _persist_live_session_system_prompt(session: dict | None) -> None:
     # SOUL.md and skills.  See issue #50233.
     profile_home = session.get("profile_home")
     home_token = (
-        set_ev0_home_override(profile_home) if profile_home else None
+        set_threev0_home_override(profile_home) if profile_home else None
     )
     try:
         prompt = agent._build_system_prompt(None)
@@ -4189,7 +4189,7 @@ def _persist_live_session_system_prompt(session: dict | None) -> None:
         )
     finally:
         if home_token is not None:
-            reset_ev0_home_override(home_token)
+            reset_threev0_home_override(home_token)
 
 
 # Stable leading text of the model-switch marker, shared by the builder and the
@@ -7761,7 +7761,7 @@ def _auto_continue_config() -> tuple[bool, float, int]:
 def _session_home(session: dict) -> Path:
     """The EV0_HOME the session's durable state lives in (profile-aware)."""
     profile_home = session.get("profile_home")
-    return Path(profile_home) if profile_home else Path(_ev0_home)
+    return Path(profile_home) if profile_home else Path(_threev0_home)
 
 
 def _retire_turn_marker(session: dict, *keys: str) -> None:
@@ -8985,9 +8985,9 @@ def _pet_state_rows(spritesheet) -> list[str]:
 
 def _pet_gen_root():
     """Profile-scoped staging dir for in-progress generation drafts."""
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    root = get_ev0_home() / "cache" / "pet-gen"
+    root = get_threev0_home() / "cache" / "pet-gen"
     root.mkdir(parents=True, exist_ok=True)
     return root
 
@@ -9412,9 +9412,9 @@ def _serialize_subscription_preview(p) -> dict:
 
 
 def _spawn_trees_root():
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
-    root = get_ev0_home() / "spawn-trees"
+    root = get_threev0_home() / "spawn-trees"
     root.mkdir(parents=True, exist_ok=True)
     return root
 
@@ -10572,7 +10572,7 @@ def _run_prompt_submit(
             )
             _profile_home_str = session.get("profile_home")
             if _profile_home_str:
-                home_token = set_ev0_home_override(_profile_home_str)
+                home_token = set_threev0_home_override(_profile_home_str)
                 secret_token = set_secret_scope(build_profile_secret_scope(Path(_profile_home_str)))
             # The sudo password callback is thread-local (tools.terminal_tool
             # _callback_tls), so wiring it on the build thread doesn't reach this
@@ -11279,7 +11279,7 @@ def _run_prompt_submit(
             except Exception:
                 pass
             if home_token is not None:
-                reset_ev0_home_override(home_token)
+                reset_threev0_home_override(home_token)
             if secret_token is not None:
                 reset_secret_scope(secret_token)
             _clear_session_context(session_tokens)
@@ -11520,7 +11520,7 @@ def _session_images_dir(session: dict) -> Path:
     per-profile isolation: a profile's uploads stay under that profile's home.
     """
     profile_home = session.get("profile_home")
-    base = Path(profile_home) if profile_home else _ev0_home
+    base = Path(profile_home) if profile_home else _threev0_home
     return base / "images"
 
 
@@ -11592,7 +11592,7 @@ def _desktop_attachment_dir(session: dict) -> Path:
     ``tools.credential_files._CACHE_DIRS`` and auto-mounted into containers.
     """
     profile_home = session.get("profile_home")
-    base = Path(profile_home) if profile_home else _ev0_home
+    base = Path(profile_home) if profile_home else _threev0_home
     root = base / "attachments"
     root.mkdir(parents=True, exist_ok=True)
     return root
@@ -12606,15 +12606,15 @@ def _is_repo_junk(root: str) -> bool:
     if not root:
         return True
 
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
     real = os.path.realpath(root)
-    ev0_home = os.path.realpath(str(get_ev0_home()))
+    threev0_home = os.path.realpath(str(get_threev0_home()))
 
     return (
         os.path.normcase(real) in _non_workspace_dirs()
-        or real == ev0_home
-        or real.startswith(ev0_home + os.sep)
+        or real == threev0_home
+        or real.startswith(threev0_home + os.sep)
     )
 
 
@@ -12630,11 +12630,11 @@ def _is_session_cwd_junk(cwd: str) -> bool:
     if not cwd:
         return True
 
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
 
     real = os.path.normcase(os.path.realpath(cwd))
-    ev0_home = os.path.normcase(os.path.realpath(str(get_ev0_home())))
-    return real in _non_workspace_dirs() or real == ev0_home
+    threev0_home = os.path.normcase(os.path.realpath(str(get_threev0_home())))
+    return real in _non_workspace_dirs() or real == threev0_home
 
 
 def _repo_discovery_policy(raw: dict | None = None) -> dict:

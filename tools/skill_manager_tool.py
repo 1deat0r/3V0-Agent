@@ -40,7 +40,7 @@ import contextvars as _ctxvars
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from threev0_constants import get_ev0_home, display_ev0_home
+from threev0_constants import get_threev0_home, display_threev0_home
 from utils import atomic_write_text, is_truthy_value
 from threev0_cli.config import cfg_get
 from agent.skill_utils import (
@@ -152,7 +152,7 @@ import yaml
 
 
 # All skills live in ~/.3V0/skills/ (single source of truth)
-EV0_HOME = get_ev0_home()
+EV0_HOME = get_threev0_home()
 SKILLS_DIR = EV0_HOME / "skills"
 _SKILLS_DIR_AT_IMPORT = SKILLS_DIR
 
@@ -169,7 +169,7 @@ def _skills_dir() -> Path:
     configured = Path(SKILLS_DIR)
     if configured != _SKILLS_DIR_AT_IMPORT:
         return configured
-    return get_ev0_home() / "skills"
+    return get_threev0_home() / "skills"
 
 MAX_NAME_LENGTH = 64
 MAX_DESCRIPTION_LENGTH = 1024
@@ -748,13 +748,13 @@ def _find_skill_in_other_profiles(name: str) -> List[Tuple[str, Path]]:
     """
     matches: List[Tuple[str, Path]] = []
     try:
-        from threev0_constants import get_default_ev0_root
+        from threev0_constants import get_default_threev0_root
         from agent.skill_utils import is_excluded_skill_path
     except Exception:
         return matches
 
     try:
-        root = get_default_ev0_root()
+        root = get_default_threev0_root()
     except Exception:
         return matches
 
@@ -1672,7 +1672,7 @@ SKILL_MANAGE_SCHEMA = {
     "description": (
         "Manage skills (create, update, delete). Skills are your procedural "
         "memory — reusable approaches for recurring task types. "
-        f"New skills go to {display_ev0_home()}/skills/; existing skills can be modified wherever they live.\n\n"
+        f"New skills go to {display_threev0_home()}/skills/; existing skills can be modified wherever they live.\n\n"
         "Actions: create (full SKILL.md + optional category), "
         "patch (old_string/new_string — preferred for fixes), "
         "edit (full SKILL.md rewrite — major overhauls only), "

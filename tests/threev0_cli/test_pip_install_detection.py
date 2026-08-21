@@ -25,7 +25,7 @@ def test_code_scoped_stamp_wins_over_home_stamp(tmp_path):
     (code / ".install_method").write_text("git\n")
     (home / ".install_method").write_text("docker\n")  # container contamination
     with patch("threev0_cli.config.get_managed_system", return_value=None), \
-         patch("threev0_cli.config.get_ev0_home", return_value=home):
+         patch("threev0_cli.config.get_threev0_home", return_value=home):
         from threev0_cli.config import detect_install_method
         assert detect_install_method(project_root=code) == "git"
 
@@ -40,7 +40,7 @@ def test_stamp_install_method_writes_code_scoped(tmp_path):
     home = tmp_path / "home"
     code.mkdir()
     home.mkdir()
-    with patch("threev0_cli.config.get_ev0_home", return_value=home):
+    with patch("threev0_cli.config.get_threev0_home", return_value=home):
         from threev0_cli.config import stamp_install_method
         stamp_install_method("git", project_root=code)
     assert (code / ".install_method").read_text().strip() == "git"
@@ -60,7 +60,7 @@ def test_container_without_stamp_is_not_docker(tmp_path):
     """
     (tmp_path / ".git").mkdir()
     with patch("threev0_cli.config.get_managed_system", return_value=None), \
-         patch("threev0_cli.config.get_ev0_home", return_value=tmp_path), \
+         patch("threev0_cli.config.get_threev0_home", return_value=tmp_path), \
          patch("threev0_constants.is_container", return_value=True):
         from threev0_cli.config import detect_install_method
         assert detect_install_method(project_root=tmp_path) == "git"

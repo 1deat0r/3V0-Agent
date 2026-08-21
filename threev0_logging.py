@@ -69,7 +69,7 @@ else:
     from logging.handlers import RotatingFileHandler  # noqa: E402
 
 
-from threev0_constants import get_config_path, get_ev0_home
+from threev0_constants import get_config_path, get_threev0_home
 
 # Sentinel to track whether setup_logging() has already run.  The function
 # is idempotent — calling it twice is safe but the second call is a no-op
@@ -194,7 +194,7 @@ def _install_session_record_factory() -> None:
     the module is reloaded.
     """
     current_factory = logging.getLogRecordFactory()
-    if getattr(current_factory, "_ev0_session_injector", False):
+    if getattr(current_factory, "_threev0_session_injector", False):
         return  # already installed
 
     def _session_record_factory(*args, **kwargs):
@@ -203,7 +203,7 @@ def _install_session_record_factory() -> None:
         record.session_tag = f" [{sid}]" if sid else ""  # type: ignore[attr-defined]
         return record
 
-    _session_record_factory._ev0_session_injector = True  # type: ignore[attr-defined]
+    _session_record_factory._threev0_session_injector = True  # type: ignore[attr-defined]
     logging.setLogRecordFactory(_session_record_factory)
 
 
@@ -258,7 +258,7 @@ COMPONENT_PREFIXES = {
 
 def setup_logging(
     *,
-    ev0_home: Optional[Path] = None,
+    threev0_home: Optional[Path] = None,
     log_level: Optional[str] = None,
     max_size_mb: Optional[int] = None,
     backup_count: Optional[int] = None,
@@ -300,7 +300,7 @@ def setup_logging(
         The ``logs/`` directory where files are written.
     """
     global _logging_initialized
-    home = ev0_home or get_ev0_home()
+    home = threev0_home or get_threev0_home()
     log_dir = home / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -388,13 +388,13 @@ def setup_verbose_logging() -> None:
     # Avoid adding duplicate stream handlers.
     for h in root.handlers:
         if isinstance(h, logging.StreamHandler) and not isinstance(h, RotatingFileHandler):
-            if getattr(h, "_ev0_verbose", False):
+            if getattr(h, "_threev0_verbose", False):
                 return
 
     handler = logging.StreamHandler(_safe_stderr())
     handler.setLevel(logging.DEBUG)
     handler.setFormatter(RedactingFormatter(_LOG_FORMAT_VERBOSE, datefmt="%H:%M:%S"))
-    handler._ev0_verbose = True  # type: ignore[attr-defined]
+    handler._threev0_verbose = True  # type: ignore[attr-defined]
     root.addHandler(handler)
 
     # Lower root logger level so DEBUG records reach all handlers.
@@ -622,7 +622,7 @@ def _register_queued_handler(handler: logging.Handler) -> None:
         if _log_queue is None:
             _log_queue = queue.SimpleQueue()
             qh = _NonFormattingQueueHandler(_log_queue)
-            qh._ev0_queue = True  # type: ignore[attr-defined]
+            qh._threev0_queue = True  # type: ignore[attr-defined]
             # Always funnel through the root logger so records from any logger
             # (production passes root here; callers may pass a child) reach the
             # queue via propagation.
@@ -707,7 +707,7 @@ def _reset_queued_handlers() -> None:
         _stop_queue_listener_locked()
         root = logging.getLogger()
         for h in list(root.handlers):
-            if getattr(h, "_ev0_queue", False):
+            if getattr(h, "_threev0_queue", False):
                 root.removeHandler(h)
         for h in list(_queued_file_handlers):
             try:

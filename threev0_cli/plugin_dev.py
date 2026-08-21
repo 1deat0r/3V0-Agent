@@ -21,7 +21,7 @@ from types import SimpleNamespace
 from typing import Any, Literal
 from unittest.mock import patch
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 
 class _DoctorLoadError(RuntimeError):
@@ -186,7 +186,7 @@ def resolve_plugin_path(target: str | os.PathLike[str] | None = None) -> Path:
         return direct.resolve()
 
     candidates: list[Path] = []
-    user_root = get_ev0_home() / "plugins"
+    user_root = get_threev0_home() / "plugins"
     candidates.append(user_root / raw)
     try:
         from threev0_cli.plugins import get_bundled_plugins_dir

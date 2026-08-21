@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 logger = logging.getLogger(__name__)
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from tools.tool_backend_helpers import managed_nous_tools_enabled
 
 _DEFAULT_TOOL_GATEWAY_DOMAIN = "nousresearch.com"
@@ -30,7 +30,7 @@ class ManagedToolGatewayConfig:
 
 def auth_json_path():
     """Return the 3V0 auth store path, respecting EV0_HOME overrides."""
-    return get_ev0_home() / "auth.json"
+    return get_threev0_home() / "auth.json"
 
 
 def _read_nous_provider_state() -> Optional[dict]:

@@ -55,12 +55,12 @@ SUPPORT_FLOOR_VERSION = 12
 
 def support_floor_message() -> str:
     """Human-facing explanation shown when a config is below the floor."""
-    from threev0_constants import display_ev0_home
+    from threev0_constants import display_threev0_home
 
     return (
         f"This config predates version {SUPPORT_FLOOR_VERSION} (~2 years old) "
         "and can no longer be auto-migrated. Back up "
-        f"{display_ev0_home()}/config.yaml and run `3v0 setup` to "
+        f"{display_threev0_home()}/config.yaml and run `3v0 setup` to "
         f"regenerate, or manually set _config_version: {SUPPORT_FLOOR_VERSION} "
         "after reviewing the changelog."
     )
@@ -322,7 +322,7 @@ def _migrate_to_21(results: Dict[str, Any], quiet: bool) -> None:
     _c = _cfg()
     read_raw_config = _c.read_raw_config
     _persist_migration = _c._persist_migration
-    get_ev0_home = _c.get_ev0_home
+    get_threev0_home = _c.get_threev0_home
     fast_safe_load = _c.fast_safe_load
 
     config = read_raw_config()
@@ -339,7 +339,7 @@ def _migrate_to_21(results: Dict[str, Any], quiet: bool) -> None:
         # Scan ``$EV0_HOME/plugins/`` for currently installed user plugins.
         grandfathered: List[str] = []
         try:
-            user_plugins_dir = get_ev0_home() / "plugins"
+            user_plugins_dir = get_threev0_home() / "plugins"
             if user_plugins_dir.is_dir():
                 for child in sorted(user_plugins_dir.iterdir()):
                     if not child.is_dir():
@@ -403,11 +403,11 @@ def _migrate_to_23(results: Dict[str, Any], quiet: bool) -> None:
     _c = _cfg()
     read_raw_config = _c.read_raw_config
     _persist_migration = _c._persist_migration
-    get_ev0_home = _c.get_ev0_home
+    get_threev0_home = _c.get_threev0_home
     DEFAULT_CONFIG = _c.DEFAULT_CONFIG
 
     try:
-        curator_dir = get_ev0_home() / "logs" / "curator"
+        curator_dir = get_threev0_home() / "logs" / "curator"
         curator_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
         results["warnings"].append(f"Could not create {curator_dir}: {e}")

@@ -44,7 +44,7 @@ _lock = threading.Lock()
 _cached: dict[str, str] = {}
 
 
-def _ev0_root(home: Path) -> Path:
+def _threev0_root(home: Path) -> Path:
     """Root ~/.3V0 for both the default profile and named profiles."""
     if home.parent.name == "profiles":
         return home.parent.parent
@@ -106,7 +106,7 @@ def _handle(name: str) -> str:
 
 
 def _build_section(home: Path) -> str:
-    root = _ev0_root(home)
+    root = _threev0_root(home)
     me = _profile_name(home)
 
     roster = _roster(root)
@@ -194,13 +194,13 @@ def capability_fingerprint(home: str | os.PathLike | None = None) -> str:
         # Canonical loader (managed overlay + env expansion + normalization),
         # scoped to the bot's home via the override the loaders already honor.
         from threev0_cli.config import load_config_readonly
-        from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+        from threev0_constants import reset_threev0_home_override, set_threev0_home_override
 
-        token = set_ev0_home_override(str(resolved))
+        token = set_threev0_home_override(str(resolved))
         try:
             cfg = load_config_readonly() or {}
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
         skills_cfg = cfg.get("skills") if isinstance(cfg.get("skills"), dict) else {}
         tools_cfg = cfg.get("tools") if isinstance(cfg.get("tools"), dict) else {}
         skills_cfg = skills_cfg or {}
@@ -226,7 +226,7 @@ def capability_fingerprint(home: str | os.PathLike | None = None) -> str:
     except Exception:
         surface["skills"] = []
     try:
-        root = _ev0_root(resolved)
+        root = _threev0_root(resolved)
         surface["roster"] = sorted(n for n, d in _roster(root) if _is_bot_managed(d))
     except Exception:
         surface["roster"] = []

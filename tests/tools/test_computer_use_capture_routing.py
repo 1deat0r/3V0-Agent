@@ -55,7 +55,7 @@ def tmp_cache_dir(tmp_path):
     def _fake_get(*_args, **_kw):
         return cache_dir
 
-    with patch("threev0_constants.get_ev0_dir", _fake_get):
+    with patch("threev0_constants.get_threev0_dir", _fake_get):
         yield cache_dir
 
 

@@ -13,12 +13,12 @@ import yaml
 
 
 @pytest.fixture
-def isolated_profiles(tmp_path, monkeypatch, _isolate_ev0_home):
+def isolated_profiles(tmp_path, monkeypatch, _isolate_threev0_home):
     """Isolated default home + one named profile, each with config + .env."""
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
     from threev0_cli import profiles
 
-    default_home = get_ev0_home()
+    default_home = get_threev0_home()
     profiles_root = default_home / "profiles"
     worker_home = profiles_root / "worker_beta"
     for home in (default_home, worker_home):
@@ -26,7 +26,7 @@ def isolated_profiles(tmp_path, monkeypatch, _isolate_ev0_home):
         (home / "config.yaml").write_text("{}\n", encoding="utf-8")
     (worker_home / ".env").write_text("", encoding="utf-8")
 
-    monkeypatch.setattr(profiles, "_get_default_ev0_home", lambda: default_home)
+    monkeypatch.setattr(profiles, "_get_default_threev0_home", lambda: default_home)
     monkeypatch.setattr(profiles, "_get_profiles_root", lambda: profiles_root)
     return {"default": default_home, "worker_beta": worker_home}
 
@@ -39,10 +39,10 @@ def client(monkeypatch, isolated_profiles):
         pytest.skip("fastapi/starlette not installed")
 
     import threev0_state
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
     from threev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
-    monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db")
+    monkeypatch.setattr(threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db")
     c = TestClient(app)
     c.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
     return c
@@ -376,7 +376,7 @@ class TestProfileScopedPostSetup:
 
         monkeypatch.setattr(
             web_server,
-            "_spawn_ev0_action",
+            "_spawn_threev0_action",
             lambda subcommand, name: calls.append(list(subcommand)) or _FakeProc(),
         )
         monkeypatch.setattr(
@@ -404,7 +404,7 @@ class TestProfileScopedPostSetup:
 
         monkeypatch.setattr(
             web_server,
-            "_spawn_ev0_action",
+            "_spawn_threev0_action",
             lambda subcommand, name: calls.append(list(subcommand)) or _FakeProc(),
         )
         monkeypatch.setattr(
@@ -425,14 +425,14 @@ class TestProfileScopedGateway:
         self, client, isolated_profiles, monkeypatch
     ):
         import threev0_cli.web_server as web_server
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
         seen_homes = []
 
         def fake_get_running_pid(*args, **kwargs):
             # /api/status?profile= now passes pid_path= explicitly (the TTL
             # cache would otherwise serve another profile's PID) — accept it.
-            seen_homes.append(str(get_ev0_home()))
+            seen_homes.append(str(get_threev0_home()))
             return None
 
         monkeypatch.setattr(web_server, "check_config_version", lambda: (1, 1))
@@ -530,7 +530,7 @@ class TestProfileScopedTelegramOnboarding:
 
         monkeypatch.setattr(
             web_server,
-            "_spawn_ev0_action",
+            "_spawn_threev0_action",
             lambda subcommand, name: calls.append((list(subcommand), name)) or _FakeProc(),
         )
         web_server._ACTION_PROCS.pop("gateway-restart", None)
@@ -562,7 +562,7 @@ class TestProfileScopedTelegramOnboarding:
 
 
 class TestProfileScopedChatPty:
-    def test_chat_argv_scopes_ev0_home(self, isolated_profiles, monkeypatch):
+    def test_chat_argv_scopes_threev0_home(self, isolated_profiles, monkeypatch):
         import threev0_cli.web_server as web_server
 
         monkeypatch.setattr(
@@ -598,9 +598,9 @@ class TestProfileScopedAudio:
         seen = {}
 
         def _fake_transcribe(path):
-            from threev0_constants import get_ev0_home
+            from threev0_constants import get_threev0_home
 
-            seen["home"] = str(get_ev0_home())
+            seen["home"] = str(get_threev0_home())
             return {"success": True, "transcript": "hi", "provider": "fake"}
 
         monkeypatch.setattr(voice_mode, "transcribe_recording", _fake_transcribe)

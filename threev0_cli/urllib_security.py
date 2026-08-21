@@ -179,7 +179,7 @@ def _secure_opener_from_installed_policy(original_url: str, *, ssl_context=None)
     # instead, then leave the rebuilt opener's late-injection list empty.
     setattr(
         secured,
-        "_ev0_initial_addheaders",
+        "_threev0_initial_addheaders",
         list(getattr(installed, "addheaders", ())),
     )
     secured.addheaders = []
@@ -209,7 +209,7 @@ def open_credentialed_url(
         opener = _secure_opener_from_installed_policy(
             request.full_url, ssl_context=ssl_context
         )
-        for name, value in getattr(opener, "_ev0_initial_addheaders", ()):
+        for name, value in getattr(opener, "_threev0_initial_addheaders", ()):
             if not request.has_header(name):
                 request.add_header(name, value)
     else:

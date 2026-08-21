@@ -92,9 +92,9 @@ def is_container_startup_environment() -> bool:
     return "docker" in cgroup or "podman" in cgroup or "/lxc/" in cgroup
 
 
-def active_profile_may_override_home(ev0_root: str) -> bool:
+def active_profile_may_override_home(threev0_root: str) -> bool:
     """Cheap probe: does an active non-default profile redirect EV0_HOME?"""
-    active_profile = os.path.join(ev0_root, "active_profile")
+    active_profile = os.path.join(threev0_root, "active_profile")
     try:
         if os.path.exists(active_profile):
             with open(active_profile, encoding="utf-8") as handle:
@@ -106,9 +106,9 @@ def active_profile_may_override_home(ev0_root: str) -> bool:
 
 
 def _resolved_home() -> str:
-    ev0_home = os.environ.get("EV0_HOME", "").strip()
-    if ev0_home:
-        return ev0_home
+    threev0_home = os.environ.get("EV0_HOME", "").strip()
+    if threev0_home:
+        return threev0_home
     return os.path.join(os.path.expanduser("~"), ".3V0")
 
 
@@ -126,14 +126,14 @@ def container_mode_may_be_active() -> bool:
     if is_container_startup_environment():
         return False
 
-    ev0_home = os.environ.get("EV0_HOME", "").strip()
-    if ev0_home:
-        if os.path.exists(os.path.join(ev0_home, ".container-mode")):
+    threev0_home = os.environ.get("EV0_HOME", "").strip()
+    if threev0_home:
+        if os.path.exists(os.path.join(threev0_home, ".container-mode")):
             return True
-        parent_name = os.path.basename(os.path.dirname(os.path.normpath(ev0_home)))
+        parent_name = os.path.basename(os.path.dirname(os.path.normpath(threev0_home)))
         return (
             parent_name != "profiles"
-            and active_profile_may_override_home(ev0_home)
+            and active_profile_may_override_home(threev0_home)
         )
 
     default_home = os.path.join(os.path.expanduser("~"), ".3V0")

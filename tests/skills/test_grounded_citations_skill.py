@@ -323,7 +323,7 @@ def test_cli_ledger_path_prefers_flag_over_env(sources_mod, tmp_path: Path, monk
     assert sources_mod.resolve_ledger_path(None) == tmp_path / "env.json"
 
 
-def test_cli_ledger_path_defaults_under_ev0_home(sources_mod, tmp_path: Path, monkeypatch) -> None:
+def test_cli_ledger_path_defaults_under_threev0_home(sources_mod, tmp_path: Path, monkeypatch) -> None:
     monkeypatch.delenv("EV0_CITATION_LEDGER", raising=False)
     monkeypatch.setenv("EV0_HOME", str(tmp_path / ".3V0"))
     path = sources_mod.resolve_ledger_path(None)

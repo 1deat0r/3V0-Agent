@@ -14,7 +14,7 @@ from concurrent.futures import TimeoutError as FuturesTimeoutError
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -1595,7 +1595,7 @@ def get_host(
 
 def current_profile_key() -> str:
     """Return the canonical profile identity used for runtime isolation."""
-    home = get_ev0_home().expanduser()
+    home = get_threev0_home().expanduser()
     if not home.is_absolute():
         return str(home.resolve())
     raw = str(home)

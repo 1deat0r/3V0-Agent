@@ -41,7 +41,7 @@ _CRON_PLUGINS_DIR = Path(__file__).parent
 
 # Synthetic parent package for user-installed providers, so they don't
 # collide with bundled providers in sys.modules.
-_USER_NAMESPACE = "_ev0_user_cron"
+_USER_NAMESPACE = "_threev0_user_cron"
 
 
 def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
@@ -51,7 +51,7 @@ def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
     name whose parents exist nowhere on disk. Unless those parents are present
     in ``sys.modules``, any relative import inside the plugin
     (``from . import config``) fails with
-    ``ModuleNotFoundError: No module named '_ev0_user_cron'`` — the same
+    ``ModuleNotFoundError: No module named '_threev0_user_cron'`` — the same
     reason the loader already registers ``plugins`` and ``plugins.cron_providers`` for
     bundled providers.
     """
@@ -69,8 +69,8 @@ def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
 def _get_user_plugins_dir() -> Optional[Path]:
     """Return ``$EV0_HOME/plugins/`` or None if unavailable."""
     try:
-        from threev0_constants import get_ev0_home
-        d = get_ev0_home() / "plugins"
+        from threev0_constants import get_threev0_home
+        d = get_threev0_home() / "plugins"
         return d if d.is_dir() else None
     except Exception:
         return None

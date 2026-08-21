@@ -36,9 +36,9 @@ _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
-from _ev0_home import get_ev0_home
+from _threev0_home import get_threev0_home
 
-EV0_HOME = get_ev0_home()
+EV0_HOME = get_threev0_home()
 TOKEN_PATH = EV0_HOME / "google_token.json"
 CLIENT_SECRET_PATH = EV0_HOME / "google_client_secret.json"
 

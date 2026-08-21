@@ -136,8 +136,8 @@ class TestKillStaleDashboardPosix:
             # SIGTERM itself: succeed silently.
 
         with patch("threev0_cli.main._find_stale_dashboard_pids",
-                   return_value=[12345, 12346]), \
-             patch("os.kill", side_effect=fake_kill), \
+                   return_value=[12345, 12346]),\
+             patch("os.kill", side_effect=fake_kill),\
              patch("time.sleep"):
             result = _kill_stale_dashboard_processes()
 
@@ -176,8 +176,8 @@ class TestKillStaleDashboardPosix:
                 return MagicMock(returncode=0, stdout="", stderr="")
             raise AssertionError(f"unexpected subprocess.run call: {args}")
 
-        with patch("subprocess.run", side_effect=fake_run), \
-             patch("threev0_cli.main._find_stale_dashboard_pids", return_value=[12345]) as find_pids, \
+        with patch("subprocess.run", side_effect=fake_run),\
+             patch("threev0_cli.main._find_stale_dashboard_pids", return_value=[12345]) as find_pids,\
              patch("os.kill") as kill:
             _kill_stale_dashboard_processes(restart_managed=True)
 
@@ -210,7 +210,7 @@ class TestKillStaleDashboardWindows:
             return MagicMock(returncode=0, stdout="", stderr="")
 
         with patch("threev0_cli.main._find_stale_dashboard_pids",
-                   return_value=[12345, 12346]), \
+                   return_value=[12345, 12346]),\
              patch("subprocess.run", side_effect=fake_run) as mock_run:
             _kill_stale_dashboard_processes()
 
@@ -266,7 +266,7 @@ class TestWindowsWmicEncoding:
         mocked, so ``sys.platform`` is patched rather than gating the test
         to the Windows-only CI job.
         """
-        with patch("sys.platform", "win32"), \
+        with patch("sys.platform", "win32"),\
              patch("threev0_cli._subprocess_compat.bounded_probe_run") as mock_probe:
             mock_probe.return_value = subprocess.CompletedProcess(
                 args=["wmic"],
@@ -296,7 +296,7 @@ class TestWindowsWmicEncoding:
     def test_probe_failure_fails_open_to_empty_list(self):
         """A spawn failure or timeout (bounded_probe_run → None) must yield
         an empty scan, not an AttributeError on result.stdout (#87134)."""
-        with patch("sys.platform", "win32"), \
+        with patch("sys.platform", "win32"),\
              patch("threev0_cli._subprocess_compat.bounded_probe_run",
                    return_value=None):
             assert _find_stale_dashboard_pids() == []
@@ -319,14 +319,14 @@ class TestSupervisedBackendRestart:
             if sig == 0:
                 raise ProcessLookupError
 
-        with patch.object(live, "_restart_managed_dashboard_service", return_value=False), \
-             patch.object(live, "_find_stale_dashboard_pids", return_value=[4321]), \
+        with patch.object(live, "_restart_managed_dashboard_service", return_value=False),\
+             patch.object(live, "_find_stale_dashboard_pids", return_value=[4321]),\
              patch.object(live, "_get_pid_cgroup_path",
-                          return_value="/system.slice/3v0-serve.service"), \
+                          return_value="/system.slice/3v0-serve.service"),\
              patch.object(live, "_get_systemd_service_for_pid",
-                          return_value="3v0-serve.service"), \
-             patch.object(live, "_try_restart_systemd_service", return_value=True) as restart, \
-             patch("os.kill", side_effect=fake_kill), \
+                          return_value="3v0-serve.service"),\
+             patch.object(live, "_try_restart_systemd_service", return_value=True) as restart,\
+             patch("os.kill", side_effect=fake_kill),\
              patch("time.sleep"):
             _kill_stale_dashboard_processes(restart_managed=True)
 
@@ -345,14 +345,14 @@ class TestSupervisedBackendRestart:
         skip killing/restarting it again here."""
         live = self._live()
 
-        with patch.object(live, "_restart_managed_dashboard_service", return_value=False), \
-             patch.object(live, "_find_stale_dashboard_pids", return_value=[4321]), \
+        with patch.object(live, "_restart_managed_dashboard_service", return_value=False),\
+             patch.object(live, "_find_stale_dashboard_pids", return_value=[4321]),\
              patch.object(live, "_get_pid_cgroup_path",
-                          return_value="/system.slice/3v0-serve.service"), \
+                          return_value="/system.slice/3v0-serve.service"),\
              patch.object(live, "_get_systemd_service_for_pid",
-                          return_value="3v0-serve.service"), \
-             patch.object(live, "_try_restart_systemd_service") as restart, \
-             patch("os.kill") as kill, \
+                          return_value="3v0-serve.service"),\
+             patch.object(live, "_try_restart_systemd_service") as restart,\
+             patch("os.kill") as kill,\
              patch("time.sleep"):
             result = _kill_stale_dashboard_processes(
                 restart_managed=True, already_restarted_units={"3v0-serve"}
@@ -379,13 +379,13 @@ class TestManualBackendRespawn:
             if sig == 0:
                 raise ProcessLookupError
 
-        with patch.object(live, "_restart_managed_dashboard_service", return_value=False), \
-             patch.object(live, "_find_stale_dashboard_pids", return_value=[5555]), \
-             patch.object(live, "_get_pid_cgroup_path", return_value=None), \
-             patch.object(live, "_get_systemd_service_for_pid", return_value=None), \
-             patch.object(live, "_dashboard_cmdline_for_pid", return_value=None), \
-             patch.object(live, "_respawn_dashboard_processes") as respawn, \
-             patch("os.kill", side_effect=fake_kill), \
+        with patch.object(live, "_restart_managed_dashboard_service", return_value=False),\
+             patch.object(live, "_find_stale_dashboard_pids", return_value=[5555]),\
+             patch.object(live, "_get_pid_cgroup_path", return_value=None),\
+             patch.object(live, "_get_systemd_service_for_pid", return_value=None),\
+             patch.object(live, "_dashboard_cmdline_for_pid", return_value=None),\
+             patch.object(live, "_respawn_dashboard_processes") as respawn,\
+             patch("os.kill", side_effect=fake_kill),\
              patch("time.sleep"):
             _kill_stale_dashboard_processes(restart_managed=True)
 
@@ -403,14 +403,14 @@ class TestManualBackendRespawn:
             if sig == 0:
                 raise ProcessLookupError
 
-        with patch.object(live, "_restart_managed_dashboard_service", return_value=False), \
-             patch.object(live, "_find_stale_dashboard_pids", return_value=[6001]), \
-             patch.object(live, "_get_pid_cgroup_path", return_value=None), \
-             patch.object(live, "_get_systemd_service_for_pid", return_value=None), \
-             patch.object(live, "_dashboard_cmdline_for_pid", return_value=argv), \
-             patch("threev0_cli.dashboard_procs._ev0_home_for_pid", return_value=None), \
-             patch.object(live, "_respawn_dashboard_processes", return_value=[]) as respawn, \
-             patch("os.kill", side_effect=fake_kill), \
+        with patch.object(live, "_restart_managed_dashboard_service", return_value=False),\
+             patch.object(live, "_find_stale_dashboard_pids", return_value=[6001]),\
+             patch.object(live, "_get_pid_cgroup_path", return_value=None),\
+             patch.object(live, "_get_systemd_service_for_pid", return_value=None),\
+             patch.object(live, "_dashboard_cmdline_for_pid", return_value=argv),\
+             patch("threev0_cli.dashboard_procs._threev0_home_for_pid", return_value=None),\
+             patch.object(live, "_respawn_dashboard_processes", return_value=[]) as respawn,\
+             patch("os.kill", side_effect=fake_kill),\
              patch("time.sleep"):
             _kill_stale_dashboard_processes(restart_managed=True)
 
@@ -430,15 +430,15 @@ class TestManualBackendRespawn:
             if sig == 0:
                 raise ProcessLookupError
 
-        with patch.object(live, "_restart_managed_dashboard_service", return_value=False), \
+        with patch.object(live, "_restart_managed_dashboard_service", return_value=False),\
              patch.object(live, "_find_stale_dashboard_pids",
-                          return_value=[7001, 7002, 7003]), \
-             patch.object(live, "_get_pid_cgroup_path", return_value=None), \
-             patch.object(live, "_get_systemd_service_for_pid", return_value=None), \
-             patch.object(live, "_dashboard_cmdline_for_pid", return_value=argv), \
-             patch("threev0_cli.dashboard_procs._ev0_home_for_pid", return_value=None), \
-             patch.object(live, "_respawn_dashboard_processes") as respawn, \
-             patch("os.kill", side_effect=fake_kill), \
+                          return_value=[7001, 7002, 7003]),\
+             patch.object(live, "_get_pid_cgroup_path", return_value=None),\
+             patch.object(live, "_get_systemd_service_for_pid", return_value=None),\
+             patch.object(live, "_dashboard_cmdline_for_pid", return_value=argv),\
+             patch("threev0_cli.dashboard_procs._threev0_home_for_pid", return_value=None),\
+             patch.object(live, "_respawn_dashboard_processes") as respawn,\
+             patch("os.kill", side_effect=fake_kill),\
              patch("time.sleep"):
             result = _kill_stale_dashboard_processes(restart_managed=True)
 
@@ -458,14 +458,14 @@ class TestManualBackendRespawn:
             if sig == 0:
                 raise ProcessLookupError
 
-        with patch.object(live, "_restart_managed_dashboard_service", return_value=False), \
-             patch.object(live, "_find_stale_dashboard_pids", return_value=[8001]), \
-             patch.object(live, "_get_pid_cgroup_path", return_value=None), \
-             patch.object(live, "_get_systemd_service_for_pid", return_value=None), \
-             patch.object(live, "_dashboard_cmdline_for_pid", return_value=argv), \
-             patch("threev0_cli.dashboard_procs._ev0_home_for_pid", return_value=None), \
-             patch.object(live, "_respawn_dashboard_processes", return_value=[]) as respawn, \
-             patch("os.kill", side_effect=fake_kill), \
+        with patch.object(live, "_restart_managed_dashboard_service", return_value=False),\
+             patch.object(live, "_find_stale_dashboard_pids", return_value=[8001]),\
+             patch.object(live, "_get_pid_cgroup_path", return_value=None),\
+             patch.object(live, "_get_systemd_service_for_pid", return_value=None),\
+             patch.object(live, "_dashboard_cmdline_for_pid", return_value=argv),\
+             patch("threev0_cli.dashboard_procs._threev0_home_for_pid", return_value=None),\
+             patch.object(live, "_respawn_dashboard_processes", return_value=[]) as respawn,\
+             patch("os.kill", side_effect=fake_kill),\
              patch("time.sleep"):
             _kill_stale_dashboard_processes(restart_managed=True)
 
@@ -565,7 +565,7 @@ class TestFilterDashboardRespawnCandidates:
         ])
         assert out == [a, c]
 
-    def test_caps_one_per_ev0_home(self):
+    def test_caps_one_per_threev0_home(self):
         from threev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
         home = "/tmp/3v0-home-a"
@@ -600,7 +600,7 @@ class TestFilterDashboardRespawnCandidates:
         ])
         assert out == [a]
 
-    def test_distinct_dot_ev0_homes_do_not_share_cap(self):
+    def test_distinct_dot_threev0_homes_do_not_share_cap(self):
         from threev0_cli.dashboard_procs import _filter_dashboard_respawn_candidates
 
         a = ["3v0", "dashboard", "--port", "8300"]
@@ -657,7 +657,7 @@ class TestCmdlineCapture:
                 return real_open(proc_file, *a, **kw)
             return real_open(path, *a, **kw)
 
-        with patch.object(live.os.path, "exists", fake_exists), \
+        with patch.object(live.os.path, "exists", fake_exists),\
              patch("builtins.open", fake_open):
             argv = live._dashboard_cmdline_for_pid(777)
 
@@ -671,7 +671,7 @@ class TestCmdlineCapture:
             assert args == ["ps", "-p", "888", "-o", "command="]
             return MagicMock(returncode=0, stdout="3v0 serve --port 8300\n", stderr="")
 
-        with patch.object(live.os.path, "exists", return_value=False), \
+        with patch.object(live.os.path, "exists", return_value=False),\
              patch("subprocess.run", side_effect=fake_run):
             argv = live._dashboard_cmdline_for_pid(888)
 
@@ -722,7 +722,7 @@ class TestPostUpdateStaleModuleReload:
         no reload, no kill (existing safety rule preserved)."""
         from threev0_cli import update_cmd
 
-        with patch.object(update_cmd, "_reload_process_scan_modules") as mock_reload, \
+        with patch.object(update_cmd, "_reload_process_scan_modules") as mock_reload,\
              patch("threev0_cli.main._kill_stale_dashboard_processes") as mock_kill:
             update_cmd._finish_dashboard_update_cleanup(["dashboard"])
 

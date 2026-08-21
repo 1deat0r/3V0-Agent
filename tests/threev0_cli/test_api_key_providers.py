@@ -515,10 +515,10 @@ class TestHasAnyProviderConfigured:
         """Claude Code credentials should NOT skip the wizard when 3V0 is unconfigured."""
         from threev0_cli import config as config_module
         from threev0_cli.auth import PROVIDER_REGISTRY
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setattr(config_module, "get_env_path", lambda: ev0_home / ".env")
-        monkeypatch.setattr(config_module, "get_ev0_home", lambda: ev0_home)
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setattr(config_module, "get_env_path", lambda: threev0_home / ".env")
+        monkeypatch.setattr(config_module, "get_threev0_home", lambda: threev0_home)
         monkeypatch.setattr("threev0_cli.copilot_auth.resolve_copilot_token", lambda: ("", ""))
         # Clear all provider env vars so earlier checks don't short-circuit
         _all_vars = {"OPENROUTER_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY",
@@ -546,15 +546,15 @@ class TestHasAnyProviderConfigured:
         """config.yaml with model.provider set should count as configured."""
         import yaml
         from threev0_cli import config as config_module
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        config_file = ev0_home / "config.yaml"
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        config_file = threev0_home / "config.yaml"
         config_file.write_text(yaml.dump({
             "model": {"default": "anthropic/claude-opus-4.6", "provider": "openrouter"},
         }))
-        monkeypatch.setattr(config_module, "get_env_path", lambda: ev0_home / ".env")
-        monkeypatch.setattr(config_module, "get_ev0_home", lambda: ev0_home)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        monkeypatch.setattr(config_module, "get_env_path", lambda: threev0_home / ".env")
+        monkeypatch.setattr(config_module, "get_threev0_home", lambda: threev0_home)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         # Clear all provider env vars
         for var in ("OPENROUTER_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY",
                      "ANTHROPIC_TOKEN", "OPENAI_BASE_URL"):
@@ -576,13 +576,13 @@ class TestHasAnyProviderConfigured:
 
     def _setup_home(self, monkeypatch, tmp_path):
         from threev0_cli import config as config_module
-        ev0_home = tmp_path / ".3V0"
-        ev0_home.mkdir()
-        monkeypatch.setattr(config_module, "get_env_path", lambda: ev0_home / ".env")
-        monkeypatch.setattr(config_module, "get_ev0_home", lambda: ev0_home)
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        monkeypatch.setattr(config_module, "get_env_path", lambda: threev0_home / ".env")
+        monkeypatch.setattr(config_module, "get_threev0_home", lambda: threev0_home)
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         self._clear_provider_env(monkeypatch)
-        return ev0_home
+        return threev0_home
 
     def test_config_provider_skips_registry_sweep(self, monkeypatch, tmp_path):
         """model.provider in config.yaml must short-circuit BEFORE the slow
@@ -594,8 +594,8 @@ class TestHasAnyProviderConfigured:
         recorded call proves the sweep ran even if the raise was swallowed.
         """
         import yaml
-        ev0_home = self._setup_home(monkeypatch, tmp_path)
-        (ev0_home / "config.yaml").write_text(yaml.dump({
+        threev0_home = self._setup_home(monkeypatch, tmp_path)
+        (threev0_home / "config.yaml").write_text(yaml.dump({
             "model": {"default": "anthropic/claude-opus-4.6", "provider": "openrouter"},
         }))
         sweep_calls = []
@@ -615,8 +615,8 @@ class TestHasAnyProviderConfigured:
         """Custom endpoint (base_url/api_key in config, no provider) must also
         short-circuit before the registry sweep."""
         import yaml
-        ev0_home = self._setup_home(monkeypatch, tmp_path)
-        (ev0_home / "config.yaml").write_text(yaml.dump({
+        threev0_home = self._setup_home(monkeypatch, tmp_path)
+        (threev0_home / "config.yaml").write_text(yaml.dump({
             "model": {
                 "default": "local/custom-model",
                 "base_url": "http://localhost:8000/v1",
@@ -642,8 +642,8 @@ class TestHasAnyProviderConfigured:
         provider from auth.json — any other provider id means the sweep ran.
         """
         import json
-        ev0_home = self._setup_home(monkeypatch, tmp_path)
-        (ev0_home / "auth.json").write_text(json.dumps({
+        threev0_home = self._setup_home(monkeypatch, tmp_path)
+        (threev0_home / "auth.json").write_text(json.dumps({
             "active_provider": "nous",
         }))
         calls = []

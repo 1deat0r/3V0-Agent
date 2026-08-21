@@ -261,7 +261,7 @@ class TestBrowserVisionConfig:
         mock_response.choices = [mock_choice]
 
         with (
-            patch("threev0_constants.get_ev0_dir", return_value=shots_dir),
+            patch("threev0_constants.get_threev0_dir", return_value=shots_dir),
             patch("tools.browser_tool._cleanup_old_screenshots"),
             patch("tools.browser_tool._run_browser_command", return_value={"success": True, "data": {"path": str(screenshot)}}),
             patch("tools.browser_tool._get_vision_model", return_value="test-model"),
@@ -289,7 +289,7 @@ class TestBrowserVisionConfig:
         set_runtime_main("brand-new-provider", "llava-v1.6")
         try:
             with (
-                patch("threev0_constants.get_ev0_dir", return_value=shots_dir),
+                patch("threev0_constants.get_threev0_dir", return_value=shots_dir),
                 patch("tools.browser_tool._cleanup_old_screenshots"),
                 patch(
                     "tools.browser_tool._run_browser_command",
@@ -332,7 +332,7 @@ class TestBrowserVisionConfig:
         set_runtime_main("brand-new-provider", "llava-v1.6")
         try:
             with (
-                patch("threev0_constants.get_ev0_dir", return_value=shots_dir),
+                patch("threev0_constants.get_threev0_dir", return_value=shots_dir),
                 patch("tools.browser_tool._cleanup_old_screenshots"),
                 patch(
                     "tools.browser_tool._run_browser_command",

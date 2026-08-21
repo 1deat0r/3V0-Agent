@@ -13,7 +13,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 from ._oss_providers import (
     LLM_PROVIDERS,
@@ -218,9 +218,9 @@ def _write_env(env_path: Path, env_writes: dict[str, str]) -> None:
     env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
 
 
-def _save_mem0_json(ev0_home: str, data: dict) -> None:
+def _save_mem0_json(threev0_home: str, data: dict) -> None:
     """Merge-write to mem0.json."""
-    config_path = Path(ev0_home) / "mem0.json"
+    config_path = Path(threev0_home) / "mem0.json"
     existing = {}
     if config_path.exists():
         try:
@@ -231,7 +231,7 @@ def _save_mem0_json(ev0_home: str, data: dict) -> None:
     config_path.write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
 
 
-def _setup_platform(ev0_home: str, config: dict, flags: dict[str, str]) -> None:
+def _setup_platform(threev0_home: str, config: dict, flags: dict[str, str]) -> None:
     """Platform mode setup — uses the framework's schema-based flow.
 
     Delegates to the same code path the framework uses when post_setup
@@ -245,7 +245,7 @@ def _setup_platform(ev0_home: str, config: dict, flags: dict[str, str]) -> None:
     ]
 
     existing_config = {}
-    config_path = Path(ev0_home) / "mem0.json"
+    config_path = Path(threev0_home) / "mem0.json"
     if config_path.exists():
         try:
             existing_config = json.loads(config_path.read_text(encoding="utf-8"))
@@ -329,10 +329,10 @@ def _setup_platform(ev0_home: str, config: dict, flags: dict[str, str]) -> None:
 
     from plugins.memory.mem0 import Mem0MemoryProvider
     provider = Mem0MemoryProvider()
-    provider.save_config(provider_config, ev0_home)
+    provider.save_config(provider_config, threev0_home)
 
     if env_writes:
-        _write_env(Path(ev0_home) / ".env", env_writes)
+        _write_env(Path(threev0_home) / ".env", env_writes)
 
     print("\n  Memory provider: mem0")
     print("  Activation saved to config.yaml")
@@ -358,7 +358,7 @@ def _check_selfhosted_server(host: str) -> None:
         print(f"  ⚠ Could not reach {host} — check the URL and that the server is running.")
 
 
-def _setup_selfhosted(ev0_home: str, config: dict, flags: dict[str, str]) -> None:
+def _setup_selfhosted(threev0_home: str, config: dict, flags: dict[str, str]) -> None:
     """Self-hosted mode setup — point at an existing Mem0 dashboard server.
 
     For users already running the Dockerized Mem0 FastAPI server: stores the
@@ -366,7 +366,7 @@ def _setup_selfhosted(ev0_home: str, config: dict, flags: dict[str, str]) -> Non
     (secret -> .env as MEM0_API_KEY).
     """
     existing_config = {}
-    config_path = Path(ev0_home) / "mem0.json"
+    config_path = Path(threev0_home) / "mem0.json"
     if config_path.exists():
         try:
             existing_config = json.loads(config_path.read_text(encoding="utf-8"))
@@ -423,10 +423,10 @@ def _setup_selfhosted(ev0_home: str, config: dict, flags: dict[str, str]) -> Non
 
     from plugins.memory.mem0 import Mem0MemoryProvider
     provider = Mem0MemoryProvider()
-    provider.save_config(provider_config, ev0_home)
+    provider.save_config(provider_config, threev0_home)
 
     if env_writes:
-        _write_env(Path(ev0_home) / ".env", env_writes)
+        _write_env(Path(threev0_home) / ".env", env_writes)
 
     _check_selfhosted_server(host)
     print("\n  Memory provider: mem0 (self-hosted)")
@@ -438,14 +438,14 @@ def _setup_selfhosted(ev0_home: str, config: dict, flags: dict[str, str]) -> Non
     print("\n  Start a new session to activate.\n")
 
 
-def _setup_oss(ev0_home: str, config: dict, flags: dict[str, str]) -> None:
+def _setup_oss(threev0_home: str, config: dict, flags: dict[str, str]) -> None:
     """OSS mode setup — build config from flags or interactive prompts.
 
     Non-interactive when --mode was set explicitly via flags (post_setup already
     resolved mode). Interactive only when mode was chosen via curses picker.
     """
     if not flags.get("_mode_from_flag"):
-        _setup_oss_interactive(ev0_home, config)
+        _setup_oss_interactive(threev0_home, config)
         return
 
     oss_config, env_writes = build_oss_config(flags)
@@ -473,8 +473,8 @@ def _setup_oss(ev0_home: str, config: dict, flags: dict[str, str]) -> None:
         return
 
     if env_writes:
-        _write_env(Path(ev0_home) / ".env", env_writes)
-    _save_mem0_json(ev0_home, {"mode": "oss", "user_id": user_id, "agent_id": "3v0", "oss": oss_config})
+        _write_env(Path(threev0_home) / ".env", env_writes)
+    _save_mem0_json(threev0_home, {"mode": "oss", "user_id": user_id, "agent_id": "3v0", "oss": oss_config})
 
     _install_provider_deps(llm_id, embedder_id, vector_id)
 
@@ -494,11 +494,11 @@ def _setup_oss(ev0_home: str, config: dict, flags: dict[str, str]) -> None:
     print("\n  Start a new session to activate.\n")
 
 
-def _prompt_api_key(label: str, env_var: str, ev0_home: str) -> str:
+def _prompt_api_key(label: str, env_var: str, threev0_home: str) -> str:
     """Prompt for API key, showing masked existing value if found."""
     existing = os.environ.get(env_var, "")
     if not existing:
-        env_path = Path(ev0_home) / ".env"
+        env_path = Path(threev0_home) / ".env"
         if env_path.exists():
             # BOM-tolerant read matching the canonical .env readers in
             # threev0_cli/config.py; a Notepad BOM on the first line would
@@ -731,7 +731,7 @@ def _vector_description(pid: str, v: dict) -> str:
     return pid
 
 
-def _setup_oss_interactive(ev0_home: str, config: dict) -> None:
+def _setup_oss_interactive(threev0_home: str, config: dict) -> None:
     """Interactive OSS setup using curses pickers."""
     llm_items = [(v["label"], _provider_description(v)) for pid, v in LLM_PROVIDERS.items()]
     llm_idx = _curses_select("LLM Provider", llm_items, 0)
@@ -742,7 +742,7 @@ def _setup_oss_interactive(ev0_home: str, config: dict) -> None:
     llm_model = llm_def["default_model"]
     llm_url = llm_def.get("default_url")
     if llm_def["needs_key"]:
-        key = _prompt_api_key(llm_def["label"], llm_def["env_var"], ev0_home)
+        key = _prompt_api_key(llm_def["label"], llm_def["env_var"], threev0_home)
         if key:
             env_writes[llm_def["env_var"]] = key
     if llm_id == "ollama":
@@ -757,7 +757,7 @@ def _setup_oss_interactive(ev0_home: str, config: dict) -> None:
     embedder_model = embedder_def["default_model"]
     embedder_url = embedder_def.get("default_url")
     if embedder_def["needs_key"] and embedder_id != llm_id:
-        key = _prompt_api_key(f"{embedder_def['label']} embedder", embedder_def["env_var"], ev0_home)
+        key = _prompt_api_key(f"{embedder_def['label']} embedder", embedder_def["env_var"], threev0_home)
         if key:
             env_writes[embedder_def["env_var"]] = key
     elif embedder_def["needs_key"] and embedder_id == llm_id:
@@ -828,8 +828,8 @@ def _setup_oss_interactive(ev0_home: str, config: dict) -> None:
     oss_config, _ = build_oss_config(flags)
 
     if env_writes:
-        _write_env(Path(ev0_home) / ".env", env_writes)
-    _save_mem0_json(ev0_home, {"mode": "oss", "user_id": user_id, "agent_id": agent_id, "oss": oss_config})
+        _write_env(Path(threev0_home) / ".env", env_writes)
+    _save_mem0_json(threev0_home, {"mode": "oss", "user_id": user_id, "agent_id": agent_id, "oss": oss_config})
 
     _install_provider_deps(llm_id, embedder_id, vector_id)
 
@@ -961,7 +961,7 @@ def _check_min_dep_version() -> None:
         pass
 
 
-def post_setup(ev0_home: str, config: dict) -> None:
+def post_setup(threev0_home: str, config: dict) -> None:
     """Entry point called by 3v0 memory setup framework.
 
     Routes on --mode (platform / selfhosted / oss); with no flag it shows an
@@ -974,15 +974,15 @@ def post_setup(ev0_home: str, config: dict) -> None:
 
     if flags["mode"] == "oss":
         flags["_mode_from_flag"] = True
-        _setup_oss(ev0_home, config, flags)
+        _setup_oss(threev0_home, config, flags)
         return
 
     if flags["mode"] in ("selfhosted", "self-hosted"):
-        _setup_selfhosted(ev0_home, config, flags)
+        _setup_selfhosted(threev0_home, config, flags)
         return
 
     if flags["mode"] == "platform":
-        _setup_platform(ev0_home, config, flags)
+        _setup_platform(threev0_home, config, flags)
         return
 
     # No --mode flag: show interactive picker
@@ -993,9 +993,9 @@ def post_setup(ev0_home: str, config: dict) -> None:
     ]
     mode_idx = _curses_select("  Select mode", mode_items, 0)
     if mode_idx == 1:
-        _setup_selfhosted(ev0_home, config, flags)
+        _setup_selfhosted(threev0_home, config, flags)
     elif mode_idx == 2:
         flags["_mode_from_flag"] = False
-        _setup_oss(ev0_home, config, flags)
+        _setup_oss(threev0_home, config, flags)
     else:
-        _setup_platform(ev0_home, config, flags)
+        _setup_platform(threev0_home, config, flags)

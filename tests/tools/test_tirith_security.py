@@ -228,7 +228,7 @@ class TestEnsureInstalled:
         mock_cfg.return_value = {"tirith_enabled": True, "tirith_path": "tirith",
                                  "tirith_timeout": 5, "tirith_fail_open": True}
         _tirith_mod._resolved_path = None
-        with patch("os.path.isfile", return_value=True), \
+        with patch("os.path.isfile", return_value=True),\
              patch("os.access", return_value=True):
             result = ensure_installed()
         assert result == "/usr/local/bin/tirith"
@@ -257,7 +257,7 @@ class TestUnsupportedPlatform:
         # host to falsify. Two of the rows (Windows/AMD64, Linux/riscv64)
         # could never execute honestly anyway — the second has no CI runner
         # on any lane.
-        with patch("tools.tirith_security.platform.system", return_value=system), \
+        with patch("tools.tirith_security.platform.system", return_value=system),\
              patch("tools.tirith_security.platform.machine", return_value=machine):
             assert _tirith_mod.is_platform_supported() is expected
 
@@ -269,8 +269,8 @@ class TestUnsupportedPlatform:
         unavailable' messaging to the user."""
         mock_cfg.return_value = {"tirith_enabled": True, "tirith_path": "tirith",
                                  "tirith_timeout": 5, "tirith_fail_open": True}
-        with patch("tools.tirith_security.is_platform_supported", return_value=False), \
-             patch("tools.tirith_security.subprocess.run") as mock_run, \
+        with patch("tools.tirith_security.is_platform_supported", return_value=False),\
+             patch("tools.tirith_security.subprocess.run") as mock_run,\
              patch("tools.tirith_security._resolve_tirith_path") as mock_resolve:
             result = check_command_security("rm -rf /")
             assert result == {"action": "allow", "findings": [], "summary": ""}
@@ -286,8 +286,8 @@ class TestUnsupportedPlatform:
                                  "tirith_path": "/opt/custom/tirith",
                                  "tirith_timeout": 5, "tirith_fail_open": True}
         _tirith_mod._resolved_path = None
-        with patch("tools.tirith_security.is_platform_supported", return_value=False), \
-             patch("os.path.isfile", return_value=True), \
+        with patch("tools.tirith_security.is_platform_supported", return_value=False),\
+             patch("os.path.isfile", return_value=True),\
              patch("os.access", return_value=True):
             result = _tirith_mod._resolve_tirith_path("/opt/custom/tirith")
             assert result == "/opt/custom/tirith"
@@ -447,14 +447,14 @@ class TestInstallArchiveMemberValidation:
         member.size = len(payload)
         archive, checksums = self._write_archive(tmp_path, member, payload)
 
-        ev0_home = tmp_path / "3v0-home"
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / "3v0-home"
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         with patch("tools.tirith_security._download_file",
                    side_effect=self._download_side_effect(archive, checksums)):
             path, reason = _install_tirith(log_failures=False)
 
         assert reason == ""
-        assert path == str(ev0_home / "bin" / "tirith")
+        assert path == str(threev0_home / "bin" / "tirith")
         assert os.path.isfile(path)
         assert not os.path.islink(path)
         with open(path, "rb") as f:
@@ -474,15 +474,15 @@ class TestInstallArchiveMemberValidation:
         member.linkname = "/bin/sh"
         archive, checksums = self._write_archive(tmp_path, member)
 
-        ev0_home = tmp_path / "3v0-home"
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / "3v0-home"
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         with patch("tools.tirith_security._download_file",
                    side_effect=self._download_side_effect(archive, checksums)):
             path, reason = _install_tirith(log_failures=False)
 
         assert path is None
         assert reason == "binary_not_regular_file"
-        assert not os.path.lexists(ev0_home / "bin" / "tirith")
+        assert not os.path.lexists(threev0_home / "bin" / "tirith")
 
 
 # ---------------------------------------------------------------------------
@@ -496,10 +496,10 @@ class TestBackgroundInstall:
 
         with patch("tools.tirith_security._load_security_config",
                    return_value={"tirith_enabled": True, "tirith_path": "tirith",
-                                 "tirith_timeout": 5, "tirith_fail_open": True}), \
-             patch("tools.tirith_security.shutil.which", return_value=None), \
-             patch("tools.tirith_security._ev0_bin_dir", return_value="/nonexistent"), \
-             patch("tools.tirith_security._is_install_failed_on_disk", return_value=False), \
+                                 "tirith_timeout": 5, "tirith_fail_open": True}),\
+             patch("tools.tirith_security.shutil.which", return_value=None),\
+             patch("tools.tirith_security._threev0_bin_dir", return_value="/nonexistent"),\
+             patch("tools.tirith_security._is_install_failed_on_disk", return_value=False),\
              patch("tools.tirith_security.threading.Thread") as MockThread:
             mock_thread = MagicMock()
             mock_thread.is_alive.return_value = False
@@ -520,8 +520,8 @@ class TestBackgroundInstall:
         mock_thread.is_alive.return_value = True
         _tirith_mod._install_thread = mock_thread
 
-        with patch("tools.tirith_security.shutil.which", return_value=None), \
-             patch("tools.tirith_security._ev0_bin_dir", return_value="/nonexistent"):
+        with patch("tools.tirith_security.shutil.which", return_value=None),\
+             patch("tools.tirith_security._threev0_bin_dir", return_value="/nonexistent"):
             result = _resolve_tirith_path("tirith")
             assert result == "tirith"  # returns configured default, doesn't block
 
@@ -556,8 +556,8 @@ class TestDiskFailureMarker:
         _tirith_mod._resolved_path = _INSTALL_FAILED
         _tirith_mod._install_failure_reason = "cosign_exec_failed"
 
-        with patch("tools.tirith_security.shutil.which", return_value=None), \
-             patch("tools.tirith_security._ev0_bin_dir", return_value="/nonexistent"), \
+        with patch("tools.tirith_security.shutil.which", return_value=None),\
+             patch("tools.tirith_security._threev0_bin_dir", return_value="/nonexistent"),\
              patch("tools.tirith_security._install_tirith") as mock_install:
             result = _resolve_tirith_path("tirith")
             assert result == "tirith"  # fallback
@@ -571,13 +571,13 @@ class TestDiskFailureMarker:
 # ---------------------------------------------------------------------------
 
 class TestEv0HomeIsolation:
-    def test_ev0_bin_dir_respects_ev0_home(self):
+    def test_threev0_bin_dir_respects_threev0_home(self):
         """_ev0_bin_dir must use EV0_HOME, not hardcoded ~/.3v0."""
-        from tools.tirith_security import _ev0_bin_dir
+        from tools.tirith_security import _threev0_bin_dir
         import tempfile
         tmpdir = tempfile.mkdtemp()
         with patch.dict(os.environ, {"EV0_HOME": tmpdir}):
-            result = _ev0_bin_dir()
+            result = _threev0_bin_dir()
         assert result == os.path.join(tmpdir, "bin")
         assert os.path.isdir(result)
 

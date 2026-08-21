@@ -128,7 +128,7 @@ class TestNamedProfileHintIntegration:
     ``EV0_HOME`` and no resolver mocks.
     """
 
-    def test_real_ev0_home_under_profiles_renders_correct_paths(
+    def test_real_threev0_home_under_profiles_renders_correct_paths(
         self, tmp_path, monkeypatch
     ):
         root = tmp_path / ".3V0"
@@ -141,11 +141,11 @@ class TestNamedProfileHintIntegration:
 
         # Sanity-check the real chain before asserting on the prompt.
         from agent.file_safety import _resolve_active_profile_name
-        from threev0_constants import get_default_ev0_root, get_ev0_home
+        from threev0_constants import get_default_threev0_root, get_threev0_home
 
         assert _resolve_active_profile_name() == "coder"
-        assert get_ev0_home() == profile_home
-        assert get_default_ev0_root() == root
+        assert get_threev0_home() == profile_home
+        assert get_default_threev0_root() == root
 
         agent = _make_agent(valid_tool_names=["read_file"])
         with patch("agent.coding_context._coding_mode", return_value="off"):
@@ -205,7 +205,7 @@ def test_coding_prompt_preserves_legacy_workspace_order(monkeypatch):
     monkeypatch.setattr(system_prompt, "DEFAULT_AGENT_IDENTITY", "IDENTITY")
     monkeypatch.setattr(system_prompt, "EV0_AGENT_HELP_GUIDANCE", "HELP")
     monkeypatch.setattr(system_prompt, "STEER_CHANNEL_NOTE", "STEER")
-    monkeypatch.setattr(system_prompt, "get_ev0_home", lambda: Path("/3v0"))
+    monkeypatch.setattr(system_prompt, "get_threev0_home", lambda: Path("/3v0"))
 
     expected_profile = (
         "Active 3V0 profile: default. Other profiles (if any) live "

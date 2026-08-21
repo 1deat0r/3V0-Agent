@@ -349,8 +349,8 @@ class TestFileSync:
     def test_cleanup_syncs_back_snapshots_closes_and_is_idempotent(
         self, make_env, vercel_module, vercel_sdk, monkeypatch, tmp_path
     ):
-        ev0_home = tmp_path / ".3V0"
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         src = tmp_path / "token.txt"
         src.write_text("host-token")
         monkeypatch.setattr(
@@ -523,8 +523,8 @@ class TestSnapshotPersistence:
     def test_create_restores_from_saved_snapshot(
         self, make_env, vercel_module, vercel_sdk, monkeypatch, tmp_path
     ):
-        ev0_home = tmp_path / ".3V0"
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         vercel_module._store_snapshot("task-123", "snap_saved")
         restored = _FakeSandbox(cwd="/restored")
         vercel_sdk.create_side_effects.append(restored)
@@ -541,8 +541,8 @@ class TestSnapshotPersistence:
     def test_restore_failure_prunes_snapshot_and_falls_back_to_fresh_sandbox(
         self, make_env, vercel_module, vercel_sdk, monkeypatch, tmp_path
     ):
-        ev0_home = tmp_path / ".3V0"
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         vercel_module._store_snapshot("task-123", "snap_stale")
         fresh = _FakeSandbox(cwd="/fresh")
         vercel_sdk.create_side_effects.extend(
@@ -562,8 +562,8 @@ class TestSnapshotPersistence:
     def test_cleanup_stops_when_snapshot_fails_without_storing_metadata(
         self, make_env, vercel_module, vercel_sdk, monkeypatch, tmp_path
     ):
-        ev0_home = tmp_path / ".3V0"
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         env = make_env()
         sandbox = vercel_sdk.current
         sandbox.snapshot_side_effects.append(RuntimeError("snapshot failed"))
@@ -578,8 +578,8 @@ class TestSnapshotPersistence:
     def test_non_persistent_cleanup_stops_without_snapshot(
         self, make_env, vercel_module, vercel_sdk, monkeypatch, tmp_path
     ):
-        ev0_home = tmp_path / ".3V0"
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         env = make_env(persistent_filesystem=False)
         sandbox = vercel_sdk.current
 
@@ -593,8 +593,8 @@ class TestSnapshotPersistence:
     def test_persistent_cleanup_without_task_id_stops_without_snapshot(
         self, make_env, vercel_module, vercel_sdk, monkeypatch, tmp_path
     ):
-        ev0_home = tmp_path / ".3V0"
-        monkeypatch.setenv("EV0_HOME", str(ev0_home))
+        threev0_home = tmp_path / ".3V0"
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
         env = make_env(task_id="")
         sandbox = vercel_sdk.current
 

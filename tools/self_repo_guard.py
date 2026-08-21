@@ -730,6 +730,6 @@ def _block_message(operation: str, root: Path) -> str:
 
 def _scratch_dir_hint() -> str:
     """Disk-backed scratch location suggested to agents for temporary clones."""
-    ev0_home = os.environ.get("EV0_HOME", "").strip()
-    base = Path(ev0_home).expanduser() if ev0_home else Path.home() / ".3V0"
+    threev0_home = os.environ.get("EV0_HOME", "").strip()
+    base = Path(threev0_home).expanduser() if threev0_home else Path.home() / ".3V0"
     return str(base / "scratch")

@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 
 _DB_LOCK = threading.Lock()
@@ -61,7 +61,7 @@ def _retention_cutoff() -> str:
 
 
 def _db_path() -> Path:
-    return get_ev0_home() / "verification_evidence.db"
+    return get_threev0_home() / "verification_evidence.db"
 
 
 def _connect() -> sqlite3.Connection:

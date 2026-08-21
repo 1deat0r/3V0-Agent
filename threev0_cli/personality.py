@@ -169,10 +169,10 @@ def persist_personality(value: Any) -> bool:
     """
     name = normalize_personality_name(value)
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from utils import atomic_roundtrip_yaml_update
 
-        config_path = get_ev0_home() / "config.yaml"
+        config_path = get_threev0_home() / "config.yaml"
         config_path.parent.mkdir(parents=True, exist_ok=True)
         atomic_roundtrip_yaml_update(config_path, "display.personality", name)
         try:

@@ -30,8 +30,8 @@ class TestResolveEv0UidGid:
     def test_returns_parsed_values_when_both_set(self, monkeypatch):
         monkeypatch.setenv("EV0_UID", "1000")
         monkeypatch.setenv("EV0_GID", "911")
-        from threev0_cli.config import _resolve_ev0_uid_gid
-        uid, gid = _resolve_ev0_uid_gid()
+        from threev0_cli.config import _resolve_threev0_uid_gid
+        uid, gid = _resolve_threev0_uid_gid()
         assert uid == 1000
         assert gid == 911
 
@@ -44,8 +44,8 @@ class TestResolveEv0UidGid:
     def test_windows_returns_none_none(self, monkeypatch):
         monkeypatch.setenv("EV0_UID", "1000")
         monkeypatch.setenv("EV0_GID", "911")
-        from threev0_cli.config import _resolve_ev0_uid_gid
-        uid, gid = _resolve_ev0_uid_gid()
+        from threev0_cli.config import _resolve_threev0_uid_gid
+        uid, gid = _resolve_threev0_uid_gid()
         assert uid is None
         assert gid is None
 
@@ -65,7 +65,7 @@ class TestChownToEv0Uid:
         d.mkdir()
 
         with patch.object(cfg.os, "chown") as mock_chown:
-            cfg._chown_to_ev0_uid(d)
+            cfg._chown_to_threev0_uid(d)
         mock_chown.assert_called_once_with(d, 1000, 911)
 
 
@@ -86,7 +86,7 @@ class TestChownToEv0Uid:
 
         with patch.object(cfg.os, "chown", side_effect=_raises_eperm):
             # Must not raise — the catch is non-fatal.
-            cfg._chown_to_ev0_uid(d)
+            cfg._chown_to_threev0_uid(d)
 
     def test_attributeerror_swallowed_for_windows_compat(self, tmp_path, monkeypatch):
         """os.chown doesn't exist on Windows. Catching AttributeError keeps
@@ -99,7 +99,7 @@ class TestChownToEv0Uid:
         d.mkdir()
 
         with patch.object(cfg.os, "chown", side_effect=AttributeError("no chown on this platform")):
-            cfg._chown_to_ev0_uid(d)  # must not raise
+            cfg._chown_to_threev0_uid(d)  # must not raise
 
 
 # ---------------------------------------------------------------------------

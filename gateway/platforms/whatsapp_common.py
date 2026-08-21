@@ -516,12 +516,12 @@ def resolve_whatsapp_bridge_dir() -> Path:
     from pathlib import Path as _Path
 
     # Default location in install tree (may be read-only)
-    from threev0_constants import get_ev0_home
+    from threev0_constants import get_threev0_home
     install_bridge = _Path(__file__).resolve().parents[2] / "scripts" / "whatsapp-bridge"
 
     # Try EV0_HOME location first
-    ev0_home = get_ev0_home()
-    ev0_home_bridge = ev0_home / "scripts" / "whatsapp-bridge"
+    threev0_home = get_threev0_home()
+    threev0_home_bridge = threev0_home / "scripts" / "whatsapp-bridge"
 
     # Check if install dir is writable
     try:
@@ -536,17 +536,17 @@ def resolve_whatsapp_bridge_dir() -> Path:
         return install_bridge
 
     # Install dir is read-only, mirror to EV0_HOME if needed
-    if ev0_home_bridge.exists():
-        return ev0_home_bridge
+    if threev0_home_bridge.exists():
+        return threev0_home_bridge
 
     # Mirror the bridge source to EV0_HOME
     try:
-        ev0_home_bridge.parent.mkdir(parents=True, exist_ok=True)
+        threev0_home_bridge.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(
             install_bridge,
-            ev0_home_bridge,
+            threev0_home_bridge,
             dirs_exist_ok=False,
         )
-        return ev0_home_bridge
+        return threev0_home_bridge
     except Exception:
         return install_bridge

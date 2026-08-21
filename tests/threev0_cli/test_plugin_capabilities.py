@@ -28,7 +28,7 @@ from threev0_cli.plugin_capabilities import (
 
 
 @pytest.fixture()
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     """Point EV0_HOME at a tmp dir with an empty config.yaml."""
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
     (tmp_path / "config.yaml").write_text("{}\n", encoding="utf-8")
@@ -158,9 +158,9 @@ class TestDeclarationParsing:
 
 
 class TestConsentPersistence:
-    def test_record_consent_persists_grant(self, ev0_home):
+    def test_record_consent_persists_grant(self, threev0_home):
         record_consent("capplug", ["tools.override"], ["tools.override"])
-        cfg = _read_cfg(ev0_home)
+        cfg = _read_cfg(threev0_home)
         entry = cfg["plugins"]["entries"]["capplug"]
         assert entry["granted_capabilities"] == ["tools.override"]
         assert entry["capabilities_consent"]["hash"] == capability_set_hash(
@@ -170,18 +170,18 @@ class TestConsentPersistence:
         # Bridge: legacy key mirrored so existing enforcement sites work.
         assert entry["allow_tool_override"] is True
 
-    def test_record_consent_mirrors_nested_legacy_key(self, ev0_home):
+    def test_record_consent_mirrors_nested_legacy_key(self, threev0_home):
         record_consent(
             "capplug", ["llm.model_override"], ["llm.model_override"]
         )
-        entry = _read_cfg(ev0_home)["plugins"]["entries"]["capplug"]
+        entry = _read_cfg(threev0_home)["plugins"]["entries"]["capplug"]
         assert entry["llm"]["allow_model_override"] is True
 
-    def test_granted_capabilities_roundtrip(self, ev0_home):
+    def test_granted_capabilities_roundtrip(self, threev0_home):
         record_consent("capplug", ["tools.override"], ["tools.override"])
         assert granted_capabilities("capplug") == frozenset({"tools.override"})
 
-    def test_grant_is_union_with_previous(self, ev0_home):
+    def test_grant_is_union_with_previous(self, threev0_home):
         record_consent("capplug", ["tools.override"], ["tools.override"])
         record_consent(
             "capplug",
@@ -192,11 +192,11 @@ class TestConsentPersistence:
             {"tools.override", "llm.model_override"}
         )
 
-    def test_capability_granted_after_consent(self, ev0_home):
+    def test_capability_granted_after_consent(self, threev0_home):
         record_consent("capplug", ["tools.override"], ["tools.override"])
         assert plugin_capability_granted("capplug", "tools.override") is True
 
-    def test_declined_stays_off(self, ev0_home):
+    def test_declined_stays_off(self, threev0_home):
         # No record_consent call — nothing granted.
         assert plugin_capability_granted("capplug", "tools.override") is False
         assert pending_capabilities("capplug", ["tools.override"]) == [
@@ -208,7 +208,7 @@ class TestConsentPersistence:
 
 
 class TestUpdateReconsent:
-    def test_added_capability_is_pending(self, ev0_home):
+    def test_added_capability_is_pending(self, threev0_home):
         # v1 declared + granted tools.override.
         record_consent("capplug", ["tools.override"], ["tools.override"])
         # v2 adds llm.model_override.
@@ -222,7 +222,7 @@ class TestUpdateReconsent:
         # The previously granted one keeps working.
         assert plugin_capability_granted("capplug", "tools.override") is True
 
-    def test_unchanged_set_needs_no_reconsent(self, ev0_home):
+    def test_unchanged_set_needs_no_reconsent(self, threev0_home):
         record_consent("capplug", ["tools.override"], ["tools.override"])
         assert pending_capabilities("capplug", ["tools.override"]) == []
         assert declared_set_changed("capplug", ["tools.override"]) is False
@@ -232,10 +232,10 @@ class TestUpdateReconsent:
         b = capability_set_hash(["llm.model_override", "tools.override"])
         assert a == b
 
-    def test_no_consent_record_counts_as_changed(self, ev0_home):
+    def test_no_consent_record_counts_as_changed(self, threev0_home):
         assert declared_set_changed("capplug", ["tools.override"]) is True
 
-    def test_reconsent_grants_addition(self, ev0_home):
+    def test_reconsent_grants_addition(self, threev0_home):
         record_consent("capplug", ["tools.override"], ["tools.override"])
         declared_v2 = ["tools.override", "llm.model_override"]
         record_consent(
@@ -254,26 +254,26 @@ class TestFailClosed:
         assert plugin_capability_granted("capplug", "tools.override") is False
         assert granted_capabilities("capplug") == frozenset()
 
-    def test_corrupt_granted_list_not_granted(self, ev0_home):
-        (ev0_home / "config.yaml").write_text(
+    def test_corrupt_granted_list_not_granted(self, threev0_home):
+        (threev0_home / "config.yaml").write_text(
             "plugins:\n  entries:\n    capplug:\n"
             "      granted_capabilities: not-a-list\n",
             encoding="utf-8",
         )
         assert plugin_capability_granted("capplug", "tools.override") is False
 
-    def test_corrupt_entry_types_not_granted(self, ev0_home):
-        (ev0_home / "config.yaml").write_text(
+    def test_corrupt_entry_types_not_granted(self, threev0_home):
+        (threev0_home / "config.yaml").write_text(
             "plugins:\n  entries:\n    capplug: 42\n", encoding="utf-8"
         )
         assert plugin_capability_granted("capplug", "tools.override") is False
 
-    def test_unknown_capability_denied(self, ev0_home):
+    def test_unknown_capability_denied(self, threev0_home):
         record_consent("capplug", ["tools.override"], ["tools.override"])
         assert plugin_capability_granted("capplug", "root.everything") is False
 
-    def test_unknown_ids_in_granted_list_ignored(self, ev0_home):
-        (ev0_home / "config.yaml").write_text(
+    def test_unknown_ids_in_granted_list_ignored(self, threev0_home):
+        (threev0_home / "config.yaml").write_text(
             "plugins:\n  entries:\n    capplug:\n"
             "      granted_capabilities: [root.everything, 42]\n",
             encoding="utf-8",
@@ -281,8 +281,8 @@ class TestFailClosed:
         assert granted_capabilities("capplug") == frozenset()
         assert plugin_capability_granted("capplug", "tools.override") is False
 
-    def test_corrupt_consent_hash_counts_as_changed(self, ev0_home):
-        (ev0_home / "config.yaml").write_text(
+    def test_corrupt_consent_hash_counts_as_changed(self, threev0_home):
+        (threev0_home / "config.yaml").write_text(
             "plugins:\n  entries:\n    capplug:\n"
             "      capabilities_consent: broken\n",
             encoding="utf-8",
@@ -295,31 +295,31 @@ class TestFailClosed:
 
 
 class TestLegacyGateCompat:
-    def test_legacy_allow_tool_override_still_works(self, ev0_home):
-        (ev0_home / "config.yaml").write_text(
+    def test_legacy_allow_tool_override_still_works(self, threev0_home):
+        (threev0_home / "config.yaml").write_text(
             "plugins:\n  entries:\n    oldplug:\n"
             "      allow_tool_override: true\n",
             encoding="utf-8",
         )
         assert plugin_capability_granted("oldplug", "tools.override") is True
 
-    def test_legacy_nested_llm_key_still_works(self, ev0_home):
-        (ev0_home / "config.yaml").write_text(
+    def test_legacy_nested_llm_key_still_works(self, threev0_home):
+        (threev0_home / "config.yaml").write_text(
             "plugins:\n  entries:\n    oldplug:\n"
             "      llm:\n        allow_model_override: true\n",
             encoding="utf-8",
         )
         assert plugin_capability_granted("oldplug", "llm.model_override") is True
 
-    def test_legacy_false_stays_denied(self, ev0_home):
-        (ev0_home / "config.yaml").write_text(
+    def test_legacy_false_stays_denied(self, threev0_home):
+        (threev0_home / "config.yaml").write_text(
             "plugins:\n  entries:\n    oldplug:\n"
             "      allow_tool_override: false\n",
             encoding="utf-8",
         )
         assert plugin_capability_granted("oldplug", "tools.override") is False
 
-    def test_tool_override_gate_uses_canonical_path(self, ev0_home):
+    def test_tool_override_gate_uses_canonical_path(self, threev0_home):
         """PluginContext._tool_override_allowed honors capability grant."""
         from threev0_cli.plugins import PluginContext, PluginManifest, PluginManager
 
@@ -328,17 +328,17 @@ class TestLegacyGateCompat:
         ctx = PluginContext(manifest, PluginManager())
         assert ctx._tool_override_allowed("write_file") is True
 
-    def test_tool_override_gate_denies_without_grant(self, ev0_home):
+    def test_tool_override_gate_denies_without_grant(self, threev0_home):
         from threev0_cli.plugins import PluginContext, PluginManifest, PluginManager
 
         manifest = PluginManifest(name="capplug", source="user", key="capplug")
         ctx = PluginContext(manifest, PluginManager())
         assert ctx._tool_override_allowed("write_file") is False
 
-    def test_tool_override_gate_legacy_key(self, ev0_home):
+    def test_tool_override_gate_legacy_key(self, threev0_home):
         from threev0_cli.plugins import PluginContext, PluginManifest, PluginManager
 
-        (ev0_home / "config.yaml").write_text(
+        (threev0_home / "config.yaml").write_text(
             "plugins:\n  entries:\n    oldplug:\n"
             "      allow_tool_override: true\n",
             encoding="utf-8",
@@ -347,7 +347,7 @@ class TestLegacyGateCompat:
         ctx = PluginContext(manifest, PluginManager())
         assert ctx._tool_override_allowed("write_file") is True
 
-    def test_bundled_plugin_trusted(self, ev0_home):
+    def test_bundled_plugin_trusted(self, threev0_home):
         from threev0_cli.plugins import PluginContext, PluginManifest, PluginManager
 
         manifest = PluginManifest(name="bplug", source="bundled", key="bplug")
@@ -360,7 +360,7 @@ class TestLegacyGateCompat:
 
 
 class TestHasCapability:
-    def test_probe_granted(self, ev0_home):
+    def test_probe_granted(self, threev0_home):
         from threev0_cli.plugins import PluginContext, PluginManifest, PluginManager
 
         record_consent("capplug", ["llm.model_override"], ["llm.model_override"])
@@ -381,7 +381,7 @@ class TestConsentFlow:
         console.input.side_effect = lambda *a, **k: next(it, "")
         return console
 
-    def test_consent_yes_records_grant(self, ev0_home, monkeypatch):
+    def test_consent_yes_records_grant(self, threev0_home, monkeypatch):
         from threev0_cli.plugins_cmd import _run_capability_consent
 
         console = self._console(["y"])
@@ -394,7 +394,7 @@ class TestConsentFlow:
         assert granted is True
         assert plugin_capability_granted("capplug", "tools.override") is True
 
-    def test_consent_decline_leaves_ungranted(self, ev0_home):
+    def test_consent_decline_leaves_ungranted(self, threev0_home):
         from threev0_cli.plugins_cmd import _run_capability_consent
 
         console = self._console(["n"])
@@ -407,7 +407,7 @@ class TestConsentFlow:
         assert granted is False
         assert plugin_capability_granted("capplug", "tools.override") is False
 
-    def test_non_interactive_fails_closed(self, ev0_home):
+    def test_non_interactive_fails_closed(self, threev0_home):
         from threev0_cli.plugins_cmd import _run_capability_consent
 
         console = self._console()
@@ -422,7 +422,7 @@ class TestConsentFlow:
         # No prompt was shown.
         console.input.assert_not_called()
 
-    def test_already_granted_skips_prompt(self, ev0_home):
+    def test_already_granted_skips_prompt(self, threev0_home):
         from threev0_cli.plugins_cmd import _run_capability_consent
 
         record_consent("capplug", ["tools.override"], ["tools.override"])

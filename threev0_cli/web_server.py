@@ -65,8 +65,8 @@ from threev0_cli.config import (
     clear_model_endpoint_credentials,
     get_config_path,
     get_env_path,
-    get_ev0_home,
-    get_process_ev0_home,
+    get_threev0_home,
+    get_process_threev0_home,
     load_config,
     load_env,
     read_raw_config,
@@ -2213,7 +2213,7 @@ def _media_serve_roots() -> list[Path]:
     key or a screenshot outside the cache) merely because the suffix passes the
     allowlist.
     """
-    home = get_ev0_home()
+    home = get_threev0_home()
     roots = [home / "images", home / "screenshots", home / "cache"]
     out: list[Path] = []
     for root in roots:
@@ -2300,14 +2300,14 @@ def _local_dashboard_request(request: Request) -> bool:
     return host in local_hosts or client_host in local_hosts
 
 
-def _default_ev0_root_is_opt_data() -> bool:
+def _default_threev0_root_is_opt_data() -> bool:
     raw = os.environ.get("EV0_HOME", "").strip()
     if not raw:
         return False
     try:
-        from threev0_constants import get_default_ev0_root
+        from threev0_constants import get_default_threev0_root
 
-        root = get_default_ev0_root().expanduser().resolve(strict=False)
+        root = get_default_threev0_root().expanduser().resolve(strict=False)
     except (OSError, RuntimeError):
         root = Path(raw).expanduser().resolve(strict=False)
     return root == _HOSTED_MANAGED_FILES_ROOT
@@ -2328,7 +2328,7 @@ def _dashboard_local_update_managed_externally() -> bool:
     externally managed unless their apply path is proven safe inside the
     running container filesystem.
     """
-    if _default_ev0_root_is_opt_data():
+    if _default_threev0_root_is_opt_data():
         return True
     try:
         from threev0_constants import is_container
@@ -2362,7 +2362,7 @@ def _managed_files_policy(request: Request, *, create_root: bool = True) -> Mana
     # and still expect the Files page to browse their local home directory. Lock
     # to /opt/data only when the installation's 3V0 root is actually /opt/data
     # (the container/hosted layout) or when EV0_DASHBOARD_FILES_ROOT is set.
-    if _default_ev0_root_is_opt_data():
+    if _default_threev0_root_is_opt_data():
         root = _ensure_managed_root(_HOSTED_MANAGED_FILES_ROOT) if create_root else _HOSTED_MANAGED_FILES_ROOT
         return ManagedFilesPolicy(default_path=root, locked_root=root, can_change_path=False)
 
@@ -2515,7 +2515,7 @@ async def upload_chat_image(payload: ChatImageUpload, profile: Optional[str] = N
     def _run():
         data, mime_type, ext = _decode_chat_image_upload(payload)
         with _profile_scope(profile) as scoped_home:
-            home = scoped_home or get_ev0_home()
+            home = scoped_home or get_threev0_home()
             img_dir = Path(home) / "images"
             try:
                 img_dir.mkdir(parents=True, exist_ok=True)
@@ -3530,7 +3530,7 @@ async def get_status(profile: Optional[str] = None):
             from gateway.readiness import _probe_state_db
 
             storage_check = await asyncio.get_running_loop().run_in_executor(
-                None, functools.partial(_probe_state_db, get_ev0_home())
+                None, functools.partial(_probe_state_db, get_threev0_home())
             )
             components["storage"] = {"status": storage_check.get("status", "degraded")}
         except Exception:
@@ -3573,7 +3573,7 @@ async def get_status(profile: Optional[str] = None):
                 None,
                 functools.partial(
                     collect_memory_status,
-                    profile_dir if profile_dir else get_ev0_home(),
+                    profile_dir if profile_dir else get_threev0_home(),
                 ),
             )
         except Exception:
@@ -3591,7 +3591,7 @@ async def get_status(profile: Optional[str] = None):
                 None,
                 functools.partial(
                     collect_disk_status,
-                    profile_dir if profile_dir else get_ev0_home(),
+                    profile_dir if profile_dir else get_threev0_home(),
                 ),
             )
         except Exception:
@@ -3604,7 +3604,7 @@ async def get_status(profile: Optional[str] = None):
         # Read-only probe, never blocks startup, never raises.
         try:
             from threev0_state import SessionDB as _SDB
-            from threev0_constants import get_ev0_home as _ghh
+            from threev0_constants import get_threev0_home as _ghh
 
             _db_path = _ghh() / "state.db"
             if _db_path.exists():
@@ -3649,7 +3649,7 @@ async def get_status(profile: Optional[str] = None):
         # split ``should_require_auth`` draws.
         if not auth_required:
             status.update({
-                "ev0_home": str(get_ev0_home()),
+                "ev0_home": str(get_threev0_home()),
                 "config_path": str(get_config_path()),
                 "env_path": str(get_env_path()),
                 "gateway_pid": gateway_pid,
@@ -3743,7 +3743,7 @@ async def get_system_stats():
             "percent": vm.percent,
         }
         try:
-            du = psutil.disk_usage(str(get_ev0_home()))
+            du = psutil.disk_usage(str(get_threev0_home()))
             info["disk"] = {
                 "total": du.total,
                 "used": du.used,
@@ -3829,7 +3829,7 @@ async def set_curator_paused(body: CuratorPause):
 async def run_curator():
     """Trigger a curator review now (backgrounded; tail via action status)."""
     try:
-        proc = _spawn_ev0_action(["curator", "run"], "curator-run")
+        proc = _spawn_threev0_action(["curator", "run"], "curator-run")
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to run curator: {exc}")
     return {"ok": True, "pid": proc.pid, "name": "curator-run"}
@@ -3977,7 +3977,7 @@ def _get_portal_status_sync():
 @app.post("/api/ops/prompt-size")
 async def run_prompt_size():
     try:
-        proc = _spawn_ev0_action(["prompt-size"], "prompt-size")
+        proc = _spawn_threev0_action(["prompt-size"], "prompt-size")
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed: {exc}")
     return {"ok": True, "pid": proc.pid, "name": "prompt-size"}
@@ -3986,7 +3986,7 @@ async def run_prompt_size():
 @app.post("/api/ops/dump")
 async def run_dump():
     try:
-        proc = _spawn_ev0_action(["dump"], "dump")
+        proc = _spawn_threev0_action(["dump"], "dump")
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed: {exc}")
     return {"ok": True, "pid": proc.pid, "name": "dump"}
@@ -3995,7 +3995,7 @@ async def run_dump():
 @app.post("/api/ops/config-migrate")
 async def run_config_migrate():
     try:
-        proc = _spawn_ev0_action(["config", "migrate"], "config-migrate")
+        proc = _spawn_threev0_action(["config", "migrate"], "config-migrate")
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed: {exc}")
     return {"ok": True, "pid": proc.pid, "name": "config-migrate"}
@@ -4047,7 +4047,7 @@ async def run_debug_share_endpoint(body: DebugShareRequest | None = None):
 # the dashboard can tail them back to the user.
 # ---------------------------------------------------------------------------
 
-_ACTION_LOG_DIR: Path = get_ev0_home() / "logs"
+_ACTION_LOG_DIR: Path = get_threev0_home() / "logs"
 _ACTION_LOG_TAIL_MAX_BYTES = 256 * 1024
 _ACTION_LOG_TAIL_INITIAL_CHUNK_BYTES = 8 * 1024
 _ACTION_LOG_TAIL_MAX_CHUNK_BYTES = 64 * 1024
@@ -4128,7 +4128,7 @@ def _dashboard_spawn_executable() -> str:
     return sys.executable
 
 
-def _spawn_ev0_action(
+def _spawn_threev0_action(
     subcommand: List[str],
     name: str,
     *,
@@ -4327,7 +4327,7 @@ def _spawn_gateway_restart(profile: Optional[str] = None) -> Tuple[subprocess.Po
         if existing_command is None or existing_command == tuple(subcommand):
             return existing, True
         raise RuntimeError("gateway restart already in progress for another profile")
-    return _spawn_ev0_action(subcommand, "gateway-restart"), False
+    return _spawn_threev0_action(subcommand, "gateway-restart"), False
 
 
 def _restart_gateway_after_webhook_enable(profile: Optional[str] = None) -> dict[str, Any]:
@@ -4501,7 +4501,7 @@ async def update_ev0():
 
     action_id = secrets.token_hex(16)
     try:
-        proc = _spawn_ev0_action(
+        proc = _spawn_threev0_action(
             ["update"],
             "3v0-update",
             env_overrides={"EV0_ACTION_ID": action_id},
@@ -4572,7 +4572,7 @@ def _recent_upstream_commits(n: int = 20) -> List[Dict[str, Any]]:
 
 
 @app.get("/api/3v0/update/check")
-async def check_ev0_update(force: bool = False):
+async def check_threev0_update(force: bool = False):
     """Report whether a 3V0 update is available, without applying it.
 
     Powers the dashboard's "check before you update" flow: the System page
@@ -4636,7 +4636,7 @@ async def check_ev0_update(force: bool = False):
 
         if force:
             try:
-                (get_ev0_home() / ".update_check").unlink()
+                (get_threev0_home() / ".update_check").unlink()
             except OSError:
                 pass
 
@@ -5331,7 +5331,7 @@ def _serialize_field_value(field: ProviderField, value: Any) -> str:
 
 
 def _flat_json_path(provider: ProviderConfigSchema) -> Path:
-    return get_ev0_home() / provider.name / "config.json"
+    return get_threev0_home() / provider.name / "config.json"
 
 
 def _read_flat_json(provider: ProviderConfigSchema) -> Dict[str, Any]:
@@ -6044,13 +6044,13 @@ def _read_json_file(path: Path) -> Dict[str, Any]:
 def _read_memory_provider_existing_values(name: str) -> Dict[str, Any]:
     """Best-effort read of existing provider config across legacy/native stores."""
 
-    ev0_home = get_ev0_home()
+    threev0_home = get_threev0_home()
     values: Dict[str, Any] = {}
 
     # Common native provider stores.
     for path in (
-        ev0_home / f"{name}.json",
-        ev0_home / name / "config.json",
+        threev0_home / f"{name}.json",
+        threev0_home / name / "config.json",
     ):
         values.update(_read_json_file(path))
 
@@ -6234,10 +6234,10 @@ def _save_memory_provider_native_config(name: str, provider: Any, values: Dict[s
         try:
             from agent.memory_provider import MemoryProvider as _BaseMemoryProvider
         except Exception:
-            provider.save_config(values, str(get_ev0_home()))
+            provider.save_config(values, str(get_threev0_home()))
             return
         if type(provider).save_config is not _BaseMemoryProvider.save_config:
-            provider.save_config(values, str(get_ev0_home()))
+            provider.save_config(values, str(get_threev0_home()))
             return
 
     cfg = load_config()
@@ -8879,9 +8879,9 @@ def _normalize_whatsapp_allowed_users(value: Any) -> str:
 
 
 def _whatsapp_session_path() -> Path:
-    from threev0_constants import get_ev0_dir
+    from threev0_constants import get_threev0_dir
 
-    return get_ev0_dir("platforms/whatsapp/session", "whatsapp/session")
+    return get_threev0_dir("platforms/whatsapp/session", "whatsapp/session")
 
 
 def _whatsapp_phone_from_identifier(value: Any) -> str | None:
@@ -8931,7 +8931,7 @@ def _ensure_whatsapp_bridge_dependencies(bridge_dir: Path) -> None:
     if (bridge_dir / "node_modules").exists():
         return
 
-    from threev0_constants import find_node_executable, with_ev0_node_path
+    from threev0_constants import find_node_executable, with_threev0_node_path
     from utils import env_int
 
     npm = find_node_executable("npm")
@@ -8953,7 +8953,7 @@ def _ensure_whatsapp_bridge_dependencies(bridge_dir: Path) -> None:
             encoding="utf-8",
             errors="replace",
             timeout=timeout,
-            env=with_ev0_node_path(),
+            env=with_threev0_node_path(),
             creationflags=windows_hide_flags(),
         )
     except subprocess.TimeoutExpired as exc:
@@ -8979,7 +8979,7 @@ def _ensure_whatsapp_bridge_dependencies(bridge_dir: Path) -> None:
 
 def _spawn_whatsapp_pairing_process(session_path: Path, mode: str) -> subprocess.Popen:
     from gateway.platforms.whatsapp_common import resolve_whatsapp_bridge_dir
-    from threev0_constants import find_node_executable, with_ev0_node_path
+    from threev0_constants import find_node_executable, with_threev0_node_path
 
     bridge_dir = resolve_whatsapp_bridge_dir()
     bridge_script = bridge_dir / "bridge.js"
@@ -8998,7 +8998,7 @@ def _spawn_whatsapp_pairing_process(session_path: Path, mode: str) -> subprocess
     _ensure_whatsapp_bridge_dependencies(bridge_dir)
     session_path.mkdir(parents=True, exist_ok=True)
 
-    env = with_ev0_node_path()
+    env = with_threev0_node_path()
     env["WHATSAPP_MODE"] = mode
     env["WHATSAPP_DM_POLICY"] = "pairing"
     return subprocess.Popen(
@@ -9974,27 +9974,27 @@ def _anthropic_oauth_status() -> Dict[str, Any]:
     """
     try:
         from agent.anthropic_adapter import (
-            read_ev0_oauth_credentials,
-            _get_ev0_oauth_file,
+            read_threev0_oauth_credentials,
+            _get_threev0_oauth_file,
         )
     except ImportError:
-        read_ev0_oauth_credentials = None  # type: ignore
-        _get_ev0_oauth_file = None  # type: ignore
+        read_threev0_oauth_credentials = None  # type: ignore
+        _get_threev0_oauth_file = None  # type: ignore
 
-    ev0_creds = None
-    if read_ev0_oauth_credentials:
+    threev0_creds = None
+    if read_threev0_oauth_credentials:
         try:
-            ev0_creds = read_ev0_oauth_credentials()
+            threev0_creds = read_threev0_oauth_credentials()
         except Exception:
-            ev0_creds = None
-    if ev0_creds and ev0_creds.get("accessToken"):
+            threev0_creds = None
+    if threev0_creds and threev0_creds.get("accessToken"):
         return {
             "logged_in": True,
             "source": "ev0_pkce",
-            "source_label": f"3V0 PKCE ({_get_ev0_oauth_file() if _get_ev0_oauth_file else None})",
-            "token_preview": _truncate_token(ev0_creds.get("accessToken")),
-            "expires_at": ev0_creds.get("expiresAt"),
-            "has_refresh_token": bool(ev0_creds.get("refreshToken")),
+            "source_label": f"3V0 PKCE ({_get_threev0_oauth_file() if _get_threev0_oauth_file else None})",
+            "token_preview": _truncate_token(threev0_creds.get("accessToken")),
+            "expires_at": threev0_creds.get("expiresAt"),
+            "has_refresh_token": bool(threev0_creds.get("refreshToken")),
         }
 
     # Env-var / secret-source path. ``get_env_value`` checks the process
@@ -10434,8 +10434,8 @@ async def disconnect_oauth_provider(
             if provider_id == "anthropic":
                 cleared = False
                 try:
-                    from agent.anthropic_adapter import _get_ev0_oauth_file
-                    oauth_file = _get_ev0_oauth_file()
+                    from agent.anthropic_adapter import _get_threev0_oauth_file
+                    oauth_file = _get_threev0_oauth_file()
                     if oauth_file.exists():
                         oauth_file.unlink()
                         cleared = True
@@ -10583,8 +10583,8 @@ def _save_anthropic_oauth_creds(access_token: str, refresh_token: str, expires_a
     Mirrors what auth_commands.add_command does so the dashboard flow leaves
     the system in the same state as ``3v0 auth add anthropic``.
     """
-    from agent.anthropic_adapter import _get_ev0_oauth_file
-    oauth_file = _get_ev0_oauth_file()
+    from agent.anthropic_adapter import _get_threev0_oauth_file
+    oauth_file = _get_threev0_oauth_file()
     payload = {
         "accessToken": access_token,
         "refreshToken": refresh_token,
@@ -11849,7 +11849,7 @@ def _prune_sessions(body: SessionPrune):
     _effective_older_than = body.older_than_days
     if has_window or (_attr_filters_set and not _older_than_explicit):
         _effective_older_than = None
-    profile_home = _cron_profile_home(body.profile)[1] if body.profile else get_ev0_home()
+    profile_home = _cron_profile_home(body.profile)[1] if body.profile else get_threev0_home()
     db = _open_session_db_for_profile(body.profile, read_only=False)
     try:
         filters = dict(
@@ -11936,7 +11936,7 @@ async def get_logs(
     log_name = LOG_FILES.get(file)
     if not log_name:
         raise HTTPException(status_code=400, detail=f"Unknown log file: {file}")
-    log_path = get_ev0_home() / "logs" / log_name
+    log_path = get_threev0_home() / "logs" / log_name
     if not log_path.exists():
         return {"file": file, "lines": []}
 
@@ -12174,11 +12174,11 @@ def _call_cron_for_profile(target_profile: Optional[str], func_name: str, *args,
     profile_name, home = _cron_profile_home(target_profile)
     from cron import jobs as cron_jobs
     from threev0_constants import (
-        reset_ev0_home_override,
-        set_ev0_home_override,
+        reset_threev0_home_override,
+        set_threev0_home_override,
     )
 
-    token = set_ev0_home_override(str(home))
+    token = set_threev0_home_override(str(home))
     try:
         with cron_jobs.use_cron_store(home):
             if func_name == "create_job":
@@ -12188,7 +12188,7 @@ def _call_cron_for_profile(target_profile: Optional[str], func_name: str, *args,
             else:
                 result = getattr(cron_jobs, func_name)(*args, **kwargs)
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
     if isinstance(result, list):
         return [_annotate_cron_job(j, profile_name, home) for j in result]
@@ -12219,11 +12219,11 @@ def _notify_cron_provider_for_profile(target_profile: Optional[str]) -> None:
             resolve_cron_scheduler,
         )
         from threev0_constants import (
-            reset_ev0_home_override,
-            set_ev0_home_override,
+            reset_threev0_home_override,
+            set_threev0_home_override,
         )
 
-        token = set_ev0_home_override(str(home))
+        token = set_threev0_home_override(str(home))
         try:
             with cron_jobs.use_cron_store(home):
                 provider = resolve_cron_scheduler()
@@ -12245,7 +12245,7 @@ def _notify_cron_provider_for_profile(target_profile: Optional[str]) -> None:
                         return
                 provider.on_jobs_changed()
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
     except Exception:
         _log.debug(
             "Cron provider reconciliation failed for profile %s",
@@ -12575,11 +12575,11 @@ def _fire_cron_job_for_profile(
         resolve_cron_scheduler,
     )
     from threev0_constants import (
-        reset_ev0_home_override,
-        set_ev0_home_override,
+        reset_threev0_home_override,
+        set_threev0_home_override,
     )
 
-    token = set_ev0_home_override(str(home))
+    token = set_threev0_home_override(str(home))
     try:
         with cron_jobs.use_cron_store(home):
             provider = resolve_cron_scheduler()
@@ -12597,7 +12597,7 @@ def _fire_cron_job_for_profile(
                 )
             return bool(provider.fire_due(job_id, adapters=None, loop=None))
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
 
 def _profile_env_value(home: Path, key: str) -> str:
@@ -12646,15 +12646,15 @@ def _gateway_fire_endpoint(profile: str, home: Path) -> str:
         # get_config_path() to the TARGET profile, same pattern the
         # deprecated _fire_cron_job_for_profile used for its store scope.
         from threev0_constants import (
-            reset_ev0_home_override,
-            set_ev0_home_override,
+            reset_threev0_home_override,
+            set_threev0_home_override,
         )
 
-        token = set_ev0_home_override(str(home))
+        token = set_threev0_home_override(str(home))
         try:
             profile_cfg = load_config()
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
         raw = cfg_get(
             profile_cfg, "platforms", "api_server", "extra", "port", default=None
         )
@@ -12973,7 +12973,7 @@ def _mcp_oauth_callback_url(request: Request, server_name: str) -> str:
 
 
 def _mcp_oauth_transaction(flow) -> threading.Lock:
-    key = (flow.ev0_home, flow.server_name)
+    key = (flow.threev0_home, flow.server_name)
     with _mcp_oauth_transactions_lock:
         return _mcp_oauth_transactions.setdefault(key, threading.Lock())
 
@@ -12991,13 +12991,13 @@ def _run_dashboard_mcp_oauth(flow, cfg: dict) -> None:
             reset_secret_scope,
             set_secret_scope,
         )
-        from threev0_constants import reset_ev0_home_override, set_ev0_home_override
+        from threev0_constants import reset_threev0_home_override, set_threev0_home_override
         from tools.mcp_dashboard_oauth import dashboard_oauth_flow
         from tools.mcp_oauth import Ev0TokenStorage, force_interactive_oauth
         from tools.mcp_oauth_manager import get_manager
 
-        home_token = set_ev0_home_override(flow.ev0_home)
-        secret_token = set_secret_scope(build_profile_secret_scope(Path(flow.ev0_home)))
+        home_token = set_threev0_home_override(flow.threev0_home)
+        secret_token = set_secret_scope(build_profile_secret_scope(Path(flow.threev0_home)))
         try:
             transaction = _mcp_oauth_transaction(flow)
             with transaction, force_interactive_oauth(), dashboard_oauth_flow(flow):
@@ -13008,7 +13008,7 @@ def _run_dashboard_mcp_oauth(flow, cfg: dict) -> None:
                 try:
                     previous_entry = manager.remove(
                         flow.server_name,
-                        ev0_home=flow.ev0_home,
+                        threev0_home=flow.threev0_home,
                     )
                     tools = _probe_single_server(
                         flow.server_name,
@@ -13032,12 +13032,12 @@ def _run_dashboard_mcp_oauth(flow, cfg: dict) -> None:
                     manager.restore_entry(
                         flow.server_name,
                         previous_entry,
-                        ev0_home=flow.ev0_home,
+                        threev0_home=flow.threev0_home,
                     )
                     raise
         finally:
             reset_secret_scope(secret_token)
-            reset_ev0_home_override(home_token)
+            reset_threev0_home_override(home_token)
     except Exception as exc:
         msg = str(exc)
         # Providers that gate RFC 7591 registration to pre-approved clients
@@ -13350,7 +13350,7 @@ async def set_webhook_enabled(name: str, body: WebhookEnabledToggle):
 @app.post("/api/gateway/start")
 async def start_gateway(profile: Optional[str] = None):
     try:
-        proc = _spawn_ev0_action(_gateway_subcommand(profile, "start"), "gateway-start")
+        proc = _spawn_threev0_action(_gateway_subcommand(profile, "start"), "gateway-start")
     except HTTPException:
         raise
     except Exception as exc:
@@ -13362,7 +13362,7 @@ async def start_gateway(profile: Optional[str] = None):
 @app.post("/api/gateway/stop")
 async def stop_gateway(profile: Optional[str] = None):
     try:
-        proc = _spawn_ev0_action(_gateway_subcommand(profile, "stop"), "gateway-stop")
+        proc = _spawn_threev0_action(_gateway_subcommand(profile, "stop"), "gateway-stop")
     except HTTPException:
         raise
     except Exception as exc:
@@ -13558,7 +13558,7 @@ async def get_memory_status():
             active = _normalize_memory_provider_name(mem.get("provider"))
 
         # Built-in memory file sizes (so the UI can show what a reset would erase).
-        mem_dir = get_ev0_home() / "memories"
+        mem_dir = get_threev0_home() / "memories"
         files = {}
         for fname, key in (("MEMORY.md", "memory"), ("USER.md", "user")):
             path = mem_dir / fname
@@ -13597,7 +13597,7 @@ async def reset_memory(body: MemoryReset):
     if target not in {"all", "memory", "user"}:
         raise HTTPException(status_code=400, detail="target must be all, memory, or user")
 
-    mem_dir = get_ev0_home() / "memories"
+    mem_dir = get_threev0_home() / "memories"
     deleted = []
     targets = []
     if target in {"all", "memory"}:
@@ -13631,7 +13631,7 @@ async def reset_memory(body: MemoryReset):
 @app.post("/api/ops/doctor")
 async def run_doctor():
     try:
-        proc = _spawn_ev0_action(["doctor"], "doctor")
+        proc = _spawn_threev0_action(["doctor"], "doctor")
     except Exception as exc:
         _log.exception("Failed to spawn doctor")
         raise HTTPException(status_code=500, detail=f"Failed to run doctor: {exc}")
@@ -13641,7 +13641,7 @@ async def run_doctor():
 @app.post("/api/ops/security-audit")
 async def run_security_audit():
     try:
-        proc = _spawn_ev0_action(["security", "audit"], "security-audit")
+        proc = _spawn_threev0_action(["security", "audit"], "security-audit")
     except Exception as exc:
         _log.exception("Failed to spawn security audit")
         raise HTTPException(status_code=500, detail=f"Failed to run security audit: {exc}")
@@ -13649,7 +13649,7 @@ async def run_security_audit():
 
 
 def _dashboard_backup_dir() -> Path:
-    return get_ev0_home() / "backups"
+    return get_threev0_home() / "backups"
 
 
 def _new_dashboard_backup_path() -> Path:
@@ -13675,7 +13675,7 @@ async def run_backup(body: BackupRequest):
             )
         args.extend(["-o", str(archive)])
     try:
-        proc = _spawn_ev0_action(args, "backup")
+        proc = _spawn_threev0_action(args, "backup")
     except Exception as exc:
         _log.exception("Failed to spawn backup")
         raise HTTPException(status_code=500, detail=f"Failed to run backup: {exc}")
@@ -13719,7 +13719,7 @@ async def run_import(body: ImportRequest):
     if body.force:
         args.append("--force")
     try:
-        proc = _spawn_ev0_action(args, "import")
+        proc = _spawn_threev0_action(args, "import")
     except Exception as exc:
         _log.exception("Failed to spawn import")
         raise HTTPException(status_code=500, detail=f"Failed to run import: {exc}")
@@ -13801,7 +13801,7 @@ async def run_import_upload(
     if force:
         args.append("--force")
     try:
-        proc = _spawn_ev0_action(args, "import")
+        proc = _spawn_threev0_action(args, "import")
     except Exception as exc:
         _log.exception("Failed to spawn import")
         raise HTTPException(status_code=500, detail=f"Failed to run import: {exc}")
@@ -13975,7 +13975,7 @@ async def list_checkpoints():
     # total size so the dashboard can show what a prune would reclaim; the
     # actual prune is a spawned action so confirmation/pruning logic stays
     # in one place (the CLI).
-    cp_dir = get_ev0_home() / "checkpoints"
+    cp_dir = get_threev0_home() / "checkpoints"
     sessions = []
     total_bytes = 0
     if cp_dir.is_dir():
@@ -14005,7 +14005,7 @@ async def list_checkpoints():
 @app.post("/api/ops/checkpoints/prune")
 async def prune_checkpoints():
     try:
-        proc = _spawn_ev0_action(["checkpoints", "prune"], "checkpoints-prune")
+        proc = _spawn_threev0_action(["checkpoints", "prune"], "checkpoints-prune")
     except Exception as exc:
         _log.exception("Failed to spawn checkpoints prune")
         raise HTTPException(status_code=500, detail=f"Failed to prune checkpoints: {exc}")
@@ -14177,7 +14177,7 @@ def _fallback_profile_dicts(profiles_mod) -> List[Dict[str, Any]]:
             return default
 
     profiles: List[Dict[str, Any]] = []
-    default_home = profiles_mod._get_default_ev0_home()
+    default_home = profiles_mod._get_default_threev0_home()
     if default_home.is_dir():
         model, provider = _safe(lambda: profiles_mod._read_config_model(default_home), (None, None))
         profiles.append({
@@ -14257,16 +14257,16 @@ def _write_profile_model(profile_dir: Path, provider: str, model: str) -> None:
     Clears any stale ``base_url`` / ``context_length`` the same way
     ``POST /api/model/set`` does, since the new model may differ.
     """
-    from threev0_constants import set_ev0_home_override, reset_ev0_home_override
+    from threev0_constants import set_threev0_home_override, reset_threev0_home_override
 
-    token = set_ev0_home_override(str(profile_dir))
+    token = set_threev0_home_override(str(profile_dir))
     try:
         provider, model = _normalize_main_model_assignment(provider, model)
         cfg = load_config()
         cfg["model"] = _apply_main_model_assignment(cfg.get("model", {}), provider, model)
         save_config(cfg)
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
 
 def _write_profile_mcp_servers(profile_dir: Path, servers: List["MCPServerCreate"]) -> int:
@@ -14281,11 +14281,11 @@ def _write_profile_mcp_servers(profile_dir: Path, servers: List["MCPServerCreate
     but batched so the whole profile-create write is a single config save.
     Returns the number of servers written.
     """
-    from threev0_constants import set_ev0_home_override, reset_ev0_home_override
+    from threev0_constants import set_threev0_home_override, reset_threev0_home_override
     from threev0_cli.mcp_config import _save_bearer_auth_token
 
     written = 0
-    token = set_ev0_home_override(str(profile_dir))
+    token = set_threev0_home_override(str(profile_dir))
     try:
         cfg = load_config()
         mcp = cfg.setdefault("mcp_servers", {})
@@ -14312,7 +14312,7 @@ def _write_profile_mcp_servers(profile_dir: Path, servers: List["MCPServerCreate
             cfg.pop("mcp_servers", None)
             save_config(cfg)
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
     return written
 
 
@@ -14327,12 +14327,12 @@ def _disable_unselected_skills(profile_dir: Path, keep: List[str]) -> int:
     install.) Scoped to the profile via the EV0_HOME override. Returns the
     number of skills newly disabled.
     """
-    from threev0_constants import set_ev0_home_override, reset_ev0_home_override
+    from threev0_constants import set_threev0_home_override, reset_threev0_home_override
     from threev0_cli.skills_config import get_disabled_skills, save_disabled_skills
 
     keep_set = {s.strip() for s in keep if s and s.strip()}
     disabled_count = 0
-    token = set_ev0_home_override(str(profile_dir))
+    token = set_threev0_home_override(str(profile_dir))
     try:
         installed: List[str] = []
         skills_root = profile_dir / "skills"
@@ -14348,7 +14348,7 @@ def _disable_unselected_skills(profile_dir: Path, keep: List[str]) -> int:
         if disabled_count:
             save_disabled_skills(cfg, disabled)
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
     return disabled_count
 
 
@@ -14435,19 +14435,19 @@ def _profile_scope(profile: Optional[str]):
     requested = (profile or "").strip()
 
     from threev0_constants import (
-        get_ev0_home,
-        set_ev0_home_override,
-        reset_ev0_home_override,
+        get_threev0_home,
+        set_threev0_home_override,
+        reset_threev0_home_override,
     )
     from tools import skills_tool as _skills_tool
     from tools import skill_manager_tool as _skill_mgr
 
     token = None
     if not requested or requested.lower() == "current":
-        profile_dir = get_ev0_home()
+        profile_dir = get_threev0_home()
     else:
         profile_dir = _resolve_profile_dir(requested)
-        token = set_ev0_home_override(str(profile_dir))
+        token = set_threev0_home_override(str(profile_dir))
 
     with _SKILLS_PROFILE_LOCK:
         old_home = _skills_tool.EV0_HOME
@@ -14466,7 +14466,7 @@ def _profile_scope(profile: Optional[str]):
             _skill_mgr.EV0_HOME = old_mgr_home
             _skill_mgr.SKILLS_DIR = old_mgr_skills_dir
             if token is not None:
-                reset_ev0_home_override(token)
+                reset_threev0_home_override(token)
 
 
 @contextmanager
@@ -14491,16 +14491,16 @@ def _config_profile_scope(profile: Optional[str]):
         return
 
     from threev0_constants import (
-        set_ev0_home_override,
-        reset_ev0_home_override,
+        set_threev0_home_override,
+        reset_threev0_home_override,
     )
 
     profile_dir = _resolve_profile_dir(requested)
-    token = set_ev0_home_override(str(profile_dir))
+    token = set_threev0_home_override(str(profile_dir))
     try:
         yield profile_dir
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
 
 app.include_router(_skills_routes.router)
@@ -17306,7 +17306,7 @@ def _discover_user_themes() -> list:
     transient profile override from embedded chat does not hide themes that
     live under the server's own ``EV0_HOME``.
     """
-    themes_dir = get_process_ev0_home() / "dashboard-themes"
+    themes_dir = get_process_threev0_home() / "dashboard-themes"
     if not themes_dir.is_dir():
         return []
     result = []
@@ -17489,10 +17489,10 @@ def _discover_dashboard_plugins() -> list:
     # ``threev0_cli.plugins`` resolves plugin install locations. The
     # ``seen_names`` dedupe below keeps profile-local plugins (if any)
     # authoritative over same-named root plugins.
-    from threev0_constants import get_default_ev0_root
+    from threev0_constants import get_default_threev0_root
 
-    user_plugin_roots = [get_process_ev0_home() / "plugins"]
-    root_plugins = get_default_ev0_root() / "plugins"
+    user_plugin_roots = [get_process_threev0_home() / "plugins"]
+    root_plugins = get_default_threev0_root() / "plugins"
     if root_plugins.resolve(strict=False) != user_plugin_roots[0].resolve(strict=False):
         user_plugin_roots.append(root_plugins)
     search_dirs = [(d, "user") for d in user_plugin_roots]
@@ -17746,7 +17746,7 @@ def _merged_plugins_hub(force_refresh: bool = False) -> Dict[str, Any]:
     config = load_config()
     hidden_plugins: list = cfg_get(config, "dashboard", "hidden_plugins", default=[]) or []
 
-    plugins_root_resolved = (get_ev0_home() / "plugins").resolve()
+    plugins_root_resolved = (get_threev0_home() / "plugins").resolve()
     rows: List[Dict[str, Any]] = []
 
     for name, version, description, source, dir_str, key in _discover_all_plugins():

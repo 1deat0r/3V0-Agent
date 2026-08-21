@@ -24,9 +24,9 @@ def mcp_loop():
 
 def test_override_propagates_to_mcp_loop(tmp_path, monkeypatch, mcp_loop):
     from threev0_constants import (
-        get_ev0_home,
-        reset_ev0_home_override,
-        set_ev0_home_override,
+        get_threev0_home,
+        reset_threev0_home_override,
+        set_threev0_home_override,
     )
 
     process_home = tmp_path / "proc-home"
@@ -36,13 +36,13 @@ def test_override_propagates_to_mcp_loop(tmp_path, monkeypatch, mcp_loop):
     monkeypatch.setenv("EV0_HOME", str(process_home))
 
     async def read_home():
-        return str(get_ev0_home())
+        return str(get_threev0_home())
 
     # Unscoped: the loop task sees the process home.
     assert mcp_loop._run_on_mcp_loop(read_home(), timeout=10) == str(process_home)
 
     # Scoped: the caller's override must reach the loop task.
-    token = set_ev0_home_override(str(profile_home))
+    token = set_threev0_home_override(str(profile_home))
     try:
         assert mcp_loop._run_on_mcp_loop(read_home(), timeout=10) == str(profile_home)
         # Factory form must be wrapped too.
@@ -50,7 +50,7 @@ def test_override_propagates_to_mcp_loop(tmp_path, monkeypatch, mcp_loop):
             profile_home
         )
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
 
     # The loop thread's default context is untouched afterwards.
     assert mcp_loop._run_on_mcp_loop(read_home(), timeout=10) == str(process_home)
@@ -62,9 +62,9 @@ def test_concurrent_scopes_do_not_interfere(tmp_path, monkeypatch, mcp_loop):
     import threading
 
     from threev0_constants import (
-        get_ev0_home,
-        reset_ev0_home_override,
-        set_ev0_home_override,
+        get_threev0_home,
+        reset_threev0_home_override,
+        set_threev0_home_override,
     )
 
     process_home = tmp_path / "proc-home"
@@ -75,16 +75,16 @@ def test_concurrent_scopes_do_not_interfere(tmp_path, monkeypatch, mcp_loop):
     monkeypatch.setenv("EV0_HOME", str(process_home))
 
     async def read_home():
-        return str(get_ev0_home())
+        return str(get_threev0_home())
 
     results: dict = {}
 
     def scoped_call(key, home):
-        token = set_ev0_home_override(str(home))
+        token = set_threev0_home_override(str(home))
         try:
             results[key] = mcp_loop._run_on_mcp_loop(read_home(), timeout=10)
         finally:
-            reset_ev0_home_override(token)
+            reset_threev0_home_override(token)
 
     threads = [
         threading.Thread(target=scoped_call, args=("a", home_a)),

@@ -336,10 +336,10 @@ class _DiscordNonConversationalMessageTracker:
         self._ids: dict[str, None] = dict.fromkeys(self._load())
 
     def _state_path(self) -> _Path:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
         return (
-            get_ev0_home()
+            get_threev0_home()
             / _DISCORD_COMMAND_SYNC_STATE_SUBDIR
             / _DISCORD_NONCONVERSATIONAL_STATE_FILENAME
         )
@@ -1147,9 +1147,9 @@ class DiscordAdapter(BasePlatformAdapter):
         # shutdown from a runtime websocket crash.
         self._disconnecting = False
         self._missed_message_backfill_task: Optional[asyncio.Task] = None
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from plugins.platforms.discord.recovery import DiscordRecoveryStore
-        self._discord_recovery_store = DiscordRecoveryStore(get_ev0_home())
+        self._discord_recovery_store = DiscordRecoveryStore(get_threev0_home())
         # Dedup cache: prevents duplicate bot responses when Discord
         # RESUME replays events after reconnects.
         self._dedup = MessageDeduplicator()
@@ -2205,9 +2205,9 @@ class DiscordAdapter(BasePlatformAdapter):
         logger.info("[%s] Disconnected", self.name)
 
     def _command_sync_state_path(self) -> _Path:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        directory = get_ev0_home() / _DISCORD_COMMAND_SYNC_STATE_SUBDIR
+        directory = get_threev0_home() / _DISCORD_COMMAND_SYNC_STATE_SUBDIR
         try:
             directory.mkdir(parents=True, exist_ok=True)
         except Exception:
@@ -7234,7 +7234,7 @@ class DiscordAdapter(BasePlatformAdapter):
             try:
                 thread = await message.create_thread(name=thread_name, auto_archive_duration=1440)
                 try:
-                    setattr(thread, "_ev0_auto_thread_initial_name", thread_name)
+                    setattr(thread, "_threev0_auto_thread_initial_name", thread_name)
                 except Exception:
                     pass
                 return thread
@@ -7250,7 +7250,7 @@ class DiscordAdapter(BasePlatformAdapter):
                         reason=reason,
                     )
                     try:
-                        setattr(thread, "_ev0_auto_thread_initial_name", thread_name)
+                        setattr(thread, "_threev0_auto_thread_initial_name", thread_name)
                     except Exception:
                         pass
                     return thread
@@ -8276,7 +8276,7 @@ class DiscordAdapter(BasePlatformAdapter):
             role_authorized=role_authorized,
             auto_thread_created=auto_threaded_channel is not None,
             auto_thread_initial_name=(
-                getattr(auto_threaded_channel, "_ev0_auto_thread_initial_name", None)
+                getattr(auto_threaded_channel, "_threev0_auto_thread_initial_name", None)
                 or self._derive_auto_thread_name(message.content or "")
             ) if auto_threaded_channel is not None else None,
         )
@@ -9110,8 +9110,8 @@ def _define_discord_view_classes() -> None:
 
             # Write response file
             try:
-                from threev0_constants import get_ev0_home
-                home = get_ev0_home()
+                from threev0_constants import get_threev0_home
+                home = get_threev0_home()
                 response_path = home / ".update_response"
                 tmp = response_path.with_suffix(".tmp")
                 tmp.write_text(answer, encoding="utf-8")

@@ -22,9 +22,9 @@ def _setup_doctor_env(monkeypatch, tmp_path, venv_name="venv"):
     # Create a fake venv entry point
     venv_bin_dir = project / venv_name / "bin"
     venv_bin_dir.mkdir(parents=True, exist_ok=True)
-    ev0_bin = venv_bin_dir / "3v0"
-    ev0_bin.write_text("#!/usr/bin/env python\n# entry point\n")
-    ev0_bin.chmod(0o755)
+    threev0_bin = venv_bin_dir / "3v0"
+    threev0_bin.write_text("#!/usr/bin/env python\n# entry point\n")
+    threev0_bin.chmod(0o755)
 
     monkeypatch.setattr(doctor_mod, "EV0_HOME", home)
     monkeypatch.setattr(doctor_mod, "PROJECT_ROOT", project)
@@ -52,7 +52,7 @@ def _setup_doctor_env(monkeypatch, tmp_path, venv_name="venv"):
     except Exception:
         pass
 
-    return home, project, ev0_bin
+    return home, project, threev0_bin
 
 
 def _run_doctor(fix=False):
@@ -75,7 +75,7 @@ class TestDoctorCommandInstallation:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Symlink check is Unix-only")
     def test_fix_repairs_wrong_symlink(self, monkeypatch, tmp_path):
-        home, project, ev0_bin = _setup_doctor_env(monkeypatch, tmp_path)
+        home, project, threev0_bin = _setup_doctor_env(monkeypatch, tmp_path)
 
         # Create a symlink pointing to wrong target
         cmd_link_dir = tmp_path / ".local" / "bin"
@@ -92,7 +92,7 @@ class TestDoctorCommandInstallation:
 
         # Verify the symlink now points to the correct target
         assert cmd_link.is_symlink()
-        assert cmd_link.resolve() == ev0_bin.resolve()
+        assert cmd_link.resolve() == threev0_bin.resolve()
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Symlink check is Unix-only")
     def test_missing_venv_entry_point_shows_warn(self, monkeypatch, tmp_path):
@@ -139,7 +139,7 @@ class TestDoctorCommandInstallation:
         prefix_bin = prefix_dir / "bin"
         prefix_bin.mkdir(parents=True)
 
-        home, project, ev0_bin = _setup_doctor_env(monkeypatch, tmp_path)
+        home, project, threev0_bin = _setup_doctor_env(monkeypatch, tmp_path)
 
         monkeypatch.setenv("TERMUX_VERSION", "0.118.3")
         monkeypatch.setenv("PREFIX", str(prefix_dir))

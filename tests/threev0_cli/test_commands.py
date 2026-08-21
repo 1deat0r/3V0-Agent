@@ -69,7 +69,7 @@ class TestCommandRegistry:
                     # reset -> new is intentional (reset IS an alias for new)
                     target = next(c for c in COMMAND_REGISTRY if c.name == alias)
                     # This should only happen if the alias points to the same entry
-                    assert resolve_command(alias).name == cmd.name or alias == cmd.name, \
+                    assert resolve_command(alias).name == cmd.name or alias == cmd.name,\
                         f"Alias '{alias}' of '{cmd.name}' shadows canonical '{target.name}'"
 
 
@@ -132,7 +132,7 @@ class TestGatewayKnownCommands:
         """Commands with gateway_config_gate are always in GATEWAY_KNOWN_COMMANDS."""
         for cmd in COMMAND_REGISTRY:
             if cmd.gateway_config_gate:
-                assert cmd.name in GATEWAY_KNOWN_COMMANDS, \
+                assert cmd.name in GATEWAY_KNOWN_COMMANDS,\
                     f"config-gated command '{cmd.name}' should be in GATEWAY_KNOWN_COMMANDS"
 
 
@@ -150,7 +150,7 @@ class TestGatewayHelpLines:
             if cmd.cli_only and not cmd.gateway_config_gate:
                 # Word-boundary match so `/reload` doesn't match `/reload-mcp`
                 pattern = rf'`/{re.escape(cmd.name)}(?![-_\w])'
-                assert not re.search(pattern, joined), \
+                assert not re.search(pattern, joined),\
                     f"cli_only command /{cmd.name} should not be in gateway help"
 
     def test_includes_alias_note_for_bg(self):
@@ -245,8 +245,8 @@ class TestSlackNativeSlashes:
         reserved_norm = {_norm(n) for n in _SLACK_RESERVED_COMMANDS}
         # Commands deliberately routed through /3v0 <command> on Slack only
         # (Slack's 50-slash cap) are expected to be absent from native slashes.
-        via_ev0_norm = {_norm(n) for n in _SLACK_VIA_EV0_ONLY}
-        missing = (tg_norm - slack_norm) - reserved_norm - via_ev0_norm
+        via_threev0_norm = {_norm(n) for n in _SLACK_VIA_EV0_ONLY}
+        missing = (tg_norm - slack_norm) - reserved_norm - via_threev0_norm
         assert not missing, (
             f"commands on Telegram but missing from Slack native slashes: {sorted(missing)}"
         )
@@ -619,8 +619,8 @@ class TestDiscordSkillCmdKeyDispatch:
             },
         }
 
-        with patch("agent.skill_commands.get_skill_commands", return_value=fake_cmds), \
-             patch("tools.skills_tool.SKILLS_DIR", fake_skills_dir), \
+        with patch("agent.skill_commands.get_skill_commands", return_value=fake_cmds),\
+             patch("tools.skills_tool.SKILLS_DIR", fake_skills_dir),\
              patch("agent.skill_utils.get_external_skills_dirs", return_value=[]):
             entries, hidden = discord_skill_commands(
                 max_slots=100, reserved_names=set(),

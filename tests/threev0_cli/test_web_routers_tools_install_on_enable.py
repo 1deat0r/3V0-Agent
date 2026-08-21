@@ -14,18 +14,18 @@ import pytest
 
 class TestToggleToolsetInstallOnEnable:
     @pytest.fixture(autouse=True)
-    def _setup(self, monkeypatch, _isolate_ev0_home):
+    def _setup(self, monkeypatch, _isolate_threev0_home):
         try:
             from starlette.testclient import TestClient
         except ImportError:
             pytest.skip("fastapi/starlette not installed")
 
         import threev0_state
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
         from threev0_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
 
         monkeypatch.setattr(
-            threev0_state, "DEFAULT_DB_PATH", get_ev0_home() / "state.db"
+            threev0_state, "DEFAULT_DB_PATH", get_threev0_home() / "state.db"
         )
         self.client = TestClient(app)
         self.client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
@@ -42,7 +42,7 @@ class TestToggleToolsetInstallOnEnable:
             calls.append((tuple(subcommand), name))
             return _FakeProc()
 
-        monkeypatch.setattr(web_server, "_spawn_ev0_action", _fake_spawn)
+        monkeypatch.setattr(web_server, "_spawn_threev0_action", _fake_spawn)
         return calls
 
     def test_enable_computer_use_spawns_cua_install_when_binary_missing(
@@ -123,7 +123,7 @@ class TestToggleToolsetInstallOnEnable:
         def _boom(subcommand, name, **kwargs):
             raise RuntimeError("spawn exploded")
 
-        monkeypatch.setattr(web_server, "_spawn_ev0_action", _boom)
+        monkeypatch.setattr(web_server, "_spawn_threev0_action", _boom)
 
         resp = self.client.put(
             "/api/tools/toolsets/computer_use", json={"enabled": True}

@@ -43,15 +43,15 @@ def test_scrub_on_forwards_extra_like_sanitize_extra_env(monkeypatch):
 
 
 def test_no_scrub_inherit_profile_home_bridges_context_override(tmp_path):
-    from threev0_constants import set_ev0_home_override, reset_ev0_home_override
+    from threev0_constants import set_threev0_home_override, reset_threev0_home_override
 
-    token = set_ev0_home_override(str(tmp_path))
+    token = set_threev0_home_override(str(tmp_path))
     try:
         env = build_subprocess_env(
             {"PATH": "/bin"}, scrub_secrets=False, inherit_profile_home=True
         )
     finally:
-        reset_ev0_home_override(token)
+        reset_threev0_home_override(token)
     assert env["EV0_HOME"] == str(tmp_path)
 
 
@@ -59,12 +59,12 @@ def test_no_scrub_inherit_profile_home_bridges_context_override(tmp_path):
 # E2E: real subprocess sees the factory's contract
 # ---------------------------------------------------------------------------
 
-def test_e2e_child_sees_ev0_home_and_no_planted_secret(tmp_path, monkeypatch):
+def test_e2e_child_sees_threev0_home_and_no_planted_secret(tmp_path, monkeypatch):
     """A real child spawned with a factory-built env must see EV0_HOME
     propagated and (with scrub on) a planted provider-style key absent."""
-    ev0_home = tmp_path / "3v0-home"
-    ev0_home.mkdir()
-    monkeypatch.setenv("EV0_HOME", str(ev0_home))
+    threev0_home = tmp_path / "3v0-home"
+    threev0_home.mkdir()
+    monkeypatch.setenv("EV0_HOME", str(threev0_home))
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-FAKE-planted")
     monkeypatch.setenv("AUXILIARY_FAKE_API_KEY", "sk-FAKE-aux")
 
@@ -83,7 +83,7 @@ def test_e2e_child_sees_ev0_home_and_no_planted_secret(tmp_path, monkeypatch):
     import json
 
     result = json.loads(out.stdout)
-    assert result["home"] == str(ev0_home)
+    assert result["home"] == str(threev0_home)
     assert result["k1"] is False
     assert result["k2"] is False
 

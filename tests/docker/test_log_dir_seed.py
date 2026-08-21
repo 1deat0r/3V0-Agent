@@ -17,7 +17,7 @@ from tests.docker.conftest import (
 )
 
 
-def test_logs_gateways_seeded_and_ev0_owned(
+def test_logs_gateways_seeded_and_threev0_owned(
     built_image: str, container_name: str,
 ) -> None:
     """logs/ and logs/gateways/ must exist and be owned by 3v0 after boot."""

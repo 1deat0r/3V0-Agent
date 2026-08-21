@@ -4412,9 +4412,9 @@ Summary generation was unavailable, so this is a best-effort deterministic fallb
         # date here never affects prompt-cache stability. Resolved defensively —
         # a clock failure must never block compaction.
         try:
-            from threev0_time import now as _ev0_now
+            from threev0_time import now as _threev0_now
 
-            _today_str = _ev0_now().strftime("%Y-%m-%d")
+            _today_str = _threev0_now().strftime("%Y-%m-%d")
         except Exception:  # pragma: no cover - clock resolution is best-effort
             _today_str = ""
 

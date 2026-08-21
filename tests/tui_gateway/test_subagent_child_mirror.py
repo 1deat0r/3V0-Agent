@@ -23,7 +23,7 @@ def server():
         "sys.modules",
         {
             "threev0_constants": MagicMock(
-                get_ev0_home=MagicMock(return_value="/tmp/ev0_test_child_mirror")
+                get_threev0_home=MagicMock(return_value="/tmp/ev0_test_child_mirror")
             ),
             "threev0_cli.env_loader": MagicMock(),
             "threev0_cli.banner": MagicMock(),

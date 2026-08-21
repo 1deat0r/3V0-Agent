@@ -20,7 +20,7 @@ class TestResolveRuntimeAgentKwargsAuthFallback:
             "  model: meta-llama/llama-4-maverick\n"
         )
 
-        monkeypatch.setattr("gateway.run._ev0_home", tmp_path)
+        monkeypatch.setattr("gateway.run._threev0_home", tmp_path)
 
         call_count = {"n": 0}
 

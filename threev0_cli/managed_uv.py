@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Optional
 
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 from threev0_cli.sqlite_runtime import SQLiteRuntimeInfo, probe_sqlite_runtime
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ def managed_uv_path() -> Path:
     Windows.  The directory may not exist yet — callers should use
     ``ensure_uv()`` to bootstrap it.
     """
-    home = get_ev0_home()
+    home = get_threev0_home()
     if platform.system() == "Windows":
         return home / "bin" / "uv.exe"
     return home / "bin" / "uv"
@@ -285,9 +285,9 @@ def _uv_self_update_is_fresh(now: float | None = None) -> bool:
     caches the last successful self-update time.
     """
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        stamp = get_ev0_home() / "cache" / ".uv_self_update_stamp"
+        stamp = get_threev0_home() / "cache" / ".uv_self_update_stamp"
         age = (now if now is not None else time.time()) - stamp.stat().st_mtime
         return 0 <= age < UV_SELF_UPDATE_INTERVAL_SECONDS
     except Exception:
@@ -296,9 +296,9 @@ def _uv_self_update_is_fresh(now: float | None = None) -> bool:
 
 def _touch_uv_self_update_stamp() -> None:
     try:
-        from threev0_constants import get_ev0_home
+        from threev0_constants import get_threev0_home
 
-        stamp = get_ev0_home() / "cache" / ".uv_self_update_stamp"
+        stamp = get_threev0_home() / "cache" / ".uv_self_update_stamp"
         stamp.parent.mkdir(parents=True, exist_ok=True)
         stamp.touch()
     except OSError:

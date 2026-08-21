@@ -685,11 +685,11 @@ def _(home, kb):
 # CONCURRENCY CORNERS
 # =============================================================================
 
-def _idempotency_race_worker(ev0_home: str, key: str, result_file: str,
+def _idempotency_race_worker(threev0_home: str, key: str, result_file: str,
                              barrier_path: str) -> None:
     """Subprocess body for the idempotency race test."""
-    os.environ["EV0_HOME"] = ev0_home
-    os.environ["HOME"] = ev0_home
+    os.environ["EV0_HOME"] = threev0_home
+    os.environ["HOME"] = threev0_home
     sys.path.insert(0, str(WT))
     from threev0_cli import kanban_db as kb
 

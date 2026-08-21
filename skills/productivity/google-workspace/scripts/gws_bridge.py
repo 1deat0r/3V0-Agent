@@ -15,11 +15,11 @@ _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
-from _ev0_home import get_ev0_home
+from _threev0_home import get_threev0_home
 
 
 def get_token_path() -> Path:
-    return get_ev0_home() / "google_token.json"
+    return get_threev0_home() / "google_token.json"
 
 
 def _normalize_authorized_user_payload(payload: dict) -> dict:

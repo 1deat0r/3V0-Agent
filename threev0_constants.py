@@ -27,7 +27,7 @@ INDICATOR_STYLES: tuple[str, ...] = ("ascii", "emoji", "kaomoji", "unicode")
 DEFAULT_INDICATOR_STYLE: str = "kaomoji"
 
 
-def set_ev0_home_override(path: str | Path | None) -> Token:
+def set_threev0_home_override(path: str | Path | None) -> Token:
     """Set a context-local 3V0 home override and return its reset token.
 
     This is for in-process, per-task scoping.  It deliberately does not mutate
@@ -37,12 +37,12 @@ def set_ev0_home_override(path: str | Path | None) -> Token:
     return _EV0_HOME_OVERRIDE.set(value)
 
 
-def reset_ev0_home_override(token: Token) -> None:
+def reset_threev0_home_override(token: Token) -> None:
     """Restore the previous context-local 3V0 home override."""
     _EV0_HOME_OVERRIDE.reset(token)
 
 
-def get_ev0_home_override() -> str | None:
+def get_threev0_home_override() -> str | None:
     """Return the active context-local 3V0 home override, if any."""
     override = _EV0_HOME_OVERRIDE.get()
     if override is _UNSET or not override:
@@ -50,7 +50,7 @@ def get_ev0_home_override() -> str | None:
     return str(override)
 
 
-def _get_platform_default_ev0_home() -> Path:
+def _get_platform_default_threev0_home() -> Path:
     """Return the platform-native default 3V0 home path."""
     if sys.platform == "win32":
         local_appdata = os.environ.get("LOCALAPPDATA", "").strip()
@@ -59,7 +59,7 @@ def _get_platform_default_ev0_home() -> Path:
     return Path.home() / ".3V0"
 
 
-def _ev0_home_from_env() -> Path:
+def _threev0_home_from_env() -> Path:
     """Resolve EV0_HOME from the process environment only.
 
     Reads the ``EV0_HOME`` env var, falling back to the platform-native
@@ -71,7 +71,7 @@ def _ev0_home_from_env() -> Path:
     val = os.environ.get("EV0_HOME", "").strip()
     if val:
         return Path(val)
-    return _get_platform_default_ev0_home()
+    return _get_platform_default_threev0_home()
 
 
 def _warn_profile_fallback_once() -> None:
@@ -84,7 +84,7 @@ def _warn_profile_fallback_once() -> None:
     if _profile_fallback_warned:
         return
     try:
-        fallback_home = _get_platform_default_ev0_home()
+        fallback_home = _get_platform_default_threev0_home()
         active_path = fallback_home / "active_profile"
         active = active_path.read_text(encoding="utf-8").strip() if active_path.exists() else ""
     except (UnicodeDecodeError, OSError):
@@ -111,7 +111,7 @@ def _warn_profile_fallback_once() -> None:
             pass
 
 
-def get_ev0_home() -> Path:
+def get_threev0_home() -> Path:
     """Return the 3V0 home directory (default: platform-native path).
 
     Resolution order: context-local override (see
@@ -129,29 +129,29 @@ def get_ev0_home() -> Path:
     template in ``threev0_cli/gateway.py`` and the kanban dispatcher in
     ``threev0_cli/kanban_db.py``).  See https://github.com/1deat0r/3V0-Agent/issues/18594.
     """
-    override = get_ev0_home_override()
+    override = get_threev0_home_override()
     if override:
         return Path(override)
 
     if not os.environ.get("EV0_HOME", "").strip():
         _warn_profile_fallback_once()
 
-    return _ev0_home_from_env()
+    return _threev0_home_from_env()
 
 
-def ev0_home_key(path: str | Path | None = None) -> str:
+def threev0_home_key(path: str | Path | None = None) -> str:
     """Return a stable key for a 3V0 home/profile directory.
 
     Runtime registries use this key to isolate plugin-owned entries while
     keeping built-in registrations process-global.  ``strict=False`` preserves
     useful behavior for profiles whose directories have not been created yet.
     """
-    candidate = Path(path) if path is not None else get_ev0_home()
+    candidate = Path(path) if path is not None else get_threev0_home()
     resolved = candidate.expanduser().resolve(strict=False)
     return os.path.normcase(str(resolved))
 
 
-def get_process_ev0_home() -> Path:
+def get_process_threev0_home() -> Path:
     """Return the 3V0 home for the running process, ignoring task overrides.
 
     Unlike :func:`get_ev0_home`, this never follows the context-local
@@ -167,7 +167,7 @@ def get_process_ev0_home() -> Path:
     for genuinely profile-scoped data (memories, backups, checkpoints,
     provider config) — those should keep following the override.
     """
-    return _ev0_home_from_env()
+    return _threev0_home_from_env()
 
 
 # Process-level memo for get_default_ev0_root(). The function resolves
@@ -177,10 +177,10 @@ def get_process_ev0_home() -> Path:
 # Its result depends only on (EV0_HOME, platform native home), which are
 # compared for free on each call, so the memo is freshness-correct even if a
 # test or plugin mutates EV0_HOME mid-process.
-_default_ev0_root_memo: "tuple[str, str, Path] | None" = None
+_default_threev0_root_memo: "tuple[str, str, Path] | None" = None
 
 
-def get_default_ev0_root() -> Path:
+def get_default_threev0_root() -> Path:
     """Return the root 3V0 directory for profile-level operations.
 
     In standard deployments this is the platform-native 3V0 home
@@ -197,11 +197,11 @@ def get_default_ev0_root() -> Path:
 
     Import-safe — no dependencies beyond stdlib.
     """
-    global _default_ev0_root_memo
-    native_home = _get_platform_default_ev0_home()
+    global _default_threev0_root_memo
+    native_home = _get_platform_default_threev0_home()
     env_home = os.environ.get("EV0_HOME", "")
-    if _default_ev0_root_memo is not None:
-        memo_native, memo_env, memo_result = _default_ev0_root_memo
+    if _default_threev0_root_memo is not None:
+        memo_native, memo_env, memo_result = _default_threev0_root_memo
         if memo_native == str(native_home) and memo_env == env_home:
             return memo_result
 
@@ -223,7 +223,7 @@ def get_default_ev0_root() -> Path:
             else:
                 # Not a profile path — EV0_HOME itself is the root
                 result = env_path
-    _default_ev0_root_memo = (str(native_home), env_home, result)
+    _default_threev0_root_memo = (str(native_home), env_home, result)
     return result
 
 
@@ -238,7 +238,7 @@ def get_optional_skills_dir(default: Path | None = None) -> Path:
         return Path(override)
     if default is not None:
         return default
-    return get_ev0_home() / "optional-skills"
+    return get_threev0_home() / "optional-skills"
 
 
 def get_optional_mcps_dir(default: Path | None = None) -> Path:
@@ -254,7 +254,7 @@ def get_optional_mcps_dir(default: Path | None = None) -> Path:
         return Path(override)
     if default is not None:
         return default
-    return get_ev0_home() / "optional-mcps"
+    return get_threev0_home() / "optional-mcps"
 
 
 def get_bundled_skills_dir(default: Path | None = None) -> Path:
@@ -270,10 +270,10 @@ def get_bundled_skills_dir(default: Path | None = None) -> Path:
         return Path(override)
     if default is not None:
         return default
-    return get_ev0_home() / "skills"
+    return get_threev0_home() / "skills"
 
 
-def get_ev0_dir(
+def get_threev0_dir(
     new_subpath: str,
     old_name: str,
     *,
@@ -304,14 +304,14 @@ def get_ev0_dir(
         Absolute ``Path`` — legacy location if it exists with content,
         otherwise the new location.
     """
-    home = home or get_ev0_home()
+    home = home or get_threev0_home()
     old_path = home / old_name
     if _legacy_path_has_content(old_path):
         return old_path
     return home / new_subpath
 
 
-def iter_ev0_node_dirs(home: Path | None = None) -> list[Path]:
+def iter_threev0_node_dirs(home: Path | None = None) -> list[Path]:
     """Return 3V0-managed Node.js directories in preferred lookup order.
 
     Windows installs from ``scripts/install.ps1`` unpack portable Node directly
@@ -319,7 +319,7 @@ def iter_ev0_node_dirs(home: Path | None = None) -> list[Path]:
     ``$EV0_HOME/node/bin``. Include both shapes on every platform so mixed
     or migrated installs still work.
     """
-    root = home or get_ev0_home()
+    root = home or get_threev0_home()
     dirs = [root / "node"]
     bin_dir = root / "node" / "bin"
     # NOTE: keep this ordering in sync with ev0ManagedNodePathEntries() in
@@ -382,7 +382,7 @@ def node_tool_runnable(path: str | None) -> bool:
             [path, "--version"],
             capture_output=True,
             timeout=10,
-            env=with_ev0_node_path(),
+            env=with_threev0_node_path(),
             creationflags=windows_hide_flags(),
         )
     except (OSError, subprocess.TimeoutExpired, ValueError):
@@ -390,12 +390,12 @@ def node_tool_runnable(path: str | None) -> bool:
     return result.returncode == 0
 
 
-def ev0_managed_node_tree_present(home: Path | None = None) -> bool:
+def threev0_managed_node_tree_present(home: Path | None = None) -> bool:
     """Return True when any 3V0-managed node/npm/npx shim exists on disk."""
     names = set()
     for command in ("node", "npm", "npx"):
         names.update(_candidate_node_command_names(command))
-    for directory in iter_ev0_node_dirs(home):
+    for directory in iter_threev0_node_dirs(home):
         for name in names:
             candidate = directory / name
             if candidate.is_file() and (
@@ -445,7 +445,7 @@ def managed_node_tree_in_use(home: Path | None = None) -> bool:
     except Exception:
         return False
     dirs: list[str] = []
-    for directory in iter_ev0_node_dirs(home):
+    for directory in iter_threev0_node_dirs(home):
         try:
             dirs.append(str(Path(directory).resolve()))
         except OSError:
@@ -527,7 +527,7 @@ def _heal_managed_node_windows(home: Path | None = None) -> bool | None:
     else:
         return False
 
-    home = home or get_ev0_home()
+    home = home or get_threev0_home()
     target = home / "node"
 
     # Cheap pre-check: skip the download and staging work when the tree is
@@ -664,7 +664,7 @@ def _bootstrap_managed_node_posix() -> bool:
             ],
             env={
                 **os.environ,
-                "EV0_HOME": str(get_ev0_home()),
+                "EV0_HOME": str(get_threev0_home()),
                 # Private provisioning: do not symlink node/npm/npx into
                 # ~/.local/bin — the user has their own toolchain on PATH and
                 # this tree must not shadow it.
@@ -679,7 +679,7 @@ def _bootstrap_managed_node_posix() -> bool:
     return result.returncode == 0
 
 
-def bootstrap_ev0_managed_node() -> str | None:
+def bootstrap_threev0_managed_node() -> str | None:
     """Install a 3V0-managed Node tree and return its npm path.
 
     Used when the only Node/npm on the machine belongs to the user (system,
@@ -692,7 +692,7 @@ def bootstrap_ev0_managed_node() -> str | None:
     No-ops (returning the existing npm) when a healthy managed tree is already
     present.
     """
-    existing = find_ev0_node_executable("npm")
+    existing = find_threev0_node_executable("npm")
     if existing:
         return existing
 
@@ -703,7 +703,7 @@ def bootstrap_ev0_managed_node() -> str | None:
     if not ok:
         return None
 
-    for directory in iter_ev0_node_dirs():
+    for directory in iter_threev0_node_dirs():
         for name in _candidate_node_command_names("npm"):
             candidate = directory / name
             if candidate.is_file() and (
@@ -715,7 +715,7 @@ def bootstrap_ev0_managed_node() -> str | None:
     return None
 
 
-def heal_ev0_managed_node() -> bool:
+def heal_threev0_managed_node() -> bool:
     """Redownload 3V0-managed Node when the tree exists but is broken.
 
     Runs at most once per process. POSIX installs shell out to
@@ -728,7 +728,7 @@ def heal_ev0_managed_node() -> bool:
     global _managed_node_heal_attempted
     if _managed_node_heal_attempted:
         return False
-    if not ev0_managed_node_tree_present():
+    if not threev0_managed_node_tree_present():
         return False
 
     if sys.platform == "win32":
@@ -754,7 +754,7 @@ def heal_ev0_managed_node() -> bool:
                 "-c",
                 f'source "{_NODE_BOOTSTRAP_SCRIPT}" && heal_managed_node',
             ],
-            env={**os.environ, "EV0_HOME": str(get_ev0_home())},
+            env={**os.environ, "EV0_HOME": str(get_threev0_home())},
             capture_output=True,
             timeout=300,
             check=False,
@@ -776,7 +776,7 @@ def _managed_node_tree_outdated(home: Path | None = None) -> bool:
     """
     import subprocess
 
-    for directory in iter_ev0_node_dirs(home):
+    for directory in iter_threev0_node_dirs(home):
         for name in _candidate_node_command_names("node"):
             candidate = directory / name
             if not candidate.is_file() or (
@@ -799,7 +799,7 @@ def _managed_node_tree_outdated(home: Path | None = None) -> bool:
     return False
 
 
-def find_ev0_node_executable(command: str) -> str | None:
+def find_threev0_node_executable(command: str) -> str | None:
     """Return a 3V0-managed Node/npm executable path, healing broken trees.
 
     Outdated trees (node major below ``_EV0_NODE_TARGET_MAJOR``) heal the
@@ -812,7 +812,7 @@ def find_ev0_node_executable(command: str) -> str | None:
 
     def _first_runnable() -> tuple[str | None, bool]:
         broken = False
-        for directory in iter_ev0_node_dirs():
+        for directory in iter_threev0_node_dirs():
             for name in names:
                 candidate = directory / name
                 if candidate.is_file() and (
@@ -828,7 +828,7 @@ def find_ev0_node_executable(command: str) -> str | None:
     needs_heal = broken_present or (
         resolved is not None and _managed_node_tree_outdated()
     )
-    if needs_heal and heal_ev0_managed_node():
+    if needs_heal and heal_threev0_managed_node():
         healed, _ = _first_runnable()
         if healed:
             return healed
@@ -871,20 +871,20 @@ def find_node_executable(command: str) -> str | None:
     tree exists but cannot be healed, returns ``None`` instead of falling back
     to system npm on PATH.
     """
-    managed = find_ev0_node_executable(command)
+    managed = find_threev0_node_executable(command)
     if managed:
         return managed
-    if ev0_managed_node_tree_present():
+    if threev0_managed_node_tree_present():
         return None
     return find_node_executable_on_path(command)
 
 
-def with_ev0_node_path(env: dict[str, str] | None = None) -> dict[str, str]:
+def with_threev0_node_path(env: dict[str, str] | None = None) -> dict[str, str]:
     """Return *env* with 3V0-managed Node directories prepended to PATH."""
     merged = dict(os.environ if env is None else env)
     existing = merged.get("PATH", "")
     parts = [p for p in existing.split(os.pathsep) if p]
-    managed = [str(path) for path in iter_ev0_node_dirs() if path.is_dir()]
+    managed = [str(path) for path in iter_threev0_node_dirs() if path.is_dir()]
     for entry in reversed(managed):
         if entry not in parts:
             parts.insert(0, entry)
@@ -932,7 +932,7 @@ def agent_browser_runnable(path: str | None) -> bool:
             [path, "--version"],
             capture_output=True,
             timeout=10,
-            env=with_ev0_node_path(),
+            env=with_threev0_node_path(),
             creationflags=windows_hide_flags(),
         )
     except (OSError, subprocess.TimeoutExpired, ValueError):
@@ -989,7 +989,7 @@ def _legacy_path_has_content(path: Path) -> bool:
     return True
 
 
-def display_ev0_home() -> str:
+def display_threev0_home() -> str:
     """Return a user-friendly display string for the current EV0_HOME.
 
     Uses ``~/`` shorthand for readability::
@@ -1002,7 +1002,7 @@ def display_ev0_home() -> str:
     ``~/.3V0``.  For code that needs a real ``Path``, use
     :func:`get_ev0_home` instead.
     """
-    home = get_ev0_home()
+    home = get_threev0_home()
     try:
         return "~/" + str(home.relative_to(Path.home()))
     except ValueError:
@@ -1042,10 +1042,10 @@ def _norm_home_path(path: str | None) -> str:
 
 def _profile_home_path(env: dict[str, str] | None = None) -> str | None:
     """Return ``{EV0_HOME}/home`` when the profile-home directory exists."""
-    ev0_home = get_ev0_home_override() or (env or {}).get("EV0_HOME") or os.getenv("EV0_HOME")
-    if not ev0_home:
+    threev0_home = get_threev0_home_override() or (env or {}).get("EV0_HOME") or os.getenv("EV0_HOME")
+    if not threev0_home:
         return None
-    profile_home = os.path.join(ev0_home, "home")
+    profile_home = os.path.join(threev0_home, "home")
     if os.path.isdir(profile_home):
         return profile_home
     return None
@@ -1509,18 +1509,18 @@ def get_config_path() -> Path:
     Replaces the ``get_ev0_home() / "config.yaml"`` pattern repeated
     in 7+ files (skill_utils.py, threev0_logging.py, threev0_time.py, etc.).
     """
-    return get_ev0_home() / "config.yaml"
+    return get_threev0_home() / "config.yaml"
 
 
 def get_skills_dir() -> Path:
     """Return the path to the skills directory under EV0_HOME."""
-    return get_ev0_home() / "skills"
+    return get_threev0_home() / "skills"
 
 
 
 def get_env_path() -> Path:
     """Return the path to the ``.env`` file under EV0_HOME."""
-    return get_ev0_home() / ".env"
+    return get_threev0_home() / ".env"
 
 
 # ─── Network Preferences ─────────────────────────────────────────────────────
@@ -1548,7 +1548,7 @@ def apply_ipv4_preference(force: bool = False) -> None:
     import socket
 
     # Guard against double-patching
-    if getattr(socket.getaddrinfo, "_ev0_ipv4_patched", False):
+    if getattr(socket.getaddrinfo, "_threev0_ipv4_patched", False):
         return
 
     _original_getaddrinfo = socket.getaddrinfo
@@ -1564,7 +1564,7 @@ def apply_ipv4_preference(force: bool = False) -> None:
                 return _original_getaddrinfo(host, port, family, type, proto, flags)
         return _original_getaddrinfo(host, port, family, type, proto, flags)
 
-    _ipv4_getaddrinfo._ev0_ipv4_patched = True  # type: ignore[attr-defined]
+    _ipv4_getaddrinfo._threev0_ipv4_patched = True  # type: ignore[attr-defined]
     socket.getaddrinfo = _ipv4_getaddrinfo  # type: ignore[assignment]
 
 

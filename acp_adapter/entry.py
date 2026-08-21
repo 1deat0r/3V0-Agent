@@ -35,7 +35,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from threev0_constants import get_ev0_home
+from threev0_constants import get_threev0_home
 
 
 # Methods clients send as periodic liveness probes. They are not part of the
@@ -103,16 +103,16 @@ def _setup_logging() -> None:
 
 def _load_env() -> None:
     """Load .env from EV0_HOME (default ``~/.3V0``)."""
-    from threev0_cli.env_loader import load_ev0_dotenv
+    from threev0_cli.env_loader import load_threev0_dotenv
 
-    ev0_home = get_ev0_home()
-    loaded = load_ev0_dotenv(ev0_home=ev0_home)
+    threev0_home = get_threev0_home()
+    loaded = load_threev0_dotenv(threev0_home=threev0_home)
     if loaded:
         for env_file in loaded:
             logging.getLogger(__name__).info("Loaded env from %s", env_file)
     else:
         logging.getLogger(__name__).info(
-            "No .env found at %s, using system env", ev0_home / ".env"
+            "No .env found at %s, using system env", threev0_home / ".env"
         )
 
 
@@ -150,9 +150,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def _print_version() -> None:
-    from threev0_cli import __version__ as ev0_version
+    from threev0_cli import __version__ as threev0_version
 
-    print(ev0_version)
+    print(threev0_version)
 
 
 def _run_check() -> None:
@@ -163,12 +163,12 @@ def _run_check() -> None:
 
 
 def _run_setup() -> None:
-    from threev0_cli.main import main as ev0_main
+    from threev0_cli.main import main as threev0_main
 
     old_argv = sys.argv[:]
     try:
         sys.argv = [old_argv[0] if old_argv else "3v0", "model"]
-        ev0_main()
+        threev0_main()
     finally:
         sys.argv = old_argv
 

@@ -149,18 +149,18 @@ def has_live_connection(path: Path | str) -> bool:
 class _TrackingMixin:
     """Untrack-on-close behaviour, mixable into any Connection subclass."""
 
-    _ev0_tracked_path: str | None = None
+    _threev0_tracked_path: str | None = None
 
     def close(self) -> None:  # type: ignore[misc]
         with _live_lock:
-            path = getattr(self, "_ev0_tracked_path", None)
+            path = getattr(self, "_threev0_tracked_path", None)
             # Close first; untrack only once the descriptor is actually gone.
             # Untracking before a failing close (e.g. cross-thread
             # ProgrammingError) leaves the FD open while the byte-probe
             # guard thinks nothing is live — see #75629.
             super().close()  # type: ignore[misc]
             if path is not None:
-                self._ev0_tracked_path = None
+                self._threev0_tracked_path = None
                 untrack_connection(path)
 
 
@@ -260,7 +260,7 @@ def connect_tracked(
                 # releases the registry entry, rather than handing back a
                 # connection whose database has silently lost probe safety.
                 conn = _retrofit_tracking(conn, resolved)
-            conn._ev0_tracked_path = resolved
+            conn._threev0_tracked_path = resolved
             _live_connections[resolved] = _live_connections.get(resolved, 0) + 1
             return conn
         except Exception:

@@ -41,7 +41,7 @@ def make_args(path, **overrides):
 
 
 @pytest.fixture
-def ev0_home(tmp_path, monkeypatch):
+def threev0_home(tmp_path, monkeypatch):
     monkeypatch.setenv("EV0_HOME", str(tmp_path / ".3v0-home"))
     monkeypatch.delenv("EV0_SESSION_ID", raising=False)
     return tmp_path
@@ -55,9 +55,9 @@ def _workspace(tmp_path, *, scripts=None, manifest_recipe=None):
         json.dumps({"scripts": scripts} if scripts else {}), encoding="utf-8"
     )
     if manifest_recipe is not None:
-        ev0_dir = project / ".3V0"
-        ev0_dir.mkdir()
-        (ev0_dir / "environment.json").write_text(
+        threev0_dir = project / ".3V0"
+        threev0_dir.mkdir()
+        (threev0_dir / "environment.json").write_text(
             json.dumps({"version": 1, "recipe": manifest_recipe}), encoding="utf-8"
         )
     return project
@@ -68,8 +68,8 @@ def _workspace(tmp_path, *, scripts=None, manifest_recipe=None):
 # ---------------------------------------------------------------------------
 
 
-def test_record_verify_run_marks_workspace_passed(ev0_home):
-    project = _workspace(ev0_home)
+def test_record_verify_run_marks_workspace_passed(threev0_home):
+    project = _workspace(threev0_home)
     event = record_verify_run(root=project, session_id="s1", ok=True, output="all green")
     assert event is not None
     assert event["status"] == "passed"
@@ -79,15 +79,15 @@ def test_record_verify_run_marks_workspace_passed(ev0_home):
     assert status["evidence"]["canonical_command"] == "3v0 verify"
 
 
-def test_record_verify_run_records_failure(ev0_home):
-    project = _workspace(ev0_home)
+def test_record_verify_run_records_failure(threev0_home):
+    project = _workspace(threev0_home)
     record_verify_run(root=project, session_id="s1", ok=False, output="boom")
     status = verification_status(session_id="s1", cwd=project)
     assert status["status"] == "failed"
 
 
-def test_cli_passing_run_writes_ledger_evidence(ev0_home, capsys):
-    project = _workspace(ev0_home, manifest_recipe={"name": "Fake", "test": ["echo ok"]})
+def test_cli_passing_run_writes_ledger_evidence(threev0_home, capsys):
+    project = _workspace(threev0_home, manifest_recipe={"name": "Fake", "test": ["echo ok"]})
     code = run_verify_command(make_args(project))
     assert code == 0
     assert json.loads(capsys.readouterr().out)["ok"] is True
@@ -96,26 +96,26 @@ def test_cli_passing_run_writes_ledger_evidence(ev0_home, capsys):
     assert status["evidence"]["scope"] == "full"
 
 
-def test_cli_failing_run_writes_failed_evidence(ev0_home, capsys):
-    project = _workspace(ev0_home, manifest_recipe={"name": "Fake", "test": ["false"]})
+def test_cli_failing_run_writes_failed_evidence(threev0_home, capsys):
+    project = _workspace(threev0_home, manifest_recipe={"name": "Fake", "test": ["false"]})
     code = run_verify_command(make_args(project))
     assert code == 1
     status = verification_status(session_id=None, cwd=project)
     assert status["status"] == "failed"
 
 
-def test_cli_partial_run_records_targeted_scope(ev0_home, capsys):
+def test_cli_partial_run_records_targeted_scope(threev0_home, capsys):
     # --skip-start / --phase subsets must never present as full workspace green.
-    project = _workspace(ev0_home, manifest_recipe={"name": "Fake", "test": ["echo ok"]})
+    project = _workspace(threev0_home, manifest_recipe={"name": "Fake", "test": ["echo ok"]})
     code = run_verify_command(make_args(project, skip_start=True))
     assert code == 0
     status = verification_status(session_id=None, cwd=project)
     assert status["evidence"]["scope"] == "targeted"
 
 
-def test_cli_run_uses_ev0_session_id_env(ev0_home, capsys, monkeypatch):
+def test_cli_run_uses_threev0_session_id_env(threev0_home, capsys, monkeypatch):
     monkeypatch.setenv("EV0_SESSION_ID", "sess-42")
-    project = _workspace(ev0_home, manifest_recipe={"name": "Fake", "test": ["echo ok"]})
+    project = _workspace(threev0_home, manifest_recipe={"name": "Fake", "test": ["echo ok"]})
     run_verify_command(make_args(project))
     assert verification_status(session_id="sess-42", cwd=project)["status"] == "passed"
 
@@ -125,8 +125,8 @@ def test_cli_run_uses_ev0_session_id_env(ev0_home, capsys, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_passing_verify_run_satisfies_stop_guard(ev0_home, capsys):
-    project = _workspace(ev0_home, manifest_recipe={"name": "Fake", "test": ["echo ok"]})
+def test_passing_verify_run_satisfies_stop_guard(threev0_home, capsys):
+    project = _workspace(threev0_home, manifest_recipe={"name": "Fake", "test": ["echo ok"]})
     changed = str(project / "src" / "app.ts")
     mark_workspace_edited(session_id="default", cwd=project, paths=[changed])
     assert build_verify_on_stop_nudge(session_id="default", changed_paths=[changed]) is not None
@@ -141,8 +141,8 @@ def test_passing_verify_run_satisfies_stop_guard(ev0_home, capsys):
 # ---------------------------------------------------------------------------
 
 
-def test_nudge_mentions_ev0_verify_when_recipe_has_start(ev0_home):
-    project = _workspace(ev0_home, scripts={"test": "vitest", "dev": "vite"})
+def test_nudge_mentions_threev0_verify_when_recipe_has_start(threev0_home):
+    project = _workspace(threev0_home, scripts={"test": "vitest", "dev": "vite"})
     changed = str(project / "src" / "app.ts")
     mark_workspace_edited(session_id="s1", cwd=project, paths=[changed])
     nudge = build_verify_on_stop_nudge(session_id="s1", changed_paths=[changed])
@@ -152,10 +152,10 @@ def test_nudge_mentions_ev0_verify_when_recipe_has_start(ev0_home):
     assert "npm run test" in nudge
 
 
-def test_nudge_mentions_ev0_verify_when_manifest_exists(ev0_home):
+def test_nudge_mentions_threev0_verify_when_manifest_exists(threev0_home):
     # No start script, but a saved .3V0/environment.json qualifies.
     project = _workspace(
-        ev0_home,
+        threev0_home,
         scripts={"test": "vitest"},
         manifest_recipe={"name": "Fake", "test": ["echo ok"]},
     )
@@ -166,9 +166,9 @@ def test_nudge_mentions_ev0_verify_when_manifest_exists(ev0_home):
     assert "3v0 verify --json" in nudge
 
 
-def test_nudge_keeps_plain_wording_without_recipe_start(ev0_home):
+def test_nudge_keeps_plain_wording_without_recipe_start(threev0_home):
     # Verify commands but no start script and no manifest: today's wording.
-    project = _workspace(ev0_home, scripts={"test": "vitest"})
+    project = _workspace(threev0_home, scripts={"test": "vitest"})
     changed = str(project / "src" / "app.ts")
     mark_workspace_edited(session_id="s1", cwd=project, paths=[changed])
     nudge = build_verify_on_stop_nudge(session_id="s1", changed_paths=[changed])
@@ -176,7 +176,7 @@ def test_nudge_keeps_plain_wording_without_recipe_start(ev0_home):
     assert "3v0 verify" not in nudge
 
 
-def test_nudge_recipe_detection_failure_is_silent(ev0_home, monkeypatch):
+def test_nudge_recipe_detection_failure_is_silent(threev0_home, monkeypatch):
     # A broken recipe detector must never break the nudge path.
     import agent.verify.recipes as recipes
 
@@ -184,7 +184,7 @@ def test_nudge_recipe_detection_failure_is_silent(ev0_home, monkeypatch):
         raise RuntimeError("detector exploded")
 
     monkeypatch.setattr(recipes, "detect_recipe", boom)
-    project = _workspace(ev0_home, scripts={"test": "vitest", "dev": "vite"})
+    project = _workspace(threev0_home, scripts={"test": "vitest", "dev": "vite"})
     changed = str(project / "src" / "app.ts")
     mark_workspace_edited(session_id="s1", cwd=project, paths=[changed])
     nudge = build_verify_on_stop_nudge(session_id="s1", changed_paths=[changed])
@@ -197,8 +197,8 @@ def test_nudge_recipe_detection_failure_is_silent(ev0_home, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_detect_path_merges_project_facts_commands(ev0_home, capsys):
-    project = _workspace(ev0_home)  # package.json with no scripts
+def test_detect_path_merges_project_facts_commands(threev0_home, capsys):
+    project = _workspace(threev0_home)  # package.json with no scripts
     scripts_dir = project / "scripts"
     scripts_dir.mkdir()
     (scripts_dir / "run_tests.sh").write_text("#!/bin/sh\n", encoding="utf-8")
@@ -213,9 +213,9 @@ def test_detect_path_merges_project_facts_commands(ev0_home, capsys):
     assert "pytest" in tests
 
 
-def test_manifest_recipe_is_not_merged(ev0_home, capsys):
+def test_manifest_recipe_is_not_merged(threev0_home, capsys):
     # A saved manifest is the user-edited source of truth; leave it alone.
-    project = _workspace(ev0_home, manifest_recipe={"name": "Fake", "test": ["echo ok"]})
+    project = _workspace(threev0_home, manifest_recipe={"name": "Fake", "test": ["echo ok"]})
     (project / "pytest.ini").write_text("[pytest]\n", encoding="utf-8")
     code = run_verify_command(make_args(project, detect_only=True))
     assert code == 0
@@ -224,8 +224,8 @@ def test_manifest_recipe_is_not_merged(ev0_home, capsys):
     assert payload["recipe"]["test"] == ["echo ok"]
 
 
-def test_merge_skips_commands_recipe_already_has(ev0_home, capsys):
-    project = _workspace(ev0_home, scripts={"test": "vitest"})
+def test_merge_skips_commands_recipe_already_has(threev0_home, capsys):
+    project = _workspace(threev0_home, scripts={"test": "vitest"})
     code = run_verify_command(make_args(project, detect_only=True))
     assert code == 0
     payload = json.loads(capsys.readouterr().out)

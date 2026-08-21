@@ -35,7 +35,7 @@ def _resolve_runtime_client(provider="fireworks"):
     return client, model
 
 
-def test_ev0_wires_fireworks_client():
+def test_threev0_wires_fireworks_client():
     """The runtime resolves a Fireworks client pointed at the right endpoint
     with the partner-attribution headers applied — no network required."""
     client, model = _resolve_runtime_client()
