@@ -118,7 +118,10 @@ conservative at the waist.
   concrete consumer. Adding a hook is easy; removing one after plugins depend
   on it is hard. A hook is NOT speculative if a contributor has a real, stated
   use case — even if the consumer ships separately.
-- **New `EV0_*` env vars for non-secret config.** `.env` is for secrets
+- **New env vars follow the brand namespace (`3V0_*`, via the
+  `3v0/core/env_compat.py` resolver).** Do not add new `EV0_*` vars — that
+  family is a legacy read-compat contract (see
+  `3v0/docs/adr/0006-env-compat-brand-namespace.md`). `.env` is for secrets
   only (API keys, tokens, passwords). All behavioral settings — timeouts,
   thresholds, feature flags, display prefs — go in `config.yaml`. Bridge to an
   internal env var if the mechanism needs one, but user-facing docs point to

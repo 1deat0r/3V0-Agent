@@ -19,25 +19,28 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-# Fallback when neither THREEV0_SKILLS_DIR nor EV0_HOME resolves (the 3v0
-# profile's skills dir). The runtime subprocess inherits EV0_HOME, so this is
-# only a last resort for direct CLI use outside a profile.
+from core.env_compat import branded_env
+
+# Fallback when neither THREEV0_SKILLS_DIR nor the brand-resolved home
+# resolves (the 3v0 profile's skills dir). The runtime subprocess inherits the
+# legacy home var, so this is only a last resort for direct CLI use outside a
+# profile.
 DEFAULT_PROFILE = Path.home() / ".3V0" / "profiles" / "3v0" / "skills"
 
 
 def profile_skills_dir() -> Path:
     """The active profile's skills directory.
 
-    Honors ``THREEV0_SKILLS_DIR`` (tests / explicit override) first, then
-    ``EV0_HOME/skills`` (the runtime's profile), then the 3v0 profile
-    default.
+    Honors ``THREEV0_SKILLS_DIR`` (tests / explicit override) first, then the
+    brand-resolved home (``3V0_HOME`` → ``THREEV0_HOME`` → ``EV0_HOME``)
+    ``/skills`` (the runtime's profile), then the 3v0 profile default.
     """
     env = os.environ.get("THREEV0_SKILLS_DIR")
     if env:
         return Path(env).expanduser()
-    ev0_home = os.environ.get("EV0_HOME")
-    if ev0_home:
-        return Path(ev0_home).expanduser() / "skills"
+    home = branded_env("HOME")
+    if home:
+        return Path(home).expanduser() / "skills"
     return DEFAULT_PROFILE
 
 

@@ -95,6 +95,9 @@ code.
 - `core/skill_io.py` — single owner of skill-name → SKILL.md path/content
   mapping (locate/write/remove, `.archive/` excluded), shared by
   seed/ingest/sync_skills.
+- `core/env_compat.py` — brand-compatible env resolver (`3V0_*` →
+  `THREEV0_*` → `EV0_*` fallback); the declared-exception bridge between the
+  canonical brand namespace and the legacy runtime env contract (ADR-0006).
 - `core/sync_skills.py` — reconcile the skill store with the profile's SKILL.md
   files and fold the curator's operational state (active/stale/archived) into
   the store. The pure `diff_skills` classifier is the decision layer; the
