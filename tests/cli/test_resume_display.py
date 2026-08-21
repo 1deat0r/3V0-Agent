@@ -270,7 +270,7 @@ class TestPreloadResumedSession:
         mock_db.reopen_session.assert_called_once_with("reopen_session")
 
     def test_rejects_runaway_transcript_before_history_load(self):
-        from ev0_state import SessionResumeTooLargeError
+        from threev0_state import SessionResumeTooLargeError
 
         cli = _make_cli(resume="runaway-session")
         mock_db = MagicMock()
@@ -313,7 +313,7 @@ class TestHandleResumeCommandRecap:
         cli._session_db = mock_db
 
         with (
-            patch("ev0_cli.main._resolve_session_by_name_or_id", return_value="target_session"),
+            patch("threev0_cli.main._resolve_session_by_name_or_id", return_value="target_session"),
             patch.object(cli, "_display_resumed_history") as display_mock,
         ):
             cli._handle_resume_command("/resume test session")
@@ -345,7 +345,7 @@ class TestHandleResumeCommandRecap:
         cli._session_db = mock_db
 
         with (
-            patch("ev0_cli.main._resolve_session_by_name_or_id", return_value="session_b"),
+            patch("threev0_cli.main._resolve_session_by_name_or_id", return_value="session_b"),
             patch.object(cli, "_display_resumed_history") as display_mock,
         ):
             cli._handle_resume_command("/resume session_b")
@@ -391,8 +391,8 @@ class TestResumeDisplayConfig:
     """resume_display config option defaults and behavior."""
 
     def test_default_config_has_resume_display(self):
-        """DEFAULT_CONFIG in ev0_cli/config.py includes resume_display."""
-        from ev0_cli.config import DEFAULT_CONFIG
+        """DEFAULT_CONFIG in threev0_cli/config.py includes resume_display."""
+        from threev0_cli.config import DEFAULT_CONFIG
         display = DEFAULT_CONFIG.get("display", {})
         assert "resume_display" in display
         assert display["resume_display"] == "full"

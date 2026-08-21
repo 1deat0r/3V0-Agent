@@ -33,7 +33,7 @@ change, under Expert TDD / Code Review / Eval gates.
   python-multipart all imported. **True candidate: `tenacity`** (no import
   anywhere; verify dynamic/plugin use before removal).
 - Commented-out lookalikes: 804 lines; heaviest: gateway/run.py (45),
-  agent/conversation_loop.py (24), ev0_cli/config_defaults.py (21),
+  agent/conversation_loop.py (24), threev0_cli/config_defaults.py (21),
   tui_gateway/server.py (16), agent/auxiliary_client.py (16), cli.py (15).
 - Artifacts: 3; Empty .py: 31 (all package `__init__` markers — benign, keep).
 - Duplicate files: 2 groups, both empty-`__init__` clusters — benign.

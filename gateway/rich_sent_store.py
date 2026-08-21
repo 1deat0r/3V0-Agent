@@ -26,7 +26,7 @@ _MAX_TEXT_CHARS = 2000
 
 def _store_path() -> str:
     # Resolve via get_ev0_home() so the active profile override is honored.
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     home = get_ev0_home()
     return os.path.join(str(home), "state", "rich_sent_index.json")

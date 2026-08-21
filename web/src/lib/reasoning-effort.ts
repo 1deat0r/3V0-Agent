@@ -4,7 +4,7 @@
  * Kept DOM-free so the node-environment vitest harness can cover the
  * resolution logic without loading React or the UI kit.
  *
- * Values mirror ev0_constants.VALID_REASONING_EFFORTS plus `none`
+ * Values mirror threev0_constants.VALID_REASONING_EFFORTS plus `none`
  * (thinking-off). An empty/unset config value means the 3V0 default,
  * which is `medium`.
  */

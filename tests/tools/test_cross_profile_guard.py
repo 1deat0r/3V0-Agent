@@ -37,8 +37,8 @@ def fake_ev0(tmp_path, monkeypatch):
 
     monkeypatch.setenv("EV0_HOME", str(sec_home))
 
-    import ev0_constants
-    monkeypatch.setattr(ev0_constants, "get_default_ev0_root", lambda: root)
+    import threev0_constants
+    monkeypatch.setattr(threev0_constants, "get_default_ev0_root", lambda: root)
 
     import agent.file_safety as fs
     monkeypatch.setattr(fs, "_ev0_home_path", lambda: sec_home)

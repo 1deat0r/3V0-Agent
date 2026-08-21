@@ -96,7 +96,7 @@ class TestRegistration:
         assert reg.register_source(object()) is False
 
     def test_same_name_is_isolated_by_profile(self, tmp_path):
-        from ev0_constants import (
+        from threev0_constants import (
             reset_ev0_home_override,
             set_ev0_home_override,
         )

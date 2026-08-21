@@ -561,7 +561,7 @@ install_uv() {
 
     # 3V0 owns its own uv at $EV0_HOME/bin/uv.  Always install there —
     # no PATH probing, no conda guards, no multi-location resolution chains.
-    # The runtime update path (ev0_cli/managed_uv.py) looks in the same
+    # The runtime update path (threev0_cli/managed_uv.py) looks in the same
     # place, so install.sh and `3v0 update` stay in sync.
     local _managed_uv="$EV0_HOME/bin/uv"
 
@@ -1987,7 +1987,7 @@ copy_config_templates() {
     fi
 
     # Create SOUL.md if it doesn't exist (global persona file).
-    # This MUST match DEFAULT_SOUL_MD in ev0_cli/default_soul.py — the
+    # This MUST match DEFAULT_SOUL_MD in threev0_cli/default_soul.py — the
     # runtime (_ensure_default_soul_md) treats the old comment-only scaffold as
     # "never customized" and upgrades it to this text on next run, so any drift
     # here is self-healing, but keep them in sync to avoid a churn on first run.
@@ -2611,9 +2611,9 @@ run_setup_wizard() {
     # Run 3v0 setup using the venv Python directly (no activation needed).
     # Redirect stdin from /dev/tty so interactive prompts work when piped from curl.
     if [ "$USE_VENV" = true ]; then
-        "$INSTALL_DIR/venv/bin/python" -m ev0_cli.main setup < /dev/tty
+        "$INSTALL_DIR/venv/bin/python" -m threev0_cli.main setup < /dev/tty
     else
-        python -m ev0_cli.main setup < /dev/tty
+        python -m threev0_cli.main setup < /dev/tty
     fi
 }
 
@@ -3307,7 +3307,7 @@ install_desktop() {
             if EV0_HOME="$EV0_HOME" "$config_python" - "$desktop_dir" <<'PYEOF'
 import sys
 from pathlib import Path
-from ev0_cli.main import _desktop_macos_relaunchable_fixup
+from threev0_cli.main import _desktop_macos_relaunchable_fixup
 ok = _desktop_macos_relaunchable_fixup(
     Path(sys.argv[1]), publisher_signing_configured=False
 )

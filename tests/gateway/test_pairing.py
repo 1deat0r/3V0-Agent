@@ -563,8 +563,8 @@ class TestProfileScopedStorage:
     def test_default_store_uses_global_dir(self, tmp_path, monkeypatch):
         """PairingStore() (no profile) keeps the legacy global path so the
         ``3v0 pairing`` CLI continues to work without a profile context."""
-        from ev0_constants import get_ev0_home
-        monkeypatch.setattr("ev0_constants.get_ev0_home", lambda: tmp_path)
+        from threev0_constants import get_ev0_home
+        monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: tmp_path)
         # Re-import PAIRING_DIR (it's a module-level constant resolved at
         # import time) so the test exercises the right path. We patch it
         # rather than re-importing so the assertion is unambiguous.
@@ -587,7 +587,7 @@ class TestProfileScopedStorage:
 
     def test_profile_store_matches_profile_cli_home(self, tmp_path, monkeypatch):
         """Gateway and ``3v0 -p`` must resolve the same pairing store."""
-        from ev0_constants import get_ev0_dir
+        from threev0_constants import get_ev0_dir
 
         monkeypatch.setenv("EV0_HOME", str(tmp_path))
         profile_home = tmp_path / "profiles" / "coder"
@@ -604,7 +604,7 @@ class TestProfileScopedStorage:
 
     def test_default_profile_store_is_global_store(self, tmp_path, monkeypatch):
         """Multiplexing must not invent a ``profiles/default`` store."""
-        from ev0_constants import get_ev0_dir
+        from threev0_constants import get_ev0_dir
 
         monkeypatch.setenv("EV0_HOME", str(tmp_path))
         expected = get_ev0_dir(

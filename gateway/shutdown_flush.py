@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 def _get_flush_dir():
     """Return the pending-messages flush directory under the active EV0_HOME."""
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     flush_dir = get_ev0_home() / "pending_messages"
     flush_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -312,7 +312,7 @@ def recover_pending_to_db(
     # Use the provided SessionDB or open one on the default path.
     own_db = False
     if session_db is None:
-        from ev0_state import SessionDB
+        from threev0_state import SessionDB
         session_db = SessionDB()
         own_db = True
 

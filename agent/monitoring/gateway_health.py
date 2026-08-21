@@ -293,7 +293,7 @@ def build_gateway_health_snapshot(
 
 def _safe_profile() -> str:
     try:
-        from ev0_cli.profiles import get_active_profile_name
+        from threev0_cli.profiles import get_active_profile_name
         return str(get_active_profile_name() or "default")
     except Exception:
         return "default"
@@ -301,7 +301,7 @@ def _safe_profile() -> str:
 
 def _safe_version() -> str:
     try:
-        from ev0_cli import __version__
+        from threev0_cli import __version__
         return str(__version__)
     except Exception:
         return "unknown"

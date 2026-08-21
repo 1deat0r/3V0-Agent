@@ -42,7 +42,7 @@ files bucket together under their directory.
 - `wiki/manifest.tsv`: 9,722 rows = 100.0% coverage of tracked paths
   (auto entries from module docstrings + path rules).
 - `wiki/curated.tsv`: 414 hand-curated rows covering the load-bearing spine —
-  repo root, 3v0/ core, agent/, tools/, gateway/, ev0_cli/, cron/, plugins/,
+  repo root, 3v0/ core, agent/, tools/, gateway/, threev0_cli/, cron/, plugins/,
   skills categories, providers, apps/, ui-tui/, web/, website/, docs/,
   scripts/, tests/, infra, misc.
 - 20 area pages + 20 hand-written area intros (`wiki/areas/`).

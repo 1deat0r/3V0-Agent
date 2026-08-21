@@ -25,7 +25,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from agent.context_compressor import ContextCompressor
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 def _build_agent_with_db(db: SessionDB, session_id: str, platform: str = "telegram"):
@@ -103,7 +103,7 @@ class TestGoalMigratesOnRotation:
         # Set a persistent goal on the parent via the real persistence path.
         with patch.dict(os.environ, {"EV0_HOME": str(tmp_path / ".3V0")}):
             (tmp_path / ".3V0").mkdir(exist_ok=True)
-            import ev0_cli.goals as goals
+            import threev0_cli.goals as goals
             goals._DB_CACHE.clear()
             # Point the goal DB at the same state.db the agent uses.
             with patch.object(goals, "_get_session_db", return_value=db):

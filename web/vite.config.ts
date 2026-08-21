@@ -7,7 +7,7 @@ const BACKEND = process.env.EV0_DASHBOARD_URL ?? "http://127.0.0.1:9119";
 
 /**
  * In production the Python `3v0 dashboard` server injects a one-shot
- * session token into `index.html` (see `ev0_cli/web_server.py`). The
+ * session token into `index.html` (see `threev0_cli/web_server.py`). The
  * Vite dev server serves its own `index.html`, so unless we forward that
  * token, every protected `/api/*` call 401s.
  *
@@ -84,7 +84,7 @@ export default defineConfig({
     ],
   },
   build: {
-    outDir: "../ev0_cli/web_dist",
+    outDir: "../threev0_cli/web_dist",
     emptyOutDir: true,
     // Shell stays a bit over Vite's 500 kB default after vendor splits;
     // page/xterm chunks load on demand. Keep a modest ceiling so a true

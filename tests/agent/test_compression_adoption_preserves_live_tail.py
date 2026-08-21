@@ -31,7 +31,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 def _build_agent_with_db(db: SessionDB, session_id: str):

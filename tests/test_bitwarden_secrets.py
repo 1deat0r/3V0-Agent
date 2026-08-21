@@ -45,9 +45,9 @@ def ev0_home(tmp_path, monkeypatch):
     home.mkdir()
     monkeypatch.setenv("EV0_HOME", str(home))
     # Some modules cache get_ev0_home; clear if needed.
-    import ev0_constants
-    if hasattr(ev0_constants, "_EV0_HOME_CACHE"):
-        ev0_constants._EV0_HOME_CACHE = None  # type: ignore[attr-defined]
+    import threev0_constants
+    if hasattr(threev0_constants, "_EV0_HOME_CACHE"):
+        threev0_constants._EV0_HOME_CACHE = None  # type: ignore[attr-defined]
     return home
 
 
@@ -278,7 +278,7 @@ def test_env_loader_calls_bsm_when_enabled(tmp_path, monkeypatch):
 
     reg_module._reset_registry_for_tests()
 
-    from ev0_cli.env_loader import _apply_external_secret_sources
+    from threev0_cli.env_loader import _apply_external_secret_sources
     _apply_external_secret_sources(home)
 
     assert called["n"] == 1

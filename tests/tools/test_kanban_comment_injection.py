@@ -20,7 +20,7 @@ _WORKTREE = Path(__file__).resolve().parents[2]
 if str(_WORKTREE) not in sys.path:
     sys.path.insert(0, str(_WORKTREE))
 
-from ev0_cli import kanban_db as kb
+from threev0_cli import kanban_db as kb
 import tools.kanban_tools as kt
 
 
@@ -42,8 +42,8 @@ def worker_home(tmp_path, monkeypatch):
     for var in ("EV0_KANBAN_DB", "EV0_KANBAN_WORKSPACES_ROOT", "EV0_KANBAN_HOME", "EV0_KANBAN_BOARD"):
         monkeypatch.delenv(var, raising=False)
     try:
-        import ev0_constants
-        ev0_constants._cached_default_ev0_root = None  # type: ignore[attr-defined]
+        import threev0_constants
+        threev0_constants._cached_default_ev0_root = None  # type: ignore[attr-defined]
     except Exception:
         pass
     kb._INITIALIZED_PATHS.clear()

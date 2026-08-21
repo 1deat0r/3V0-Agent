@@ -175,7 +175,7 @@ class ScratchDashboard:
         env["PYTHONPATH"] = str(REPO_ROOT) + os.pathsep + env.get("PYTHONPATH", "")
         env["EV0_ISO_CERTIFY_SYNTH_TURN"] = "1"
         cmd = [
-            python, "-m", "ev0_cli.main", "dashboard",
+            python, "-m", "threev0_cli.main", "dashboard",
             "--no-open", "--host", "127.0.0.1", "--port", str(self.port),
         ]
         self.proc = subprocess.Popen(

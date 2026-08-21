@@ -57,8 +57,8 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
-from ev0_constants import get_ev0_home
-from ev0_cli._subprocess_compat import windows_hide_flags
+from threev0_constants import get_ev0_home
+from threev0_cli._subprocess_compat import windows_hide_flags
 from typing import Dict, List, Optional, Set, Tuple
 
 from utils import env_int

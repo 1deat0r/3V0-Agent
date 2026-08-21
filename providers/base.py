@@ -29,7 +29,7 @@ def _profile_user_agent() -> str:
     (OpenCode Zen, etc.) sit behind a WAF that returns 403 for that.
     """
     try:
-        from ev0_cli import __version__ as _ver  # lazy: avoid layer cycle at import time
+        from threev0_cli import __version__ as _ver  # lazy: avoid layer cycle at import time
         return f"3v0-cli/{_ver}"
     except Exception:
         return "3v0-cli"
@@ -231,7 +231,7 @@ class ProviderProfile:
         import json
         import urllib.request
 
-        from ev0_cli.urllib_security import open_credentialed_url
+        from threev0_cli.urllib_security import open_credentialed_url
 
         req = urllib.request.Request(url)
         if api_key:

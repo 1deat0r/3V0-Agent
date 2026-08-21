@@ -142,7 +142,7 @@ def get_trusted_peers() -> set[str]:
     if env_peers:
         return {p.strip() for p in env_peers.split(",") if p.strip()}
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
         cfg = load_config() or {}
         peers_list = (cfg.get("a2a") or {}).get("trusted_peers", [])
         if isinstance(peers_list, list):
@@ -347,7 +347,7 @@ def is_safe_callback_url(url: str) -> bool:
 
 def _audit_path() -> Path:
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         base = Path(get_ev0_home())
     except Exception:
         base = Path(os.path.expanduser("~/.3V0"))

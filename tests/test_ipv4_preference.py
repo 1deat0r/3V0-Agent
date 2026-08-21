@@ -6,10 +6,10 @@ import socket
 
 
 def _reload_constants():
-    """Reload ev0_constants to get a fresh apply_ipv4_preference."""
-    import ev0_constants
-    importlib.reload(ev0_constants)
-    return ev0_constants
+    """Reload threev0_constants to get a fresh apply_ipv4_preference."""
+    import threev0_constants
+    importlib.reload(threev0_constants)
+    return threev0_constants
 
 
 class TestApplyIPv4Preference:
@@ -26,7 +26,7 @@ class TestApplyIPv4Preference:
 
     def test_patches_getaddrinfo_when_forced(self):
         """Patches socket.getaddrinfo when force=True."""
-        from ev0_constants import apply_ipv4_preference
+        from threev0_constants import apply_ipv4_preference
         original = socket.getaddrinfo
         apply_ipv4_preference(force=True)
         assert socket.getaddrinfo is not original
@@ -34,7 +34,7 @@ class TestApplyIPv4Preference:
 
     def test_double_patch_is_safe(self):
         """Calling apply twice doesn't double-wrap."""
-        from ev0_constants import apply_ipv4_preference
+        from threev0_constants import apply_ipv4_preference
         apply_ipv4_preference(force=True)
         first_patch = socket.getaddrinfo
         apply_ipv4_preference(force=True)
@@ -42,7 +42,7 @@ class TestApplyIPv4Preference:
 
     def test_af_unspec_becomes_af_inet(self):
         """AF_UNSPEC (default) calls get rewritten to AF_INET."""
-        from ev0_constants import apply_ipv4_preference
+        from threev0_constants import apply_ipv4_preference
 
         calls = []
         original = socket.getaddrinfo
@@ -60,7 +60,7 @@ class TestApplyIPv4Preference:
 
     def test_explicit_family_preserved(self):
         """Explicit AF_INET6 requests are not intercepted."""
-        from ev0_constants import apply_ipv4_preference
+        from threev0_constants import apply_ipv4_preference
 
         calls = []
         original = socket.getaddrinfo

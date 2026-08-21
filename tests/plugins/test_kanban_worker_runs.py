@@ -20,7 +20,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from ev0_cli import kanban_db as kb
+from threev0_cli import kanban_db as kb
 
 
 # ---------------------------------------------------------------------------

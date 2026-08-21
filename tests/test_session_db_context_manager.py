@@ -23,12 +23,12 @@ real connection count and make such assertions flaky.
 
 import pytest
 
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 def _live_count(path) -> int:
     """Live-connection count the tracking registry holds for *path*."""
-    import ev0_cli.sqlite_safe_read as mod
+    import threev0_cli.sqlite_safe_read as mod
 
     with mod._live_lock:
         return mod._live_connections.get(mod._key(path), 0)

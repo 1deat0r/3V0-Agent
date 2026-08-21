@@ -86,9 +86,9 @@ class TestConfigFilePermissions(unittest.TestCase):
 
     def test_save_config_sets_0600(self):
         config_path = Path(self.tmpdir) / "config.yaml"
-        with patch("ev0_cli.config.get_config_path", return_value=config_path), \
-             patch("ev0_cli.config.ensure_ev0_home"):
-            from ev0_cli.config import save_config
+        with patch("threev0_cli.config.get_config_path", return_value=config_path), \
+             patch("threev0_cli.config.ensure_ev0_home"):
+            from threev0_cli.config import save_config
             save_config({"model": "test/model"})
 
             file_mode = stat.S_IMODE(os.stat(config_path).st_mode)
@@ -96,9 +96,9 @@ class TestConfigFilePermissions(unittest.TestCase):
 
     def test_save_env_value_sets_0600(self):
         env_path = Path(self.tmpdir) / ".env"
-        with patch("ev0_cli.config.get_env_path", return_value=env_path), \
-             patch("ev0_cli.config.ensure_ev0_home"):
-            from ev0_cli.config import save_env_value
+        with patch("threev0_cli.config.get_env_path", return_value=env_path), \
+             patch("threev0_cli.config.ensure_ev0_home"):
+            from threev0_cli.config import save_env_value
             save_env_value("TEST_KEY", "test_value")
 
             file_mode = stat.S_IMODE(os.stat(env_path).st_mode)
@@ -106,8 +106,8 @@ class TestConfigFilePermissions(unittest.TestCase):
 
     def test_ensure_ev0_home_sets_0700(self):
         home = Path(self.tmpdir) / ".3V0"
-        with patch("ev0_cli.config.get_ev0_home", return_value=home):
-            from ev0_cli.config import ensure_ev0_home
+        with patch("threev0_cli.config.get_ev0_home", return_value=home):
+            from threev0_cli.config import ensure_ev0_home
             ensure_ev0_home()
 
             home_mode = stat.S_IMODE(os.stat(home).st_mode)

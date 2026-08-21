@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 @pytest.fixture()

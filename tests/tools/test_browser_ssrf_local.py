@@ -306,7 +306,7 @@ class TestAllowPrivateUrlsConfig:
 
     def test_browser_config_string_false_stays_disabled(self, monkeypatch):
         monkeypatch.setattr(
-            "ev0_cli.config.read_raw_config",
+            "threev0_cli.config.read_raw_config",
             lambda: {"browser": {"allow_private_urls": "false"}},
         )
 
@@ -321,7 +321,7 @@ class TestAllowPrivateUrlsConfig:
         self, tmp_path, profile_order
     ):
         """The browser's independent guard must follow the active profile."""
-        from ev0_constants import (
+        from threev0_constants import (
             reset_ev0_home_override,
             set_ev0_home_override,
         )

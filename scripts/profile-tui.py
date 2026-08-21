@@ -9,7 +9,7 @@ Defaults: picks the session with the most messages, holds PageUp for 8s at
 
 The --tui build must exist (run `npm run build` in ui-tui first). This script
 launches `node dist/entry.js` directly with EV0_TUI_RESUME set so it
-bypasses the ev0_cli wrapper — we want repeatable timing, not the CLI's
+bypasses the threev0_cli wrapper — we want repeatable timing, not the CLI's
 session-picker flow.
 
 Environment overrides:
@@ -38,7 +38,7 @@ from typing import Any
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 try:
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 except ImportError:
     def get_ev0_home() -> Path:  # type: ignore[misc]
         val = (os.environ.get("EV0_HOME") or "").strip()
@@ -536,7 +536,7 @@ def loop_mode(args: argparse.Namespace) -> int:
 
     tui_dir = Path(args.tui_dir).resolve()
     src_root = tui_dir / "src"
-    pkg_root = tui_dir / "packages" / "ev0-ink" / "src"
+    pkg_root = tui_dir / "packages" / "3v0-ink" / "src"
 
     def collect_mtimes() -> dict[str, float]:
         mtimes: dict[str, float] = {}

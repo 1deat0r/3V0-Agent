@@ -34,7 +34,7 @@ def worker_loop(worker_id: int, ev0_home: str, result_file: str) -> None:
     os.environ["EV0_HOME"] = ev0_home
     os.environ["HOME"] = ev0_home
     sys.path.insert(0, WT)
-    from ev0_cli import kanban_db as kb
+    from threev0_cli import kanban_db as kb
 
     events = []
     start = time.monotonic()
@@ -146,7 +146,7 @@ def reclaimer_loop(ev0_home: str, result_file: str) -> None:
     os.environ["EV0_HOME"] = ev0_home
     os.environ["HOME"] = ev0_home
     sys.path.insert(0, WT)
-    from ev0_cli import kanban_db as kb
+    from threev0_cli import kanban_db as kb
 
     events = []
     start = time.monotonic()
@@ -176,7 +176,7 @@ def main():
     os.environ["EV0_HOME"] = home
     os.environ["HOME"] = home
     sys.path.insert(0, WT)
-    from ev0_cli import kanban_db as kb
+    from threev0_cli import kanban_db as kb
 
     kb.init_db()
     conn = kb.connect()

@@ -1,4 +1,4 @@
-import { withInkSuspended } from '@ev0/ink'
+import { withInkSuspended } from '@3v0/ink'
 
 import { launchEv0Command } from '../../../lib/externalCli.js'
 import { runExternalSetup } from '../../setupHandoff.js'

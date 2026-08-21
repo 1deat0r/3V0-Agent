@@ -10,7 +10,7 @@ a single tagged catalog at
 ``https://api.deepinfra.com/v1/openai/models?filter=true&sort_by=3v0``
 where each entry's ``metadata.tags`` declares its surface (``image-gen``
 here). ``list_models()`` filters that catalog via
-:func:`ev0_cli.models._fetch_deepinfra_models_by_tag` so newly added
+:func:`threev0_cli.models._fetch_deepinfra_models_by_tag` so newly added
 models show up in ``3v0 tools`` automatically. No model ids are
 hardcoded in this file — if a model is retired upstream, it disappears
 from 3v0 the next time the catalog is fetched, no patch required.
@@ -58,7 +58,7 @@ _SIZES = {
 def _load_deepinfra_image_config() -> Dict[str, Any]:
     """Read ``image_gen.deepinfra`` from config.yaml."""
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
 
         cfg = load_config()
         section = cfg.get("image_gen") if isinstance(cfg, dict) else None
@@ -72,7 +72,7 @@ def _load_deepinfra_image_config() -> Dict[str, Any]:
 def _live_models() -> Optional[List[Dict[str, Any]]]:
     """Fetch ``image-gen``-tagged models from the DeepInfra catalog."""
     try:
-        from ev0_cli.models import _fetch_deepinfra_models_by_tag
+        from threev0_cli.models import _fetch_deepinfra_models_by_tag
     except Exception as exc:
         logger.debug("Cannot import _fetch_deepinfra_models_by_tag: %s", exc)
         return None
@@ -230,7 +230,7 @@ class DeepInfraImageGenProvider(ImageGenProvider):
                 aspect_ratio=aspect,
             )
         size = _SIZES.get(aspect, _SIZES["square"])
-        from ev0_cli.models import deepinfra_base_url
+        from threev0_cli.models import deepinfra_base_url
         base_url = deepinfra_base_url(di_cfg)
 
         # DeepInfra's /images/generations is OpenAI-compatible — use the

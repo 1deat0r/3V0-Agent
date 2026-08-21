@@ -60,7 +60,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from ev0_cli._subprocess_compat import bounded_git_probe
+from threev0_cli._subprocess_compat import bounded_git_probe
 
 logger = logging.getLogger("3v0.coding_context")
 
@@ -337,7 +337,7 @@ def _coding_mode(config: Optional[dict[str, Any]]) -> str:
     """Return the normalized ``agent.coding_context`` mode (auto/focus/on/off)."""
     if config is None:
         try:
-            from ev0_cli.config import load_config_readonly
+            from threev0_cli.config import load_config_readonly
 
             config = load_config_readonly()
         except Exception:
@@ -365,7 +365,7 @@ def _coding_instructions(config: Optional[dict[str, Any]]) -> str:
     """
     if config is None:
         try:
-            from ev0_cli.config import load_config
+            from threev0_cli.config import load_config
 
             config = load_config()
         except Exception:
@@ -699,8 +699,8 @@ def _enabled_mcp_servers(config: Optional[dict[str, Any]]) -> list[str]:
     of the coding workflow, not noise to strip.
     """
     try:
-        from ev0_cli.config import read_raw_config
-        from ev0_cli.tools_config import _parse_enabled_flag
+        from threev0_cli.config import read_raw_config
+        from threev0_cli.tools_config import _parse_enabled_flag
 
         servers = read_raw_config().get("mcp_servers") or {}
         return [

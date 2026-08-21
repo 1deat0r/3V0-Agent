@@ -1,4 +1,4 @@
-import { Box, Text, useStdout } from '@ev0/ink'
+import { Box, Text, useStdout } from '@3v0/ink'
 import { useStore } from '@nanostores/react'
 import { type ReactNode } from 'react'
 

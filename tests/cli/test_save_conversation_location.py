@@ -26,9 +26,9 @@ def ev0_home(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("EV0_HOME", str(home))
     # Clear any cached ev0_home computation
-    import ev0_constants
-    if hasattr(ev0_constants, "_ev0_home_cache"):
-        ev0_constants._ev0_home_cache = None
+    import threev0_constants
+    if hasattr(threev0_constants, "_ev0_home_cache"):
+        threev0_constants._ev0_home_cache = None
     return home
 
 
@@ -50,7 +50,7 @@ def test_save_conversation_writes_under_ev0_home(ev0_home, tmp_path, monkeypatch
     monkeypatch.chdir(work)
 
     # Import fresh to pick up the EV0_HOME fixture
-    for mod in [m for m in sys.modules if m.startswith("cli") or m == "ev0_constants"]:
+    for mod in [m for m in sys.modules if m.startswith("cli") or m == "threev0_constants"]:
         sys.modules.pop(mod, None)
 
     import cli  # noqa: F401  (module under test)
@@ -90,7 +90,7 @@ def test_save_conversation_writes_under_ev0_home(ev0_home, tmp_path, monkeypatch
 
 
 def test_save_conversation_empty_history_does_nothing(ev0_home, capsys):
-    for mod in [m for m in sys.modules if m.startswith("cli") or m == "ev0_constants"]:
+    for mod in [m for m in sys.modules if m.startswith("cli") or m == "threev0_constants"]:
         sys.modules.pop(mod, None)
     import cli
 
@@ -105,7 +105,7 @@ def test_save_conversation_empty_history_does_nothing(ev0_home, capsys):
 
 def test_save_conversation_bare_shows_usage(ev0_home, capsys):
     """Bare /save prints the usage card and writes nothing."""
-    for mod in [m for m in sys.modules if m.startswith("cli") or m == "ev0_constants"]:
+    for mod in [m for m in sys.modules if m.startswith("cli") or m == "threev0_constants"]:
         sys.modules.pop(mod, None)
     import cli
 
@@ -121,7 +121,7 @@ def test_save_conversation_bare_shows_usage(ev0_home, capsys):
 
 
 def test_save_conversation_bad_format_shows_usage(ev0_home, capsys):
-    for mod in [m for m in sys.modules if m.startswith("cli") or m == "ev0_constants"]:
+    for mod in [m for m in sys.modules if m.startswith("cli") or m == "threev0_constants"]:
         sys.modules.pop(mod, None)
     import cli
 

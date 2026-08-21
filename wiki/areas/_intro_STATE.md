@@ -1,1 +1,1 @@
-The session store family. `ev0_state.py` (SessionDB, FTS5) + schema/search/common/portability siblings; `ev0_constants.py` (get_ev0_home — profile-aware), `ev0_logging.py`, `ev0_time.py`. Hardcoding ~/.3V0 anywhere else is the known-bug class.
+The session store family. `threev0_state.py` (SessionDB, FTS5) + schema/search/common/portability siblings; `threev0_constants.py` (home resolution — profile-aware), `threev0_logging.py`, `threev0_time.py`. Hardcoding ~/.3V0 elsewhere is the known-bug class.

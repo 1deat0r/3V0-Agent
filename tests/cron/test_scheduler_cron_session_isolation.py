@@ -92,13 +92,13 @@ def test_run_job_cron_execute_code_deny_does_not_pollute_later_gateway_execute_c
     monkeypatch.setattr(approval_module, "_YOLO_MODE_FROZEN", False)
     monkeypatch.setattr(approval_module, "_get_approval_mode", lambda: "manual")
     monkeypatch.setattr(approval_module, "_get_cron_approval_mode", lambda: "deny")
-    monkeypatch.setattr("ev0_state.SessionDB", _DummySessionDB)
+    monkeypatch.setattr("threev0_state.SessionDB", _DummySessionDB)
     monkeypatch.setattr("run_agent.AIAgent", _FakeCronAgent)
     monkeypatch.setattr(
-        "ev0_constants.resolve_reasoning_config", lambda *_args, **_kwargs: None
+        "threev0_constants.resolve_reasoning_config", lambda *_args, **_kwargs: None
     )
     monkeypatch.setattr(
-        "ev0_cli.runtime_provider.resolve_runtime_provider",
+        "threev0_cli.runtime_provider.resolve_runtime_provider",
         lambda **_kwargs: {
             "api_key": "test-key",
             "base_url": None,

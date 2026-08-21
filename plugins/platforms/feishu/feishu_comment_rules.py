@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -351,7 +351,7 @@ def _main() -> int:
     import sys
 
     try:
-        from ev0_cli.env_loader import load_ev0_dotenv
+        from threev0_cli.env_loader import load_ev0_dotenv
         load_ev0_dotenv()
     except Exception:
         pass

@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Awaitable, Callable
 
 from agent.model_metadata import estimate_tokens_rough
-from ev0_cli._subprocess_compat import IS_WINDOWS, windows_hide_flags
-from ev0_cli.sizefmt import format_bytes
+from threev0_cli._subprocess_compat import IS_WINDOWS, windows_hide_flags
+from threev0_cli.sizefmt import format_bytes
 
 from abc import ABC, abstractmethod
 
@@ -482,7 +482,7 @@ def _resolve_path(cwd: Path, target: str, *, allowed_root: Path | None = None) -
 
 
 def _ensure_reference_path_allowed(path: Path) -> None:
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
     home = Path(os.path.expanduser("~")).resolve()
     ev0_home = get_ev0_home().resolve()
 

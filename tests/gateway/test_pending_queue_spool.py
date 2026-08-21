@@ -43,9 +43,9 @@ class BrokenThenHealedDb:
 def spool_home(tmp_path, monkeypatch):
     """Point the pending spool at an isolated EV0_HOME."""
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
-    import ev0_constants
+    import threev0_constants
     monkeypatch.setattr(
-        ev0_constants, "get_ev0_home", lambda: tmp_path, raising=True
+        threev0_constants, "get_ev0_home", lambda: tmp_path, raising=True
     )
     return tmp_path
 

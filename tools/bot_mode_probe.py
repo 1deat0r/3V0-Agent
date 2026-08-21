@@ -193,8 +193,8 @@ def capability_fingerprint(home: str | os.PathLike | None = None) -> str:
     try:
         # Canonical loader (managed overlay + env expansion + normalization),
         # scoped to the bot's home via the override the loaders already honor.
-        from ev0_cli.config import load_config_readonly
-        from ev0_constants import reset_ev0_home_override, set_ev0_home_override
+        from threev0_cli.config import load_config_readonly
+        from threev0_constants import reset_ev0_home_override, set_ev0_home_override
 
         token = set_ev0_home_override(str(resolved))
         try:

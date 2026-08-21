@@ -10,7 +10,7 @@ Subcommands:
 - ``list`` — print the registry of supported servers.
 
 The handlers are kept here (rather than in
-``ev0_cli/main.py``) so the LSP module ships self-contained.
+``threev0_cli/main.py``) so the LSP module ships self-contained.
 """
 from __future__ import annotations
 

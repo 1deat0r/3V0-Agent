@@ -5,9 +5,9 @@ import pytest
 pytest.importorskip("nemo_relay")
 
 from agent import auxiliary_client, relay_llm, relay_runtime
-from ev0_cli.observability.shared_metrics import SharedMetricsStore
-from ev0_cli.observability.shared_metrics_contract import MODEL_ROUTE_METRIC
-from ev0_cli.observability.shared_metrics_subscriber import SharedMetricsSubscriber
+from threev0_cli.observability.shared_metrics import SharedMetricsStore
+from threev0_cli.observability.shared_metrics_contract import MODEL_ROUTE_METRIC
+from threev0_cli.observability.shared_metrics_subscriber import SharedMetricsSubscriber
 
 
 @pytest.fixture()

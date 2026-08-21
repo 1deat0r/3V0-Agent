@@ -33,7 +33,7 @@ UA = "python-httpx/0.27"  # CF blocks default urllib UA on many providers
 def _ev0_home():
     # Prefer 3V0' own resolver (profile-safe); fall back to env then ~/.3v0.
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         return str(get_ev0_home())
     except Exception:
         return os.environ.get("EV0_HOME") or os.path.expanduser("~/.3V0")

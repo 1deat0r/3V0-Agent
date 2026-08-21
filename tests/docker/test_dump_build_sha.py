@@ -4,7 +4,7 @@ Background: ``.dockerignore`` excludes ``.git``, so ``git rev-parse HEAD``
 fails inside the published image and ``3v0 dump`` used to report
 ``version: ... [(unknown)]``.  The Dockerfile now writes the build-time
 ``$EV0_GIT_SHA`` build-arg to ``/opt/3v0/.ev0_build_sha`` and
-``ev0_cli/build_info.py`` reads it as a fallback.
+``threev0_cli/build_info.py`` reads it as a fallback.
 
 CI (``.github/workflows/docker.yml``) always sets the build-arg
 to ``${{ github.sha }}``.  Local ``docker build`` (the ``built_image``

@@ -12,7 +12,7 @@ from agent.secret_scope import (
     set_multiplex_active,
     set_secret_scope,
 )
-from ev0_constants import reset_ev0_home_override, set_ev0_home_override
+from threev0_constants import reset_ev0_home_override, set_ev0_home_override
 from gateway.config import (
     ChannelOverride,
     GatewayConfig,

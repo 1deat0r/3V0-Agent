@@ -1,4 +1,4 @@
-import { Box } from '@ev0/ink'
+import { Box } from '@3v0/ink'
 import { Fragment, memo, type ReactNode, useMemo } from 'react'
 
 import {

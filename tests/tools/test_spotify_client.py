@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from ev0_cli.auth import AuthError
+from threev0_cli.auth import AuthError
 from plugins.spotify import client as spotify_mod
 from plugins.spotify import tools as spotify_tool
 

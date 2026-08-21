@@ -32,25 +32,25 @@ def _restore_tool_and_agent_modules():
     original_modules = {
         name: module
         for name, module in sys.modules.items()
-        if name in {"tools", "agent", "ev0_cli"}
+        if name in {"tools", "agent", "threev0_cli"}
         or name.startswith("tools.")
         or name.startswith("agent.")
-        or name.startswith("ev0_cli.")
+        or name.startswith("threev0_cli.")
     }
     try:
         yield
     finally:
-        _reset_modules(("tools", "agent", "ev0_cli"))
+        _reset_modules(("tools", "agent", "threev0_cli"))
         sys.modules.update(original_modules)
 
 
 def _install_fake_tools_package(*, credential_mounts=None):
-    _reset_modules(("tools", "agent", "ev0_cli"))
+    _reset_modules(("tools", "agent", "threev0_cli"))
 
-    ev0_cli = types.ModuleType("ev0_cli")
-    ev0_cli.__path__ = []  # type: ignore[attr-defined]
-    sys.modules["ev0_cli"] = ev0_cli
-    sys.modules["ev0_cli.config"] = types.SimpleNamespace(
+    threev0_cli = types.ModuleType("threev0_cli")
+    threev0_cli.__path__ = []  # type: ignore[attr-defined]
+    sys.modules["threev0_cli"] = threev0_cli
+    sys.modules["threev0_cli.config"] = types.SimpleNamespace(
         get_ev0_home=lambda: Path(tempfile.gettempdir()) / "3v0-home",
     )
 

@@ -1,4 +1,4 @@
-import { forceRedraw, useInput } from '@ev0/ink'
+import { forceRedraw, useInput } from '@3v0/ink'
 import { useStore } from '@nanostores/react'
 import { useEffect, useRef } from 'react'
 

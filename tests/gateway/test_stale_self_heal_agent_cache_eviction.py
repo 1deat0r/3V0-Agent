@@ -42,7 +42,7 @@ cached entry's snapshot session_id..." / ``_stale_dead_sid_reuse``).
 
 import threading
 
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 def _make_runner_with_db(tmp_path):

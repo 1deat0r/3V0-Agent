@@ -8,7 +8,7 @@ import type { DashboardTheme, ThemeTypography, ThemeLayout } from "./types";
  * corner-radius all shift to match the theme's personality.
  *
  * Theme names must stay in sync with the backend's
- * `_BUILTIN_DASHBOARD_THEMES` list in `ev0_cli/web_server.py`.
+ * `_BUILTIN_DASHBOARD_THEMES` list in `threev0_cli/web_server.py`.
  */
 
 // ---------------------------------------------------------------------------

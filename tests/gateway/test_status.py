@@ -71,7 +71,7 @@ class TestGatewayPidState:
             record = {
                 "pid": pid,
                 "kind": "3v0-gateway",
-                "argv": ["python", "-m", "ev0_cli.main", "gateway"],
+                "argv": ["python", "-m", "threev0_cli.main", "gateway"],
                 "start_time": start_time,
             }
             pid_path.write_text(json.dumps(record))
@@ -104,7 +104,7 @@ class TestGatewayPidState:
         pid_path.write_text(json.dumps({
             "pid": 99999,
             "kind": "3v0-gateway",
-            "argv": ["python", "-m", "ev0_cli.main", "gateway"],
+            "argv": ["python", "-m", "threev0_cli.main", "gateway"],
             "start_time": 123,
         }))
 
@@ -116,7 +116,7 @@ class TestGatewayPidState:
             lambda: {
                 "pid": os.getpid(),
                 "kind": "3v0-gateway",
-                "argv": ["python", "-m", "ev0_cli.main", "gateway"],
+                "argv": ["python", "-m", "threev0_cli.main", "gateway"],
                 "start_time": 123,
             },
         )
@@ -143,7 +143,7 @@ class TestGatewayPidState:
         for a named profile), gateway identity files should still be written to
         the process-level EV0_HOME, not the profile's directory.  See #56986.
         """
-        from ev0_constants import set_ev0_home_override, reset_ev0_home_override
+        from threev0_constants import set_ev0_home_override, reset_ev0_home_override
 
         process_home = tmp_path / "default"
         process_home.mkdir()
@@ -329,7 +329,7 @@ class TestTerminatePid:
 
         # taskkill is spawned with the no-window flag so the windowless
         # pythonw.exe backend doesn't flash a conhost window on force-kill.
-        from ev0_cli._subprocess_compat import windows_hide_flags
+        from threev0_cli._subprocess_compat import windows_hide_flags
 
         assert calls == [
             (["taskkill", "/PID", "123", "/T", "/F"], True, True, 10, windows_hide_flags())
@@ -404,7 +404,7 @@ class TestScopedLocks:
             "pid": 873,
             "start_time": None,
             "kind": "3v0-gateway",
-            "argv": ["/Users/user/.3V0/3v0-agent/ev0_cli/main.py", "gateway", "run", "--replace"],
+            "argv": ["/Users/user/.3V0/3v0-agent/threev0_cli/main.py", "gateway", "run", "--replace"],
         }))
 
         # Post-#21561 the liveness probe routes through
@@ -441,7 +441,7 @@ class TestScopedLocks:
             "pid": os.getpid(),
             "start_time": None,
             "kind": "3v0-gateway",
-            "argv": ["ev0_cli/main.py", "--profile", "milena", "gateway", "run", "--replace"],
+            "argv": ["threev0_cli/main.py", "--profile", "milena", "gateway", "run", "--replace"],
             "scope": "discord-bot-token",
         }))
 
@@ -496,7 +496,7 @@ class TestScopedLocks:
             "pid": os.getpid(),
             "start_time": 111,
             "kind": "3v0-gateway",
-            "argv": ["ev0_cli/main.py", "gateway", "run", "--replace"],
+            "argv": ["threev0_cli/main.py", "gateway", "run", "--replace"],
             "scope": "discord-bot-token",
         }))
 
@@ -725,7 +725,7 @@ class TestScopedLockTakeover:
         record = {
             "pid": pid,
             "kind": "3v0-gateway",
-            "argv": ["python", "-m", "ev0_cli.main", "gateway", "run"],
+            "argv": ["python", "-m", "threev0_cli.main", "gateway", "run"],
             "start_time": start_time,
             "ev0_home": str(target_home),
         }
@@ -747,7 +747,7 @@ class TestScopedLockTakeover:
         monkeypatch.setattr(
             status,
             "_read_process_cmdline",
-            lambda _pid: "python -m ev0_cli.main gateway run",
+            lambda _pid: "python -m threev0_cli.main gateway run",
         )
         calls = []
 
@@ -783,7 +783,7 @@ class TestScopedLockTakeover:
         monkeypatch.setattr(
             status,
             "_read_process_cmdline",
-            lambda _pid: "python -m ev0_cli.main gateway run",
+            lambda _pid: "python -m threev0_cli.main gateway run",
         )
         calls = []
         monkeypatch.setattr(
@@ -884,11 +884,11 @@ class TestReadProcessCmdlinePsFallback:
 
         def fake_read_bytes(self):
             calls.append("proc")
-            return b"python\x00ev0_cli/main.py\x00gateway\x00"
+            return b"python\x00threev0_cli/main.py\x00gateway\x00"
 
         monkeypatch.setattr(status.Path, "read_bytes", fake_read_bytes)
         result = status._read_process_cmdline(12345)
-        assert "ev0_cli/main.py" in result
+        assert "threev0_cli/main.py" in result
         assert calls == ["proc"]
 
 
@@ -974,7 +974,7 @@ class TestRespawnStormBreaker:
 class TestLaunchdPlistRespawnGovernance:
     def test_plist_has_throttle_interval(self, tmp_path, monkeypatch):
         monkeypatch.setenv("EV0_HOME", str(tmp_path))
-        from ev0_cli.gateway import generate_launchd_plist
+        from threev0_cli.gateway import generate_launchd_plist
 
         plist = generate_launchd_plist()
         assert "<key>ThrottleInterval</key>" in plist

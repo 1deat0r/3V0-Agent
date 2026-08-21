@@ -58,7 +58,7 @@ def main():
     os.environ["EV0_HOME"] = home
     os.environ["HOME"] = home
     sys.path.insert(0, WT)
-    from ev0_cli import kanban_db as kb
+    from threev0_cli import kanban_db as kb
 
     kb.init_db()
 

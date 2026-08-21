@@ -35,12 +35,12 @@ class TestCopilotAuthSkipsGhCli:
     """
 
     def test_invalid_env_var_skips_gh_cli(self, monkeypatch):
-        from ev0_cli.copilot_auth import resolve_copilot_token
+        from threev0_cli.copilot_auth import resolve_copilot_token
 
         monkeypatch.delenv("COPILOT_GITHUB_TOKEN", raising=False)
         monkeypatch.delenv("GH_TOKEN", raising=False)
         monkeypatch.setenv("GITHUB_TOKEN", "ghp_classic_pat_nope")
-        with patch("ev0_cli.copilot_auth._try_gh_cli_token") as mock_cli:
+        with patch("threev0_cli.copilot_auth._try_gh_cli_token") as mock_cli:
             token, source = resolve_copilot_token()
         assert token == ""
         assert source == ""
@@ -48,10 +48,10 @@ class TestCopilotAuthSkipsGhCli:
 
     def test_valid_env_var_skips_gh_cli(self, monkeypatch):
         """A valid token in an env var should return immediately — no CLI."""
-        from ev0_cli.copilot_auth import resolve_copilot_token
+        from threev0_cli.copilot_auth import resolve_copilot_token
 
         monkeypatch.setenv("GITHUB_TOKEN", "gho_valid_oauth_token")
-        with patch("ev0_cli.copilot_auth._try_gh_cli_token") as mock_cli:
+        with patch("threev0_cli.copilot_auth._try_gh_cli_token") as mock_cli:
             token, source = resolve_copilot_token()
         assert token == "gho_valid_oauth_token"
         assert source == "GITHUB_TOKEN"
@@ -59,13 +59,13 @@ class TestCopilotAuthSkipsGhCli:
 
     def test_no_env_vars_falls_back_to_gh_cli(self, monkeypatch):
         """When NO env var is set, the gh CLI fallback must still fire."""
-        from ev0_cli.copilot_auth import resolve_copilot_token
+        from threev0_cli.copilot_auth import resolve_copilot_token
 
         monkeypatch.delenv("COPILOT_GITHUB_TOKEN", raising=False)
         monkeypatch.delenv("GH_TOKEN", raising=False)
         monkeypatch.delenv("GITHUB_TOKEN", raising=False)
         with patch(
-            "ev0_cli.copilot_auth._try_gh_cli_token",
+            "threev0_cli.copilot_auth._try_gh_cli_token",
             return_value="gho_from_cli",
         ) as mock_cli:
             token, source = resolve_copilot_token()
@@ -175,16 +175,16 @@ def test_warm_gateway_module_imports_cold_start_chains():
     """
     import sys
 
-    import ev0_cli.web_server as web_server_mod
+    import threev0_cli.web_server as web_server_mod
 
     required = {
-        "ev0_cli.gateway",
-        "ev0_cli.auth",
-        "ev0_cli.copilot_auth",
-        "ev0_cli.runtime_provider",
-        "ev0_cli.skin_engine",
-        "ev0_cli.inventory",
-        "ev0_cli.model_switch",
+        "threev0_cli.gateway",
+        "threev0_cli.auth",
+        "threev0_cli.copilot_auth",
+        "threev0_cli.runtime_provider",
+        "threev0_cli.skin_engine",
+        "threev0_cli.inventory",
+        "threev0_cli.model_switch",
     }
 
     web_server_mod._warm_gateway_module()

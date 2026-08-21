@@ -34,8 +34,8 @@ import threading
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from ev0_cli._subprocess_compat import windows_hide_flags
-from ev0_constants import find_node_executable
+from threev0_cli._subprocess_compat import windows_hide_flags
+from threev0_constants import find_node_executable
 
 logger = logging.getLogger("agent.lsp.install")
 
@@ -124,7 +124,7 @@ def _is_windows() -> bool:
 
 def ev0_lsp_bin_dir() -> Path:
     """Return the 3V0-owned bin staging dir for LSP servers."""
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     p = get_ev0_home() / "lsp" / "bin"
     p.mkdir(parents=True, exist_ok=True)
@@ -354,7 +354,7 @@ def _install_pip(pkg: str, bin_name: str) -> Optional[str]:
     pip_target.mkdir(parents=True, exist_ok=True)
     try:
         logger.info("[install] pip install --target %s %s", pip_target, pkg)
-        from ev0_cli.tools_config import _pip_install
+        from threev0_cli.tools_config import _pip_install
 
         proc = _pip_install(
             ["--target", str(pip_target), "--quiet", pkg],

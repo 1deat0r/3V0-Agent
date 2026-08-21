@@ -197,7 +197,7 @@ def _config_language_cached() -> str | None:
     (e.g. after the setup wizard).
     """
     try:
-        from ev0_cli.config import load_config_readonly
+        from threev0_cli.config import load_config_readonly
         cfg = load_config_readonly()
         lang = (cfg.get("display") or {}).get("language")
         if lang:
@@ -210,7 +210,7 @@ def _config_language_cached() -> str | None:
 def reset_language_cache() -> None:
     """Invalidate cached language resolution and catalogs.
 
-    Call after :func:`ev0_cli.config.save_config` if a running process
+    Call after :func:`threev0_cli.config.save_config` if a running process
     needs to pick up a changed ``display.language`` without restart.
     """
     _config_language_cached.cache_clear()

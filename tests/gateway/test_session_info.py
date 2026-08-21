@@ -95,7 +95,7 @@ class TestFormatSessionInfo:
             },
         )
         with p1, p2, p3, patch(
-            "ev0_cli.config.get_compatible_custom_providers",
+            "threev0_cli.config.get_compatible_custom_providers",
             return_value=[
                 {
                     "name": "custom-local-agentw",

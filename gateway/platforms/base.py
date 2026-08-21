@@ -578,7 +578,7 @@ sys.path.insert(0, str(_Path(__file__).resolve().parents[2]))
 
 from gateway.config import Platform, PlatformConfig
 from gateway.session import SessionSource, build_session_key
-from ev0_constants import get_default_ev0_root, get_ev0_dir, get_ev0_home
+from threev0_constants import get_default_ev0_root, get_ev0_dir, get_ev0_home
 
 if TYPE_CHECKING:
     from agent.display import ToolPreview
@@ -763,7 +763,7 @@ def get_inbound_media_max_bytes() -> int:
     unreadable — falls back to the default.
     """
     try:
-        from ev0_cli.config import load_config_readonly as _load_config
+        from threev0_cli.config import load_config_readonly as _load_config
         cfg = _load_config()  # read-only: .get() only, never mutated
     except Exception:
         return DEFAULT_INBOUND_MEDIA_MAX_BYTES
@@ -4012,7 +4012,7 @@ class BasePlatformAdapter(ABC):
         auto-deletion.  Non-fatal if config is unreadable.
         """
         try:
-            from ev0_cli.config import load_config_readonly as _load_config
+            from threev0_cli.config import load_config_readonly as _load_config
         except Exception:
             return 0
         try:
@@ -6023,7 +6023,7 @@ class BasePlatformAdapter(ABC):
             # session lifecycle and its cleanup races with the running task
             # (see PR #4926).
             cmd = event.get_command()
-            from ev0_cli.commands import (
+            from threev0_cli.commands import (
                 is_interrupt_then_dispatch,
                 should_bypass_active_session,
             )

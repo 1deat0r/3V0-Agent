@@ -1096,7 +1096,7 @@ def _is_local_openviking_url(value: str) -> bool:
 
 def _load_ev0_openviking_config() -> dict:
     try:
-        from ev0_cli.config import load_config_readonly
+        from threev0_cli.config import load_config_readonly
 
         config = load_config_readonly()
         memory_config = config.get("memory", {}) if isinstance(config, dict) else {}
@@ -1436,7 +1436,7 @@ def _local_openviking_bind(endpoint: str) -> tuple[str, int]:
 
 def _openviking_server_log_path() -> Path:
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         home = get_ev0_home()
     except Exception:
         home = Path(os.environ.get("EV0_HOME", "")).expanduser() if os.environ.get("EV0_HOME") else Path.home() / ".3V0"
@@ -2411,7 +2411,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         if endpoint:
             normalized["endpoint"] = _normalize_openviking_url(endpoint)
 
-        from ev0_cli.config import load_config, save_config
+        from threev0_cli.config import load_config, save_config
 
         config = load_config()
         memory_config = config.get("memory")
@@ -2461,8 +2461,8 @@ class OpenVikingMemoryProvider(MemoryProvider):
 
     def post_setup(self, ev0_home: str, config: dict) -> None:
         """Custom setup that can reuse OpenViking's shared CLI config."""
-        from ev0_cli.config import save_config
-        from ev0_cli.memory_setup import _CANCELLED, _curses_select, _print_cancelled_setup, _prompt
+        from threev0_cli.config import save_config
+        from threev0_cli.memory_setup import _CANCELLED, _curses_select, _print_cancelled_setup, _prompt
 
         ev0_home_path = Path(ev0_home)
         env_path = ev0_home_path / ".env"
@@ -2725,7 +2725,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         ev0_home = str(kwargs.get("ev0_home") or "").strip()
         if not ev0_home:
             try:
-                from ev0_constants import get_ev0_home
+                from threev0_constants import get_ev0_home
                 ev0_home = str(get_ev0_home())
             except Exception:
                 ev0_home = str(Path.home() / ".3V0")

@@ -587,7 +587,7 @@ def _default_directory():
 
     if _delivers_as_an_attachment():
         try:
-            from ev0_constants import get_ev0_dir
+            from threev0_constants import get_ev0_dir
 
             return get_ev0_dir("cache/videos", "video_cache")
         except Exception:
@@ -792,7 +792,7 @@ def _has_nous_credential() -> bool:
     if peek_nous_access_token():
         return True
     try:
-        from ev0_cli.auth import get_provider_auth_state
+        from threev0_cli.auth import get_provider_auth_state
 
         state = get_provider_auth_state("nous") or {}
     except Exception:

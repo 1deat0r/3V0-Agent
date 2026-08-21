@@ -29,7 +29,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def _traces_enabled_and_dir() -> Optional[Path]:
     ``moa.trace_dir`` overrides the default ``<ev0_home>/moa-traces/``.
     """
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
 
         moa_cfg = (load_config() or {}).get("moa") or {}
     except Exception:  # pragma: no cover - defensive: never break a turn over tracing

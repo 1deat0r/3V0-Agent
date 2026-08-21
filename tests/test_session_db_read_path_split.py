@@ -13,7 +13,7 @@ import threading
 
 import pytest
 
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 @pytest.fixture()
@@ -114,7 +114,7 @@ def test_read_conn_open_failure_marks_thread(db, monkeypatch, tmp_path):
     fresh = SessionDB(db_path=tmp_path / "state2.db")
     try:
         fresh.create_session(session_id="x", source="cli", model="m")
-        monkeypatch.setattr("ev0_state.sqlite3.connect", failing_connect)
+        monkeypatch.setattr("threev0_state.sqlite3.connect", failing_connect)
         assert fresh.get_session("x")["id"] == "x"
         assert fresh.get_session("x")["id"] == "x"
         assert calls["n"] == 1, "open failure should be remembered per thread"

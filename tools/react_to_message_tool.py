@@ -24,7 +24,7 @@ from utils import env_var_enabled
 def _open_session_db():
     """Open the SessionDB for the profile owning this turn, or ``None``."""
     try:
-        from ev0_state import SessionDB
+        from threev0_state import SessionDB
 
         return SessionDB()
     except Exception:
@@ -125,7 +125,7 @@ def check_react_requirements() -> bool:
     reads the right config whether that gateway is local, SSH, URL, or cloud.
     """
     try:
-        from ev0_cli.config import load_config_readonly
+        from threev0_cli.config import load_config_readonly
 
         display = load_config_readonly().get("display")
     except Exception:

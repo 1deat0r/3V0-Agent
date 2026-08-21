@@ -23,7 +23,7 @@ mode parameter):
      previews, timestamps).
 
 All four modes operate on the SQLite session DB via the FTS5 index and
-the get_anchored_view / get_messages_around primitives in ev0_state.
+the get_anchored_view / get_messages_around primitives in threev0_state.
 No LLM calls anywhere — every shape returns actual messages from the DB.
 
 History: PR #20238 (JabberELF) seeded a fast/summary dual-mode split; the
@@ -37,7 +37,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional, Union
 
-from ev0_state_common import _RESET_END_REASONS
+from threev0_state_common import _RESET_END_REASONS
 
 # Sources that are excluded from session browsing/searching by default.
 # Third-party integrations tag their sessions with EV0_SESSION_SOURCE=tool;
@@ -355,8 +355,8 @@ def _resolve_profile_db(profile: str):
     if profile is None or not str(profile).strip():
         return None
 
-    from ev0_cli import profiles as profiles_mod
-    from ev0_state import SessionDB
+    from threev0_cli import profiles as profiles_mod
+    from threev0_state import SessionDB
 
     canon = profiles_mod.normalize_profile_name(profile)
     profiles_mod.validate_profile_name(canon)
@@ -377,7 +377,7 @@ def _session_link(session_id: str, profile: str = None) -> str:
     name = (profile or "").strip()
     if not name:
         try:
-            from ev0_cli.profiles import get_active_profile_name
+            from threev0_cli.profiles import get_active_profile_name
 
             resolved = get_active_profile_name()
             name = "" if resolved == "custom" else resolved
@@ -400,8 +400,8 @@ def _locate_session_db(session_id: str):
     from pathlib import Path
 
     try:
-        from ev0_cli import profiles as profiles_mod
-        from ev0_state import SessionDB
+        from threev0_cli import profiles as profiles_mod
+        from threev0_state import SessionDB
     except Exception:
         return None, None
 
@@ -1083,13 +1083,13 @@ def session_search(
     owned_dbs: List[Any] = []
     if db is None:
         try:
-            from ev0_state import SessionDB
+            from threev0_state import SessionDB
 
             db = SessionDB()
             owned_dbs.append(db)
         except Exception:
             logging.debug("SessionDB unavailable for session_search", exc_info=True)
-            from ev0_state import format_session_db_unavailable
+            from threev0_state import format_session_db_unavailable
 
             return tool_error(format_session_db_unavailable(), success=False)
 
@@ -1119,7 +1119,7 @@ def session_search(
 def check_session_search_requirements() -> bool:
     """Requires the SQLite state database."""
     try:
-        from ev0_state import _default_db_path
+        from threev0_state import _default_db_path
         return _default_db_path().parent.exists()
     except ImportError:
         return False

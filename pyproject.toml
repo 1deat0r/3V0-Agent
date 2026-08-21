@@ -62,7 +62,7 @@ dependencies = [
   # try/except-ImportError fallbacks silently degrade: Hindsight's
   # ``_meets_minimum_version`` disables update_mode='append' (#40503),
   # tools/lazy_deps.py treats every version constraint as satisfied, and
-  # ev0_cli/main.py drops to naive requirement parsing. Pure-Python
+  # threev0_cli/main.py drops to naive requirement parsing. Pure-Python
   # py3-none-any wheel, no compiled extensions — safe to ship everywhere.
   # Pinned to the version already resolved in uv.lock (no resolution churn).
   "packaging==26.0",
@@ -119,7 +119,7 @@ dependencies = [
   "python-multipart>=0.0.9,<1",
   "ptyprocess>=0.7.0,<1; sys_platform != 'win32'",
   "pywinpty>=2.0.0,<3; sys_platform == 'win32'",
-  # Desktop SSH's Windows remote runtime (ev0_cli/windows_ssh_runtime.py)
+  # Desktop SSH's Windows remote runtime (threev0_cli/windows_ssh_runtime.py)
   # imports win32security/win32file/etc. directly — declare pywin32 rather than
   # relying on the concurrent-log-handler → portalocker transitive chain.
   "pywin32>=306,<312; sys_platform == 'win32'",
@@ -139,7 +139,7 @@ dependencies = [
   # processes), pinning ``agent.log`` at the 5 MiB threshold and spamming
   # stderr on every emit (see #44873). ``concurrent-log-handler`` wraps the
   # rename in a cross-process file lock (via ``portalocker``: pywin32 on
-  # Windows) so only one process rotates at a time. ``ev0_logging.py``
+  # Windows) so only one process rotates at a time. ``threev0_logging.py``
   # aliases it ONLY on Windows — POSIX renames an open file fine, so stdlib
   # already works there and managed-mode perms depend on its exact lifecycle.
   # Hence the ``sys_platform == 'win32'`` marker: the dep (and its portalocker
@@ -361,7 +361,7 @@ requires = ["setuptools==83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-3v0 = "ev0_cli.main:main"
+3v0 = "threev0_cli.main:main"
 3v0-agent = "run_agent:main"
 3v0-acp = "acp_adapter.entry:main"
 
@@ -409,7 +409,7 @@ exclude-newer-package = { vercel = false, nemo-relay = false, huggingface_hub = 
 
 [tool.setuptools]
 # Top-level single-file modules (not packages). Without this, uv2nix's
-# sealed venv is missing ev0_constants, run_agent, etc.
+# sealed venv is missing threev0_constants, run_agent, etc.
 py-modules = [
   "run_agent",
   "registration_lifecycle",
@@ -419,24 +419,24 @@ py-modules = [
   "trajectory_compressor",
   "toolset_distributions",
   "cli",
-  "ev0_bootstrap",
-  "ev0_constants",
-  "ev0_state",
-  "ev0_state_common",
-  "ev0_state_portability",
-  "ev0_state_schema",
-  "ev0_state_search",
-  "ev0_time",
-  "ev0_logging",
+  "threev0_bootstrap",
+  "threev0_constants",
+  "threev0_state",
+  "threev0_state_common",
+  "threev0_state_portability",
+  "threev0_state_schema",
+  "threev0_state_search",
+  "threev0_time",
+  "threev0_logging",
   "utils",
   "mcp_serve",
 ]
 
 [tool.setuptools.packages.find]
-include = ["agent", "agent.*", "tools", "tools.*", "ev0_cli", "ev0_cli.*", "gateway", "gateway.*", "tui_gateway", "tui_gateway.*", "cron", "cron.*", "acp_adapter", "plugins", "plugins.*", "providers", "providers.*"]
+include = ["agent", "agent.*", "tools", "tools.*", "threev0_cli", "threev0_cli.*", "gateway", "gateway.*", "tui_gateway", "tui_gateway.*", "cron", "cron.*", "acp_adapter", "plugins", "plugins.*", "providers", "providers.*"]
 
 [tool.setuptools.package-data]
-ev0_cli = ["observability/schemas/*.json", "data/*.json"]
+threev0_cli = ["observability/schemas/*.json", "data/*.json"]
 # gateway/assets/ ships status_phrases.yaml and the Telegram BotFather
 # screenshot. Without this, sealed venvs (uv2nix) silently lose both —
 # status phrases fall back to the tiny hardcoded set and the Telegram

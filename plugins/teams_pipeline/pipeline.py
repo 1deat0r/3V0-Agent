@@ -18,7 +18,7 @@ import httpx
 from agent.secret_scope import get_secret
 
 from agent.auxiliary_client import async_call_llm, extract_content_or_reasoning
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 from plugins.teams_pipeline.meetings import (
     download_recording_artifact,
     enrich_meeting_with_call_record,

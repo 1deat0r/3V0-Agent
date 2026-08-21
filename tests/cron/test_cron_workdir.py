@@ -233,7 +233,7 @@ class TestRunJobTerminalCwd:
         monkeypatch.setitem(sys.modules, "run_agent", fake_mod)
 
         # Bypass the real provider resolver — it reads ~/.3V0 and credentials.
-        from ev0_cli import runtime_provider as _rtp
+        from threev0_cli import runtime_provider as _rtp
         monkeypatch.setattr(
             _rtp,
             "resolve_runtime_provider",

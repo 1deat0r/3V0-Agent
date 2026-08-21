@@ -45,7 +45,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import yaml
 
-from ev0_cli.config import get_ev0_home
+from threev0_cli.config import get_ev0_home
 
 
 HOOKS_DIR = get_ev0_home() / "hooks"

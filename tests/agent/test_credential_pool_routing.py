@@ -386,7 +386,7 @@ class TestFailureAttribution:
         ):
             monkeypatch.delenv(env_var, raising=False)
         monkeypatch.setattr(
-            "ev0_cli.auth.is_provider_explicitly_configured",
+            "threev0_cli.auth.is_provider_explicitly_configured",
             lambda provider: False,
         )
         (ev0_home / "auth.json").write_text(

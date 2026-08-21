@@ -34,7 +34,7 @@ def test_readonly_install_mirrors_to_ev0_home(tmp_path, monkeypatch):
         str(install_root / "gateway" / "platforms" / "whatsapp_common.py"),
     )
     monkeypatch.setattr(
-        "ev0_constants.get_ev0_home", lambda: ev0_home
+        "threev0_constants.get_ev0_home", lambda: ev0_home
     )
 
     # Simulate a read-only install tree. chmod(0o555) is unreliable under

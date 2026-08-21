@@ -34,7 +34,7 @@ from typing import Any
 
 import yaml
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 
 # These are 3V0 UI surfaces, not app/vendor/domain buckets.  Keep this
 # long-running-only: regular tool/thinking/interim chatter is intentionally not

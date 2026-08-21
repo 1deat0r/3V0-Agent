@@ -6,7 +6,7 @@ Usage:
   python3 scripts/rot_scan.py --strict   # exit 1 on ANY finding above zero
 
 What it detects (stdlib-only, single-pass):
-  1. DEAD-MODULE candidates — runtime modules (agent/ev0_cli/gateway/cron/
+  1. DEAD-MODULE candidates — runtime modules (agent/threev0_cli/gateway/cron/
      providers/acp_adapter/native/tools + top-level py) whose module token
      never appears in any other tracked file (tests excluded by convention:
      pytest collects tests by path, not imports).
@@ -38,10 +38,10 @@ import tomllib
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SKIP_DIRS = {".git", "node_modules", ".venv", "__pycache__", "dist", "build",
              ".mypy_cache", ".pytest_cache", ".cache", "cache"}
-RUNTIME_TOPS = {"agent", "ev0_cli", "gateway", "cron", "providers",
+RUNTIME_TOPS = {"agent", "threev0_cli", "gateway", "cron", "providers",
                 "acp_adapter", "native", "tools", "tui_gateway",
-                "registration_lifecycle.py", "ev0_state.py",
-                "ev0_constants.py", "ev0_logging.py"}
+                "registration_lifecycle.py", "threev0_state.py",
+                "threev0_constants.py", "threev0_logging.py"}
 
 
 def tracked_files(root: pathlib.Path) -> list[str]:

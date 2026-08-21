@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, List
 
-from ev0_cli.auth import get_auth_status
+from threev0_cli.auth import get_auth_status
 from plugins.spotify.client import (
     SpotifyAPIError,
     SpotifyAuthRequiredError,

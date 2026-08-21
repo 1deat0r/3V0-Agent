@@ -20,8 +20,8 @@ import sqlite3
 
 import pytest
 
-from ev0_state import SessionDB
-from ev0_state_common import SCHEMA_VERSION
+from threev0_state import SessionDB
+from threev0_state_common import SCHEMA_VERSION
 
 LEGACY_SQL = """
     CREATE TABLE session_model_usage (

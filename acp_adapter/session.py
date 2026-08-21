@@ -8,7 +8,7 @@ history.
 """
 from __future__ import annotations
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 
 import copy
 import json
@@ -35,7 +35,7 @@ def _translate_acp_cwd(cwd: str) -> str:
     agents, tools, and persisted ACP sessions all agree on the usable workspace.
     Native Linux/macOS keeps the original cwd unchanged.
     """
-    from ev0_constants import translate_cwd_for_wsl_backend
+    from threev0_constants import translate_cwd_for_wsl_backend
 
     return translate_cwd_for_wsl_backend(str(cwd))
 
@@ -48,7 +48,7 @@ def _normalize_cwd_for_compare(cwd: str | None) -> str:
 
     # Normalize Windows drive paths into the equivalent WSL mount form so
     # ACP history filters match the same workspace across Windows and WSL.
-    from ev0_constants import windows_path_to_wsl
+    from threev0_constants import windows_path_to_wsl
 
     translated = windows_path_to_wsl(expanded)
     if translated is not None:
@@ -401,7 +401,7 @@ class SessionManager:
         if self._db_instance is not None:
             return self._db_instance
         try:
-            from ev0_state import SessionDB
+            from threev0_state import SessionDB
             ev0_home = get_ev0_home()
             self._db_instance = SessionDB(db_path=ev0_home / "state.db")
             return self._db_instance
@@ -539,7 +539,7 @@ class SessionManager:
         # LIVE REPLAY — the loaded list becomes the resumed agent's working
         # conversation. A durable ``user;user`` violation left in state.db would
         # otherwise re-fire the pre-request defensive repair on every request
-        # for the rest of the session (see ev0_state.get_messages_as_conversation).
+        # for the rest of the session (see threev0_state.get_messages_as_conversation).
         try:
             history = db.get_messages_as_conversation(
                 session_id, repair_alternation=True
@@ -602,8 +602,8 @@ class SessionManager:
             return self._agent_factory()
 
         from run_agent import AIAgent
-        from ev0_cli.config import load_config
-        from ev0_cli.runtime_provider import resolve_runtime_provider
+        from threev0_cli.config import load_config
+        from threev0_cli.runtime_provider import resolve_runtime_provider
 
         config = load_config()
         model_cfg = config.get("model")
@@ -664,7 +664,7 @@ class SessionManager:
         # server can't block — servers that miss the bound are picked up by
         # the automatic late-refresh (see Ev0ACPAgent._schedule_mcp_late_refresh).
         try:
-            from ev0_cli.mcp_startup import ensure_mcp_discovery_before_agent_build
+            from threev0_cli.mcp_startup import ensure_mcp_discovery_before_agent_build
 
             ensure_mcp_discovery_before_agent_build(
                 logger=logger,

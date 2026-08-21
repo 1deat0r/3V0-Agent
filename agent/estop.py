@@ -45,7 +45,7 @@ _logged_components: set[str] = set()
 def _ev0_home() -> Path:
     """Resolve the active EV0_HOME (profile-aware) at call time."""
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         return get_ev0_home()
     except Exception:
         return Path(os.path.expanduser("~/.3V0"))

@@ -300,7 +300,7 @@ class TestHandleFunctionCallIntegration:
     def test_tool_search_emits_one_terminal_hook(self, monkeypatch):
         """Inline bridge results still complete the tool lifecycle."""
         import model_tools
-        from ev0_cli import lifecycle
+        from threev0_cli import lifecycle
         from tools import tool_search
 
         events = []

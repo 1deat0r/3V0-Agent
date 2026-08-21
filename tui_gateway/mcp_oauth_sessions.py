@@ -8,7 +8,7 @@ primitive reports ``{status: pending|approved|error}`` until the tokens land on
 disk for that server in that profile.
 
 The underlying token machinery is the *same* one the CLI ``3v0 mcp login``
-uses — ``ev0_cli.mcp_config._probe_single_server`` under
+uses — ``threev0_cli.mcp_config._probe_single_server`` under
 ``tools.mcp_oauth.force_interactive_oauth`` — so no OAuth logic is reimplemented
 here. The only new piece is decoupling the two browser callbacks (authorization
 URL out, ``code``/``state`` back in) from a FastAPI ``Request``:
@@ -133,12 +133,12 @@ def _worker(session_id: str, ev0_home: str, server_name: str, cfg: dict, reconne
     exists on disk (verified via ``_oauth_tokens_present``) and the server config
     is (re)saved into the profile's config.yaml.
     """
-    from ev0_cli.mcp_config import (
+    from threev0_cli.mcp_config import (
         _oauth_tokens_present,
         _probe_single_server,
         _save_mcp_server,
     )
-    from ev0_constants import reset_ev0_home_override, set_ev0_home_override
+    from threev0_constants import reset_ev0_home_override, set_ev0_home_override
 
     rec = _sessions.get(session_id)
     flow = rec["flow"] if rec else None

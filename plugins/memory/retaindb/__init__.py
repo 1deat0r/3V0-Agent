@@ -53,7 +53,7 @@ def _load_retaindb_config() -> Dict[str, Any]:
     secret resolution rather than config.yaml.
     """
     try:
-        from ev0_cli.config import load_config_readonly
+        from threev0_cli.config import load_config_readonly
 
         config = load_config_readonly()
         memory_config = config.get("memory", {}) if isinstance(config, dict) else {}
@@ -588,7 +588,7 @@ class RetainDBMemoryProvider(MemoryProvider):
         self._user_id = kwargs.get("user_id", "default") or "default"
         self._agent_id = kwargs.get("agent_id", "3v0") or "3v0"
 
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         ev0_home_path = get_ev0_home()
         db_path = ev0_home_path / "retaindb_queue.db"
         self._queue = _WriteQueue(self._client, db_path)

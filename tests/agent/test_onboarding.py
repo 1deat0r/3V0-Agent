@@ -222,6 +222,6 @@ class TestProfileBuildSeenFlag:
 
 class TestProfileBuildConfigDefault:
     def test_default_config_carries_ask(self):
-        from ev0_cli.config import DEFAULT_CONFIG
+        from threev0_cli.config import DEFAULT_CONFIG
 
         assert DEFAULT_CONFIG["onboarding"]["profile_build"] == "ask"

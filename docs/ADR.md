@@ -8,7 +8,7 @@ Context:
 3V0 supports multiple profiles via different 3V0 home directories.
 Homes are switched two ways in a running process: the `EV0_HOME`
 environment variable (single-profile CLI/gateway processes), and the
-context-local `set_ev0_home_override()` (`ev0_constants.py`), which
+context-local `set_ev0_home_override()` (`threev0_constants.py`), which
 the multiplexed gateway worker (`gateway/run.py`'s `_profile_scope`) and
 subagent/embedded callers use to serve several profiles from one
 long-lived process. The override is a `ContextVar` and deliberately does

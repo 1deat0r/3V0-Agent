@@ -10,7 +10,7 @@ source: https://github.com/CyberSamuraiX/3v0-n8n-mcp
 
 # How to launch the server once installed. The keys here map 1:1 to the
 # `mcp_servers.<name>` block written into ~/.3V0/config.yaml by the
-# existing `_save_mcp_server()` helper in ev0_cli/mcp_config.py.
+# existing `_save_mcp_server()` helper in threev0_cli/mcp_config.py.
 transport:
   type: stdio
   # For git-installed servers, ${INSTALL_DIR} is substituted at install time

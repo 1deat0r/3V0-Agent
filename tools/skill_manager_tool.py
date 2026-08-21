@@ -40,9 +40,9 @@ import contextvars as _ctxvars
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from ev0_constants import get_ev0_home, display_ev0_home
+from threev0_constants import get_ev0_home, display_ev0_home
 from utils import atomic_write_text, is_truthy_value
-from ev0_cli.config import cfg_get
+from threev0_cli.config import cfg_get
 from agent.skill_utils import (
     extract_skill_description,
     is_skill_description_truncated_for_prompt,
@@ -112,7 +112,7 @@ def _guard_agent_created_enabled() -> bool:
     on via `3v0 config set skills.guard_agent_created true`.
     """
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
         cfg = load_config()
         return is_truthy_value(
             cfg_get(cfg, "skills", "guard_agent_created"),
@@ -748,7 +748,7 @@ def _find_skill_in_other_profiles(name: str) -> List[Tuple[str, Path]]:
     """
     matches: List[Tuple[str, Path]] = []
     try:
-        from ev0_constants import get_default_ev0_root
+        from threev0_constants import get_default_ev0_root
         from agent.skill_utils import is_excluded_skill_path
     except Exception:
         return matches

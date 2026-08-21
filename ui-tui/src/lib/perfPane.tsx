@@ -15,8 +15,8 @@ import { appendFileSync, mkdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 
-import type { FrameEvent } from '@ev0/ink'
-import { scrollFastPathStats } from '@ev0/ink'
+import type { FrameEvent } from '@3v0/ink'
+import { scrollFastPathStats } from '@3v0/ink'
 import { Profiler, type ProfilerOnRenderCallback, type ReactNode } from 'react'
 
 const ENABLED = /^(?:1|true|yes|on)$/i.test((process.env.EV0_DEV_PERF ?? '').trim())

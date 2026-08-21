@@ -21,8 +21,8 @@ JPEG = b"\xff\xd8\xff" + b"\x00" * 64
 
 def _reload(monkeypatch, ev0_home: Path):
     monkeypatch.setenv("EV0_HOME", str(ev0_home))
-    import ev0_constants
-    importlib.reload(ev0_constants)
+    import threev0_constants
+    importlib.reload(threev0_constants)
     import tools.image_source as isrc
     importlib.reload(isrc)
     return isrc

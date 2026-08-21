@@ -12,7 +12,7 @@ Tag shape (sent in OpenAI-compatible ``extra_body['tags']``):
         "client=3v0-client-v<__version__>",
     ]
 
-The version is sourced live from ``ev0_cli.__version__`` so it auto-aligns
+The version is sourced live from ``threev0_cli.__version__`` so it auto-aligns
 to whatever release is installed; the release script
 (``scripts/release.py``) regex-bumps that single string, and every Portal
 request picks up the new tag on the next process start.
@@ -26,7 +26,7 @@ Why one helper instead of inlining the literal at each site:
 
 Do NOT pre-compute these as module-level constants in the consumers. The
 version can change at runtime (editable installs, hot-reload tooling), and
-``ev0_cli.__version__`` is the canonical source of truth.
+``threev0_cli.__version__`` is the canonical source of truth.
 """
 
 from __future__ import annotations
@@ -85,17 +85,17 @@ def get_conversation_context() -> Optional[str]:
 def _ev0_version() -> str:
     """Return the current 3V0 release version, e.g. ``"0.13.0"``.
 
-    Falls back to ``"unknown"`` if ``ev0_cli`` cannot be imported (should
+    Falls back to ``"unknown"`` if ``threev0_cli`` cannot be imported (should
     never happen in a real install — guarded for defensive testing).
     """
     try:
-        from ev0_cli import __version__
+        from threev0_cli import __version__
         return __version__
     except Exception:
         return "unknown"
 
 
-def ev0_client_tag() -> str:
+def threev0_client_tag() -> str:
     """Return the ``client=...`` tag for Nous Portal requests.
 
     Format: ``client=3v0-client-v<MAJOR>.<MINOR>.<PATCH>``.
@@ -132,7 +132,7 @@ def nous_portal_tags(session_id: str | None = None) -> List[str]:
     per-call-site plumbing. Callers outside any conversation (e.g. the
     auxiliary client's import-time base tags) get the canonical two-tag set.
     """
-    tags = ["product=3v0-agent", ev0_client_tag()]
+    tags = ["product=3v0-agent", threev0_client_tag()]
     # Ambient context first: the agent loop publishes the lineage ROOT id
     # (stable across context-compression rotation and delegate subagent
     # trees), which is the better conversation key than a per-segment

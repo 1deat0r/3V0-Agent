@@ -1,5 +1,5 @@
-import type { InputEvent, Key } from '@ev0/ink'
-import * as Ink from '@ev0/ink'
+import type { InputEvent, Key } from '@3v0/ink'
+import * as Ink from '@3v0/ink'
 import { type MutableRefObject, useEffect, useMemo, useRef, useState } from 'react'
 
 import { setInputSelection } from '../app/inputSelectionStore.js'
@@ -439,7 +439,7 @@ export function killToLineEnd(value: string, cursor: number): { value: string; c
  * boundary rather than delete a single word.
  *
  * Only the *super* bit qualifies. It is tempting to reuse `isActionMod`,
- * but that accepts `key.meta` on macOS — and ev0-ink reports Option as
+ * but that accepts `key.meta` on macOS — and 3v0-ink reports Option as
  * `meta`, so Option+Backspace (delete-word, the macOS standard) would be
  * swallowed. On Linux/Windows `isActionMod` is `key.ctrl`, and
  * Ctrl+Backspace is delete-word there too. `super` is set only by kitty
@@ -1396,7 +1396,7 @@ export function TextInput({
         c = wordRight(v, c)
       } else if (wordMod && inp === 'd') {
         // meta+d (readline kill-word). The web dashboard maps Ctrl+Delete to
-        // ESC d, which ev0-ink decodes as meta+'d'; without this branch it
+        // ESC d, which 3v0-ink decodes as meta+'d'; without this branch it
         // fell through to the printable path and typed a literal "d".
         if (range) {
           v = v.slice(0, range.start) + v.slice(range.end)

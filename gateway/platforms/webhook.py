@@ -503,7 +503,7 @@ class WebhookAdapter(BasePlatformAdapter):
 
     def _reload_dynamic_routes(self) -> None:
         """Reload agent-created subscriptions from disk if the file changed."""
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         ev0_home = get_ev0_home()
         subs_path = ev0_home / _DYNAMIC_ROUTES_FILENAME
         if not subs_path.exists():
@@ -581,7 +581,7 @@ class WebhookAdapter(BasePlatformAdapter):
             # the single-profile gateway (don't 404 a would-be valid route).
             return None
         try:
-            from ev0_cli.profiles import profiles_to_serve
+            from threev0_cli.profiles import profiles_to_serve
             served = {
                 name
                 for name, _ in profiles_to_serve(

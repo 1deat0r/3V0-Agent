@@ -1,1 +1,1 @@
-The interactive CLI (`cli.py`), its config contract (`ev0_cli/config.py` — non-secrets live in config.yaml, not .env), the central slash-command registry (`ev0_cli/commands.py`), skins, curses pickers, and the dashboard server (`web_server.py` + `pty_bridge.py` embedding 3v0 --tui).
+The interactive CLI (`cli.py`), its config contract (`threev0_cli/config.py` — non-secrets live in config.yaml, not .env), the slash-command registry (`threev0_cli/commands.py`), skins, curses pickers, and the dashboard server (`web_server.py` + `pty_bridge.py` embedding 3v0 --tui).

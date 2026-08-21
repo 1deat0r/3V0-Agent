@@ -20,8 +20,8 @@ def store(tmp_path, monkeypatch):
     home.mkdir()
     monkeypatch.setenv("EV0_HOME", str(home))
     # Reload so module-level CRON_DIR/SUGGESTIONS_FILE pick up the temp home.
-    import ev0_constants
-    importlib.reload(ev0_constants)
+    import threev0_constants
+    importlib.reload(threev0_constants)
     import cron.suggestions as s
     importlib.reload(s)
     return s
@@ -180,7 +180,7 @@ class TestCommandHandler:
     def test_bare_lists_pending(self, store):
         _add(store, key="c1", title="Daily thing")
         with patch("cron.suggestions.list_pending", store.list_pending):
-            from ev0_cli.suggestions_cmd import handle_suggestions_command
+            from threev0_cli.suggestions_cmd import handle_suggestions_command
             # Patch the module the handler imports.
             with patch.dict("sys.modules"):
                 out = handle_suggestions_command("")
@@ -188,13 +188,13 @@ class TestCommandHandler:
 
 
     def test_empty_list_message(self, store):
-        from ev0_cli.suggestions_cmd import handle_suggestions_command
+        from threev0_cli.suggestions_cmd import handle_suggestions_command
 
         out = handle_suggestions_command("")
         assert "No suggested automations" in out
 
     def test_aux_monitor_config_default(self):
-        from ev0_cli.config import DEFAULT_CONFIG
+        from threev0_cli.config import DEFAULT_CONFIG
 
         assert "monitor" in DEFAULT_CONFIG["auxiliary"]
         assert DEFAULT_CONFIG["auxiliary"]["monitor"]["provider"] == "auto"

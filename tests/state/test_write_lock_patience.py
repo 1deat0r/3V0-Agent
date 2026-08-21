@@ -24,7 +24,7 @@ import time
 
 import pytest
 
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 def _hold_write_lock(db_path, hold_s, started_evt):

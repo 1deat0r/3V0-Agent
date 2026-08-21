@@ -19,22 +19,22 @@ from plugins.memory.mem0._setup import (
 )
 
 
-def _inject_fake_ev0_cli(monkeypatch):
-    """Inject fake ev0_cli modules so yaml/curses aren't required."""
-    fake_config_mod = types.ModuleType("ev0_cli.config")
+def _inject_fake_threev0_cli(monkeypatch):
+    """Inject fake threev0_cli modules so yaml/curses aren't required."""
+    fake_config_mod = types.ModuleType("threev0_cli.config")
     fake_config_mod.save_config = lambda c: None
 
-    fake_setup_mod = types.ModuleType("ev0_cli.memory_setup")
+    fake_setup_mod = types.ModuleType("threev0_cli.memory_setup")
     fake_setup_mod._curses_select = lambda *a, **kw: 0
     fake_setup_mod._prompt = lambda label, default=None, secret=False: default or ""
 
-    fake_ev0_cli = types.ModuleType("ev0_cli")
-    fake_ev0_cli.config = fake_config_mod
-    fake_ev0_cli.memory_setup = fake_setup_mod
+    fake_threev0_cli = types.ModuleType("threev0_cli")
+    fake_threev0_cli.config = fake_config_mod
+    fake_threev0_cli.memory_setup = fake_setup_mod
 
-    monkeypatch.setitem(sys.modules, "ev0_cli", fake_ev0_cli)
-    monkeypatch.setitem(sys.modules, "ev0_cli.config", fake_config_mod)
-    monkeypatch.setitem(sys.modules, "ev0_cli.memory_setup", fake_setup_mod)
+    monkeypatch.setitem(sys.modules, "threev0_cli", fake_threev0_cli)
+    monkeypatch.setitem(sys.modules, "threev0_cli.config", fake_config_mod)
+    monkeypatch.setitem(sys.modules, "threev0_cli.memory_setup", fake_setup_mod)
 
     monkeypatch.setattr("plugins.memory.mem0._setup._curses_select", lambda *a, **kw: 0)
     monkeypatch.setattr("plugins.memory.mem0._setup._prompt", lambda label, default=None, secret=False: default or "")
@@ -189,7 +189,7 @@ class TestPostSetup:
     def test_platform_flag_mode(self, tmp_path, monkeypatch):
         monkeypatch.setattr("sys.argv", ["3v0", "--mode", "platform", "--api-key", "sk-test"])
         monkeypatch.setattr("plugins.memory.mem0._setup.get_ev0_home", lambda: tmp_path)
-        _inject_fake_ev0_cli(monkeypatch)
+        _inject_fake_threev0_cli(monkeypatch)
         config = {"memory": {}}
         post_setup(str(tmp_path), config)
         assert config["memory"]["provider"] == "mem0"
@@ -205,7 +205,7 @@ class TestPostSetup:
             "--host", "http://localhost:8888/", "--api-key", "admin-key",
         ])
         monkeypatch.setattr("plugins.memory.mem0._setup.get_ev0_home", lambda: tmp_path)
-        _inject_fake_ev0_cli(monkeypatch)
+        _inject_fake_threev0_cli(monkeypatch)
         monkeypatch.setattr("plugins.memory.mem0._setup._check_selfhosted_server", lambda h: None)
         config = {"memory": {}}
         post_setup(str(tmp_path), config)

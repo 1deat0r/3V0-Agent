@@ -45,7 +45,7 @@ def has_xai_credentials() -> bool:
         if (get_secret("XAI_API_KEY", "") or "").strip():
             return True
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
 
         auth_path = get_ev0_home() / "auth.json"
         if not auth_path.exists():
@@ -79,12 +79,12 @@ def has_xai_credentials() -> bool:
 def get_env_value(name: str, default=None):
     """Read ``name`` from ``~/.3V0/.env`` first, then ``os.environ``.
 
-    Wraps :func:`ev0_cli.config.get_env_value` so tests can patch
+    Wraps :func:`threev0_cli.config.get_env_value` so tests can patch
     ``tools.xai_http.get_env_value`` to inject dotenv-only secrets into the
     xAI credential resolver.
     """
     try:
-        from ev0_cli.config import get_env_value as _ev0_get_env_value
+        from threev0_cli.config import get_env_value as _ev0_get_env_value
     except ImportError:
         return os.environ.get(name, default)
 
@@ -95,7 +95,7 @@ def get_env_value(name: str, default=None):
 def ev0_xai_user_agent() -> str:
     """Return a stable 3V0-specific User-Agent for xAI HTTP calls."""
     try:
-        from ev0_cli import __version__
+        from threev0_cli import __version__
     except Exception:
         __version__ = "unknown"
     return f"3V0-Agent/{__version__}"
@@ -114,7 +114,7 @@ def ev0_xai_default_headers() -> Dict[str, str]:
 def _load_config_section(section_name: str) -> Dict[str, Any]:
     """Return a top-level 3V0 config section as a dict, or empty."""
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
 
         cfg = load_config()
         section = cfg.get(section_name) if isinstance(cfg, dict) else None
@@ -241,7 +241,7 @@ def maybe_mark_xai_storage_notice_seen(section_name: str) -> Optional[str]:
     if not notice:
         return None
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
 
         marker_dir = get_ev0_home() / "state"
         marker_dir.mkdir(parents=True, exist_ok=True)
@@ -262,7 +262,7 @@ def resolve_xai_http_credentials(
     """Resolve bearer credentials for direct xAI HTTP endpoints.
 
     Prefers 3V0-managed xAI OAuth credentials when available, then falls back
-    to ``XAI_API_KEY`` resolved via ``ev0_cli.config.get_env_value`` so keys
+    to ``XAI_API_KEY`` resolved via ``threev0_cli.config.get_env_value`` so keys
     stored in ``~/.3V0/.env`` (the standard 3V0 location) are honored —
     not just ones already exported into ``os.environ``. This keeps direct xAI
     endpoints (images, TTS, STT, etc.) aligned with the main runtime auth model
@@ -275,7 +275,7 @@ def resolve_xai_http_credentials(
     """
     try:
         from agent.credential_pool import load_pool
-        import ev0_cli.auth as auth_mod
+        import threev0_cli.auth as auth_mod
 
         pool = load_pool("xai-oauth")
         entry = (

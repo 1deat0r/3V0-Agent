@@ -670,7 +670,7 @@ def main() -> int:
             sys.executable,
             "-c",
             "\n".join([
-                "from ev0_cli.observability import relay_shared_metrics",
+                "from threev0_cli.observability import relay_shared_metrics",
                 "from tools.skill_usage import (",
                 "    STATE_ACTIVE, STATE_ARCHIVED, STATE_STALE, bump_patch,",
                 "    bump_use, record_created, record_installed, set_state,",
@@ -721,7 +721,7 @@ def main() -> int:
     package_paths, packages = _validate_packages(
         telemetry / "outbox",
         ev0_repo
-        / "ev0_cli"
+        / "threev0_cli"
         / "observability"
         / "schemas"
         / "3v0.shared_metrics.v2.schema.json",

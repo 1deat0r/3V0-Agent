@@ -12,12 +12,12 @@ Usage:
     python cli.py --list-tools             # List available tools and exit
 """
 
-# IMPORTANT: ev0_bootstrap must be the very first import — UTF-8 stdio
-# on Windows.  No-op on POSIX.  See ev0_bootstrap.py for full rationale.
+# IMPORTANT: threev0_bootstrap must be the very first import — UTF-8 stdio
+# on Windows.  No-op on POSIX.  See threev0_bootstrap.py for full rationale.
 try:
-    import ev0_bootstrap  # noqa: F401
+    import threev0_bootstrap  # noqa: F401
 except ModuleNotFoundError:
-    # Graceful fallback when ev0_bootstrap isn't registered in the venv
+    # Graceful fallback when threev0_bootstrap isn't registered in the venv
     # yet — happens during partial ``3v0 update`` where git-reset landed
     # new code but ``uv pip install -e .`` didn't finish.  Missing bootstrap
     # means UTF-8 stdio setup is skipped on Windows; POSIX is unaffected.
@@ -50,10 +50,10 @@ logger = logging.getLogger(__name__)
 # Suppress startup messages for clean CLI experience
 os.environ["EV0_QUIET"] = "1"  # Our own modules
 
-from ev0_cli.fallback_config import get_fallback_chain
-from ev0_cli.cli_agent_setup_mixin import CLIAgentSetupMixin
-from ev0_cli.cli_commands_mixin import CLICommandsMixin
-from ev0_cli.cli_billing_mixin import CLIBillingMixin
+from threev0_cli.fallback_config import get_fallback_chain
+from threev0_cli.cli_agent_setup_mixin import CLIAgentSetupMixin
+from threev0_cli.cli_commands_mixin import CLICommandsMixin
+from threev0_cli.cli_billing_mixin import CLIBillingMixin
 from agent.interrupt_compat import request_hard_interrupt
 
 # prompt_toolkit for fixed input area TUI
@@ -77,7 +77,7 @@ except (ImportError, AttributeError):
     _STEADY_CURSOR = None
 
 try:
-    from ev0_cli.pt_input_extras import (
+    from threev0_cli.pt_input_extras import (
         install_cmd_backspace_alias,
         install_ctrl_enter_alias,
         install_ignored_terminal_sequences,
@@ -143,7 +143,7 @@ def _reverse_alias_for_display(model_name: str) -> str:
     if _REVERSE_ALIAS_CACHE is None:
         rmap: dict[str, str] = {}
         try:
-            from ev0_cli.config import load_config
+            from threev0_cli.config import load_config
             cfg = load_config() or {}
             ma = cfg.get("model_aliases")
             if isinstance(ma, dict):
@@ -211,21 +211,21 @@ def realign_markdown_tables(*args, **kwargs):
 # NOTE: `from agent.account_usage import ...` is deliberately NOT at module
 # top — it transitively pulls the OpenAI SDK chain (~230 ms cold) and is only
 # needed when the user runs `/limits`. Lazy-imported inside the handler below.
-from ev0_cli.banner import _format_context_length, format_banner_version_label
+from threev0_cli.banner import _format_context_length, format_banner_version_label
 
 _COMMAND_SPINNER_FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏")
 
 
 # Load .env from ~/.3V0/.env first, then project root as dev fallback.
 # User-managed env files should override stale shell exports on restart.
-from ev0_constants import get_ev0_home, display_ev0_home
-from ev0_cli.browser_connect import (
+from threev0_constants import get_ev0_home, display_ev0_home
+from threev0_cli.browser_connect import (
     DEFAULT_BROWSER_CDP_URL,
     is_browser_debug_ready,
     manual_chrome_debug_command,
     try_launch_chrome_debug,
 )
-from ev0_cli.env_loader import load_ev0_dotenv
+from threev0_cli.env_loader import load_ev0_dotenv
 from utils import base_url_host_matches, base_url_hostname, fast_safe_load
 
 _ev0_home = get_ev0_home()
@@ -391,7 +391,7 @@ def _parse_reasoning_config(effort) -> dict | None:
     Accepts the raw config value (string or YAML boolean — ``false``/``off``
     parse as thinking disabled, see parse_reasoning_effort).
     """
-    from ev0_constants import parse_reasoning_effort
+    from threev0_constants import parse_reasoning_effort
     result = parse_reasoning_effort(effort)
     if effort and str(effort).strip() and result is None:
         logger.warning("Unknown reasoning_effort '%s', using default (medium)", effort)
@@ -480,7 +480,7 @@ def load_cli_config() -> Dict[str, Any]:
             "prefill_messages_file": "",
             "reasoning_effort": "",
             "service_tier": "",
-            # Built-in personalities live in ev0_cli.personality
+            # Built-in personalities live in threev0_cli.personality
             # (BUILTIN_PERSONALITIES) — the single owner. Entries here are
             # user-defined additions/overrides merged on top by name.
             "personalities": {},
@@ -489,14 +489,14 @@ def load_cli_config() -> Dict[str, Any]:
         "display": {
             "compact": False,
             "resume_display": "full",
-            # Recap tuning for /resume — see ev0_cli/config.py DEFAULT_CONFIG.
+            # Recap tuning for /resume — see threev0_cli/config.py DEFAULT_CONFIG.
             "resume_exchanges": 10,
             "resume_max_user_chars": 300,
             "resume_max_assistant_chars": 200,
             "resume_max_assistant_lines": 3,
             "resume_skip_tool_only": True,
             # Live reasoning display default ON — keep in sync with
-            # ev0_cli/config.py DEFAULT_CONFIG (display.show_reasoning).
+            # threev0_cli/config.py DEFAULT_CONFIG (display.show_reasoning).
             "show_reasoning": True,
             "reasoning_full": False,
             "streaming": True,
@@ -560,7 +560,7 @@ def load_cli_config() -> Dict[str, Any]:
     if config_path.exists():
         try:
             with open(config_path, "r", encoding="utf-8") as f:
-                from ev0_cli.config import _normalize_root_model_keys
+                from threev0_cli.config import _normalize_root_model_keys
 
                 file_config = _normalize_root_model_keys(fast_safe_load(f) or {})
             
@@ -614,25 +614,25 @@ def load_cli_config() -> Dict[str, Any]:
             logger.warning("Failed to load cli-config.yaml: %s", e)
 
     # Expand ${ENV_VAR} references in config values before bridging to env vars.
-    from ev0_cli.config import _expand_env_vars
+    from threev0_cli.config import _expand_env_vars
     defaults = _expand_env_vars(defaults)
 
     # Managed scope: overlay administrator-pinned values LAST so they win over
     # the user's config here too. cli.py builds its config independently of
-    # ev0_cli.config._load_config_impl (which has its own managed merge), so
+    # threev0_cli.config._load_config_impl (which has its own managed merge), so
     # without this the entire interactive CLI/TUI surface — skin, display prefs,
     # etc. read from CLI_CONFIG — would silently ignore managed scope while
     # `3v0 config`/`doctor`/guards (which use load_config) honor it. The
     # shared helper mirrors _load_config_impl (env-only expansion, root-model
     # normalization, leaf-merge) and is fail-open.
-    from ev0_cli import managed_scope
+    from threev0_cli import managed_scope
 
     defaults = managed_scope.apply_managed_overlay(defaults)
 
     # Apply terminal config to environment variables (so terminal_tool picks them up)
     terminal_config = defaults.get("terminal", {})
     
-    # Normalize config key: the new config system (ev0_cli/config.py) and all
+    # Normalize config key: the new config system (threev0_cli/config.py) and all
     # documentation use "backend", the legacy cli-config.yaml uses "env_type".
     # Accept both, with "backend" taking precedence (it's the documented key).
     if "backend" in terminal_config:
@@ -773,7 +773,7 @@ def load_cli_config() -> Dict[str, Any]:
         if redact is not None:
             os.environ["EV0_REDACT_SECRETS"] = str(redact).lower()
 
-    # Session-search index knobs (ev0_state reads the env carriers).
+    # Session-search index knobs (threev0_state reads the env carriers).
     sessions_config = defaults.get("sessions", {})
     if isinstance(sessions_config, dict):
         if "cjk_fts" in sessions_config:
@@ -792,21 +792,21 @@ CLI_CONFIG = load_cli_config()
 # Initialize centralized logging early — agent.log + errors.log in ~/.3V0/logs/.
 # This ensures CLI sessions produce a log trail even before AIAgent is instantiated.
 try:
-    from ev0_logging import setup_logging
+    from threev0_logging import setup_logging
     setup_logging(mode="cli")
 except Exception:
     pass  # Logging setup is best-effort — don't crash the CLI
 
 # Validate config structure early — print warnings before user hits cryptic errors
 try:
-    from ev0_cli.config import print_config_warnings
+    from threev0_cli.config import print_config_warnings
     print_config_warnings()
 except Exception:
     pass
 
 # Initialize the skin engine from config
 try:
-    from ev0_cli.skin_engine import init_skin_from_config
+    from threev0_cli.skin_engine import init_skin_from_config
     init_skin_from_config(CLI_CONFIG)
 except Exception:
     pass  # Skin engine is optional — default skin used if unavailable
@@ -902,7 +902,7 @@ def AIAgent(*args, **kwargs):
 
 
 def get_tool_definitions(*args, **kwargs):
-    from ev0_cli.mcp_startup import wait_for_mcp_discovery
+    from threev0_cli.mcp_startup import wait_for_mcp_discovery
     from model_tools import get_tool_definitions as _get_tool_definitions
 
     wait_for_mcp_discovery()
@@ -915,8 +915,8 @@ def get_toolset_for_tool(*args, **kwargs):
     return _get_toolset_for_tool(*args, **kwargs)
 
 # Extracted CLI modules (Phase 3)
-from ev0_cli.banner import build_welcome_banner
-from ev0_cli.commands import SlashCommandCompleter, SlashCommandAutoSuggest
+from threev0_cli.banner import build_welcome_banner
+from threev0_cli.commands import SlashCommandCompleter, SlashCommandAutoSuggest
 
 
 def get_all_toolsets(*args, **kwargs):
@@ -950,7 +950,7 @@ def get_job(*args, **kwargs):
     return _get_job(*args, **kwargs)
 
 # Resource cleanup imports for safe shutdown (terminal VMs, browser sessions)
-from ev0_cli.callbacks import prompt_for_secret
+from threev0_cli.callbacks import prompt_for_secret
 
 
 def _cleanup_all_terminals(*args, **kwargs):
@@ -1021,7 +1021,7 @@ def _prepare_deferred_agent_startup() -> None:
         "on",
     }
     try:
-        from ev0_cli.plugins import discover_plugins
+        from threev0_cli.plugins import discover_plugins
 
         discover_plugins()
     except Exception:
@@ -1030,7 +1030,7 @@ def _prepare_deferred_agent_startup() -> None:
             exc_info=True,
         )
     try:
-        from ev0_cli.mcp_startup import start_background_mcp_discovery
+        from threev0_cli.mcp_startup import start_background_mcp_discovery
 
         start_background_mcp_discovery(
             logger=logger,
@@ -1043,7 +1043,7 @@ def _prepare_deferred_agent_startup() -> None:
         )
     try:
         from agent.shell_hooks import register_from_config
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
 
         _hooks_cfg = load_config()
         register_from_config(_hooks_cfg, accept_hooks=_accept_hooks)
@@ -1293,7 +1293,7 @@ def _notify_session_finalize(
     reason: str = "shutdown",
 ) -> None:
     try:
-        from ev0_cli.lifecycle import finalize_session
+        from threev0_cli.lifecycle import finalize_session
         finalize_session(
             session_id=session_id,
             platform=platform,
@@ -1322,7 +1322,7 @@ def _emit_interrupted_session_end(cli, *, reason: str = "keyboard_interrupt") ->
             pass
 
     try:
-        from ev0_cli.lifecycle import invoke_hook as _invoke_hook
+        from threev0_cli.lifecycle import invoke_hook as _invoke_hook
         _invoke_hook(
             "on_session_end",
             session_id=session_id,
@@ -1518,7 +1518,7 @@ def _resolve_worktree_base(
     """
     import subprocess
 
-    from ev0_cli._subprocess_compat import noninteractive_git_env
+    from threev0_cli._subprocess_compat import noninteractive_git_env
 
     def _git(args, timeout: float = 20):
         return subprocess.run(
@@ -2235,7 +2235,7 @@ def _run_state_db_auto_maintenance(session_db) -> None:
     """Call ``SessionDB.maybe_auto_prune_and_vacuum`` using current config.
 
     Reads the ``sessions:`` section from config.yaml via
-    :func:`ev0_cli.config.load_config` (the authoritative loader that
+    :func:`threev0_cli.config.load_config` (the authoritative loader that
     deep-merges DEFAULT_CONFIG, so unmigrated configs still get default
     values). Honours ``auto_prune`` / ``retention_days`` /
     ``vacuum_after_prune`` / ``min_vacuum_interval_days`` /
@@ -2245,8 +2245,8 @@ def _run_state_db_auto_maintenance(session_db) -> None:
     if session_db is None:
         return
     try:
-        from ev0_cli.config import load_config as _load_full_config
-        from ev0_constants import get_ev0_home as _get_ev0_home
+        from threev0_cli.config import load_config as _load_full_config
+        from threev0_constants import get_ev0_home as _get_ev0_home
         _ev0_home_maint = _get_ev0_home()
 
         # One-time prune of empty TUI ghost sessions.
@@ -2301,12 +2301,12 @@ def _run_checkpoint_auto_maintenance() -> None:
     """Call ``checkpoint_manager.maybe_auto_prune_checkpoints`` using current config.
 
     Reads the ``checkpoints:`` section from config.yaml via
-    :func:`ev0_cli.config.load_config`. Honours ``auto_prune`` /
+    :func:`threev0_cli.config.load_config`. Honours ``auto_prune`` /
     ``retention_days`` / ``delete_orphans`` / ``min_interval_hours``.
     Never raises — maintenance must never block interactive startup.
     """
     try:
-        from ev0_cli.config import load_config as _load_full_config
+        from threev0_cli.config import load_config as _load_full_config
         cfg = (_load_full_config().get("checkpoints") or {})
         if not cfg.get("auto_prune", False):
             return
@@ -2987,7 +2987,7 @@ def _install_skin_light_mode_hook() -> None:
     """Wrap SkinConfig.get_color at import time so EVERY skin color read goes
     through the light-mode remap.  Idempotent."""
     try:
-        from ev0_cli.skin_engine import SkinConfig  # type: ignore[import]
+        from threev0_cli.skin_engine import SkinConfig  # type: ignore[import]
     except Exception:
         return
     if getattr(SkinConfig, "_ev0_light_mode_hook_installed", False):
@@ -3035,7 +3035,7 @@ class _SkinAwareAnsi:
     def __str__(self) -> str:
         if self._cached is None:
             try:
-                from ev0_cli.skin_engine import get_active_skin
+                from threev0_cli.skin_engine import get_active_skin
                 self._cached = _hex_to_ansi(
                     get_active_skin().get_color(self._skin_key, self._fallback_hex),
                     bold=self._bold,
@@ -3085,7 +3085,7 @@ def _d(s: str) -> str:
 def _accent_hex() -> str:
     """Return the active skin accent color for legacy CLI output lines."""
     try:
-        from ev0_cli.skin_engine import get_active_skin
+        from threev0_cli.skin_engine import get_active_skin
         return get_active_skin().get_color("ui_accent", "#FFBF00")
     except Exception:
         return "#FFBF00"
@@ -3484,7 +3484,7 @@ _IMAGE_EXTENSIONS = frozenset({
 })
 
 
-from ev0_constants import is_termux as _is_termux_environment
+from threev0_constants import is_termux as _is_termux_environment
 
 
 def _termux_example_image_path(filename: str = "cat.png") -> str:
@@ -3731,7 +3731,7 @@ def _should_auto_attach_clipboard_image_on_paste(pasted_text: str) -> bool:
 
 
 def _strip_leaked_bracketed_paste_wrappers(text: str) -> str:
-    from ev0_cli.input_sanitize import strip_leaked_bracketed_paste_wrappers
+    from threev0_cli.input_sanitize import strip_leaked_bracketed_paste_wrappers
 
     return strip_leaked_bracketed_paste_wrappers(text)
 
@@ -3947,7 +3947,7 @@ def _enable_extended_enter_keys(output=None, env: Optional[Mapping[str, str]] = 
     none of these, which is why the CSI >1u push was temporarily removed in
     #87074 (Ctrl+C arrived as ``ESC[99;5u`` and died, #56684).
     ``install_modify_other_keys_aliases()`` (called at CLI startup from
-    ``ev0_cli.pt_input_extras``) now populates ``ANSI_SEQUENCES`` with the
+    ``threev0_cli.pt_input_extras``) now populates ``ANSI_SEQUENCES`` with the
     full Ctrl/Alt/Shift/multi-modifier and functional-key tables under BOTH
     formats, so every existing key binding continues to fire — including
     Ctrl+C, which is handled by prompt_toolkit's ``c-c`` binding (raw mode
@@ -4385,7 +4385,7 @@ EV0_CADUCEUS = """[#CD7F32]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⣀⣀⠀�
 def _build_compact_banner() -> str:
     """Build a compact banner that fits the current terminal width."""
     try:
-        from ev0_cli.skin_engine import get_active_skin
+        from threev0_cli.skin_engine import get_active_skin
         _skin = get_active_skin()
     except Exception:
         _skin = None
@@ -4404,8 +4404,8 @@ def _build_compact_banner() -> str:
         tiny_line = agent_name
 
     if os.environ.get("EV0_FAST_STARTUP_BANNER") == "1":
-        from ev0_cli import __release_date__ as _release_date
-        from ev0_cli import __version__ as _version
+        from threev0_cli import __release_date__ as _release_date
+        from threev0_cli import __version__ as _version
 
         version_line = f"3V0 Agent v{_version} ({_release_date})"
     else:
@@ -4505,7 +4505,7 @@ def build_bundle_invocation_message(*args, **kwargs):
 def _get_plugin_cmd_handler_names() -> set:
     """Return plugin command names (without slash prefix) for dispatch matching."""
     try:
-        from ev0_cli.plugins import get_plugin_commands
+        from threev0_cli.plugins import get_plugin_commands
         return set(get_plugin_commands().keys())
     except Exception:
         return set()
@@ -4583,7 +4583,7 @@ def save_config_value(key_path: str, value: any) -> bool:
         # Model/provider changes made through /model and the TUI use this
         # persistence path rather than ``3v0 config set``. Surface the same
         # fail-closed cron drift warning for every operator-facing model switch.
-        from ev0_cli.config import (
+        from threev0_cli.config import (
             warn_unpinned_cron_jobs_after_model_config_change,
         )
 
@@ -4625,7 +4625,7 @@ def _normalize_moa_model(model: Optional[str]) -> tuple[Optional[str], Optional[
 def _split_model_config_default(raw_default: Any) -> tuple[str, str]:
     # Thin wrapper around the shared helper in config.py — kept for
     # backward compat with existing call sites in this module.
-    from ev0_cli.config import split_model_config_default
+    from threev0_cli.config import split_model_config_default
     return split_model_config_default(raw_default)
 
 
@@ -4698,13 +4698,13 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # tool-progress mode is snapped to "off" so the EXISTING suppression
         # path hides per-tool lines, and the pre-focus mode is stashed so
         # /focus off restores it. Purely cosmetic — never changes what is sent
-        # to the model. See ev0_cli/focus_view.py.
+        # to the model. See threev0_cli/focus_view.py.
         self._focus_view_enabled = bool(CLI_CONFIG["display"].get("focus_view", False))
         self._focus_saved_tool_progress = None
         self._focus_hidden_lines = 0
         self._focus_last_counted_tool = None
         if self._focus_view_enabled:
-            from ev0_cli.focus_view import (
+            from threev0_cli.focus_view import (
                 FOCUS_TOOL_PROGRESS_MODE,
                 normalize_tool_progress_mode,
             )
@@ -4846,7 +4846,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if self.model == _DEFAULT_CONFIG_MODEL:
             _base_url = (_model_config.get("base_url") or "") if isinstance(_model_config, dict) else ""
             if base_url_hostname(_base_url) in ("localhost", "127.0.0.1"):
-                from ev0_cli.runtime_provider import _auto_detect_local_model
+                from threev0_cli.runtime_provider import _auto_detect_local_model
                 _detected = _auto_detect_local_model(_base_url)
                 if _detected:
                     self.model = _detected
@@ -4878,7 +4878,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # length (#86978). Explicit `-m` still wins.
         if not model and provider:
             try:
-                from ev0_cli.runtime_provider import _get_named_custom_provider
+                from threev0_cli.runtime_provider import _get_named_custom_provider
 
                 _named_custom = _get_named_custom_provider(provider)
             except Exception as exc:
@@ -4956,15 +4956,15 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         self.checkpoint_max_file_size_mb = cp_cfg.get("max_file_size_mb", 10)
         self.pass_session_id = pass_session_id
         # --ignore-rules: honor either the constructor flag or the env var set
-        # by `3v0 chat --ignore-rules` in ev0_cli/main.py. When true we
+        # by `3v0 chat --ignore-rules` in threev0_cli/main.py. When true we
         # pass skip_context_files=True and skip_memory=True to AIAgent so
         # AGENTS.md/SOUL.md/.cursorrules and persistent memory are not loaded.
         self.ignore_rules = ignore_rules or os.environ.get("EV0_IGNORE_RULES") == "1"
         
         # Ephemeral system prompt: env var takes precedence, then
         # display.personality / agent.system_prompt from config.
-        # ev0_cli.personality is the single owner of overlay resolution.
-        from ev0_cli.personality import (
+        # threev0_cli.personality is the single owner of overlay resolution.
+        from threev0_cli.personality import (
             available_personalities,
             resolve_ephemeral_system_prompt,
         )
@@ -4982,8 +4982,8 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         
         # Reasoning config (OpenRouter reasoning effort level)
         # Per-model override > global reasoning_effort — resolved through the
-        # shared chokepoint in ev0_constants (Closes #21256).
-        from ev0_constants import resolve_reasoning_config
+        # shared chokepoint in threev0_constants (Closes #21256).
+        from threev0_constants import resolve_reasoning_config
         self.reasoning_config = resolve_reasoning_config(CLI_CONFIG, self.model)
         # An explicit --reasoning wins over config for this run only (never
         # persisted). Kanban's dispatcher uses it to pin a task's thinking
@@ -5055,7 +5055,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         self._session_db = None
         self._session_db_unavailable = False
         try:
-            from ev0_state import SessionDB
+            from threev0_state import SessionDB
             self._session_db = SessionDB()
         except Exception as e:
             # #41386: a failed session store means the transcript is NOT
@@ -5196,7 +5196,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # Ctrl+S prompt stash — park a half-written draft, send something
         # else, bring the draft back.  Session-scoped and in-memory only:
         # drafts routinely contain secrets, so nothing is written to disk.
-        from ev0_cli.prompt_stash import PromptStash as _PromptStash
+        from threev0_cli.prompt_stash import PromptStash as _PromptStash
         self._prompt_stash = _PromptStash()
         self.preloaded_skills: list[str] = []
         self._startup_skills_line_shown = False
@@ -5259,7 +5259,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if self._active_session_lease is not None:
             return True
         try:
-            from ev0_cli.active_sessions import try_acquire_active_session
+            from threev0_cli.active_sessions import try_acquire_active_session
 
             lease, message = try_acquire_active_session(
                 session_id=self.session_id,
@@ -5468,7 +5468,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if getattr(self, "_terminal_io_broken", False):
             return
         try:
-            from ev0_cli.curses_ui import flush_stdin
+            from threev0_cli.curses_ui import flush_stdin
             flush_stdin()
         except Exception:
             pass
@@ -5897,7 +5897,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             model_short = model_name.split("/")[-1] if "/" in model_name else model_name
             # Strip Palantir RID prefixes via the shared display formatter so
             # this site and ``ModelSwitchResult`` confirmation can't drift.
-            from ev0_cli.model_switch import format_model_for_display
+            from threev0_cli.model_switch import format_model_for_display
             model_short = format_model_for_display(model_short)
         if model_short.endswith(".gguf"):
             model_short = model_short[:-5]
@@ -5942,7 +5942,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         }
 
         try:
-            from ev0_cli.focus_view import focus_statusbar_segment
+            from threev0_cli.focus_view import focus_statusbar_segment
 
             snapshot["focus_label"] = focus_statusbar_segment(
                 bool(getattr(self, "_focus_view_enabled", False))
@@ -6374,7 +6374,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         try:
             from agent.pet import constants, store
             from agent.pet.render import PetRenderer
-            from ev0_cli.config import load_config
+            from threev0_cli.config import load_config
 
             cfg = load_config()
             display = cfg.get("display", {}) if isinstance(cfg.get("display"), dict) else {}
@@ -6610,7 +6610,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         registered so the cached label always matches the live binding.
         """
         try:
-            from ev0_cli.voice import format_voice_record_key_for_status
+            from threev0_cli.voice import format_voice_record_key_for_status
             self._voice_record_key_display_cache = format_voice_record_key_for_status(raw_key)
         except Exception:
             self._voice_record_key_display_cache = "Ctrl+B"
@@ -7005,7 +7005,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         changed = False
 
         try:
-            from ev0_cli.model_normalize import (
+            from threev0_cli.model_normalize import (
                 _AGGREGATOR_PROVIDERS,
                 normalize_model_for_provider,
             )
@@ -7025,7 +7025,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
 
         if resolved_provider == "copilot":
             try:
-                from ev0_cli.models import copilot_model_api_mode, normalize_copilot_model_id
+                from threev0_cli.models import copilot_model_api_mode, normalize_copilot_model_id
 
                 canonical = normalize_copilot_model_id(current_model, api_key=self.api_key)
                 if canonical and canonical != current_model:
@@ -7047,7 +7047,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
 
         if resolved_provider in {"opencode-zen", "opencode-go"}:
             try:
-                from ev0_cli.models import normalize_opencode_model_id, opencode_model_api_mode
+                from threev0_cli.models import normalize_opencode_model_id, opencode_model_api_mode
 
                 canonical = normalize_opencode_model_id(resolved_provider, current_model)
                 if canonical and canonical != current_model:
@@ -7086,7 +7086,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if self._model_is_default:
             fallback_model = "gpt-5.3-codex"
             try:
-                from ev0_cli.codex_models import get_codex_model_ids
+                from threev0_cli.codex_models import get_codex_model_ids
 
                 available = get_codex_model_ids(
                     access_token=self.api_key if self.api_key else None,
@@ -7537,7 +7537,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 return
             self._stream_box_opened = True
             try:
-                from ev0_cli.skin_engine import get_active_skin
+                from threev0_cli.skin_engine import get_active_skin
                 _skin = get_active_skin()
                 label = _skin.get_branding("response_label", "⚕ 3V0")
                 _text_hex = _skin.get_color("banner_text", "#FFF8DC")
@@ -7940,7 +7940,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         small.
         """
         try:
-            from ev0_cli.security_advisories import (
+            from threev0_cli.security_advisories import (
                 detect_compromised,
                 startup_banner,
             )
@@ -8043,7 +8043,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             # get_tool_definitions walk. The agent's REAL tool list is still
             # computed fresh at first message; a background refresh below
             # re-verifies the snapshot so any drift self-heals next launch.
-            from ev0_cli.banner import (
+            from threev0_cli.banner import (
                 compute_toolset_availability,
                 load_banner_snapshot,
                 save_banner_snapshot,
@@ -8181,7 +8181,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 )
 
         # Warn if the configured model is a Nous 3V0 LLM (not agentic)
-        from ev0_cli.model_switch import is_nous_ev0_non_agentic
+        from threev0_cli.model_switch import is_nous_ev0_non_agentic
 
         model_name = getattr(self, "model", "") or ""
         if is_nous_ev0_non_agentic(model_name):
@@ -8269,7 +8269,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         covers everything).
         """
         try:
-            from ev0_state import SessionDB
+            from threev0_state import SessionDB
             from tools.approval import (
                 _YOLO_MODE_FROZEN,
                 enable_session_yolo,
@@ -8316,7 +8316,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # same recovery the TUI gateway applies on its read path.
         if str(provider or "").strip().lower() == "custom":
             try:
-                from ev0_cli.runtime_provider import canonical_custom_identity
+                from threev0_cli.runtime_provider import canonical_custom_identity
                 provider = canonical_custom_identity(
                     base_url=result.base_url or None,
                     model=result.new_model or None,
@@ -8380,7 +8380,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # Stored provider/endpoint via the canonical row-level reader
         # (prefers model_config.gateway_runtime, falls back to the TUI
         # gateway's top-level keys).
-        from ev0_state import SessionDB as _SessionDB
+        from threev0_state import SessionDB as _SessionDB
         _stored_runtime = _SessionDB.session_gateway_runtime(session_meta)
         stored_provider = _stored_runtime.get("provider") or None
         stored_base_url = _stored_runtime.get("base_url") or None
@@ -8393,7 +8393,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # exists — the CLI's resolve path would hard-fail on it, #14676.)
         if str(stored_provider or "").strip().lower() == "custom":
             try:
-                from ev0_cli.runtime_provider import canonical_custom_identity
+                from threev0_cli.runtime_provider import canonical_custom_identity
                 stored_provider = canonical_custom_identity(
                     base_url=stored_base_url or None,
                     model=stored_model or None,
@@ -8424,7 +8424,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             # never persisted to the session DB (by design) — the normal
             # runtime provider resolution owns credentials.
             try:
-                from ev0_cli.runtime_provider import resolve_runtime_provider
+                from threev0_cli.runtime_provider import resolve_runtime_provider
                 resolved = resolve_runtime_provider(requested=stored_provider)
                 if resolved.get("api_key"):
                     self.api_key = resolved["api_key"]
@@ -8489,7 +8489,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         Saves the image to ~/.3V0/images/ and appends the path to
         ``_attached_images``.  Returns True if an image was attached.
         """
-        from ev0_cli.clipboard import save_clipboard_image
+        from threev0_cli.clipboard import save_clipboard_image
 
         img_dir = get_ev0_home() / "images"
         self._image_counter += 1
@@ -8752,7 +8752,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
 
         # Build status line with proper markup — skin-aware colors
         try:
-            from ev0_cli.skin_engine import get_active_skin
+            from threev0_cli.skin_engine import get_active_skin
             skin = get_active_skin()
             separator_color = skin.get_color("banner_dim", "#B8860B")
             accent_color = skin.get_color("ui_accent", "#FFBF00")
@@ -8828,7 +8828,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
     
     def _fast_command_available(self) -> bool:
         try:
-            from ev0_cli.models import model_supports_fast_mode
+            from threev0_cli.models import model_supports_fast_mode
         except Exception:
             return False
         agent = getattr(self, "agent", None)
@@ -8842,10 +8842,10 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
 
     def show_help(self):
         """Display help information with categorized commands."""
-        from ev0_cli.commands import COMMANDS_BY_CATEGORY
+        from threev0_cli.commands import COMMANDS_BY_CATEGORY
 
         try:
-            from ev0_cli.skin_engine import get_active_help_header
+            from threev0_cli.skin_engine import get_active_help_header
             header = get_active_help_header("(^_^)? Available Commands")
         except Exception:
             header = "(^_^)? Available Commands"
@@ -9042,7 +9042,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if not self._session_db:
             return []
         try:
-            from ev0_cli.session_listing import query_session_listing
+            from threev0_cli.session_listing import query_session_listing
 
             return query_session_listing(
                 self._session_db,
@@ -9065,7 +9065,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if not sessions:
             return False
 
-        from ev0_cli.main import _relative_time
+        from threev0_cli.main import _relative_time
 
         _cli_visible_print()
         if reason == "history":
@@ -9176,7 +9176,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         lifecycle point (shutdown, /new, /reset).
         """
         try:
-            from ev0_cli.lifecycle import finalize_session, invoke_hook
+            from threev0_cli.lifecycle import finalize_session, invoke_hook
 
             context = {
                 "session_id": self.agent.session_id if self.agent else None,
@@ -9213,7 +9213,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if getattr(self, "conversation_history", None):
             return False
         try:
-            from ev0_constants import get_ev0_home as _ghh
+            from threev0_constants import get_ev0_home as _ghh
             return self._session_db.delete_session_if_empty(
                 session_id, sessions_dir=_ghh() / "sessions"
             )
@@ -9342,7 +9342,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 else ""
             )
             try:
-                from ev0_cli.model_switch import switch_model as _switch_model
+                from threev0_cli.model_switch import switch_model as _switch_model
 
                 _reset_result = _switch_model(
                     raw_input=_config_model,
@@ -9416,7 +9416,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 except Exception:
                     pass
                 if title and self._session_db:
-                    from ev0_state import SessionDB
+                    from threev0_state import SessionDB
                     try:
                         sanitized = SessionDB.sanitize_title(title)
                     except ValueError as e:
@@ -9528,7 +9528,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         ``/save``. ``redact`` runs the export through the force-mode secret
         redaction pass before writing.
         """
-        from ev0_cli.session_export import (
+        from threev0_cli.session_export import (
             SAVE_USAGE,
             normalize_save_format,
             render_session_for_save,
@@ -9578,7 +9578,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             }
 
         if redact:
-            from ev0_cli.session_export_md import redact_session_data
+            from threev0_cli.session_export_md import redact_session_data
 
             session_data = redact_session_data(session_data)
 
@@ -9803,7 +9803,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
     def _run_curses_picker(self, title: str, items: list[str], default_index: int = 0) -> int | None:
         """Run curses_single_select via run_in_terminal so prompt_toolkit handles terminal ownership cleanly."""
         import threading
-        from ev0_cli.curses_ui import curses_single_select
+        from threev0_cli.curses_ui import curses_single_select
 
         result = [None]
 
@@ -10152,7 +10152,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if not getattr(result, "success", False):
             return True
         try:
-            from ev0_cli.model_selection_guards import combined_selection_warning
+            from threev0_cli.model_selection_guards import combined_selection_warning
 
             warning = combined_selection_warning(
                 result.new_model,
@@ -10289,8 +10289,8 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
     def _clear_persisted_context_for_model_switch(self, result) -> None:
         """Drop a global context pin when its configured owner changes."""
         try:
-            from ev0_cli.config import load_config_readonly
-            from ev0_cli.route_identity import should_clear_context_pin
+            from threev0_cli.config import load_config_readonly
+            from threev0_cli.route_identity import should_clear_context_pin
 
             config = load_config_readonly()
             model_cfg = config.get("model", {}) if isinstance(config, dict) else {}
@@ -10317,7 +10317,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
 
         if self.agent is not None:
             try:
-                from ev0_cli.context_switch_guard import merge_preflight_compression_warning
+                from threev0_cli.context_switch_guard import merge_preflight_compression_warning
 
                 # Prefer the fresh inventory list (same source as switch_model /
                 # TUI); fall back to the agent-init snapshot.
@@ -10389,7 +10389,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 )
                 return
 
-        from ev0_cli.model_switch import format_model_for_display
+        from threev0_cli.model_switch import format_model_for_display
         _display_old = format_model_for_display(old_model)
         _display_new = format_model_for_display(result.new_model)
 
@@ -10408,7 +10408,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # (e.g. gpt-5.5 is 1.05M on openai but 272K on Codex OAuth).
         mi = result.model_info
         try:
-            from ev0_cli.model_switch import resolve_display_context_length
+            from threev0_cli.model_switch import resolve_display_context_length
             ctx = resolve_display_context_length(
                 result.new_model,
                 result.target_provider,
@@ -10477,7 +10477,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             model_list = provider_data.get("models", [])
             if not model_list:
                 try:
-                    from ev0_cli.models import provider_model_ids
+                    from threev0_cli.models import provider_model_ids
                     live = provider_model_ids(provider_data["slug"])
                     if live:
                         model_list = live
@@ -10503,7 +10503,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 self._close_model_picker()
                 return
             if selected < len(model_list):
-                from ev0_cli.model_switch import switch_model
+                from threev0_cli.model_switch import switch_model
                 chosen_model = model_list[selected]
                 result = switch_model(
                     raw_input=chosen_model,
@@ -10548,19 +10548,19 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         config.yaml, default False — switches are session-scoped). Use
         ``--global`` to persist, or ``--once`` for the next turn only.
         """
-        from ev0_cli.model_switch import (
+        from threev0_cli.model_switch import (
             switch_model,
             parse_model_switch_args,
             resolve_persist_behavior,
         )
-        from ev0_cli.providers import get_label
+        from threev0_cli.providers import get_label
 
         # Parse args from the original command
         parts = cmd_original.split(None, 1)  # split off '/model'
         raw_args = parts[1].strip() if len(parts) > 1 else ""
 
         # Parse --provider, --global, --session, --once, and --refresh flags
-        # via the shared single-owner parser (ev0_cli.model_switch).
+        # via the shared single-owner parser (threev0_cli.model_switch).
         request = parse_model_switch_args(raw_args)
         model_input = request.target
         explicit_provider = request.explicit_provider
@@ -10586,7 +10586,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # /v1/models endpoint on this open.
         if force_refresh:
             try:
-                from ev0_cli.models import clear_provider_models_cache
+                from threev0_cli.models import clear_provider_models_cache
                 clear_provider_models_cache()
                 _cprint("  Cleared model picker cache. Refreshing...")
             except Exception:
@@ -10596,7 +10596,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # dashboard / TUI used to duplicate. Overlay live session state
         # via with_overrides (truthy-only) so empty self.* attrs don't
         # clobber disk config.
-        from ev0_cli.inventory import build_models_payload, load_picker_context
+        from threev0_cli.inventory import build_models_payload, load_picker_context
 
         try:
             ctx = load_picker_context().with_overrides(
@@ -10666,7 +10666,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
 
         if self.agent is not None:
             try:
-                from ev0_cli.context_switch_guard import merge_preflight_compression_warning
+                from threev0_cli.context_switch_guard import merge_preflight_compression_warning
 
                 merge_preflight_compression_warning(
                     result,
@@ -10768,7 +10768,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # Store a note to prepend to the next user message so the model
         # knows a switch occurred (avoids injecting system messages mid-history
         # which breaks providers and prompt caching).
-        from ev0_cli.model_switch import format_model_for_display
+        from threev0_cli.model_switch import format_model_for_display
         _display_old = format_model_for_display(old_model)
         _display_new = format_model_for_display(result.new_model)
 
@@ -10792,7 +10792,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # Copilot, and Nous-enforced caps win over the raw models.dev entry
         # (e.g. gpt-5.5 is 1.05M on openai but 272K on Codex OAuth).
         mi = result.model_info
-        from ev0_cli.model_switch import resolve_display_context_length
+        from threev0_cli.model_switch import resolve_display_context_length
         ctx = resolve_display_context_length(
             result.new_model,
             result.target_provider,
@@ -10852,7 +10852,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             /codex-runtime codex_app_server      — hand turns to codex subprocess
             /codex-runtime on / off              — synonyms for the above
         """
-        from ev0_cli import codex_runtime_switch as crs
+        from threev0_cli import codex_runtime_switch as crs
 
         parts = cmd_original.split(None, 1)
         raw_args = parts[1].strip() if len(parts) > 1 else ""
@@ -10864,7 +10864,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
 
         # Load + persist via the existing config helpers
         try:
-            from ev0_cli.config import load_config, save_config
+            from threev0_cli.config import load_config, save_config
         except Exception as exc:
             _cprint(f"❌ could not load config: {exc}")
             return
@@ -10888,7 +10888,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if not text or has_images or not _looks_like_slash_command(text):
             return False
         try:
-            from ev0_cli.commands import resolve_command
+            from threev0_cli.commands import resolve_command
             base = text.split(None, 1)[0].lower().lstrip('/')
             cmd = resolve_command(base)
             return bool(cmd and cmd.name == "model")
@@ -10912,7 +10912,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if not getattr(self, "_agent_running", False):
             return False
         try:
-            from ev0_cli.commands import resolve_command
+            from threev0_cli.commands import resolve_command
             base = text.split(None, 1)[0].lower().lstrip('/')
             cmd = resolve_command(base)
             return bool(cmd and cmd.name == "steer")
@@ -10943,7 +10943,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         if not getattr(self, "_agent_running", False):
             return False
         try:
-            from ev0_cli.commands import resolve_command
+            from threev0_cli.commands import resolve_command
             base = text.split(None, 1)[0].lower().lstrip('/')
             cmd = resolve_command(base)
             return bool(cmd and cmd.name == "background")
@@ -10975,7 +10975,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         disabled for this context (gateway/cron), letting the caller fall
         through to normal routing.
         """
-        from ev0_cli.bang_shell import (
+        from threev0_cli.bang_shell import (
             USAGE_HINT,
             bang_shell_enabled,
             check_bang_approval,
@@ -11022,9 +11022,9 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
     def _resolve_personality_prompt(value) -> str:
         """Accept string or dict personality value; return system prompt string.
 
-        Delegates to ev0_cli.personality (single owner of rendering).
+        Delegates to threev0_cli.personality (single owner of rendering).
         """
-        from ev0_cli.personality import render_personality_prompt
+        from threev0_cli.personality import render_personality_prompt
 
         return render_personality_prompt(value)
 
@@ -11105,8 +11105,8 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         cmd_original = command.strip()
 
         # Resolve aliases via central registry so adding an alias is a one-line
-        # change in ev0_cli/commands.py instead of touching every dispatch site.
-        from ev0_cli.commands import resolve_command as _resolve_cmd
+        # change in threev0_cli/commands.py instead of touching every dispatch site.
+        from threev0_cli.commands import resolve_command as _resolve_cmd
         _base_word = cmd_lower.split()[0].lstrip("/")
         _cmd_def = _resolve_cmd(_base_word)
         canonical = _cmd_def.name if _cmd_def else _base_word
@@ -11116,7 +11116,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # return values are ignored (fire_pre_command_hook logs directives
         # at debug). Never raises, so a broken plugin can't break dispatch.
         if _cmd_def is not None:
-            from ev0_cli.plugins import fire_pre_command_hook
+            from threev0_cli.plugins import fire_pre_command_hook
             _rest_parts = cmd_original.split(None, 1)
             fire_pre_command_hook(
                 surface="cli",
@@ -11211,10 +11211,10 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 _cprint("  ✨ (◕‿◕)✨ Fresh start! Screen cleared and conversation reset.\n")
                 # Show a random tip on new session
                 try:
-                    from ev0_cli.tips import get_random_tip
+                    from threev0_cli.tips import get_random_tip
                     _tip = get_random_tip()
                     try:
-                        from ev0_cli.skin_engine import get_active_skin
+                        from threev0_cli.skin_engine import get_active_skin
                         _tip_color = get_active_skin().get_color("banner_dim", "#B8860B")
                     except Exception:
                         _tip_color = "#B8860B"
@@ -11226,10 +11226,10 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 print("  ✨ (◕‿◕)✨ Fresh start! Screen cleared and conversation reset.\n")
                 # Show a random tip on new session
                 try:
-                    from ev0_cli.tips import get_random_tip
+                    from threev0_cli.tips import get_random_tip
                     _tip = get_random_tip()
                     try:
-                        from ev0_cli.skin_engine import get_active_skin
+                        from threev0_cli.skin_engine import get_active_skin
                         _tip_color = get_active_skin().get_color("banner_dim", "#B8860B")
                     except Exception:
                         _tip_color = "#B8860B"
@@ -11246,7 +11246,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                     if self._session_db:
                         # Sanitize the title early so feedback matches what gets stored
                         try:
-                            from ev0_state import SessionDB
+                            from threev0_state import SessionDB
                             new_title = SessionDB.sanitize_title(raw_title)
                         except ValueError as e:
                             _cprint(f"  {e}")
@@ -11273,7 +11273,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                                 self._pending_title = new_title
                                 _cprint(f"  Session title queued: {new_title} (will be saved on first message)")
                     else:
-                        from ev0_state import format_session_db_unavailable
+                        from threev0_state import format_session_db_unavailable
                         _cprint(f"  {format_session_db_unavailable()}")
                 else:
                     _cprint("  Usage: /title <your session title>")
@@ -11288,7 +11288,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 else:
                     _cprint("  No title set. Usage: /title <your session title>")
             else:
-                from ev0_state import format_session_db_unavailable
+                from threev0_state import format_session_db_unavailable
                 _cprint(f"  {format_session_db_unavailable()}")
         elif canonical == "handoff":
             if not self._handle_handoff_command(cmd_original):
@@ -11385,7 +11385,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         elif canonical == "context":
             self._show_context_breakdown(cmd_original)
         elif canonical == "egress":
-            from ev0_cli.slash_exec import CommandContext, execute_command
+            from threev0_cli.slash_exec import CommandContext, execute_command
 
             self._console_print(
                 execute_command("egress", CommandContext(surface="cli")).text,
@@ -11433,7 +11433,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             if self._handle_update_command():
                 return False
         elif canonical == "version":
-            from ev0_cli.main import _print_version_info
+            from threev0_cli.main import _print_version_info
 
             _print_version_info(check_updates=True)
         elif canonical == "paste":
@@ -11441,7 +11441,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         elif canonical == "image":
             self._handle_image_command(cmd_original)
         elif canonical == "reload":
-            from ev0_cli.config import reload_env
+            from threev0_cli.config import reload_env
             count = reload_env()
             print(f"  Reloaded .env ({count} var(s) updated)")
         elif canonical == "reload-mcp":
@@ -11463,7 +11463,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 # too. The plugin manager only knows about *loaded* plugins, so
                 # using it alone made freshly-installed, not-yet-enabled plugins
                 # look like "nothing installed".
-                from ev0_cli.plugins_cmd import (
+                from threev0_cli.plugins_cmd import (
                     _discover_all_plugins,
                     _get_disabled_set,
                     _get_enabled_set,
@@ -11492,7 +11492,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                     # keyed by name, when available.
                     loaded: dict = {}
                     try:
-                        from ev0_cli.plugins import get_plugin_manager
+                        from threev0_cli.plugins import get_plugin_manager
                         for p in get_plugin_manager().list_plugins():
                             loaded[p["name"]] = p
                     except Exception:
@@ -11586,7 +11586,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             # default MoA preset, then restore the prior model. To *switch* to a
             # MoA preset for the session, pick it from the model picker (MoA
             # presets surface as a virtual "Mixture of Agents" provider).
-            from ev0_cli.moa_config import (
+            from threev0_cli.moa_config import (
                 moa_usage,
                 normalize_moa_config,
             )
@@ -11649,7 +11649,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                             # has all API keys in os.environ.
                             from tools.environments.local import build_subprocess_env
                             sanitized_env = build_subprocess_env()
-                            from ev0_cli._subprocess_compat import windows_hide_flags
+                            from threev0_cli._subprocess_compat import windows_hide_flags
                             result = subprocess.run(
                                 exec_cmd, shell=True, capture_output=True,
                                 text=True, encoding="utf-8", errors="replace", timeout=30, env=sanitized_env,
@@ -11682,7 +11682,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                     self._console_print(f"[bold red]Quick command '{base_cmd}' has unsupported type (supported: 'exec', 'alias')[/]")
             # Check for plugin-registered slash commands
             elif base_cmd.lstrip("/") in _get_plugin_cmd_handler_names():
-                from ev0_cli.plugins import (
+                from threev0_cli.plugins import (
                     get_plugin_command_handler,
                     resolve_plugin_command_result,
                 )
@@ -11770,7 +11770,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 # Prefix matching: if input uniquely identifies one command, execute it.
                 # Matches against both built-in COMMANDS and installed skill commands so
                 # that execution-time resolution agrees with tab-completion.
-                from ev0_cli.commands import COMMANDS
+                from threev0_cli.commands import COMMANDS
                 typed_base = cmd_lower.split()[0]
                 all_known = set(COMMANDS) | set(skill_commands) | set(skill_bundles)
                 matches = [c for c in all_known if c.startswith(typed_base)]
@@ -11834,8 +11834,8 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         session split).
         """
         try:
-            from ev0_cli.goals import GoalManager
-            from ev0_cli.config import load_config
+            from threev0_cli.goals import GoalManager
+            from threev0_cli.config import load_config
         except Exception as exc:
             logging.debug("goal manager unavailable: %s", exc)
             return None
@@ -11866,7 +11866,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         ``session_id`` changes (mirrors ``_get_goal_manager``).
         """
         try:
-            from ev0_cli.heartbeat import HeartbeatManager
+            from threev0_cli.heartbeat import HeartbeatManager
         except Exception as exc:
             logging.debug("heartbeat manager unavailable: %s", exc)
             return None
@@ -11897,7 +11897,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             return
         self._heartbeat_watchdog_started = True
 
-        from ev0_cli.heartbeat import POLL_SECONDS
+        from threev0_cli.heartbeat import POLL_SECONDS
 
         def _loop():
             try:
@@ -11935,7 +11935,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         ``session_id`` changes (mirrors ``_get_goal_manager``).
         """
         try:
-            from ev0_cli.loops import LoopManager
+            from threev0_cli.loops import LoopManager
         except Exception as exc:
             logging.debug("loop manager unavailable: %s", exc)
             return None
@@ -11978,7 +11978,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         except Exception:
             return
         try:
-            from ev0_cli.loops import goal_blocks_loop_tick
+            from threev0_cli.loops import goal_blocks_loop_tick
 
             if goal_blocks_loop_tick(mgr.session_id):
                 return
@@ -12248,7 +12248,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             return
 
         try:
-            from ev0_cli.goals import gather_background_processes as _gather_bg
+            from threev0_cli.goals import gather_background_processes as _gather_bg
             _bg_procs = _gather_bg()
         except Exception:
             _bg_procs = None
@@ -12299,7 +12299,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             self._focus_hidden_lines = 0
             self._focus_last_counted_tool = None
             try:
-                from ev0_cli.focus_view import FOCUS_CONFIG_KEY
+                from threev0_cli.focus_view import FOCUS_CONFIG_KEY
 
                 save_config_value(FOCUS_CONFIG_KEY, False)
             except Exception:
@@ -12316,7 +12316,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # prompt_toolkit's renderer.  self.console.print() with Rich markup
         # writes directly to stdout which patch_stdout's StdoutProxy mangles
         # into garbled sequences like '?[33mTool progress: NEW?[0m' (#2262).
-        from ev0_cli.colors import Colors as _Colors
+        from threev0_cli.colors import Colors as _Colors
         labels = {
             "off": f"{_Colors.DIM}Tool progress: OFF{_Colors.RESET} — silent mode, just the final response.",
             "new": f"{_Colors.YELLOW}Tool progress: NEW{_Colors.RESET} — show each new tool (skip repeats).",
@@ -12335,7 +12335,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         or when session.terminal_continue is false.
         """
         try:
-            from ev0_cli.terminal_breadcrumbs import write_breadcrumb
+            from threev0_cli.terminal_breadcrumbs import write_breadcrumb
 
             write_breadcrumb(self.session_id)
         except Exception:
@@ -12417,7 +12417,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         ``set_current_session_key`` so the bypass takes effect on the very
         next dangerous command in this run.
         """
-        from ev0_cli.colors import Colors as _Colors
+        from threev0_cli.colors import Colors as _Colors
         from tools.approval import (
             disable_session_yolo,
             enable_session_yolo,
@@ -12506,7 +12506,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # directs users here when auto-compaction is off, and the gateway's
         # /compress handler has never gated on the flag.
 
-        from ev0_cli.partial_compress import (
+        from threev0_cli.partial_compress import (
             extract_compress_flags,
             parse_partial_compress_args,
             rejoin_compressed_head_and_tail,
@@ -12908,7 +12908,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             # above the file handler level filters records before they
             # reach handlers, so agent.log / errors.log lose visibility
             # into stream-retry events, credential rotations, etc.
-            # Console quietness is enforced by ev0_logging not
+            # Console quietness is enforced by threev0_logging not
             # installing a console StreamHandler in non-verbose mode.
 
     def _show_insights(self, command: str = "/insights"):
@@ -12936,7 +12936,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 i += 1
 
         try:
-            from ev0_state import SessionDB
+            from threev0_state import SessionDB
             from agent.insights import InsightsEngine
 
             db = SessionDB()
@@ -12979,7 +12979,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             return
         self._last_config_check = now
 
-        from ev0_cli.config import get_config_path as _get_config_path
+        from threev0_cli.config import get_config_path as _get_config_path
         cfg_path = _get_config_path()
         if not cfg_path.exists():
             return
@@ -13008,7 +13008,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # keys) triggers a false-positive MCP reload because the raw yaml
         # still has "${POWERMEM_API_KEY}" while the snapshot has the
         # expanded value.
-        from ev0_cli.config import _expand_env_vars
+        from threev0_cli.config import _expand_env_vars
         new_mcp = _expand_env_vars(new_mcp)
         if new_mcp == self._config_mcp_servers:
             return  # mcp_servers unchanged (some other section was edited)
@@ -13693,7 +13693,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # instead of crashing on ``.get()``.
         voice_cfg: dict = {}
         try:
-            from ev0_cli.config import load_config
+            from threev0_cli.config import load_config
             _cfg = load_config().get("voice")
             voice_cfg = _cfg if isinstance(_cfg, dict) else {}
         except Exception:
@@ -13792,7 +13792,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         CLI passes a real model name into the local STT backend.
         """
         try:
-            from ev0_cli.config import load_config
+            from threev0_cli.config import load_config
             stt_config = load_config().get("stt", {})
             if not isinstance(stt_config, dict):
                 return None
@@ -13809,7 +13809,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
     def _voice_stt_provider(self) -> str:
         """Configured STT provider name (lowercased), or empty string."""
         try:
-            from ev0_cli.config import load_config
+            from threev0_cli.config import load_config
             stt_config = load_config().get("stt", {})
             if not isinstance(stt_config, dict):
                 return ""
@@ -14077,7 +14077,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             return  # one listener owns the mic for this turn
         fd_active.set()
         try:
-            from ev0_cli.config import load_config
+            from threev0_cli.config import load_config
             voice_cfg = load_config().get("voice") or {}
             if not (isinstance(voice_cfg, dict) and voice_cfg.get("barge_in", True)):
                 return
@@ -14205,7 +14205,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
     def _voice_beeps_enabled(self) -> bool:
         """Return whether CLI voice mode should play record start/stop beeps."""
         try:
-            from ev0_cli.config import load_config
+            from threev0_cli.config import load_config
             from utils import is_truthy_value
             voice_cfg = load_config().get("voice", {})
             if isinstance(voice_cfg, dict):
@@ -14252,7 +14252,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # Check config for auto_tts (shape-safe — malformed ``voice:`` YAML
         # leaves ``voice_config`` as a non-dict, so guard before .get()).
         try:
-            from ev0_cli.config import load_config
+            from threev0_cli.config import load_config
             _raw_voice = load_config().get("voice")
             voice_config = _raw_voice if isinstance(_raw_voice, dict) else {}
             if voice_config.get("auto_tts", False):
@@ -15221,7 +15221,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                     build_native_content_parts,
                     decide_image_input_mode,
                 )
-                from ev0_cli.config import load_config
+                from threev0_cli.config import load_config
 
                 _img_model, _img_provider = "", ""
                 if isinstance(self.model, dict):
@@ -15835,7 +15835,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             if response and not response_previewed:
                 # Use skin engine for label/color with fallback
                 try:
-                    from ev0_cli.skin_engine import get_active_skin
+                    from threev0_cli.skin_engine import get_active_skin
                     _skin = get_active_skin()
                     label = _skin.get_branding("response_label", "⚕ 3V0")
                     _resp_color = _maybe_remap_for_light_mode(_skin.get_color("response_border", "#CD7F32"))
@@ -16186,7 +16186,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             # session on the next invocation. The "default" and "custom"
             # profile names use the standard EV0_HOME, so no -p needed.
             try:
-                from ev0_cli.profiles import get_active_profile_name
+                from threev0_cli.profiles import get_active_profile_name
                 _active_profile = get_active_profile_name()
             except Exception:
                 _active_profile = "default"
@@ -16204,7 +16204,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             print(f"Messages:       {msg_count} ({user_msgs} user, {tool_calls} tool calls)")
         else:
             try:
-                from ev0_cli.skin_engine import get_active_goodbye
+                from threev0_cli.skin_engine import get_active_goodbye
                 goodbye = get_active_goodbye("Goodbye! ⚕")
             except Exception:
                 goodbye = "Goodbye! ⚕"
@@ -16221,7 +16221,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         prepended to the prompt symbol: ``coder ❯`` instead of ``❯``.
         """
         try:
-            from ev0_cli.skin_engine import get_active_prompt_symbol
+            from threev0_cli.skin_engine import get_active_prompt_symbol
             symbol = get_active_prompt_symbol("❯ ")
         except Exception:
             symbol = "❯ "
@@ -16230,7 +16230,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
 
         # Prepend profile name when not default
         try:
-            from ev0_cli.profiles import get_active_profile_name
+            from threev0_cli.profiles import get_active_profile_name
             profile = get_active_profile_name()
             if profile not in {"default", "custom"}:
                 symbol = f"{profile} {symbol}"
@@ -16315,7 +16315,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         """
         style_dict = dict(getattr(self, "_tui_style_base", {}) or {})
         try:
-            from ev0_cli.skin_engine import get_prompt_toolkit_style_overrides
+            from threev0_cli.skin_engine import get_prompt_toolkit_style_overrides
             style_dict.update(get_prompt_toolkit_style_overrides())
         except Exception:
             pass
@@ -16482,7 +16482,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 self._display_resumed_history()
 
         try:
-            from ev0_cli.skin_engine import get_active_skin
+            from threev0_cli.skin_engine import get_active_skin
             _welcome_skin = get_active_skin()
             _welcome_text = _welcome_skin.get_branding("welcome", "Welcome to 3V0 Agent! Type your message or /help for commands.")
             _welcome_color = _welcome_skin.get_color("banner_text", "#FFF8DC")
@@ -16496,7 +16496,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # otherwise blocks ~1-2s on serial /v1/models fetches the first time
         # it's opened in a session. Fire-and-forget, guarded once-per-process.
         try:
-            from ev0_cli.model_switch import prewarm_picker_cache_async
+            from threev0_cli.model_switch import prewarm_picker_cache_async
             prewarm_picker_cache_async()
         except Exception:
             pass
@@ -16559,7 +16559,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                     _resid_color = "#B8860B"
                 self._console_print(f"[{_resid_color}]{openclaw_residue_hint_cli()}[/]")
                 try:
-                    from ev0_cli.config import get_config_path as _get_cfg_path_resid
+                    from threev0_cli.config import get_config_path as _get_cfg_path_resid
                     mark_seen(_get_cfg_path_resid(), OPENCLAW_RESIDUE_FLAG)
                 except Exception:
                     pass  # best-effort — banner will fire again next session
@@ -16567,7 +16567,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             pass  # banner is non-critical — never break startup
         # Show a random tip to help users discover features
         try:
-            from ev0_cli.tips import get_random_tip
+            from threev0_cli.tips import get_random_tip
             _tip = get_random_tip()
             try:
                 _tip_color = _welcome_skin.get_color("banner_dim", "#B8860B")
@@ -16636,11 +16636,11 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         self._last_ctrl_c_time = 0  # Track double Ctrl+C for force exit
 
         # Give plugin manager a CLI reference so plugins can inject messages
-        from ev0_cli.plugins import get_plugin_manager
+        from threev0_cli.plugins import get_plugin_manager
         get_plugin_manager()._cli_ref = self
 
         # Config file watcher — detect mcp_servers changes and auto-reload
-        from ev0_cli.config import get_config_path as _get_config_path
+        from threev0_cli.config import get_config_path as _get_config_path
         _cfg_path = _get_config_path()
         self._config_mtime: float = _cfg_path.stat().st_mtime if _cfg_path.exists() else 0.0
         self._config_mcp_servers: dict = self.config.get("mcp_servers") or {}
@@ -16715,7 +16715,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         def handle_ignored_terminal_sequence(event):
             """Consume parser-level ignored terminal sequences before self-insert.
 
-            install_ignored_terminal_sequences() in ev0_cli.pt_input_extras
+            install_ignored_terminal_sequences() in threev0_cli.pt_input_extras
             registers focus reports (CSI I / CSI O) as Keys.Ignore at the
             VT100 parser level. Without this no-op binding the default
             self-insert path would still fire and the bytes would land in
@@ -16790,7 +16790,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 try:
                     # Picker selections follow the same session-scoped default
                     # as /model <name>; honour model.persist_switch_by_default.
-                    from ev0_cli.model_switch import resolve_persist_behavior
+                    from threev0_cli.model_switch import resolve_persist_behavior
 
                     self._handle_model_picker_selection(
                         persist_global=resolve_persist_behavior(False, False)
@@ -17119,7 +17119,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             repeated Ctrl+S safe: a second stash never silently overwrites the
             first, both stay reachable in the panel.
             """
-            from ev0_cli.prompt_stash import (
+            from threev0_cli.prompt_stash import (
                 ACTION_OPEN_PANEL,
                 ACTION_RESTORED,
                 ACTION_STASHED,
@@ -17647,7 +17647,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 return
             import signal as _sig
             from prompt_toolkit.application import run_in_terminal
-            from ev0_cli.skin_engine import get_active_skin
+            from threev0_cli.skin_engine import get_active_skin
             agent_name = get_active_skin().get_branding("agent_name", "3V0 Agent")
             msg = f"\n{agent_name} has been suspended. Run `fg` to bring {agent_name} back."
             def _suspend():
@@ -17666,8 +17666,8 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # TUI/CLI split instead of a silent mismatch (round-11).
         _raw_key: object = "ctrl+b"
         try:
-            from ev0_cli.config import load_config
-            from ev0_cli.voice import (
+            from threev0_cli.config import load_config
+            from threev0_cli.voice import (
                 normalize_voice_record_key_for_prompt_toolkit,
                 pt_key_to_sequence,
                 voice_record_key_from_config,
@@ -19423,7 +19423,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 # and SQLite history. Ported from google-gemini/gemini-cli#19332.
                 if getattr(self, '_delete_session_on_exit', False):
                     try:
-                        from ev0_constants import get_ev0_home as _ghh
+                        from threev0_constants import get_ev0_home as _ghh
                         _sessions_dir = _ghh() / "sessions"
                         _sid = self.agent.session_id
                         if self._session_db.delete_session(_sid, sessions_dir=_sessions_dir):
@@ -19438,7 +19438,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             # the exit occurred, meaning run_conversation's hook didn't fire.
             if self.agent and getattr(self, '_agent_running', False):
                 try:
-                    from ev0_cli.lifecycle import invoke_hook as _invoke_hook
+                    from threev0_cli.lifecycle import invoke_hook as _invoke_hook
                     _invoke_hook(
                         "on_session_end",
                         session_id=self.agent.session_id,
@@ -19460,7 +19460,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # thread (which would skip terminal cleanup on POSIX and only exit
         # the worker thread on Windows).
         if getattr(self, '_pending_relaunch', None):
-            from ev0_cli.relaunch import relaunch
+            from threev0_cli.relaunch import relaunch
             relaunch(self._pending_relaunch, preserve_inherited=False)
 
 
@@ -19491,8 +19491,8 @@ def _run_kanban_goal_loop_q(cli: "Ev0CLI", first_response: str) -> None:
         except ValueError:
             logger.warning("invalid EV0_KANBAN_RUN_ID=%r", raw_run_id)
 
-    from ev0_cli import kanban_db as _kb
-    from ev0_cli.goals import run_kanban_goal_loop as _run_loop, DEFAULT_MAX_TURNS as _DEF_TURNS
+    from threev0_cli import kanban_db as _kb
+    from threev0_cli.goals import run_kanban_goal_loop as _run_loop, DEFAULT_MAX_TURNS as _DEF_TURNS
 
     # Resolve goal text from the card (title + body = the acceptance
     # criteria the judge evaluates against).
@@ -19635,7 +19635,7 @@ def main(
     # Rich console prints Unicode box-drawing characters that would
     # UnicodeEncodeError on cp1252.  No-op on Linux/macOS.
     try:
-        from ev0_cli.stdio import configure_windows_stdio
+        from threev0_cli.stdio import configure_windows_stdio
         configure_windows_stdio()
     except Exception:
         pass
@@ -19755,7 +19755,7 @@ def main(
             toolsets_list = _coding
         else:
             # Use the shared resolver so MCP servers are included at runtime
-            from ev0_cli.tools_config import _get_platform_tools
+            from threev0_cli.tools_config import _get_platform_tools
             toolsets_list = sorted(_get_platform_tools(CLI_CONFIG, "cli"))
     
     parsed_skills = _parse_skills_argument(skills)
@@ -19940,7 +19940,7 @@ def main(
             _kanban_task_id = os.environ.get("EV0_KANBAN_TASK", "").strip()
             if _kanban_task_id:
                 try:
-                    from ev0_cli import kanban_db as _kb
+                    from threev0_cli import kanban_db as _kb
                     from agent.image_routing import extract_image_refs as _extract_refs
 
                     _conn = _kb.connect()
@@ -19986,7 +19986,7 @@ def main(
                                 build_native_content_parts as _build_parts,  # noqa: F811
                             )
                             from agent.image_routing import decide_image_input_mode
-                            from ev0_cli.config import load_config
+                            from threev0_cli.config import load_config
 
                             _img_mode = decide_image_input_mode(
                                 (cli.provider or "").strip(),
@@ -20112,7 +20112,7 @@ def main(
                                 "failure_reason"
                             ) in ("rate_limit", "billing"):
                                 try:
-                                    from ev0_cli.kanban_db import (
+                                    from threev0_cli.kanban_db import (
                                         KANBAN_RATE_LIMIT_EXIT_CODE as _RL_CODE,
                                     )
                                     _exit_code = _RL_CODE

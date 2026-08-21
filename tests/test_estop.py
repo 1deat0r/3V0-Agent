@@ -229,7 +229,7 @@ async def test_gateway_internal_events_bypass_estop(ev0_home):
 
 
 def test_cli_pause_engages_with_reason(ev0_home, capsys):
-    from ev0_cli.subcommands.pause import cmd_pause
+    from threev0_cli.subcommands.pause import cmd_pause
 
     rc = cmd_pause(argparse.Namespace(reason="ops incident"))
     assert rc == 0
@@ -239,7 +239,7 @@ def test_cli_pause_engages_with_reason(ev0_home, capsys):
 
 
 def test_cli_pause_idempotent(ev0_home, capsys):
-    from ev0_cli.subcommands.pause import cmd_pause
+    from threev0_cli.subcommands.pause import cmd_pause
 
     assert cmd_pause(argparse.Namespace(reason=None)) == 0
     assert cmd_pause(argparse.Namespace(reason=None)) == 0
@@ -247,7 +247,7 @@ def test_cli_pause_idempotent(ev0_home, capsys):
 
 
 def test_cli_resume_disengages(ev0_home, capsys):
-    from ev0_cli.subcommands.pause import cmd_pause, cmd_resume
+    from threev0_cli.subcommands.pause import cmd_pause, cmd_resume
 
     cmd_pause(argparse.Namespace(reason=None))
     rc = cmd_resume(argparse.Namespace())
@@ -257,7 +257,7 @@ def test_cli_resume_disengages(ev0_home, capsys):
 
 
 def test_cli_resume_when_not_paused(ev0_home, capsys):
-    from ev0_cli.subcommands.pause import cmd_resume
+    from threev0_cli.subcommands.pause import cmd_resume
 
     rc = cmd_resume(argparse.Namespace())
     assert rc == 0
@@ -265,7 +265,7 @@ def test_cli_resume_when_not_paused(ev0_home, capsys):
 
 
 def test_builtin_subcommands_include_pause_resume():
-    from ev0_cli.main import _BUILTIN_SUBCOMMANDS
+    from threev0_cli.main import _BUILTIN_SUBCOMMANDS
 
     assert "pause" in _BUILTIN_SUBCOMMANDS
     assert "resume" in _BUILTIN_SUBCOMMANDS
@@ -275,7 +275,7 @@ def test_builtin_subcommands_include_pause_resume():
 
 
 def test_status_line_when_paused(ev0_home):
-    from ev0_cli.status import _estop_status_line
+    from threev0_cli.status import _estop_status_line
 
     assert _estop_status_line() is None
     estop.engage(reason="ops")
@@ -369,7 +369,7 @@ async def test_gateway_pause_command_engages_and_resumes(ev0_home):
 
 
 def test_pause_command_registered_for_gateway():
-    from ev0_cli.commands import GATEWAY_KNOWN_COMMANDS, resolve_command
+    from threev0_cli.commands import GATEWAY_KNOWN_COMMANDS, resolve_command
 
     cmd = resolve_command("pause")
     assert cmd is not None and cmd.name == "pause"

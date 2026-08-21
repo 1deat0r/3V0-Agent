@@ -47,7 +47,7 @@ or dynamic Relay plugins.
 
 3V0 core owns one Relay host and one isolated Relay session scope per 3V0
 session. Core lifecycle producers use
-`ev0_cli.observability.relay_runtime` to obtain the shared session handle or
+`threev0_cli.observability.relay_runtime` to obtain the shared session handle or
 run Relay scope, LLM, tool, and mark APIs in that session context. New product
 marks do not require 3V0 plugin registration. Shared-metrics marks must
 still contain only fields approved by the versioned allowlist; the hard

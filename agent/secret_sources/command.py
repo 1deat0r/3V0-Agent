@@ -42,7 +42,7 @@ from pathlib import Path
 from typing import Dict, Optional
 
 # Reuse the exact result shape the bitwarden source returns so
-# ev0_cli.env_loader can consume both providers identically.
+# threev0_cli.env_loader can consume both providers identically.
 from agent.secret_sources.base import ErrorKind, SecretSource
 from agent.secret_sources.base import get_source_environment
 from agent.secret_sources.bitwarden import FetchResult
@@ -321,7 +321,7 @@ def list_command_secrets(
 
 
 # ---------------------------------------------------------------------------
-# Public entry point — called from ev0_cli.env_loader
+# Public entry point — called from threev0_cli.env_loader
 # ---------------------------------------------------------------------------
 
 

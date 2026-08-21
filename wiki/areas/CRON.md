@@ -10,8 +10,8 @@ Columns: path · kind · purpose · why · related
 | `cron/__init__.py` | source | Cron job scheduling system for 3V0 Agent. | Python module executed or imported by the runtime; check git intent before deleting | cron/blueprint_catalog.py; cron/executions.py; cron/jobs.py; cron/lifecycle_guard.py; cron/monitor.py; cron/notepad.py; cron/scheduler.py; cron/scheduler_provider.py; cron/scripts/__init__.py |
 | `cron/blueprint_catalog.py` | source | Blueprint jobs catalog (well-known scheduled tasks) | One-shot canonical jobs | cron/jobs.py |
 | `cron/executions.py` | source | Audit of what fired | Records cron executions for the scheduler's audit trail | cron/scheduler.py; cron/jobs.py; gateway/run.py |
-| `cron/jobs.py` | source | Job store — SQLite-backed cron jobs (schedules, skills, context_from, workdir) | The agent's own scheduler; 3-minute hard interrupt invariant | ev0_cli/cron.py; tools/cronjob_tools.py |
-| `cron/lifecycle_guard.py` | source | Cron job lifecycle guards (pause/resume rules) | Policy enforcement | ev0_cli/cron.py |
+| `cron/jobs.py` | source | Job store — SQLite-backed cron jobs (schedules, skills, context_from, workdir) | The agent's own scheduler; 3-minute hard interrupt invariant | threev0_cli/cron.py; tools/cronjob_tools.py |
+| `cron/lifecycle_guard.py` | source | Cron job lifecycle guards (pause/resume rules) | Policy enforcement | threev0_cli/cron.py |
 | `cron/monitor.py` | source | Cron monitoring surfaces | Observability for jobs | cron/executions.py |
 | `cron/notepad.py` | source | Context persistence | Persists scratch context for cron jobs across runs | cron/scheduler.py; agent/memory_manager.py |
 | `cron/scheduler.py` | source | Scheduler tick loop (lock-guarded) | Runs inside the gateway process; .tick.lock prevents duplicates | cron/jobs.py |

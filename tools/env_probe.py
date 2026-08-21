@@ -37,7 +37,7 @@ import tempfile
 import threading
 from typing import Optional
 
-from ev0_cli._subprocess_compat import windows_hide_flags
+from threev0_cli._subprocess_compat import windows_hide_flags
 
 logger = logging.getLogger(__name__)
 

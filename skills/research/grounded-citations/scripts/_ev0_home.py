@@ -1,10 +1,10 @@
 """Resolve EV0_HOME for standalone skill scripts.
 
 Skill scripts may run outside the 3V0 process (system Python, nix env,
-CI) where ``ev0_constants`` is not importable.  This module provides the
+CI) where ``threev0_constants`` is not importable.  This module provides the
 same ``get_ev0_home()`` contract without requiring it on ``sys.path``.
 
-When ``ev0_constants`` IS available it is used directly so profile
+When ``threev0_constants`` IS available it is used directly so profile
 resolution and any future enhancements are picked up automatically.
 """
 
@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 
 try:
-    from ev0_constants import get_ev0_home as get_ev0_home
+    from threev0_constants import get_ev0_home as get_ev0_home
 except (ModuleNotFoundError, ImportError):
 
     def get_ev0_home() -> Path:

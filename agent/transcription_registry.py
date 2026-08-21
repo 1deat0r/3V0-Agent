@@ -24,7 +24,7 @@ import threading
 from typing import Dict, List, Optional
 
 from agent.transcription_provider import TranscriptionProvider
-from ev0_constants import ev0_home_key
+from threev0_constants import ev0_home_key
 
 logger = logging.getLogger(__name__)
 

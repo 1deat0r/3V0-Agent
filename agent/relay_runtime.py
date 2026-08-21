@@ -14,7 +14,7 @@ from concurrent.futures import TimeoutError as FuturesTimeoutError
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 
 logger = logging.getLogger(__name__)
 

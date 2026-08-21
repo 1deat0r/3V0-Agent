@@ -1279,7 +1279,7 @@ class MemoryManager:
         ``get_ev0_home()`` themselves.
         """
         if "ev0_home" not in kwargs:
-            from ev0_constants import get_ev0_home
+            from threev0_constants import get_ev0_home
             kwargs["ev0_home"] = str(get_ev0_home())
         for provider in self._providers:
             try:

@@ -103,7 +103,7 @@ def _join_url(base: str, prefix: str) -> str:
 
 def _active_profile_name() -> str:
     try:
-        from ev0_cli.profiles import get_active_profile_name
+        from threev0_cli.profiles import get_active_profile_name
         return get_active_profile_name() or "default"
     except Exception:
         return os.getenv("EV0_PROFILE", "default") or "default"
@@ -111,12 +111,12 @@ def _active_profile_name() -> str:
 
 def _profile_home(profile: str) -> Optional[str]:
     try:
-        from ev0_cli.profiles import get_profile_dir
+        from threev0_cli.profiles import get_profile_dir
         return str(get_profile_dir(profile))
     except Exception:
         if not profile or profile == "default":
             try:
-                from ev0_cli.config import get_ev0_home
+                from threev0_cli.config import get_ev0_home
                 return str(get_ev0_home())
             except Exception:
                 return None
@@ -481,7 +481,7 @@ class A2AAdapter(BasePlatformAdapter):
 
     def _load_global_a2a_config(self) -> dict:
         try:
-            from ev0_cli.config import load_config
+            from threev0_cli.config import load_config
             cfg = load_config() or {}
             return cfg if isinstance(cfg, dict) else {}
         except Exception:

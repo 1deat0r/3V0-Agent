@@ -39,7 +39,7 @@ def _make_event(text):
 
 def _fake_switch_result():
     """Build a successful ModelSwitchResult that bypasses real provider resolution."""
-    from ev0_cli.model_switch import ModelSwitchResult
+    from threev0_cli.model_switch import ModelSwitchResult
 
     return ModelSwitchResult(
         success=True,
@@ -69,12 +69,12 @@ def _setup_isolated_home(tmp_path, monkeypatch, model_yaml_value):
     monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
     monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda: {})
     monkeypatch.setattr(
-        "ev0_cli.model_switch.switch_model",
+        "threev0_cli.model_switch.switch_model",
         lambda **kw: _fake_switch_result(),
     )
     # save_config writes to ``get_ev0_home() / config.yaml`` — point it here.
-    monkeypatch.setattr("ev0_constants.get_ev0_home", lambda: ev0_home)
-    monkeypatch.setattr("ev0_cli.config.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: ev0_home)
     return cfg_path
 
 
@@ -120,11 +120,11 @@ async def test_model_global_persists_when_config_has_missing_model(tmp_path, mon
     monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
     monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda: {})
     monkeypatch.setattr(
-        "ev0_cli.model_switch.switch_model",
+        "threev0_cli.model_switch.switch_model",
         lambda **kw: _fake_switch_result(),
     )
-    monkeypatch.setattr("ev0_constants.get_ev0_home", lambda: ev0_home)
-    monkeypatch.setattr("ev0_cli.config.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: ev0_home)
 
     result = await _make_runner()._handle_model_command(
         _make_event("/model gpt-5.5 --global")

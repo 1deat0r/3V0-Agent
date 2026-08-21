@@ -173,7 +173,7 @@ _capability_bg_lock = threading.Lock()
 
 def _capability_disk_cache_path() -> "Path":
 
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     return get_ev0_home() / "cache" / "discord_capabilities.json"
 
@@ -710,7 +710,7 @@ def _load_allowed_actions_config() -> Optional[List[str]]:
     Unknown action names are dropped with a log warning.
     """
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
         cfg = load_config()
     except Exception as exc:
         logger.debug("discord: could not load config (%s); allowing all actions.", exc)

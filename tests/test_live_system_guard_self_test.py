@@ -265,7 +265,7 @@ def test_subprocess_pkill_ev0_gateway_blocked():
 
 
 def test_subprocess_pkill_python_dash_f_blocked():
-    """``pkill -f python`` matches the gateway's "python -m ev0_cli.main"."""
+    """``pkill -f python`` matches the gateway's "python -m threev0_cli.main"."""
     with pytest.raises(RuntimeError, match="live-system guard"):
         subprocess.run(["pkill", "-f", "python"])
 

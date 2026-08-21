@@ -2,7 +2,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from cli import Ev0CLI, _rich_text_from_ansi
-from ev0_cli.skin_engine import get_active_skin, set_active_skin
+from threev0_cli.skin_engine import get_active_skin, set_active_skin
 
 
 def _make_cli_stub():

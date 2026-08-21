@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ev0_cli import env_loader
+from threev0_cli import env_loader
 
 
 @pytest.fixture(autouse=True)

@@ -46,7 +46,7 @@ def is_connected(config) -> bool:
 
 def interactive_setup() -> None:
     """`3v0 gateway setup` flow for A2A."""
-    from ev0_cli.setup import (
+    from threev0_cli.setup import (
         prompt,
         prompt_yes_no,
         save_env_value,

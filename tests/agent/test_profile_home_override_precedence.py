@@ -23,7 +23,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from ev0_constants import reset_ev0_home_override, set_ev0_home_override
+from threev0_constants import reset_ev0_home_override, set_ev0_home_override
 
 
 class _DB:

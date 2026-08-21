@@ -641,7 +641,7 @@ def _resolve_script_path(script_path: str) -> Optional[Path]:
     ``_expand_candidate_path``; such a value can never name a file the
     scheduler would execute, so there is nothing to scan.
     """
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     raw = _expand_candidate_path(script_path)
     if raw is None:

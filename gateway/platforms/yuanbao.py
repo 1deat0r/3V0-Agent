@@ -104,7 +104,7 @@ logger = logging.getLogger(__name__)
 # Version / platform constants (used in AUTH_BIND and sign-token headers)
 # ---------------------------------------------------------------------------
 try:
-    from ev0_cli import __version__ as _EV0_VERSION
+    from threev0_cli import __version__ as _EV0_VERSION
 except ImportError:
     _EV0_VERSION = "0.0.0"
 
@@ -1385,8 +1385,8 @@ class AutoSetHomeMiddleware(InboundMiddleware):
                 adapter._auto_sethome_done = True  # DM seen — no further upgrades needed
             if _should_set:
                 try:
-                    from ev0_constants import get_ev0_home
-                    from ev0_cli.config import atomic_config_write, read_user_config_raw
+                    from threev0_constants import get_ev0_home
+                    from threev0_cli.config import atomic_config_write, read_user_config_raw
 
                     _home = get_ev0_home()
                     config_path = _home / "config.yaml"

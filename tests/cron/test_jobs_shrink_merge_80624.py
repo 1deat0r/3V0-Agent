@@ -24,10 +24,10 @@ def ev0_env(tmp_path, monkeypatch):
     monkeypatch.setenv("EV0_HOME", str(home))
 
     import importlib
-    import ev0_constants
+    import threev0_constants
     import cron.jobs
 
-    importlib.reload(ev0_constants)
+    importlib.reload(threev0_constants)
     importlib.reload(cron.jobs)
     return home
 

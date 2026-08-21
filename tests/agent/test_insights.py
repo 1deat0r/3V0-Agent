@@ -4,7 +4,7 @@ import sqlite3
 import time
 import pytest
 
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 from agent.insights import (
     InsightsEngine,
     _estimate_cost,

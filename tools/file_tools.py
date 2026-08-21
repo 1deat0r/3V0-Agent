@@ -36,14 +36,14 @@ def _expand_tilde(path: str) -> str:
 
     In-process file tools share the gateway process's HOME, which may differ
     from the profile-specific HOME that interactive CLI sessions use.  This
-    mirrors ``ev0_constants.get_subprocess_home()`` so that ``~`` resolves
+    mirrors ``threev0_constants.get_subprocess_home()`` so that ``~`` resolves
     consistently regardless of whether the tool runs interactively or inside a
     gateway-driven cron job (#48552).
     """
     if not path or "~" not in path:
         return path
     try:
-        from ev0_constants import get_subprocess_home
+        from threev0_constants import get_subprocess_home
 
         home = get_subprocess_home()
     except Exception:
@@ -77,7 +77,7 @@ def _get_max_read_chars() -> int:
     if _max_read_chars_cached is not None:
         return _max_read_chars_cached
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
         cfg = load_config()
         val = cfg.get("file_read_max_chars")
         if isinstance(val, (int, float)) and val > 0:
@@ -667,7 +667,7 @@ def _get_ev0_config_resolved() -> str | None:
         return _ev0_config_resolved
     _ev0_config_resolved_loaded = True
     try:
-        from ev0_cli.config import get_config_path
+        from threev0_cli.config import get_config_path
         _ev0_config_resolved = str(get_config_path().resolve())
     except Exception:
         try:
@@ -744,7 +744,7 @@ def _get_real_ev0_home() -> str | None:
         return _real_ev0_home_cached
     _real_ev0_home_loaded = True
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         _real_ev0_home_cached = os.path.realpath(str(get_ev0_home()))
     except Exception:
         try:
@@ -768,7 +768,7 @@ def _protected_instruction_config() -> tuple[bool, list[str]]:
           protected_instruction_extra_patterns: []  # fnmatch on basename
     """
     try:
-        from ev0_cli.config import load_config, cfg_get
+        from threev0_cli.config import load_config, cfg_get
         cfg = load_config()
         enabled = cfg_get(cfg, "security", "protected_instruction_files",
                           default=True)

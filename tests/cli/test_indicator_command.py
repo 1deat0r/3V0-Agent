@@ -14,7 +14,7 @@ from cli import Ev0CLI
 
 
 def _import_cli():
-    import ev0_cli.config as config_mod
+    import threev0_cli.config as config_mod
 
     if not hasattr(config_mod, "save_env_value_secure"):
         config_mod.save_env_value_secure = lambda key, value: {
@@ -127,14 +127,14 @@ class TestHandleIndicatorCommand(unittest.TestCase):
 
 class TestIndicatorRegistry(unittest.TestCase):
     def test_indicator_in_registry(self):
-        from ev0_cli.commands import COMMAND_REGISTRY
+        from threev0_cli.commands import COMMAND_REGISTRY
 
         names = [c.name for c in COMMAND_REGISTRY]
         self.assertIn("indicator", names)
 
     def test_indicator_subcommands_match_handler(self):
-        from ev0_cli.commands import COMMAND_REGISTRY
-        from ev0_constants import INDICATOR_STYLES
+        from threev0_cli.commands import COMMAND_REGISTRY
+        from threev0_constants import INDICATOR_STYLES
 
         indicator = next(c for c in COMMAND_REGISTRY if c.name == "indicator")
         self.assertEqual(indicator.category, "Configuration")

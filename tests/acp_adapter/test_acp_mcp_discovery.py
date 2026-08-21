@@ -19,7 +19,7 @@ import pytest
 
 from acp_adapter.server import Ev0ACPAgent
 from acp_adapter.session import SessionManager, SessionState
-from ev0_cli import mcp_startup
+from threev0_cli import mcp_startup
 
 
 # ---------------------------------------------------------------------------
@@ -88,9 +88,9 @@ def test_acp_background_discovery_does_not_block_startup(monkeypatch):
 
     monkeypatch.setitem(
         sys.modules,
-        "ev0_cli.config",
+        "threev0_cli.config",
         _mod(
-            "ev0_cli.config",
+            "threev0_cli.config",
             read_raw_config=lambda: {"mcp_servers": {"slow": {"url": "https://mcp.example.test"}}},
         ),
     )
@@ -136,9 +136,9 @@ def test_acp_late_refresh_adds_tools_when_discovery_lands_after_build(monkeypatc
 
     monkeypatch.setitem(
         sys.modules,
-        "ev0_cli.config",
+        "threev0_cli.config",
         _mod(
-            "ev0_cli.config",
+            "threev0_cli.config",
             read_raw_config=lambda: {"mcp_servers": {"slow": {"url": "https://mcp.example.test"}}},
         ),
     )
@@ -213,9 +213,9 @@ def test_acp_late_refresh_skips_after_first_turn(monkeypatch):
 
     monkeypatch.setitem(
         sys.modules,
-        "ev0_cli.config",
+        "threev0_cli.config",
         _mod(
-            "ev0_cli.config",
+            "threev0_cli.config",
             read_raw_config=lambda: {"mcp_servers": {"slow": {"url": "https://mcp.example.test"}}},
         ),
     )
@@ -280,9 +280,9 @@ def test_acp_late_refresh_skips_while_turn_running(monkeypatch):
 
     monkeypatch.setitem(
         sys.modules,
-        "ev0_cli.config",
+        "threev0_cli.config",
         _mod(
-            "ev0_cli.config",
+            "threev0_cli.config",
             read_raw_config=lambda: {"mcp_servers": {"slow": {"url": "https://mcp.example.test"}}},
         ),
     )

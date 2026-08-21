@@ -57,7 +57,7 @@ def _(rid, params: dict) -> dict:
         """
         out: list[dict] = []
         try:
-            from ev0_cli.profiles import list_profiles
+            from threev0_cli.profiles import list_profiles
 
             seen: set[str] = set()
             for p in list_profiles():
@@ -334,7 +334,7 @@ def _(rid, params: dict) -> dict:
         return _ok(rid, {"items": []})
 
     try:
-        from ev0_cli.commands import SlashCommandCompleter
+        from threev0_cli.commands import SlashCommandCompleter
         from prompt_toolkit.document import Document
         from prompt_toolkit.formatted_text import to_plain_text
 
@@ -469,7 +469,7 @@ def _(rid, params: dict) -> dict:
 @method("model.options")
 def _(rid, params: dict) -> dict:
     try:
-        from ev0_cli.inventory import build_model_options_payload
+        from threev0_cli.inventory import build_model_options_payload
 
         session = _sessions.get(params.get("session_id", ""))
         agent = session.get("agent") if session else None
@@ -501,9 +501,9 @@ def _(rid, params: dict) -> dict:
     model.options entries) on success.
     """
     try:
-        from ev0_cli.auth import PROVIDER_REGISTRY
-        from ev0_cli.config import is_managed
-        from ev0_cli.inventory import build_models_payload
+        from threev0_cli.auth import PROVIDER_REGISTRY
+        from threev0_cli.config import is_managed
+        from threev0_cli.inventory import build_models_payload
 
         slug = (params.get("slug") or "").strip()
         api_key = (params.get("api_key") or "").strip()
@@ -530,7 +530,7 @@ def _(rid, params: dict) -> dict:
         # so any stale config.yaml mirror of the previous key (model.api_key,
         # custom_providers[*].api_key) is rotated in the same action (#62269).
         env_var = pconfig.api_key_env_vars[0]
-        from ev0_cli.credential_lifecycle import save_provider_env_credential
+        from threev0_cli.credential_lifecycle import save_provider_env_credential
 
         save_provider_env_credential(env_var, api_key)
         # Also set in current process so the refreshed inventory sees it.
@@ -579,8 +579,8 @@ def _(rid, params: dict) -> dict:
     Returns success status and the provider's slug.
     """
     try:
-        from ev0_cli.auth import PROVIDER_REGISTRY, clear_provider_auth
-        from ev0_cli.credential_lifecycle import remove_provider_env_credential
+        from threev0_cli.auth import PROVIDER_REGISTRY, clear_provider_auth
+        from threev0_cli.credential_lifecycle import remove_provider_env_credential
 
         slug = (params.get("slug") or "").strip()
         if not slug:

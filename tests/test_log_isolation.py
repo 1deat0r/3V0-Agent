@@ -1,6 +1,6 @@
 """The test suite must never write into the operator's real 3V0 logs.
 
-`ev0_cli/main.py` calls `setup_logging()` at module scope, which resolves
+`threev0_cli/main.py` calls `setup_logging()` at module scope, which resolves
 `get_ev0_home()` and attaches rotating file handlers to the ROOT logger.
 Importing it - which many test modules do, directly or transitively - wires
 the whole pytest session's logging to `<EV0_HOME>/logs/agent.log`.
@@ -51,9 +51,9 @@ def _all_file_destinations() -> list[str]:
     collect(logging.getLogger().handlers)
 
     try:
-        import ev0_logging
+        import threev0_logging
 
-        listener = getattr(ev0_logging, "_queue_listener", None)
+        listener = getattr(threev0_logging, "_queue_listener", None)
         if listener is not None:
             collect(getattr(listener, "handlers", ()))
     except Exception:
@@ -77,7 +77,7 @@ class TestLogIsolation:
         )
 
     def test_importing_the_cli_does_not_target_the_real_logs(self):
-        pytest.importorskip("ev0_cli.main")
+        pytest.importorskip("threev0_cli.main")
 
         real_logs = str(_real_ev0_home() / "logs")
         offenders = [p for p in _all_file_destinations() if p.startswith(real_logs)]

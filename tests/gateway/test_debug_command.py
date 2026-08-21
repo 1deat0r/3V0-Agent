@@ -35,11 +35,11 @@ class TestHandleDebugCommand:
         runner = _make_runner()
         event = _make_event()
 
-        with patch("ev0_cli.debug._sweep_expired_pastes", return_value=(0, 0)) as mock_sweep, \
-             patch("ev0_cli.debug._capture_dump", return_value="dump"), \
-             patch("ev0_cli.debug.collect_debug_report", return_value="report"), \
-             patch("ev0_cli.debug.upload_to_pastebin", return_value="https://paste.rs/report"), \
-             patch("ev0_cli.debug._schedule_auto_delete"):
+        with patch("threev0_cli.debug._sweep_expired_pastes", return_value=(0, 0)) as mock_sweep, \
+             patch("threev0_cli.debug._capture_dump", return_value="dump"), \
+             patch("threev0_cli.debug.collect_debug_report", return_value="report"), \
+             patch("threev0_cli.debug.upload_to_pastebin", return_value="https://paste.rs/report"), \
+             patch("threev0_cli.debug._schedule_auto_delete"):
             result = await runner._handle_debug_command(event)
 
         mock_sweep.assert_called_once()

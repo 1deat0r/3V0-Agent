@@ -29,8 +29,8 @@ def _isolate_ev0_home(tmp_path, monkeypatch):
     """Redirect EV0_HOME to a temp directory."""
     monkeypatch.setenv("EV0_HOME", str(tmp_path))
     try:
-        import ev0_constants
-        monkeypatch.setattr(ev0_constants, "get_ev0_home", lambda: tmp_path)
+        import threev0_constants
+        monkeypatch.setattr(threev0_constants, "get_ev0_home", lambda: tmp_path)
     except (ImportError, AttributeError):
         pass
     return tmp_path
@@ -122,7 +122,7 @@ def populated_sessions_dir(sessions_dir, sample_sessions):
 
 
 def _create_test_db(db_path, session_id, messages):
-    """Create a minimal SQLite DB mimicking ev0_state schema."""
+    """Create a minimal SQLite DB mimicking threev0_state schema."""
     conn = sqlite3.connect(str(db_path))
     conn.execute("""
         CREATE TABLE IF NOT EXISTS sessions (
@@ -1023,7 +1023,7 @@ class TestCliIntegration:
 
         import argparse
         args = argparse.Namespace(mcp_action="serve", verbose=True)
-        from ev0_cli.mcp_config import mcp_command
+        from threev0_cli.mcp_config import mcp_command
         mcp_command(args)
         mock_run.assert_called_once_with(verbose=True)
 

@@ -13,7 +13,7 @@ import contextvars
 from collections import OrderedDict
 from pathlib import Path
 
-from ev0_constants import (
+from threev0_constants import (
     get_ev0_home,
     get_skills_dir,
     is_wsl,
@@ -1404,7 +1404,7 @@ def build_environment_hints() -> str:
     extra = (os.getenv("EV0_ENVIRONMENT_HINT") or "").strip()
     if not extra:
         try:
-            from ev0_cli.config import load_config_readonly
+            from threev0_cli.config import load_config_readonly
 
             extra = str(
                 (load_config_readonly().get("agent", {}) or {}).get("environment_hint", "")
@@ -1458,7 +1458,7 @@ def _get_context_file_max_chars(context_length: Optional[int] = None) -> int:
       3. ``CONTEXT_FILE_MAX_CHARS`` (20K) as the upstream-compatible fallback.
     """
     try:
-        from ev0_cli.config import load_config_readonly
+        from threev0_cli.config import load_config_readonly
 
         val = load_config_readonly().get("context_file_max_chars")
         if isinstance(val, (int, float)) and val > 0:
@@ -2069,7 +2069,7 @@ def _build_skills_system_prompt_inner(
 def build_nous_subscription_prompt(valid_tool_names: "set[str] | None" = None) -> str:
     """Build a compact Nous subscription capability block for the system prompt."""
     try:
-        from ev0_cli.nous_subscription import get_nous_subscription_features
+        from threev0_cli.nous_subscription import get_nous_subscription_features
         from tools.tool_backend_helpers import managed_nous_tools_enabled
     except Exception as exc:
         logger.debug("Failed to import Nous subscription helper: %s", exc)
@@ -2193,7 +2193,7 @@ def load_soul_md(
     same class as the skills-index leak fixed in #86313).
     """
     try:
-        from ev0_cli.config import ensure_ev0_home
+        from threev0_cli.config import ensure_ev0_home
         ensure_ev0_home()
     except Exception as e:
         logger.debug("Could not ensure EV0_HOME before loading SOUL.md: %s", e)

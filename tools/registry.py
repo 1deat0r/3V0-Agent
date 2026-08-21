@@ -25,7 +25,7 @@ import time
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set
 
-from ev0_constants import ev0_home_key
+from threev0_constants import ev0_home_key
 
 logger = logging.getLogger(__name__)
 
@@ -166,8 +166,8 @@ def _discovery_cache_path() -> Optional[Path]:
     """Path of the tool-discovery verdict cache, or None if unresolvable."""
     try:
         # Deferred import keeps tools/registry.py a no-deps leaf at module
-        # import time (ev0_constants itself is stdlib-only, so no cycle).
-        from ev0_constants import get_ev0_home
+        # import time (threev0_constants itself is stdlib-only, so no cycle).
+        from threev0_constants import get_ev0_home
 
         return Path(get_ev0_home()) / "cache" / "tool_discovery_cache.json"
     except Exception:
@@ -309,7 +309,7 @@ def check_fn_cache_scope() -> Optional[str]:
 
         if not is_multiplex_active():
             return None
-        from ev0_constants import get_ev0_home_override
+        from threev0_constants import get_ev0_home_override
 
         override = get_ev0_home_override()
         if not override:

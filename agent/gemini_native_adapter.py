@@ -33,9 +33,9 @@ from agent.gemini_schema import sanitize_gemini_tool_parameters
 logger = logging.getLogger(__name__)
 
 try:
-    import ev0_cli as _ev0_cli
+    import threev0_cli as _threev0_cli
 
-    _EV0_VERSION = str(_ev0_cli.__version__)
+    _EV0_VERSION = str(_threev0_cli.__version__)
 except Exception:
     _EV0_VERSION = "0.0.0"
 

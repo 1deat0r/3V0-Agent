@@ -178,7 +178,7 @@ def run(arm: str, model: str, reps: int, pythonpath: str, only=None):
             t0 = time.time()
             try:
                 p = subprocess.run(
-                    [sys.executable, "-m", "ev0_cli.main", "chat", "--query", q,
+                    [sys.executable, "-m", "threev0_cli.main", "chat", "--query", q,
                      "--quiet", "--max-turns", "30", "--accept-hooks", "--model", model],
                     cwd=work, env=env, capture_output=True, text=True,
                     encoding="utf-8", errors="replace", timeout=600)

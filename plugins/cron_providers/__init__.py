@@ -69,7 +69,7 @@ def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
 def _get_user_plugins_dir() -> Optional[Path]:
     """Return ``$EV0_HOME/plugins/`` or None if unavailable."""
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         d = get_ev0_home() / "plugins"
         return d if d.is_dir() else None
     except Exception:

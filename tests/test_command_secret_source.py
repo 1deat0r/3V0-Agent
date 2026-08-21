@@ -3,7 +3,7 @@
 These exercise the REAL resolution path: real helper shell scripts written
 to a temp dir (chmod +x), real ``/bin/sh -c`` subprocesses, and a real temp
 EV0_HOME with a config.yaml routing ``secrets.provider: command`` through
-``ev0_cli.env_loader._apply_external_secret_sources``.
+``threev0_cli.env_loader._apply_external_secret_sources``.
 
 Security invariants under test (ported from the desktop TS provider):
 
@@ -46,7 +46,7 @@ from agent.secret_sources.base import (  # noqa: E402
     reset_source_environment,
     set_source_environment,
 )
-from ev0_cli import env_loader  # noqa: E402
+from threev0_cli import env_loader  # noqa: E402
 
 
 pytestmark = pytest.mark.skipif(

@@ -119,7 +119,7 @@ class TestShutdownTranscriptSurvivesResumeE2E:
         # Isolated state.db.
         monkeypatch.setenv("EV0_HOME", str(tmp_path / ".3V0"))
 
-        from ev0_state import SessionDB
+        from threev0_state import SessionDB
         from run_agent import AIAgent
 
         db = SessionDB(db_path=tmp_path / "state.db")

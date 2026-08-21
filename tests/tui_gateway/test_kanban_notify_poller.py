@@ -14,7 +14,7 @@ unsubscribe) and ``_format_kanban_event_text``.
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from ev0_cli import kanban_db as kb
+from threev0_cli import kanban_db as kb
 from tui_gateway.server import (
     _collect_kanban_notifications,
     _format_kanban_event_text,
@@ -193,14 +193,14 @@ class TestCollectKanbanNotifications:
 
     def test_profile_scoped_session_reads_the_shared_board(self, tmp_path):
         """The kanban board is shared across profiles BY DESIGN (see the
-        ev0_cli/kanban_db.py module docstring): ``kanban_home()`` anchors on
+        threev0_cli/kanban_db.py module docstring): ``kanban_home()`` anchors on
         ``get_default_ev0_root()``, which resolves the process env and
         ignores context-local profile overrides. A Desktop session bound to a
         non-launch profile (``session["profile_home"]``) must therefore still
         have its subscription claimed from the one shared board — the poller
         needs no per-profile home binding.
         """
-        from ev0_constants import (
+        from threev0_constants import (
             reset_ev0_home_override,
             set_ev0_home_override,
         )

@@ -267,7 +267,7 @@ def _pending_reaction_notes(session: dict) -> str:
 
 @method("prompt.submit")
 def _(rid, params: dict) -> dict:
-    from ev0_cli.input_sanitize import sanitize_user_prompt_text
+    from threev0_cli.input_sanitize import sanitize_user_prompt_text
 
     sid = params.get("session_id", "")
     raw_text = params.get("text", "")
@@ -290,7 +290,7 @@ def _(rid, params: dict) -> dict:
             os.environ["EV0_VOICE"] = "0"
             os.environ["EV0_VOICE_TTS"] = "0"
             try:
-                from ev0_cli.voice import stop_continuous
+                from threev0_cli.voice import stop_continuous
 
                 stop_continuous()
             except Exception:
@@ -732,7 +732,7 @@ def _(rid, params: dict) -> dict:
         # resumes with full context (the agent won't persist the seed itself).
         _persist_branch_seed(session)
     except Exception as exc:
-        from ev0_state import is_disk_full_error
+        from threev0_state import is_disk_full_error
 
         with session["history_lock"]:
             session["running"] = False
@@ -819,7 +819,7 @@ def _(rid, params: dict) -> dict:
     if err:
         return err
     try:
-        from ev0_cli.clipboard import has_clipboard_image, save_clipboard_image
+        from threev0_cli.clipboard import has_clipboard_image, save_clipboard_image
     except Exception as e:
         return _err(rid, 5027, f"clipboard unavailable: {e}")
 
@@ -1040,7 +1040,7 @@ def _(rid, params: dict) -> dict:
             "-f", str(first_page), "-l", str(last_page),
             str(pdf_path), str(out_prefix),
         ]
-        from ev0_cli._subprocess_compat import windows_hide_flags
+        from threev0_cli._subprocess_compat import windows_hide_flags
 
         try:
             res = subprocess.run(

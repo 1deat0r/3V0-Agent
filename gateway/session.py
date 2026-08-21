@@ -98,7 +98,7 @@ from utils import atomic_replace
 from agent.turn_context import extract_api_content_sidecar
 
 # Session keys/ids flow into filesystem paths downstream (e.g.
-# ``sessions_dir / f"{session_id}.json"`` in ev0_state, request-dump
+# ``sessions_dir / f"{session_id}.json"`` in threev0_state, request-dump
 # filenames in agent_runtime_helpers). Any value that could escape the
 # sessions directory as a path must be rejected at the entry boundary.
 # Rejects: parent traversal (``..``), a path separator anywhere (``/`` or
@@ -405,8 +405,8 @@ def _slack_tools_loaded() -> bool:
     if not _slack_token.strip():
         return False
     try:
-        from ev0_cli.config import load_config
-        from ev0_cli.tools_config import _get_platform_tools
+        from threev0_cli.config import load_config
+        from threev0_cli.tools_config import _get_platform_tools
         cfg = load_config()
         # include_default_mcp_servers=True (the default) so a Slack MCP
         # server that's enabled by default for this platform (not
@@ -433,8 +433,8 @@ def _discord_tools_loaded() -> bool:
     """
     try:
         from agent.secret_scope import get_secret
-        from ev0_cli.config import load_config
-        from ev0_cli.tools_config import _get_platform_tools
+        from threev0_cli.config import load_config
+        from threev0_cli.tools_config import _get_platform_tools
 
         if not (get_secret("DISCORD_BOT_TOKEN", "") or "").strip():
             return False
@@ -719,7 +719,7 @@ def build_session_context_prompt(
     lines.append("")
     lines.append("**Delivery options for scheduled tasks:**")
 
-    from ev0_constants import display_ev0_home
+    from threev0_constants import display_ev0_home
 
     # Origin delivery
     if context.source.platform == Platform.LOCAL:
@@ -1288,7 +1288,7 @@ class SessionStore:
         # Initialize SQLite session database
         self._db = None
         try:
-            from ev0_state import SessionDB
+            from threev0_state import SessionDB
             self._db = SessionDB()
         except RuntimeError as e:
             if "live-system guard" in str(e):
@@ -1775,7 +1775,7 @@ class SessionStore:
         if source is not None and source.profile:
             return source.profile
         try:
-            from ev0_cli.profiles import get_active_profile_name
+            from threev0_cli.profiles import get_active_profile_name
             return get_active_profile_name() or "default"
         except Exception:
             return None
@@ -1794,7 +1794,7 @@ class SessionStore:
     @staticmethod
     def _active_profile_name() -> str:
         try:
-            from ev0_cli.profiles import get_active_profile_name
+            from threev0_cli.profiles import get_active_profile_name
             return get_active_profile_name() or "default"
         except Exception:
             return "default"
@@ -3564,7 +3564,7 @@ class SessionStore:
             try:
                 self._append_transcript_message(session_id, msg)
             except Exception as exc:
-                from ev0_state import CompressionSessionClosedError
+                from threev0_state import CompressionSessionClosedError
 
                 if isinstance(exc, CompressionSessionClosedError):
                     # Resolve the full continuation chain via the canonical

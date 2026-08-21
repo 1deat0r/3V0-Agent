@@ -1,16 +1,16 @@
 import { PassThrough } from 'stream'
 
-import { Box, renderSync, ScrollBox, type ScrollBoxHandle, Text } from '@ev0/ink'
+import { Box, renderSync, ScrollBox, type ScrollBoxHandle, Text } from '@3v0/ink'
 import React, { useLayoutEffect, useRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import SourceBox from '../../packages/ev0-ink/src/ink/components/Box.js'
-import SourceScrollBox from '../../packages/ev0-ink/src/ink/components/ScrollBox.js'
-import SourceText from '../../packages/ev0-ink/src/ink/components/Text.js'
-import type { DOMElement } from '../../packages/ev0-ink/src/ink/dom.js'
-import Output from '../../packages/ev0-ink/src/ink/output.js'
-import { scrollFastPathStats as sourceScrollFastPathStats } from '../../packages/ev0-ink/src/ink/render-node-to-output.js'
-import { renderSync as renderSourceSync } from '../../packages/ev0-ink/src/ink/root.js'
+import SourceBox from '../../packages/3v0-ink/src/ink/components/Box.js'
+import SourceScrollBox from '../../packages/3v0-ink/src/ink/components/ScrollBox.js'
+import SourceText from '../../packages/3v0-ink/src/ink/components/Text.js'
+import type { DOMElement } from '../../packages/3v0-ink/src/ink/dom.js'
+import Output from '../../packages/3v0-ink/src/ink/output.js'
+import { scrollFastPathStats as sourceScrollFastPathStats } from '../../packages/3v0-ink/src/ink/render-node-to-output.js'
+import { renderSync as renderSourceSync } from '../../packages/3v0-ink/src/ink/root.js'
 import { useVirtualHistory } from '../hooks/useVirtualHistory.js'
 
 interface Item {

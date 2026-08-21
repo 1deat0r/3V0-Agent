@@ -19,8 +19,8 @@ from pathlib import Path
 
 import yaml
 
-import ev0_cli.plugins as plugins_mod
-from ev0_cli.plugins import PluginManager, VALID_HOOKS
+import threev0_cli.plugins as plugins_mod
+from threev0_cli.plugins import PluginManager, VALID_HOOKS
 
 
 def _make_enabled_plugin(ev0_home: Path, name: str, register_body: str) -> Path:

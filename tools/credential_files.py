@@ -26,7 +26,7 @@ import posixpath
 from contextvars import ContextVar
 from pathlib import Path
 from typing import Dict, List, Optional
-from ev0_cli.config import cfg_get
+from threev0_cli.config import cfg_get
 
 try:  # pragma: no cover - exercised via the fail-closed test below
     from agent.file_safety import get_read_block_error
@@ -55,7 +55,7 @@ _config_files: List[Dict[str, str]] | None = None
 
 
 def _resolve_ev0_home() -> Path:
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
     return get_ev0_home()
 
 
@@ -181,7 +181,7 @@ def _load_config_files() -> List[Dict[str, str]]:
 
     result: List[Dict[str, str]] = []
     try:
-        from ev0_cli.config import read_raw_config
+        from threev0_cli.config import read_raw_config
         ev0_home = _resolve_ev0_home()
         cfg = read_raw_config()
         cred_files = cfg_get(cfg, "terminal", "credential_files")
@@ -386,7 +386,7 @@ def iter_skills_files(
 # ---------------------------------------------------------------------------
 
 # The cache subdirectories that should be mirrored into remote backends.
-# Each tuple is (new_subpath, old_name) matching ev0_constants.get_ev0_dir().
+# Each tuple is (new_subpath, old_name) matching threev0_constants.get_ev0_dir().
 _CACHE_DIRS: list[tuple[str, str]] = [
     ("cache/documents", "document_cache"),
     ("cache/images", "image_cache"),
@@ -417,7 +417,7 @@ def get_cache_directory_mounts(
     ``container_path`` keys.  The host path is resolved via
     ``get_ev0_dir()`` for backward compatibility with old directory layouts.
     """
-    from ev0_constants import get_ev0_dir
+    from threev0_constants import get_ev0_dir
 
     mounts: List[Dict[str, str]] = []
     for new_subpath, old_name in _CACHE_DIRS:
@@ -540,7 +540,7 @@ def iter_cache_files(
     Used by Modal to upload files individually and resync before each command.
     Skips symlinks.  The container paths use the new ``cache/<subdir>`` layout.
     """
-    from ev0_constants import get_ev0_dir
+    from threev0_constants import get_ev0_dir
 
     result: List[Dict[str, str]] = []
     for new_subpath, old_name in _CACHE_DIRS:

@@ -559,13 +559,13 @@ async def _standalone_send(
 def _is_connected(config) -> bool:
     """Home Assistant is considered connected when ``HASS_TOKEN`` is set.
 
-    Looks up via ``ev0_cli.gateway.get_env_value`` at call time (not via
+    Looks up via ``threev0_cli.gateway.get_env_value`` at call time (not via
     the plugin's own bound import) so tests that patch
     ``gateway_mod.get_env_value`` can suppress ambient ``HASS_TOKEN`` env
     vars.  Matches what the legacy connected-platforms check did before
     this migration.
     """
-    import ev0_cli.gateway as gateway_mod
+    import threev0_cli.gateway as gateway_mod
     return bool((gateway_mod.get_env_value("HASS_TOKEN") or "").strip())
 
 

@@ -9,7 +9,7 @@ are rebound onto server.py's globals at install time — see method_ctx.py.
 
 from .method_ctx import HandlerRegistry
 
-from ev0_constants import DEFAULT_INDICATOR_STYLE, INDICATOR_STYLES
+from threev0_constants import DEFAULT_INDICATOR_STYLE, INDICATOR_STYLES
 
 _registry = HandlerRegistry()
 method = _registry.method
@@ -23,7 +23,7 @@ def _(rid, params: dict) -> dict:
         db = _get_db()
         if db is None:
             return _ok(rid, {"repos": []})
-        from ev0_cli import projects_db as pdb
+        from threev0_cli import projects_db as pdb
 
         policy = _repo_discovery_policy()
         policy_key = _repo_discovery_policy_key(policy)
@@ -47,7 +47,7 @@ def _(rid, params: dict) -> dict:
     the merged repo list. The native crawl runs on the desktop (local fs); this
     caches the result so later reads are instant instead of re-walking disk."""
     try:
-        from ev0_cli import projects_db as pdb
+        from threev0_cli import projects_db as pdb
 
         policy = _repo_discovery_policy()
         policy_key = _repo_discovery_policy_key(policy)
@@ -163,7 +163,7 @@ def _(rid, params: dict) -> dict:
     key = params.get("key", "")
     if key == "provider":
         try:
-            from ev0_cli.models import list_available_providers, normalize_provider
+            from threev0_cli.models import list_available_providers, normalize_provider
 
             model = _resolve_model()
             parts = model.split("/", 1)
@@ -180,7 +180,7 @@ def _(rid, params: dict) -> dict:
         except Exception as e:
             return _err(rid, 5013, str(e))
     if key == "profile":
-        from ev0_constants import display_ev0_home
+        from threev0_constants import display_ev0_home
 
         return _ok(rid, {"home": str(_ev0_home), "display": display_ev0_home()})
     if key == "project":
@@ -211,7 +211,7 @@ def _(rid, params: dict) -> dict:
     if key == "personality":
         # Report the EFFECTIVE personality via the single owner — a stale or
         # unknown name in config must not display as active.
-        from ev0_cli.personality import active_personality_name
+        from threev0_cli.personality import active_personality_name
 
         return _ok(
             rid,
@@ -344,7 +344,7 @@ def _(rid, params: dict) -> dict:
 @method("setup.status")
 def _(rid, params: dict) -> dict:
     try:
-        from ev0_cli.main import _has_any_provider_configured
+        from threev0_cli.main import _has_any_provider_configured
 
         return _ok(rid, {"provider_configured": bool(_has_any_provider_configured())})
     except Exception as e:
@@ -363,9 +363,9 @@ def _(rid, params: dict) -> dict:
     surface onboarding before the user submits a doomed prompt.
     """
     try:
-        from ev0_cli.runtime_provider import resolve_runtime_provider
-        from ev0_cli.auth import has_usable_secret
-        from ev0_cli.main import _has_any_provider_configured
+        from threev0_cli.runtime_provider import resolve_runtime_provider
+        from threev0_cli.auth import has_usable_secret
+        from threev0_cli.main import _has_any_provider_configured
 
         requested = str(params.get("provider") or "").strip() or None
         runtime = resolve_runtime_provider(requested=requested)

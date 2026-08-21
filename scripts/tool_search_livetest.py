@@ -274,7 +274,7 @@ def setup_isolated_home(enabled: bool, listing: str = "off",
         # hand — it never materializes the secret in a local variable in
         # this module, which both avoids a hand-rolled parser bug and keeps
         # static analysis from tainting the transcript records with the key.
-        from ev0_cli.env_loader import load_ev0_dotenv
+        from threev0_cli.env_loader import load_ev0_dotenv
         load_ev0_dotenv(ev0_home=str(Path.home() / ".3V0"))
 
     cfg = {
@@ -348,7 +348,7 @@ def reset_module_state():
     """Drop cached modules so the new EV0_HOME takes effect."""
     keys = [k for k in sys.modules.keys()
             if k.startswith(("tools.", "model_tools", "toolsets",
-                             "ev0_cli", "agent.", "run_agent"))]
+                             "threev0_cli", "agent.", "run_agent"))]
     for k in keys:
         del sys.modules[k]
 

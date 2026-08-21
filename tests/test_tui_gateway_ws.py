@@ -4,7 +4,7 @@ import json
 import threading
 import time
 
-from ev0_cli import mcp_startup
+from threev0_cli import mcp_startup
 from tui_gateway import server
 from tui_gateway import ws as ws_mod
 

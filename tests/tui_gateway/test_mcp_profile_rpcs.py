@@ -32,7 +32,7 @@ def ev0_root(tmp_path, monkeypatch):
     (root / "profiles" / "other").mkdir(parents=True)
     monkeypatch.setenv("EV0_HOME", str(root))
     # Make sure no stale process-wide home override leaks in from another test.
-    from ev0_constants import get_ev0_home_override
+    from threev0_constants import get_ev0_home_override
 
     assert get_ev0_home_override() is None
     return root

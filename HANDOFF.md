@@ -20,11 +20,11 @@ plus two later fix commits) surfaced real misses; the follow-up fix pass is
 
 **Fixed + verified + pushed:**
 1. **ink split-brain:** sweep used `3v0-ink`/`@3v0/ink` while the contract (and
-   dir) say `ev0-ink` — realigned 115 files / 186 refs (ui-tui, package-lock,
-   ev0_cli, tests, wiki, AGENTS.md). Verified: `build:ink` ✓, 56 vitest ✓,
+   dir) say `3v0-ink` — realigned 115 files / 186 refs (ui-tui, package-lock,
+   threev0_cli, tests, wiki, AGENTS.md). Verified: `build:ink` ✓, 56 vitest ✓,
    32 pytest (tui_npm_install/resume_flow/voice_wrapper) ✓.
 2. **URLs/issue refs:** 108 files / 192 refs `NousResearch/3v0-agent` →
-   `1deat0r/3V0-Agent` — incl. `ev0_cli/update_cmd.py` OFFICIAL_REPO_URLS +
+   `1deat0r/3V0-Agent` — incl. `threev0_cli/update_cmd.py` OFFICIAL_REPO_URLS +
    archive URLs, `scripts/install.sh`, `release.py`, README.*/CONTRIBUTING/
    SECURITY, tests, 3v0/data stores. Kept: provider host `nousresearch.com`,
    security email, plugin-org repos (`3v0-media-studio` etc.), author credits.
@@ -93,7 +93,7 @@ gateway (62k-line production gateway: streaming, TTS, slash commands, delivery
 ledger, turn leases, session stalls, shutdown watchdog, kanban, mirrors). The
 cutover is now formally **FIRED-2026-08-14 / ROLLED-BACK-2026-08-20** in
 `3v0/CUTOVER.md`. Live state: `3v0-gateway.service` (ev0 CLI,
-`python -m ev0_cli.main --profile 3v0 gateway run`) **active + enabled**,
+`python -m threev0_cli.main --profile 3v0 gateway run`) **active + enabled**,
 native **inactive + disabled**. Verified: zero poll conflicts in journal,
 bot identity `@sovereign3v0Bot` answers `getMe` OK.
 
@@ -415,7 +415,7 @@ drift before picking up the follow-ups.
   (tracked-file manifest generator + area renderer + `--check` hard gate),
   `wiki/manifest.tsv` (9,722 rows = 100.0% of tracked paths), 414-row
   hand-curated overlay `wiki/curated.tsv` (load-bearing spine: root, 3v0/core,
-  agent, tools, gateway, ev0_cli, cron, plugins, skills, apps, infra), 20
+  agent, tools, gateway, threev0_cli, cron, plugins, skills, apps, infra), 20
   area pages + intros, `wiki/index.md` / `SCHEMA.md` / `README.md` / `log.md`.
   Enforcement wired in: `.githooks/pre-commit` step 4 runs `--check`,
   `3v0/scripts/verify.sh` gained a wiki step, `AGENTS.md` now points agents at

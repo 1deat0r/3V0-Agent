@@ -61,7 +61,7 @@ def _make_event(text):
 
 
 def _fake_switch_result(*, base_url="", api_mode=""):
-    from ev0_cli.model_switch import ModelSwitchResult
+    from threev0_cli.model_switch import ModelSwitchResult
 
     return ModelSwitchResult(
         success=True,
@@ -90,19 +90,19 @@ def _setup_isolated_home(tmp_path, monkeypatch, model_yaml_value, *, base_url=""
     monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
     monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda: {})
     monkeypatch.setattr(
-        "ev0_cli.model_switch.list_picker_providers",
+        "threev0_cli.model_switch.list_picker_providers",
         lambda **kw: [{"slug": "custom", "name": "Custom", "models": ["local-llama"]}],
     )
     monkeypatch.setattr(
-        "ev0_cli.model_switch.switch_model",
+        "threev0_cli.model_switch.switch_model",
         lambda **kw: _fake_switch_result(base_url=base_url, api_mode=api_mode),
     )
     monkeypatch.setattr(
-        "ev0_cli.model_switch.resolve_display_context_length",
+        "threev0_cli.model_switch.resolve_display_context_length",
         lambda *a, **k: 8192,
     )
-    monkeypatch.setattr("ev0_constants.get_ev0_home", lambda: ev0_home)
-    monkeypatch.setattr("ev0_cli.config.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: ev0_home)
     return cfg_path
 
 

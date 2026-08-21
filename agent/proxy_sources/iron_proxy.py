@@ -357,7 +357,7 @@ class TokenMapping:
 
 
 def _ev0_bin_dir() -> Path:
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     return get_ev0_home() / "bin"
 
@@ -369,7 +369,7 @@ def _proxy_state_dir_ro() -> Path:
     this — there's no reason to materialize ``~/.3V0/proxy/`` just to
     check whether a pidfile exists.
     """
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     return get_ev0_home() / "proxy"
 

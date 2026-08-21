@@ -13,7 +13,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ev0_cli.config import get_ev0_home
+from threev0_cli.config import get_ev0_home
 from utils import atomic_json_write
 
 logger = logging.getLogger(__name__)
@@ -439,7 +439,7 @@ def _build_from_sessions_db(platform_name: str) -> List[Dict[str, str]]:
     """Pull channels/contacts from state.db gateway session rows."""
     entries: List[Dict[str, str]] = []
     try:
-        from ev0_state import SessionDB
+        from threev0_state import SessionDB
         db = SessionDB()
         try:
             lister = getattr(db, "list_gateway_sessions", None)

@@ -50,9 +50,9 @@ AREA_TITLE = {
     "ROOT": "Repository root — load-bearing core entrypoints",
     "CORE": "3v0/ — the sovereign agent core (memory, standing systems)",
     "AGENT": "agent/ — AIAgent internals (providers, memory, caching, audio)",
-    "STATE": "ev0_state* + ev0_constants/logging — session store & profile paths",
+    "STATE": "threev0_state* + threev0_constants/logging — session store & profile paths",
     "TOOLS": "tools/ + toolsets.py + model_tools.py — model tool orchestration",
-    "CLI": "ev0_cli/ + cli.py — interactive CLI, config, skins, subcommands",
+    "CLI": "threev0_cli/ + cli.py — interactive CLI, config, skins, subcommands",
     "GATEWAY": "gateway/ + tui_gateway/ — platform adapters + TUI backend",
     "CRON": "cron/ — scheduled jobs",
     "PLUGINS": "plugins/ — plugin ecosystem (memory, providers, tools)",
@@ -377,9 +377,9 @@ def area_of(path: str) -> str:
         return "TOOLS"
     if head in ("model_tools.py", "toolsets.py", "toolset_distributions.py"):
         return "TOOLS"
-    if head.startswith("ev0_"):
+    if head.startswith(("ev0_", "threev0_")) and head not in ("threev0_cli",):
         return "STATE"
-    if head == "ev0_cli":
+    if head == "threev0_cli":
         return "CLI"
     if head in ("gateway", "tui_gateway"):
         return "GATEWAY"
@@ -414,7 +414,7 @@ def area_of(path: str) -> str:
                 "3v0-cli", "constraints-termux.txt", ".bytecode-fingerprint"):
         return "INFRA"
     if head in ("run_agent.py", "cli.py", "batch_runner.py",
-                "trajectory_compressor.py", "utils.py", "ev0_bootstrap.py"):
+                "trajectory_compressor.py", "utils.py", "threev0_bootstrap.py"):
         return "ROOT"
     return "MISC"
 

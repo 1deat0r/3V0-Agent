@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ev0_cli import __version__ as _EV0_VERSION
+from threev0_cli import __version__ as _EV0_VERSION
 from providers import register_provider
 from providers.base import ProviderProfile
 

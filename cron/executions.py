@@ -14,8 +14,8 @@ import uuid
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional
 
-from ev0_constants import get_ev0_home
-from ev0_time import now as _ev0_now
+from threev0_constants import get_ev0_home
+from threev0_time import now as _ev0_now
 
 # Optional test override. Production resolves the path at transaction time so
 # dashboard operations that temporarily enter another profile cannot leak that
@@ -34,7 +34,7 @@ def _connect() -> sqlite3.Connection:
 
 
 def _initialize_schema(conn: sqlite3.Connection) -> None:
-    from ev0_state import apply_wal_with_fallback
+    from threev0_state import apply_wal_with_fallback
 
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA busy_timeout=5000")

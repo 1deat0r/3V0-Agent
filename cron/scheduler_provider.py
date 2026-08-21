@@ -274,7 +274,7 @@ def resolve_cron_scheduler() -> "CronScheduler":
 
     name = ""
     try:
-        from ev0_cli.config import cfg_get, load_config
+        from threev0_cli.config import cfg_get, load_config
         name = (cfg_get(load_config(), "cron", "provider", default="") or "").strip()
     except Exception:
         pass
@@ -449,7 +449,7 @@ class InProcessCronScheduler(CronScheduler):
             record_ticker_heartbeat,
             use_cron_store,
         )
-        from ev0_constants import set_ev0_home_override, reset_ev0_home_override
+        from threev0_constants import set_ev0_home_override, reset_ev0_home_override
 
         logger = logging.getLogger("cron.scheduler_provider")
         logger.info(

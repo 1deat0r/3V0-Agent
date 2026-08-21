@@ -753,7 +753,7 @@ class TestPruneCheckpointsOrphanAllowlist:
         the human is "answering" the prompt. Only the previewed orphan may
         be deleted.
         """
-        import ev0_cli.checkpoints as checkpoints_cli
+        import threev0_cli.checkpoints as checkpoints_cli
 
         base = tmp_path / "checkpoints"
         monkeypatch.setattr("tools.checkpoint_manager.CHECKPOINT_BASE", base)

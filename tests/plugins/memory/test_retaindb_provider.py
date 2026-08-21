@@ -95,7 +95,7 @@ def test_upload_file_allows_regular_file(tmp_path):
 
 def _capture_initialized_client(monkeypatch, tmp_path):
     """Patch _Client/_WriteQueue/get_ev0_home; return a dict capturing args."""
-    import ev0_constants
+    import threev0_constants
 
     import plugins.memory.retaindb as retaindb_module
 
@@ -110,12 +110,12 @@ def _capture_initialized_client(monkeypatch, tmp_path):
 
     monkeypatch.setattr(retaindb_module, "_Client", _FakeClient)
     monkeypatch.setattr(retaindb_module, "_WriteQueue", lambda *a, **k: MagicMock())
-    monkeypatch.setattr(ev0_constants, "get_ev0_home", lambda: tmp_path)
+    monkeypatch.setattr(threev0_constants, "get_ev0_home", lambda: tmp_path)
     return retaindb_module, captured
 
 
 def test_retaindb_config_loader_uses_readonly_config(monkeypatch):
-    import ev0_cli.config as config_mod
+    import threev0_cli.config as config_mod
     import plugins.memory.retaindb as retaindb_module
 
     backing_config = {

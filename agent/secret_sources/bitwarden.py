@@ -133,7 +133,7 @@ def _encrypted_disk_cache_path(home_path: Optional[Path] = None) -> Path:
 
 def _ev0_bin_dir() -> Path:
     """Where 3V0 stores its managed binaries.  Profile-aware."""
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     return get_ev0_home() / "bin"
 
@@ -754,7 +754,7 @@ def _run_bws_list(
 
 
 # ---------------------------------------------------------------------------
-# Public entry point — called from ev0_cli.env_loader
+# Public entry point — called from threev0_cli.env_loader
 # ---------------------------------------------------------------------------
 
 

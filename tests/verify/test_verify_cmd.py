@@ -3,7 +3,7 @@
 import argparse
 import json
 
-from ev0_cli.verify_cmd import run_verify_command
+from threev0_cli.verify_cmd import run_verify_command
 
 
 def make_args(path, **overrides):

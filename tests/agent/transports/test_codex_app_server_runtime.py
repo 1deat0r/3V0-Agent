@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from ev0_cli.runtime_provider import (
+from threev0_cli.runtime_provider import (
     _VALID_API_MODES,
     _maybe_apply_codex_app_server_runtime,
 )

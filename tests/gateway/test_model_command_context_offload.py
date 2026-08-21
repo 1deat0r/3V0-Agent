@@ -47,7 +47,7 @@ def _runner_with_store(tmp_path, monkeypatch):
 
     import gateway.run as gateway_run
     from gateway.run import GatewayRunner
-    from ev0_cli.model_switch import ModelSwitchResult
+    from threev0_cli.model_switch import ModelSwitchResult
 
     ev0_home = tmp_path / ".3V0"
     ev0_home.mkdir()
@@ -58,7 +58,7 @@ def _runner_with_store(tmp_path, monkeypatch):
     monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
     monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda: {})
     monkeypatch.setattr(
-        "ev0_cli.model_switch.switch_model",
+        "threev0_cli.model_switch.switch_model",
         lambda **kw: ModelSwitchResult(
             success=True,
             new_model="gpt-5.5",
@@ -70,11 +70,11 @@ def _runner_with_store(tmp_path, monkeypatch):
             provider_label="OpenRouter",
         ),
     )
-    monkeypatch.setattr("ev0_constants.get_ev0_home", lambda: ev0_home)
-    monkeypatch.setattr("ev0_cli.config.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: ev0_home)
     # No expensive-model confirmation detour.
     monkeypatch.setattr(
-        "ev0_cli.model_cost_guard.expensive_model_warning",
+        "threev0_cli.model_cost_guard.expensive_model_warning",
         lambda *a, **k: None,
     )
 
@@ -96,7 +96,7 @@ def _runner_with_store(tmp_path, monkeypatch):
 async def test_context_resolution_runs_off_the_loop_thread(tmp_path, monkeypatch):
     """The sync resolver must execute on a worker thread when the /model
     handler resolves the display context length for the switch reply."""
-    from ev0_cli import model_switch
+    from threev0_cli import model_switch
 
     seen = {}
     loop_thread = threading.current_thread()
@@ -126,7 +126,7 @@ async def test_warning_enrichment_is_offloaded(tmp_path, monkeypatch):
     """enrich_model_switch_warnings_for_gateway reaches the same sync resolver
     via merge_preflight_compression_warning, so the handler must dispatch it
     through asyncio.to_thread rather than calling it inline on the loop."""
-    from ev0_cli import context_switch_guard
+    from threev0_cli import context_switch_guard
 
     offloaded = []
     real_to_thread = asyncio.to_thread

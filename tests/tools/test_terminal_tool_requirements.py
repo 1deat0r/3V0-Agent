@@ -145,7 +145,7 @@ class TestCheckFnTransientFailureSuppression:
             set_multiplex_active,
             set_secret_scope,
         )
-        from ev0_constants import (
+        from threev0_constants import (
             reset_ev0_home_override,
             set_ev0_home_override,
         )

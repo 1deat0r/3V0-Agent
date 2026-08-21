@@ -40,7 +40,7 @@ def _clean_env(monkeypatch):
 @pytest.fixture(autouse=True)
 def _no_dotenv(monkeypatch):
     """Keep the developer's real ~/.3V0/.env out of these tests."""
-    import ev0_cli.config as config_mod
+    import threev0_cli.config as config_mod
 
     monkeypatch.setattr(config_mod, "load_env", lambda: {})
     yield

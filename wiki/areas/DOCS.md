@@ -7,7 +7,7 @@ Columns: path · kind · purpose · why · related
 
 | path | kind | purpose | why | related |
 |------|------|---------|-----|---------|
-| `.env.example` | config | Example secrets file (.env is for secrets ONLY) | Documentation of every credential the body can use; non-secrets belong in config.yaml | ev0_cli/config.py |
+| `.env.example` | config | Example secrets file (.env is for secrets ONLY) | Documentation of every credential the body can use; non-secrets belong in config.yaml | threev0_cli/config.py |
 | `AGENTS.md` | doc | The body's governance + contribution contract (3V0 sovereignty, footprint ladder, testing policy) | Constitutional doc; every AI assistant working here is bound by it | wiki/SCHEMA.md; 3v0/SOUL.md; 3v0/CONTEXT.md |
 | `CONTRIBUTING.md` | policy-doc | Contribution guide (full engineering standards) | Merging law for the repo | AGENTS.md; CONTRIBUTING.es.md |
 | `HANDOFF.md` | doc | Manual session handoff — the operator's narrative continuity document | Tracked continuity artifact; regenerated draft lives in HANDOFF.generated.md (gitignored) | 3v0/data/continuity/claims.json; 3v0/scripts/generate_handoff.py |
@@ -16,7 +16,7 @@ Columns: path · kind · purpose · why · related
 | `SECURITY.md` | policy-doc | Security policy + reporting | Public security contract | SECURITY.es.md; .coderabbit.yaml |
 | `SELF_IMPROVEMENT.md` | policy-doc | Self-improvement doctrine (quality loops, verify.sh culture) | Policies the body's own evolution | 3v0/EVOLUTION_LOOP.md; 3v0/scripts/verify.sh |
 | `SUSTAINABILITY.md` | policy-doc | Cost-efficiency doctrine for LLM spend | Guides token-efficiency; pairs with 3v0/TOKEN_EFFICIENCY.md | 3v0/TOKEN_EFFICIENCY.md |
-| `docs/3v0-kanban-v1-spec.pdf` | doc | Kanban contract artifact | Specifies the kanban mode contract | ev0_cli/kanban_db.py; 3v0/docs/adr/ |
+| `docs/3v0-kanban-v1-spec.pdf` | doc | Kanban contract artifact | Specifies the kanban mode contract | threev0_cli/kanban_db.py; 3v0/docs/adr/ |
 | `docs/ADR.md` | doc | Design rationale ledger | Records architectural decisions for the body's evolution | 3v0/docs/adr/; AGENTS.md |
 | `docs/billing-lifecycle.md` | doc | Billing lifecycle doc | Account/billing | agent/billing_view.py |
 | `docs/chronos-managed-cron-contract.md` | doc | Managed cron contract | Scheduled tasks spec | cron/scheduler_provider.py |

@@ -15,9 +15,9 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-from ev0_cli import lifecycle, plugins as plugin_api
-from ev0_cli.observability import relay_runtime, relay_shared_metrics
-from ev0_cli.plugins import PluginManager
+from threev0_cli import lifecycle, plugins as plugin_api
+from threev0_cli.observability import relay_runtime, relay_shared_metrics
+from threev0_cli.plugins import PluginManager
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -307,7 +307,7 @@ def test_shared_metrics_and_rich_plugin_share_one_core_session(
         "EV0_NEMO_RELAY_ATIF_OUTPUT_DIRECTORY", str(tmp_path / "atif")
     )
     monkeypatch.setattr(
-        "ev0_cli.config.read_raw_config_readonly",
+        "threev0_cli.config.read_raw_config_readonly",
         lambda: {"telemetry": {"shared_metrics": {"enabled": True}}},
     )
     plugin = _fresh_plugin(monkeypatch, fake)
@@ -464,7 +464,7 @@ def test_relay_tool_request_rewrite_precedes_ev0_authorization_boundary(
     tmp_path,
     monkeypatch,
 ):
-    from ev0_cli.middleware import apply_tool_request_middleware
+    from threev0_cli.middleware import apply_tool_request_middleware
 
     fake = _FakeNemoRelay()
     plugin = _fresh_plugin(monkeypatch, fake)

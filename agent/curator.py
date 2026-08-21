@@ -30,7 +30,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 from tools import skill_usage
 from utils import atomic_json_write
 
@@ -138,7 +138,7 @@ def is_paused() -> bool:
 def _load_config() -> Dict[str, Any]:
     """Read curator.* config from ~/.3V0/config.yaml. Tolerates missing file."""
     try:
-        from ev0_cli.config import load_config_readonly
+        from threev0_cli.config import load_config_readonly
         cfg = load_config_readonly()
     except Exception as e:
         logger.debug("Failed to load config for curator: %s", e)
@@ -1875,8 +1875,8 @@ def _run_llm_review(prompt: str) -> Dict[str, Any]:
     _acp_args = None
     _model_name = ""
     try:
-        from ev0_cli.config import load_config_readonly
-        from ev0_cli.runtime_provider import resolve_runtime_provider
+        from threev0_cli.config import load_config_readonly
+        from threev0_cli.runtime_provider import resolve_runtime_provider
         _cfg = load_config_readonly()
         _binding = _resolve_review_runtime(_cfg)
         _provider, _model_name = _binding.provider, _binding.model

@@ -16,7 +16,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
-from ev0_cli.config import get_ev0_home
+from threev0_cli.config import get_ev0_home
 
 logger = logging.getLogger(__name__)
 

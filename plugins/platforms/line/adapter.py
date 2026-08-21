@@ -1402,7 +1402,7 @@ class LineAdapter(BasePlatformAdapter):
             return web.Response(status=404, text="not found")
 
         try:
-            from ev0_constants import get_ev0_home
+            from threev0_constants import get_ev0_home
             ev0_home = Path(get_ev0_home()).resolve()
         except Exception:
             ev0_home = Path.home().joinpath(".3V0").resolve()
@@ -1685,7 +1685,7 @@ def interactive_setup() -> None:
     """Minimal stdin wizard for ``3v0 setup line``.
 
     Mirrors the irc/teams style: prompts for the two required vars, plus
-    one optional public URL. Writes to ``~/.3V0/.env`` via ``ev0_cli.config``.
+    one optional public URL. Writes to ``~/.3V0/.env`` via ``threev0_cli.config``.
     """
     print()
     print("LINE Messaging API setup")
@@ -1695,9 +1695,9 @@ def interactive_setup() -> None:
     print()
 
     try:
-        from ev0_cli.config import get_env_value as _get_env, save_env_value as _set_env
+        from threev0_cli.config import get_env_value as _get_env, save_env_value as _set_env
     except ImportError:
-        print("ev0_cli.config not available; set LINE_* vars manually in ~/.3V0/.env")
+        print("threev0_cli.config not available; set LINE_* vars manually in ~/.3V0/.env")
         return
 
     def _prompt(var: str, prompt: str, *, secret: bool = False) -> None:
@@ -1705,7 +1705,7 @@ def interactive_setup() -> None:
         suffix = " [keep current]" if existing else ""
         try:
             if secret:
-                from ev0_cli.secret_prompt import masked_secret_prompt
+                from threev0_cli.secret_prompt import masked_secret_prompt
                 value = masked_secret_prompt(f"{prompt}{suffix}: ")
             else:
                 value = input(f"{prompt}{suffix}: ").strip()

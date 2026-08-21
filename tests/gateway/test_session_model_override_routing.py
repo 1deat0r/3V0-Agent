@@ -106,7 +106,7 @@ fallback_providers:
 
     def fake_resolve_runtime_provider(*, requested=None, explicit_base_url=None, explicit_api_key=None):
         if requested in {None, "", "openai-codex"}:
-            from ev0_cli.auth import AuthError
+            from threev0_cli.auth import AuthError
             raise AuthError("No Codex credentials stored. Run `3v0 auth` to authenticate.")
         assert requested == "openrouter"
         return {
@@ -119,7 +119,7 @@ fallback_providers:
             "credential_pool": None,
         }
 
-    import ev0_cli.runtime_provider as runtime_provider
+    import threev0_cli.runtime_provider as runtime_provider
 
     monkeypatch.setattr(runtime_provider, "resolve_runtime_provider", fake_resolve_runtime_provider)
 

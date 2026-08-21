@@ -234,9 +234,9 @@ class TestExecuteCode(unittest.TestCase):
 
     def test_repo_root_modules_are_importable(self):
         """Sandboxed scripts can import modules that live at the repo root."""
-        result = self._run('import ev0_constants; print(ev0_constants.__file__)')
+        result = self._run('import threev0_constants; print(threev0_constants.__file__)')
         self.assertEqual(result["status"], "success")
-        self.assertIn("ev0_constants.py", result["output"])
+        self.assertIn("threev0_constants.py", result["output"])
 
     def test_single_tool_call(self):
         """Script calls terminal and prints the result."""
@@ -664,7 +664,7 @@ class TestLoadConfig(unittest.TestCase):
         mock_cli = MagicMock()
         mock_cli.CLI_CONFIG = {"code_execution": {"timeout": 999}}
         with patch.dict("sys.modules", {"cli": mock_cli}), \
-             patch("ev0_cli.config.read_raw_config", return_value={}):
+             patch("threev0_cli.config.read_raw_config", return_value={}):
             result = _load_config()
         self.assertEqual(result, {})
 

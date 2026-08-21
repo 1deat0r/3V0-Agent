@@ -2,7 +2,7 @@
 
 The stdio ``3v0 --tui`` path used to spawn its own discovery thread and
 ``wait_for_mcp_discovery`` only ever joined that local handle. Now the spawn
-goes through ``ev0_cli.mcp_startup.start_background_mcp_discovery`` (single
+goes through ``threev0_cli.mcp_startup.start_background_mcp_discovery`` (single
 owner, restart-after-zero-connected semantics), so the entry-side wait must
 fall through to the shared owner when no local thread exists.
 """
@@ -10,7 +10,7 @@ fall through to the shared owner when no local thread exists.
 import threading
 import time
 
-from ev0_cli import mcp_startup
+from threev0_cli import mcp_startup
 from tui_gateway import entry
 
 

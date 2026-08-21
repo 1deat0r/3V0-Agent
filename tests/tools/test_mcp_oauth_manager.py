@@ -13,7 +13,7 @@ import pytest
 
 
 def test_manager_isolates_same_named_servers_by_profile_home(tmp_path, monkeypatch):
-    from ev0_constants import reset_ev0_home_override, set_ev0_home_override
+    from threev0_constants import reset_ev0_home_override, set_ev0_home_override
     from tools.mcp_oauth import Ev0TokenStorage
     from tools.mcp_oauth_manager import MCPOAuthManager
 

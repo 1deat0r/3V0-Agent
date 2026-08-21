@@ -176,7 +176,7 @@ def check_env_vars():
 
     # Load .env
     try:
-        from ev0_cli.env_loader import load_ev0_dotenv
+        from threev0_cli.env_loader import load_ev0_dotenv
 
         load_ev0_dotenv(
             ev0_home=ENV_FILE.parent,

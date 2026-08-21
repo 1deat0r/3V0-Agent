@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 try:
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 except ImportError:
     import os as _os
     def get_ev0_home() -> Path:  # type: ignore[misc]
@@ -585,7 +585,7 @@ def scan_sessions(
     at the end.
     """
     try:
-        from ev0_state import SessionDB
+        from threev0_state import SessionDB
     except Exception as exc:
         return {"sessions": [], "aggregate": {}, "error": f"Could not import SessionDB: {exc}", "scan_meta": {"mode": "failed", "sessions_total": 0, "sessions_rescanned": 0, "sessions_reused": 0}}
 

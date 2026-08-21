@@ -28,7 +28,7 @@ def test_session_store_default_db_uses_runtime_ev0_home(tmp_path, monkeypatch):
     """SessionStore must honor runtime EV0_HOME when opening the default DB.
 
     Regression for the import-time DEFAULT_DB_PATH freeze: importing
-    ev0_state before a fixture redirected EV0_HOME used to pin every
+    threev0_state before a fixture redirected EV0_HOME used to pin every
     default SessionDB() at the developer's real ~/.3V0/state.db.
     """
     config = GatewayConfig(default_reset_policy=SessionResetPolicy(mode="none"))

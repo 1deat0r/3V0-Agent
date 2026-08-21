@@ -157,7 +157,7 @@ def test_install_ps1_stops_venv_resident_processes_before_parking_venv() -> None
     old venv before moving it aside.
 
     A gateway autostarted by a scheduled task runs as
-    ``venv\\Scripts\\pythonw.exe -m ev0_cli.main gateway run`` — image name
+    ``venv\\Scripts\\pythonw.exe -m threev0_cli.main gateway run`` — image name
     ``pythonw``, not ``3v0.exe`` — so the ``taskkill /IM 3v0.exe`` guard
     misses it and the loaded ``.pyd`` stays locked (issues #47036/#47557/#47910).
     The recreate branch must sweep by venv path prefix before Rename-Item, and

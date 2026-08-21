@@ -52,7 +52,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
-from ev0_constants import secure_parent_dir
+from threev0_constants import secure_parent_dir
 
 logger = logging.getLogger(__name__)
 
@@ -187,7 +187,7 @@ def _get_token_dir(ev0_home: str | Path | None = None) -> Path:
     Uses EV0_HOME so each profile gets its own OAuth tokens.
     Layout: ``EV0_HOME/mcp-tokens/``
     """
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     base = Path(ev0_home) if ev0_home is not None else Path(get_ev0_home())
     return base / "mcp-tokens"

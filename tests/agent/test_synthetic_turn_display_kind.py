@@ -27,7 +27,7 @@ from unittest.mock import patch
 import pytest
 
 from agent.turn_context import build_turn_context
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 from run_agent import AIAgent
 
 NOTE = "[System note: Your previous turn was interrupted mid-run …]\n\nkeep going"

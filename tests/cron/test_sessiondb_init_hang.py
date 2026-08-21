@@ -83,11 +83,11 @@ class TestSessionDbInitTimeout:
 
         with patch("cron.scheduler._ev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("ev0_cli.env_loader.load_ev0_dotenv"), \
-             patch("ev0_cli.env_loader.reset_secret_source_cache"), \
-             patch("ev0_state.SessionDB"), \
+             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.reset_secret_source_cache"), \
+             patch("threev0_state.SessionDB"), \
              patch(
-                 "ev0_cli.runtime_provider.resolve_runtime_provider",
+                 "threev0_cli.runtime_provider.resolve_runtime_provider",
                  return_value=_RUNTIME,
              ), \
              patch("run_agent.AIAgent") as mock_agent_cls, \
@@ -118,11 +118,11 @@ class TestSessionDbInitTimeout:
 
         with patch("cron.scheduler._ev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("ev0_cli.env_loader.load_ev0_dotenv"), \
-             patch("ev0_cli.env_loader.reset_secret_source_cache"), \
-             patch("ev0_state.SessionDB", return_value=fake_db), \
+             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.reset_secret_source_cache"), \
+             patch("threev0_state.SessionDB", return_value=fake_db), \
              patch(
-                 "ev0_cli.runtime_provider.resolve_runtime_provider",
+                 "threev0_cli.runtime_provider.resolve_runtime_provider",
                  return_value=_RUNTIME,
              ), \
              patch("run_agent.AIAgent") as mock_agent_cls, \
@@ -161,11 +161,11 @@ class TestSessionDbInitTimeout:
 
         with patch("cron.scheduler._ev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("ev0_cli.env_loader.load_ev0_dotenv"), \
-             patch("ev0_cli.env_loader.reset_secret_source_cache"), \
-             patch("ev0_state.SessionDB"), \
+             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.reset_secret_source_cache"), \
+             patch("threev0_state.SessionDB"), \
              patch(
-                 "ev0_cli.runtime_provider.resolve_runtime_provider",
+                 "threev0_cli.runtime_provider.resolve_runtime_provider",
                  return_value=_RUNTIME,
              ), \
              patch("run_agent.AIAgent") as mock_agent_cls, \
@@ -211,11 +211,11 @@ class TestDispatchGuardReleasedAfterHang:
         try:
             with patch("cron.scheduler._ev0_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("ev0_cli.env_loader.load_ev0_dotenv"), \
-                 patch("ev0_cli.env_loader.reset_secret_source_cache"), \
-                 patch("ev0_state.SessionDB"), \
+                 patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+                 patch("threev0_cli.env_loader.reset_secret_source_cache"), \
+                 patch("threev0_state.SessionDB"), \
                  patch(
-                     "ev0_cli.runtime_provider.resolve_runtime_provider",
+                     "threev0_cli.runtime_provider.resolve_runtime_provider",
                      return_value=_RUNTIME,
                  ), \
                  patch("run_agent.AIAgent") as mock_agent_cls, \
@@ -309,11 +309,11 @@ class TestLateSessionDbClosedAfterTimeout:
         try:
             with patch("cron.scheduler._ev0_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("ev0_cli.env_loader.load_ev0_dotenv"), \
-                 patch("ev0_cli.env_loader.reset_secret_source_cache"), \
-                 patch("ev0_state.SessionDB", side_effect=_hanging_then_capture), \
+                 patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+                 patch("threev0_cli.env_loader.reset_secret_source_cache"), \
+                 patch("threev0_state.SessionDB", side_effect=_hanging_then_capture), \
                  patch(
-                     "ev0_cli.runtime_provider.resolve_runtime_provider",
+                     "threev0_cli.runtime_provider.resolve_runtime_provider",
                      return_value={
                          "api_key": "test-key",
                          "base_url": "https://example.invalid/v1",

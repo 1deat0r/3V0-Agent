@@ -28,7 +28,7 @@ def parse_node_kind(node_id: str) -> str:
 
 
 def _memories_dir() -> Path:
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     return get_ev0_home() / "memories"
 

@@ -35,8 +35,8 @@ def _restore_tool_modules():
         for name, module in sys.modules.items()
         if name == "tools"
         or name.startswith("tools.")
-        or name == "ev0_cli"
-        or name.startswith("ev0_cli.")
+        or name == "threev0_cli"
+        or name.startswith("threev0_cli.")
         or name == "modal"
         or name.startswith("modal.")
     }
@@ -47,7 +47,7 @@ def _restore_tool_modules():
             os.environ.pop("EV0_HOME", None)
         else:
             os.environ["EV0_HOME"] = original_ev0_home
-        _reset_modules(("tools", "ev0_cli", "modal"))
+        _reset_modules(("tools", "threev0_cli", "modal"))
         sys.modules.update(original_modules)
 
 
@@ -57,14 +57,14 @@ def _install_modal_test_modules(
     fail_on_snapshot_ids: set[str] | None = None,
     snapshot_id: str = "im-fresh",
 ):
-    _reset_modules(("tools", "ev0_cli", "modal"))
+    _reset_modules(("tools", "threev0_cli", "modal"))
 
-    ev0_cli = types.ModuleType("ev0_cli")
-    ev0_cli.__path__ = []  # type: ignore[attr-defined]
-    sys.modules["ev0_cli"] = ev0_cli
+    threev0_cli = types.ModuleType("threev0_cli")
+    threev0_cli.__path__ = []  # type: ignore[attr-defined]
+    sys.modules["threev0_cli"] = threev0_cli
     ev0_home = tmp_path / "3v0-home"
     os.environ["EV0_HOME"] = str(ev0_home)
-    sys.modules["ev0_cli.config"] = types.SimpleNamespace(
+    sys.modules["threev0_cli.config"] = types.SimpleNamespace(
         get_ev0_home=lambda: ev0_home,
     )
 

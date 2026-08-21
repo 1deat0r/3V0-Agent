@@ -78,9 +78,9 @@ logger = logging.getLogger("gateway.platforms.google_chat_user_oauth")
 # Use the project's EV0_HOME helper so the token follows the user's
 # profile (e.g. tests can override via EV0_HOME=/tmp/...).
 try:
-    from ev0_constants import display_ev0_home, get_ev0_home
+    from threev0_constants import display_ev0_home, get_ev0_home
 except (ModuleNotFoundError, ImportError):
-    # Fallback for environments where ev0_constants isn't importable
+    # Fallback for environments where threev0_constants isn't importable
     # (mirrors the same fallback used by the google-workspace skill's
     # _ev0_home.py shim).
     def get_ev0_home() -> Path:
@@ -402,7 +402,7 @@ def install_deps() -> bool:
 
     print("Installing Google Chat dependencies...")
     try:
-        from ev0_cli.tools_config import _pip_install
+        from threev0_cli.tools_config import _pip_install
 
         result = _pip_install(["--quiet"] + missing)
         if result.returncode != 0:

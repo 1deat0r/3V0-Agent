@@ -1,15 +1,15 @@
 """Tests for the WeCom plugin's interactive_setup wizard home-channel flow.
 
 The interactive_setup wizard lazy-imports its CLI helpers from
-``ev0_cli.config`` (get_env_value / save_env_value / remove_env_value),
-``ev0_cli.cli_output`` (prompt / prompt_yes_no / print_*), and
-``ev0_cli.setup`` (prompt_choice); we patch each at its source module so
+``threev0_cli.config`` (get_env_value / save_env_value / remove_env_value),
+``threev0_cli.cli_output`` (prompt / prompt_yes_no / print_*), and
+``threev0_cli.setup`` (prompt_choice); we patch each at its source module so
 the QR scan / pip paths never fire. Covers the home-channel clear-on-blank
 behavior added in the follow-up to PR #58421.
 """
-import ev0_cli.config as config_mod
-import ev0_cli.cli_output as cli_output_mod
-import ev0_cli.setup as setup_mod
+import threev0_cli.config as config_mod
+import threev0_cli.cli_output as cli_output_mod
+import threev0_cli.setup as setup_mod
 from plugins.platforms.wecom.adapter import interactive_setup
 
 

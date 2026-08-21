@@ -22,9 +22,9 @@ Entry text is deliberately budget-capped so a small aux model
 | ROOT | `/` | Conversation loop, CLI, tool orchestration, session store, profile paths | `areas/ROOT.md` |
 | CORE | `3v0/` | Sovereign memory core + standing systems + canonical data | `areas/CORE.md` |
 | AGENT | `agent/` | AIAgent internals: providers, caching, memory, budget, curator | `areas/AGENT.md` |
-| STATE | `ev0_state*.py` | Session store family + constants/logging | `areas/STATE.md` |
+| STATE | `threev0_state*.py` | Session store family + constants/logging | `areas/STATE.md` |
 | TOOLS | `tools/`, `model_tools.py`, `toolsets.py` | Model tool registry + implementations | `areas/TOOLS.md` |
-| CLI | `ev0_cli/`, `cli.py` | Interactive CLI, config, skins, dashboard server | `areas/CLI.md` |
+| CLI | `threev0_cli/`, `cli.py` | Interactive CLI, config, skins, dashboard server | `areas/CLI.md` |
 | GATEWAY | `gateway/`, `tui_gateway/` | Messaging platforms + TUI backend | `areas/GATEWAY.md` |
 | CRON | `cron/` | Scheduled jobs | `areas/CRON.md` |
 | PLUGINS | `plugins/` | Plugin ecosystem (memory, providers, platforms, tools) | `areas/PLUGINS.md` |
@@ -47,9 +47,9 @@ Reading these gives you ~90% of the architecture in ~15 files:
 1. `AGENTS.md` — governance + contribution law (the constitution).
 2. `3v0/SOUL.md` + `3v0/CONTEXT.md` — the agent's identity (only if you will *be* the agent, not just work on the code).
 3. `run_agent.py` — the conversation loop.
-4. `cli.py` + `ev0_cli/main.py` — CLI entry + command dispatch.
+4. `cli.py` + `threev0_cli/main.py` — CLI entry + command dispatch.
 5. `model_tools.py` + `tools/registry.py` + `toolsets.py` — how tools exist.
-6. `ev0_state.py` + `ev0_constants.py` — persistence + paths.
+6. `threev0_state.py` + `threev0_constants.py` — persistence + paths.
 7. `gateway/run.py` + `gateway/session.py` — the messaging orchestrator.
 8. `agent/prompt_builder.py` + `agent/prompt_caching.py` — the cache-sacred system prompt.
 9. `3v0/core/memdb.py` + `3v0/core/store.py` + `3v0/core/consolidate.py` — the memory substrate.
@@ -57,11 +57,11 @@ Reading these gives you ~90% of the architecture in ~15 files:
 
 ## Conventions to know before editing
 
-- **Secrets live in `.env`; every behavioral setting in `config.yaml`** (`ev0_cli/config.py`). No new `EV0_*` env vars for non-secrets.
+- **Secrets live in `.env`; every behavioral setting in `config.yaml`** (`threev0_cli/config.py`). No new `EV0_*` env vars for non-secrets.
 - **Prompt caching is sacred** — never mutate past context, toolsets, or system prompt mid-conversation (`agent/prompt_cache_boundary.py`).
 - **The core is a narrow waist** — new capability prefers CLI command + skill → service-gated tool → plugin → MCP server → new core tool, in that order (footprint ladder).
 - **Tests run only via `scripts/run_tests.sh`** (CI-parity env, per-file subprocess isolation). Direct `pytest` diverges from CI.
-- **Profile paths** — always `get_ev0_home()` from `ev0_constants`, never hardcoded `~/.3V0`.
+- **Profile paths** — always `get_ev0_home()` from `threev0_constants`, never hardcoded `~/.3V0`.
 - **Git invariant** — 3V0 always commits tracked changes; `memory.db` canonical state is versioned in git.
 - **verify.sh is the done-gate** — body changes are "done" when it passes.
 

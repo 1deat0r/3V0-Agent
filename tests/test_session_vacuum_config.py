@@ -3,20 +3,20 @@ from unittest.mock import MagicMock
 
 
 def test_default_config_exposes_vacuum_interval():
-    from ev0_cli.config import DEFAULT_CONFIG
+    from threev0_cli.config import DEFAULT_CONFIG
 
     assert DEFAULT_CONFIG["sessions"]["min_vacuum_interval_days"] == 30
 
 
 def test_cli_auto_maintenance_forwards_vacuum_interval(monkeypatch, tmp_path: Path):
     import cli
-    import ev0_cli.config
-    import ev0_constants
+    import threev0_cli.config
+    import threev0_constants
 
     session_db = MagicMock()
     session_db.get_meta.return_value = "already-done"
     monkeypatch.setattr(
-        ev0_cli.config,
+        threev0_cli.config,
         "load_config",
         lambda: {
             "sessions": {
@@ -28,7 +28,7 @@ def test_cli_auto_maintenance_forwards_vacuum_interval(monkeypatch, tmp_path: Pa
             }
         },
     )
-    monkeypatch.setattr(ev0_constants, "get_ev0_home", lambda: tmp_path)
+    monkeypatch.setattr(threev0_constants, "get_ev0_home", lambda: tmp_path)
 
     cli._run_state_db_auto_maintenance(session_db)
 

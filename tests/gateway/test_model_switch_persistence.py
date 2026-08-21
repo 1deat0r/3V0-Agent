@@ -186,7 +186,7 @@ class TestOneTurnNeverPersisted:
 
         import gateway.run as gateway_run
         from gateway.run import GatewayRunner
-        from ev0_cli.model_switch import ModelSwitchResult
+        from threev0_cli.model_switch import ModelSwitchResult
 
         ev0_home = tmp_path / ".3V0"
         ev0_home.mkdir()
@@ -199,7 +199,7 @@ class TestOneTurnNeverPersisted:
         monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
         monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda: {})
         monkeypatch.setattr(
-            "ev0_cli.model_switch.switch_model",
+            "threev0_cli.model_switch.switch_model",
             lambda **kw: ModelSwitchResult(
                 success=True,
                 new_model="gpt-5.5",
@@ -211,8 +211,8 @@ class TestOneTurnNeverPersisted:
                 provider_label="OpenRouter",
             ),
         )
-        monkeypatch.setattr("ev0_constants.get_ev0_home", lambda: ev0_home)
-        monkeypatch.setattr("ev0_cli.config.get_ev0_home", lambda: ev0_home)
+        monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: ev0_home)
+        monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: ev0_home)
 
         runner = object.__new__(GatewayRunner)
         runner.adapters = {}

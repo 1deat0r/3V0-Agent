@@ -568,7 +568,7 @@ def get_clarify_timeout() -> int:
     is still deciding.
     """
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
         return resolve_clarify_timeout(load_config() or {})
     except Exception:
         return 3600

@@ -25,7 +25,7 @@ def ev0_home(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("EV0_HOME", str(home))
 
-    from ev0_cli import loops
+    from threev0_cli import loops
 
     loops._DB_CACHE.clear()
     yield home
@@ -37,8 +37,8 @@ def server(ev0_home):
     with patch.dict(
         "sys.modules",
         {
-            "ev0_cli.env_loader": MagicMock(),
-            "ev0_cli.banner": MagicMock(),
+            "threev0_cli.env_loader": MagicMock(),
+            "threev0_cli.banner": MagicMock(),
         },
     ):
         mod = importlib.import_module("tui_gateway.server")
@@ -87,7 +87,7 @@ def test_loop_set_persists(server, session):
     assert result["type"] == "exec"
     assert "Loop set" in result["output"]
 
-    from ev0_cli.loops import LoopManager
+    from threev0_cli.loops import LoopManager
 
     mgr = LoopManager(session_key)
     assert mgr.state is not None
@@ -115,7 +115,7 @@ def test_loop_pause_resume_stop(server, session):
     r = _call(server, "command.dispatch", name="loop", arg="stop", session_id=sid)
     assert "stopped" in r["result"]["output"].lower()
 
-    from ev0_cli.loops import LoopManager
+    from threev0_cli.loops import LoopManager
 
     assert not LoopManager(session_key).has_loop()
 
@@ -131,7 +131,7 @@ def test_loop_requires_session(server):
 
 def test_tui_tick_fires_when_idle_and_due(server, session):
     sid, session_key, s = session
-    from ev0_cli.loops import LoopManager, save_loop
+    from threev0_cli.loops import LoopManager, save_loop
 
     mgr = LoopManager(session_key)
     mgr.set("poll the build", interval_seconds=60)
@@ -155,7 +155,7 @@ def test_tui_tick_fires_when_idle_and_due(server, session):
 
 def test_tui_tick_defers_when_running(server, session):
     sid, session_key, s = session
-    from ev0_cli.loops import LoopManager, save_loop
+    from threev0_cli.loops import LoopManager, save_loop
 
     mgr = LoopManager(session_key)
     mgr.set("poll", interval_seconds=60)
@@ -174,8 +174,8 @@ def test_tui_tick_defers_when_running(server, session):
 
 def test_tui_tick_defers_to_active_goal(server, session):
     sid, session_key, s = session
-    from ev0_cli.goals import GoalManager
-    from ev0_cli.loops import LoopManager, save_loop
+    from threev0_cli.goals import GoalManager
+    from threev0_cli.loops import LoopManager, save_loop
 
     GoalManager(session_id=session_key).set("finish the feature")
     mgr = LoopManager(session_key)
@@ -193,7 +193,7 @@ def test_tui_tick_defers_to_active_goal(server, session):
 
 def test_tui_tick_noop_when_not_due(server, session):
     sid, session_key, s = session
-    from ev0_cli.loops import LoopManager
+    from threev0_cli.loops import LoopManager
 
     LoopManager(session_key).set("poll", interval_seconds=300)
 

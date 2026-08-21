@@ -546,9 +546,9 @@ class ComputeHost:
         secret_token = None
         try:
             if profile_home:
-                from ev0_constants import set_ev0_home_override
+                from threev0_constants import set_ev0_home_override
                 from agent.secret_scope import build_profile_secret_scope, set_secret_scope
-                from ev0_state import SessionDB
+                from threev0_state import SessionDB
 
                 home_token = set_ev0_home_override(profile_home)
                 secret_token = set_secret_scope(build_profile_secret_scope(Path(profile_home)))
@@ -577,7 +577,7 @@ class ComputeHost:
                     session_db.close()
             if home_token is not None:
                 try:
-                    from ev0_constants import reset_ev0_home_override
+                    from threev0_constants import reset_ev0_home_override
                     from agent.secret_scope import reset_secret_scope
 
                     reset_ev0_home_override(home_token)

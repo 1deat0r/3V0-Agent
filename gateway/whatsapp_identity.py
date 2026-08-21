@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 # full-width digits / Unicode word chars can't sneak through.
 _SAFE_IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9@.+\-]+$")
 
-from ev0_constants import get_ev0_dir
+from threev0_constants import get_ev0_dir
 
 
 def normalize_whatsapp_identifier(value: str) -> str:

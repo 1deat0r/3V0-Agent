@@ -13,12 +13,12 @@ Usage::
     3v0-acp
 """
 
-# IMPORTANT: ev0_bootstrap must be the very first import — UTF-8 stdio
-# on Windows.  No-op on POSIX.  See ev0_bootstrap.py for full rationale.
+# IMPORTANT: threev0_bootstrap must be the very first import — UTF-8 stdio
+# on Windows.  No-op on POSIX.  See threev0_bootstrap.py for full rationale.
 try:
-    import ev0_bootstrap  # noqa: F401
+    import threev0_bootstrap  # noqa: F401
 except ModuleNotFoundError:
-    # Graceful fallback when ev0_bootstrap isn't registered in the venv
+    # Graceful fallback when threev0_bootstrap isn't registered in the venv
     # yet — happens during partial ``3v0 update`` where git-reset landed
     # new code but ``uv pip install -e .`` didn't finish.  Missing bootstrap
     # means UTF-8 stdio setup is skipped on Windows; POSIX is unaffected.
@@ -27,7 +27,7 @@ else:
     # Stop a ``utils/``/``proxy/``/``ui/`` package in the launch directory from
     # shadowing 3V0's own modules — ``3v0 acp`` can be started from any
     # cwd, including a project that has same-named packages on its path.
-    ev0_bootstrap.harden_import_path()
+    threev0_bootstrap.harden_import_path()
 
 import argparse
 import asyncio
@@ -35,7 +35,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 
 
 # Methods clients send as periodic liveness probes. They are not part of the
@@ -103,7 +103,7 @@ def _setup_logging() -> None:
 
 def _load_env() -> None:
     """Load .env from EV0_HOME (default ``~/.3V0``)."""
-    from ev0_cli.env_loader import load_ev0_dotenv
+    from threev0_cli.env_loader import load_ev0_dotenv
 
     ev0_home = get_ev0_home()
     loaded = load_ev0_dotenv(ev0_home=ev0_home)
@@ -150,7 +150,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def _print_version() -> None:
-    from ev0_cli import __version__ as ev0_version
+    from threev0_cli import __version__ as ev0_version
 
     print(ev0_version)
 
@@ -163,7 +163,7 @@ def _run_check() -> None:
 
 
 def _run_setup() -> None:
-    from ev0_cli.main import main as ev0_main
+    from threev0_cli.main import main as ev0_main
 
     old_argv = sys.argv[:]
     try:
@@ -197,7 +197,7 @@ def _run_setup_browser(assume_yes: bool = False) -> int:
 
     Returns 0 on success, 1 on failure.
     """
-    from ev0_cli.dep_ensure import ensure_dependency
+    from threev0_cli.dep_ensure import ensure_dependency
 
     try:
         node_ok = ensure_dependency("node", interactive=not assume_yes)
@@ -259,7 +259,7 @@ def main(argv: list[str] | None = None) -> None:
     # Metadata-only hosts can opt out of unrelated global MCP startup.
     if os.environ.get("EV0_ACP_SKIP_CONFIGURED_MCP", "").strip() != "1":
         try:
-            from ev0_cli.mcp_startup import start_background_mcp_discovery
+            from threev0_cli.mcp_startup import start_background_mcp_discovery
 
             start_background_mcp_discovery(
                 logger=logger,

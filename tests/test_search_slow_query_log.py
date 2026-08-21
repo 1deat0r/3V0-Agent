@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 @pytest.fixture()
@@ -18,7 +18,7 @@ def db(tmp_path):
 
 def test_slow_log_emitted_at_zero_threshold(db, monkeypatch, caplog):
     monkeypatch.setenv("EV0_SEARCH_SLOW_MS", "0")
-    with caplog.at_level(logging.INFO, logger="ev0_state"):
+    with caplog.at_level(logging.INFO, logger="threev0_state"):
         rows = db.search_messages("graphiti", limit=5)
     assert rows
     slow = [r for r in caplog.records if "slow session search" in r.getMessage()]
@@ -29,7 +29,7 @@ def test_slow_log_emitted_at_zero_threshold(db, monkeypatch, caplog):
 
 def test_no_log_under_threshold(db, monkeypatch, caplog):
     monkeypatch.setenv("EV0_SEARCH_SLOW_MS", "60000")
-    with caplog.at_level(logging.INFO, logger="ev0_state"):
+    with caplog.at_level(logging.INFO, logger="threev0_state"):
         db.search_messages("graphiti", limit=5)
     assert not [r for r in caplog.records if "slow session search" in r.getMessage()]
 

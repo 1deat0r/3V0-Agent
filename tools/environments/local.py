@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from tools.environments.base import BaseEnvironment, _pipe_stdin
-from ev0_cli._subprocess_compat import windows_hide_flags
+from threev0_cli._subprocess_compat import windows_hide_flags
 
 _IS_WINDOWS = platform.system() == "Windows"
 
@@ -227,7 +227,7 @@ def _build_provider_env_blocklist() -> frozenset:
     blocked: set[str] = set()
 
     try:
-        from ev0_cli.auth import PROVIDER_REGISTRY
+        from threev0_cli.auth import PROVIDER_REGISTRY
         for pconfig in PROVIDER_REGISTRY.values():
             blocked.update(pconfig.api_key_env_vars)
             if pconfig.auth_type == "aws_sdk":
@@ -238,7 +238,7 @@ def _build_provider_env_blocklist() -> frozenset:
         pass
 
     try:
-        from ev0_cli.config import OPTIONAL_ENV_VARS
+        from threev0_cli.config import OPTIONAL_ENV_VARS
         for name, metadata in OPTIONAL_ENV_VARS.items():
             category = metadata.get("category")
             if category in {"tool", "messaging"}:
@@ -397,7 +397,7 @@ def _is_ev0_internal_secret(key: str) -> bool:
 def _inject_context_ev0_home(env: dict) -> None:
     """Bridge the context-local 3V0 home override into subprocess env."""
     try:
-        from ev0_constants import get_ev0_home_override
+        from threev0_constants import get_ev0_home_override
 
         value = get_ev0_home_override()
         if value:
@@ -496,7 +496,7 @@ def _sanitize_subprocess_env(base_env: dict | None, extra_env: dict | None = Non
 
     _inject_context_ev0_home(sanitized)
 
-    from ev0_constants import apply_subprocess_home_env
+    from threev0_constants import apply_subprocess_home_env
     apply_subprocess_home_env(sanitized)
 
     # Same cross-session leak guard as _make_run_env, for the background/PTY
@@ -628,7 +628,7 @@ def ev0_subprocess_env(*, inherit_credentials: bool = False) -> dict[str, str]:
     env.setdefault("PYTHONUTF8", "1")
 
     _inject_context_ev0_home(env)
-    from ev0_constants import apply_subprocess_home_env
+    from threev0_constants import apply_subprocess_home_env
     apply_subprocess_home_env(env)
 
     # Active-venv markers must not clobber another project's environment.
@@ -692,7 +692,7 @@ def build_subprocess_env(
       grep-able and future-fixable.
     * ``inherit_profile_home`` — on the non-scrub path, when True, bridge the
       context-local 3V0 home override into ``EV0_HOME`` and apply the
-      subprocess HOME contract (``ev0_constants.apply_subprocess_home_env``).
+      subprocess HOME contract (``threev0_constants.apply_subprocess_home_env``).
       Pass False to keep the inherited env untouched (exact legacy
       ``os.environ.copy()`` behavior).
     * ``extra`` — applied **last** on the non-scrub path so explicit caller
@@ -712,7 +712,7 @@ def build_subprocess_env(
     env: dict[str, str] = dict(base) if base is not None else os.environ.copy()
     if inherit_profile_home:
         _inject_context_ev0_home(env)
-        from ev0_constants import apply_subprocess_home_env
+        from threev0_constants import apply_subprocess_home_env
         apply_subprocess_home_env(env)
     if extra:
         env.update(extra)
@@ -1160,7 +1160,7 @@ def _managed_runtime_path_entries() -> list[str]:
     mid-process (``heal_ev0_managed_node``, a first browser install).
     """
     try:
-        from ev0_constants import get_ev0_home, iter_ev0_node_dirs
+        from threev0_constants import get_ev0_home, iter_ev0_node_dirs
 
         candidates = [*iter_ev0_node_dirs(), get_ev0_home() / "bin"]
         return [str(d) for d in candidates if d.is_dir()]
@@ -1310,7 +1310,7 @@ def _make_run_env(env: dict) -> dict:
 
     _inject_context_ev0_home(run_env)
 
-    from ev0_constants import apply_subprocess_home_env
+    from threev0_constants import apply_subprocess_home_env
     apply_subprocess_home_env(run_env)
 
     # Bridge ContextVar-based session vars into the subprocess env (with the
@@ -1335,7 +1335,7 @@ def _read_terminal_shell_init_config() -> tuple[list[str], bool]:
     execution never breaks because the config file is unreadable.
     """
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
 
         cfg = load_config() or {}
         terminal_cfg = cfg.get("terminal") or {}
@@ -1452,7 +1452,7 @@ class LocalEnvironment(BaseEnvironment):
             # accepts forward slashes in filesystem paths, and we control
             # the path so we can guarantee no spaces.
             try:
-                from ev0_constants import get_ev0_home
+                from threev0_constants import get_ev0_home
                 cache_dir = get_ev0_home() / "cache" / "terminal"
             except Exception:
                 cache_dir = Path(tempfile.gettempdir()) / "ev0_terminal"

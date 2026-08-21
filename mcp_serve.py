@@ -63,7 +63,7 @@ except ImportError:
 def _get_sessions_dir() -> Path:
     """Return the sessions directory using EV0_HOME."""
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         return get_ev0_home() / "sessions"
     except ImportError:
         return Path(os.environ.get("EV0_HOME", Path.home() / ".3V0")) / "sessions"
@@ -72,7 +72,7 @@ def _get_sessions_dir() -> Path:
 def _get_session_db():
     """Get a SessionDB instance for reading message transcripts."""
     try:
-        from ev0_state import SessionDB
+        from threev0_state import SessionDB
         return SessionDB()
     except Exception as e:
         logger.debug("SessionDB unavailable: %s", e)
@@ -211,7 +211,7 @@ def _load_sessions_index_from_json() -> dict:
 def _load_channel_directory() -> dict:
     """Load the cached channel directory for available targets."""
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         directory_file = get_ev0_home() / "channel_directory.json"
     except ImportError:
         directory_file = Path(
@@ -486,7 +486,7 @@ class EventBridge:
         message is still delivered on its state.db-change tick.
         """
         try:
-            from ev0_constants import get_ev0_home
+            from threev0_constants import get_ev0_home
             db_file = get_ev0_home() / "state.db"
         except ImportError:
             db_file = Path(os.environ.get("EV0_HOME", Path.home() / ".3V0")) / "state.db"
@@ -543,7 +543,7 @@ class EventBridge:
         could drop brand-new conversations (#8925).
         """
         try:
-            from ev0_constants import get_ev0_home
+            from threev0_constants import get_ev0_home
             db_file = get_ev0_home() / "state.db"
         except ImportError:
             db_file = Path(os.environ.get("EV0_HOME", Path.home() / ".3V0")) / "state.db"

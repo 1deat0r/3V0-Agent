@@ -114,8 +114,8 @@ class GuardSeamTest(unittest.TestCase):
         )
         self.assert_blocked(
             "terminal",
-            {"command": "python -m ev0_cli.main update"},
-            msg="python -m ev0_cli.main update must block (regex gap closed)",
+            {"command": "python -m threev0_cli.main update"},
+            msg="python -m threev0_cli.main update must block (regex gap closed)",
         )
 
     # ------------------------------------------------------------------
@@ -197,7 +197,7 @@ class GuardSeamTest(unittest.TestCase):
     def test_write_into_canonical_allowed(self):
         self.assert_allowed(
             "write_file",
-            {"path": os.path.join(CANONICAL, "ev0_cli", "x.py")},
+            {"path": os.path.join(CANONICAL, "threev0_cli", "x.py")},
             msg="write into canonical repo must stay allowed",
         )
 

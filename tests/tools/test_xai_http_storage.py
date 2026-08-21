@@ -7,7 +7,7 @@ import yaml
 
 def _invalidate_config_cache():
     try:
-        import ev0_cli.config as cfg_mod
+        import threev0_cli.config as cfg_mod
 
         if hasattr(cfg_mod, "_invalidate_load_config_cache"):
             cfg_mod._invalidate_load_config_cache()

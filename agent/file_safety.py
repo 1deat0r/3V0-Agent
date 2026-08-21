@@ -10,7 +10,7 @@ from typing import Optional
 def _ev0_home_path() -> Path:
     """Resolve the active EV0_HOME (profile-aware) without circular imports."""
     try:
-        from ev0_constants import get_ev0_home  # local import to avoid cycles
+        from threev0_constants import get_ev0_home  # local import to avoid cycles
         return get_ev0_home()
     except Exception:
         return Path(os.path.expanduser("~/.3V0"))
@@ -19,7 +19,7 @@ def _ev0_home_path() -> Path:
 def _ev0_root_path() -> Path:
     """Resolve the 3V0 root dir (always the parent of any profile, never per-profile)."""
     try:
-        from ev0_constants import get_default_ev0_root  # local import to avoid cycles
+        from threev0_constants import get_default_ev0_root  # local import to avoid cycles
         return get_default_ev0_root()
     except Exception:
         return Path(os.path.expanduser("~/.3V0"))

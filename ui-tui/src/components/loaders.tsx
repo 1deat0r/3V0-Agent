@@ -1,4 +1,4 @@
-import { Box, Text } from '@ev0/ink'
+import { Box, Text } from '@3v0/ink'
 import { useEffect, useState } from 'react'
 
 import { mix } from '../lib/color.js'

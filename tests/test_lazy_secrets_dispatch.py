@@ -22,7 +22,7 @@ def _run_ev0(args: list[str], timeout: int = 30) -> subprocess.CompletedProcess[
     """Run 3v0 CLI as a subprocess from repo root."""
     repo_root = Path(__file__).parent.parent
     return subprocess.run(
-        [sys.executable, "-m", "ev0_cli.main"] + args,
+        [sys.executable, "-m", "threev0_cli.main"] + args,
         capture_output=True,
         text=True,
         cwd=str(repo_root),
@@ -153,14 +153,14 @@ def capture_update_check(*args, **kwargs):
 
 sys.argv = ['3v0', 'update', '--check']
 
-import ev0_cli.main as m
+import threev0_cli.main as m
 
 # Patch the update handler so main() exercises its parser + dispatch
 # without doing network I/O.  cmd_update (in main.py) calls
 # _self()._cmd_update_check(branch=..., branch_explicit=...) where _self()
-# resolves the ev0_cli.main module's lazily re-exported attribute —
-# so the patch must land on ev0_cli.main._cmd_update_check.
-with patch('ev0_cli.main._cmd_update_check', capture_update_check):
+# resolves the threev0_cli.main module's lazily re-exported attribute —
+# so the patch must land on threev0_cli.main._cmd_update_check.
+with patch('threev0_cli.main._cmd_update_check', capture_update_check):
     try:
         m.main()
     except SystemExit as e:

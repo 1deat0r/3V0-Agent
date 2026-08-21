@@ -15,9 +15,9 @@ Columns: path · kind · purpose · why · related
 | `gateway/builtin_hooks/__init__.py` | source | Built-in gateway hooks that are always registered. | Python module executed or imported by the runtime; check git intent before deleting | gateway/builtin_hooks/ |
 | `gateway/cgroup_cleanup.py` | source | Leak control | Cleans up cgroup/process leftovers on gateway stop | gateway/run.py |
 | `gateway/channel_directory.py` | source | Channel directory -- cached map of reachable channels/contacts per platform. | Python module executed or imported by the runtime; check git intent before deleting | gateway/__init__.py; gateway/agent_cache_pressure.py; gateway/assets/status_phrases.yaml; gateway/assets/telegram-botfather-threads-settings.jpg; gateway/authz_mixin.py |
-| `gateway/code_skew.py` | source | Mixed-version fleet safety | Detects version drift between gateway processes | gateway/run.py; ev0_cli/update_cmd.py; ev0_constants.py |
-| `gateway/config.py` | source | Gateway config loader + platform settings | Dedicated raw-yaml loader for the gateway runtime | gateway/run.py; ev0_cli/config.py |
-| `gateway/cwd_placeholder.py` | source | CWD placeholder resolution | terminal.cwd bridging | ev0_cli/config.py |
+| `gateway/code_skew.py` | source | Mixed-version fleet safety | Detects version drift between gateway processes | gateway/run.py; threev0_cli/update_cmd.py; threev0_constants.py |
+| `gateway/config.py` | source | Gateway config loader + platform settings | Dedicated raw-yaml loader for the gateway runtime | gateway/run.py; threev0_cli/config.py |
+| `gateway/cwd_placeholder.py` | source | CWD placeholder resolution | terminal.cwd bridging | threev0_cli/config.py |
 | `gateway/dead_targets.py` | source | Persistent registry of delivery targets that are confirmed unreachable. | Python module executed or imported by the runtime; check git intent before deleting | gateway/__init__.py; gateway/agent_cache_pressure.py; gateway/assets/status_phrases.yaml; gateway/assets/telegram-botfather-threads-settings.jpg; gateway/authz_mixin.py |
 | `gateway/delivery.py` | source | Message delivery ledger (idempotent delivery) | Guarantees under retries | gateway/delivery_ledger.py; gateway/lifecycle_ledger.py |
 | `gateway/delivery_ledger.py` | source | Durable delivery-obligation ledger for gateway final responses. | Python module executed or imported by the runtime; check git intent before deleting | gateway/__init__.py; gateway/agent_cache_pressure.py; gateway/assets/status_phrases.yaml; gateway/assets/telegram-botfather-threads-settings.jpg; gateway/authz_mixin.py |
@@ -76,7 +76,7 @@ Columns: path · kind · purpose · why · related
 | `gateway/restart.py` | source | Graceful restart management | Zero-downtime config reload | gateway/restart_loop_guard.py |
 | `gateway/restart_loop_guard.py` | source | Restart loop protection | Crash-loop braking | gateway/restart.py |
 | `gateway/rich_sent_store.py` | source | Rich sent-message store | Message edit/delete hooks | gateway/delivery.py |
-| `gateway/run.py` | source | GatewayRunner — the messaging gateway orchestrator (session lifecycle, message dispatch, hooks) | The always-on surface for Telegram/Discord/etc.; slash commands resolve here in messaging | gateway/session.py; gateway/platforms/; ev0_cli/commands.py |
+| `gateway/run.py` | source | GatewayRunner — the messaging gateway orchestrator (session lifecycle, message dispatch, hooks) | The always-on surface for Telegram/Discord/etc.; slash commands resolve here in messaging | gateway/session.py; gateway/platforms/; threev0_cli/commands.py |
 | `gateway/runtime_footer.py` | source | Runtime footer for session prompts | Session identity footer | gateway/session.py |
 | `gateway/scale_to_zero.py` | source | Scale-to-zero for idle instances | Cost control | gateway/readiness.py; gateway/systemd_notify.py |
 | `gateway/session.py` | source | Session manager for messaging (per-chat agents, resume, /new) | Isolates each chat's conversation | gateway/run.py; gateway/session_context.py |
@@ -87,7 +87,7 @@ Columns: path · kind · purpose · why · related
 | `gateway/shutdown_forensics.py` | source | Shutdown forensics (why did it die) | Crash reporting | gateway/shutdown_watchdog.py |
 | `gateway/shutdown_watchdog.py` | source | Shutdown watchdog | Force-exit after grace | gateway/drain_control.py |
 | `gateway/slash_access.py` | source | Per-platform slash command access control. | Python module executed or imported by the runtime; check git intent before deleting | gateway/__init__.py; gateway/agent_cache_pressure.py; gateway/assets/status_phrases.yaml; gateway/assets/telegram-botfather-threads-settings.jpg; gateway/authz_mixin.py |
-| `gateway/slash_commands.py` | source | Gateway slash-command dispatch | Messaging-side command handling | ev0_cli/commands.py; gateway/run.py |
+| `gateway/slash_commands.py` | source | Gateway slash-command dispatch | Messaging-side command handling | threev0_cli/commands.py; gateway/run.py |
 | `gateway/status.py` | source | Gateway status surfaces (health, locks) | token-scoped locks: acquire_scoped_lock for unique credentials | gateway/readiness.py; gateway/memory_status.py |
 | `gateway/status_phrases.py` | source | Human-friendly generic gateway status phrases. | Python module executed or imported by the runtime; check git intent before deleting | gateway/__init__.py; gateway/agent_cache_pressure.py; gateway/assets/status_phrases.yaml; gateway/assets/telegram-botfather-threads-settings.jpg; gateway/authz_mixin.py |
 | `gateway/sticker_cache.py` | source | Sticker description cache for Telegram. | Python module executed or imported by the runtime; check git intent before deleting | gateway/__init__.py; gateway/agent_cache_pressure.py; gateway/assets/status_phrases.yaml; gateway/assets/telegram-botfather-threads-settings.jpg; gateway/authz_mixin.py |

@@ -17,7 +17,7 @@ import json
 from unittest.mock import AsyncMock
 
 from gateway.config import Platform, PlatformConfig
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 
 
 PHONE = "351912345678"

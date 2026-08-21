@@ -2,13 +2,13 @@ import os
 import sys
 
 # Stop a ``utils/`` (or ``proxy/``, ``ui/``) package in the launch directory
-# from shadowing 3V0's own top-level modules.  ``ev0_bootstrap`` lives at
+# from shadowing 3V0's own top-level modules.  ``threev0_bootstrap`` lives at
 # the repo root next to this package, so importing it is safe before the guard
 # runs (its name won't collide with a user package), and it owns the canonical
 # path-hardening logic shared with the other entry points.
-import ev0_bootstrap
+import threev0_bootstrap
 
-ev0_bootstrap.harden_import_path()
+threev0_bootstrap.harden_import_path()
 
 import json
 import logging
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # ensure_mcp_discovery_started).  The first agent build briefly joins this so
 # already-spawning fast servers land before the agent snapshots its tool list
 # (see wait_for_mcp_discovery).  Stays None when discovery is delegated to the
-# shared owner in ev0_cli.mcp_startup — the wait/in-flight/join helpers
+# shared owner in threev0_cli.mcp_startup — the wait/in-flight/join helpers
 # below consult both owners.
 _mcp_discovery_thread = None
 
@@ -37,7 +37,7 @@ _mcp_discovery_thread = None
 # configured and spawned discovery through the shared owner. Lets
 # wait_for_mcp_discovery re-invoke the (idempotent) spawn on later agent
 # builds so the retry-after-zero-connected allowance in
-# ev0_cli.mcp_startup.start_background_mcp_discovery can actually fire —
+# threev0_cli.mcp_startup.start_background_mcp_discovery can actually fire —
 # without this, the single spawn is the only call and a first run that
 # connected nothing latches the process MCP-less. Kept as a flag (rather than
 # re-probing config) so non-MCP sessions never pay the tools.mcp_tool import
@@ -266,12 +266,12 @@ def wait_for_mcp_discovery(timeout: "float | None" = None) -> None:
     waited on beyond the bound.  No-op when no discovery thread was started.
 
     The bound comes from ``mcp_discovery_timeout`` in config (shared with the
-    CLI path via ``ev0_cli.mcp_startup``); ``timeout`` overrides it.
+    CLI path via ``threev0_cli.mcp_startup``); ``timeout`` overrides it.
     """
     thread = _mcp_discovery_thread
     if thread is not None and thread.is_alive():
         try:
-            from ev0_cli.mcp_startup import _resolve_discovery_timeout
+            from threev0_cli.mcp_startup import _resolve_discovery_timeout
 
             bound = _resolve_discovery_timeout(timeout)
         except Exception:
@@ -279,7 +279,7 @@ def wait_for_mcp_discovery(timeout: "float | None" = None) -> None:
         thread.join(timeout=bound)
         return
     # Discovery is spawned via the shared owner (ensure_mcp_discovery_started
-    # → ev0_cli.mcp_startup); wait on it so the first agent build still
+    # → threev0_cli.mcp_startup); wait on it so the first agent build still
     # catches fast servers. Re-invoke the idempotent spawn first: if the
     # previous run finished with zero connected servers,
     # start_background_mcp_discovery's retry-after-zero-connected allowance
@@ -293,7 +293,7 @@ def wait_for_mcp_discovery(timeout: "float | None" = None) -> None:
     if not _mcp_discovery_enabled:
         return
     try:
-        from ev0_cli.mcp_startup import start_background_mcp_discovery
+        from threev0_cli.mcp_startup import start_background_mcp_discovery
 
         start_background_mcp_discovery(
             logger=logger, thread_name="tui-mcp-discovery"
@@ -303,7 +303,7 @@ def wait_for_mcp_discovery(timeout: "float | None" = None) -> None:
             "TUI MCP discovery retry-spawn failed", exc_info=True
         )
     try:
-        from ev0_cli.mcp_startup import (
+        from threev0_cli.mcp_startup import (
             wait_for_mcp_discovery as _startup_wait,
         )
 
@@ -324,7 +324,7 @@ def mcp_discovery_in_flight() -> bool:
     ``3v0 --tui`` path spawns ITS thread here (``_mcp_discovery_thread``),
     while the desktop app + dashboard WebSocket sidecar (``tui_gateway/ws.py``)
     and ``3v0 dashboard`` spawn theirs via
-    ``ev0_cli.mcp_startup.start_background_mcp_discovery``. The late-refresh
+    ``threev0_cli.mcp_startup.start_background_mcp_discovery``. The late-refresh
     scheduler imports this function regardless of surface, so it MUST consult
     both — checking only the entry thread left the desktop/dashboard surfaces
     with no late refresh, so a slow MCP server's tools never surfaced for the
@@ -334,7 +334,7 @@ def mcp_discovery_in_flight() -> bool:
     if thread is not None and thread.is_alive():
         return True
     try:
-        from ev0_cli.mcp_startup import (
+        from threev0_cli.mcp_startup import (
             mcp_discovery_in_flight as _startup_in_flight,
         )
 
@@ -352,7 +352,7 @@ def join_mcp_discovery(timeout: float | None = None) -> bool:
     the outcome, for the off-critical-path late-refresh waiter.
 
     Joins both discovery-thread owners (see ``mcp_discovery_in_flight``): the
-    entry thread first, then the ``ev0_cli.mcp_startup`` thread used by the
+    entry thread first, then the ``threev0_cli.mcp_startup`` thread used by the
     desktop/dashboard surfaces. ``timeout`` bounds EACH join, mirroring the
     pre-#51587 single-owner behavior for the entry thread.
     """
@@ -362,7 +362,7 @@ def join_mcp_discovery(timeout: float | None = None) -> bool:
         thread.join(timeout=timeout)
         entry_done = not thread.is_alive()
     try:
-        from ev0_cli.mcp_startup import join_mcp_discovery as _startup_join
+        from threev0_cli.mcp_startup import join_mcp_discovery as _startup_join
 
         startup_done = _startup_join(timeout=timeout)
     except Exception:
@@ -377,7 +377,7 @@ _recovery_times: list[float] = []
 
 def _has_configured_mcp_servers() -> bool:
     """Delegate to the shared native and portable MCP startup gate."""
-    from ev0_cli.mcp_startup import _has_configured_mcp_servers as configured
+    from threev0_cli.mcp_startup import _has_configured_mcp_servers as configured
 
     return configured()
 
@@ -389,7 +389,7 @@ def ensure_mcp_discovery_started() -> None:
     entrypoints can accept sessions without running ``main()``, so the
     agent-build path (``server._start_agent_build``) also calls it AFTER
     binding the session profile's EV0_HOME override — the shared owner in
-    ``ev0_cli.mcp_startup`` captures the caller's context-local override
+    ``threev0_cli.mcp_startup`` captures the caller's context-local override
     and propagates it into the discovery thread, so discovery reads the
     SELECTED profile's ``mcp_servers``, not the launch profile's (#67605).
 
@@ -407,7 +407,7 @@ def ensure_mcp_discovery_started() -> None:
         return
     _mcp_discovery_enabled = True
     try:
-        from ev0_cli.mcp_startup import start_background_mcp_discovery
+        from threev0_cli.mcp_startup import start_background_mcp_discovery
 
         start_background_mcp_discovery(
             logger=logger, thread_name="tui-mcp-discovery"
@@ -452,7 +452,7 @@ def main():
     # /model open blocks on serial /v1/models fetches. Fire-and-forget,
     # guarded once-per-process, fully exception-isolated.
     try:
-        from ev0_cli.model_switch import prewarm_picker_cache_async
+        from threev0_cli.model_switch import prewarm_picker_cache_async
         prewarm_picker_cache_async()
     except Exception:
         logger.debug("picker cache prewarm (tui) failed to start", exc_info=True)

@@ -25,7 +25,7 @@ import pytest
 
 import tools.approval as approval_module
 from cli import Ev0CLI
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 SESSION_ID = "yolo_persist_session"

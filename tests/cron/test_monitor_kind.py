@@ -40,8 +40,8 @@ def ev0_env(tmp_path, monkeypatch):
 
     # Reload modules that cache get_ev0_home() at import time.
     import importlib
-    import ev0_constants
-    importlib.reload(ev0_constants)
+    import threev0_constants
+    importlib.reload(threev0_constants)
     import cron.jobs
     importlib.reload(cron.jobs)
     import cron.monitor
@@ -85,7 +85,7 @@ def _install_agent_stubs(monkeypatch, observed: dict):
     fake_mod.AIAgent = FakeAgent
     monkeypatch.setitem(sys.modules, "run_agent", fake_mod)
 
-    from ev0_cli import runtime_provider as _rtp
+    from threev0_cli import runtime_provider as _rtp
     monkeypatch.setattr(
         _rtp,
         "resolve_runtime_provider",

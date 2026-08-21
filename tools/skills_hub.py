@@ -10,7 +10,7 @@ This is a library module (not an agent tool). It provides:
   - HubLockFile: Track provenance of installed hub skills
   - Hub state directory management (quarantine, audit log, taps, index cache)
 
-Used by ev0_cli/skills_hub.py for CLI commands and the /skills slash command.
+Used by threev0_cli/skills_hub.py for CLI commands and the /skills slash command.
 """
 
 import hashlib
@@ -25,8 +25,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
-from ev0_constants import get_ev0_home
-from ev0_cli._subprocess_compat import windows_hide_flags
+from threev0_constants import get_ev0_home
+from threev0_cli._subprocess_compat import windows_hide_flags
 from agent.skill_utils import is_excluded_skill_path
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import unquote, urljoin, urlparse, urlsplit, urlunparse
@@ -3284,7 +3284,7 @@ class OptionalSkillSource(SkillSource):
     OPTIONAL_SKILLS_PREFIX = "optional-skills"
 
     def __init__(self, auth: Optional[GitHubAuth] = None):
-        from ev0_constants import get_optional_skills_dir
+        from threev0_constants import get_optional_skills_dir
 
         self._optional_dir = get_optional_skills_dir(
             Path(__file__).parent.parent / "optional-skills"
@@ -3868,7 +3868,7 @@ def _category_skill_dirs(directory: Path) -> List[str]:
     :func:`is_excluded_skill_path` so a lone ``node_modules`` or
     ``references/pkg/SKILL.md`` hit does not misclassify the directory as
     a category. Shared by the install-time category guard here and
-    ``ev0_cli.skills_hub._existing_categories``.
+    ``threev0_cli.skills_hub._existing_categories``.
     """
     skill_dirs: List[str] = []
     for entry in directory.iterdir():

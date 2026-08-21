@@ -57,8 +57,8 @@ def fake_ev0(tmp_path, monkeypatch):
 
     # Monkeypatch the resolver functions used by file_safety so each test
     # can choose which profile is "active".
-    import ev0_constants
-    monkeypatch.setattr(ev0_constants, "get_default_ev0_root", lambda: root)
+    import threev0_constants
+    monkeypatch.setattr(threev0_constants, "get_default_ev0_root", lambda: root)
 
     # The reloads below ensure get_cross_profile_warning/classify see the patched root.
     import agent.file_safety as fs

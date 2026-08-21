@@ -126,7 +126,7 @@ logger = logging.getLogger(__name__)
 def _ev0_version() -> str:
     """Return the canonical 3V0 Agent version string.
 
-    ``ev0_cli.__version__`` is the runtime source of truth used by the CLI,
+    ``threev0_cli.__version__`` is the runtime source of truth used by the CLI,
     dashboard, portal tags, and release script. Prefer it over installed
     distribution metadata because editable/source checkouts can retain stale
     ``ev0_agent-*.dist-info`` after a source update until the environment is
@@ -134,7 +134,7 @@ def _ev0_version() -> str:
     health endpoint.
     """
     try:
-        from ev0_cli import __version__
+        from threev0_cli import __version__
 
         return __version__
     except Exception:
@@ -333,7 +333,7 @@ def _resolve_request_runtime_agent_kwargs(provider: str, target_model: Optional[
     explicit provider/model so an API caller can use the same authenticated
     provider catalog as the TUI without mutating config.yaml.
     """
-    from ev0_cli.runtime_provider import resolve_runtime_provider, format_runtime_provider_error, _get_model_config
+    from threev0_cli.runtime_provider import resolve_runtime_provider, format_runtime_provider_error, _get_model_config
 
     try:
         runtime = resolve_runtime_provider(requested=provider, target_model=target_model)
@@ -830,7 +830,7 @@ class ResponseStore:
         self._max_size = max_size
         if db_path is None:
             try:
-                from ev0_cli.config import get_ev0_home
+                from threev0_cli.config import get_ev0_home
                 db_path = str(get_ev0_home() / "response_store.db")
             except Exception:
                 db_path = ":memory:"
@@ -843,8 +843,8 @@ class ResponseStore:
         # Use shared WAL-fallback helper so response_store.db degrades
         # gracefully on NFS/SMB/FUSE-mounted EV0_HOME (same filesystem
         # issue addressed for state.db/kanban.db — see
-        # ev0_state._WAL_INCOMPAT_MARKERS).
-        from ev0_state import apply_wal_with_fallback
+        # threev0_state._WAL_INCOMPAT_MARKERS).
+        from threev0_state import apply_wal_with_fallback
         apply_wal_with_fallback(self._conn, db_label="response_store.db")
         self._conn.execute(
             """CREATE TABLE IF NOT EXISTS responses (
@@ -1630,7 +1630,7 @@ class APIServerAdapter(BasePlatformAdapter):
         """
         default = 10
         try:
-            from ev0_cli.config import cfg_get, load_config
+            from threev0_cli.config import cfg_get, load_config
 
             raw = cfg_get(
                 load_config(),
@@ -1654,14 +1654,14 @@ class APIServerAdapter(BasePlatformAdapter):
         3. Fallback: "3v0-agent"
 
         Delegates the tiered fallthrough to
-        :func:`ev0_cli.model_switch.resolve_effective_model` (the shared
+        :func:`threev0_cli.model_switch.resolve_effective_model` (the shared
         override > mid-tier > default precedence owner).
         """
-        from ev0_cli.model_switch import resolve_effective_model
+        from threev0_cli.model_switch import resolve_effective_model
 
         profile_name = ""
         try:
-            from ev0_cli.profiles import get_active_profile_name
+            from threev0_cli.profiles import get_active_profile_name
             profile = get_active_profile_name()
             if profile and profile not in {"default", "custom"}:
                 profile_name = profile
@@ -1763,7 +1763,7 @@ class APIServerAdapter(BasePlatformAdapter):
 
         try:
             from agent.secret_scope import get_secret
-            from ev0_cli.auth import has_usable_secret
+            from threev0_cli.auth import has_usable_secret
 
             key = get_secret("API_SERVER_KEY", "") or ""
             if not has_usable_secret(key, min_length=16):
@@ -1984,7 +1984,7 @@ class APIServerAdapter(BasePlatformAdapter):
             # the single-profile gateway (don't 404 a would-be valid route).
             return None
         try:
-            from ev0_cli.profiles import profiles_to_serve
+            from threev0_cli.profiles import profiles_to_serve
 
             served = {
                 name
@@ -2019,14 +2019,14 @@ class APIServerAdapter(BasePlatformAdapter):
 
                 if is_multiplex_active():
                     from gateway.run import _profile_runtime_scope
-                    from ev0_constants import get_ev0_home
+                    from threev0_constants import get_ev0_home
 
                     return _profile_runtime_scope(get_ev0_home())
             except Exception:
                 pass
             return nullcontext()
         from gateway.run import _profile_runtime_scope
-        from ev0_cli.profiles import get_profile_dir
+        from threev0_cli.profiles import get_profile_dir
 
         return _profile_runtime_scope(get_profile_dir(profile))
 
@@ -2182,7 +2182,7 @@ class APIServerAdapter(BasePlatformAdapter):
         — that stays reserved for an explicit test/manual override, so the first
         profile served can't pin every later request to its DB.
         """
-        from ev0_state import SessionDB
+        from threev0_state import SessionDB
 
         key = str(home)
         with self._session_db_cache_lock:
@@ -2226,7 +2226,7 @@ class APIServerAdapter(BasePlatformAdapter):
         if self._session_db is not None:
             return self._session_db
         try:
-            from ev0_constants import get_ev0_home
+            from threev0_constants import get_ev0_home
 
             return self._open_and_cache_session_db(get_ev0_home())
         except Exception as e:
@@ -2245,7 +2245,7 @@ class APIServerAdapter(BasePlatformAdapter):
         if self._session_db is not None:
             return self._session_db
         try:
-            from ev0_constants import get_ev0_home
+            from threev0_constants import get_ev0_home
 
             home = get_ev0_home()
             key = str(home)
@@ -2670,7 +2670,7 @@ class APIServerAdapter(BasePlatformAdapter):
             _load_gateway_config,
             GatewayRunner,
         )
-        from ev0_cli.tools_config import _get_platform_tools
+        from threev0_cli.tools_config import _get_platform_tools
 
         # Catch RuntimeError ONLY around this call, not the wider
         # _create_agent()+run_conversation() span --
@@ -2757,10 +2757,10 @@ class APIServerAdapter(BasePlatformAdapter):
         if not confirmed_runtime_lock:
             session_override = self._session_model_override_for(session_key)
         # Model-string precedence delegates to the shared owner
-        # ev0_cli.model_switch.resolve_effective_model (session /model
+        # threev0_cli.model_switch.resolve_effective_model (session /model
         # override > session-persisted model > global) — the rule 7dd00bb47d
         # had to re-fix here after it diverged from gateway/run.py.
-        from ev0_cli.model_switch import resolve_effective_model
+        from threev0_cli.model_switch import resolve_effective_model
         if session_override:
             override_model = resolve_effective_model(session_override, None, model)
             session_provider = _clean_request_string(session_override.get("provider"))
@@ -2850,7 +2850,7 @@ class APIServerAdapter(BasePlatformAdapter):
         # resolved a model is never treated as "empty" here.
         if not model and runtime_kwargs.get("provider"):
             try:
-                from ev0_cli.models import get_default_model_for_provider
+                from threev0_cli.models import get_default_model_for_provider
                 model = get_default_model_for_provider(runtime_kwargs["provider"])
                 if model:
                     logger.info(
@@ -3087,7 +3087,7 @@ class APIServerAdapter(BasePlatformAdapter):
 
         refresh = _coerce_request_bool(request.query.get("refresh"), default=False)
         try:
-            from ev0_cli.inventory import build_model_options_payload, load_picker_context
+            from threev0_cli.inventory import build_model_options_payload, load_picker_context
 
             def _build_payload() -> Dict[str, Any]:
                 return build_model_options_payload(
@@ -3241,8 +3241,8 @@ class APIServerAdapter(BasePlatformAdapter):
             return auth_err
 
         try:
-            from ev0_cli.config import load_config
-            from ev0_cli.tools_config import (
+            from threev0_cli.config import load_config
+            from threev0_cli.tools_config import (
                 _get_effective_configurable_toolsets,
                 _get_platform_tools,
                 _toolset_has_keys,
@@ -5895,7 +5895,7 @@ class APIServerAdapter(BasePlatformAdapter):
         trips NAS's HTTP timeout. The store CAS claim inside fire_due guards
         against double-fire on a NAS/scheduler retry.
         """
-        from ev0_cli.config import cfg_get, load_config
+        from threev0_cli.config import cfg_get, load_config
         from plugins.cron_providers.chronos.verify import get_fire_verifier
 
         auth = request.headers.get("Authorization", "")
@@ -7359,7 +7359,7 @@ class APIServerAdapter(BasePlatformAdapter):
             return False
 
         try:
-            from ev0_cli.auth import has_usable_secret
+            from threev0_cli.auth import has_usable_secret
         except Exception as exc:
             # Fail CLOSED. This guard is the only thing between a guessable
             # key and a terminal-capable endpoint, so "the check could not be
@@ -7465,7 +7465,7 @@ class APIServerAdapter(BasePlatformAdapter):
             # the operator may have an external firewall / strong key.
             if is_network_accessible(self._host):
                 try:
-                    from ev0_cli.config import load_config as _load_cfg
+                    from threev0_cli.config import load_config as _load_cfg
                     _backend = (
                         ((_load_cfg() or {}).get("terminal") or {}).get(
                             "backend", "local"

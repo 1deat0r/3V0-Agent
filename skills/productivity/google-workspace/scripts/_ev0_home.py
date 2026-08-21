@@ -1,14 +1,14 @@
 """Resolve EV0_HOME for standalone skill scripts.
 
 Skill scripts may run outside the 3V0 process (e.g. system Python,
-nix env, CI) where ``ev0_constants`` is not importable.  This module
+nix env, CI) where ``threev0_constants`` is not importable.  This module
 provides the same ``get_ev0_home()`` and ``display_ev0_home()``
-contracts as ``ev0_constants`` without requiring it on ``sys.path``.
+contracts as ``threev0_constants`` without requiring it on ``sys.path``.
 
-When ``ev0_constants`` IS available it is used directly so that any
+When ``threev0_constants`` IS available it is used directly so that any
 future enhancements (profile resolution, Docker detection, etc.) are
 picked up automatically.  The fallback path replicates the core logic
-from ``ev0_constants.py`` using only the stdlib.
+from ``threev0_constants.py`` using only the stdlib.
 
 All scripts under ``google-workspace/scripts/`` should import from here
 instead of duplicating the ``EV0_HOME = Path(os.getenv(...))`` pattern.
@@ -20,21 +20,21 @@ import os
 from pathlib import Path
 
 try:
-    from ev0_constants import display_ev0_home as display_ev0_home
-    from ev0_constants import get_ev0_home as get_ev0_home
+    from threev0_constants import display_ev0_home as display_ev0_home
+    from threev0_constants import get_ev0_home as get_ev0_home
 except (ModuleNotFoundError, ImportError):
 
     def get_ev0_home() -> Path:
         """Return the 3V0 home directory (default: ~/.3V0).
 
-        Mirrors ``ev0_constants.get_ev0_home()``."""
+        Mirrors ``threev0_constants.get_ev0_home()``."""
         val = os.environ.get("EV0_HOME", "").strip()
         return Path(val) if val else Path.home() / ".3V0"
 
     def display_ev0_home() -> str:
         """Return a user-friendly ``~/``-shortened display string.
 
-        Mirrors ``ev0_constants.display_ev0_home()``."""
+        Mirrors ``threev0_constants.display_ev0_home()``."""
         home = get_ev0_home()
         try:
             return "~/" + str(home.relative_to(Path.home()))

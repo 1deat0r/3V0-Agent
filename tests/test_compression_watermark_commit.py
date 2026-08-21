@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ev0_state import SessionCompressionInProgressError, SessionDB
+from threev0_state import SessionCompressionInProgressError, SessionDB
 
 
 @pytest.fixture

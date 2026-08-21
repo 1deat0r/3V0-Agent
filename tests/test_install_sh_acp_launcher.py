@@ -201,7 +201,7 @@ def test_venv_install_writes_executable_ev0_agent_launcher(tmp_path):
 def test_ev0_agent_launcher_cleanup_on_uninstall(tmp_path):
     """uninstall.remove_wrapper_script() must remove 3v0-agent alongside
     3v0 and 3v0-acp."""
-    from ev0_cli.uninstall import remove_wrapper_script
+    from threev0_cli.uninstall import remove_wrapper_script
 
     # Simulate a 3v0-agent wrapper in the user-local location
     local_shim = tmp_path / ".local" / "bin" / "3v0-agent"

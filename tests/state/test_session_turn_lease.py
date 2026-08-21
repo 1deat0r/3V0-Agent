@@ -10,8 +10,8 @@ from types import SimpleNamespace
 
 import pytest
 
-import ev0_state
-from ev0_state import SessionDB, SessionTurnLeaseLostError
+import threev0_state
+from threev0_state import SessionDB, SessionTurnLeaseLostError
 
 
 def test_turn_lease_serializes_separate_session_db_instances(tmp_path):
@@ -429,7 +429,7 @@ def test_non_expired_turn_lease_from_dead_pid_is_reclaimed(
         return False
 
     monkeypatch.setattr(
-        ev0_state, "psutil", SimpleNamespace(pid_exists=pid_exists)
+        threev0_state, "psutil", SimpleNamespace(pid_exists=pid_exists)
     )
 
     fresh_holder = "pid=525252:turn=fresh:platform=test"

@@ -129,7 +129,7 @@ class BrowserProvider(abc.ABC):
     def get_setup_schema(self) -> Optional[Dict[str, Any]]:
         """Return provider metadata for the ``3v0 tools`` picker.
 
-        Used by :mod:`ev0_cli.tools_config` to inject this provider as a
+        Used by :mod:`threev0_cli.tools_config` to inject this provider as a
         row in the Browser Automation picker. Shape mirrors the existing
         hardcoded entries in ``TOOL_CATEGORIES["browser"]``::
 

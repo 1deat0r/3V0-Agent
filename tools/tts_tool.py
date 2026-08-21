@@ -57,19 +57,19 @@ from pathlib import Path
 from typing import Callable, Dict, Any, Iterator, List, Optional, Tuple
 from urllib.parse import urljoin, urlparse
 
-from ev0_cli._subprocess_compat import windows_hide_flags
-from ev0_constants import display_ev0_home
+from threev0_cli._subprocess_compat import windows_hide_flags
+from threev0_constants import display_ev0_home
 
 logger = logging.getLogger(__name__)
 def get_env_value(name, default=None):
     """Read env values through the live config module.
 
-    Tests may monkeypatch and later restore ``ev0_cli.config.get_env_value``
+    Tests may monkeypatch and later restore ``threev0_cli.config.get_env_value``
     before this module is imported. Resolve the helper at call time so TTS does
     not keep a stale imported function for the rest of the test process.
     """
     try:
-        from ev0_cli.config import get_env_value as _get_env_value
+        from threev0_cli.config import get_env_value as _get_env_value
     except ImportError:
         return os.getenv(name, default)
     value = _get_env_value(name)
@@ -250,7 +250,7 @@ DEFAULT_GEMINI_TTS_VOICE = "Kore"
 DEFAULT_GEMINI_TTS_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 DEFAULT_GEMINI_AUDIO_TAGS = False
 GEMINI_AUDIO_TAG_REWRITE_TASK = "tts_audio_tags"
-# Base URL now resolved via ev0_cli.models.deepinfra_base_url (shared).
+# Base URL now resolved via threev0_cli.models.deepinfra_base_url (shared).
 DEFAULT_DEEPINFRA_TTS_VOICE = "default"
 # PCM output specs for Gemini TTS (fixed by the API)
 GEMINI_TTS_SAMPLE_RATE = 24000
@@ -260,7 +260,7 @@ TTS_RESPONSE_BODY_LIMIT_BYTES = 16 * 1024 * 1024
 TTS_RESPONSE_BODY_CHUNK_BYTES = 64 * 1024
 
 def _get_default_output_dir() -> str:
-    from ev0_constants import get_ev0_dir
+    from threev0_constants import get_ev0_dir
     return str(get_ev0_dir("cache/audio", "audio_cache"))
 
 DEFAULT_OUTPUT_DIR = _get_default_output_dir()
@@ -634,11 +634,11 @@ def _load_tts_config() -> Dict[str, Any]:
     for any missing fields.
     """
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
         config = load_config()
         return config.get("tts") or {}
     except ImportError:
-        logger.debug("ev0_cli.config not available, using default TTS config")
+        logger.debug("threev0_cli.config not available, using default TTS config")
         return {}
     except Exception as e:
         logger.warning("Failed to load TTS config: %s", e, exc_info=True)
@@ -909,7 +909,7 @@ def _dispatch_to_plugin_provider(
         return None
     try:
         from agent.tts_registry import get_provider
-        from ev0_cli.plugins import _ensure_plugins_discovered
+        from threev0_cli.plugins import _ensure_plugins_discovered
 
         _ensure_plugins_discovered()
         plugin_provider = get_provider(key)
@@ -1934,7 +1934,7 @@ def _generate_deepinfra_tts(text: str, output_path: str, tts_config: Dict[str, A
     DeepInfra's audio endpoint is OpenAI-compatible, so there's no need
     to duplicate the SDK call — we just pass an explicit api_key /
     base_url / model / voice through. Model ids and the base URL come from
-    the shared ``ev0_cli.models`` helpers so every DeepInfra surface
+    the shared ``threev0_cli.models`` helpers so every DeepInfra surface
     resolves them identically.
     """
     api_key = _resolve_provider_key("DEEPINFRA_API_KEY", "deepinfra")
@@ -1951,7 +1951,7 @@ def _generate_deepinfra_tts(text: str, output_path: str, tts_config: Dict[str, A
     if not isinstance(di_config, dict):
         di_config = {}
 
-    from ev0_cli.models import deepinfra_base_url, deepinfra_model_ids
+    from threev0_cli.models import deepinfra_base_url, deepinfra_model_ids
 
     model = di_config.get("model")
     if not isinstance(model, str) or not model.strip():
@@ -2449,7 +2449,7 @@ def _resolve_gemini_persona_prompt_path(gemini_config: Dict[str, Any]) -> Option
     path = Path(expanded).expanduser()
     if not path.is_absolute():
         try:
-            from ev0_constants import get_ev0_home
+            from threev0_constants import get_ev0_home
             path = get_ev0_home() / path
         except Exception:
             path = Path.cwd() / path
@@ -2663,9 +2663,9 @@ def _generate_gemini_tts(text: str, output_path: str, tts_config: Dict[str, Any]
     headers = {"Content-Type": "application/json"}
     if urlparse(base_url).hostname == "generativelanguage.googleapis.com":
         try:
-            import ev0_cli as _ev0_cli
+            import threev0_cli as _threev0_cli
 
-            _ev0_version = str(_ev0_cli.__version__)
+            _ev0_version = str(_threev0_cli.__version__)
         except Exception:
             _ev0_version = "0.0.0"
         # Include 3V0 client context following Gemini's partner
@@ -2902,7 +2902,7 @@ def _get_piper_voices_dir() -> Path:
     Resolves to ``~/.3V0/cache/piper-voices/`` under the active
     EV0_HOME so voice downloads follow profile boundaries.
     """
-    from ev0_constants import get_ev0_dir
+    from threev0_constants import get_ev0_dir
     root = Path(get_ev0_dir("cache/piper-voices", "piper_voices_cache"))
     root.mkdir(parents=True, exist_ok=True)
     return root
@@ -3768,7 +3768,7 @@ def check_tts_requirements() -> bool:
 
     try:
         from agent.tts_registry import get_provider
-        from ev0_cli.plugins import _ensure_plugins_discovered
+        from threev0_cli.plugins import _ensure_plugins_discovered
 
         _ensure_plugins_discovered()
         plugin = get_provider(provider)

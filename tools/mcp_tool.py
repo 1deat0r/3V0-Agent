@@ -165,7 +165,7 @@ def _get_mcp_stderr_log() -> Any:
         if _mcp_stderr_log_fh is not None:
             return _mcp_stderr_log_fh
         try:
-            from ev0_constants import get_ev0_home
+            from threev0_constants import get_ev0_home
             log_dir = get_ev0_home() / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
             log_path = log_dir / "mcp-stderr.log"
@@ -591,7 +591,7 @@ def _build_safe_env(user_env: Optional[dict]) -> dict:
     in every MCP server's ``env:`` block.
     """
     try:
-        from ev0_cli.env_loader import get_secret_source
+        from threev0_cli.env_loader import get_secret_source
     except Exception:  # pragma: no cover — early bootstrap/import fallback
         get_secret_source = None
     env = {}
@@ -1137,7 +1137,7 @@ def _unwrap_exception_group(exc: BaseException) -> BaseException:
     unwrap to surface the real cause (e.g. ``BrokenPipeError`` on a dead
     stdio pipe, "401 Unauthorized" on an auth failure).
 
-    Adapted from :func:`ev0_cli.mcp_config._unwrap_exception_group` with
+    Adapted from :func:`threev0_cli.mcp_config._unwrap_exception_group` with
     two extra behaviours needed on the runtime path:
 
     - **Fatal leaves re-raise.** A ``KeyboardInterrupt`` / ``SystemExit``
@@ -1377,7 +1377,7 @@ def _resolve_identity_header(server_name: str, config: dict):
             return None
         return (name.strip(), value)
     if value_from == "profile":
-        from ev0_cli.profiles import get_active_profile_name
+        from threev0_cli.profiles import get_active_profile_name
         return (name.strip(), get_active_profile_name())
     logger.warning(
         "MCP server '%s': identity_header value_from must be 'static' or "
@@ -2264,7 +2264,7 @@ class MCPServerTask:
         """Build a ``logging_callback`` for ``ClientSession``.
 
         Routes MCP ``notifications/message`` log notifications from the
-        server into 3V0' logging (agent.log via ev0_logging), tagged
+        server into 3V0' logging (agent.log via threev0_logging), tagged
         with the server name.  Without this, the SDK's default callback
         silently discards them, so server-side warnings/errors during a
         tool call were invisible.  Port of anomalyco/opencode#34529.
@@ -4683,7 +4683,7 @@ def _try_acquire_mcp_discovery_lock() -> Any:
     """
     global _MCP_DISCOVERY_LOCK_PATH
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         if _MCP_DISCOVERY_LOCK_PATH is None:
             _MCP_DISCOVERY_LOCK_PATH = str(
                 get_ev0_home() / ".mcp-discovery.lock"
@@ -4854,7 +4854,7 @@ def _wrap_with_home_override(coro: "Coroutine") -> "Coroutine":
     carrying different scopes don't interfere.
     """
     try:
-        from ev0_constants import (
+        from threev0_constants import (
             get_ev0_home_override,
             reset_ev0_home_override,
             set_ev0_home_override,
@@ -5068,7 +5068,7 @@ def _warn_hidden_whitespace(server_name: str, config: dict) -> List[str]:
 def _filter_suspicious_mcp_servers(servers: Dict[str, dict]) -> Dict[str, dict]:
     """Drop exfiltration-shaped MCP configs before any stdio spawn path."""
     try:
-        from ev0_cli.mcp_security import validate_mcp_server_entry as _validate_mcp_server_entry
+        from threev0_cli.mcp_security import validate_mcp_server_entry as _validate_mcp_server_entry
     except Exception:
         _validate_mcp_server_entry: Callable[[str, dict[str, Any]], list[str]] | None = None
 
@@ -5104,7 +5104,7 @@ def _load_mcp_config() -> Dict[str, dict]:
     ``os.environ`` (which includes ``~/.3V0/.env`` loaded at startup).
     """
     try:
-        from ev0_cli.config import load_config
+        from threev0_cli.config import load_config
         from utils import env_var_enabled as _env_enabled
 
         if _env_enabled("EV0_SAFE_MODE"):
@@ -5115,7 +5115,7 @@ def _load_mcp_config() -> Dict[str, dict]:
             servers = {}
         # Ensure .env vars are available for interpolation
         try:
-            from ev0_cli.env_loader import load_ev0_dotenv
+            from threev0_cli.env_loader import load_ev0_dotenv
             load_ev0_dotenv()
         except Exception:
             pass
@@ -5126,7 +5126,7 @@ def _load_mcp_config() -> Dict[str, dict]:
                 _warn_hidden_whitespace(name, interpolated)
                 safe_servers[name] = interpolated
         try:
-            from ev0_cli.plugins import discover_plugins, get_plugin_manager
+            from threev0_cli.plugins import discover_plugins, get_plugin_manager
 
             discover_plugins()
             portable = get_plugin_manager().get_portable_mcp_servers()

@@ -25,14 +25,14 @@ def server():
     # The sys.modules mocks only need to cover the *initial* import — once
     # tui_gateway.server is cached, they are inert. Keeping them active for
     # the whole test poisons any module first imported inside a test body:
-    # e.g. ev0_cli.active_sessions would bind the mocked get_ev0_home
+    # e.g. threev0_cli.active_sessions would bind the mocked get_ev0_home
     # (a fixed shared path) forever, leaking active-session registry entries
     # across every later test in the process. Scope the patch to the import.
     with patch.dict("sys.modules", {
-        "ev0_constants": MagicMock(get_ev0_home=MagicMock(return_value="/tmp/ev0_test")),
-        "ev0_cli.env_loader": MagicMock(),
-        "ev0_cli.banner": MagicMock(),
-        "ev0_state": MagicMock(),
+        "threev0_constants": MagicMock(get_ev0_home=MagicMock(return_value="/tmp/ev0_test")),
+        "threev0_cli.env_loader": MagicMock(),
+        "threev0_cli.banner": MagicMock(),
+        "threev0_state": MagicMock(),
     }):
         import importlib
         mod = importlib.import_module("tui_gateway.server")
@@ -669,7 +669,7 @@ def test_sync_session_key_after_compress_reanchors_active_session_lease(
     home = tmp_path / ".3V0"
     monkeypatch.setenv("EV0_HOME", str(home))
 
-    from ev0_cli.active_sessions import (
+    from threev0_cli.active_sessions import (
         active_session_registry_snapshot,
         try_acquire_active_session,
     )
@@ -718,7 +718,7 @@ def test_make_agent_accepts_list_system_prompt(server, monkeypatch):
     monkeypatch.setitem(sys.modules, "run_agent", types.SimpleNamespace(AIAgent=_Agent))
     monkeypatch.setitem(
         sys.modules,
-        "ev0_cli.runtime_provider",
+        "threev0_cli.runtime_provider",
         types.SimpleNamespace(
             resolve_runtime_provider=lambda **_kwargs: {
                 "provider": "test",
@@ -933,7 +933,7 @@ def test_skin_live_switch_end_to_end(server, tmp_path, monkeypatch):
     """Real config + skin files: activating a skin (as `3v0 config set` does)
     makes the per-tool reconcile broadcast skin.changed with the resolved palette.
     Exercises _load_cfg → _skin_sig → resolve_skin → _emit with no mocks in between."""
-    import ev0_cli.skin_engine as skin_engine
+    import threev0_cli.skin_engine as skin_engine
 
     (tmp_path / "skins").mkdir()
     (tmp_path / "skins" / "midnight.yaml").write_text(

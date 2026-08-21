@@ -6,7 +6,7 @@ Whisper auto-detection frequently misidentifies short/accented clips
 auto-detect with ``stt.language: ""``.
 """
 
-from ev0_cli.config import DEFAULT_CONFIG
+from threev0_cli.config import DEFAULT_CONFIG
 from tools.transcription_tools import _resolve_stt_language
 
 

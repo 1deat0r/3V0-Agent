@@ -36,7 +36,7 @@ This skill is a concise operating guide, not the complete source of truth for ev
 
 Good verification targets:
 
-- CLI commands: `3v0 --help`, `3v0 <command> --help`, and `ev0_cli/main.py`
+- CLI commands: `3v0 --help`, `3v0 <command> --help`, and `threev0_cli/main.py`
 - User documentation: https://github.com/1deat0r/3V0-Agent/docs/
 - Source tree: https://github.com/1deat0r/3V0-Agent
 

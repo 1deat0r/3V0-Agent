@@ -365,12 +365,12 @@ class TestDelegationCleanup:
     def test_run_single_child_calls_close(self, monkeypatch, tmp_path):
         """_run_single_child finally block should call close() on child."""
         from unittest.mock import MagicMock
-        from ev0_constants import (
+        from threev0_constants import (
             get_ev0_home,
             reset_ev0_home_override,
             set_ev0_home_override,
         )
-        from ev0_cli.observability import relay_runtime
+        from threev0_cli.observability import relay_runtime
         from tools.delegate_tool import _run_single_child
 
         parent = MagicMock()
@@ -415,7 +415,7 @@ class TestDelegationCleanup:
     def test_active_child_turn_owns_relay_scope_cleanup(self, monkeypatch):
         from unittest.mock import MagicMock
 
-        from ev0_cli.observability import relay_runtime
+        from threev0_cli.observability import relay_runtime
         from tools.delegate_tool import _run_single_child
 
         parent = MagicMock()
@@ -450,7 +450,7 @@ class TestDelegationCleanup:
         from unittest.mock import MagicMock
 
         from agent import relay_runtime
-        from ev0_constants import (
+        from threev0_constants import (
             reset_ev0_home_override,
             set_ev0_home_override,
         )

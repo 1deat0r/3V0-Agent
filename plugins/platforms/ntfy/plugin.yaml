@@ -15,7 +15,7 @@ description: >
 author: sprmn24
 # ``requires_env`` and ``optional_env`` entries are surfaced in the
 # ``3v0 config`` UI via the platform-plugin env var injector in
-# ``ev0_cli/config.py``.
+# ``threev0_cli/config.py``.
 requires_env:
   - name: NTFY_TOPIC
     description: "Topic name to subscribe to (e.g. 3v0-in)"

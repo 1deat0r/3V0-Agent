@@ -790,7 +790,7 @@ class TaskStore:
 
 def _conv_dir() -> Path:
     try:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         base = Path(get_ev0_home())
     except Exception:
         base = Path(os.path.expanduser("~/.3V0"))

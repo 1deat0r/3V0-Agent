@@ -23,12 +23,12 @@ def server():
     with patch.dict(
         "sys.modules",
         {
-            "ev0_constants": MagicMock(
+            "threev0_constants": MagicMock(
                 get_ev0_home=MagicMock(return_value="/tmp/ev0_test_review_summary")
             ),
-            "ev0_cli.env_loader": MagicMock(),
-            "ev0_cli.banner": MagicMock(),
-            "ev0_state": MagicMock(),
+            "threev0_cli.env_loader": MagicMock(),
+            "threev0_cli.banner": MagicMock(),
+            "threev0_state": MagicMock(),
         },
     ):
         import importlib

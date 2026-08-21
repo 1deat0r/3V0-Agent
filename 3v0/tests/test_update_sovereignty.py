@@ -1,7 +1,7 @@
 """Update-machinery sovereignty tests (F5, post-incident 2026-08-20).
 
 Invariants under test:
-  I1. No code path in ev0_cli/update_cmd.py may target a remote literally
+  I1. No code path in threev0_cli/update_cmd.py may target a remote literally
       named `origin` as its update source when `origin` does not exist —
       after the rename, update must resolve remotes safely (public/upstream)
       instead of erroring or, worse, hard-resetting to a remote-tracking ref.
@@ -18,7 +18,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-UPDATE_CMD = os.path.join(REPO_ROOT, "ev0_cli", "update_cmd.py")
+UPDATE_CMD = os.path.join(REPO_ROOT, "threev0_cli", "update_cmd.py")
 
 
 class UpdateMachinerySovereigntyTest(unittest.TestCase):
@@ -79,7 +79,7 @@ class UpdateMachinerySovereigntyTest(unittest.TestCase):
 
         Behavioural test: create a real temp git repo WITHOUT an origin
         remote, run _get_origin_url against it, expect None. (Importing
-        ev0_cli.update_cmd may pull heavy deps, so we import it lazily.)
+        threev0_cli.update_cmd may pull heavy deps, so we import it lazily.)
         """
         import tempfile
         import subprocess
@@ -88,7 +88,7 @@ class UpdateMachinerySovereigntyTest(unittest.TestCase):
             subprocess.run(["git", "init", "-q", td], check=True)
             try:
                 sys.path.insert(0, REPO_ROOT)
-                from ev0_cli.update_cmd import _get_origin_url
+                from threev0_cli.update_cmd import _get_origin_url
             except Exception as exc:  # heavy import chain may fail on scratch
                 self.skipTest(f"update_cmd import unavailable: {exc}")
             url = _get_origin_url(["git"], Path(td))

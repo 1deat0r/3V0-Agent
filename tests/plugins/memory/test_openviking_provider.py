@@ -85,7 +85,7 @@ def _allow_setup_validation(monkeypatch, *, root_access: bool = False):
 
 
 def test_openviking_provider_config_loader_uses_readonly_config(monkeypatch):
-    import ev0_cli.config as config_mod
+    import threev0_cli.config as config_mod
 
     calls = []
     backing_config = {
@@ -289,7 +289,7 @@ def test_post_setup_existing_profile_picker_validates_and_links_saved_profile(tm
     monkeypatch.setenv("EV0_HOME", str(ev0_home))
     monkeypatch.setattr(openviking_module.Path, "home", staticmethod(lambda: tmp_path))
 
-    from ev0_cli import memory_setup
+    from threev0_cli import memory_setup
 
     validate_calls = []
 

@@ -42,7 +42,7 @@ def _make_event(text):
 
 
 def _fake_switch_result():
-    from ev0_cli.model_switch import ModelSwitchResult
+    from threev0_cli.model_switch import ModelSwitchResult
 
     return ModelSwitchResult(
         success=True,
@@ -80,13 +80,13 @@ def _setup_isolated_home(tmp_path, monkeypatch, *, warn):
     monkeypatch.setattr(gateway_run, "_ev0_home", ev0_home)
     monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda: {})
     monkeypatch.setattr(
-        "ev0_cli.model_switch.switch_model",
+        "threev0_cli.model_switch.switch_model",
         lambda **kw: _fake_switch_result(),
     )
-    monkeypatch.setattr("ev0_constants.get_ev0_home", lambda: ev0_home)
-    monkeypatch.setattr("ev0_cli.config.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_constants.get_ev0_home", lambda: ev0_home)
+    monkeypatch.setattr("threev0_cli.config.get_ev0_home", lambda: ev0_home)
     monkeypatch.setattr(
-        "ev0_cli.model_cost_guard.expensive_model_warning",
+        "threev0_cli.model_cost_guard.expensive_model_warning",
         (lambda *a, **kw: _fake_warning()) if warn else (lambda *a, **kw: None),
     )
     return cfg_path

@@ -63,7 +63,7 @@ def _process_ev0_home() -> Path:
     val = os.environ.get("EV0_HOME", "").strip()
     if val:
         return Path(val)
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     return get_ev0_home()
 
@@ -314,7 +314,7 @@ def read_prior_exit_label(profile_home: Path) -> str:
     """Container-boot helper: one-word summary of how the profile's last
     gateway life ended.  ``clean`` / ``unclean`` / ``unknown`` (no sentinel
     or never ran).  Read-only and exception-free — used by
-    ``ev0_cli.container_boot`` to annotate ``container-boot.log``.
+    ``threev0_cli.container_boot`` to annotate ``container-boot.log``.
     """
     try:
         sentinel = _read_json(get_lifecycle_sentinel_path(profile_home))

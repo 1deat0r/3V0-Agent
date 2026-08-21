@@ -3,8 +3,8 @@ import asyncio
 import threading
 from pathlib import Path
 
-from ev0_cli import web_server
-from ev0_cli.web_routers import sessions as web_sessions
+from threev0_cli import web_server
+from threev0_cli.web_routers import sessions as web_sessions
 
 
 TARGET_HANDLERS = {

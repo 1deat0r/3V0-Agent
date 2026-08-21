@@ -33,7 +33,7 @@ def _resolve_profile_path(path_value: Any) -> Optional[Path]:
     raw = os.path.expandvars(path_value.strip())
     if not raw:
         return None
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     ev0_home = get_ev0_home()
     if raw == "~/.3V0":
@@ -50,7 +50,7 @@ def _resolve_script_path(script_value: Any) -> tuple[Optional[Path], Optional[st
     """Resolve a route script under EV0_HOME/scripts."""
     if not isinstance(script_value, str) or not script_value.strip():
         return None, "script path is empty"
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     scripts_root = (get_ev0_home() / "scripts").resolve()
     raw_text = os.path.expandvars(script_value.strip())

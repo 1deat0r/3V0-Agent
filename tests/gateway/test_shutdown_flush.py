@@ -125,7 +125,7 @@ def test_recover_closes_owned_db_when_unexpected_exception_escapes(
             self.closed = True
 
     db = InterruptingDB()
-    monkeypatch.setattr("ev0_state.SessionDB", lambda: db)
+    monkeypatch.setattr("threev0_state.SessionDB", lambda: db)
 
     with pytest.raises(KeyboardInterrupt):
         recover_pending_to_db()
@@ -161,7 +161,7 @@ def test_get_flush_dir_uses_get_ev0_home(tmp_path, monkeypatch):
         return tmp_path
 
     monkeypatch.setattr(
-        "ev0_constants.get_ev0_home", fake_get_ev0_home
+        "threev0_constants.get_ev0_home", fake_get_ev0_home
     )
     result = mod._get_flush_dir()
     assert captured.get("called") is True

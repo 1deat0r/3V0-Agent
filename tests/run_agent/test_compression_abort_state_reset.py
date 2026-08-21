@@ -97,7 +97,7 @@ class TestAbortPathsResetPerAttemptState:
             compress_context,
             conversation_history_after_compression,
         )
-        from ev0_state import SessionDB
+        from threev0_state import SessionDB
 
         with tempfile.TemporaryDirectory() as tmpdir:
             db = SessionDB(db_path=Path(tmpdir) / "test.db")

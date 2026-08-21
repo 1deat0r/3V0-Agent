@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from ev0_state import SCHEMA_VERSION, SessionDB
+from threev0_state import SCHEMA_VERSION, SessionDB
 
 
 @pytest.fixture()

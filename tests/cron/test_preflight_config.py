@@ -54,10 +54,10 @@ def _job(**overrides):
 
 
 class _AuthErrorFactory:
-    """Raise a real AuthError from ev0_cli.auth."""
+    """Raise a real AuthError from threev0_cli.auth."""
 
     def __call__(self, **kwargs):
-        from ev0_cli.auth import AuthError
+        from threev0_cli.auth import AuthError
 
         raise AuthError("No API key configured for provider 'openrouter'")
 
@@ -71,22 +71,22 @@ def _run_job_patched(job, tmp_path, *, resolve=None, skill_view=None):
     patches = [
         patch("cron.scheduler._ev0_home", tmp_path),
         patch("cron.scheduler._resolve_origin", return_value=None),
-        patch("ev0_cli.env_loader.load_ev0_dotenv"),
-        patch("ev0_cli.env_loader.reset_secret_source_cache"),
-        patch("ev0_state.SessionDB", return_value=fake_db),
+        patch("threev0_cli.env_loader.load_ev0_dotenv"),
+        patch("threev0_cli.env_loader.reset_secret_source_cache"),
+        patch("threev0_state.SessionDB", return_value=fake_db),
         patch("tools.mcp_tool.discover_mcp_tools", return_value=[]),
     ]
     if resolve is None:
         patches.append(
             patch(
-                "ev0_cli.runtime_provider.resolve_runtime_provider",
+                "threev0_cli.runtime_provider.resolve_runtime_provider",
                 return_value=dict(_RUNTIME),
             )
         )
     else:
         patches.append(
             patch(
-                "ev0_cli.runtime_provider.resolve_runtime_provider",
+                "threev0_cli.runtime_provider.resolve_runtime_provider",
                 side_effect=resolve,
             )
         )
@@ -140,11 +140,11 @@ class TestMissingProviderKeyBlocks:
                 fresh = [j for j in cron_jobs.load_jobs() if j["id"] == job["id"]][0]
                 with patch("cron.scheduler._ev0_home", tmp_path), \
                      patch("cron.scheduler._resolve_origin", return_value=None), \
-                     patch("ev0_cli.env_loader.load_ev0_dotenv"), \
-                     patch("ev0_cli.env_loader.reset_secret_source_cache"), \
-                     patch("ev0_state.SessionDB", return_value=fake_db), \
+                     patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+                     patch("threev0_cli.env_loader.reset_secret_source_cache"), \
+                     patch("threev0_state.SessionDB", return_value=fake_db), \
                      patch("tools.mcp_tool.discover_mcp_tools", return_value=[]), \
-                     patch("ev0_cli.runtime_provider.resolve_runtime_provider",
+                     patch("threev0_cli.runtime_provider.resolve_runtime_provider",
                            side_effect=_AuthErrorFactory()), \
                      patch.object(sched, "_deliver_result", side_effect=fake_deliver), \
                      patch("run_agent.AIAgent") as mock_agent_cls:
@@ -175,7 +175,7 @@ class TestMissingProviderKeyBlocks:
         def resolve(**kwargs):
             calls.append(kwargs.get("requested"))
             if kwargs.get("requested") in (None, ""):
-                from ev0_cli.auth import AuthError
+                from threev0_cli.auth import AuthError
 
                 raise AuthError("no key")
             return {**_RUNTIME, "provider": "openrouter"}
@@ -244,11 +244,11 @@ class TestOptOut:
                 fresh = [j for j in cron_jobs.load_jobs() if j["id"] == job["id"]][0]
                 with patch("cron.scheduler._ev0_home", tmp_path), \
                      patch("cron.scheduler._resolve_origin", return_value=None), \
-                     patch("ev0_cli.env_loader.load_ev0_dotenv"), \
-                     patch("ev0_cli.env_loader.reset_secret_source_cache"), \
-                     patch("ev0_state.SessionDB", return_value=fake_db), \
+                     patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+                     patch("threev0_cli.env_loader.reset_secret_source_cache"), \
+                     patch("threev0_state.SessionDB", return_value=fake_db), \
                      patch("tools.mcp_tool.discover_mcp_tools", return_value=[]), \
-                     patch("ev0_cli.runtime_provider.resolve_runtime_provider",
+                     patch("threev0_cli.runtime_provider.resolve_runtime_provider",
                            side_effect=_AuthErrorFactory()), \
                      patch.object(sched, "_deliver_result", side_effect=fake_deliver), \
                      patch("run_agent.AIAgent") as mock_agent_cls:

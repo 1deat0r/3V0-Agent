@@ -18,11 +18,11 @@ from gateway.status import (
 
 
 ACCEPT = [
-    "pythonw.exe -m ev0_cli.main gateway run",
-    r"C:\Users\me\3v0\venv\Scripts\pythonw.exe -m ev0_cli.main gateway run",
-    "python -m ev0_cli.main --profile work gateway run",
-    "python -m ev0_cli.main gateway run --replace",
-    "python -m ev0_cli/main.py gateway run",
+    "pythonw.exe -m threev0_cli.main gateway run",
+    r"C:\Users\me\3v0\venv\Scripts\pythonw.exe -m threev0_cli.main gateway run",
+    "python -m threev0_cli.main --profile work gateway run",
+    "python -m threev0_cli.main gateway run --replace",
+    "python -m threev0_cli/main.py gateway run",
     "python gateway/run.py",
     "3v0-gateway.exe",
     "3v0 gateway",          # bare `3v0 gateway` defaults to run
@@ -30,23 +30,23 @@ ACCEPT = [
     # profile selector AFTER the `gateway` token (argv is profile-position
     # agnostic — _apply_profile_override strips --profile/-p anywhere)
     "3v0 gateway --profile work run",
-    "python -m ev0_cli.main gateway -p work run",
+    "python -m threev0_cli.main gateway -p work run",
     "3v0 gateway --profile=work run",
     # a profile literally NAMED "gateway"
     "3v0 -p gateway gateway run",
-    "python -m ev0_cli.main --profile gateway gateway run",
+    "python -m threev0_cli.main --profile gateway gateway run",
     # quoted Windows paths with spaces (shlex-aware tokenization)
     r'"C:\Program Files\3V0\3v0-gateway.exe"',
     r'"C:\Program Files\3V0\gateway\run.py" run',
-    r'"C:\Program Files\Py\pythonw.exe" -m ev0_cli.main gateway run',
+    r'"C:\Program Files\Py\pythonw.exe" -m threev0_cli.main gateway run',
 ]
 
 REJECT = [
     "python -m tui_gateway",                              # unrelated module
-    "python -m ev0_cli.main gateway status",           # other subcommand
-    "python -m ev0_cli.main gateway restart",
-    "python -m ev0_cli.main gateway stop",
-    "python -m ev0_cli.main --profile x dashboard",    # non-gateway subcommand
+    "python -m threev0_cli.main gateway status",           # other subcommand
+    "python -m threev0_cli.main gateway restart",
+    "python -m threev0_cli.main gateway stop",
+    "python -m threev0_cli.main --profile x dashboard",    # non-gateway subcommand
     "some random python -m mygateway thing",
     "",
     None,

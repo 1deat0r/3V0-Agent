@@ -231,7 +231,7 @@ def load_env_file(env_path: Path) -> Dict[str, str]:
     itself (``export`` prefix, ``#`` comments — full-line and
     dotenv-compatible inline, matching quotes with the
     writer's ``\\"``/``\\\\`` escapes reversed — the same semantics as
-    ``ev0_cli.config._parse_env_value``) but never mutates the process
+    ``threev0_cli.config._parse_env_value``) but never mutates the process
     environment — that isolation is the whole point.
 
     Encoding is ``utf-8-sig`` so a leading UTF-8 BOM (Windows Notepad /
@@ -250,7 +250,7 @@ def load_env_file(env_path: Path) -> Dict[str, str]:
     # the outer quotes here would corrupt credentials containing "
     # or \ — they work interactively but fail in scoped (cron /
     # multiplex) resolution.
-    from ev0_cli.config import _parse_env_value
+    from threev0_cli.config import _parse_env_value
 
     for raw in text.splitlines():
         line = raw.strip()
@@ -280,7 +280,7 @@ def build_profile_secret_scope(ev0_home: Path) -> Dict[str, str]:
     secrets = load_env_file(home / ".env")
 
     try:
-        from ev0_cli.env_loader import get_secret_source_values
+        from threev0_cli.env_loader import get_secret_source_values
         external_secrets = get_secret_source_values(home)
     except Exception:
         external_secrets = {}

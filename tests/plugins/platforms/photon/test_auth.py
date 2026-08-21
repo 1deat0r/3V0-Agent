@@ -109,7 +109,7 @@ def test_store_project_credentials_round_trip(
 def test_load_user_numbers_falls_back_to_home_channel(
     tmp_ev0_home: Path,
 ) -> None:
-    from ev0_cli.config import save_env_value
+    from threev0_cli.config import save_env_value
 
     save_env_value("PHOTON_HOME_CHANNEL", "+15551234567")
 
@@ -158,12 +158,12 @@ def test_load_project_credentials_env_override(
 
 # ---------------------------------------------------------------------------
 # Cross-process auth.json lock (issue: photon wrote auth.json without the
-# cross-process lock ev0_cli/auth.py's ~15 other writers all use, so a
+# cross-process lock threev0_cli/auth.py's ~15 other writers all use, so a
 # concurrent refresh from elsewhere could silently lose photon's update or
 # vice versa).
 
 def _hold_auth_lock_then_release(hold_event: threading.Event, release_event: threading.Event) -> None:
-    from ev0_cli.auth import _auth_store_lock
+    from threev0_cli.auth import _auth_store_lock
 
     with _auth_store_lock():
         hold_event.set()

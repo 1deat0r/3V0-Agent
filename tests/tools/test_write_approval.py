@@ -1,5 +1,5 @@
 """Tests for the memory/skill write-approval gate (tools/write_approval.py)
-and the shared slash-command handlers (ev0_cli/write_approval_commands.py).
+and the shared slash-command handlers (threev0_cli/write_approval_commands.py).
 
 Covers the boolean write_approval gate (off by default = write freely; on =
 require approval) for both subsystems, the foreground-vs-background staging
@@ -26,7 +26,7 @@ def ev0_home(monkeypatch):
 
 
 def _set_approval(subsystem, enabled):
-    import ev0_cli.config as cfg
+    import threev0_cli.config as cfg
     c = cfg.load_config()
     c.setdefault(subsystem, {})["write_approval"] = enabled
     cfg.save_config(c)
@@ -86,7 +86,7 @@ def test_cli_memory_approve_without_live_agent_uses_fresh_store(ev0_home, capsys
     import json
     from tools.memory_tool import memory_tool, MemoryStore
     from tools import write_approval as wa
-    from ev0_cli.cli_commands_mixin import CLICommandsMixin
+    from threev0_cli.cli_commands_mixin import CLICommandsMixin
 
     _set_approval("memory", True)
     staging = MemoryStore(); staging.load_from_disk()
@@ -118,7 +118,7 @@ def test_load_on_disk_store_honors_configured_char_limits(ev0_home, monkeypatch)
 
     # Config override path: helper picks up the configured limits.
     monkeypatch.setattr(
-        "ev0_cli.config.load_config",
+        "threev0_cli.config.load_config",
         lambda: {"memory": {"memory_char_limit": 999, "user_char_limit": 444}},
     )
     store = load_on_disk_store()
@@ -129,7 +129,7 @@ def test_load_on_disk_store_honors_configured_char_limits(ev0_home, monkeypatch)
     def _boom():
         raise RuntimeError("no config")
 
-    monkeypatch.setattr("ev0_cli.config.load_config", _boom)
+    monkeypatch.setattr("threev0_cli.config.load_config", _boom)
     fallback = load_on_disk_store()
     assert fallback.memory_char_limit == 2200
     assert fallback.user_char_limit == 1375
@@ -156,7 +156,7 @@ _SKILL = (
 
 
 def test_handle_approve_all(ev0_home):
-    from ev0_cli.write_approval_commands import handle_pending_subcommand
+    from threev0_cli.write_approval_commands import handle_pending_subcommand
     from tools.memory_tool import MemoryStore
     from tools import write_approval as wa
     store = MemoryStore(); store.load_from_disk()
@@ -171,7 +171,7 @@ def test_handle_approve_all(ev0_home):
 
 
 def test_handle_approval_on(ev0_home):
-    from ev0_cli.write_approval_commands import handle_pending_subcommand
+    from threev0_cli.write_approval_commands import handle_pending_subcommand
     from tools import write_approval as wa
     captured = {}
     out = handle_pending_subcommand(
@@ -183,7 +183,7 @@ def test_handle_approval_on(ev0_home):
 
 
 def test_handle_approval_off(ev0_home):
-    from ev0_cli.write_approval_commands import handle_pending_subcommand
+    from threev0_cli.write_approval_commands import handle_pending_subcommand
     from tools import write_approval as wa
     captured = {}
     out = handle_pending_subcommand(

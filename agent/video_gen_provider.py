@@ -209,7 +209,7 @@ class VideoGenProvider(abc.ABC):
 
 def _videos_cache_dir() -> Path:
     """Return ``$EV0_HOME/cache/videos/``, creating parents as needed."""
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     path = get_ev0_home() / "cache" / "videos"
     path.mkdir(parents=True, exist_ok=True)

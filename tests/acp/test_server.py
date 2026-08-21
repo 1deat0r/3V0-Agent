@@ -42,7 +42,7 @@ from acp_adapter.server import (
     EV0_VERSION,
 )
 from acp_adapter.session import SessionManager
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 @pytest.fixture()
@@ -208,8 +208,8 @@ class TestSessionOps:
         }
 
         with (
-            patch("ev0_cli.inventory.load_picker_context", return_value=picker_context),
-            patch("ev0_cli.inventory.build_models_payload", return_value=payload) as build_payload,
+            patch("threev0_cli.inventory.load_picker_context", return_value=picker_context),
+            patch("threev0_cli.inventory.build_models_payload", return_value=payload) as build_payload,
         ):
             resp = await acp_agent.new_session(cwd="/tmp")
 

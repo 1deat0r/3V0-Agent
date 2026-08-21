@@ -516,7 +516,7 @@ def resolve_whatsapp_bridge_dir() -> Path:
     from pathlib import Path as _Path
 
     # Default location in install tree (may be read-only)
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
     install_bridge = _Path(__file__).resolve().parents[2] / "scripts" / "whatsapp-bridge"
 
     # Try EV0_HOME location first

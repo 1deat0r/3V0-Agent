@@ -2,7 +2,7 @@ import queue
 from unittest.mock import patch
 
 from cli import Ev0CLI
-from ev0_cli.moa_config import decode_moa_turn
+from threev0_cli.moa_config import decode_moa_turn
 
 
 def _make_cli():

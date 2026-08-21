@@ -195,7 +195,7 @@ class TestConfigMigration:
         monkeypatch.setenv("EV0_HOME", str(tmp_path))
         # Re-import to pick up the new EV0_HOME
         import importlib
-        import ev0_cli.config as cfg_mod
+        import threev0_cli.config as cfg_mod
         importlib.reload(cfg_mod)
 
         result = cfg_mod.migrate_config(interactive=False, quiet=True)

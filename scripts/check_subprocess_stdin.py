@@ -40,12 +40,12 @@ TUI_CONTEXT_DIRS = [
 # User plugin roots — scanned at runtime if they exist.  Plugins load from
 # ``get_ev0_home() / "plugins"`` (user) and ``./.3V0/plugins/`` (project,
 # gated behind ``EV0_ENABLE_PROJECT_PLUGINS``) — see
-# ``ev0_cli/plugins.py:10-12``.  The guard only checked the bundled
+# ``threev0_cli/plugins.py:10-12``.  The guard only checked the bundled
 # ``plugins/`` dir, missing user-installed code that spawns subprocesses
 # (gap reported in #67639).
 #
 # Import is deferred to ``main()`` (after ``os.chdir(repo_root)``) because
-# this script runs as a standalone subprocess — ``ev0_constants`` isn't
+# this script runs as a standalone subprocess — ``threev0_constants`` isn't
 # on ``sys.path`` until the repo root is added.
 
 # subprocess and os APIs that inherit stdin by default when called without
@@ -78,7 +78,7 @@ SKIP_DIRS = {
     "scripts/",
     "skills/",
     "optional-skills/",
-    "ev0_cli/",
+    "threev0_cli/",
     "gateway/",
     "cron/",
 }
@@ -157,10 +157,10 @@ def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent
     os.chdir(repo_root)
 
-    # Add repo root to sys.path so we can import ev0_constants (this script
+    # Add repo root to sys.path so we can import threev0_constants (this script
     # runs as a standalone subprocess, not as a module).
     sys.path.insert(0, str(repo_root))
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     all_violations = []
 

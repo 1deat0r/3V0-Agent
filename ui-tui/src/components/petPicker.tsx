@@ -1,4 +1,4 @@
-import { Box, Text, useInput, useStdout } from '@ev0/ink'
+import { Box, Text, useInput, useStdout } from '@3v0/ink'
 import { useEffect, useMemo, useState } from 'react'
 
 import type { GatewayClient } from '../gatewayClient.js'

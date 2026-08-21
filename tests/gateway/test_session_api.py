@@ -10,7 +10,7 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from gateway.config import PlatformConfig
 from gateway.platforms.api_server import APIServerAdapter
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 @pytest.fixture
@@ -426,7 +426,7 @@ def _patch_api_server_runtime(monkeypatch):
         staticmethod(lambda: None),
     )
     monkeypatch.setattr("gateway.run._current_max_iterations", lambda: 90)
-    monkeypatch.setattr("ev0_cli.tools_config._get_platform_tools", lambda *_: set())
+    monkeypatch.setattr("threev0_cli.tools_config._get_platform_tools", lambda *_: set())
     monkeypatch.setattr(
         "gateway.run._resolve_runtime_agent_kwargs_for_provider",
         lambda provider: {

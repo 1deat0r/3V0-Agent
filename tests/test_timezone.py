@@ -1,5 +1,5 @@
 """
-Tests for timezone support (ev0_time module + integration points).
+Tests for timezone support (threev0_time module + integration points).
 
 Covers:
   - Valid timezone applies correctly
@@ -17,34 +17,34 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-import ev0_time
+import threev0_time
 
 
-def _reset_ev0_time_cache():
-    """Reset the ev0_time module cache (replacement for removed reset_cache)."""
-    ev0_time._cached_tz = None
-    ev0_time._cached_tz_name = None
-    ev0_time._cache_resolved = False
+def _reset_threev0_time_cache():
+    """Reset the threev0_time module cache (replacement for removed reset_cache)."""
+    threev0_time._cached_tz = None
+    threev0_time._cached_tz_name = None
+    threev0_time._cache_resolved = False
 
 
 # =========================================================================
-# ev0_time.now() — core helper
+# threev0_time.now() — core helper
 # =========================================================================
 
 class TestEv0TimeNow:
     """Test the timezone-aware now() helper."""
 
     def setup_method(self):
-        _reset_ev0_time_cache()
+        _reset_threev0_time_cache()
 
     def teardown_method(self):
-        _reset_ev0_time_cache()
+        _reset_threev0_time_cache()
         os.environ.pop("EV0_TIMEZONE", None)
 
     def test_valid_timezone_applies(self):
         """With a valid IANA timezone, now() returns time in that zone."""
         os.environ["EV0_TIMEZONE"] = "Asia/Kolkata"
-        result = ev0_time.now()
+        result = threev0_time.now()
         assert result.tzinfo is not None
         # IST is UTC+5:30
         offset = result.utcoffset()
@@ -53,13 +53,13 @@ class TestEv0TimeNow:
     def test_utc_timezone(self):
         """UTC timezone works."""
         os.environ["EV0_TIMEZONE"] = "UTC"
-        result = ev0_time.now()
+        result = threev0_time.now()
         assert result.utcoffset() == timedelta(0)
 
     def test_us_eastern(self):
         """US/Eastern timezone works (DST-aware zone)."""
         os.environ["EV0_TIMEZONE"] = "America/New_York"
-        result = ev0_time.now()
+        result = threev0_time.now()
         assert result.tzinfo is not None
         # Offset is -5h or -4h depending on DST
         offset_hours = result.utcoffset().total_seconds() / 3600
@@ -74,15 +74,15 @@ class TestGetTimezone:
     """Test get_timezone()."""
 
     def setup_method(self):
-        _reset_ev0_time_cache()
+        _reset_threev0_time_cache()
 
     def teardown_method(self):
-        _reset_ev0_time_cache()
+        _reset_threev0_time_cache()
         os.environ.pop("EV0_TIMEZONE", None)
 
     def test_returns_zoneinfo_for_valid(self):
         os.environ["EV0_TIMEZONE"] = "Europe/London"
-        tz = ev0_time.get_timezone()
+        tz = threev0_time.get_timezone()
         assert isinstance(tz, ZoneInfo)
         assert str(tz) == "Europe/London"
 
@@ -170,10 +170,10 @@ class TestCronTimezone:
     """Verify cron paths use timezone-aware now()."""
 
     def setup_method(self):
-        _reset_ev0_time_cache()
+        _reset_threev0_time_cache()
 
     def teardown_method(self):
-        _reset_ev0_time_cache()
+        _reset_threev0_time_cache()
         os.environ.pop("EV0_TIMEZONE", None)
 
     def test_parse_schedule_duration_uses_tz_aware_now(self):
@@ -205,7 +205,7 @@ class TestCronTimezone:
         from cron.jobs import _ensure_aware
 
         os.environ["EV0_TIMEZONE"] = "Asia/Kolkata"
-        _reset_ev0_time_cache()
+        _reset_threev0_time_cache()
 
         # Create a naive datetime — will be interpreted as system-local time
         naive_dt = datetime(2026, 3, 11, 12, 0, 0)
@@ -238,7 +238,7 @@ class TestCronTimezone:
         # of the naive timestamp exceeds _ev0_now's wall time — this would
         # have caused a false "not due" with the old replace(tzinfo=...) approach.
         os.environ["EV0_TIMEZONE"] = "Pacific/Midway"  # UTC-11
-        _reset_ev0_time_cache()
+        _reset_threev0_time_cache()
 
         from cron.jobs import create_job, load_jobs, save_jobs, get_due_jobs
         create_job(prompt="Cross-tz job", schedule="every 1h")
@@ -262,7 +262,7 @@ class TestCronTimezone:
         monkeypatch.setattr(jobs_module, "OUTPUT_DIR", tmp_path / "cron" / "output")
 
         os.environ["EV0_TIMEZONE"] = "US/Eastern"
-        _reset_ev0_time_cache()
+        _reset_threev0_time_cache()
 
         from cron.jobs import create_job
         job = create_job(prompt="TZ test", schedule="every 2h")

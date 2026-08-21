@@ -2,7 +2,7 @@
 
 Read-only SessionDB opens skip _reconcile_columns() by design, so dashboard
 read paths heal stale stores via a probe-then-writable-reopen dance in
-``ev0_cli.web_server._open_session_db_at_path``. These tests pin the
+``threev0_cli.web_server._open_session_db_at_path``. These tests pin the
 probe's contract: it is DERIVED from SCHEMA_SQL (any column added there is
 covered automatically — the previous hand-written probe went stale within
 days) and it must fail at prepare time on a store missing any declared
@@ -13,8 +13,8 @@ import sqlite3
 
 import pytest
 
-from ev0_state_common import DEFERRED_INDEX_SQL, SCHEMA_SQL
-from ev0_state_schema import SessionSchemaMixin, schema_read_probe_statements
+from threev0_state_common import DEFERRED_INDEX_SQL, SCHEMA_SQL
+from threev0_state_schema import SessionSchemaMixin, schema_read_probe_statements
 
 
 def _fresh_schema_conn() -> sqlite3.Connection:

@@ -28,7 +28,7 @@
 // Layout: the <Md> subtrees MUST stack in a column — the messageLine.tsx
 // parent is a default row Box, so bare siblings render side-by-side.
 
-import { Box } from '@ev0/ink'
+import { Box } from '@3v0/ink'
 import { memo, useRef } from 'react'
 
 import type { Theme } from '../theme.js'

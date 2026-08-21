@@ -56,10 +56,10 @@ def test_run_job_bounds_sessiondb_finalization(tmp_path):
     try:
         with patch("cron.scheduler._ev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("ev0_cli.env_loader.load_ev0_dotenv"), \
-             patch("ev0_cli.env_loader.reset_secret_source_cache"), \
-             patch("ev0_state.SessionDB", return_value=fake_db), \
-             patch("ev0_cli.runtime_provider.resolve_runtime_provider", return_value=_RUNTIME), \
+             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.reset_secret_source_cache"), \
+             patch("threev0_state.SessionDB", return_value=fake_db), \
+             patch("threev0_cli.runtime_provider.resolve_runtime_provider", return_value=_RUNTIME), \
              patch("run_agent.AIAgent") as mock_agent_cls, \
              patch("cron.scheduler._cron_cleanup_timeout_seconds", return_value=0.02):
             mock_agent = MagicMock()
@@ -116,10 +116,10 @@ def test_dispatch_guard_releases_after_sessiondb_finalization_hang(tmp_path):
     try:
         with patch("cron.scheduler._ev0_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("ev0_cli.env_loader.load_ev0_dotenv"), \
-             patch("ev0_cli.env_loader.reset_secret_source_cache"), \
-             patch("ev0_state.SessionDB", return_value=fake_db), \
-             patch("ev0_cli.runtime_provider.resolve_runtime_provider", return_value=_RUNTIME), \
+             patch("threev0_cli.env_loader.load_ev0_dotenv"), \
+             patch("threev0_cli.env_loader.reset_secret_source_cache"), \
+             patch("threev0_state.SessionDB", return_value=fake_db), \
+             patch("threev0_cli.runtime_provider.resolve_runtime_provider", return_value=_RUNTIME), \
              patch("run_agent.AIAgent") as mock_agent_cls, \
              patch("cron.scheduler._cron_cleanup_timeout_seconds", return_value=0.02), \
              patch.object(sched, "get_due_jobs", return_value=[job]), \

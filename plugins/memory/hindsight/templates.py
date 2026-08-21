@@ -18,7 +18,7 @@ import os
 import urllib.request
 from urllib.parse import urljoin
 
-from ev0_cli.urllib_security import open_credentialed_url
+from threev0_cli.urllib_security import open_credentialed_url
 
 logger = logging.getLogger(__name__)
 

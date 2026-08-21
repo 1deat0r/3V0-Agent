@@ -20,7 +20,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 @pytest.fixture()
@@ -39,8 +39,8 @@ def server(ev0_home):
     with patch.dict(
         "sys.modules",
         {
-            "ev0_cli.env_loader": MagicMock(),
-            "ev0_cli.banner": MagicMock(),
+            "threev0_cli.env_loader": MagicMock(),
+            "threev0_cli.banner": MagicMock(),
         },
     ):
         mod = importlib.import_module("tui_gateway.server")

@@ -646,18 +646,18 @@ def atomic_roundtrip_yaml_save(
     callers that mutate a deep-loaded config dict and want to persist the
     whole thing.
 
-    Shares the fail-closed contract ``ev0_cli.config.atomic_config_write``
+    Shares the fail-closed contract ``threev0_cli.config.atomic_config_write``
     enforces for plain (non-comment-preserving) full-document writes: an
     existing-but-unreadable ``config.yaml`` (permission error, broken mount,
     transient I/O) raises rather than being silently replaced with only
     ``new_state``. Imported lazily to avoid a module-level circular import —
-    ``ev0_cli.config`` itself imports from this module.
+    ``threev0_cli.config`` itself imports from this module.
     """
     from ruamel.yaml import YAML
     from ruamel.yaml.comments import CommentedMap
     from ruamel.yaml.scalarstring import DoubleQuotedScalarString
 
-    from ev0_cli.config import require_readable_config_before_write
+    from threev0_cli.config import require_readable_config_before_write
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

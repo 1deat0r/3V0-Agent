@@ -324,13 +324,13 @@ class TestTeamsPluginRegistration:
 class TestTeamsInteractiveSetup:
     def test_interactive_setup_persists_credentials(self, tmp_path, monkeypatch):
         """Regression for #19173: interactive_setup must import prompt helpers
-        from ev0_cli.cli_output (not ev0_cli.config) and persist
+        from threev0_cli.cli_output (not threev0_cli.config) and persist
         credentials to .env without crashing.
         """
         ev0_home = tmp_path / "3v0"
         monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
-        import ev0_cli.cli_output as cli_output_mod
+        import threev0_cli.cli_output as cli_output_mod
 
         answers = iter(["client-id", "client-secret", "tenant-id", "aad-1, aad-2"])
         monkeypatch.setattr(cli_output_mod, "prompt", lambda *_a, **_kw: next(answers))

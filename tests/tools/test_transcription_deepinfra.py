@@ -4,7 +4,7 @@
 then delegates to ``_transcribe_openai``. These two tests pin the
 STT-specific gating (so an unset DEEPINFRA_API_KEY refuses dispatch) and
 the delegation happy path; shared catalog/tag-filter behavior is covered
-in ``tests/ev0_cli/test_api_key_providers.py``.
+in ``tests/threev0_cli/test_api_key_providers.py``.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _isolation(monkeypatch):
-    import ev0_cli.models as _models_mod
+    import threev0_cli.models as _models_mod
     monkeypatch.setattr(_models_mod, "_deepinfra_catalog_cache", {})
     yield
 

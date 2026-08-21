@@ -10,7 +10,7 @@ profile's cache. The validator must resolve the cache roots per-call.
 """
 from pathlib import Path
 
-from ev0_constants import reset_ev0_home_override, set_ev0_home_override
+from threev0_constants import reset_ev0_home_override, set_ev0_home_override
 
 
 def _make_profile(root: Path) -> Path:

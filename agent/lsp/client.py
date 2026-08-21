@@ -56,7 +56,7 @@ from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Set
 from urllib.parse import quote, unquote
 
-from ev0_cli._subprocess_compat import windows_hide_flags
+from threev0_cli._subprocess_compat import windows_hide_flags
 
 from agent.lsp.protocol import (
     ERROR_CONTENT_MODIFIED,

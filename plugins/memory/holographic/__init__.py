@@ -27,7 +27,7 @@ from tools.registry import tool_error
 from utils import is_truthy_value
 from .store import MemoryStore
 from .retrieval import FactRetriever
-from ev0_cli.config import cfg_get
+from threev0_cli.config import cfg_get
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ def _load_plugin_config() -> dict:
     try:
         # Canonical loader: behavioral read now honors the managed-scope
         # overlay + ${VAR} expansion (e.g. an api key template) too.
-        from ev0_cli.config import load_config_readonly
+        from threev0_cli.config import load_config_readonly
         all_config = load_config_readonly()
         return cfg_get(all_config, "plugins", "3v0-memory-store", default={}) or {}
     except Exception:
@@ -134,7 +134,7 @@ class HolographicMemoryProvider(MemoryProvider):
             import yaml
             # Write-back round-trip: raw read is correct (merged defaults
             # must not be persisted back into the user's file).
-            from ev0_cli.config import read_user_config_raw
+            from threev0_cli.config import read_user_config_raw
             existing = read_user_config_raw(config_path)
             existing.setdefault("plugins", {})
             existing["plugins"]["3v0-memory-store"] = values
@@ -144,7 +144,7 @@ class HolographicMemoryProvider(MemoryProvider):
             pass
 
     def get_config_schema(self):
-        from ev0_constants import display_ev0_home
+        from threev0_constants import display_ev0_home
         _default_db = f"{display_ev0_home()}/memory_store.db"
         return [
             {"key": "db_path", "description": "SQLite database path", "default": _default_db},
@@ -154,7 +154,7 @@ class HolographicMemoryProvider(MemoryProvider):
         ]
 
     def initialize(self, session_id: str, **kwargs) -> None:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         _ev0_home = str(get_ev0_home())
         _default_db = _ev0_home + "/memory_store.db"
         db_path = self._config.get("db_path", _default_db)

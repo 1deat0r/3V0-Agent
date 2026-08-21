@@ -1,24 +1,24 @@
 run_agent.py	source	manual	AIAgent class — the core synchronous conversation loop (model calls, tool dispatch, budget, interrupts)	Everything talks to a model through this loop; the narrow waist of the whole system	model_tools.py;cli.py;agent/conversation_loop.py;agent/prompt_builder.py
-cli.py	source	manual	Ev0CLI — interactive CLI orchestrator (prompt_toolkit + Rich), slash commands, session management	The primary human-facing surface; hosts command dispatch and config loading	for shell_commands: ev0_cli/commands.py;ev0_cli/config.py;ev0_cli/main.py;run_agent.py
+cli.py	source	manual	Ev0CLI — interactive CLI orchestrator (prompt_toolkit + Rich), slash commands, session management	The primary human-facing surface; hosts command dispatch and config loading	for shell_commands: threev0_cli/commands.py;threev0_cli/config.py;threev0_cli/main.py;run_agent.py
 batch_runner.py	source	manual	Parallel batch task runner driving many AIAgent sessions	Runs offline jobs/campaigns against the same core loop without a live TTY	run_agent.py;tests/run_agent
 trajectory_compressor.py	source	manual	Context compression / trajectory compaction service for long conversations	Prevents prompt-cache breakage and context overflow on long sessions; the one allowed mid-conversation context mutation	agent/context_compressor.py;agent/native_compaction.py;agent/conversation_compression.py
-utils.py	source	manual	Shared utilities (paths, JSON, file atomics, misc helpers)	Common helpers used repo-wide; keep dependency-free	ev0_constants.py;ev0_logging.py
-ev0_bootstrap.py	source	manual	Early-boot module that applies profile override and seeds environment before other imports	Runs before everything so EV0_HOME / profile routing is correct at import time	ev0_constants.py;ev0_cli/main.py
+utils.py	source	manual	Shared utilities (paths, JSON, file atomics, misc helpers)	Common helpers used repo-wide; keep dependency-free	threev0_constants.py;threev0_logging.py
+threev0_bootstrap.py	source	manual	Early-boot module that applies profile override and seeds environment before other imports	Runs before everything so EV0_HOME / profile routing is correct at import time	threev0_constants.py;threev0_cli/main.py
 model_tools.py	source	manual	Tool orchestration hub — discover_builtin_tools, get_tool_definitions, handle_function_call, toolset assembly	Every model tool ships through here per API call; the footprint-ladder choke point	tools/registry.py;toolsets.py;run_agent.py
 toolsets.py	source	manual	TOOLSETS dict — named tool bundles + _EV0_CORE_TOOLS default	Defines which tools each platform/base exposes; the schema-gating wedge	model_tools.py;tools/registry.py
 toolset_distributions.py	source	manual	Per-platform toolset enablement matrix + distribution rules	Maps platform -> base toolset with config-gated additions	platforms use: toolsets.py;gateway/platform_registry.py
-ev0_state.py	source	manual	SessionDB — the SQLite session store (FTS5 search, project/session records)	Canonical session persistence backing resume/search/desktop; god-file, split across ev0_state_* siblings	ev0_state_schema.py;ev0_state_search.py;ev0_state_common.py;ev0_state_portability.py
-ev0_state_schema.py	source	manual	SQLite schema definitions + migrations for the session store	Keeps the DB schema versioned and migratable	ev0_state.py
-ev0_state_search.py	source	manual	FTS5 search layer over the session store	Powers /search and session picker; SQLite-side, no external indexer	ev0_state.py
-ev0_state_common.py	source	manual	Shared helpers for the session store family (types, paths, common queries)	Avoids circular imports between ev0_state and its satellites	ev0_state.py;ev0_state_portability.py
-ev0_state_portability.py	source	manual	Portability/backup layer for session stores (export, import, relocation)	Lets sessions survive profile moves and installs	moves: ev0_state.py;ev0_constants.py
-ev0_constants.py	source	manual	get_ev0_home() / display_ev0_home() — profile-aware path resolution	Every state path in the body resolves through here; hardcoding ~/.3V0 elsewhere is a known-bug class	ev0_logging.py;ev0_bootstrap.py;tests/ev0_cli/test_profiles.py
-ev0_logging.py	source	manual	setup_logging() — agent.log / errors.log / gateway.log (profile-aware)	All logs land per-profile via EV0_HOME; browse with 3v0 logs	ev0_constants.py;gateway/run.py
-ev0_time.py	source	manual	Time helpers (UTC stamps, duration parsing)	Consistent time handling across scheduler/cron/session code	cron/scheduler.py;ev0_constants.py
+threev0_state.py	source	manual	SessionDB — the SQLite session store (FTS5 search, project/session records)	Canonical session persistence backing resume/search/desktop; god-file, split across threev0_state_* siblings	threev0_state_schema.py;threev0_state_search.py;threev0_state_common.py;threev0_state_portability.py
+threev0_state_schema.py	source	manual	SQLite schema definitions + migrations for the session store	Keeps the DB schema versioned and migratable	threev0_state.py
+threev0_state_search.py	source	manual	FTS5 search layer over the session store	Powers /search and session picker; SQLite-side, no external indexer	threev0_state.py
+threev0_state_common.py	source	manual	Shared helpers for the session store family (types, paths, common queries)	Avoids circular imports between threev0_state and its satellites	threev0_state.py;threev0_state_portability.py
+threev0_state_portability.py	source	manual	Portability/backup layer for session stores (export, import, relocation)	Lets sessions survive profile moves and installs	moves: threev0_state.py;threev0_constants.py
+threev0_constants.py	source	manual	get_ev0_home() / display_ev0_home() — profile-aware path resolution	Every state path in the body resolves through here; hardcoding ~/.3V0 elsewhere is a known-bug class	threev0_logging.py;threev0_bootstrap.py;tests/threev0_cli/test_profiles.py
+threev0_logging.py	source	manual	setup_logging() — agent.log / errors.log / gateway.log (profile-aware)	All logs land per-profile via EV0_HOME; browse with 3v0 logs	threev0_constants.py;gateway/run.py
+threev0_time.py	source	manual	Time helpers (UTC stamps, duration parsing)	Consistent time handling across scheduler/cron/session code	cron/scheduler.py;threev0_constants.py
 mcp_serve.py	source	manual	MCP server mode — expose the agent as an MCP host/server	Lets external MCP clients drive the agent; catalog + client bridging lives in tools/mcp_tool.py	tools/mcp_tool.py;tools/setup_mcp_tool.py
 mini_swe_runner.py	source	manual	Minimal SWE-bench-style evaluator harness for the agent	Runs model patch-turns against task instances for offline evals	scripts/run_tests.sh;3v0/tests/
-registration_lifecycle.py	source	manual	Lifecycle hooks for registration/licensing flows	Registration/activation side of the product surface	ev0_cli/auth.py;ev0_cli/auth_commands.py
-3v0-cli	script	manual	Launcher script for the 3v0 CLI	Thin exec shim so `3v0 --tui` etc. work from PATH	ev0_cli/main.py;run_agent.py
+registration_lifecycle.py	source	manual	Lifecycle hooks for registration/licensing flows	Registration/activation side of the product surface	threev0_cli/auth.py;threev0_cli/auth_commands.py
+3v0-cli	script	manual	Launcher script for the 3v0 CLI	Thin exec shim so `3v0 --tui` etc. work from PATH	threev0_cli/main.py;run_agent.py
 AGENTS.md	doc	manual	The body's governance + contribution contract (3V0 sovereignty, footprint ladder, testing policy)	Constitutional doc; every AI assistant working here is bound by it	wiki/SCHEMA.md;3v0/SOUL.md;3v0/CONTEXT.md
 README.md	readme	manual	Project README (English)	for humans/new agents	README.es.md;README.zh-CN.md;README.ur-pk.md;CONTRIBUTING.md
 README.es.md	readme	manual	Spanish project README	Spanish community surface	README.md;locales/es.yaml
@@ -35,7 +35,7 @@ Dockerfile	build	manual	Container image definition (+ multi-stage build)	Dockeri
 docker-compose.yml	config	manual	Single-node compose stack	Docker deployment entry	Dockerfile;docker-compose.windows.yml
 flake.nix	build	manual	Nix flake declaration	for nix-based dev environments	nix/;flake.lock
 .githooks/pre-commit	script	manual	Pre-commit coherence guard — stale-doctrine scan + coherence fail-close + dirty-warn	Makes stale doctrine and coherence contradictions impossible to merge	3v0/core/coherence.py;3v0/scripts/verify.sh;wiki refresh steps
-.env.example	config	manual	Example secrets file (.env is for secrets ONLY)	Documentation of every credential the body can use; non-secrets belong in config.yaml	ev0_cli/config.py
+.env.example	config	manual	Example secrets file (.env is for secrets ONLY)	Documentation of every credential the body can use; non-secrets belong in config.yaml	threev0_cli/config.py
 3v0/SOUL.md	doc	manual	The agent's soul — identity, values (honesty/judgment/sovereignty), prime directive	Anchors every coherence check and the wake gate; editing it is editing the self	3v0/CONTEXT.md;3v0/core/coherence.py;AGENTS.md
 3v0/CONTEXT.md	doc	manual	Standing context — who 3V0 is, what it knows, the operating narrative	Loaded into every session; the memory store's profile mirror	sync: 3v0/scripts/sync.py;3v0/data/memory.db
 3v0/CUTOVER.md	doc	manual	Migration record of the 3V0 -> 3V0 cutover (renames, ev0_* identifiers)	Audit trail for the substrate rename; explains why files are named ev0_*	AGENTS.md;3v0/VERSION
@@ -151,8 +151,8 @@ agent/auxiliary_client.py	source	manual	Aux task client — side-LLM work (curat
 agent/aux_accounting.py	source	manual	Aux cost accounting per task/model	Cents-level attribution	agent/auxiliary_client.py
 agent/curator.py	source	manual	Skill curator — background skill lifecycle (active/stale/archived)	Curator invariants: only agent-created skills, never delete, pinned exempt	agent/curator_backup.py;tools/skill_usage.py
 agent/curator_backup.py	source	manual	Pre-run tar.gz snapshots for curator	Restore safety	agent/curator.py
-agent/display.py	source	manual	KawaiiSpinner + activity feed rendering	CLI presentation	ev0_cli/skin_engine.py;cli.py
-agent/onboarding.py	source	manual	First-run onboarding flow	Setup UX	ev0_cli/config.py
+agent/display.py	source	manual	KawaiiSpinner + activity feed rendering	CLI presentation	threev0_cli/skin_engine.py;cli.py
+agent/onboarding.py	source	manual	First-run onboarding flow	Setup UX	threev0_cli/config.py
 agent/oneshot.py	source	manual	One-shot prompt execution	Non-interactive single turns	run_agent.py
 agent/title_generator.py	source	manual	Session title generation (aux)	Session niceness	agent/auxiliary_client.py
 agent/turn_context.py	source	manual	Per-turn context object	Loop plumbing	agent/conversation_loop.py
@@ -163,7 +163,7 @@ agent/learning_graph.py	source	manual	Learning graph — structured knowledge re
 agent/moa_loop.py	source	manual	Mixture-of-agents loop	Multi-model consensus mode	agent/moa_trace.py
 agent/moa_trace.py	source	manual	MoA trace instrumentation	Debuggability	agent/moa_loop.py
 agent/relay_llm.py	source	manual	Relay LLM client — the shared relay protocol (nemo relay)	Multi-process/remote LLM transport	agent/relay_runtime.py;agent/relay_tools.py
-agent/skill_commands.py	source	manual	Skill slash-command injection (as USER message to preserve caching)	Skills live in commands without touching the system prompt	ev0_cli/commands.py;tools/skills_tool.py
+agent/skill_commands.py	source	manual	Skill slash-command injection (as USER message to preserve caching)	Skills live in commands without touching the system prompt	threev0_cli/commands.py;tools/skills_tool.py
 agent/tool_executor.py	source	manual	Tool executor — runs handler with guards	Dispatch plumbing	model_tools.py;tools/registry.py
 agent/tool_guardrails.py	source	manual	Tool-call guardrails (threat patterns, safety)	Safety layer	tools/threat_patterns.py;tools/tirith_security.py
 agent/monitoring	source	manual	Monitoring mixins (metrics/traces)	for the gateway/agents	plugins/observability/
@@ -184,7 +184,7 @@ tools/async_delegation.py	source	manual	Async delegation completion queue	Backgr
 tools/todo_tool.py	source	manual	Todo/task tracking tool (agent-level, intercepted by run_agent)	Lets the run loop manage its own plan	run_agent.py
 tools/memory_tool.py	source	manual	Memory tool — record/recall through memory providers	The memory model-tool surface	agent/memory_manager.py
 tools/skills_tool.py	source	manual	Skills tool — load/list skills	Skill activation surface	agent/skill_commands.py;tools/skill_manager_tool.py
-tools/skill_manager_tool.py	source	manual	Skill install/update/remove tooling	Skill lifecycle for the agent	tools/skill_usage.py;ev0_cli/bundles.py
+tools/skill_manager_tool.py	source	manual	Skill install/update/remove tooling	Skill lifecycle for the agent	tools/skill_usage.py;threev0_cli/bundles.py
 tools/skills_hub.py	source	manual	OptionalSkillSource — install from the official catalog	3v0 skills install official/...	optional-skills/;tools/skills_sync.py
 tools/skills_sync.py	source	manual	Skill sync (hub -> local refresh)	Keeps installed skills current	tools/skills_sync_client.py
 tools/skill_linter.py	source	manual	Skill linter (frontmatter/standard checks)	Skill authoring standards enforcement	tests/skills/;tools/skill_provenance.py
@@ -198,7 +198,7 @@ tools/browser_supervisor.py	source	manual	Browser session supervisor (lifecycle,
 tools/web_tools.py	source	manual	Web tools — search/extract (web_search, web_extract)	Core web capability	tools/read_extract.py
 tools/read_extract.py	source	manual	Web page extraction to markdown	Feeds web_extract	tools/web_tools.py
 tools/code_execution_tool.py	source	manual	execute_code — sandboxed python execution	Programmatic tool calling	tools/computer_use/
-tools/session_search_tool.py	source	manual	Session search tool over SessionDB	Search across past sessions	ev0_state_search.py
+tools/session_search_tool.py	source	manual	Session search tool over SessionDB	Search across past sessions	threev0_state_search.py
 tools/approval.py	source	manual	Approval primitives (request/respond)	Safe-action consent flow	tools/clarify_tool.py;tools/write_approval.py
 tools/clarify_tool.py	source	manual	Clarify tool — ask the user mid-turn	Human-in-the-loop	gates: tools/clarify_gateway.py
 tools/write_approval.py	source	manual	Write-approval interceptor for file mutations	File-safety consent	tools/approval.py;tools/path_security.py
@@ -211,7 +211,7 @@ tools/mcp_oauth_manager.py	source	manual	OAuth flows for MCP servers	Authenticat
 tools/cronjob_tools.py	source	manual	Cron tool for the agent	Agent-schedulable jobs	cron/jobs.py
 tools/send_message_tool.py	source	manual	Message-send tool (gateway platforms)	Agent-initiated platform sends	gateway/platforms/;plugins/platforms/
 tools/schema_sanitizer.py	source	manual	Tool schema sanitization (drop unsafe params)	Hardens generated schemas	tools/registry.py
-tools/checkpoint_manager.py	source	manual	Checkpoint manager for long sessions	Resume-after-crash	agent/conversation_loop.py;ev0_cli/checkpoints.py
+tools/checkpoint_manager.py	source	manual	Checkpoint manager for long sessions	Resume-after-crash	agent/conversation_loop.py;threev0_cli/checkpoints.py
 tools/daemon_pool.py	source	manual	Daemon process pool for tool backends	Long-lived helpers	tools/process_registry.py
 tools/process_registry.py	source	manual	Process registry / lifecycle for spawned children	Cleanup and tracking	tools/terminal_tool.py;tools/daemon_pool.py
 tools/interrupt.py	source	manual	Tool-call interrupt support	Stop mid-tool	tools/terminal_tool.py
@@ -226,20 +226,20 @@ tools/tts_tool.py	source	manual	TTS tool + streaming	Voice output	tools/tts_stre
 tools/transcription_tools.py	source	manual	Audio transcription tools	Voice input	agent/transcription_registry.py
 tools/image_generation_tool.py	source	manual	Image generation tool (providers)	Creative capability	plugins/image_gen/;gen: bailian-gen skill
 tools/video_generation_tool.py	source	manual	Video generation tool	Creative capability	tools/flux3_video_tool.py
-tools/kanban_tools.py	source	manual	Kanban worker tools (kanban_show/complete/... )	Zero schema footprint outside kanban tasks	plugins/kanban/;ev0_cli/kanban.py
-gateway/run.py	source	manual	GatewayRunner — the messaging gateway orchestrator (session lifecycle, message dispatch, hooks)	The always-on surface for Telegram/Discord/etc.; where slash commands resolve in messaging	gateway/session.py;gateway/platforms/;ev0_cli/commands.py
+tools/kanban_tools.py	source	manual	Kanban worker tools (kanban_show/complete/... )	Zero schema footprint outside kanban tasks	plugins/kanban/;threev0_cli/kanban.py
+gateway/run.py	source	manual	GatewayRunner — the messaging gateway orchestrator (session lifecycle, message dispatch, hooks)	The always-on surface for Telegram/Discord/etc.; where slash commands resolve in messaging	gateway/session.py;gateway/platforms/;threev0_cli/commands.py
 gateway/session.py	source	manual	Session manager for messaging (per-chat agents, resume, /new)	Isolates each chat's conversation	gateway/run.py;gateway/session_context.py
-gateway/config.py	source	manual	Gateway config loader + platform settings	Dedicated loader for the raw-yaml gateway path	gateway/run.py;ev0_cli/config.py
+gateway/config.py	source	manual	Gateway config loader + platform settings	Dedicated loader for the raw-yaml gateway path	gateway/run.py;threev0_cli/config.py
 gateway/platforms	source	manual	Per-platform adapters (telegram, discord, slack, whatsapp, signal, matrix, mattermost, email, sms, homeassistant, ...)	The breadth surface; each adapter implements one transport	gateway/platform_registry.py;plugins/platforms/
-gateway/run.py	source	manual	GatewayRunner — the messaging gateway orchestrator (session lifecycle, message dispatch, hooks)	The always-on surface for Telegram/Discord/etc.; slash commands resolve here in messaging	gateway/session.py;gateway/platforms/;ev0_cli/commands.py
+gateway/run.py	source	manual	GatewayRunner — the messaging gateway orchestrator (session lifecycle, message dispatch, hooks)	The always-on surface for Telegram/Discord/etc.; slash commands resolve here in messaging	gateway/session.py;gateway/platforms/;threev0_cli/commands.py
 gateway/session.py	source	manual	Session manager for messaging (per-chat agents, resume, /new)	Isolates each chat's conversation	gateway/run.py;gateway/session_context.py
-gateway/config.py	source	manual	Gateway config loader + platform settings	Dedicated raw-yaml loader for the gateway runtime	gateway/run.py;ev0_cli/config.py
+gateway/config.py	source	manual	Gateway config loader + platform settings	Dedicated raw-yaml loader for the gateway runtime	gateway/run.py;threev0_cli/config.py
 gateway/platforms	source	manual	Per-platform adapters (telegram, discord, slack, whatsapp, signal, matrix, mattermost, email, sms, homeassistant, ...)	The breadth surface; one adapter per transport	gateway/platform_registry.py;plugins/platforms/
 gateway/platform_registry.py	source	manual	Platform adapter registry and discovery	Finds adapters across gateway/platforms and plugins/platforms	gateway/run.py
 gateway/authz_mixin.py	source	manual	Authorization mixin — allowlists, allow-all gates, group policy (fail-closed per profile)	Sharpest edge: leak here silently rejects or fail-opens routing	agent/secret_scope.py;plugins/platforms/feishu/adapter.py
 gateway/status.py	source	manual	Gateway status surfaces (health, locks)	token-scoped locks: acquire_scoped_lock for unique credentials	gateway/readiness.py;gateway/memory_status.py
 gateway/wake.py	source	manual	Wake orchestration (the gateway has its own wake ritual, parallel to the body.s)	Boot-time standing pass; the parallel to scripts/handoff_check.sh	scripts/handoff_check.sh
-gateway/slash_commands.py	source	manual	Gateway slash-command dispatch	Messaging-side command handling	ev0_cli/commands.py;gateway/run.py
+gateway/slash_commands.py	source	manual	Gateway slash-command dispatch	Messaging-side command handling	threev0_cli/commands.py;gateway/run.py
 gateway/hooks.py	source	manual	Gateway hook emission (pre/post event hooks)	Extension seam for gateway lifecycle	gateway/builtin_hooks/
 gateway/builtin_hooks	source	manual	Always-registered gateway hooks (none shipped by default)	The intentional empty extension point	gateway/hooks.py
 gateway/delivery.py	source	manual	Message delivery ledger (idempotent delivery)	Guarantees under retries	gateway/delivery_ledger.py;gateway/lifecycle_ledger.py
@@ -266,48 +266,48 @@ gateway/disk_status.py	source	manual	Disk usage reporting	Capacity alerting	gate
 gateway/code_skew.py	source	manual	Code-version skew detection between processes	Mixed-version fleet safety	gateway/build_info.py
 gateway/rich_sent_store.py	source	manual	Rich sent-message store	Message edit/delete hooks	gateway/delivery.py
 gateway/runtime_footer.py	source	manual	Runtime footer for session prompts	Session identity footer	gateway/session.py
-gateway/cwd_placeholder.py	source	manual	CWD placeholder resolution	terminal.cwd bridging	ev0_cli/config.py
-ev0_cli/main.py	source	manual	CLI entrypoint — argparse tree, profile override bootstrap, subcommand wiring	The 3v0 command itself; where _apply_profile_override runs before any import	ev0_bootstrap.py;ev0_cli/config.py
-ev0_cli/main.py	source	manual	CLI entrypoint — argparse tree, profile override bootstrap, subcommand wiring	The 3v0 command; _apply_profile_override must run before any import	ev0_bootstrap.py;ev0_cli/config.py
-ev0_cli/config_defaults.py	source	manual	Default config values	Deep-merged under user YAML	ev0_cli/config.py
-ev0_cli/config_migrations.py	source	manual	Config version migrations	Bumps _config_version only when transform needed	ev0_cli/config.py
-ev0_cli/commands.py	source	manual	COMMAND_REGISTRY — canonical slash commands (CommandDef)	Single source: CLI, gateway, Telegram menu, Slack map, autocomplete	cli.py;gateway/run.py;gateway/slash_commands.py
-ev0_cli/config.py	source	manual	DEFAULT_CONFIG schema + loaders (load_config, migrations, OPTIONAL_ENV_VARS)	The config.yaml contract; non-secret settings live here, not .env	ev0_cli/config_defaults.py;ev0_cli/config_migrations.py
-ev0_cli/config_defaults.py	source	manual	Default config values	Deep-merged under user YAML	ev0_cli/config.py
-ev0_cli/config_migrations.py	source	manual	Config version migrations	Bumps _config_version only when a transform is needed	ev0_cli/config.py
-ev0_cli/commands.py	source	manual	COMMAND_REGISTRY — canonical slash commands (CommandDef)	Single source: CLI, gateway, Telegram menu, Slack map, autocomplete	cli.py;gateway/run.py;gateway/slash_commands.py
-ev0_cli/skin_engine.py	source	manual	Skin system — built-in + user YAML skins, data-driven CLI theming	Skins are pure data; no code per skin	ev0_cli/colors.py;agent/display.py
-ev0_cli/plugins.py	source	manual	PluginManager — discovery of ~/.3V0/plugins, repo plugins, pip entry points	Ships register(ctx) hooks + register_tool + register_cli_command	plugins/;tools/registry.py
-ev0_cli/web_server.py	source	manual	Dashboard web server + /api/pty WebSocket endpoint (embedded 3v0 --tui)	Serves 3v0 dashboard; the PTY tunnel is the chat surface bridge	ev0_cli/pty_bridge.py;web/;ui-tui/
-ev0_cli/pty_bridge.py	source	manual	PTY bridge — spawns 3v0 --tui for the dashboard terminal pane	AUTH via ephemeral _SESSION_TOKEN; POSIX PTY only	ev0_cli/web_server.py;ui-tui/
-ev0_cli/tools_config.py	source	manual	3v0 tools curses UI	The toolset enable/disable picker (curses, per project law)	ev0_cli/curses_ui.py;toolsets.py
-ev0_cli/curses_ui.py	source	manual	Shared curses menu machinery	Every interactive menu must be built here	ev0_cli/tools_config.py
-ev0_cli/banner.py	source	manual	Startup banner rendering	Branding + build info	ev0_cli/skin_engine.py;assets/banner.png
-ev0_cli/completion.py	source	manual	Slash command + path autocomplete	CLI input UX	ev0_cli/commands.py
-ev0_cli/checkpoints.py	source	manual	CLI-side checkpoint integration	Resume-after-crash in the CLI	tools/checkpoint_manager.py
-ev0_cli/cron.py	source	manual	3v0 cron subcommand	CLI surface for cron/jobs.py	cron/jobs.py;ev0_cli/commands.py
-ev0_cli/auth.py	source	manual	Auth flows (login/logout, providers)	Account surface	ev0_cli/auth_commands.py
-ev0_cli/claw.py	source	manual	Claw — capture/alt-input mode	Advanced input modes	cli.py
-ev0_cli/console_engine.py	source	manual	Console abstraction layer	Portable output	ev0_cli/cli_output.py
-ev0_cli/clipboard.py	source	manual	Clipboard integration	Paste UX	cli.py
-ev0_cli/bundles.py	source	manual	Bundle management (skill/skin bundles)	Install surface	tools/skills_hub.py
-ev0_cli/backup.py	source	manual	3v0 backup subcommand	State export	safety: ev0_state_portability.py
-cron/jobs.py	source	manual	Job store — SQLite-backed cron jobs (schedules, skills, context_from, workdir)	The agent's own scheduler; 3-minute hard interrupt invariant	ev0_cli/cron.py;tools/cronjob_tools.py
+gateway/cwd_placeholder.py	source	manual	CWD placeholder resolution	terminal.cwd bridging	threev0_cli/config.py
+threev0_cli/main.py	source	manual	CLI entrypoint — argparse tree, profile override bootstrap, subcommand wiring	The 3v0 command itself; where _apply_profile_override runs before any import	threev0_bootstrap.py;threev0_cli/config.py
+threev0_cli/main.py	source	manual	CLI entrypoint — argparse tree, profile override bootstrap, subcommand wiring	The 3v0 command; _apply_profile_override must run before any import	threev0_bootstrap.py;threev0_cli/config.py
+threev0_cli/config_defaults.py	source	manual	Default config values	Deep-merged under user YAML	threev0_cli/config.py
+threev0_cli/config_migrations.py	source	manual	Config version migrations	Bumps _config_version only when transform needed	threev0_cli/config.py
+threev0_cli/commands.py	source	manual	COMMAND_REGISTRY — canonical slash commands (CommandDef)	Single source: CLI, gateway, Telegram menu, Slack map, autocomplete	cli.py;gateway/run.py;gateway/slash_commands.py
+threev0_cli/config.py	source	manual	DEFAULT_CONFIG schema + loaders (load_config, migrations, OPTIONAL_ENV_VARS)	The config.yaml contract; non-secret settings live here, not .env	threev0_cli/config_defaults.py;threev0_cli/config_migrations.py
+threev0_cli/config_defaults.py	source	manual	Default config values	Deep-merged under user YAML	threev0_cli/config.py
+threev0_cli/config_migrations.py	source	manual	Config version migrations	Bumps _config_version only when a transform is needed	threev0_cli/config.py
+threev0_cli/commands.py	source	manual	COMMAND_REGISTRY — canonical slash commands (CommandDef)	Single source: CLI, gateway, Telegram menu, Slack map, autocomplete	cli.py;gateway/run.py;gateway/slash_commands.py
+threev0_cli/skin_engine.py	source	manual	Skin system — built-in + user YAML skins, data-driven CLI theming	Skins are pure data; no code per skin	threev0_cli/colors.py;agent/display.py
+threev0_cli/plugins.py	source	manual	PluginManager — discovery of ~/.3V0/plugins, repo plugins, pip entry points	Ships register(ctx) hooks + register_tool + register_cli_command	plugins/;tools/registry.py
+threev0_cli/web_server.py	source	manual	Dashboard web server + /api/pty WebSocket endpoint (embedded 3v0 --tui)	Serves 3v0 dashboard; the PTY tunnel is the chat surface bridge	threev0_cli/pty_bridge.py;web/;ui-tui/
+threev0_cli/pty_bridge.py	source	manual	PTY bridge — spawns 3v0 --tui for the dashboard terminal pane	AUTH via ephemeral _SESSION_TOKEN; POSIX PTY only	threev0_cli/web_server.py;ui-tui/
+threev0_cli/tools_config.py	source	manual	3v0 tools curses UI	The toolset enable/disable picker (curses, per project law)	threev0_cli/curses_ui.py;toolsets.py
+threev0_cli/curses_ui.py	source	manual	Shared curses menu machinery	Every interactive menu must be built here	threev0_cli/tools_config.py
+threev0_cli/banner.py	source	manual	Startup banner rendering	Branding + build info	threev0_cli/skin_engine.py;assets/banner.png
+threev0_cli/completion.py	source	manual	Slash command + path autocomplete	CLI input UX	threev0_cli/commands.py
+threev0_cli/checkpoints.py	source	manual	CLI-side checkpoint integration	Resume-after-crash in the CLI	tools/checkpoint_manager.py
+threev0_cli/cron.py	source	manual	3v0 cron subcommand	CLI surface for cron/jobs.py	cron/jobs.py;threev0_cli/commands.py
+threev0_cli/auth.py	source	manual	Auth flows (login/logout, providers)	Account surface	threev0_cli/auth_commands.py
+threev0_cli/claw.py	source	manual	Claw — capture/alt-input mode	Advanced input modes	cli.py
+threev0_cli/console_engine.py	source	manual	Console abstraction layer	Portable output	threev0_cli/cli_output.py
+threev0_cli/clipboard.py	source	manual	Clipboard integration	Paste UX	cli.py
+threev0_cli/bundles.py	source	manual	Bundle management (skill/skin bundles)	Install surface	tools/skills_hub.py
+threev0_cli/backup.py	source	manual	3v0 backup subcommand	State export	safety: threev0_state_portability.py
+cron/jobs.py	source	manual	Job store — SQLite-backed cron jobs (schedules, skills, context_from, workdir)	The agent's own scheduler; 3-minute hard interrupt invariant	threev0_cli/cron.py;tools/cronjob_tools.py
 cron/scheduler.py	source	manual	Scheduler tick loop (lock-guarded)	Runs inside the gateway process; .tick.lock prevents duplicates	cron/jobs.py
 cron/scheduler_provider.py	source	manual	Pluggable scheduler backends (system/provider cron)	Alternative runtimes: system cron, managed providers	cron/scheduler.py;plugins/cron_providers/
 cron/executions.py	source	manual	Execution ledger for cron runs	Audit of what fired	run: cron/monitor.py
 cron/suggestions.py	source	manual	Cron job suggestions (natural-language->schedule)	UX helper	for: cron/suggestion_catalog.py
 cron/blueprint_catalog.py	source	manual	Blueprint jobs catalog (well-known scheduled tasks)	One-shot canonical jobs	4: cron/scheduler.py;cron/jobs.py
-cron/lifecycle_guard.py	source	manual	Cron job lifecycle guards (pause/resume rules)	Policy enforcement	: cron/jobs.py;ev0_cli/cron.py
+cron/lifecycle_guard.py	source	manual	Cron job lifecycle guards (pause/resume rules)	Policy enforcement	: cron/jobs.py;threev0_cli/cron.py
 cron/monitor.py	source	manual	Cron monitoring surfaces	Observability for jobs	cron/executions.py
 cron/notepad.py	source	manual	Cron notepad — per-job notes	Context persistence	for jobs: cron/jobs.py
-plugins/__init__.py	source	manual	Plugin package marker	Discovery root	ev0_cli/plugins.py
+plugins/__init__.py	source	manual	Plugin package marker	Discovery root	threev0_cli/plugins.py
 plugins/memory	source	manual	Memory-provider plugins (honcho, mem0, supermemory, byterover, hindsight, holographic, openviking, retaindb)	Closed in-tree set; new backends ship as standalone repos	agent/memory_provider.py;agent/memory_manager.py
 plugins/memory/honcho	source	manual	Honcho memory backend	Memory provider	plugins/memory/mem0;agent/memory_provider.py
 plugins/memory/mem0	source	manual	Mem0 memory backend	Memory provider	agent/memory_provider.py
 plugins/model-providers	source	manual	Inference backend plugins (openrouter, anthropic, gmi, deepseek, nvidia, ...)	Lazy discovery via providers.register_provider; user plugins override bundled	plugins/model-providers/openrouter;providers/__init__.py
 plugins/platforms	source	manual	Optional platform adapters that ship as plugins (irc, teams, ...)	Plugin-based adapters use the same ABCs as gateway/platforms	gateway/platform_registry.py;plugins/platforms/feishu/adapter.py
-plugins/kanban	source	manual	Kanban board plugin (dashboard web UI + systemd dispatcher unit)	Multi-agent work queue; board is the hard isolation boundary	ev0_cli/kanban.py;tools/kanban_tools.py
+plugins/kanban	source	manual	Kanban board plugin (dashboard web UI + systemd dispatcher unit)	Multi-agent work queue; board is the hard isolation boundary	threev0_cli/kanban.py;tools/kanban_tools.py
 plugins/observability	source	manual	Metrics/traces/logs plugin	Standalone observability surface	agent/monitoring
 plugins/context_engine	source	manual	Context-engine provider plugins	Plug into agent/context_engine.py	agent/context_engine.py
 plugins/image_gen	source	manual	Image-generation provider plugins	Plug into agent/image_gen_provider.py	tools/image_generation_tool.py
@@ -349,9 +349,9 @@ optional-skills/dogfood	source	manual	Dogfooding skills	Internal testing	optiona
 optional-skills/software-development	source	manual	Software-development skill pack	Optionally installed	skills/software-development
 providers/base.py	source	manual	Provider ABC — base contract for model-provider plugins	The seam implemented by every provider plugin	plugins/model-providers/;providers/__init__.py
 providers/__init__.py	source	manual	Provider registry + lazy discovery (bundled, user, legacy)	Lazy separate discovery; user plugins override bundled (last-writer-wins)	plugins/model-providers/
-native/fts5_cjk	source	manual	SQLite FTS5 CJK tokenizer native module	Asian-language tokenization for FTS5 search	ev0_state_search.py;3v0/core/retrieval_fts.py
+native/fts5_cjk	source	manual	SQLite FTS5 CJK tokenizer native module	Asian-language tokenization for FTS5 search	threev0_state_search.py;3v0/core/retrieval_fts.py
 locales	source	manual	i18n YAML locales (af..zh)	for multilingual messaging surfaces	agent/i18n.py
-assets/banner.png	data	manual	Banner artwork for CLI startup	Branding	ev0_cli/banner.py
+assets/banner.png	data	manual	Banner artwork for CLI startup	Branding	threev0_cli/banner.py
 contributors	source	manual	Contributor records (emails/ + README)	Attribution and contributor credit	tools/skill_provenance.py;scripts/add_contributor.py
 sustainability/fiverr	source	manual	Fiverr-related sustainability records	Cost governance lore	SUSTAINABILITY.md;3v0/TOKEN_EFFICIENCY.md
 sustainability/wallet.md	doc	manual	Sustainability wallet ledger	Spend governance	SUSTAINABILITY.md
@@ -363,10 +363,10 @@ apps/shared	source	manual	Framework-agnostic shared package (@3v0/shared) — Js
 apps/bootstrap-installer	source	manual	Bootstrap/installer assets for the desktop app	Distribution	apps/desktop
 ui-tui	source	manual	Ink (React) terminal UI — 3v0 --tui; Node frontend of the TUI process model	The full TUI replacement for classic CLI; TS owns the screen, Python owns sessions	ui-tui/src;tui_gateway/;apps/desktop
 ui-tui/src	source	manual	TUI source (entry.tsx, app.tsx, gatewayClient.ts + components/hooks/lib)	The screen-side implementation	ui-tui/packages;tui_gateway/server.py
-ui-tui/packages	source	manual	Shared JS packages for the TUI (ev0-ink etc.)	Reusable UI kit	tui_gateway/
+ui-tui/packages	source	manual	Shared JS packages for the TUI (3v0-ink etc.)	Reusable UI kit	tui_gateway/
 ui-tui/scripts	source	manual	TUI build/dev scripts	Tooling for the Ink app	tui_gateway/
 tui_gateway	source	manual	Python JSON-RPC backend for the TUI + desktop (server.py catalog: methods/events)	The other half of the process model; slash catalog + completions live here	ui-tui/src;apps/shared
-web	source	manual	Dashboard frontend (React + Vite) — embedding the real 3v0 --tui via /api/pty	Complements, never re-implements, the chat surface	ev0_cli/web_server.py;apps/shared;ui-tui/
+web	source	manual	Dashboard frontend (React + Vite) — embedding the real 3v0 --tui via /api/pty	Complements, never re-implements, the chat surface	threev0_cli/web_server.py;apps/shared;ui-tui/
 website	source	manual	Docusaurus docs site	Public documentation	website/docs;docs/
 website/docs	source	manual	Docusaurus documentation content (user guides, developer guides)	The canonical human docs	tooling: docs/
 website/docusaurus.config.ts	source	manual	Docusaurus config	Site build config	website/sidebars.ts;website/static
@@ -389,7 +389,7 @@ docs/billing-lifecycle.md	doc	manual	Billing lifecycle doc	Account/billing	agent
 docs/streaming-tts.md	doc	manual	Streaming TTS doc	Voice streaming	tools/tts_streaming.py
 docs/micro-compaction.md	doc	manual	Micro-compaction design	Context compaction rationale	scripts/micro_compaction_report.py
 docs/rca-ssl-cacert-post-git-pull.md	doc	manual	RCA: SSL CA certs after git pull	Postmortem lesson	tests/gateway/
-acp_adapter	source	manual	ACP server (VS Code / Zed / JetBrains integration)	Editor integration surface	ui-tui/;ev0_cli/auth.py? no: tools/active: registry
+acp_adapter	source	manual	ACP server (VS Code / Zed / JetBrains integration)	Editor integration surface	ui-tui/;threev0_cli/auth.py? no: tools/active: registry
 tests/conformance	source	manual	Conformance test suite (protocol conformance)	Contract tests for wire behaviors	conformance vectors: scripts/generate_conformance_vectors.py
 tests/e2e	source	manual	End-to-end test suite (real runtime)	Full-path validation	tests/integration
 tests/integration	source	manual	Integration tests	Cross-module paths	tests/e2e
@@ -416,15 +416,15 @@ optional-mcps	source	manual	Optional MCP server definitions	Expands the MCP cata
 tests/agent	source	manual	Agent-level test suites (loop, memory, adapters)	Task coverage	agent/
 tests/gateway	source	manual	Gateway test suites (runner, platforms, authz)	Messaging coverage	gateway/
 tests/cli	source	manual	CLI test suites	CLI coverage	cli.py
-tests/ev0_cli	source	manual	ev0_cli test suites (config, commands, profiles)	Config/command coverage	ev0_cli/
+tests/threev0_cli	source	manual	threev0_cli test suites (config, commands, profiles)	Config/command coverage	threev0_cli/
 tests/run_agent	source	manual	run_agent/AIAgent test suites	Loop coverage	run_agent.py
 tests/skills	source	manual	Skill test suites (SKILL standards)	Skill authoring enforcement	tools/skill_linter.py
 tests/plugins	source	manual	Plugin test suites	Plugin surfaces	plugins/
 tests/providers	source	manual	Provider test suites	Model-provider coverage	plugins/model-providers/
-tests/state	source	manual	Session-state test suites	ev0_state coverage	ev0_state.py
+tests/state	source	manual	Session-state test suites	threev0_state coverage	threev0_state.py
 tests/cron	source	manual	Cron test suites	Scheduler coverage	cron/
 tests/computer_use	source	manual	Computer-use test suites	Desktop automation coverage	tools/computer_use/
-tests/dashboard	source	manual	Dashboard test suites	Web dashboard coverage	ev0_cli/web_server.py
+tests/dashboard	source	manual	Dashboard test suites	Web dashboard coverage	threev0_cli/web_server.py
 tests/acp	source	manual	ACP adapter test suites	Editor integration coverage	acp_adapter/
 tests/acp_adapter	source	manual	ACP adapter tests (second tree)	Editor integration coverage	acp_adapter/
 tests/docker	source	manual	Docker-specific tests	Containerized paths	docker/
@@ -445,17 +445,17 @@ wiki/SCHEMA.md	doc	manual	The wiki maintenance contract — invariant, artifacts
 wiki/log.md	doc	manual	Append-only change log for the wiki itself	Audit trail of wiki schema/coverage changes	wiki/SCHEMA.md
 wiki/README.md	doc	manual	One-paragraph orientation to the wiki	Fast entry for humans	wiki/index.md
 wiki/areas/_intro_CORE.md	doc	manual	Hand-written CORE area narrative, prepended to areas/CORE.md	Human-owned narrative survives regenerated tables	scripts/build_wiki.py
-3v0/VERSION	doc	manual	Single-sourced version; release tooling reads it	Keeps the body version in one place for sync/release	pyproject.toml;ev0_cli/__init__.py;3v0/scripts/sync.py
+3v0/VERSION	doc	manual	Single-sourced version; release tooling reads it	Keeps the body version in one place for sync/release	pyproject.toml;threev0_cli/__init__.py;3v0/scripts/sync.py
 3v0/scripts/redo_tracker.sh	script	manual	Durability bookkeeping for ingest	Tracks redo state so failed ingests can be replayed	3v0/scripts/ingest.py;3v0/scripts/consistency.sh;3v0/scripts/verify.sh
 agent/background_review.py	source	manual	Deferred review queues	Queues background self-review for later review_session runs	agent/curator.py;3v0/scripts/review_session.py
 agent/conversation_compression.py	source	manual	Sibling of context compressor for messaging	Compresses long conversations on the messaging surface	agent/context_compressor.py;agent/conversation_loop.py;agent/native_compaction.py
 cron/executions.py	source	manual	Audit of what fired	Records cron executions for the scheduler's audit trail	cron/scheduler.py;cron/jobs.py;gateway/run.py
 cron/notepad.py	source	manual	Context persistence	Persists scratch context for cron jobs across runs	cron/scheduler.py;agent/memory_manager.py
 cron/suggestions.py	source	manual	UX helper	Builds suggested cron-job prompts for interactive setup	cron/scheduler.py;gateway/slash_commands.py
-docs/3v0-kanban-v1-spec.pdf	doc	manual	Kanban contract artifact	Specifies the kanban mode contract	ev0_cli/kanban_db.py;3v0/docs/adr/
+docs/3v0-kanban-v1-spec.pdf	doc	manual	Kanban contract artifact	Specifies the kanban mode contract	threev0_cli/kanban_db.py;3v0/docs/adr/
 docs/ADR.md	doc	manual	Design rationale ledger	Records architectural decisions for the body's evolution	3v0/docs/adr/;AGENTS.md
 gateway/cgroup_cleanup.py	source	manual	Leak control	Cleans up cgroup/process leftovers on gateway stop	gateway/run.py
-gateway/code_skew.py	source	manual	Mixed-version fleet safety	Detects version drift between gateway processes	gateway/run.py;ev0_cli/update_cmd.py;ev0_constants.py
+gateway/code_skew.py	source	manual	Mixed-version fleet safety	Detects version drift between gateway processes	gateway/run.py;threev0_cli/update_cmd.py;threev0_constants.py
 tools/clarify_tool.py	source	manual	Human-in-the-loop	Lets the agent ask the operator a bounded-choice question	agent/tool_executor.py;tools/patch_parser.py
 tools/homeassistant_tool.py	source	manual	Smart-home automation	Drives Home Assistant entities from tools	plugins/platforms/homeassistant/;providers/
 tools/patch_parser.py	source	manual	The patch tool's engine	Parses V4A patches for the patch tool	agent/tool_executor.py

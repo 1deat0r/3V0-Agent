@@ -7,14 +7,14 @@ Protocol: reads JSON lines from stdin {id, command}, writes {id, ok, output|erro
 # from shadowing 3V0's own top-level modules.  This worker is spawned as
 # ``-m tui_gateway.slash_worker`` and inherits the user's CWD, so the ``import
 # cli`` below would otherwise resolve ``utils`` to a colliding local package
-# and crash the child in a retry loop (issue #51286).  ``ev0_bootstrap``
+# and crash the child in a retry loop (issue #51286).  ``threev0_bootstrap``
 # lives at the repo root, so importing it is safe before the guard runs (its
 # name won't collide with a user package), and it owns the canonical
 # path-hardening logic shared with the other entry points — #51693 added the
 # guard to ``entry.py``/``acp_adapter/entry.py`` but missed this child.
-import ev0_bootstrap
+import threev0_bootstrap
 
-ev0_bootstrap.harden_import_path()
+threev0_bootstrap.harden_import_path()
 
 import argparse
 import contextlib
@@ -65,7 +65,7 @@ def _prepare_slash_worker_runtime() -> None:
     """
     import logging
 
-    from ev0_cli.mcp_startup import (
+    from threev0_cli.mcp_startup import (
         start_background_mcp_discovery,
         wait_for_mcp_discovery,
     )
@@ -179,7 +179,7 @@ def main():
             # the same command boundary as other long-lived gateway processes.
             # trim_memory's shared cooldown coalesces this with nearby activity.
             try:
-                from ev0_cli.mem_trim import trim_memory
+                from threev0_cli.mem_trim import trim_memory
 
                 trim_memory(reason="slash worker command completion")
             except Exception as exc:

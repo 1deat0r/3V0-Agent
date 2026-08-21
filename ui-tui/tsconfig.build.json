@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@ev0/ink": ["src/types/ev0-ink.d.ts"]
+      "@3v0/ink": ["src/types/3v0-ink.d.ts"]
     }
   }
 }

@@ -41,7 +41,7 @@ class TestWriteDenyExactPaths:
         monkeypatch.setenv("EV0_HOME", str(profile_home))
 
         # Sanity check: EV0_HOME does point to the profile dir, not the root.
-        from ev0_constants import get_ev0_home, get_default_ev0_root
+        from threev0_constants import get_ev0_home, get_default_ev0_root
         assert get_ev0_home() == profile_home
         assert get_default_ev0_root() == root
 
@@ -88,7 +88,7 @@ class TestWriteAllowed:
 
 
     def test_ev0_control_files_requested_writable(self):
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
 
         home = get_ev0_home()
         for name in ["auth.json", "config.yaml", "webhook_subscriptions.json"]:

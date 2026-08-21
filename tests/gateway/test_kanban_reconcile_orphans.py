@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from ev0_cli import kanban_db as kb
+from threev0_cli import kanban_db as kb
 
 
 @pytest.fixture

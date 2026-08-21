@@ -11,7 +11,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Any, Callable
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class DiscordRecoveryStore:
             return default
 
     def _initialize(self, conn: sqlite3.Connection) -> None:
-        from ev0_state import apply_wal_with_fallback
+        from threev0_state import apply_wal_with_fallback
 
         apply_wal_with_fallback(conn, db_label="discord_recovery.db")
         conn.execute("""

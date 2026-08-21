@@ -16,10 +16,10 @@ Verified barrier map (tested, not assumed):
 | `.env` / `.env.example` | **YES** | no barrier — dotenv-style files accept any name |
 | File names, package.json names, git paths | **YES** | no grammar rule outside Python identifiers |
 | POSIX shell `export 3V0_X=x` | **NO** | `export: not a valid identifier` — use `env VAR=x cmd` instead |
-| Python import statement `import 3v0_cli` | **NO** | `SyntaxError: invalid decimal literal` — identifiers can't start with a digit. Rename to a valid identifier (`threev0_cli`) instead |
+| Python import statement `import 3v0_cli` | **NO** | `SyntaxError: invalid decimal literal` — identifiers can't start with a digit. Rename to a valid identifier (`threthreev0_cli`) instead |
 
-Conclusion: the old-name residue (`EV0_*` env vars, `ev0_cli` package,
-`ev0_logging.py`, `ev0-ink`, etc.) is **not** a permanent exception — it is
+Conclusion: the old-name residue (`EV0_*` env vars, `threev0_cli` package,
+`threev0_logging.py`, `3v0-ink`, etc.) is **not** a permanent exception — it is
 under active migration. Only two constraints survive:
 
 1. Python identifiers must not start with a digit → package/module names use
@@ -34,9 +34,9 @@ under active migration. Only two constraints survive:
   `THREEV0_*` units stay (valid spelling for systemd) and Python resolves
   `3V0_*` first, `THREEV0_*` second, `EV0_*` third (read-compat fallback
   removed once Phase E lands: no production path reads EV0_*).
-- **Phase P (import package):** `ev0_cli/` → `threev0_cli/` (and
-  `ev0_bootstrap.py`, `ev0_logging.py`, `ev0_state*.py`,
-  `ui-tui/packages/ev0-ink/` similarly), mechanical import rewrites across
+- **Phase P (import package):** `threev0_cli/` → `threthreev0_cli/` (and
+  `threev0_bootstrap.py`, `threev0_logging.py`, `threev0_state*.py`,
+  `ui-tui/packages/3v0-ink/` similarly), mechanical import rewrites across
   ~749 files / 6,514 import sites, gated by the canonical test suite.
 - **Phase R (remainder):** residual `ev0` in comments/history/allowlists —
   scrubbed or declared with a written justification.
@@ -47,7 +47,7 @@ change scheduled after the runtime's next restart.
 
 ## Consequences
 
-- New code: use `3V0_*` env vars; import from `threev0_cli` after Phase P.
+- New code: use `3V0_*` env vars; import from `threthreev0_cli` after Phase P.
 - The previous "declared exceptions" section of this ADR is **retired** —
   it overstated the barrier and treated inertia as a constraint.
 - `3v0/data/memory.db` old-name bytes remain classified as history (session

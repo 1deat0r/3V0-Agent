@@ -162,7 +162,7 @@ _SECRET_SUBSTRINGS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL",
                       "CREDS", "BEARER", "APIKEY")
 
 # Operational EV0_* vars the child legitimately needs by exact name — these
-# are non-secret runtime-location flags (the same set ev0_cli treats as the
+# are non-secret runtime-location flags (the same set threev0_cli treats as the
 # runtime location) that repo-root modules a sandbox script imports may read at
 # import time.  None match _SECRET_SUBSTRINGS.
 _EV0_CHILD_ALLOWED = frozenset({
@@ -1463,7 +1463,7 @@ def execute_code(
             child_env["TZ"] = _tz_name
         child_env.pop("EV0_TIMEZONE", None)
 
-        from ev0_constants import apply_subprocess_home_env
+        from threev0_constants import apply_subprocess_home_env
         apply_subprocess_home_env(child_env)
 
         # Resolve interpreter + CWD based on execute_code mode.
@@ -1490,7 +1490,7 @@ def execute_code(
             _pp_parts.append(_ev0_root)
         elif _child_python not in _external_env_logged:
             # Import behavior changes silently otherwise — surface it (once
-            # per interpreter path) so "import ev0_constants suddenly
+            # per interpreter path) so "import threev0_constants suddenly
             # fails" reports are diagnosable without log spam.
             _external_env_logged.add(_child_python)
             logger.info(
@@ -1796,7 +1796,7 @@ def _load_config() -> dict:
     key cleanly falls back to DEFAULT_EXECUTION_MODE.
     """
     try:
-        from ev0_cli.config import read_raw_config
+        from threev0_cli.config import read_raw_config
 
         cfg = read_raw_config().get("code_execution", {})
         return cfg if isinstance(cfg, dict) else {}

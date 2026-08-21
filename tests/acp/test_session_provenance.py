@@ -10,7 +10,7 @@ import time
 import pytest
 
 from acp_adapter.provenance import build_session_provenance, session_provenance_meta
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 @pytest.fixture()

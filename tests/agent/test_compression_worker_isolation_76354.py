@@ -23,7 +23,7 @@ import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from ev0_state import SessionDB
+from threev0_state import SessionDB
 
 
 def _build_agent_with_db(db: SessionDB, session_id: str, **compressor_kwargs):

@@ -22,7 +22,7 @@ def session_db(tmp_path):
     """Create a real SessionDB for testing."""
     os.environ["EV0_HOME"] = str(tmp_path / ".3V0")
     os.makedirs(tmp_path / ".3V0", exist_ok=True)
-    from ev0_state import SessionDB
+    from threev0_state import SessionDB
     db = SessionDB(db_path=tmp_path / ".3V0" / "test_sessions.db")
     yield db
     db.close()
@@ -153,14 +153,14 @@ class TestBranchCommandDef:
 
     def test_branch_in_registry(self):
         """The branch command should be in the command registry."""
-        from ev0_cli.commands import COMMAND_REGISTRY
+        from threev0_cli.commands import COMMAND_REGISTRY
         names = [c.name for c in COMMAND_REGISTRY]
         assert "branch" in names
 
 
     def test_branch_in_session_category(self):
         """The branch command should be in the Session category."""
-        from ev0_cli.commands import COMMAND_REGISTRY
+        from threev0_cli.commands import COMMAND_REGISTRY
         branch = next(c for c in COMMAND_REGISTRY if c.name == "branch")
         assert branch.category == "Session"
 

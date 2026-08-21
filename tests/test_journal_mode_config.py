@@ -24,26 +24,26 @@ def _configure_mode(monkeypatch: pytest.MonkeyPatch, tmp_path, mode: object) -> 
 
 def _disable_vulnerable_gate(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "ev0_state.is_sqlite_wal_reset_vulnerable",
+        "threev0_state.is_sqlite_wal_reset_vulnerable",
         lambda **kwargs: False,
     )
 
 
 def test_database_journal_mode_has_a_canonical_default():
-    from ev0_cli.config import DEFAULT_CONFIG
+    from threev0_cli.config import DEFAULT_CONFIG
 
     assert DEFAULT_CONFIG["database"]["journal_mode"] == "wal"
 
 
 def test_resolve_journal_mode_uses_real_database_config(monkeypatch, tmp_path):
-    from ev0_state import resolve_journal_mode
+    from threev0_state import resolve_journal_mode
 
     _configure_mode(monkeypatch, tmp_path, "DELETE")
     assert resolve_journal_mode() == "delete"
 
 
 def test_new_nonsecret_ev0_env_override_is_not_exposed(monkeypatch, tmp_path):
-    from ev0_state import resolve_journal_mode
+    from threev0_state import resolve_journal_mode
 
     _configure_mode(monkeypatch, tmp_path, "wal")
     monkeypatch.setenv("EV0_JOURNAL_MODE", "delete")
@@ -52,7 +52,7 @@ def test_new_nonsecret_ev0_env_override_is_not_exposed(monkeypatch, tmp_path):
 
 @pytest.mark.parametrize("value", ["bogus", "truncate", None, 42, {"bad": "shape"}])
 def test_invalid_config_value_falls_back_to_wal(monkeypatch, tmp_path, value):
-    from ev0_state import resolve_journal_mode
+    from threev0_state import resolve_journal_mode
 
     _configure_mode(monkeypatch, tmp_path, value)
     assert resolve_journal_mode() == "wal"
@@ -62,14 +62,14 @@ def test_invalid_config_value_falls_back_to_wal(monkeypatch, tmp_path, value):
 def test_malformed_database_section_falls_back_to_wal(
     monkeypatch, tmp_path, database
 ):
-    from ev0_state import resolve_journal_mode
+    from threev0_state import resolve_journal_mode
 
     _write_config(monkeypatch, tmp_path, {"database": database})
     assert resolve_journal_mode() == "wal"
 
 
 def test_apply_wal_with_fallback_honors_delete_config(monkeypatch, tmp_path):
-    from ev0_state import apply_wal_with_fallback
+    from threev0_state import apply_wal_with_fallback
 
     _configure_mode(monkeypatch, tmp_path, "delete")
     _disable_vulnerable_gate(monkeypatch)
@@ -82,7 +82,7 @@ def test_apply_wal_with_fallback_honors_delete_config(monkeypatch, tmp_path):
 
 
 def test_apply_wal_with_fallback_defaults_to_wal(monkeypatch, tmp_path):
-    from ev0_state import apply_wal_with_fallback
+    from threev0_state import apply_wal_with_fallback
 
     _configure_mode(monkeypatch, tmp_path, "wal")
     _disable_vulnerable_gate(monkeypatch)
@@ -96,11 +96,11 @@ def test_apply_wal_with_fallback_defaults_to_wal(monkeypatch, tmp_path):
 
 def test_configured_delete_validates_vulnerable_sqlite_result(monkeypatch, tmp_path):
     """The safety gate must not report DELETE when SQLite returns MEMORY."""
-    from ev0_state import apply_wal_with_fallback
+    from threev0_state import apply_wal_with_fallback
 
     _configure_mode(monkeypatch, tmp_path, "delete")
     monkeypatch.setattr(
-        "ev0_state.is_sqlite_wal_reset_vulnerable",
+        "threev0_state.is_sqlite_wal_reset_vulnerable",
         lambda **kwargs: True,
     )
     conn = sqlite3.connect(":memory:")
@@ -113,7 +113,7 @@ def test_configured_delete_validates_vulnerable_sqlite_result(monkeypatch, tmp_p
 
 
 def test_configured_delete_never_live_downgrades_existing_wal(monkeypatch, tmp_path):
-    from ev0_state import apply_wal_with_fallback
+    from threev0_state import apply_wal_with_fallback
 
     _configure_mode(monkeypatch, tmp_path, "delete")
     db_path = tmp_path / "existing-wal.db"
@@ -121,7 +121,7 @@ def test_configured_delete_never_live_downgrades_existing_wal(monkeypatch, tmp_p
     try:
         assert conn.execute("PRAGMA journal_mode=WAL").fetchone()[0].lower() == "wal"
         monkeypatch.setattr(
-            "ev0_state.is_sqlite_wal_reset_vulnerable",
+            "threev0_state.is_sqlite_wal_reset_vulnerable",
             lambda **kwargs: True,
         )
         assert apply_wal_with_fallback(conn, db_label="existing-wal.db") == "wal"
@@ -139,8 +139,8 @@ def test_real_db_openers_honor_configured_delete(monkeypatch, tmp_path):
     from cron import executions
     from gateway import delivery_ledger
     from gateway.platforms.api_server import ResponseStore
-    from ev0_cli import kanban_db, projects_db
-    from ev0_state import SessionDB
+    from threev0_cli import kanban_db, projects_db
+    from threev0_state import SessionDB
     from plugins.memory.holographic.store import MemoryStore
     from plugins.platforms.discord.recovery import DiscordRecoveryStore
     from tools import async_delegation

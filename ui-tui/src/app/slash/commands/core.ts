@@ -1,4 +1,4 @@
-import { forceRedraw, type MouseTrackingMode } from '@ev0/ink'
+import { forceRedraw, type MouseTrackingMode } from '@3v0/ink'
 
 import { DASHBOARD_TUI_MODE, NO_CONFIRM_DESTRUCTIVE } from '../../../config/env.js'
 import { dailyFortune, randomFortune } from '../../../content/fortunes.js'

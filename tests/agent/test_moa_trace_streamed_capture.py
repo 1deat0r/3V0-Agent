@@ -28,7 +28,7 @@ def _enable_traces(tmp_path, monkeypatch):
     ev0_home.mkdir()
     monkeypatch.setenv("EV0_HOME", str(ev0_home))
 
-    # save_moa_turn reads config via ev0_cli.config.load_config; stub it to
+    # save_moa_turn reads config via threev0_cli.config.load_config; stub it to
     # return traces-on so the test doesn't depend on a real config file.
     import agent.moa_trace as moa_trace
 
@@ -40,7 +40,7 @@ def _enable_traces(tmp_path, monkeypatch):
     )
     # load_config is imported lazily inside _traces_enabled_and_dir; patch the
     # source module attribute it imports from as well.
-    import ev0_cli.config as cfg
+    import threev0_cli.config as cfg
 
     monkeypatch.setattr(
         cfg, "load_config", lambda: {"moa": {"save_traces": True}}, raising=False

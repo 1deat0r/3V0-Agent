@@ -30,8 +30,8 @@ def curator_env(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
     import importlib
-    import ev0_constants
-    importlib.reload(ev0_constants)
+    import threev0_constants
+    importlib.reload(threev0_constants)
     from agent import curator
     importlib.reload(curator)
     yield curator

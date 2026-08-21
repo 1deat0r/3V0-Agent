@@ -913,7 +913,7 @@ class TestDefaultInteractionDispatch:
         ev0_home = tmp_path / "ev0_home"
         ev0_home.mkdir()
         monkeypatch.setattr(
-            "ev0_constants.get_ev0_home",
+            "threev0_constants.get_ev0_home",
             lambda: ev0_home,
         )
 

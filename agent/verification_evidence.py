@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 
 
 _DB_LOCK = threading.Lock()
@@ -65,7 +65,7 @@ def _db_path() -> Path:
 
 
 def _connect() -> sqlite3.Connection:
-    from ev0_state import apply_wal_with_fallback
+    from threev0_state import apply_wal_with_fallback
 
     path = _db_path()
     path.parent.mkdir(parents=True, exist_ok=True)

@@ -21,15 +21,15 @@ import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 from typing import Any, Dict, List, Optional, Tuple
 from utils import base_url_host_matches, base_url_hostname, normalize_proxy_env_vars
 from agent.secret_scope import get_secret as _get_secret
 
 try:
-    import ev0_cli as _ev0_cli
+    import threev0_cli as _threev0_cli
 
-    _EV0_VERSION = str(_ev0_cli.__version__)
+    _EV0_VERSION = str(_threev0_cli.__version__)
 except Exception:
     _EV0_VERSION = "0.0.0"
 
@@ -39,7 +39,7 @@ def _getenv(name: str, default: str = "") -> str:
 
     Routes through the secret scope (Workstream A): identical to os.getenv
     when multiplexing is off, scope-aware (and fail-closed on an unscoped
-    read) when on. Mirrors the same wrapper in ev0_cli/runtime_provider.py.
+    read) when on. Mirrors the same wrapper in threev0_cli/runtime_provider.py.
     """
     val = _get_secret(name, default)
     return val if val is not None else default
@@ -589,7 +589,7 @@ def _is_nous_portal_endpoint(base_url: str | None) -> bool:
     if base_url_host_matches(base_url or "", "inference-api.nousresearch.com"):
         return True
     try:
-        from ev0_cli.auth import _nous_inference_env_override
+        from threev0_cli.auth import _nous_inference_env_override
 
         override = _nous_inference_env_override()
     except Exception:
@@ -1563,7 +1563,7 @@ def run_ev0_oauth_login_pure() -> Optional[Dict[str, Any]]:
     print()
 
     try:
-        from ev0_cli.auth import _can_open_graphical_browser as _can_open_gui
+        from threev0_cli.auth import _can_open_graphical_browser as _can_open_gui
     except Exception:
         _can_open_gui = lambda: True  # noqa: E731 — degrade to prior behavior
 

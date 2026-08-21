@@ -8,7 +8,7 @@ from tools.delegate_tool import _expand_parent_toolsets
 class TestExpandParentToolsets(unittest.TestCase):
     """Verify _expand_parent_toolsets recognises individual toolsets within composites."""
 
-    def test_composite_ev0_cli_expands_web(self):
+    def test_composite_threev0_cli_expands_web(self):
         """3v0-cli includes web_search/web_extract → 'web' should be in expansion."""
         expanded = _expand_parent_toolsets({"3v0-cli"})
         self.assertIn("web", expanded)

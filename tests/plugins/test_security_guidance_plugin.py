@@ -272,10 +272,10 @@ class TestPluginDiscovery:
 
         # Wipe any cached plugin state from earlier tests in this worker.
         for k in list(sys.modules):
-            if k.startswith(("ev0_plugins", "ev0_cli.plugins")):
+            if k.startswith(("ev0_plugins", "threev0_cli.plugins")):
                 del sys.modules[k]
 
-        from ev0_cli.plugins import _ensure_plugins_discovered
+        from threev0_cli.plugins import _ensure_plugins_discovered
 
         mgr = _ensure_plugins_discovered(force=True)
         loaded = set()

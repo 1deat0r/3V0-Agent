@@ -1,4 +1,4 @@
-import { Box, Text } from '@ev0/ink'
+import { Box, Text } from '@3v0/ink'
 import { memo, type ReactNode, useEffect, useRef, useState } from 'react'
 
 import { sparkRows } from '../lib/charts.js'

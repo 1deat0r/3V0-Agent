@@ -592,7 +592,7 @@ class SupermemoryMemoryProvider(MemoryProvider):
         _save_supermemory_config(sanitized, ev0_home)
 
     def get_status_config(self, provider_config: dict) -> dict:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
 
         del provider_config
         ev0_home = str(get_ev0_home())
@@ -603,8 +603,8 @@ class SupermemoryMemoryProvider(MemoryProvider):
     def post_setup(self, ev0_home: str, config: dict) -> None:
         from pathlib import Path
 
-        from ev0_cli.config import save_config
-        from ev0_cli.memory_setup import _prompt, _write_env_vars
+        from threev0_cli.config import save_config
+        from threev0_cli.memory_setup import _prompt, _write_env_vars
 
         print("\n  Configuring supermemory:\n")
         print(f"  Get your API key at {_API_KEY_URL}\n")
@@ -651,7 +651,7 @@ class SupermemoryMemoryProvider(MemoryProvider):
         print("\n  Start a new session to activate.\n")
 
     def initialize(self, session_id: str, **kwargs) -> None:
-        from ev0_constants import get_ev0_home
+        from threev0_constants import get_ev0_home
         self._ev0_home = kwargs.get("ev0_home") or str(get_ev0_home())
         self._session_id = session_id
         self._turn_count = 0

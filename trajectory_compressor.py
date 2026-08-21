@@ -45,11 +45,11 @@ from utils import base_url_host_matches, base_url_hostname
 import fire
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeElapsedColumn, TimeRemainingColumn
 from rich.console import Console
-from ev0_constants import OPENROUTER_BASE_URL, get_ev0_home
+from threev0_constants import OPENROUTER_BASE_URL, get_ev0_home
 from agent.retry_utils import jittered_backoff
 
 # Load .env from EV0_HOME first, then project root as a dev fallback.
-from ev0_cli.env_loader import load_ev0_dotenv
+from threev0_cli.env_loader import load_ev0_dotenv
 
 _ev0_home = get_ev0_home()
 _project_env = Path(__file__).parent / ".env"

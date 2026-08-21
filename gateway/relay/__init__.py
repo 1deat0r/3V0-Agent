@@ -303,7 +303,7 @@ def relay_display_name() -> Optional[str]:
     value = os.environ.get("GATEWAY_RELAY_DISPLAY_NAME", "").strip()
     if not value:
         try:
-            from ev0_cli.skin_engine import get_active_skin  # late import: boot-safe
+            from threev0_cli.skin_engine import get_active_skin  # late import: boot-safe
 
             value = str(
                 get_active_skin().get_branding("agent_name", "") or ""
@@ -562,7 +562,7 @@ def _resolve_relay_identity_token() -> str:
 
     if not token_url:
         # Mode 2 — Nous Portal (default, unchanged behaviour).
-        from ev0_cli.auth import resolve_nous_access_token
+        from threev0_cli.auth import resolve_nous_access_token
 
         return resolve_nous_access_token()
 

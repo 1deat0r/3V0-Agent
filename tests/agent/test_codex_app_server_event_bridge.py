@@ -63,7 +63,7 @@ class TestCodexItemToToolName:
             {"type": "dynamicToolCall", "tool": "web_search"}
         ) == "web_search"
 
-    def test_ev0_tools_mcp_server_emits_bare_tool_name(self):
+    def test_threev0_tools_mcp_server_emits_bare_tool_name(self):
         """The 3v0-tools MCP server wraps 3V0' own tools for codex;
         the inner dispatch subprocess can't fire native progress events,
         so the codex-level event IS the display event — shown without the

@@ -201,7 +201,7 @@ def _send_imap_id(imap: "imaplib.IMAP4") -> None:
     """
     try:
         try:
-            from ev0_cli import __version__ as _ev0_version
+            from threev0_cli import __version__ as _ev0_version
         except Exception:  # noqa: BLE001 — keep ID best-effort if import fails
             _ev0_version = "0"
         imap.xatom(
@@ -1419,7 +1419,7 @@ class EmailAdapter(BasePlatformAdapter):
 # bundled plugin. register() exposes the platform via the registry, replacing
 # the Platform.EMAIL elif in gateway/run.py, the _PLATFORM_CONNECTED_CHECKERS
 # entry in gateway/config.py, the _PLATFORMS["email"] static dict in
-# ev0_cli/gateway.py, and the _send_email dispatch in
+# threev0_cli/gateway.py, and the _send_email dispatch in
 # tools/send_message_tool.py. EMAIL_* env→PlatformConfig seeding stays in core.
 # ──────────────────────────────────────────────────────────────────────────
 
@@ -1480,7 +1480,7 @@ def _is_connected(config) -> bool:
     extra = getattr(config, "extra", {}) or {}
     if extra.get("address"):
         return True
-    import ev0_cli.gateway as gateway_mod
+    import threev0_cli.gateway as gateway_mod
     return bool((gateway_mod.get_env_value("EMAIL_ADDRESS") or "").strip())
 
 

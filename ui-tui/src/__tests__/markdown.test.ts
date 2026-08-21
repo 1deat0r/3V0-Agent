@@ -1,6 +1,6 @@
 import { PassThrough } from 'stream'
 
-import { Box, renderSync } from '@ev0/ink'
+import { Box, renderSync } from '@3v0/ink'
 import chalk from 'chalk'
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -325,7 +325,7 @@ describe('Md link labels', () => {
 
 describe('renderTable CJK width alignment', () => {
   it('column starts share the same display offset across CJK rows', async () => {
-    const { stringWidth } = await import('@ev0/ink')
+    const { stringWidth } = await import('@3v0/ink')
 
     const md = [
       '| 配置 | Config | 状态 |',

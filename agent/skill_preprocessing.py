@@ -5,7 +5,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from ev0_cli._subprocess_compat import IS_WINDOWS, windows_hide_flags
+from threev0_cli._subprocess_compat import IS_WINDOWS, windows_hide_flags
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ _INLINE_SHELL_MAX_OUTPUT = 4000
 def load_skills_config() -> dict:
     """Load the ``skills`` section of config.yaml (best-effort)."""
     try:
-        from ev0_cli.config import load_config_readonly
+        from threev0_cli.config import load_config_readonly
 
         cfg = load_config_readonly() or {}
         skills_cfg = cfg.get("skills")

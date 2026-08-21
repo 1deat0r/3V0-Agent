@@ -11,7 +11,7 @@ import sys
 import pytest
 import uvicorn
 
-from ev0_cli import web_server
+from threev0_cli import web_server
 
 
 def _stub_uvicorn(monkeypatch):

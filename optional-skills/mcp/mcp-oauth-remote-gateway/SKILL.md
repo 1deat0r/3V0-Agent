@@ -139,7 +139,7 @@ built-in flow won't work.
 ### 2. Find EV0_HOME and the config path
 
 ```bash
-EV0_HOME=$(python3 -c 'from ev0_constants import get_ev0_home; print(get_ev0_home())')
+EV0_HOME=$(python3 -c 'from threev0_constants import get_ev0_home; print(get_ev0_home())')
 echo "config: $EV0_HOME/config.yaml"
 echo "tokens: $EV0_HOME/mcp-tokens/"
 ```

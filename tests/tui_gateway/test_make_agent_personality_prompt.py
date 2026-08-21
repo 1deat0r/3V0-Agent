@@ -38,7 +38,7 @@ def _call_make_agent(cfg):
         )
         stack.enter_context(
             patch(
-                "ev0_cli.runtime_provider.resolve_runtime_provider",
+                "threev0_cli.runtime_provider.resolve_runtime_provider",
                 return_value=_runtime(),
             )
         )

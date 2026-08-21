@@ -1,7 +1,7 @@
 # Themes / Skins — Author a 3V0 Color Theme
 
 Author a 3V0 **skin** — one YAML file that themes the CLI, the TUI, and the
-desktop GUI at once. The skin engine (`ev0_cli/skin_engine.py`) resolves the
+desktop GUI at once. The skin engine (`threev0_cli/skin_engine.py`) resolves the
 active skin and the gateway pushes it to every surface, so a file dropped in
 `~/.3V0/skins/` is the theme analogue of a plugin: no code, all surfaces. This
 skill covers writing a good skin and activating it; it does not build GUI theme
@@ -57,7 +57,7 @@ Note the sharing: `ui_accent` colors tool markers **and** headings/links/chevron
 so to recolor *only* tool calls (the classic "change the gold `●`") set `ui_tool`.
 `branding` (`agent_name`, `prompt_symbol`, `welcome`, `goodbye`, `help_header`),
 `spinner`, and `tool_prefix` are optional flavor; full schema in
-`ev0_cli/skin_engine.py`.
+`threev0_cli/skin_engine.py`.
 
 ## Procedure
 

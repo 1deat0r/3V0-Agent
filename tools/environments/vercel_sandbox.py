@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 from tools.environments.base import (
     BaseEnvironment,
     _ThreadedProcessHandle,

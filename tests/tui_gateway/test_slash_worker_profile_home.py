@@ -6,11 +6,11 @@ from unittest.mock import MagicMock, patch
 
 def test_slash_worker_accepts_profile_home():
     """_SlashWorker.__init__ accepts profile_home parameter."""
-    # ev0_state evaluates get_ev0_home() / "state.db" at import time, so
+    # threev0_state evaluates get_ev0_home() / "state.db" at import time, so
     # the mock must return a Path (a bare str raises TypeError under per-file
     # subprocess isolation).
     with patch.dict("sys.modules", {
-        "ev0_constants": MagicMock(
+        "threev0_constants": MagicMock(
             get_ev0_home=MagicMock(return_value=Path("/tmp/ev0_test")),
         ),
     }):

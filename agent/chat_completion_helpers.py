@@ -27,8 +27,8 @@ import uuid
 from types import SimpleNamespace
 from typing import Any, Dict, Optional
 
-from ev0_cli.timeouts import get_provider_request_timeout, get_provider_stale_timeout
-from ev0_constants import PARTIAL_STREAM_STUB_ID, FINISH_REASON_LENGTH
+from threev0_cli.timeouts import get_provider_request_timeout, get_provider_stale_timeout
+from threev0_constants import PARTIAL_STREAM_STUB_ID, FINISH_REASON_LENGTH
 from agent.error_classifier import (
     FailoverReason,
     PROVIDER_STREAM_NON_JSON_ERROR_CODE,
@@ -2409,7 +2409,7 @@ def _fallback_entry_unavailable_without_network(agent, fb: dict) -> Optional[str
     if fb_provider != "nous":
         return None
     try:
-        from ev0_cli.auth import get_provider_auth_state
+        from threev0_cli.auth import get_provider_auth_state
 
         state = get_provider_auth_state("nous") or {}
     except Exception as exc:
@@ -2534,7 +2534,7 @@ def try_activate_fallback(agent, reason: "FailoverReason | None" = None) -> bool
         # Pass base_url and api_key from fallback config so custom
         # endpoints (e.g. Ollama Cloud) resolve correctly instead of
         # falling through to OpenRouter defaults.
-        from ev0_cli.fallback_config import resolve_entry_api_key
+        from threev0_cli.fallback_config import resolve_entry_api_key
 
         fb_base_url_hint = (fb.get("base_url") or "").strip() or None
         fb_api_key_hint = resolve_entry_api_key(fb)
@@ -2583,7 +2583,7 @@ def try_activate_fallback(agent, reason: "FailoverReason | None" = None) -> bool
             unavailable.add(fb_key)
             return agent._try_activate_fallback(reason)  # try next in chain
         try:
-            from ev0_cli.model_normalize import normalize_model_for_provider
+            from threev0_cli.model_normalize import normalize_model_for_provider
 
             fb_model = normalize_model_for_provider(fb_model, fb_provider)
         except Exception as _norm_err:
@@ -2607,7 +2607,7 @@ def try_activate_fallback(agent, reason: "FailoverReason | None" = None) -> bool
                 # resolve_provider_client still returns an OpenAI client for
                 # Nous; the anthropic_messages branch below rebuilds the native
                 # client from that credential + base_url.
-                from ev0_cli.providers import nous_api_mode
+                from threev0_cli.providers import nous_api_mode
 
                 fb_api_mode = nous_api_mode(fb_model)
             elif (
@@ -2789,8 +2789,8 @@ def try_activate_fallback(agent, reason: "FailoverReason | None" = None) -> bool
         # (YAML boolean False = disabled). Wrapped in try/except because a
         # config load failure must not kill the swap.
         try:
-            from ev0_cli.config import load_config
-            from ev0_constants import resolve_reasoning_config
+            from threev0_cli.config import load_config
+            from threev0_constants import resolve_reasoning_config
 
             agent.reasoning_config = resolve_reasoning_config(
                 load_config() or {}, agent.model
@@ -5034,7 +5034,7 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
         # env var ``EV0_LOCAL_STREAM_STALE_TIMEOUT`` overrides for escape-hatch.
         _local_default = 900.0
         try:
-            from ev0_cli.config import load_config_readonly
+            from threev0_cli.config import load_config_readonly
 
             _cfg = load_config_readonly()  # read-only consumer — no deepcopy
             _agent_cfg = _cfg.get("agent") if isinstance(_cfg, dict) else None

@@ -225,7 +225,7 @@ def _media_cache_roots() -> list:
     downloaded inbound media and the tools' own URL-download temp dirs. Covers
     the consolidated ``cache/`` layout and the legacy flat directories.
     """
-    from ev0_constants import get_ev0_home
+    from threev0_constants import get_ev0_home
 
     home = get_ev0_home()
     return [

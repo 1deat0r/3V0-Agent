@@ -1,4 +1,4 @@
-"""Session <-> workspace grouping key (ev0_state.workspace_key).
+"""Session <-> workspace grouping key (threev0_state.workspace_key).
 
 The key is what `3v0 sessions list --workspace` groups/filters on. It is a
 coarse workspace identity derived from fields already recorded on sessions
@@ -6,7 +6,7 @@ coarse workspace identity derived from fields already recorded on sessions
 NOT part of the key.
 """
 
-from ev0_state import workspace_key
+from threev0_state import workspace_key
 
 
 def test_repo_root_is_the_key_when_known():

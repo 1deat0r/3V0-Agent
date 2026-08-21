@@ -34,7 +34,7 @@ import threading
 import time
 import urllib.request
 
-from ev0_constants import get_ev0_home
+from threev0_constants import get_ev0_home
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ def _load_security_config() -> dict:
         "tirith_fail_open": True,
     }
     try:
-        from ev0_cli.config import load_config_readonly
+        from threev0_cli.config import load_config_readonly
         cfg = load_config_readonly().get("security", {}) or {}
     except Exception:
         cfg = {}

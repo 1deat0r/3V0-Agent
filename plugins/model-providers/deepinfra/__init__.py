@@ -34,7 +34,7 @@ class _DeepInfraProfile(ProviderProfile):
         if not (get_secret("DEEPINFRA_API_KEY") or "").strip():
             return None
         try:
-            from ev0_cli.models import _fetch_deepinfra_models_by_tag
+            from threev0_cli.models import _fetch_deepinfra_models_by_tag
             items = _fetch_deepinfra_models_by_tag("chat")
         except Exception:
             return None
@@ -71,7 +71,7 @@ deepinfra = _DeepInfraProfile(
     # ``api.deepinfra.com/v1/openai/models?filter=true&sort_by=3v0``.
     default_aux_model="deepseek-ai/DeepSeek-V4-Flash",
     # ``fallback_models`` deliberately empty — the live catalog at
-    # ``ev0_cli/models.py::_fetch_deepinfra_models`` is the source of
+    # ``threev0_cli/models.py::_fetch_deepinfra_models`` is the source of
     # truth. When the live fetch fails (network/DNS), the picker shows
     # no options, which is preferable to silently routing the user to a
     # model that may have been retired upstream.

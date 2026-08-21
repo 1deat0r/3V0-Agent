@@ -80,9 +80,9 @@ class TestCacheFileLocation:
     ):
         # Real path (no _cache_path monkeypatch): EV0_HOME/cache/…, 0o600,
         # matching the discovery-cache precedent in tools/registry.py.
-        import ev0_constants
+        import threev0_constants
 
-        monkeypatch.setattr(ev0_constants, "get_ev0_home", lambda: tmp_path)
+        monkeypatch.setattr(threev0_constants, "get_ev0_home", lambda: tmp_path)
         path = msc._cache_path()
         assert path == tmp_path / "cache" / "mcp_schema_cache.json"
         msc.write_cache_entry("srv", "fp", tools=[], utility_tools=[])

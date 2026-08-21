@@ -20,12 +20,12 @@ Usage:
     python batch_runner.py --dataset_file=data.jsonl --batch_size=10 --run_name=my_run --distribution=image_gen
 """
 
-# IMPORTANT: ev0_bootstrap must be the very first import — UTF-8 stdio
-# on Windows.  No-op on POSIX.  See ev0_bootstrap.py for full rationale.
+# IMPORTANT: threev0_bootstrap must be the very first import — UTF-8 stdio
+# on Windows.  No-op on POSIX.  See threev0_bootstrap.py for full rationale.
 try:
-    import ev0_bootstrap  # noqa: F401
+    import threev0_bootstrap  # noqa: F401
 except ModuleNotFoundError:
-    # Graceful fallback when ev0_bootstrap isn't registered in the venv
+    # Graceful fallback when threev0_bootstrap isn't registered in the venv
     # yet — happens during partial ``3v0 update`` where git-reset landed
     # new code but ``uv pip install -e .`` didn't finish.  Missing bootstrap
     # means UTF-8 stdio setup is skipped on Windows; POSIX is unaffected.
