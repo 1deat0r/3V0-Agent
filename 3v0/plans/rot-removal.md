@@ -108,10 +108,13 @@ in the contaminated batch process — order-dependence was real).
   banner shallow-path + compare-API mocks (3✅), console-script fixture names
   (ev0* → 3v0*), windows-docs honest skip (unvendored website workspace).
 
-**Remaining (≈32 fails):** kanban_notify, lazy_refresh_venv_repair,
-model_switch_context_offload, nous_ev0_non_agentic, model_catalog,
-plugin_runtime_disable_gate, pre_command_hook, update_yes_flag — triage running
-(proc_5995345da02b) → likely env-credential (API keys) / TTY / catalog fetch.
+**Remaining (≈32 fails):** — ALL RESOLVED 2026-08-21. Final canonical rerun:
+**686 files, 6,433 passed, 0 FAILED, 55 skipped** (unvendored-website skips +
+env skips, all with reason). From 82-failure baseline to zero. Fixes:
+nous classifier ev0-family (model_switch.py 2318648240), update_yes_flag +
+lazy_refresh public-remote fakes, model_catalog unvendored skip (ca78ae41aa).
+**P3 shipped:** scripts/rot_scan.py — evidence engine as a tracked guard
+(--strict exit 0 on current state; dead-modules 0, dead-deps 0, artifacts 0).
 
 ## Independent QA (neutral subagent, 2026-08-21)
 Grade: overall PASS_WITH_ISSUES; W1 PASS_WITH_ISSUES, W2 PASS, W3 PASS,
