@@ -12,6 +12,7 @@ import os
 import secrets
 import socket
 import struct
+import time
 from typing import Optional
 from xml.etree import ElementTree as ET
 
@@ -113,7 +114,7 @@ class WXBizMsgCrypt:
 
     def encrypt(self, plaintext: str, nonce: Optional[str] = None, timestamp: Optional[str] = None) -> str:
         nonce = nonce or self._random_nonce()
-        timestamp = timestamp or str(int(__import__("time").time()))
+        timestamp = timestamp or str(int(time.time()))
         encrypt = self._encrypt_bytes(plaintext.encode("utf-8"))
         signature = _sha1_signature(self.token, timestamp, nonce, encrypt)
         root = ET.Element("xml")
