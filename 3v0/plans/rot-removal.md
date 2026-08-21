@@ -112,6 +112,18 @@ in the contaminated batch process — order-dependence was real).
 model_switch_context_offload, nous_ev0_non_agentic, model_catalog,
 plugin_runtime_disable_gate, pre_command_hook, update_yes_flag — triage running
 (proc_5995345da02b) → likely env-credential (API keys) / TTY / catalog fetch.
+
+## Independent QA (neutral subagent, 2026-08-21)
+Grade: overall PASS_WITH_ISSUES; W1 PASS_WITH_ISSUES, W2 PASS, W3 PASS,
+W4 PASS, W5 PASS_WITH_ISSUES. 162/162 fix-cluster tests reproduced; audit
+claims reproduced (20/20 sample, 125/125 frontmatter, improvements exact).
+CORRECTIONS ADOPTED:
+1. On-disk zero-checks must use `rg -ia` (binary-capable); plain `rg
+   --hidden` silently skips memory.db — earlier "on-disk = 0" claims were
+   misleading (binary not scanned).
+2. memory.db re-persist is a GATEWAY-CACHE problem, not a scrub problem:
+   semantic reword committed (f4b0d220eb), durable purge requires a gateway
+   restart.
   1. Install dev/mcp extras in a synced env; re-collect → 15 errors vanish.
   2. Triage the 334 failures: env-credential → mark xfail/skip with reason;
      order-dependent → isolate (fixture scope fixes); real bugs → TDD fix.
