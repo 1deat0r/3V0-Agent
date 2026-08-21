@@ -652,7 +652,7 @@ class SupermemoryMemoryProvider(MemoryProvider):
 
     def initialize(self, session_id: str, **kwargs) -> None:
         from threev0_constants import get_threev0_home
-        self._threev0_home = kwargs.get("ev0_home") or str(get_threev0_home())
+        self._threev0_home = kwargs.get("threev0_home") or kwargs.get("ev0_home") or str(get_threev0_home())
         self._session_id = session_id
         self._turn_count = 0
         self._config = _load_supermemory_config(self._threev0_home)

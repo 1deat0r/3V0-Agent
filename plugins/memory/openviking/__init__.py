@@ -2722,7 +2722,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         self._env_refresh_enabled = True
         self._session_id = session_id
         self._turn_count = 0
-        threev0_home = str(kwargs.get("ev0_home") or "").strip()
+        threev0_home = str(kwargs.get("threev0_home") or kwargs.get("ev0_home") or "").strip()
         if not threev0_home:
             try:
                 from threev0_constants import get_threev0_home

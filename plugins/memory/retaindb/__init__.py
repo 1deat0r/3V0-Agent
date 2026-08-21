@@ -579,7 +579,7 @@ class RetainDBMemoryProvider(MemoryProvider):
         if explicit:
             project = explicit
         else:
-            threev0_home = str(kwargs.get("ev0_home", ""))
+            threev0_home = str(kwargs.get("threev0_home") or kwargs.get("ev0_home", ""))
             profile_name = os.path.basename(threev0_home) if threev0_home else ""
             project = f"3v0-{profile_name}" if (profile_name and profile_name not in {"", ".3V0"}) else "default"
 
