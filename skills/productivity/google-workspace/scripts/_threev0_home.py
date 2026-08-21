@@ -2,7 +2,7 @@
 
 Skill scripts may run outside the 3V0 process (e.g. system Python,
 nix env, CI) where ``threev0_constants`` is not importable.  This module
-provides the same ``get_ev0_home()`` and ``display_threev0_home()``
+provides the same ``get_threev0_home()`` and ``display_threev0_home()``
 contracts as ``threev0_constants`` without requiring it on ``sys.path``.
 
 When ``threev0_constants`` IS available it is used directly so that any
@@ -27,7 +27,7 @@ except (ModuleNotFoundError, ImportError):
     def get_threev0_home() -> Path:
         """Return the 3V0 home directory (default: ~/.3V0).
 
-        Mirrors ``threev0_constants.get_ev0_home()``."""
+        Mirrors ``threev0_constants.get_threev0_home()``."""
         val = os.environ.get("EV0_HOME", "").strip()
         return Path(val) if val else Path.home() / ".3V0"
 
