@@ -389,7 +389,6 @@ docs/billing-lifecycle.md	doc	manual	Billing lifecycle doc	Account/billing	agent
 docs/streaming-tts.md	doc	manual	Streaming TTS doc	Voice streaming	tools/tts_streaming.py
 docs/micro-compaction.md	doc	manual	Micro-compaction design	Context compaction rationale	scripts/micro_compaction_report.py
 docs/rca-ssl-cacert-post-git-pull.md	doc	manual	RCA: SSL CA certs after git pull	Postmortem lesson	tests/gateway/
-docs/3v0-kanban-v1-spec.pdf	doc	manual	3V0 kanban shared spec (PDF)	Kanban contract artifact	plugins/kanban
 acp_adapter	source	manual	ACP server (VS Code / Zed / JetBrains integration)	Editor integration surface	ui-tui/;ev0_cli/auth.py? no: tools/active: registry
 tests/conformance	source	manual	Conformance test suite (protocol conformance)	Contract tests for wire behaviors	conformance vectors: scripts/generate_conformance_vectors.py
 tests/e2e	source	manual	End-to-end test suite (real runtime)	Full-path validation	tests/integration
