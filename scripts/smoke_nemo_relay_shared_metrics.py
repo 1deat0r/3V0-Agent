@@ -238,7 +238,7 @@ def _arguments() -> argparse.Namespace:
         "--threev0-repo",
         type=Path,
         default=Path.cwd(),
-        help="3V0 source checkout containing .venv/bin/ev0",
+        help="3V0 source checkout containing .venv/bin/3v0",
     )
     parser.add_argument(
         "--relay-python",
