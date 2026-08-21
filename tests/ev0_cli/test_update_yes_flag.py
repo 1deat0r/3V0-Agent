@@ -42,6 +42,8 @@ def _make_run_side_effect(
         # actually patch in tests that exercise restore, so this is a catch-all.
         if "stash" in joined and "list" in joined:
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if joined.strip().endswith("remote"):
+            return subprocess.CompletedProcess(cmd, 0, stdout="public\n", stderr="")
         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
 
     return side_effect

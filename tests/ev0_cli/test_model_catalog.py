@@ -259,9 +259,10 @@ class TestDefaultModelFromCache:
         from ev0_cli.models import PREFERRED_SILENT_DEFAULT_MODEL
 
         repo_root = Path(model_catalog.__file__).resolve().parent.parent
-        manifest = json.loads(
-            (repo_root / "website" / "static" / "api" / "model-catalog.json").read_text()
-        )
+        manifest_path = repo_root / "website" / "static" / "api" / "model-catalog.json"
+        if not manifest_path.exists():
+            pytest.skip("website workspace not vendored in this fork; model-catalog.json missing")
+        manifest = json.loads(manifest_path.read_text())
         for provider in ("openrouter", "nous"):
             block = manifest["providers"][provider]
             labeled = [m["id"] for m in block["models"] if m.get("default")]

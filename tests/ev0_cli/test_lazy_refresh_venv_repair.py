@@ -184,6 +184,8 @@ def test_cmd_update_captures_and_propagates_pre_rebuild_snapshot(
             return SimpleNamespace(returncode=0, stdout="main\n", stderr="")
         if "rev-list" in cmd:
             return SimpleNamespace(returncode=0, stdout="0\n", stderr="")
+        if cmd and cmd[-1] == "remote":
+            return SimpleNamespace(returncode=0, stdout="public\n", stderr="")
         return SimpleNamespace(returncode=0, stdout="", stderr="")
 
     def fake_refresh(prefix, *, env=None, features=None):
