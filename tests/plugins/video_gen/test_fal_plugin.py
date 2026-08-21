@@ -163,8 +163,10 @@ class TestFamilyRouting:
 
         # Reset the lazy global so it picks up our stub
         from plugins.video_gen import fal as fal_plugin
-        fal_plugin._fal_client = None
-        # Also reset the managed client cache
+        # Documented patch point (fal_common.import_fal_client docstring):
+        # set the module's cached client global to the stub so _load_fal_client
+        # short-circuits instead of running lazy-deps install of the real SDK.
+        monkeypatch.setattr(fal_plugin, "_fal_client", fake)
         fal_plugin._managed_fal_video_client = None
         fal_plugin._managed_fal_video_client_config = None
 
@@ -508,7 +510,10 @@ class TestUpscalePass:
         monkeypatch.setitem(sys.modules, "fal_client", fake)
 
         from plugins.video_gen import fal as fal_plugin
-        fal_plugin._fal_client = None
+        # Documented patch point (fal_common.import_fal_client docstring):
+        # set the module's cached client global to the stub so _load_fal_client
+        # short-circuits instead of running lazy-deps install of the real SDK.
+        monkeypatch.setattr(fal_plugin, "_fal_client", fake)
         fal_plugin._managed_fal_video_client = None
         fal_plugin._managed_fal_video_client_config = None
 

@@ -756,6 +756,30 @@ class TestPrefetchServerRetainVisibility:
 
         assert provider._is_retain_op_complete("bank", "op-1") is False
 
+    def test_missing_client_sdk_degrades_to_waiting(self, provider, monkeypatch):
+        """Optional hindsight-client SDK absent: op status is unknown, so the
+        prefetch keeps waiting (bounded by the deadline loop) instead of
+        crashing the background thread with an unhandled import error."""
+        # Simulate the consumer venv without the hindsight extra installed.
+        import builtins
+        real_import = builtins.__import__
+
+        def _blocked_import(name, *args, **kwargs):
+            if name == "hindsight_client_api" or name.startswith("hindsight_client_api."):
+                raise ModuleNotFoundError(name)
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", _blocked_import)
+
+        client = _make_mock_client()
+        client.operations = MagicMock()
+        provider._client = client
+
+        # No status call should even be attempted (the import gate fires first),
+        # and the result is 'not complete' so the caller waits, never crashes.
+        assert provider._is_retain_op_complete("bank", "op-1") is False
+        client.operations.get_operation_status.assert_not_called()
+
 
 # ---------------------------------------------------------------------------
 # recall_status (deterministic recall indicator) tests

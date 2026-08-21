@@ -1336,7 +1336,14 @@ class HindsightMemoryProvider(MemoryProvider):
         means "no longer pending" and is treated as done. Transient errors
         return False so the caller keeps waiting until its deadline.
         """
-        from hindsight_client_api.exceptions import NotFoundException
+        try:
+            from hindsight_client_api.exceptions import NotFoundException
+        except ImportError:
+            # Optional client SDK absent (hindsight extra not installed): we
+            # cannot poll server-side op status. Treat as not-complete so the
+            # caller's deadline loop drops it (bounded), never crash the
+            # prefetch thread with an unhandled import error.
+            return False
 
         try:
             resp = self._run_hindsight_operation(
