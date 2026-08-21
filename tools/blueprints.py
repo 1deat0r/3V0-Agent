@@ -5,7 +5,7 @@ agent loads) that additionally declares an automation schedule in its
 frontmatter:
 
     metadata:
-      ev0:
+      3v0:
         blueprint:
           schedule: "0 9 * * *"     # presence of `blueprint:` marks it runnable
           deliver: origin            # optional (default "origin")
@@ -15,7 +15,7 @@ frontmatter:
 Because a blueprint is just a skill, it flows through the ENTIRE existing
 skills-hub pipeline for free — search, inspect, quarantine, security scan,
 install, lock-file provenance, audit log, taps, the centralized index, and
-`ev0 skills publish` for sharing. No new source type, no new store, no new
+`3v0 skills publish` for sharing. No new source type, no new store, no new
 transport. This module is the thin bridge between that skill metadata and the
 existing cron `create_job()` API:
 
@@ -106,8 +106,8 @@ def parse_blueprint(skill_md_text: str) -> Optional[BlueprintSpec]:
     name = str(fm.get("name", "")).strip()
 
     meta = fm.get("metadata")
-    ev0 = meta.get("3v0") if isinstance(meta, dict) else None
-    blueprint = ev0.get("blueprint") if isinstance(ev0, dict) else None
+    threev0 = meta.get("3v0") if isinstance(meta, dict) else None
+    blueprint = threev0.get("blueprint") if isinstance(threev0, dict) else None
     if blueprint is None:
         return None
     if not isinstance(blueprint, dict):
@@ -248,7 +248,7 @@ def export_blueprint(job: Dict[str, Any], body: str, *, blueprint_name: Optional
 
     The inverse of ``create_blueprint_job``: take a cron job a user already built
     and emit a SKILL.md (with a ``metadata.3v0.blueprint`` block) they can hand
-    to ``ev0 skills publish`` to share. ``body`` is the plain-language
+    to ``3v0 skills publish`` to share. ``body`` is the plain-language
     description / instructions that become the SKILL.md body.
     """
     import yaml

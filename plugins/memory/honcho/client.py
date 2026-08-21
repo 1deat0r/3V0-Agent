@@ -65,13 +65,18 @@ def profile_host_key(profile: str | None) -> str:
 
 
 def _host_block(raw: dict, host: str) -> dict:
-    """Return host config, accepting legacy dot-form profile host keys."""
+    """Return host config, accepting legacy dot-form and ev0-prefix keys."""
     hosts = raw.get("hosts") or {}
     block = hosts.get(host, {})
     if block or not host.startswith(f"{HOST}_"):
         return block
     legacy = f"{HOST}.{host[len(HOST) + 1:]}"
-    return hosts.get(legacy, {})
+    if legacy in hosts:
+        return hosts.get(legacy, {})
+    # Pre-rename persisted configs keyed hosts by the old brand prefix
+    # (e.g. ``ev0_work``). Reads must tolerate them; new writes use 3v0_.
+    old = f"ev0_{host[len(HOST) + 1:]}"
+    return hosts.get(old, {})
 
 
 def resolve_active_host() -> str:

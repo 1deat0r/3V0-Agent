@@ -32,9 +32,9 @@ def test_frontmatter_required_fields():
     for field in ("name", "description", "version", "author", "license", "platforms"):
         assert field in fm, f"missing frontmatter field: {field}"
     assert fm["name"] == "document-to-action-items"
-    ev0 = fm["metadata"]["3v0"]
-    assert ev0["tags"]
-    assert "related_skills" in ev0
+    threev0 = fm["metadata"]["3v0"]
+    assert threev0["tags"]
+    assert "related_skills" in threev0
 
 
 def test_description_hardline():

@@ -256,7 +256,7 @@ def test_identity_template_resolved_in_container_tag(monkeypatch, tmp_path):
     _save_supermemory_config({"container_tag": "3v0-{identity}"}, str(tmp_path))
     p = SupermemoryMemoryProvider()
     p.initialize("s1", threev0_home=str(tmp_path), platform="cli", agent_identity="coder")
-    assert p._container_tag == "ev0_coder"
+    assert p._container_tag == "3v0_coder"
 
 
 def test_container_tag_env_var_override(monkeypatch, tmp_path):

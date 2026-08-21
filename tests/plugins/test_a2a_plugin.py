@@ -1585,8 +1585,8 @@ class TestV1SpecRegressionFixes:
         fakebin = tmp_path / "bin"
         fakebin.mkdir()
         calls = tmp_path / "calls.jsonl"
-        ev0 = fakebin / "3v0"
-        ev0.write_text("""#!/usr/bin/env python3
+        threev0 = fakebin / "3v0"
+        threev0.write_text("""#!/usr/bin/env python3
 import json, os, sqlite3, sys, time
 calls = os.environ['FAKE_EV0_CALLS']
 with open(calls, 'a') as f:
@@ -1598,7 +1598,7 @@ if '--resume' not in sys.argv:
     con.commit()
 print('fake reply')
 """)
-        ev0.chmod(0o755)
+        threev0.chmod(0o755)
         monkeypatch.setenv("PATH", str(fakebin) + os.pathsep + os.environ.get("PATH", ""))
         monkeypatch.setenv("FAKE_EV0_CALLS", str(calls))
         monkeypatch.setattr("plugins.platforms.a2a.adapter._profile_home", lambda profile: str(profile_home))

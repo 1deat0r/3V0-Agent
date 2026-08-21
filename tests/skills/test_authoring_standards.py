@@ -89,8 +89,8 @@ def test_required_frontmatter_fields(p):
     ]
     if missing and not _grandfathered(p, "fields"):
         pytest.fail(f"{_rel(p)}: missing frontmatter fields: {missing}")
-    ev0 = (fm.get("metadata") or {}).get("3v0") or {}
-    if not (ev0.get("tags") or fm.get("tags")) and not _grandfathered(p, "tags"):
+    threev0 = (fm.get("metadata") or {}).get("3v0") or {}
+    if not (threev0.get("tags") or fm.get("tags")) and not _grandfathered(p, "tags"):
         pytest.fail(f"{_rel(p)}: no tags (metadata.3v0.tags or top-level tags)")
 
 
@@ -118,9 +118,9 @@ def test_description_hardline(p):
 @pytest.mark.parametrize("p", _params())
 def test_related_skills_resolve(p):
     fm, _ = _frontmatter(p)
-    ev0 = (fm.get("metadata") or {}).get("3v0") or {}
+    threev0 = (fm.get("metadata") or {}).get("3v0") or {}
     dangling = [
-        rs for rs in (ev0.get("related_skills") or []) if rs not in _all_names()
+        rs for rs in (threev0.get("related_skills") or []) if rs not in _all_names()
     ]
     if dangling and not _grandfathered(p, "related"):
         pytest.fail(f"{_rel(p)}: dangling related_skills: {dangling}")

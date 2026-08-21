@@ -235,7 +235,7 @@ class _ModelHandler(BaseHTTPRequestHandler):
 def _arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--ev0-repo",
+        "--threev0-repo",
         type=Path,
         default=Path.cwd(),
         help="3V0 source checkout containing .venv/bin/ev0",
@@ -555,7 +555,7 @@ def main() -> int:
     args = _arguments()
     threev0_repo = args.threev0_repo.resolve()
     relay_python = args.relay_python.resolve() if args.relay_python else None
-    ev0 = _resolve_threev0_executable(threev0_repo)
+    threev0 = _resolve_threev0_executable(threev0_repo)
     if relay_python is not None and not any(
         (relay_python / "nemo_relay").glob("_native.*")
     ):
@@ -617,7 +617,7 @@ def main() -> int:
         env["PYTHONPATH"] = os.pathsep.join(python_paths).rstrip(os.pathsep)
         result = subprocess.run(
             [
-                str(ev0),
+                str(threev0),
                 "chat",
                 "--query",
                 PROMPT_CANARY,

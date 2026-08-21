@@ -28,8 +28,9 @@ def honcho_home(tmp_path, monkeypatch):
         "peerName": "alice",
         "hosts": {
             "3v0": {"peerName": "alice", "aiPeer": "3v0"},
-            "ev0_work": {"peerName": "alice", "aiPeer": "3v0"},
-            "ev0_my_profile": {"peerName": "bob", "aiPeer": "3v0"},
+            "3v0_work": {"peerName": "alice", "aiPeer": "3v0"},
+            "3v0_my_profile": {"peerName": "bob", "aiPeer": "3v0"},
+            "ev0_legacy": {"peerName": "carol", "aiPeer": "3v0"},
         },
     }
     path = tmp_path / "honcho.json"
@@ -60,7 +61,7 @@ class TestAllProfileHostConfigs:
         rows = honcho_cli._all_profile_host_configs()
         by_name = {name: (host, block) for name, host, block in rows}
         host, block = by_name["work"]
-        assert host == "ev0_work"  # not "3v0.work"
+        assert host == "3v0_work"  # not "3v0.work"
         assert block.get("peerName") == "alice"  # the populated block was found
 
     def test_sanitized_profile_names_resolve(self, honcho_home, monkeypatch):
@@ -83,8 +84,25 @@ class TestAllProfileHostConfigs:
         A bare hosts.get(profile_host_key(...)) would regress them."""
         path = honcho_home / "honcho.json"
         cfg = json.loads(path.read_text())
-        del cfg["hosts"]["ev0_work"]
+        del cfg["hosts"]["3v0_work"]
         cfg["hosts"]["3v0.work"] = {"peerName": "carol", "aiPeer": "3v0"}
+        path.write_text(json.dumps(cfg))
+        monkeypatch.setattr(
+            "threev0_cli.profiles.list_profiles",
+            lambda: [SimpleNamespace(name="default"), SimpleNamespace(name="work")],
+        )
+        rows = honcho_cli._all_profile_host_configs()
+        by_name = {name: block for name, _, block in rows}
+        assert by_name["work"].get("peerName") == "carol"
+
+    def test_legacy_ev0_prefix_host_key_still_readable(self, honcho_home, monkeypatch):
+        """Back-compat: pre-rename honcho.json files keyed hosts with the
+        old brand prefix ("ev0_work") must keep resolving after the rename
+        (HOST ev0 -> 3v0). The lookup bridge maps 3v0_<name> -> ev0_<name>."""
+        path = honcho_home / "honcho.json"
+        cfg = json.loads(path.read_text())
+        del cfg["hosts"]["3v0_work"]
+        cfg["hosts"]["ev0_work"] = {"peerName": "carol", "aiPeer": "3v0"}
         path.write_text(json.dumps(cfg))
         monkeypatch.setattr(
             "threev0_cli.profiles.list_profiles",

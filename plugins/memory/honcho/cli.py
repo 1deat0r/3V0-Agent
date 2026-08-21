@@ -1,6 +1,6 @@
 """CLI commands for Honcho integration management.
 
-Handles: ev0 honcho setup | status | sessions | map | peer
+Handles: 3v0 honcho setup | status | sessions | map | peer
 """
 
 from __future__ import annotations
@@ -207,7 +207,7 @@ def cmd_sync(args) -> None:
 def sync_honcho_profiles_quiet() -> int:
     """Sync Honcho host blocks for all profiles. Returns count of newly created blocks.
 
-    Called from `ev0 update` -- no output, no exceptions.
+    Called from `3v0 update` -- no output, no exceptions.
     """
     try:
         from threev0_cli.profiles import list_profiles
@@ -1011,7 +1011,7 @@ def cmd_setup(args) -> None:
         print("  Memory provider set to 'honcho' in config.yaml")
     except Exception as e:
         print(f"  Could not auto-enable in config.yaml: {e}")
-        print("  Run: ev0 config set memory.provider honcho")
+        print("  Run: 3v0 config set memory.provider honcho")
 
     # --- Test connection ---
     print("  Testing connection... ", end="", flush=True)
@@ -1041,11 +1041,11 @@ def cmd_setup(args) -> None:
     print("    honcho_reasoning -- ask Honcho a question, synthesized answer")
     print("    honcho_conclude  -- persist a user fact to memory")
     print("\n  Other commands:")
-    print("    ev0 honcho status     -- show full config")
-    print("    ev0 honcho mode       -- change recall/observation mode")
-    print("    ev0 honcho tokens     -- tune context and dialectic budgets")
-    print("    ev0 honcho peer       -- update peer names")
-    print("    ev0 honcho map <name> -- map this directory to a session name\n")
+    print("    3v0 honcho status     -- show full config")
+    print("    3v0 honcho mode       -- change recall/observation mode")
+    print("    3v0 honcho tokens     -- tune context and dialectic budgets")
+    print("    3v0 honcho peer       -- update peer names")
+    print("    3v0 honcho map <name> -- map this directory to a session name\n")
 
 
 def _device_login_available() -> bool:
@@ -1130,7 +1130,7 @@ def cmd_status(args) -> None:
     try:
         import honcho  # noqa: F401
     except ImportError:
-        print("  honcho-ai is not installed. Run: ev0 honcho setup\n")
+        print("  honcho-ai is not installed. Run: 3v0 honcho setup\n")
         return
 
     cfg = _read_config()
@@ -1315,7 +1315,7 @@ def cmd_sessions(args) -> None:
 
     if not sessions:
         print("  No session mappings configured.\n")
-        print("  Add one with: ev0 honcho map <session-name>")
+        print("  Add one with: 3v0 honcho map <session-name>")
         print(f"  Or edit {_config_path()} directly.\n")
         return
 
@@ -1366,11 +1366,11 @@ def cmd_peer(args) -> None:
     if user_name is None and ai_name is None and reasoning is None:
         # Show current values
         hosts = cfg.get("hosts", {})
-        ev0 = hosts.get(_host_key(), {})
-        user = ev0.get('peerName') or cfg.get('peerName') or '(not set)'
-        ai = ev0.get('aiPeer') or cfg.get('aiPeer') or _host_key()
-        lvl = ev0.get("dialecticReasoningLevel") or cfg.get("dialecticReasoningLevel") or "low"
-        max_chars = ev0.get("dialecticMaxChars") or cfg.get("dialecticMaxChars") or 600
+        threev0 = hosts.get(_host_key(), {})
+        user = threev0.get('peerName') or cfg.get('peerName') or '(not set)'
+        ai = threev0.get('aiPeer') or cfg.get('aiPeer') or _host_key()
+        lvl = threev0.get("dialecticReasoningLevel") or cfg.get("dialecticReasoningLevel") or "low"
+        max_chars = threev0.get("dialecticMaxChars") or cfg.get("dialecticMaxChars") or 600
         print("\nHoncho peers\n" + "─" * 40)
         print(f"  User peer:   {user}")
         print("    Your identity in Honcho. Messages you send build this peer's card.")
@@ -1428,7 +1428,7 @@ def cmd_mode(args) -> None:
         for m, desc in MODES.items():
             marker = " <-" if m == current else ""
             print(f"  {m:<10}  {desc}{marker}")
-        print("\n  Set with: ev0 honcho mode [hybrid|context|tools]\n")
+        print("\n  Set with: 3v0 honcho mode [hybrid|context|tools]\n")
         return
 
     if mode_arg not in MODES:
@@ -1463,7 +1463,7 @@ def cmd_strategy(args) -> None:
         for s, desc in STRATEGIES.items():
             marker = " <-" if s == current else ""
             print(f"  {s:<15}  {desc}{marker}")
-        print("\n  Set with: ev0 honcho strategy [per-session|per-directory|per-repo|global]\n")
+        print("\n  Set with: 3v0 honcho strategy [per-session|per-directory|per-repo|global]\n")
         return
 
     if strat_arg not in STRATEGIES:
@@ -1481,15 +1481,15 @@ def cmd_tokens(args) -> None:
     """Show or set token budget settings."""
     cfg = _read_config()
     hosts = cfg.get("hosts", {})
-    ev0 = hosts.get(_host_key(), {})
+    threev0 = hosts.get(_host_key(), {})
 
     context = getattr(args, "context", None)
     dialectic = getattr(args, "dialectic", None)
 
     if context is None and dialectic is None:
-        ctx_tokens = ev0.get("contextTokens") or cfg.get("contextTokens") or "(Honcho default)"
-        d_chars = ev0.get("dialecticMaxChars") or cfg.get("dialecticMaxChars") or 600
-        d_level = ev0.get("dialecticReasoningLevel") or cfg.get("dialecticReasoningLevel") or "low"
+        ctx_tokens = threev0.get("contextTokens") or cfg.get("contextTokens") or "(Honcho default)"
+        d_chars = threev0.get("dialecticMaxChars") or cfg.get("dialecticMaxChars") or 600
+        d_level = threev0.get("dialecticReasoningLevel") or cfg.get("dialecticReasoningLevel") or "low"
         print("\nHoncho budgets\n" + "─" * 40)
         print()
         print(f"  Context     {ctx_tokens} tokens")
@@ -1501,7 +1501,7 @@ def cmd_tokens(args) -> None:
         print("    (e.g. \"what were we working on?\") and Honcho runs its own model")
         print("    to synthesize an answer. Used for first-turn session continuity.")
         print("    Level controls how much reasoning Honcho spends on the answer.")
-        print("\n  Set with: ev0 honcho tokens [--context N] [--dialectic N]\n")
+        print("\n  Set with: 3v0 honcho tokens [--context N] [--dialectic N]\n")
         return
 
     host = _host_key()
@@ -1577,8 +1577,8 @@ def cmd_identity(args) -> None:
         print(f"  User peer: {hcfg.peer_name or 'not set'}")
         print(f"  AI peer:   {hcfg.ai_peer}")
         print()
-        print("    ev0 honcho identity --show        — show both peer representations")
-        print("    ev0 honcho identity <file>        — seed AI peer from SOUL.md or any .md/.txt\n")
+        print("    3v0 honcho identity --show        — show both peer representations")
+        print("    3v0 honcho identity <file>        — seed AI peer from SOUL.md or any .md/.txt\n")
         return
 
     from pathlib import Path
@@ -1651,7 +1651,7 @@ def cmd_migrate(args) -> None:
         print("  across sessions. You need an API key to use it.")
         print()
         print("  1. Get your API key at https://app.honcho.dev")
-        print("  2. Run:  ev0 honcho setup")
+        print("  2. Run:  3v0 honcho setup")
         print("     Paste the key when prompted.")
         print()
         answer = _prompt("  Run '3v0 honcho setup' now?", default="y")
@@ -1679,7 +1679,7 @@ def cmd_migrate(args) -> None:
     else:
         print("  No OpenClaw native memory files found in cwd or ~/.openclaw/.")
         print("  If your files are elsewhere, copy them here before continuing,")
-        print("  or seed them manually:  ev0 honcho identity <path/to/file>")
+        print("  or seed them manually:  3v0 honcho identity <path/to/file>")
 
     # ── Step 3: Migrate user memory ───────────────────────────────────────────
     print()
@@ -1698,7 +1698,7 @@ def cmd_migrate(args) -> None:
         print()
         print("  If you want to migrate them now without starting a session:")
         for f in user_files:
-            print("    ev0 honcho migrate  — this step handles it interactively")
+            print("    3v0 honcho migrate  — this step handles it interactively")
         if has_key:
             answer = _prompt("  Upload user memory files to Honcho now?", default="y")
             if answer.lower() in {"y", "yes"}:
@@ -1777,10 +1777,10 @@ def cmd_migrate(args) -> None:
         else:
             print("  Run '3v0 honcho setup' first, then seed manually:")
             for f in agent_files:
-                print(f"    ev0 honcho identity {f}")
+                print(f"    3v0 honcho identity {f}")
     else:
         print("  No agent identity files detected.")
-        print("  To seed manually:  ev0 honcho identity <path/to/SOUL.md>")
+        print("  To seed manually:  3v0 honcho identity <path/to/SOUL.md>")
 
     # ── Step 5: What changes ──────────────────────────────────────────────────
     print()
@@ -1811,22 +1811,22 @@ def cmd_migrate(args) -> None:
     print("  Session naming")
     print("    OpenClaw: no persistent session concept — files are global.")
     print("    3V0:   per-session by default — each run gets its own session")
-    print("              Map a custom name:  ev0 honcho map <session-name>")
+    print("              Map a custom name:  3v0 honcho map <session-name>")
 
     # ── Step 6: Next steps ────────────────────────────────────────────────────
     print()
     print("Step 6  Next steps")
     print()
     if not has_key:
-        print("  1. ev0 honcho setup              — configure API key (required)")
-        print("  2. ev0 honcho migrate            — re-run this walkthrough")
+        print("  1. 3v0 honcho setup              — configure API key (required)")
+        print("  2. 3v0 honcho migrate            — re-run this walkthrough")
     else:
-        print("  1. ev0 honcho status             — verify Honcho connection")
-        print("  2. ev0                           — start a session")
+        print("  1. 3v0 honcho status             — verify Honcho connection")
+        print("  2. 3v0                            — start a session")
         print("     (user memory files auto-uploaded on first turn if not done above)")
-        print("  3. ev0 honcho identity --show    — verify AI peer representation")
-        print("  4. ev0 honcho tokens             — tune context and dialectic budgets")
-        print("  5. ev0 honcho mode               — view or change memory mode")
+        print("  3. 3v0 honcho identity --show    — verify AI peer representation")
+        print("  4. 3v0 honcho tokens             — tune context and dialectic budgets")
+        print("  5. 3v0 honcho mode               — view or change memory mode")
     print()
 
 
@@ -1877,10 +1877,10 @@ def honcho_command(args) -> None:
 
 
 def register_cli(subparser) -> None:
-    """Build the ``ev0 honcho`` argparse subcommand tree.
+    """Build the ``3v0 honcho`` argparse subcommand tree.
 
     Called by the plugin CLI registration system during argparse setup.
-    The *subparser* is the parser for ``ev0 honcho``.
+    The *subparser* is the parser for ``3v0 honcho``.
     """
 
     subparser.add_argument(
@@ -1891,7 +1891,7 @@ def register_cli(subparser) -> None:
 
     subs.add_parser(
         "setup",
-        help="Initial Honcho setup (redirects to ev0 memory setup)",
+        help="Initial Honcho setup (redirects to 3v0 memory setup)",
     )
 
     status_parser = subs.add_parser(

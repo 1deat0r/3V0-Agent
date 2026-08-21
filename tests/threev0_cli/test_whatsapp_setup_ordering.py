@@ -1,10 +1,10 @@
 """Regression tests for ``cmd_whatsapp`` env-var write ordering.
 
-Before the fix, ``ev0 whatsapp`` wrote ``WHATSAPP_ENABLED=true`` at
+Before the fix, ``3v0 whatsapp`` wrote ``WHATSAPP_ENABLED=true`` at
 step 2 — before npm install (step 4) and before QR pairing (step 6).
 If the user Ctrl+C'd at any later step, ``.env`` claimed WhatsApp was
 ready when the bridge still had no ``creds.json``.  Every subsequent
-``ev0 gateway`` then paid a 30s bridge-bootstrap timeout and queued
+``3v0 gateway`` then paid a 30s bridge-bootstrap timeout and queued
 WhatsApp for indefinite retries — looking like "the gateway is broken."
 
 The fix: only set ``WHATSAPP_ENABLED=true`` once pairing actually
@@ -25,15 +25,15 @@ import pytest
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
     home = tmp_path / "home"
-    ev0 = home / ".3V0"
-    ev0.mkdir(parents=True)
+    threev0 = home / ".3V0"
+    threev0.mkdir(parents=True)
     monkeypatch.setattr(Path, "home", lambda: home)
-    monkeypatch.setenv("EV0_HOME", str(ev0))
+    monkeypatch.setenv("EV0_HOME", str(threev0))
     # Ensure get_env_value cache doesn't carry stale state.
     for key in list(os.environ):
         if key.startswith("WHATSAPP_"):
             monkeypatch.delenv(key, raising=False)
-    return ev0
+    return threev0
 
 
 def _env_value(threev0_home: Path, key: str) -> str | None:
@@ -85,7 +85,7 @@ def test_aborted_setup_does_not_enable_whatsapp(isolated_home, monkeypatch):
 
 
 def test_existing_pairing_skip_branch_enables_whatsapp(isolated_home, monkeypatch):
-    """User runs ``ev0 whatsapp`` with an existing paired session and
+    """User runs ``3v0 whatsapp`` with an existing paired session and
     chooses "no, keep my session" at the re-pair prompt.  The env var
     should be (re-)written to true so the gateway picks WhatsApp back up,
     even if the var was lost since the original pairing.

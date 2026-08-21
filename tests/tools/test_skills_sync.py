@@ -157,15 +157,15 @@ class TestRmtreeWritableScopeGuard:
         would wipe every installed skill (the degenerate #48200 path)."""
         from tools.skills_sync import _rmtree_writable
 
-        ev0 = tmp_path / "home"
-        ev0.mkdir()
-        skills = ev0 / "skills"
+        threev0 = tmp_path / "home"
+        threev0.mkdir()
+        skills = threev0 / "skills"
         (skills / "keep").mkdir(parents=True)
-        sibling = ev0 / "kanban.db"  # any non-skills path
+        sibling = threev0 / "kanban.db"  # any non-skills path
         sibling.mkdir()
 
         with patch("tools.skills_sync.SKILLS_DIR", skills):
-            for target in (Path("/"), ev0, sibling, skills):
+            for target in (Path("/"), threev0, sibling, skills):
                 with pytest.raises(ValueError, match="refusing to rmtree"):
                     _rmtree_writable(target)
 
@@ -692,9 +692,9 @@ class TestResetBundledSkill:
 class TestNoBundledSkillsOptOut:
     """The .no-bundled-skills marker makes sync_skills() a no-op.
 
-    This is what `ev0 profile create --no-skills` (named profiles) and the
+    This is what `3v0 profile create --no-skills` (named profiles) and the
     installer's `--no-skills` flag (default ~/.3V0) rely on so bundled
-    skills are never seeded at install time NOR re-injected by `ev0 update`.
+    skills are never seeded at install time NOR re-injected by `3v0 update`.
     """
 
     def test_marker_skips_sync_and_removal_seeds_normally(self, tmp_path):
@@ -740,7 +740,7 @@ class TestNoBundledSkillsOptOut:
 
 
 class TestOptOutToggleAndRemove:
-    """`ev0 skills opt-out/opt-in` core: marker toggle + safe removal."""
+    """`3v0 skills opt-out/opt-in` core: marker toggle + safe removal."""
 
     def _setup_bundled(self, tmp_path):
         bundled = tmp_path / "bundled"

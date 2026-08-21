@@ -707,14 +707,14 @@ def extract_skill_conditions(frontmatter: Dict[str, Any]) -> Dict[str, List]:
     # Handle cases where metadata is not a dict (e.g., a string from malformed YAML)
     if not isinstance(metadata, dict):
         metadata = {}
-    ev0 = metadata.get("3v0") or {}
-    if not isinstance(ev0, dict):
-        ev0 = {}
+    threev0 = metadata.get("3v0") or {}
+    if not isinstance(threev0, dict):
+        threev0 = {}
     return {
-        "fallback_for_toolsets": ev0.get("fallback_for_toolsets", []),
-        "requires_toolsets": ev0.get("requires_toolsets", []),
-        "fallback_for_tools": ev0.get("fallback_for_tools", []),
-        "requires_tools": ev0.get("requires_tools", []),
+        "fallback_for_toolsets": threev0.get("fallback_for_toolsets", []),
+        "requires_toolsets": threev0.get("requires_toolsets", []),
+        "fallback_for_tools": threev0.get("fallback_for_tools", []),
+        "requires_tools": threev0.get("requires_tools", []),
     }
 
 
@@ -740,10 +740,10 @@ def extract_skill_config_vars(frontmatter: Dict[str, Any]) -> List[Dict[str, Any
     metadata = frontmatter.get("metadata")
     if not isinstance(metadata, dict):
         return []
-    ev0 = metadata.get("3v0")
-    if not isinstance(ev0, dict):
+    threev0 = metadata.get("3v0")
+    if not isinstance(threev0, dict):
         return []
-    raw = ev0.get("config")
+    raw = threev0.get("config")
     if not raw:
         return []
     if isinstance(raw, dict):
