@@ -168,8 +168,10 @@ class ScratchDashboard:
         env = dict(os.environ)
         env.update(self.env_extra)
         env["EV0_HOME"] = str(self.home)
+        env["3V0_HOME"] = str(self.home)  # canonical (ADR-0006)
         env["HOME"] = str(self.home.parent) if str(self.home.parent) else env.get("HOME", "")
         env["EV0_HOME"] = str(self.home)
+        env["3V0_HOME"] = str(self.home)  # canonical (ADR-0006)
         env["PYTHONPATH"] = str(REPO_ROOT) + os.pathsep + env.get("PYTHONPATH", "")
         env["EV0_ISO_CERTIFY_SYNTH_TURN"] = "1"
         cmd = [

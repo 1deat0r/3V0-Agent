@@ -682,6 +682,7 @@ def _apply_profile_override() -> None:
             )
             return
         os.environ["EV0_HOME"] = ev0_home
+        os.environ["3V0_HOME"] = ev0_home  # canonical (ADR-0006); EV0_* legacy alias
         # Strip the flag from argv so argparse doesn't choke
         if consume > 0 and profile_index is not None:
             start = profile_index + 1  # +1 because argv is sys.argv[1:]
@@ -10732,6 +10733,7 @@ def cmd_dashboard(args):
         try:
             from ev0_constants import get_default_ev0_root
             env["EV0_HOME"] = str(get_default_ev0_root())
+            env["3V0_HOME"] = env["EV0_HOME"]  # canonical (ADR-0006)
         except Exception:
             # Best-effort: if root resolution fails, fall back to the prior
             # behaviour (drop EV0_HOME) rather than block the reroute.

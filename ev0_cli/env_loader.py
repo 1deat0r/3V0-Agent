@@ -218,6 +218,7 @@ def _hydrate_profile_secret_sources(home: Path) -> dict[str, str]:
             for _name, _value in load_env_file(op_env).items():
                 local_env.setdefault(_name, _value)
         local_env["EV0_HOME"] = str(home)
+        local_env["3V0_HOME"] = str(home)  # canonical (ADR-0006); EV0_* legacy alias
         report = apply_all(cfg, home, environ=local_env)
     except Exception:  # noqa: BLE001 — preserve fail-open startup behavior
         return {}

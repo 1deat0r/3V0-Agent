@@ -885,6 +885,7 @@ def windowless_gateway_restart_spec(
     }
     if ev0_home:
         env_overlay["EV0_HOME"] = ev0_home
+        env_overlay["3V0_HOME"] = ev0_home  # canonical (ADR-0006)
     _prepend_pythonpath(
         env_overlay,
         [project_root, *extra_pythonpath] if extra_pythonpath else [project_root],

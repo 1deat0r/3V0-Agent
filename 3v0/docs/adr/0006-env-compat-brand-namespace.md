@@ -1,54 +1,54 @@
-# ADR-0006 — Brand-compatible env namespace (declared exceptions to eradication)
+# ADR-0006 — Brand-compatible env namespace (corrected: migrate to 3V0_*)
 
-Status: accepted (2026-08-21)
+Status: accepted + amended (2026-08-21, second revision)
 Scope: ev0-brand env vars, import package, and the eradication boundary
 
-## Context
+## Context — operator directive (authoritative)
 
-The operator's total-eradication directive demands zero mentions of the old
-brand name (`ev0`, all case variants) with brand-consistent replacements and
-functional equivalence. A mass rename of the **env namespace** to the brand
-would break every existing install, wrapper, systemd/docker unit, shell export,
-and the running gateway for zero functional gain. The import package
-`ev0_cli` also cannot be renamed to `3v0_cli` (`3v0_cli` is not a valid Python
-identifier; `import 3v0_cli` is a SyntaxError).
+> "It should all be 3V0 unless it cannot because of a hard barrier."
 
-## Decision
+Verified barrier map (tested, not assumed):
 
-Three-layer env contract — documented, deterministic, migration-ready:
+| Surface | Can it be `3V0_*`? | Evidence |
+|---|---|---|
+| Python `os.environ` keys | **YES** | `os.environ['3V0_HOME']=...` valid key; no grammar rule on keys |
+| `env VAR=x cmd` (wrappers, systemd) | **YES** | `env '3V0_TEST=1' python -c ...` works |
+| `.env` / `.env.example` | **YES** | no barrier — dotenv-style files accept any name |
+| File names, package.json names, git paths | **YES** | no grammar rule outside Python identifiers |
+| POSIX shell `export 3V0_X=x` | **NO** | `export: not a valid identifier` — use `env VAR=x cmd` instead |
+| Python import statement `import 3v0_cli` | **NO** | `SyntaxError: invalid decimal literal` — identifiers can't start with a digit. Rename to a valid identifier (`threev0_cli`) instead |
 
-1. **Canonical (new code):** `3V0_*` — all *new* env vars and new reads use
-   `3V0_<NAME>`. `3V0_HOME` is the canonical home var; `EV0_HOME` remains a
-   read-compat fallback (see resolver below).
-2. **Daemon units:** existing `THREEV0_*` family (THREEV0_PROJECT,
-   THREEV0_REVIEW_COOLDOWN_S, THREEV0_SKILLS_DIR, ...) is retained as an
-   accepted alias family for service units that predate the brand rename —
-   functionally equivalent, documented here so new work does not add to it.
-3. **Legacy compat:** `EV0_*` remains a *readable* namespace for the live
-   runtime (gateway, launcher, profiles all set/consume EV0_HOME today) and is
-   a **declared exception** to eradication — not to be written by new code,
-   not to be scrubbed from working runtime behavior.
+Conclusion: the old-name residue (`EV0_*` env vars, `ev0_cli` package,
+`ev0_logging.py`, `ev0-ink`, etc.) is **not** a permanent exception — it is
+under active migration. Only two constraints survive:
 
-Resolver rule (in `3v0/core/env_compat.py`): for a logical setting
-`<NAME>`, read in order `3V0_<NAME>` → `THREEV0_<NAME>` → `EV0_<NAME>`
-(first truthy wins). New code SHOULD use the resolver; direct `os.environ`
-reads of `EV0_*` in the native core SHOULD be migrated to it.
+1. Python identifiers must not start with a digit → package/module names use
+   the `threev0*` spelling (same family as the `THREEV0_*` units).
+2. Shell wrappers assign digit-leading vars via `env '3V0_X=...' cmd`, never
+   `export 3V0_X=...`.
 
-## Declared exceptions to "zero mentions"
+## Migration phases
 
-- Import package `ev0_cli` (6,514 import sites) + `tests/ev0_cli/` path —
-  Python identifier constraint; allowlisted.
-- `EV0_*` env namespace — runtime compat contract, see above.
-- `3v0/data/memory.db` binary old-name tokens — session-history text, scope
-  boundary (see plan + commit 07170f598d).
-- `.env.example`, workflows, AGENTS.md doctrine — being migrated to the
-  canonical `3V0_*` guide; historical comments retained by intent.
+- **Phase E (env contract):** `EV0_*` → `3V0_*` in Python reads/writes,
+  `.env.example`, `setup-3v0.sh`, workflows, AGENTS.md doctrine, comments.
+  `THREEV0_*` units stay (valid spelling for systemd) and Python resolves
+  `3V0_*` first, `THREEV0_*` second, `EV0_*` third (read-compat fallback
+  removed once Phase E lands: no production path reads EV0_*).
+- **Phase P (import package):** `ev0_cli/` → `threev0_cli/` (and
+  `ev0_bootstrap.py`, `ev0_logging.py`, `ev0_state*.py`,
+  `ui-tui/packages/ev0-ink/` similarly), mechanical import rewrites across
+  ~749 files / 6,514 import sites, gated by the canonical test suite.
+- **Phase R (remainder):** residual `ev0` in comments/history/allowlists —
+  scrubbed or declared with a written justification.
+
+Each phase is behavior-preserving (rename-only; no semantics change), except
+the final removal of the EV0_* read fallback, which is a deliberate breaking
+change scheduled after the runtime's next restart.
 
 ## Consequences
 
-- Behavior unchanged today (no process sets `3V0_HOME` yet; resolver falls
-  through to `EV0_HOME`).
-- New code has an obvious, reviewable pattern; deny-regex/CI can flag new
-  `EV0_*` writes without breaking the runtime.
-- Eradication claims should be stated as "brand eradication at UI/docs/prose +
-  declared compat exceptions", not "zero bytes of ev0".
+- New code: use `3V0_*` env vars; import from `threev0_cli` after Phase P.
+- The previous "declared exceptions" section of this ADR is **retired** —
+  it overstated the barrier and treated inertia as a constraint.
+- `3v0/data/memory.db` old-name bytes remain classified as history (session
+  text, never scrubbed) — the one standing boundary.

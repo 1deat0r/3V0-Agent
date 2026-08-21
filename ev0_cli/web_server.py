@@ -15703,6 +15703,7 @@ def _resolve_chat_argv(
 
     if profile_dir is not None:
         env["EV0_HOME"] = str(profile_dir)
+        env["3V0_HOME"] = str(profile_dir)  # canonical (ADR-0006)
 
     if resume:
         _resume_db = _open_session_db_for_profile(

@@ -1125,10 +1125,11 @@ def _sync_ev0_home_from_systemd_unit(system: bool) -> None:
         unit_home = _read_systemd_unit_environment(system=True).get("EV0_HOME", "").strip()
     if not unit_home:
         return
-    current = os.environ.get("EV0_HOME", "").strip()
+    current = os.environ.get("EV0_HOME", "").strip() or os.environ.get("3V0_HOME", "").strip()
     if current == unit_home:
         return
     os.environ["EV0_HOME"] = unit_home
+    os.environ["3V0_HOME"] = unit_home  # canonical (ADR-0006); EV0_* legacy alias
 
 
 def _read_systemd_unit_properties(
