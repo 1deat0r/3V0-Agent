@@ -223,7 +223,7 @@ _EV0_MODEL_WARNING = (
 # Negative examples it must NOT match:
 #   3v0-brain:qwen3-14b-ctx16k, qwen3:14b, claude-opus-4-6
 _NOUS_EV0_NON_AGENTIC_RE = re.compile(
-    r"(?:^|[/:])3v0[-_ ]?[34](?:[-_.:]|$)",
+    r"(?:^|[/:])(?:3v0|ev0)[-_ ]?[34](?:[-_.:]|$)",
     re.IGNORECASE,
 )
 
