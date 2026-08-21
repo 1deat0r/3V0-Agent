@@ -31,6 +31,16 @@ if [ -n "$DIRTY" ]; then
   echo "WARN: unstaged tracked changes left uncommitted:"
   echo "$DIRTY" | sed 's/^/  /'
 fi
+# 3b) rot guard — dead modules/deps/artifacts must not enter history.
+#     Local gate replaces the CI job: it blocks reintroduction BEFORE the
+#     bad commit exists, needs no token scope, and costs ~2s per commit.
+#     --strict fails on dead-module candidates, dead deps, and artifacts;
+#     informational lines (comments/TODO/duplicates) never block.
+if ! timeout 300 "$PY" "$ROOT/scripts/rot_scan.py" --strict >/tmp/3v0_rot.txt 2>&1; then
+  echo "PRE-COMMIT BLOCKED: rot_scan --strict found rot:"
+  tail -25 /tmp/3v0_rot.txt
+  exit 1
+fi
 # 4) wiki auto-sync — every commit must leave wiki == the exact staged tree.
 #    The manifest is generated from `git ls-files`, so the commit boundary is
 #    the correct sync point: a commit carries its own fresh wiki atomically.
