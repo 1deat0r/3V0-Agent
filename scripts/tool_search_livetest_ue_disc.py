@@ -122,6 +122,7 @@ def run_one(scenario, mode, rep, out_dir: Path):
         True, listing=("auto" if mode == "listing" else "off"),
         listing_max_tokens=lmax, model=model)
     os.environ["EV0_HOME"] = str(ev0_home)
+    os.environ["3V0_HOME"] = str(ev0_home)  # canonical (ADR-0006)
     base.reset_module_state()
     register_epic_tools_adversarial()
 

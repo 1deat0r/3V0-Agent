@@ -609,6 +609,7 @@ def main() -> int:
         _write_config(home, server.server_port)
         env = os.environ.copy()
         env["EV0_HOME"] = str(home)
+        env["3V0_HOME"] = str(home)  # canonical (ADR-0006)
         python_paths = [str(ev0_repo)]
         if relay_python is not None:
             python_paths.append(str(relay_python))

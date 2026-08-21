@@ -26,6 +26,7 @@ def main() -> None:
 
     ev0_home = Path(tempfile.mkdtemp(prefix="3v0-otel-smoke-"))
     os.environ["EV0_HOME"] = str(ev0_home)
+    os.environ["3V0_HOME"] = str(ev0_home)  # canonical (ADR-0006)
 
     from gateway.status import write_runtime_status
     from agent.monitoring.gateway_health_export import start_gateway_health_export

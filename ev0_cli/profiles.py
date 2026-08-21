@@ -1750,6 +1750,7 @@ def _cleanup_gateway_service(name: str, profile_dir: Path) -> None:
     old_home = os.environ.get("EV0_HOME")
     try:
         os.environ["EV0_HOME"] = str(profile_dir)
+        os.environ["3V0_HOME"] = str(profile_dir)  # canonical (ADR-0006)
         from ev0_cli.gateway import get_service_name, get_launchd_plist_path
 
         if _platform.system() == "Linux":
@@ -1785,8 +1786,10 @@ def _cleanup_gateway_service(name: str, profile_dir: Path) -> None:
     finally:
         if old_home is not None:
             os.environ["EV0_HOME"] = old_home
+            os.environ["3V0_HOME"] = old_home  # canonical (ADR-0006)
         elif "EV0_HOME" in os.environ:
             del os.environ["EV0_HOME"]
+            os.environ.pop("3V0_HOME", None)  # canonical twin (ADR-0006)
 
 
 def _stop_gateway_process(profile_dir: Path) -> None:

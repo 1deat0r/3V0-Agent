@@ -32,6 +32,7 @@ sys.path.insert(0, REPO_ROOT)
 
 # Ensure EV0_HOME is set for imports that touch it at module level.
 os.environ.setdefault("EV0_HOME", os.path.join(os.path.expanduser("~"), ".3V0"))
+os.environ.setdefault("3V0_HOME", os.environ["EV0_HOME"])  # canonical (ADR-0006)
 
 from ev0_cli.models import (  # noqa: E402
     OPENROUTER_MODELS,

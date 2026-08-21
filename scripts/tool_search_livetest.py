@@ -545,6 +545,7 @@ def main():
     # Restore original EV0_HOME
     if ORIGINAL_HOME is not None:
         os.environ["EV0_HOME"] = ORIGINAL_HOME
+        os.environ["3V0_HOME"] = ORIGINAL_HOME  # canonical twin (ADR-0006)
     else:
         os.environ.pop("EV0_HOME", None)
 

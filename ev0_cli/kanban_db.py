@@ -10385,6 +10385,7 @@ def _default_spawn(
     from ev0_cli.profiles import resolve_profile_env
     try:
         env["EV0_HOME"] = resolve_profile_env(profile_arg)
+        env["3V0_HOME"] = env["EV0_HOME"]  # canonical (ADR-0006)
     except FileNotFoundError:
         # Profile dir doesn't exist — defer resolution to the CLI's
         # _apply_profile_override() via EV0_PROFILE (set below).

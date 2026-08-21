@@ -584,6 +584,7 @@ def _build_ev0_tools_mcp_entry() -> dict:
         ev0_home = ""
     if ev0_home:
         env["EV0_HOME"] = ev0_home
+        env["3V0_HOME"] = ev0_home  # canonical (ADR-0006)
     # PYTHONPATH passes through so a worktree-launched 3v0 finds the
     # branch's modules instead of the installed package.
     pythonpath = os.environ.get("PYTHONPATH")

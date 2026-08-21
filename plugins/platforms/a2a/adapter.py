@@ -872,6 +872,7 @@ class A2AAdapter(BasePlatformAdapter):
             home = _profile_home(profile)
             if home:
                 env["EV0_HOME"] = home
+                env["3V0_HOME"] = home  # canonical (ADR-0006)
             env["EV0_A2A_PEER"] = peer
             start = time.time()
             try:
