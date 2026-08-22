@@ -127,7 +127,8 @@ class MemoryProvider(ABC):
         establish connections, start background threads, etc.
 
         kwargs always include:
-          - ev0_home (str): The active EV0_HOME directory path. Use this
+          - threev0_home (str): The active home directory path (canonical
+            3V0_HOME → EV0_HOME chain). Use this
             for profile-scoped storage instead of hardcoding ``~/.3V0``.
           - platform (str): "cli", "telegram", "discord", "cron", etc.
 
@@ -354,7 +355,7 @@ class MemoryProvider(ABC):
 
         Called by '3v0 memory setup' after collecting user inputs.
         ``values`` contains only non-secret fields (secrets go to .env).
-        ``ev0_home`` is the active EV0_HOME directory path.
+        ``threev0_home`` is the active home directory path (canonical chain).
 
         Providers with native config files (JSON, YAML) should override
         this to write to their expected location. Providers that use only

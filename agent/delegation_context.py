@@ -18,7 +18,7 @@ from contextvars import ContextVar, Token
 from typing import Iterator, Mapping, MutableMapping
 
 _DELEGATED_CHILD_CONTEXT: ContextVar[bool] = ContextVar(
-    "ev0_delegated_child_context",
+    "threev0_delegated_child_context",
     default=False,
 )
 
@@ -28,7 +28,7 @@ _DELEGATED_CHILD_CONTEXT: ContextVar[bool] = ContextVar(
 # _DELEGATED_CHILD_CONTEXT so the delegate_task-specific behaviour attached to
 # that flag (subprocess env scrubbing, its own error strings) is unchanged.
 _NON_DISPATCHER_OWNED_CONTEXT: ContextVar[bool] = ContextVar(
-    "ev0_non_dispatcher_owned_context",
+    "threev0_non_dispatcher_owned_context",
     default=False,
 )
 

@@ -35,6 +35,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from agent.memory_provider import MemoryProvider
 from agent.skill_commands import extract_user_instruction_from_skill_message
+from threev0_constants import get_threev0_home
 from tools.registry import tool_error
 
 logger = logging.getLogger(__name__)
@@ -1274,13 +1275,16 @@ class MemoryManager:
     def initialize_all(self, session_id: str, **kwargs) -> None:
         """Initialize all providers.
 
-        Automatically injects ``ev0_home`` into *kwargs* so that every
+        Automatically injects ``threev0_home`` into *kwargs* so that every
         provider can resolve profile-scoped storage paths without importing
-        ``get_ev0_home()`` themselves.
+        the resolver themselves. The legacy ``ev0_home`` alias is injected
+        alongside for third-party providers written against the old key.
         """
+        home_dir = str(get_threev0_home())
+        if "threev0_home" not in kwargs:
+            kwargs["threev0_home"] = home_dir
         if "ev0_home" not in kwargs:
-            from threev0_constants import get_threev0_home
-            kwargs["ev0_home"] = str(get_threev0_home())
+            kwargs["ev0_home"] = home_dir
         for provider in self._providers:
             try:
                 provider.initialize(session_id=session_id, **kwargs)
