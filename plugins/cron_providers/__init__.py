@@ -45,21 +45,10 @@ _USER_NAMESPACE = "_threev0_user_cron"
 
 
 def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
-    """Register an empty package shell in sys.modules.
+    # Shared with the memory-loader scaffold (architecture-review pass 3, C1).
+    from plugins._provider_loader import register_synthetic_package as _impl
 
-    User-installed providers import as ``_ev0_user_cron.<name>``, a dotted
-    name whose parents exist nowhere on disk. Unless those parents are present
-    in ``sys.modules``, any relative import inside the plugin
-    (``from . import config``) fails with
-    ``ModuleNotFoundError: No module named '_threev0_user_cron'`` — the same
-    reason the loader already registers ``plugins`` and ``plugins.cron_providers`` for
-    bundled providers.
-    """
-    if name in sys.modules:
-        return
-    spec = importlib.machinery.ModuleSpec(name, None, is_package=True)
-    spec.submodule_search_locations = search_locations
-    sys.modules[name] = importlib.util.module_from_spec(spec)
+    return _impl(name, search_locations)
 
 
 # ---------------------------------------------------------------------------
@@ -67,13 +56,10 @@ def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
 # ---------------------------------------------------------------------------
 
 def _get_user_plugins_dir() -> Optional[Path]:
-    """Return ``$EV0_HOME/plugins/`` or None if unavailable."""
-    try:
-        from threev0_constants import get_threev0_home
-        d = get_threev0_home() / "plugins"
-        return d if d.is_dir() else None
-    except Exception:
-        return None
+    # Shared with the memory-loader scaffold (architecture-review pass 3, C1).
+    from plugins._provider_loader import get_user_plugins_dir as _impl
+
+    return _impl()
 
 
 def _is_cron_provider_dir(path: Path) -> bool:
@@ -93,55 +79,20 @@ def _is_cron_provider_dir(path: Path) -> bool:
 
 
 def _iter_provider_dirs() -> List[Tuple[str, Path]]:
-    """Yield ``(name, path)`` for all discovered provider directories.
+    """Yield ``(name, path)`` for all discovered cron provider directories."""
+    from plugins._provider_loader import iter_provider_dirs as _impl
 
-    Scans bundled first, then user-installed. Bundled takes precedence on
-    name collisions (first-seen wins via ``seen`` set).
-    """
-    seen: set = set()
-    dirs: List[Tuple[str, Path]] = []
-
-    # 1. Bundled providers (plugins/cron_providers/<name>/)
-    if _CRON_PLUGINS_DIR.is_dir():
-        for child in sorted(_CRON_PLUGINS_DIR.iterdir()):
-            if not child.is_dir() or child.name.startswith(("_", ".")):
-                continue
-            if not (child / "__init__.py").exists():
-                continue
-            seen.add(child.name)
-            dirs.append((child.name, child))
-
-    # 2. User-installed providers ($EV0_HOME/plugins/<name>/)
-    user_dir = _get_user_plugins_dir()
-    if user_dir:
-        for child in sorted(user_dir.iterdir()):
-            if not child.is_dir() or child.name.startswith(("_", ".")):
-                continue
-            if child.name in seen:
-                continue  # bundled takes precedence
-            if not _is_cron_provider_dir(child):
-                continue  # skip non-cron plugins
-            dirs.append((child.name, child))
-
-    return dirs
+    return _impl(_CRON_PLUGINS_DIR, _is_cron_provider_dir)
 
 
 def find_provider_dir(name: str) -> Optional[Path]:
-    """Resolve a provider name to its directory.
+    """Resolve a cron provider name to its directory.
 
     Checks bundled first, then user-installed.
     """
-    # Bundled
-    bundled = _CRON_PLUGINS_DIR / name
-    if bundled.is_dir() and (bundled / "__init__.py").exists():
-        return bundled
-    # User-installed
-    user_dir = _get_user_plugins_dir()
-    if user_dir:
-        user = user_dir / name
-        if user.is_dir() and _is_cron_provider_dir(user):
-            return user
-    return None
+    from plugins._provider_loader import find_provider_dir as _impl
+
+    return _impl(name, _CRON_PLUGINS_DIR, _is_cron_provider_dir)
 
 
 # ---------------------------------------------------------------------------

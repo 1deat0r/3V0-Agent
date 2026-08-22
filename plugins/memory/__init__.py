@@ -56,21 +56,10 @@ _USER_NAMESPACE = "_threev0_user_memory"
 
 
 def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
-    """Register an empty package shell in sys.modules.
+    # Shared with the cron-provider loader scaffold (pass 3, C1).
+    from plugins._provider_loader import register_synthetic_package as _impl
 
-    User-installed providers import as ``_ev0_user_memory.<name>``, a
-    dotted name whose parents exist nowhere on disk.  Unless those parents
-    are present in ``sys.modules``, any relative import inside the plugin
-    (``from . import config``) fails with
-    ``ModuleNotFoundError: No module named '_threev0_user_memory'`` — the
-    same reason the loader already registers ``plugins`` and
-    ``plugins.memory`` for bundled providers.
-    """
-    if name in sys.modules:
-        return
-    spec = importlib.machinery.ModuleSpec(name, None, is_package=True)
-    spec.submodule_search_locations = search_locations
-    sys.modules[name] = importlib.util.module_from_spec(spec)
+    return _impl(name, search_locations)
 
 
 # ---------------------------------------------------------------------------
@@ -78,13 +67,10 @@ def _register_synthetic_package(name: str, search_locations: List[str]) -> None:
 # ---------------------------------------------------------------------------
 
 def _get_user_plugins_dir() -> Optional[Path]:
-    """Return ``$EV0_HOME/plugins/`` or None if unavailable."""
-    try:
-        from threev0_constants import get_threev0_home
-        d = get_threev0_home() / "plugins"
-        return d if d.is_dir() else None
-    except Exception:
-        return None
+    # Shared with the cron-provider loader scaffold (pass 3, C1).
+    from plugins._provider_loader import get_user_plugins_dir as _impl
+
+    return _impl()
 
 
 def _get_project_plugins_dir() -> Optional[Path]:
@@ -127,35 +113,13 @@ def _iter_provider_dirs() -> List[Tuple[str, Path]]:
     Scans bundled, then user-installed, then project-local.  Bundled takes
     precedence on name collisions (first-seen wins via ``seen`` set).
     """
-    seen: set = set()
-    dirs: List[Tuple[str, Path]] = []
+    from plugins._provider_loader import iter_provider_dirs as _impl
 
-    # 1. Bundled providers (plugins/memory/<name>/)
-    if _MEMORY_PLUGINS_DIR.is_dir():
-        for child in sorted(_MEMORY_PLUGINS_DIR.iterdir()):
-            if not child.is_dir() or child.name.startswith(("_", ".")):
-                continue
-            if not (child / "__init__.py").exists():
-                continue
-            seen.add(child.name)
-            dirs.append((child.name, child))
-
-    # 2. User-installed providers ($EV0_HOME/plugins/<name>/)
-    # 3. Project-local providers (./.3V0/plugins/<name>/), opt-in
-    for source_dir in (_get_user_plugins_dir(), _get_project_plugins_dir()):
-        if not source_dir:
-            continue
-        for child in sorted(source_dir.iterdir()):
-            if not child.is_dir() or child.name.startswith(("_", ".")):
-                continue
-            if child.name in seen:
-                continue  # earlier source wins
-            if not _is_memory_provider_dir(child):
-                continue  # skip non-memory plugins
-            seen.add(child.name)
-            dirs.append((child.name, child))
-
-    return dirs
+    return _impl(
+        _MEMORY_PLUGINS_DIR,
+        _is_memory_provider_dir,
+        project_dir=_get_project_plugins_dir,
+    )
 
 
 def _iter_entry_points():
@@ -187,19 +151,16 @@ def find_provider_dir(name: str) -> Optional[Path]:
     ``3v0 <provider>`` subcommands — working, but a second-class citizen next
     to a directory install.
     """
-    # Bundled
-    bundled = _MEMORY_PLUGINS_DIR / name
-    if bundled.is_dir() and (bundled / "__init__.py").exists():
-        return bundled
-    # User-installed, then project-local
-    for source_dir in (_get_user_plugins_dir(), _get_project_plugins_dir()):
-        if not source_dir:
-            continue
-        candidate = source_dir / name
-        if candidate.is_dir() and _is_memory_provider_dir(candidate):
-            return candidate
-    # Pip entry point
-    return _entry_point_package_dir(find_provider_entry_point(name))
+    # Bundled, user-installed, project-local, then pip entry point.
+    from plugins._provider_loader import find_provider_dir as _impl
+
+    return _impl(
+        name,
+        _MEMORY_PLUGINS_DIR,
+        _is_memory_provider_dir,
+        project_dir=_get_project_plugins_dir,
+        extra_resolver=_entry_point_package_dir_any,
+    )
 
 
 def _entry_point_package_dir(entry_point) -> Optional[Path]:
@@ -238,6 +199,14 @@ def find_provider_entry_point(name: str):
         if entry_point.name == name:
             return entry_point
     return None
+
+
+def _entry_point_package_dir_any(name: str) -> Optional[Path]:
+    """Resolve an entry-point provider's package dir by provider name.
+
+    Used as the generic loader's ``extra_resolver`` hook (pass 3, C1).
+    """
+    return _entry_point_package_dir(find_provider_entry_point(name))
 
 
 # ---------------------------------------------------------------------------
