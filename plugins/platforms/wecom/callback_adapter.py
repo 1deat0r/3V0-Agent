@@ -25,8 +25,9 @@ try:
     import defusedxml.ElementTree as ET
 
     DEFUSEDXML_AVAILABLE = True
-except ImportError:
-    ET = None  # type: ignore[assignment]
+except ImportError:  # pragma: no cover — optional extra
+    import xml.etree.ElementTree as ET  # noqa: N812 — stdlib parse (drop-in)
+
     DEFUSEDXML_AVAILABLE = False
 
 try:

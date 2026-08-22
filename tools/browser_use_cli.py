@@ -39,7 +39,7 @@ _PRIVATE_BROWSER_SENTINEL = "_EV0_BU_PRIVATE_BROWSER"
 # state), costs one IPC round-trip on later calls.
 _OWN_TAB_PREAMBLE = """\
 # 3v0: pin this named session to its own tab (once per daemon process)
-def _ev0_ensure_own_tab():
+def _threev0_ensure_own_tab():
     import os as _os, tempfile as _tf
     _name = _os.environ.get("BU_NAME", "default")
     try:
@@ -68,8 +68,8 @@ def _ev0_ensure_own_tab():
         open(_marker, "w").close()
     except OSError:
         pass
-_ev0_ensure_own_tab()
-del _ev0_ensure_own_tab
+_threev0_ensure_own_tab()
+del _threev0_ensure_own_tab
 """
 
 _DEFAULT_TIMEOUT_S = 300

@@ -12,7 +12,7 @@ import pytest
     not hasattr(socket, "AF_UNIX"), reason="Unix datagram sockets are unavailable"
 )
 def test_notify_supports_systemd_abstract_socket(monkeypatch):
-    name = "\0ev0-test-notify"
+    name = "\x003v0-test-notify"
     receiver = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
     receiver.bind(name)
     receiver.settimeout(1.0)

@@ -15,10 +15,17 @@ Placement contract (July 2026):
 
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 XURL_SKILL = REPO_ROOT / "skills" / "social-media" / "xurl" / "SKILL.md"
 X_SEARCH_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "x-search.md"
+
+pytestmark = pytest.mark.skipif(
+    not X_SEARCH_DOC.exists(),
+    reason="website/ (incl. x-search.md) pruned as upstream-only surface (377b41e14b)",
+)
 
 
 def _read(path: Path) -> str:

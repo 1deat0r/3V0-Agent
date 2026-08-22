@@ -143,6 +143,10 @@ def test_skill_has_tests(name):
 def test_docs_pages_generated():
     """Each bundled office skill has a generated docs-site page."""
     docs_dir = REPO / "website" / "docs" / "user-guide" / "skills" / "bundled" / "productivity"
+    if not docs_dir.exists():
+        # website/ was pruned as upstream-only surface (377b41e14b) — the
+        # generated docs pages went with it; re-enable if the site returns.
+        pytest.skip("website/ docs site pruned as upstream-only surface (377b41e14b)")
     for name in OFFICE_SKILLS:
         assert (docs_dir / f"productivity-{name}.md").exists(), (
             f"missing generated docs page for {name}; run website/scripts/generate-skill-docs.py"

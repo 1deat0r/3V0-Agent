@@ -162,7 +162,11 @@ class TestEnginesAreSatisfiable:
         Vite is the real constraint (it needs `node:util.styleText`). Raising
         the desktop floor beyond it silently force-migrates every user's
         toolchain for no dependency reason.
+
+        apps/ was pruned as upstream-only surface (377b41e14b) — the desktop
+        Electron app is no longer shipped from this repo.
         """
+        pytest.skip("apps/ pruned as upstream-only surface (377b41e14b)")
         desktop = json.loads((REPO_ROOT / "apps" / "desktop" / "package.json").read_text())
         node_range = desktop["engines"]["node"]
         # The tightest floor any dependency actually declares (react-router

@@ -30,7 +30,7 @@ def test_profile_local_mcp_tool_is_visible_in_slash_worker(tmp_path):
             mcp = FastMCP("profileprobe")
 
             @mcp.tool()
-            def ev0_61922_profile_probe() -> str:
+            def threev0_61922_profile_probe() -> str:
                 return {marker!r}
 
             if __name__ == "__main__":
