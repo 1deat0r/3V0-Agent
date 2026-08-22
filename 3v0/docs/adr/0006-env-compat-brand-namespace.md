@@ -31,9 +31,13 @@ under active migration. Only two constraints survive:
 
 - **Phase E (env contract):** `EV0_*` → `3V0_*` in Python reads/writes,
   `.env.example`, `setup-3v0.sh`, workflows, AGENTS.md doctrine, comments.
-  `THREEV0_*` units stay (valid spelling for systemd) and Python resolves
-  `3V0_*` first, `THREEV0_*` second, `EV0_*` third (read-compat fallback
-  removed once Phase E lands: no production path reads EV0_*).
+  Python resolves `3V0_*` first, `EV0_*` second (legacy read-compat, dropped
+  once no production path reads EV0_*). `THREEV0_*` is NOT a production
+  writer — systemd `Environment="3V0_X=..."` accepts digit-leading keys
+  (grammar only bites POSIX `export`, which we avoid via `env VAR=x cmd`).
+  The env namespace is exactly two spellings: `3v0` (everywhere grammar
+  allows) and `threev0` (Python identifiers only — `import 3v0_cli` is a
+  `SyntaxError`).
 - **Phase P (import package):** `threev0_cli/` (and
   `threev0_bootstrap.py`, `threev0_logging.py`, `threev0_state*.py`,
   `ui-tui/packages/3v0-ink/` similarly), mechanical import rewrites across

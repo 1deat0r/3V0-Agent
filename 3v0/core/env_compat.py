@@ -18,15 +18,15 @@ from __future__ import annotations
 import os
 from typing import Optional
 
-# Order matters: canonical brand first, daemon alias, legacy compat last.
-_PREFIXES = ("3V0_", "THREEV0_", "EV0_")
+# Order matters: canonical brand first, legacy compat last.
+_PREFIXES = ("3V0_", "EV0_")
 
 
 def branded_env(name: str, default: Optional[str] = None) -> Optional[str]:
     """Return the first truthy value of 3V0_/THREEV0_/EV0_<name>.
 
     ``name`` is the logical suffix, e.g. ``branded_env("HOME")`` resolves
-    ``3V0_HOME``, ``THREEV0_HOME``, ``EV0_HOME``.
+    ``3V0_HOME``, then legacy ``EV0_HOME``.
     """
     for prefix in _PREFIXES:
         value = os.environ.get(f"{prefix}{name}")

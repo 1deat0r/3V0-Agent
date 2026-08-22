@@ -32,7 +32,7 @@ def profile_skills_dir() -> Path:
     """The active profile's skills directory.
 
     Honors ``THREEV0_SKILLS_DIR`` (tests / explicit override) first, then the
-    brand-resolved home (``3V0_HOME`` → ``THREEV0_HOME`` → ``EV0_HOME``)
+    brand-resolved home (``3V0_HOME`` → legacy ``EV0_HOME``)
     ``/skills`` (the runtime's profile), then the 3v0 profile default.
     """
     env = os.environ.get("THREEV0_SKILLS_DIR")

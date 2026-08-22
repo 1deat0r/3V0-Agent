@@ -73,8 +73,6 @@ def _threev0_home_from_env() -> Path:
     """
     val = os.environ.get("3V0_HOME", "").strip()
     if not val:
-        val = os.environ.get("THREEV0_HOME", "").strip()  # valid systemd spelling
-    if not val:
         val = os.environ.get("EV0_HOME", "").strip()  # legacy alias (ADR-0006 R2)
     if val:
         return Path(val)
@@ -140,11 +138,7 @@ def get_threev0_home() -> Path:
     if override:
         return Path(override)
 
-    if not (
-        os.environ.get("3V0_HOME", "").strip()
-        or os.environ.get("THREEV0_HOME", "").strip()
-        or os.environ.get("EV0_HOME", "").strip()
-    ):
+    if not os.environ.get("3V0_HOME", "").strip():
         _warn_profile_fallback_once()
 
     return _threev0_home_from_env()

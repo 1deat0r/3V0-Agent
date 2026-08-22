@@ -89,6 +89,14 @@ def _threev0_home_points_at_production(value: str) -> bool:
 if _threev0_home_points_at_production(os.environ.get("EV0_HOME", "")):
     _SESSION_EV0_HOME = tempfile.mkdtemp(prefix="3v0-test-home-")
     os.environ["EV0_HOME"] = _SESSION_EV0_HOME
+    # R2 (ADR-0006): canonical 3V0_HOME is read FIRST — a leaked
+    # 3V0_HOME (gateway env, developer shell) would bypass the sandbox
+    # and route every test to the PRODUCTION profile home. CLEAR the
+    # canonical vars (do NOT repoint them here): tests that set only the
+    # legacy EV0_HOME then resolve through the EV0 fallback to their
+    # intended tempdir; tests that intentionally set 3V0_HOME control it.
+    os.environ.pop("3V0_HOME", None)
+    os.environ.pop("THREEV0_HOME", None)  # no production writer (ADR-0006 collapse)
     atexit.register(shutil.rmtree, _SESSION_EV0_HOME, True)
 
 # Subprocess-surviving isolation marker (#82770). PYTEST_CURRENT_TEST /

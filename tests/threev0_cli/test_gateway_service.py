@@ -935,6 +935,9 @@ class TestSystemUnitEv0Home:
         # Simulate sudo: Path.home() returns /root, target user is alice
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
         monkeypatch.delenv("EV0_HOME", raising=False)
+        # R2: clear the full env-home chain to simulate "no override".
+        monkeypatch.delenv("3V0_HOME", raising=False)
+        monkeypatch.delenv("THREEV0_HOME", raising=False)
         monkeypatch.setattr(
             gateway_cli, "_system_service_identity",
             lambda run_as_user=None: ("alice", "alice", "/home/alice"),
@@ -990,7 +993,9 @@ class TestSystemUnitRefreshSyncsEv0Home:
         monkeypatch.setattr(gateway_cli, "_run_systemctl", lambda *a, **k: None)
         monkeypatch.delenv("EV0_RESTART_DRAIN_TIMEOUT", raising=False)
 
-        # Correct installed unit (operator's EV0_HOME + drain timeout).
+        # Correct installed unit (operator's 3V0_HOME + drain timeout).
+        # R2: set the canonical 3V0_HOME too — it is read first.
+        monkeypatch.setenv("3V0_HOME", str(alice_ev0))
         monkeypatch.setenv("EV0_HOME", str(alice_ev0))
         good_unit = gateway_cli.generate_systemd_unit(system=True, run_as_user="alice")
         assert "TimeoutStopSec=210" in good_unit
@@ -1095,6 +1100,10 @@ class TestEv0HomeForTargetUser:
     def test_remaps_default_home(self, monkeypatch):
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
         monkeypatch.delenv("EV0_HOME", raising=False)
+        # R2: canonical 3V0_HOME is read first — clear the full chain to
+        # simulate "no env override" (see ADR-0006 env-compat namespace).
+        monkeypatch.delenv("3V0_HOME", raising=False)
+        monkeypatch.delenv("THREEV0_HOME", raising=False)
 
         result = gateway_cli._threev0_home_for_target_user("/home/alice")
         assert result == "/home/alice/.3V0"
@@ -2153,10 +2162,12 @@ class TestServiceNameOverrides:
     """3V0 native-runtime migration: profile 3v0 owns a 3v0-gateway unit."""
 
     def test_3v0_profile_uses_native_unit_name(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("3V0_HOME", str(tmp_path / "3v0" / "profiles" / "3v0"))
         monkeypatch.setenv("EV0_HOME", str(tmp_path / "3v0" / "profiles" / "3v0"))
         assert gateway_cli.get_service_name() == "3v0-gateway"
 
     def test_regular_profile_keeps_threev0_unit_name(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("3V0_HOME", str(tmp_path / "3v0" / "profiles" / "coder"))
         monkeypatch.setenv("EV0_HOME", str(tmp_path / "3v0" / "profiles" / "coder"))
         assert gateway_cli.get_service_name() == "3v0-gateway-coder"
 
