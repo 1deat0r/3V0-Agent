@@ -24,6 +24,8 @@ import time
 import unicodedata
 import uuid
 from typing import Optional
+
+from cron.lifecycle_guard import contains_gateway_lifecycle_command_precise
 from threev0_cli.config import cfg_get
 
 from tools.interrupt import is_interrupted
@@ -614,6 +616,17 @@ def detect_hardline_command(command: str) -> tuple:
         return (True, _MALFORMED_EXEC_DESCRIPTION)
     for command_variant in _command_detection_variants(command):
         variant_lower = command_variant.lower()
+        # Gateway lifecycle shapes come from cron.lifecycle_guard — the
+        # single detection implementation (3v0 AND ev0 launcher spellings,
+        # systemctl/launchctl/kill branches, data-sink masking). The old
+        # local `\bev0 ... gateway (stop|restart)` row silently missed
+        # `3v0 gateway restart` after the rename; routing through the guard
+        # closes that drift (architecture-review C2).
+        if contains_gateway_lifecycle_command_precise(variant_lower):
+            return (
+                True,
+                "stop/restart 3v0 gateway (kills running agents)",
+            )
         for pattern_re, description in HARDLINE_PATTERNS_COMPILED:
             if pattern_re.search(variant_lower):
                 return (True, description)
@@ -924,12 +937,12 @@ DANGEROUS_PATTERNS = [
     (r'\bfind\b.*-exec(?:dir)?\s+(/\S*/)?rm\b', "find -exec/-execdir rm"),
     (r'\bfind\b.*-delete\b', "find -delete"),
     # Gateway lifecycle protection: prevent the agent from killing its own
-    # gateway process.  These commands trigger a gateway restart/stop that
-    # terminates all running agents mid-work.  Allow global flags between
-    # `3v0` and `gateway` (e.g. `3v0 -p ade gateway restart`) so a
-    # profile flag can't slip the agent past the guard.
-    (r'\bev0\s+(?:-{1,2}\S+(?:\s+\S+)?\s+)*gateway\s+(stop|restart)\b', "stop/restart 3v0 gateway (kills running agents)"),
-    (r'\bev0\s+update\b', "3v0 update (restarts gateway, kills running agents)"),
+    # gateway process.  `gateway (stop|restart)` shapes are detected by
+    # cron.lifecycle_guard (contains_gateway_lifecycle_command) — the single
+    # implementation, 3v0/ev0-brand aware — so this table only keeps the
+    # update shape, which the guard does not cover, with both launcher
+    # spellings after the rename.
+    (r'\b(?:3v0|ev0)\s+update\b', "3v0 update (restarts gateway, kills running agents)"),
     # Docker container lifecycle — any user with docker.sock mounted (a common
     # Docker Compose pattern) gives the agent the ability to restart/stop/kill
     # containers without approval.  These are agent-initiated lifecycle operations

@@ -2788,6 +2788,7 @@ def terminal_tool(
                 _MAX_REFERENCED_SCRIPT_BYTES,
                 contains_gateway_lifecycle_command_or_referenced_script,
                 contains_launchctl_submit_command,
+                is_sanctioned_self_reload,
             )
             if contains_launchctl_submit_command(command):
                 return json.dumps({
@@ -2866,9 +2867,7 @@ def terminal_tool(
                     pass
                 return None
 
-            _sanctioned_reload = (
-                "reload_gateway.sh" in command and "3v0/scripts" in command
-            )
+            _sanctioned_reload = is_sanctioned_self_reload(command)
             if _sanctioned_reload:
                 # Sanctioned 3V0 self-reload (operator-directed, 2026-08-18).
                 # reload_gateway.sh delegates the restart to a DETACHED

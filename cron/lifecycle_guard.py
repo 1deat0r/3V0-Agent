@@ -63,7 +63,11 @@ _GATEWAY_LIFECYCLE_PATTERN = re.compile(
     # `start` is intentionally excluded: starting a gateway from inside a
     # gateway is benign (a no-op or "already running" error), and a
     # legitimate cron job might start a sibling profile's gateway.
-    r"(?:3v0|ev0|" + re.escape(_LEGACY_LAUNCHER) + r")\s+gateway\s+(?:restart|stop)"
+    # Allow global flags between the launcher and `gateway` (e.g.
+    # `3v0 -p ade gateway restart`) so a profile flag can't slip the
+    # agent past the guard (architecture-review C2 — the old approval
+    # regex handled this shape; lifecycle_guard's Branch A did not).
+    r"(?:3v0|ev0|" + re.escape(_LEGACY_LAUNCHER) + r")\s+(?:-{1,2}\S+(?:\s+\S+)?\s+)*gateway\s+(?:restart|stop)"
     # Branch B: launchctl ops on a 3v0-gateway label. macOS launchd
     # labels look like `ai.3v0.gateway` / `3v0-gateway`. Requiring the
     # gateway identifier prevents blocking unrelated 3v0 services (e.g.
@@ -105,6 +109,24 @@ def contains_gateway_lifecycle_command(text: str) -> bool:
         return False
     normalized = _SHELL_LINE_CONTINUATION.sub(" ", text)
     return bool(_GATEWAY_LIFECYCLE_PATTERN.search(normalized))
+
+
+def contains_gateway_lifecycle_command_precise(text: str) -> bool:
+    """Return True when *text* EXECUTEs a gateway lifecycle command.
+
+    Same detector as :func:`contains_gateway_lifecycle_command` plus the
+    data-sink masking pass :func:`_lifecycle_command_scan_with_data_exemption`:
+    a diagnostic grep/journalctl/sqlite pattern that merely MENTIONS a
+    restart line is data, not a command. Approval prompts run against real
+    user-visible commands, so false positives here waste the operator's
+    attention; the conservative unmasked form stays the default for cron
+    scheduling (fail-closed on ambiguity there is the safer default).
+    """
+    if not text:
+        return False
+    return _lifecycle_command_scan_with_data_exemption(
+        text
+    ) or contains_launchctl_submit_command(text)
 
 
 _SHELL_EXECUTABLES = frozenset({"sh", "bash", "dash", "ksh", "zsh"})
@@ -723,3 +745,26 @@ def check_gateway_lifecycle(
             "(#30719). Run `3v0 gateway restart` from a shell outside "
             "the running gateway instead."
         )
+
+
+# Path shape of the ONLY sanctioned self-reload: reload_gateway.sh under
+# 3v0/scripts/ dispatches the restart to a DETACHED systemd-run transient
+# unit (its own cgroup, scheduled out a few seconds) that survives the
+# gateway cgroup sweep. Any other restart/stop shape is a foot-gun inside
+# the gateway process (SIGTERM propagates to the caller before it finishes).
+# Kept here — not in tools/terminal_tool.py — so the "what is sanctioned"
+# decision lives in the same module as "what is a lifecycle command".
+_SANCTIONED_RELOAD_MARKERS = ("reload_gateway.sh", "3v0/scripts")
+
+
+def is_sanctioned_self_reload(command: str) -> bool:
+    """True when *command* is the sanctioned self-reload path.
+
+    Operator-directed (2026-08-18): this is the ONLY gateway-lifecycle shape
+    the in-process terminal guard permits. Everything else that matches the
+    lifecycle pattern must be blocked from inside the gateway; ad-hoc
+    lifecycle commands stay blocked (see tools/terminal_tool.py).
+    """
+    if not command:
+        return False
+    return all(marker in command for marker in _SANCTIONED_RELOAD_MARKERS)
