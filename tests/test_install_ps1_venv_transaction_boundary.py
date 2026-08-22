@@ -22,7 +22,15 @@ source level, same approach as tests/test_install_ps1_venv_recreate_safety.py.
 
 from pathlib import Path
 
+import pytest
+
 INSTALL_PS1 = Path(__file__).resolve().parents[1] / "scripts" / "install.ps1"
+
+pytestmark = pytest.mark.skipif(
+    not INSTALL_PS1.exists(),
+    reason="scripts/install.ps1 was pruned as upstream-only surface (377b41e14b); tests re-enable if the installer returns",
+)
+
 
 
 def _function_body(source: str, function_name: str) -> str:

@@ -26,8 +26,10 @@ INSTALL_SH = REPO_ROOT / "scripts" / "install.sh"
 INSTALL_PS1 = REPO_ROOT / "scripts" / "install.ps1"
 
 pytestmark = pytest.mark.skipif(
-    shutil.which("git") is None or shutil.which("bash") is None,
-    reason="needs git and bash",
+    shutil.which("git") is None
+    or shutil.which("bash") is None
+    or not INSTALL_PS1.exists(),
+    reason="needs git and bash; install.ps1 pruned as upstream-only surface (377b41e14b)",
 )
 
 

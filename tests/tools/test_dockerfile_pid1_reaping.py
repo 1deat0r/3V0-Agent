@@ -27,6 +27,12 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DOCKERFILE = REPO_ROOT / "Dockerfile"
+
+pytestmark = pytest.mark.skipif(
+    not DOCKERFILE.exists(),
+    reason="Dockerfile was pruned as upstream-only surface (377b41e14b); tests re-enable if docker build returns"
+)
+
 DOCKERIGNORE = REPO_ROOT / ".dockerignore"
 ENTRYPOINT_DISPATCH = REPO_ROOT / "docker" / "entrypoint-dispatch.sh"
 

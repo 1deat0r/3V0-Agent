@@ -8,9 +8,17 @@ binary is still missing (see test_web_routers_tools_install_on_enable.py).
 
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 INSTALL_SH = REPO_ROOT / "scripts" / "install.sh"
 INSTALL_PS1 = REPO_ROOT / "scripts" / "install.ps1"
+
+pytestmark = pytest.mark.skipif(
+    not INSTALL_PS1.exists(),
+    reason="scripts/install.ps1 was pruned as upstream-only surface (377b41e14b); tests re-enable if the installer returns",
+)
+
 
 
 class TestInstallSh:

@@ -4,8 +4,15 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DOCKERFILE = REPO_ROOT / "Dockerfile"
+pytestmark = pytest.mark.skipif(
+    not DOCKERFILE.exists(),
+    reason="pruned artifact; tests re-enable if it returns",
+)
+
 
 
 def _dockerfile_text() -> str:

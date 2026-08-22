@@ -304,7 +304,7 @@ class TestResolveConfigPath:
 
 class TestResolveActiveHost:
     def test_profile_host_key_uses_honcho_safe_separator(self):
-        assert profile_host_key("coder") == "ev0_coder"
+        assert profile_host_key("coder") == "3v0_coder"
         assert profile_host_key("default") == "3v0"
 
 

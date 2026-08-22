@@ -15,6 +15,11 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SHIM = REPO_ROOT / "docker" / "tini-shim.sh"
 
+pytestmark = pytest.mark.skipif(
+    not SHIM.exists(),
+    reason="docker/ (incl. tini-shim.sh) was pruned as upstream-only surface (377b41e14b); tests re-enable if the shim returns",
+)
+
 
 @pytest.fixture
 def recorder(tmp_path: Path) -> tuple[Path, Path]:

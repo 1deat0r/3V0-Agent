@@ -14,9 +14,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 WINDOWS_UPDATE_PS1 = REPO_ROOT / "scripts" / "desktop-update" / "windows.ps1"
+
+pytestmark = pytest.mark.skipif(
+    not WINDOWS_UPDATE_PS1.exists(),
+    reason="scripts/desktop-update/windows.ps1 pruned as upstream-only surface (377b41e14b)"
+)
 
 
 def test_windows_update_uses_locale_independent_unix_seconds() -> None:

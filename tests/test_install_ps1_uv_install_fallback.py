@@ -33,6 +33,11 @@ from pathlib import Path
 import pytest
 
 _INSTALL_PS1 = Path(__file__).resolve().parents[1] / "scripts" / "install.ps1"
+pytestmark = pytest.mark.skipif(
+    not _INSTALL_PS1.exists(),
+    reason="scripts/install.ps1 was pruned as upstream-only surface (377b41e14b); tests re-enable if the installer returns",
+)
+
 
 _GITHUB_INSTALLER_URL = (
     "https://github.com/astral-sh/uv/releases/latest/download/uv-installer.ps1"

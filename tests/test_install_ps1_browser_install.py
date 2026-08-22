@@ -15,8 +15,16 @@ and tests/test_install_ps1_ascii_only.py.
 import re
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 INSTALL_PS1 = REPO_ROOT / "scripts" / "install.ps1"
+
+pytestmark = pytest.mark.skipif(
+    not INSTALL_PS1.exists(),
+    reason="scripts/install.ps1 was pruned as upstream-only surface (377b41e14b); tests re-enable if the installer returns",
+)
+
 
 
 def _extract_function_body(source: str, name: str) -> str:
