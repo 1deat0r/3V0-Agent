@@ -12,7 +12,24 @@ pointer to what was live at the last session's end.*
 *narrative* — the kickoff judgment, the last-sessions arc, hard-won
 lessons, and the startup routine. Read both.
 
-## Next-session kickoff (2026-08-21, wake #11 — SPEC review + eradication fix pass)
+## Next-session kickoff (2026-08-22, wake #12 — full-suite triage + Phase R2 cutover)
+
+**This session (see also HANDOFF.generated.md for mechanical state):**
+- **Full-suite triage:** 140 → 2 known failures (33,618 passed / 3 failed / 381 skipped; the 3rd of the 3, file_safety_credentials, now passes). Fixed ~79 via pyproject-pinned extras install (hindsight-client, fal-client, anthropic, daytona, modal, parallel-web, setuptools), ~50 via pruned-artifact skipif guards (`377b41e14b` reason), 8 rename-lag bugs (honcho keys, systemd NOTIFY NUL-literal, browser_use preamble, slash_worker MCP probe, threev0_state phantom assertion, windows_native assertion, workflow watch-list), **one real security vuln fixed** (credential denylist case-variant bypass — `@file:.3v0/auth.json` lowercase-v leaked provider keys/MCP tokens; fixed in context_references + preserved file_safety per-location contract), 3 real prod bugs (wecom `ET=None` crash fallback, rot_scan encoding, deleted leftover phase_r1_sweep.py), 2 xfail-documented PTY limits (raw-mode sendeof, OPOST surrogateescape). Commits 50b83d8e1b..3ab9224907; local == origin == `3ab9224907`, tree clean.
+- **Phase R2 CUTOVER COMMITTED (3ab9224907) but GATEWAY NOT YET RESTARTED — operator asked 3V0 to restart it itself; turn lease expired mid-operation.** `threev0_constants._threev0_home_from_env` now resolves `3V0_HOME` → `THREEV0_HOME` → `EV0_HOME` (legacy), per ADR-0006. The systemd unit `~/.config/systemd/user/3v0-gateway.service` was updated to set `3V0_HOME` (canonical) AND `EV0_HOME` (transition alias).
+
+**NEXT-SESSION TODO (in order):**
+1. **Restart the gateway to complete R2:** `systemctl --user daemon-reload && systemctl --user restart 3v0-gateway` (passwordless sudo available; this session will die on restart — that is expected). After restart, verify: `pgrep -af "threev0_cli.main"` shows the new PID; `tr '\0' '\n' < /proc/<pid>/environ | grep -E "3V0_HOME|EV0_HOME"` shows both; the gateway comes back on Telegram.
+2. Verify the canonical-suite still passes post-R2 (`scripts/run_tests.sh -j 8 tests/threev0_cli tests/test_threev0_constants.py`).
+3. Two known failures remain: (a) `tests/ci/test_live_comment.py::test_workflow_watch_list_names_a_workflow_that_exists` — one-line `.github/workflows/ci-review-comment.yml` watch-list change (pruned `Docker Build, Test, and Publish` → `Tests`) is blocked by OAuth workflow-scope; land when token regen. (b) `tests/threev0_cli/test_picker_prewarm.py` — pre-existing flaky race (fails on pre-change tree too).
+4. Consider migrating the remaining 61 scattered `os.environ.get("EV0_HOME")` reads (mostly scripts/tests) to the canonical chain — scope was the resolution path per ADR-0006; the full sweep is follow-up.
+
+**Lessons (this session):**
+- Pre-commit hook runs rot_scan+wiki sync — commit+push can exceed 300s; use `timeout 90 git push` and retry; the push silently succeeds on retry.
+- The rot guard (rot_scan --strict in pre-commit) catches dead modules — it's local, replaced the blocked CI job (token lacked workflow scope).
+- GitHub token lacks `workflow` scope: any `.github/workflows/*` commit is rejected; work around by reverting the workflow line from the commit, pushing, and applying via a parked branch/operator action.
+
+## Archived kickoff (2026-08-21, wake #11 — SPEC review + eradication fix pass)
 
 **This session:** SPEC-axis review of the 3,555-file rename (aa821f9361..HEAD,
 plus two later fix commits) surfaced real misses; the follow-up fix pass is
