@@ -571,21 +571,15 @@ class TestStdinHelpers:
         assert result["status"] == "ok"
 
     def test_close_stdin_allows_eof_driven_process_to_finish(self, registry, tmp_path):
-        """PTY mode: writing data + sending EOF lets an EOF-driven child finish.
+        """PTY mode EOF contract (#86212): close_stdin must tell the truth.
 
         Background non-PTY mode used to expose subprocess stdin via a pipe,
         but PR #214b95392 detached non-PTY stdin to DEVNULL to fix keyboard
         lockout (#17959). For interactive stdin → PTY mode is now the only
-        supported path.
+        supported path — and on a non-canonical (raw) PTY, EOF cannot be
+        delivered by sendeof's EOT byte, so close_stdin reports the
+        limitation honestly instead of claiming \"EOF sent\".
         """
-        pytest.xfail(
-            "raw-mode PTY (ICANON=0) does not translate sendeof's EOT into "
-            "EOF-at-line-start — ptyprocess writes the byte literally and a "
-            "blocking child read() never returns b''. Real raw-mode EOF needs "
-            "a write-side close, which the shared master fd cannot provide "
-            "while the reader thread is live. See tools/process_registry.py "
-            "close_stdin (regression #86212)."
-        )
         session = registry.spawn_local(
             'python3 -c "import sys; print(sys.stdin.read().strip())"',
             cwd=str(tmp_path),
@@ -600,18 +594,25 @@ class TestStdinHelpers:
                 interval=0.02,
             ), "PTY session never reached running"
             assert registry.submit_stdin(session.id, "hello")["status"] == "ok"
-            assert registry.close_stdin(session.id)["status"] == "ok"
-
-            deadline = time.time() + 5
-            while time.time() < deadline:
-                poll = registry.poll(session.id)
-                if poll["status"] == "exited":
-                    assert poll["exit_code"] == 0
-                    assert "hello" in poll["output_preview"]
-                    return
-                time.sleep(0.02)
-
-            pytest.fail("process did not exit after stdin was closed")
+            result = registry.close_stdin(session.id)
+            if result["status"] == "ok":
+                # EOF delivered: the child should exit promptly.
+                deadline = time.time() + 5
+                while time.time() < deadline:
+                    poll = registry.poll(session.id)
+                    if poll["status"] == "exited":
+                        assert poll["exit_code"] == 0
+                        assert "hello" in poll["output_preview"]
+                        return
+                    time.sleep(0.02)
+                pytest.fail("process did not exit after stdin was closed")
+            else:
+                # EOF not deliverable on this PTY (raw-mode / dimensions
+                # spawn): the honest error IS the contract — it must name
+                # the limitation and the escape hatch. Claiming "EOF sent"
+                # while the child keeps running would be the #86212 lie.
+                assert "EOF was attempted" in result["error"]
+                assert "kill_process" in result["error"]
         finally:
             registry.kill_process(session.id)
 

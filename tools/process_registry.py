@@ -104,6 +104,13 @@ _MIN_WORKER_MEMORY_MAX_BYTES = 64 * 1024 * 1024
 _DEFAULT_WORKER_MEMORY_MAX_BYTES = 1024 * 1024 * 1024
 _WORKER_MEMORY_MAX_CAP_BYTES = 4 * 1024 * 1024 * 1024
 
+# close_stdin's EOF-verification window: after sendeof we poll the session
+# briefly to confirm the child actually got EOF (see close_stdin docstring,
+# #86212). Short enough that a caller isn't held up, long enough for the
+# child's read() to observe EOF and exit.
+_README_EOF_GRACE_INTERVAL = 0.05
+_README_EOF_GRACE_POLLS = 20  # ~1s total
+
 
 def _worker_memory_max_bytes() -> int:
     """Return a finite per-worker cgroup limit without widening host risk.
@@ -2231,7 +2238,16 @@ class ProcessRegistry:
         }
 
     def close_stdin(self, session_id: str) -> dict:
-        """Close a running process's stdin / send EOF without killing the process."""
+        """Close a running process's stdin / send EOF without killing the process.
+
+        EOF delivery on a PTY depends on the child's line discipline, which
+        varies with spawn shape (ptyprocess's dimensions handling changes
+        the controlling-terminal setup in ways tcgetattr flags cannot
+        discriminate, #86212). Rather than predict, this sends EOF and
+        VERIFIES: if the child exits within a short grace window the call
+        reports ok; otherwise it reports the limitation honestly instead of
+        claiming "EOF sent" while the child keeps running.
+        """
         session = self.get(session_id)
         if session is None:
             return {"status": "not_found", "error": f"No process with ID {session_id}"}
@@ -2241,7 +2257,22 @@ class ProcessRegistry:
         if hasattr(session, '_pty') and session._pty:
             try:
                 session._pty.sendeof()
-                return {"status": "ok", "message": "EOF sent"}
+                # Verify the EOF actually took effect: the child should exit
+                # within a short grace window. If it doesn't, sendeof's EOT
+                # was not translated to EOF by the child's line discipline —
+                # report the limitation honestly instead of "EOF sent".
+                for _ in range(_README_EOF_GRACE_POLLS):
+                    if session.exited or not session._pty.isalive():
+                        return {"status": "ok", "message": "EOF sent"}
+                    time.sleep(_README_EOF_GRACE_INTERVAL)
+                return {
+                    "status": "error",
+                    "error": (
+                        "EOF was attempted but the process is still running; "
+                        "this PTY's line discipline does not translate EOT to "
+                        "EOF. Use kill_process or terminate instead."
+                    ),
+                }
             except Exception as e:
                 return {"status": "error", "error": str(e)}
 
@@ -2249,7 +2280,7 @@ class ProcessRegistry:
             return {"status": "error", "error": "Process stdin not available (non-local backend or stdin closed)"}
         try:
             session.process.stdin.close()
-            return {"status": "ok", "message": "stdin closed"}
+            return {"status": "ok", "message": "stdin closed"}  # pipe mode: real EOF
         except Exception as e:
             return {"status": "error", "error": str(e)}
 
