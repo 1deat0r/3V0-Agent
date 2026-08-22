@@ -21,7 +21,7 @@ If unset, :func:`get_active_provider` applies fallback logic:
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from agent.image_gen_provider import ImageGenProvider
 from agent.provider_registry import ProviderRegistry
@@ -56,12 +56,12 @@ def register_provider(provider: ImageGenProvider, *, scope: Optional[str] = None
 
 def list_providers(*, scope: Optional[str] = None) -> List[ImageGenProvider]:
     """Return all registered providers, sorted by name."""
-    return _registry.list_providers(scope=scope)
+    return cast(List[ImageGenProvider], _registry.list_providers(scope=scope))
 
 
 def get_provider(name: str, *, scope: Optional[str] = None) -> Optional[ImageGenProvider]:
     """Return the provider registered under *name*, or None."""
-    return _registry.get_provider(name, scope=scope)
+    return cast(Optional[ImageGenProvider], _registry.get_provider(name, scope=scope))
 
 
 def snapshot_registration(

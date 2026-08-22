@@ -33,7 +33,7 @@ extract-capable backend.
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from agent.web_search_provider import WebSearchProvider
 from agent.provider_registry import ProviderRegistry
@@ -68,12 +68,12 @@ def register_provider(provider: WebSearchProvider, *, scope: Optional[str] = Non
 
 def list_providers(*, scope: Optional[str] = None) -> List[WebSearchProvider]:
     """Return all registered providers, sorted by name."""
-    return _registry.list_providers(scope=scope)
+    return cast(List[WebSearchProvider], _registry.list_providers(scope=scope))
 
 
 def get_provider(name: str, *, scope: Optional[str] = None) -> Optional[WebSearchProvider]:
     """Return the provider registered under *name*, or None."""
-    return _registry.get_provider(name, scope=scope)
+    return cast(Optional[WebSearchProvider], _registry.get_provider(name, scope=scope))
 
 
 def snapshot_registration(

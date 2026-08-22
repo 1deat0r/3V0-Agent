@@ -37,7 +37,7 @@ job is purely selection, not capability routing.
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from agent.browser_provider import BrowserProvider
 from agent.provider_registry import ProviderRegistry
@@ -74,12 +74,12 @@ def register_provider(provider: BrowserProvider, *, scope: Optional[str] = None)
 
 def list_providers(*, scope: Optional[str] = None) -> List[BrowserProvider]:
     """Return all registered providers, sorted by name."""
-    return _registry.list_providers(scope=scope)
+    return cast(List[BrowserProvider], _registry.list_providers(scope=scope))
 
 
 def get_provider(name: str, *, scope: Optional[str] = None) -> Optional[BrowserProvider]:
     """Return the provider registered under *name*, or None."""
-    return _registry.get_provider(name, scope=scope)
+    return cast(Optional[BrowserProvider], _registry.get_provider(name, scope=scope))
 
 
 def snapshot_registration(
