@@ -3072,10 +3072,14 @@ from threev0_cli.web_routers.git import (  # noqa: E402,F401 — legacy re-expor
 
 
 # Host TCP ports each port-binding gateway platform listens on, as
-# ``platform-name -> (config port key, adapter default)``.  Mirrors
-# ``PORT_BINDING_PLATFORM_VALUES`` in gateway/config.py and each adapter's
-# DEFAULT_PORT / DEFAULT_WEBHOOK_PORT constant.  Used only for the dashboard's
-# gateway-topology readout — best-effort display data, not a bind source.
+# ``platform-name -> (config port key, adapter default)``. Best-effort
+# DISPLAY data for the dashboard's gateway-topology readout — NOT a bind
+# source and not authoritative (a running adapter's real port is its own
+# config key + listener). The old comment claimed this mirrored
+# ``PORT_BINDING_PLATFORM_VALUES`` in gateway/config.py — that is a frozenset
+# of platform *names*, not ports; the values here come from each adapter's
+# DEFAULT_PORT / DEFAULT_WEBHOOK_PORT constant where one exists, else the
+# historical port (ticket #11).
 _PORT_BINDING_PLATFORM_PORTS: Dict[str, Tuple[str, int]] = {
     "webhook": ("port", 8644),
     "api_server": ("port", 8642),
