@@ -13458,7 +13458,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
     # Tool progress callback (audio cues for voice mode)
     # ====================================================================
 
-    def _on_tool_progress(self, event_type: str, function_name: str = None, preview: str = None, function_args: dict = None, **kwargs):
+    def _on_tool_progress(self, event_type: str, name: str = None, preview: str = None, args: dict = None, **kwargs):
         """Called on tool lifecycle events (tool.started, tool.completed, reasoning.available, etc.).
 
         Updates the TUI spinner widget so the user can see what the agent
@@ -13479,7 +13479,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # are display-only events emitted by the MoA facade (agent_init relay);
         # they never enter message history.
         if event_type == "moa.reference":
-            label = function_name or "reference"
+            label = name or "reference"
             text = preview or ""
             idx = kwargs.get("moa_index")
             count = kwargs.get("moa_count")
@@ -13498,7 +13498,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             self._invalidate()
             return
         if event_type == "moa.aggregating":
-            agg = function_name or ""
+            agg = name or ""
             self._spinner_text = f"◆ aggregating ({agg})" if agg else "◆ aggregating"
             self._invalidate()
             return
@@ -13517,7 +13517,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             # Per-turn accounting: this feed already sees every tool call with
             # its result, so the summary line needs no agent-loop state.
             self._turn_summary_record(
-                function_name, kwargs.get("result"), kwargs.get("is_error", False)
+                name, kwargs.get("result"), kwargs.get("is_error", False)
             )
             # Focus view: count the scrollback line we are NOT printing, so the
             # post-turn recovery line can report how much was hidden. Counted
@@ -13525,7 +13525,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             # had /verbose off is never told focus hid something it didn't.
             if getattr(self, "_focus_view_enabled", False):
                 try:
-                    self._note_focus_hidden_line(function_name or "")
+                    self._note_focus_hidden_line(name or "")
                 except Exception:
                     pass
             # Print stacked scrollback line for "new" / "all" / "verbose" modes.

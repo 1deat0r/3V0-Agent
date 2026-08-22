@@ -37,6 +37,7 @@ from tools.environments.local import threev0_subprocess_env
 from agent.replay_cleanup import sanitize_replay_history
 from agent.skill_commands import describe_skill_invocation
 from agent.conversation_loop import INTERRUPT_WAITING_FOR_MODEL_PREFIX
+from agent.turn_callbacks import TurnCallbacks
 from tui_gateway import git_probe
 from tui_gateway.turn_marker import (
     clear_turn_marker,
@@ -6129,8 +6130,15 @@ def _mirror_subagent_to_child(event_type: str, payload: dict) -> None:
             _child_mirrors.pop(child_key, None)
 
 
-def _agent_cbs(sid: str) -> dict:
-    callbacks = {
+def _agent_cbs(sid: str) -> "TurnCallbacks":
+    """Build the turn-frame callback set for a session.
+
+    Return type is the canonical contract (agent/turn_callbacks.TurnCallbacks)
+    so the callback names/signatures are frozen in code, not a parity comment
+    (architecture-review pass 2, C1). Extra surface-specific callbacks beyond
+    the contract are allowed — the contract is a floor, not a ceiling.
+    """
+    callbacks: "TurnCallbacks" = {
         "tool_start_callback": lambda tc_id, name, args: _on_tool_start(
             sid, tc_id, name, args
         ),
