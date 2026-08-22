@@ -29,6 +29,15 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 
 Create a GitHub issue.
 
+## Active backlog
+
+18 open `ready-for-agent` tickets (issues #7–#24) published by the
+pass-5 `to-tickets` run from the four architecture-review passes. Two wide
+refactors are sequenced as expand–contract chains with native GitHub
+blocking edges: ENV-FUNNEL (#19–#21) and ADAPTERS (#22–#24). Frontier
+(work now): #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #19, #22 —
+everything without an open blocker.
+
 ## When a skill says "fetch the relevant ticket"
 
 Run `gh issue view <number> --comments`.
