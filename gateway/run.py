@@ -5599,6 +5599,26 @@ class TurnRunner:
         agent.notice_callback = _notice_callback_sync
         agent.notice_clear_callback = None
         agent.event_callback = ctx._event_callback_sync
+        # Contract conformance (ticket #7): every lifecycle callback this
+        # runner binds onto the agent must use a canonical name declared in
+        # agent/turn_callbacks.CALLBACK_KEYS. A future rename that drifts from
+        # the contract (the function_name/function_args class of bug) fails
+        # fast here instead of silently mis-wiring the messaging surface.
+        from agent.turn_callbacks import CALLBACK_KEYS
+
+        _contract_keys = set(CALLBACK_KEYS)
+        for _ck in (
+            "tool_progress_callback",
+            "tool_start_callback",
+            "tool_complete_callback",
+            "status_callback",
+        ):
+            if _ck not in _contract_keys:
+                raise RuntimeError(
+                    f"gateway binds {_ck} which is not in the turn callback "
+                    "contract (agent.turn_callbacks.CALLBACK_KEYS) — rename it"
+                )
+        del _ck, _contract_keys
         agent.reasoning_config = reasoning_config
         agent.service_tier = self._runner._service_tier
         agent.request_overrides = turn_route.get("request_overrides") or {}

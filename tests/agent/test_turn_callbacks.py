@@ -52,3 +52,22 @@ class TestCliCallbackSignature:
         assert "args" in params, params
         assert "function_name" not in params, params
         assert "function_args" not in params, params
+
+
+class TestGatewayCallbackConformance:
+    """Ticket #7: gateway/run.py's direct bindings are contract names."""
+
+    def test_gateway_bound_callbacks_are_in_contract(self):
+        from agent.turn_callbacks import CALLBACK_KEYS
+
+        keys = set(CALLBACK_KEYS)
+        for bound in (
+            "tool_progress_callback",
+            "tool_start_callback",
+            "tool_complete_callback",
+            "status_callback",
+        ):
+            assert bound in keys, (
+                f"gateway binds {bound} which is not in the turn callback "
+                "contract (agent.turn_callbacks.CALLBACK_KEYS) — rename it"
+            )

@@ -8,11 +8,11 @@ those callbacks differently (``function_name`` vs ``name``, ``function_args``
 vs ``args``) and the contract lived only in a "parity with gateway/run.py"
 comment. This module declares the canonical names and signatures ONCE:
 tui_gateway/server.py annotates its callback dict with :class:`TurnCallbacks`,
-cli.py's ``_on_tool_progress`` migrated to the canonical parameter names, and
-a regression test inspects the CLI signature against the contract. The
-gateway runner (``gateway/run.py``) binds callbacks directly on the agent and
-is NOT yet wired through this module — the contract is declared here, not yet
-fully consumed by all three runners.
+cli.py's ``_on_tool_progress`` migrated to the canonical parameter names,
+gateway/run.py checks its direct bindings against
+:data:`CALLBACK_KEYS` (ticket #7 conformance guard), and a regression test
+inspects the CLI signature against the contract. All three runners speak the
+canonical names.
 
 Vocabulary: the callbacks are the seam between the turn-loop implementation
 (agent.conversation_loop) and the adapters (CLI / TUI / gateway) that render
