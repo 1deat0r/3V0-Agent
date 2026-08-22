@@ -60,13 +60,27 @@ except ImportError:
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _fallback_threev0_home() -> Path:
+    """Best-effort home path used ONLY when get_threev0_home() is unavailable.
+
+    Never calls the resolver — by definition we're inside its ImportError
+    handler. Mirrors the canonical chain's default (3V0_HOME → EV0_HOME →
+    ~/.3V0) with stdlib only (pass-4 code-review fix).
+    """
+    for key in ("3V0_HOME", "EV0_HOME"):
+        val = os.environ.get(key, "").strip()
+        if val:
+            return Path(val).expanduser()
+    return Path.home() / ".3V0"
+
+
 def _get_sessions_dir() -> Path:
     """Return the sessions directory using the canonical home resolver."""
     try:
         from threev0_constants import get_threev0_home
         return get_threev0_home() / "sessions"
     except ImportError:
-        return get_threev0_home() / "sessions"
+        return _fallback_threev0_home() / "sessions"
 
 
 def _get_session_db():
@@ -214,9 +228,7 @@ def _load_channel_directory() -> dict:
         from threev0_constants import get_threev0_home
         directory_file = get_threev0_home() / "channel_directory.json"
     except ImportError:
-        directory_file = Path(
-            get_threev0_home()
-        ) / "channel_directory.json"
+        directory_file = _fallback_threev0_home() / "channel_directory.json"
 
     if not directory_file.exists():
         return {}
@@ -489,7 +501,7 @@ class EventBridge:
             from threev0_constants import get_threev0_home
             db_file = get_threev0_home() / "state.db"
         except ImportError:
-            db_file = get_threev0_home() / "state.db"
+            db_file = _fallback_threev0_home() / "state.db"
         try:
             self._state_db_mtime = db_file.stat().st_mtime if db_file.exists() else 0.0
         except OSError:
@@ -546,7 +558,7 @@ class EventBridge:
             from threev0_constants import get_threev0_home
             db_file = get_threev0_home() / "state.db"
         except ImportError:
-            db_file = get_threev0_home() / "state.db"
+            db_file = _fallback_threev0_home() / "state.db"
 
         try:
             db_mtime = db_file.stat().st_mtime if db_file.exists() else 0.0

@@ -260,6 +260,9 @@ CREDENTIAL_FILE_NAMES: tuple[str, ...] = (
     ".anthropic_oauth.json",
     ".env",
     "webhook_subscriptions.json",
+    # NOTE: joined paths are legal here and consumed by get_read_block_error's
+    # home-joined iteration (hd / name); is_credential_store_path special-cases
+    # auth/google_oauth.json separately for the classifier path.
     os.path.join("auth", "google_oauth.json"),
     # Bitwarden Secrets Manager disk cache: stores plaintext secret values
     # to avoid re-fetching across back-to-back CLI invocations. The file

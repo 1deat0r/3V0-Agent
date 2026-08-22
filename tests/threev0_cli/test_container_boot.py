@@ -16,6 +16,7 @@ import pytest
 
 from threev0_cli.container_boot import (
     ReconcileAction,
+    container_threev0_home,
     reconcile_profile_gateways,
 )
 
@@ -297,6 +298,24 @@ def _write_lifecycle_sentinel(profile_dir: Path, payload: dict) -> None:
     state_dir = profile_dir / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
     (state_dir / "gateway.lifecycle.json").write_text(json.dumps(payload))
+
+
+class TestContainerThreev0Home:
+    """Code-review fix: the container default must stay /opt/data when env unset.
+
+    The C4 sweep swapped os.environ.get("EV0_HOME", "/opt/data") for the
+    resolver, silently moving the container root to ~/.3V0 on unset env.
+    """
+
+    def test_unset_env_uses_opt_data(self, monkeypatch):
+        monkeypatch.delenv("3V0_HOME", raising=False)
+        monkeypatch.delenv("EV0_HOME", raising=False)
+        assert container_threev0_home() == Path("/opt/data")
+
+    def test_explicit_env_wins(self, monkeypatch):
+        monkeypatch.setenv("EV0_HOME", "/data/custom")
+        monkeypatch.setenv("3V0_HOME", "/data/canonical")
+        assert container_threev0_home() == Path("/data/canonical")
 
 
 

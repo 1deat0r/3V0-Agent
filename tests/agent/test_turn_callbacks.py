@@ -29,46 +29,26 @@ class TestCallbackKeyContract:
             assert key in tc.TurnCallbacks.__annotations__, key
 
 
-class TestBindCallbacks:
-    def test_binds_present_keys_onto_agent(self):
-        calls: list[str] = []
-
-        class _Agent:
-            pass
-
-        agent = _Agent()
-        tc.bind_callbacks(
-            agent,
-            {
-                "tool_progress_callback": lambda *a, **k: calls.append("progress"),
-                "thinking_callback": lambda text: calls.append("think"),
-            },
-        )
-        assert agent.tool_progress_callback is not None
-        assert agent.thinking_callback is not None
-        agent.tool_progress_callback("tool.started", "x", None, None)
-        agent.thinking_callback("...")
-        assert calls == ["progress", "think"]
-
-    def test_missing_keys_are_left_untouched(self):
-        class _Agent:
-            tool_progress_callback = "existing"
-
-        agent = _Agent()
-        tc.bind_callbacks(agent, {"thinking_callback": lambda text: None})
-        assert agent.tool_progress_callback == "existing"
-        assert agent.thinking_callback is not None
-
-    def test_builder_filters_absent_keys(self):
-        kwargs = tc.build_agent_init_callback_kwargs(
-            {"tool_progress_callback": lambda *a, **k: None}
-        )
-        assert set(kwargs) == {"tool_progress_callback"}
-
-
 class TestCliCallbackSignature:
     """The CLI's tool_progress callback uses canonical parameter names.
 
     Regression: cli._on_tool_progress used function_name/function_args while
     agent_init and the tui gateway use name/args — identical positions,
-    divergent spellings, invisible drift (C1)."""
+    divergent spellings, invisible drift (C1).
+    """
+
+    def test_cli_on_tool_progress_uses_canonical_names(self):
+        import inspect
+
+        import cli
+
+        params = inspect.signature(
+            cli.Ev0CLI._on_tool_progress
+        ).parameters
+        # The canonical contract (agent/turn_callbacks): positional
+        # (event_type, name, preview, args) plus **kwargs. If a future
+        # rename reintroduces function_name/function_args, CI fails here.
+        assert "name" in params, params
+        assert "args" in params, params
+        assert "function_name" not in params, params
+        assert "function_args" not in params, params

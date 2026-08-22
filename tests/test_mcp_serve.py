@@ -1398,3 +1398,29 @@ class TestEventBridgePollE2E:
         """Verify the poll interval constant."""
         from mcp_serve import POLL_INTERVAL
         assert POLL_INTERVAL == 0.2
+
+    def test_fallback_home_works_when_resolver_unavailable(self, monkeypatch):
+        """Code-review fix: the ImportError fallback must not call the resolver.
+
+        The C4 sweep had replaced the except-body with get_threev0_home(),
+        which NameErrors precisely when the import fails (the point of the
+        except). _fallback_threev0_home() mirrors the chain with stdlib.
+        """
+        import builtins
+        from pathlib import Path
+        from mcp_serve import _fallback_threev0_home
+
+        real_import = builtins.__import__
+
+        def boom(name, *args, **kwargs):
+            if name == "threev0_constants":
+                raise ImportError("simulated unavailable")
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", boom)
+        monkeypatch.delenv("3V0_HOME", raising=False)
+        monkeypatch.delenv("EV0_HOME", raising=False)
+        assert _fallback_threev0_home() == Path.home() / ".3V0"
+
+        monkeypatch.setenv("3V0_HOME", "/tmp/custom-home")
+        assert _fallback_threev0_home() == Path("/tmp/custom-home")

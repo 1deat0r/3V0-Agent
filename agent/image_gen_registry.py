@@ -21,12 +21,10 @@ If unset, :func:`get_active_provider` applies fallback logic:
 from __future__ import annotations
 
 import logging
-import threading
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from agent.image_gen_provider import ImageGenProvider
 from agent.provider_registry import ProviderRegistry
-from threev0_constants import threev0_home_key
 
 logger = logging.getLogger(__name__)
 

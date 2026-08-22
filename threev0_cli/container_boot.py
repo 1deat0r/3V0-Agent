@@ -29,6 +29,25 @@ from threev0_constants import get_threev0_home
 
 log = logging.getLogger(__name__)
 
+
+def container_threev0_home() -> Path:
+    """Resolve the home root for container/s6 supervision contexts.
+
+    The canonical chain (3V0_HOME → EV0_HOME → platform default) is honoured,
+    but when env is entirely unset the container contract historically meant
+    ``/opt/data`` (the image's persistent VOLUME), NOT the platform home.
+    The C4 home-resolution sweep silently dropped this default; restoring it
+    keeps the container deployment semantics intact (code-review pass).
+    """
+    raw = (
+        os.environ.get("3V0_HOME", "").strip()
+        or os.environ.get("EV0_HOME", "").strip()
+    )
+    if not raw:
+        return Path("/opt/data")
+    # Honour the canonical chain for explicitly-set home.
+    return Path(get_threev0_home())
+
 # Only this desired state triggers automatic restart. Everything else
 # (startup_failed, starting, stopped, missing) registers the slot in
 # the down state and waits for explicit user action — this avoids the
@@ -599,7 +618,7 @@ def main() -> int:
         )
         return 0
 
-    threev0_home = Path(get_threev0_home())
+    threev0_home = container_threev0_home()
     scandir = Path(os.environ.get("S6_PROFILE_GATEWAY_SCANDIR", "/run/service"))
     actions = reconcile_profile_gateways(
         threev0_home=threev0_home, scandir=scandir,

@@ -6,16 +6,13 @@ of lifecycle callbacks onto the agent object before calling
 ``agent.conversation_loop.run_conversation``. Historically each runner named
 those callbacks differently (``function_name`` vs ``name``, ``function_args``
 vs ``args``) and the contract lived only in a "parity with gateway/run.py"
-comment. That drift is exactly what this module eliminates: the callback
-names and signatures are declared ONCE here; every runner imports
-:data:`CALLBACK_KEYS` / the :class:`TurnCallbacks` TypedDict and binds
-through it.
-
-Design intent (deep module): the contract is small — one TypedDict, one
-invariant, one builder — while the per-runner implementations (rendering,
-spooling, IPC) stay behind each runner's own interface. Callers get
-*leverage* (one contract, N runners), maintainers get *locality* (a new
-callback is added here, not re-invented three times).
+comment. This module declares the canonical names and signatures ONCE:
+tui_gateway/server.py annotates its callback dict with :class:`TurnCallbacks`,
+cli.py's ``_on_tool_progress`` migrated to the canonical parameter names, and
+a regression test inspects the CLI signature against the contract. The
+gateway runner (``gateway/run.py``) binds callbacks directly on the agent and
+is NOT yet wired through this module — the contract is declared here, not yet
+fully consumed by all three runners.
 
 Vocabulary: the callbacks are the seam between the turn-loop implementation
 (agent.conversation_loop) and the adapters (CLI / TUI / gateway) that render
@@ -86,32 +83,3 @@ CALLBACK_KEYS: tuple[str, ...] = (
     "stream_callback",
     "voice_ack_callback",
 )
-
-
-def bind_callbacks(
-    agent: Any,
-    callbacks: TurnCallbacks,
-) -> None:
-    """Bind the given callbacks onto an agent instance (in place).
-
-    Each runner previously assigned ``agent.tool_progress_callback = ...``
-    etc. in its own spelling; this is the single binding site for the
-    canonical keys. Missing keys are left untouched so a partially-bound
-    agent keeps its existing wiring (e.g. cached-agent reuse).
-    """
-    for key in CALLBACK_KEYS:
-        value = callbacks.get(key)
-        if value is not None:
-            setattr(agent, key, value)
-
-
-def build_agent_init_callback_kwargs(
-    callbacks: TurnCallbacks,
-) -> Dict[str, Any]:
-    """Return the callback kwargs accepted by agent-init agent construction.
-
-    Mirrors :func:`bind_callbacks` for the path that constructs a fresh agent
-    through agent_init's kwargs dict (the tui_gateway path). Only present
-    keys are included.
-    """
-    return {key: callbacks[key] for key in CALLBACK_KEYS if key in callbacks}

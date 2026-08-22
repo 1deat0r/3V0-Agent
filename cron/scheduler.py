@@ -411,15 +411,6 @@ def _resolve_cron_enabled_toolsets(job: dict, cfg: dict) -> list[str] | None:
         )
         return None
 
-# Valid delivery platforms — used to validate user-supplied platform names
-# in cron delivery targets, preventing env var enumeration via crafted names.
-_KNOWN_DELIVERY_PLATFORMS = frozenset({
-    "telegram", "discord", "slack", "whatsapp", "signal",
-    "matrix", "mattermost", "homeassistant", "dingtalk", "feishu",
-    "wecom", "wecom_callback", "weixin", "sms", "email", "webhook", "bluebubbles",
-    "qqbot", "yuanbao",
-})
-
 # Platforms that support a configured cron/notification home target, mapped to
 # the environment variable used by gateway setup/runtime config.
 _HOME_TARGET_ENV_VARS = {
@@ -1716,9 +1707,9 @@ def _is_known_delivery_platform(platform_name: str) -> bool:
     """Whether ``platform_name`` is a valid cron delivery target.
 
     Built-in platforms are validated against the canonical ``Platform``
-    enum (gateway/config.py) instead of a parallel hand-maintained set —
-    the separate ``_KNOWN_DELIVERY_PLATFORMS`` static list drifted and
-    silently excluded whatsapp_cloud from cron delivery (pass-4 C1).
+    enum (gateway/config.py). (The hand-maintained static set that drifted
+    and silently excluded whatsapp_cloud — pass-4 C1 — is deleted; a stale
+    fallback would reinstate the very exclusion it fixes.)
     Plugin platforms registered via ``PlatformEntry`` are accepted if they
     provide a ``cron_deliver_env_var``.
     """
@@ -1727,10 +1718,14 @@ def _is_known_delivery_platform(platform_name: str) -> bool:
         from gateway.config import Platform
         if name in {p.value for p in Platform}:
             return True
+        # Not a builtin — fall through to plugin providers, which ship as
+        # separate PlatformEntry registrations (line, a2a, ...).
     except Exception:
-        # Fall back to the static list if the enum is unavailable.
-        if name in _KNOWN_DELIVERY_PLATFORMS:
-            return True
+        # Failure mode: do NOT fall back to a stale static set — it drifted
+        # once and silently excluded whatsapp_cloud (pass-4 C1). If the enum
+        # is unavailable, the honest answer is "unknown", letting plugin
+        # providers through if they declare a cron delivery env var.
+        logger.debug("Platform enum unavailable in delivery check: %s", platform_name)
     return bool(_plugin_cron_env_var(name))
 
 

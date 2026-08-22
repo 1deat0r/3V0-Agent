@@ -19,7 +19,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from typing import Literal, Protocol, runtime_checkable
-from threev0_constants import get_threev0_home
+
+from threev0_cli.container_boot import container_threev0_home
 
 ServiceManagerKind = Literal["systemd", "launchd", "windows", "s6", "none"]
 
@@ -349,7 +350,7 @@ def _profile_dir_for_gateway_service(name: str) -> Path:
 
     profile = name[len(S6_SERVICE_PREFIX):] if name.startswith(S6_SERVICE_PREFIX) else name
     validate_profile_name(profile)
-    threev0_home = Path(get_threev0_home())
+    threev0_home = container_threev0_home()
     if threev0_home.parent.name == "profiles":
         root = threev0_home.parent.parent
     else:
