@@ -18,6 +18,9 @@ Columns: path · kind · purpose · why · related
 | `SUSTAINABILITY.md` | policy-doc | Cost-efficiency doctrine for LLM spend | Guides token-efficiency; pairs with 3v0/TOKEN_EFFICIENCY.md | 3v0/TOKEN_EFFICIENCY.md |
 | `docs/3v0-kanban-v1-spec.pdf` | doc | Kanban contract artifact | Specifies the kanban mode contract | threev0_cli/kanban_db.py; 3v0/docs/adr/ |
 | `docs/ADR.md` | doc | Design rationale ledger | Records architectural decisions for the body's evolution | 3v0/docs/adr/; AGENTS.md |
+| `docs/agents/domain.md` | doc | Domain Docs | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/agents/issue-tracker.md; docs/agents/triage-labels.md |
+| `docs/agents/issue-tracker.md` | doc | Issue tracker: GitHub | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/agents/domain.md; docs/agents/triage-labels.md |
+| `docs/agents/triage-labels.md` | doc | Triage Labels | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/agents/domain.md; docs/agents/issue-tracker.md |
 | `docs/billing-lifecycle.md` | doc | Billing lifecycle doc | Account/billing | agent/billing_view.py |
 | `docs/chronos-managed-cron-contract.md` | doc | Managed cron contract | Scheduled tasks spec | cron/scheduler_provider.py |
 | `docs/design/kanban-dialogs/index.html` | asset | File `index.html` | Repository content; see related files / area page for the enclosing subsystem | docs/design/kanban-dialogs/ |

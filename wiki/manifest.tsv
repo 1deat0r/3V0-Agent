@@ -499,6 +499,9 @@ cron/suggestion_catalog.py	source	auto	Curated catalog of starter cron-job sugge
 cron/suggestions.py	source	manual	UX helper	Builds suggested cron-job prompts for interactive setup	cron/scheduler.py; gateway/slash_commands.py
 docs/3v0-kanban-v1-spec.pdf	doc	manual	Kanban contract artifact	Specifies the kanban mode contract	threev0_cli/kanban_db.py; 3v0/docs/adr/
 docs/ADR.md	doc	manual	Design rationale ledger	Records architectural decisions for the body's evolution	3v0/docs/adr/; AGENTS.md
+docs/agents/domain.md	doc	auto	Domain Docs	Human/agent-readable documentation; the wiki keeps it pointer-capped	docs/agents/issue-tracker.md; docs/agents/triage-labels.md
+docs/agents/issue-tracker.md	doc	auto	Issue tracker: GitHub	Human/agent-readable documentation; the wiki keeps it pointer-capped	docs/agents/domain.md; docs/agents/triage-labels.md
+docs/agents/triage-labels.md	doc	auto	Triage Labels	Human/agent-readable documentation; the wiki keeps it pointer-capped	docs/agents/domain.md; docs/agents/issue-tracker.md
 docs/billing-lifecycle.md	doc	manual	Billing lifecycle doc	Account/billing	agent/billing_view.py
 docs/chronos-managed-cron-contract.md	doc	manual	Managed cron contract	Scheduled tasks spec	cron/scheduler_provider.py
 docs/design/kanban-dialogs/index.html	asset	auto	File `index.html`	Repository content; see related files / area page for the enclosing subsystem	docs/design/kanban-dialogs/
