@@ -106,7 +106,7 @@ def active_profile_may_override_home(threev0_root: str) -> bool:
 
 
 def _resolved_home() -> str:
-    threev0_home = os.environ.get("EV0_HOME", "").strip()
+    threev0_home = os.environ.get("3V0_HOME", "").strip() or os.environ.get("EV0_HOME", "").strip()
     if threev0_home:
         return threev0_home
     return os.path.join(os.path.expanduser("~"), ".3V0")
@@ -126,7 +126,7 @@ def container_mode_may_be_active() -> bool:
     if is_container_startup_environment():
         return False
 
-    threev0_home = os.environ.get("EV0_HOME", "").strip()
+    threev0_home = os.environ.get("3V0_HOME", "").strip() or os.environ.get("EV0_HOME", "").strip()
     if threev0_home:
         if os.path.exists(os.path.join(threev0_home, ".container-mode")):
             return True

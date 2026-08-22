@@ -25,6 +25,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Sequence
+from threev0_constants import get_threev0_home
 
 log = logging.getLogger(__name__)
 
@@ -598,7 +599,7 @@ def main() -> int:
         )
         return 0
 
-    threev0_home = Path(os.environ.get("EV0_HOME", "/opt/data"))
+    threev0_home = Path(get_threev0_home())
     scandir = Path(os.environ.get("S6_PROFILE_GATEWAY_SCANDIR", "/run/service"))
     actions = reconcile_profile_gateways(
         threev0_home=threev0_home, scandir=scandir,

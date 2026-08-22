@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any, Callable, Collection
 
 from agent.interrupt_compat import request_hard_interrupt
+from threev0_constants import get_threev0_home
 
 
 def now_ns() -> int:
@@ -850,7 +851,7 @@ def run_host(stdin: Any = None, stdout: Any = None) -> None:
             "boot_id": host._boot_id,
             "build_sha": _build_sha(),
             "cwd": os.getcwd(),
-            "ev0_home": os.environ.get("EV0_HOME", ""),
+            "ev0_home": str(get_threev0_home()),  # wire key stays ev0_home (IPC contract); value canonical
         }
     )
 

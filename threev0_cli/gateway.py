@@ -3120,7 +3120,7 @@ def _threev0_home_for_target_user(target_home_dir: str) -> str:
       /root/.3V0/profiles/coder     → /home/alice/.3V0/profiles/coder
       /opt/custom-3v0               → /opt/custom-3v0  (kept as-is)
     """
-    current_threev0_raw = os.environ.get("EV0_HOME", "").strip()
+    current_threev0_raw = os.environ.get("3V0_HOME", "").strip() or os.environ.get("EV0_HOME", "").strip()
     current_ev0 = (
         Path(current_threev0_raw).expanduser()
         if current_threev0_raw
