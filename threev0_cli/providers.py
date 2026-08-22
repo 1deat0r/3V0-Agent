@@ -23,6 +23,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
+from threev0_constants import LOCAL_LM_STUDIO_DEFAULT_V1_URL
 from utils import base_url_host_matches, base_url_hostname
 
 logger = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ EV0_OVERLAYS: Dict[str, Ev0Overlay] = {
         transport="openai_chat",
         auth_type="api_key",
         extra_env_vars=("LM_API_KEY",),
-        base_url_override="http://127.0.0.1:1234/v1",
+        base_url_override=LOCAL_LM_STUDIO_DEFAULT_V1_URL,
         base_url_env_var="LM_BASE_URL",
     ),
     "copilot-acp": Ev0Overlay(

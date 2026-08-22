@@ -1099,3 +1099,25 @@ class TestHealAttemptFlagSemantics:
         # The flag is set, so the once-per-process budget is spent.
         assert heal_threev0_managed_node() is False
         assert calls["n"] == 1
+
+
+class TestLocalLmDefaultUrls:
+    """Ticket #8: the local-LM endpoints are one constant, not six literals."""
+
+    def test_lm_studio_v1_url_built_from_base(self):
+        from threev0_constants import (
+            LOCAL_LM_STUDIO_DEFAULT_URL,
+            LOCAL_LM_STUDIO_DEFAULT_V1_URL,
+        )
+
+        assert LOCAL_LM_STUDIO_DEFAULT_URL == "http://127.0.0.1:1234"
+        assert LOCAL_LM_STUDIO_DEFAULT_V1_URL == "http://127.0.0.1:1234/v1"
+
+    def test_ollama_v1_url_built_from_base(self):
+        from threev0_constants import (
+            LOCAL_OLLAMA_DEFAULT_URL,
+            LOCAL_OLLAMA_DEFAULT_V1_URL,
+        )
+
+        assert LOCAL_OLLAMA_DEFAULT_URL == "http://localhost:11434"
+        assert LOCAL_OLLAMA_DEFAULT_V1_URL == "http://localhost:11434/v1"

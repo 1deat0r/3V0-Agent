@@ -13,7 +13,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from threev0_constants import get_threev0_home
+from threev0_constants import LOCAL_OLLAMA_DEFAULT_URL, get_threev0_home
 
 from ._oss_providers import (
     LLM_PROVIDERS,
@@ -616,7 +616,7 @@ def _ensure_ollama(models: list[str]) -> bool:
 
     Returns True if Ollama is ready, False if user needs to handle it manually.
     """
-    url = "http://localhost:11434"
+    url = LOCAL_OLLAMA_DEFAULT_URL
     ollama_bin = shutil.which("ollama")
     ok, _ = _check_ollama(url)
 
@@ -936,7 +936,7 @@ def _run_connectivity_checks(oss_config: dict) -> None:
 
     llm = oss_config.get("llm", {})
     if llm.get("provider") == "ollama":
-        url = llm.get("config", {}).get("ollama_base_url", "http://localhost:11434")
+        url = llm.get("config", {}).get("ollama_base_url", LOCAL_OLLAMA_DEFAULT_URL)
         ok, msg = _check_ollama(url)
         if not ok:
             print(f"  Warning: {msg}")

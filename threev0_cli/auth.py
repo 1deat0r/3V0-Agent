@@ -87,7 +87,12 @@ from threev0_cli.config import (
     read_raw_config,
     require_readable_config_before_write,
 )
-from threev0_constants import OPENROUTER_BASE_URL, secure_parent_dir
+from threev0_constants import (
+    LOCAL_LM_STUDIO_DEFAULT_URL,
+    LOCAL_LM_STUDIO_DEFAULT_V1_URL,
+    OPENROUTER_BASE_URL,
+    secure_parent_dir,
+)
 from agent.credential_persistence import sanitize_borrowed_credential_payload
 from utils import atomic_replace, atomic_yaml_write, env_float, is_truthy_value
 
@@ -286,7 +291,7 @@ PROVIDER_REGISTRY: Dict[str, ProviderConfig] = {
         id="lmstudio",
         name="LM Studio",
         auth_type="api_key",
-        inference_base_url="http://127.0.0.1:1234/v1",
+        inference_base_url=LOCAL_LM_STUDIO_DEFAULT_V1_URL,
         api_key_env_vars=("LM_API_KEY",),
         base_url_env_var="LM_BASE_URL",
     ),
@@ -905,7 +910,7 @@ def _normalize_lmstudio_runtime_base_url(base_url: str) -> str:
         if root.endswith(suffix):
             root = root[: -len(suffix)].rstrip("/")
             break
-    return (root or "http://127.0.0.1:1234") + "/v1"
+    return (root or LOCAL_LM_STUDIO_DEFAULT_URL) + "/v1"
 
 
 # =============================================================================

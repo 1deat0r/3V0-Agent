@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from threev0_constants import LOCAL_OLLAMA_DEFAULT_URL
+
 LLM_PROVIDERS: dict[str, dict[str, Any]] = {
     "openai": {
         "label": "OpenAI",
@@ -17,7 +19,7 @@ LLM_PROVIDERS: dict[str, dict[str, Any]] = {
         "label": "Ollama (local)",
         "needs_key": False,
         "default_model": "llama3.1:8b",
-        "default_url": "http://localhost:11434",
+        "default_url": LOCAL_OLLAMA_DEFAULT_URL,
         "base_url_key": "ollama_base_url",
         "pip_dep": "ollama",
     },
@@ -36,7 +38,7 @@ EMBEDDER_PROVIDERS: dict[str, dict[str, Any]] = {
         "label": "Ollama (local)",
         "needs_key": False,
         "default_model": "nomic-embed-text",
-        "default_url": "http://localhost:11434",
+        "default_url": LOCAL_OLLAMA_DEFAULT_URL,
         "base_url_key": "ollama_base_url",
         "dims": 768,
         "pip_dep": "ollama",

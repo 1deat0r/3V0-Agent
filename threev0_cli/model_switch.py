@@ -37,6 +37,7 @@ from threev0_cli.providers import (
     is_aggregator,
     resolve_provider_full,
 )
+from threev0_constants import LOCAL_LM_STUDIO_DEFAULT_V1_URL
 from threev0_cli.model_normalize import (
     normalize_model_for_provider,
 )
@@ -2501,7 +2502,7 @@ def list_authenticated_providers(
         lm_base = (
             os.environ.get("LM_BASE_URL")
             or (current_base_url if is_current_lmstudio and current_base_url else None)
-            or "http://127.0.0.1:1234/v1"
+            or LOCAL_LM_STUDIO_DEFAULT_V1_URL
         )
         try:
             live = fetch_lmstudio_models(

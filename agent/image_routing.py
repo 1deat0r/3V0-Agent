@@ -46,6 +46,8 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from threev0_constants import LOCAL_OLLAMA_DEFAULT_V1_URL
+
 logger = logging.getLogger(__name__)
 
 
@@ -447,7 +449,7 @@ def _lookup_supports_vision(
 
     base_url = _resolve_inference_base_url(cfg, provider)
     if not base_url and (provider or "").strip().lower() == "ollama":
-        base_url = "http://localhost:11434/v1"
+        base_url = LOCAL_OLLAMA_DEFAULT_V1_URL
     if _should_probe_ollama_vision(provider, base_url):
         try:
             from agent.model_metadata import query_ollama_supports_vision

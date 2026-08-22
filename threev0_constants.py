@@ -26,6 +26,15 @@ _EV0_HOME_OVERRIDE: ContextVar[str | object] = ContextVar(
 INDICATOR_STYLES: tuple[str, ...] = ("ascii", "emoji", "kaomoji", "unicode")
 DEFAULT_INDICATOR_STYLE: str = "kaomoji"
 
+# Local-LM default endpoints (ticket #8: one constant, not six literals).
+# LM Studio serves OpenAI-compatible API on 127.0.0.1:1234 by default;
+# Ollama serves it on localhost:11434. A default change is a one-file edit.
+LOCAL_LM_STUDIO_DEFAULT_URL: str = "http://127.0.0.1:1234"
+LOCAL_OLLAMA_DEFAULT_URL: str = "http://localhost:11434"
+# Most call sites want the OpenAI-compatible /v1 suffix.
+LOCAL_LM_STUDIO_DEFAULT_V1_URL: str = LOCAL_LM_STUDIO_DEFAULT_URL + "/v1"
+LOCAL_OLLAMA_DEFAULT_V1_URL: str = LOCAL_OLLAMA_DEFAULT_URL + "/v1"
+
 
 def set_threev0_home_override(path: str | Path | None) -> Token:
     """Set a context-local 3V0 home override and return its reset token.
