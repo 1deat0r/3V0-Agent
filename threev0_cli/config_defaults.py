@@ -1757,9 +1757,12 @@ DEFAULT_CONFIG = {
     # Context engine -- controls how the context window is managed when
     # approaching the model's token limit.
     # "compressor" = built-in lossy summarization (default).
-    # Set to a plugin name to activate an alternative engine (e.g. "lcm"
-    # for Lossless Context Management).  The engine must be installed as
-    # a plugin in plugins/context_engine/<name>/ or ~/.3V0/plugins/.
+    # Set to a plugin name to activate an alternative engine. The engine must
+    # be installed as a plugin in plugins/context_engine/<name>/ or
+    # ~/.3V0/plugins/. The seam is intentionally minimal: no alternate engine
+    # ships in-tree today (the built-in compressor is the only consumer),
+    # but the loading path + lifecycle (agent/agent_init.py, run_agent.py) are
+    # live and tested — a third-party engine is a plugin, not a fork.
     "context": {
         "engine": "compressor",
         # Return freed glibc allocator pages after long-running agent/TUI
