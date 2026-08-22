@@ -123,6 +123,7 @@ Columns: path · kind · purpose · why · related
 | `agent/prompt_cache_boundary.py` | source | Cache-safety boundary enforcement (what may/may not mutate) | Declares the cache-safe mutation sets | agent/prompt_caching.py |
 | `agent/prompt_cache_scope.py` | source | Cache scope resolution per provider | Per-backend cache semantics | agent/prompt_caching.py |
 | `agent/prompt_caching.py` | source | Prompt caching utilities (prefix reuse, cache control) | The sacred invariant; cache-breaking changes are banned | agent/prompt_cache_boundary.py; agent/prompt_cache_scope.py |
+| `agent/provider_registry.py` | source | Generic provider registry primitive (architecture-review pass 4, C2). | Python module executed or imported by the runtime; check git intent before deleting | agent/__init__.py; agent/account_usage.py; agent/agent_init.py; agent/agent_runtime_helpers.py; agent/anthropic_adapter.py; agent/async_utils.py; agent/aux_accounting.py; agent/auxiliary_client.py |
 | `agent/proxy_sources/__init__.py` | source | Egress proxy integrations. | Python module executed or imported by the runtime; check git intent before deleting | agent/proxy_sources/iron_proxy.py |
 | `agent/proxy_sources/iron_proxy.py` | source | iron-proxy (`ironsh/iron-proxy`) integration for credential-injecting egress control. | Python module executed or imported by the runtime; check git intent before deleting | agent/proxy_sources/__init__.py |
 | `agent/rate_limit_tracker.py` | source | Per-endpoint rate limit tracking | Backoff bookkeeping | agent/nous_rate_guard.py |

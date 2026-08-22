@@ -41,16 +41,22 @@ import threading
 from typing import Dict, List, Optional
 
 from agent.browser_provider import BrowserProvider
+from agent.provider_registry import ProviderRegistry
 from threev0_constants import threev0_home_key
 
 logger = logging.getLogger(__name__)
 
 
-_providers: Dict[str, BrowserProvider] = {}
-_scoped_providers: Dict[str, Dict[str, BrowserProvider]] = {}
-_generation = 0
-_scoped_generations: Dict[str, int] = {}
-_lock = threading.Lock()
+def _is_browser_provider(provider: object) -> bool:
+    return isinstance(provider, BrowserProvider)
+
+
+# Mechanical registration core is the shared generic (pass-4 C2); the
+# browser-specific resolution policy sits in _resolve() below.
+_registry = ProviderRegistry(
+    family="browser",
+    type_check=_is_browser_provider,
+)
 
 
 def register_provider(provider: BrowserProvider, *, scope: Optional[str] = None) -> None:
@@ -58,69 +64,35 @@ def register_provider(provider: BrowserProvider, *, scope: Optional[str] = None)
 
     Re-registration (same ``name``) overwrites the previous entry and logs
     a debug message — makes hot-reload scenarios (tests, dev loops) behave
-    predictably.
+    predictably. Delegates to the shared generic registry.
     """
     if not isinstance(provider, BrowserProvider):
         raise TypeError(
             f"register_provider() expects a BrowserProvider instance, "
             f"got {type(provider).__name__}"
         )
-    raw_name = provider.name
-    if not isinstance(raw_name, str) or not raw_name.strip():
-        raise ValueError("Browser provider .name must be a non-empty string")
-    name = raw_name.strip()
-    global _generation
-    with _lock:
-        target = _providers if scope is None else _scoped_providers.setdefault(scope, {})
-        existing = target.get(name)
-        target[name] = provider
-        if scope is None:
-            _generation += 1
-        else:
-            _scoped_generations[scope] = _scoped_generations.get(scope, 0) + 1
-    if existing is not None:
-        logger.debug(
-            "Browser provider '%s' re-registered (was %r)",
-            name, type(existing).__name__,
-        )
-    else:
-        logger.debug(
-            "Registered browser provider '%s' (%s)",
-            name, type(provider).__name__,
-        )
+    _registry.register_provider(provider, scope=scope)
 
 
 def list_providers(*, scope: Optional[str] = None) -> List[BrowserProvider]:
     """Return all registered providers, sorted by name."""
-    with _lock:
-        merged = dict(_providers)
-        merged.update(_scoped_providers.get(scope or threev0_home_key(), {}))
-        items = list(merged.values())
-    return sorted(items, key=lambda p: p.name)
+    return _registry.list_providers(scope=scope)
 
 
 def get_provider(name: str, *, scope: Optional[str] = None) -> Optional[BrowserProvider]:
     """Return the provider registered under *name*, or None."""
-    if not isinstance(name, str):
-        return None
-    with _lock:
-        key = name.strip()
-        return _scoped_providers.get(scope or threev0_home_key(), {}).get(key) or _providers.get(key)
+    return _registry.get_provider(name, scope=scope)
 
 
 def snapshot_registration(
     name: str, *, scope: Optional[str] = None
 ) -> Optional[BrowserProvider]:
-    with _lock:
-        target = _providers if scope is None else _scoped_providers.get(scope, {})
-        return target.get(name.strip())
+    return _registry.snapshot_registration(name, scope=scope)
 
 
 def registry_generation(*, scope: Optional[str] = None) -> tuple[int, int]:
     """Return a cache fingerprint for the global base and one profile."""
-    active_scope = scope or threev0_home_key()
-    with _lock:
-        return _generation, _scoped_generations.get(active_scope, 0)
+    return _registry.registry_generation(scope=scope)
 
 
 def restore_registration(
@@ -131,23 +103,7 @@ def restore_registration(
     scope: Optional[str] = None,
 ) -> bool:
     """Restore a plugin registration only when *current* is still installed."""
-    key = name.strip()
-    global _generation
-    with _lock:
-        target = _providers if scope is None else _scoped_providers.setdefault(scope, {})
-        if target.get(key) is not current:
-            return False
-        if previous is None:
-            target.pop(key, None)
-        else:
-            target[key] = previous
-        if scope is None:
-            _generation += 1
-        else:
-            _scoped_generations[scope] = _scoped_generations.get(scope, 0) + 1
-            if not target:
-                _scoped_providers.pop(scope, None)
-    return True
+    return _registry.restore_registration(name, current, previous, scope=scope)
 
 
 # ---------------------------------------------------------------------------
@@ -199,9 +155,9 @@ def _resolve(configured: Optional[str]) -> Optional[BrowserProvider]:
     matches the legacy preference; the dispatcher then falls back to local
     browser mode.
     """
-    with _lock:
-        snapshot = dict(_providers)
-        snapshot.update(_scoped_providers.get(threev0_home_key(), {}))
+    # Resolution reads the merged (global + home-scoped) provider map via the
+    # shared registry's snapshot — no direct module internals (pass-4 C2).
+    snapshot = _registry.snapshot_all()
 
     def _is_available_safe(p: BrowserProvider) -> bool:
         """Wrap ``is_available()`` so a buggy provider doesn't kill resolution."""
@@ -245,9 +201,4 @@ def _resolve(configured: Optional[str]) -> Optional[BrowserProvider]:
 
 def _reset_for_tests() -> None:
     """Clear the registry. **Test-only.**"""
-    global _generation
-    with _lock:
-        _providers.clear()
-        _scoped_providers.clear()
-        _scoped_generations.clear()
-        _generation += 1
+    _registry.reset_for_tests()

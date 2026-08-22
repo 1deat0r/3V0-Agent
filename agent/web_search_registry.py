@@ -37,14 +37,20 @@ import threading
 from typing import Dict, List, Optional
 
 from agent.web_search_provider import WebSearchProvider
+from agent.provider_registry import ProviderRegistry
 from threev0_constants import threev0_home_key
 
 logger = logging.getLogger(__name__)
 
 
-_providers: Dict[str, WebSearchProvider] = {}
-_scoped_providers: Dict[str, Dict[str, WebSearchProvider]] = {}
-_lock = threading.Lock()
+def _is_web_search_provider(provider: object) -> bool:
+    return isinstance(provider, WebSearchProvider)
+
+
+_registry = ProviderRegistry(
+    family="web-search",
+    type_check=_is_web_search_provider,
+)
 
 
 def register_provider(provider: WebSearchProvider, *, scope: Optional[str] = None) -> None:
@@ -59,50 +65,23 @@ def register_provider(provider: WebSearchProvider, *, scope: Optional[str] = Non
             f"register_provider() expects a WebSearchProvider instance, "
             f"got {type(provider).__name__}"
         )
-    raw_name = provider.name
-    if not isinstance(raw_name, str) or not raw_name.strip():
-        raise ValueError("Web provider .name must be a non-empty string")
-    name = raw_name.strip()
-    with _lock:
-        target = _providers if scope is None else _scoped_providers.setdefault(scope, {})
-        existing = target.get(name)
-        target[name] = provider
-    if existing is not None:
-        logger.debug(
-            "Web provider '%s' re-registered (was %r)",
-            name, type(existing).__name__,
-        )
-    else:
-        logger.debug(
-            "Registered web provider '%s' (%s)",
-            name, type(provider).__name__,
-        )
+    _registry.register_provider(provider, scope=scope)
 
 
 def list_providers(*, scope: Optional[str] = None) -> List[WebSearchProvider]:
     """Return all registered providers, sorted by name."""
-    with _lock:
-        merged = dict(_providers)
-        merged.update(_scoped_providers.get(scope or threev0_home_key(), {}))
-        items = list(merged.values())
-    return sorted(items, key=lambda p: p.name)
+    return _registry.list_providers(scope=scope)
 
 
 def get_provider(name: str, *, scope: Optional[str] = None) -> Optional[WebSearchProvider]:
     """Return the provider registered under *name*, or None."""
-    if not isinstance(name, str):
-        return None
-    with _lock:
-        key = name.strip()
-        return _scoped_providers.get(scope or threev0_home_key(), {}).get(key) or _providers.get(key)
+    return _registry.get_provider(name, scope=scope)
 
 
 def snapshot_registration(
     name: str, *, scope: Optional[str] = None
 ) -> Optional[WebSearchProvider]:
-    with _lock:
-        target = _providers if scope is None else _scoped_providers.get(scope, {})
-        return target.get(name.strip())
+    return _registry.snapshot_registration(name, scope=scope)
 
 
 def restore_registration(
@@ -113,18 +92,7 @@ def restore_registration(
     scope: Optional[str] = None,
 ) -> bool:
     """Restore a plugin registration only when *current* is still installed."""
-    key = name.strip()
-    with _lock:
-        target = _providers if scope is None else _scoped_providers.setdefault(scope, {})
-        if target.get(key) is not current:
-            return False
-        if previous is None:
-            target.pop(key, None)
-        else:
-            target[key] = previous
-        if scope is not None and not target:
-            _scoped_providers.pop(scope, None)
-    return True
+    return _registry.restore_registration(name, current, previous, scope=scope)
 
 
 # ---------------------------------------------------------------------------
@@ -197,9 +165,7 @@ def _resolve(configured: Optional[str], *, capability: str) -> Optional[WebSearc
     matches the legacy preference; the dispatcher then returns a "set up a
     provider" error to the user.
     """
-    with _lock:
-        snapshot = dict(_providers)
-        snapshot.update(_scoped_providers.get(threev0_home_key(), {}))
+    snapshot = _registry.snapshot_all()
 
     def _capable(p: WebSearchProvider) -> bool:
         if capability == "search":
@@ -338,6 +304,4 @@ def get_active_extract_provider() -> Optional[WebSearchProvider]:
 
 def _reset_for_tests() -> None:
     """Clear the registry. **Test-only.**"""
-    with _lock:
-        _providers.clear()
-        _scoped_providers.clear()
+    _registry.reset_for_tests()

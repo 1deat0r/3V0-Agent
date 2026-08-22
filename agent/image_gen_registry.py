@@ -25,14 +25,20 @@ import threading
 from typing import Dict, List, Optional
 
 from agent.image_gen_provider import ImageGenProvider
+from agent.provider_registry import ProviderRegistry
 from threev0_constants import threev0_home_key
 
 logger = logging.getLogger(__name__)
 
 
-_providers: Dict[str, ImageGenProvider] = {}
-_scoped_providers: Dict[str, Dict[str, ImageGenProvider]] = {}
-_lock = threading.Lock()
+def _is_image_gen_provider(provider: object) -> bool:
+    return isinstance(provider, ImageGenProvider)
+
+
+_registry = ProviderRegistry(
+    family="image-gen",
+    type_check=_is_image_gen_provider,
+)
 
 
 def register_provider(provider: ImageGenProvider, *, scope: Optional[str] = None) -> None:
@@ -47,44 +53,23 @@ def register_provider(provider: ImageGenProvider, *, scope: Optional[str] = None
             f"register_provider() expects an ImageGenProvider instance, "
             f"got {type(provider).__name__}"
         )
-    raw_name = provider.name
-    if not isinstance(raw_name, str) or not raw_name.strip():
-        raise ValueError("Image gen provider .name must be a non-empty string")
-    name = raw_name.strip()
-    with _lock:
-        target = _providers if scope is None else _scoped_providers.setdefault(scope, {})
-        existing = target.get(name)
-        target[name] = provider
-    if existing is not None:
-        logger.debug("Image gen provider '%s' re-registered (was %r)", name, type(existing).__name__)
-    else:
-        logger.debug("Registered image gen provider '%s' (%s)", name, type(provider).__name__)
+    _registry.register_provider(provider, scope=scope)
 
 
 def list_providers(*, scope: Optional[str] = None) -> List[ImageGenProvider]:
     """Return all registered providers, sorted by name."""
-    with _lock:
-        merged = dict(_providers)
-        merged.update(_scoped_providers.get(scope or threev0_home_key(), {}))
-        items = list(merged.values())
-    return sorted(items, key=lambda p: p.name)
+    return _registry.list_providers(scope=scope)
 
 
 def get_provider(name: str, *, scope: Optional[str] = None) -> Optional[ImageGenProvider]:
     """Return the provider registered under *name*, or None."""
-    if not isinstance(name, str):
-        return None
-    with _lock:
-        key = name.strip()
-        return _scoped_providers.get(scope or threev0_home_key(), {}).get(key) or _providers.get(key)
+    return _registry.get_provider(name, scope=scope)
 
 
 def snapshot_registration(
     name: str, *, scope: Optional[str] = None
 ) -> Optional[ImageGenProvider]:
-    with _lock:
-        target = _providers if scope is None else _scoped_providers.get(scope, {})
-        return target.get(name.strip())
+    return _registry.snapshot_registration(name, scope=scope)
 
 
 def restore_registration(
@@ -95,18 +80,7 @@ def restore_registration(
     scope: Optional[str] = None,
 ) -> bool:
     """Restore a plugin registration only when *current* is still installed."""
-    key = name.strip()
-    with _lock:
-        target = _providers if scope is None else _scoped_providers.setdefault(scope, {})
-        if target.get(key) is not current:
-            return False
-        if previous is None:
-            target.pop(key, None)
-        else:
-            target[key] = previous
-        if scope is not None and not target:
-            _scoped_providers.pop(scope, None)
-    return True
+    return _registry.restore_registration(name, current, previous, scope=scope)
 
 
 def get_active_provider() -> Optional[ImageGenProvider]:
@@ -139,9 +113,7 @@ def get_active_provider() -> Optional[ImageGenProvider]:
     except Exception as exc:
         logger.debug("Could not read image_gen.provider from config: %s", exc)
 
-    with _lock:
-        snapshot = dict(_providers)
-        snapshot.update(_scoped_providers.get(threev0_home_key(), {}))
+    snapshot = _registry.snapshot_all()
 
     def _is_available_safe(p: ImageGenProvider) -> bool:
         """Wrap ``is_available()`` so a buggy provider doesn't kill resolution."""
@@ -179,6 +151,4 @@ def get_active_provider() -> Optional[ImageGenProvider]:
 
 def _reset_for_tests() -> None:
     """Clear the registry. **Test-only.**"""
-    with _lock:
-        _providers.clear()
-        _scoped_providers.clear()
+    _registry.reset_for_tests()
