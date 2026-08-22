@@ -66,6 +66,10 @@ def profile_and_root(tmp_path, monkeypatch):
 
     monkeypatch.setattr(A, "_auth_file_path", lambda: profile_path)
     monkeypatch.setattr(A, "_global_auth_file_path", lambda: root_path)
+    # Auth-store seam (ticket #14): credential_pool imports the alias via
+    # threev0_cli.auth_store, which captured the ORIGINAL function object at
+    # import time — patching auth_mod only wouldn't reach the seam's binding.
+    monkeypatch.setattr(CP, "global_auth_file_path", lambda: root_path)
     monkeypatch.setenv("HOME", str(tmp_path / "not-the-root"))
     return profile_path, root_path
 
@@ -117,7 +121,7 @@ def test_global_write_through_preserves_concurrent_root_update(
     monkeypatch.setattr(A, "_load_auth_store", paused_helper_load)
     # The pre-fix implementation imported the loader directly; patch both
     # bindings so reverting the safe helper still exercises the stale ordering.
-    monkeypatch.setattr(CP, "_load_auth_store", paused_helper_load)
+    monkeypatch.setattr(CP, "load_auth_store", paused_helper_load)
 
     def profile_write_through():
         CP._write_through_provider_state_to_global_root(
@@ -204,7 +208,7 @@ def test_codex_pool_refresh_holds_auth_store_lock_across_post(monkeypatch, tmp_p
 
     monkeypatch.setattr(A, "_auth_store_lock", tracking_lock)
     # credential_pool imported _auth_store_lock by name; patch that binding too.
-    monkeypatch.setattr(CP, "_auth_store_lock", tracking_lock)
+    monkeypatch.setattr(CP, "auth_store_lock", tracking_lock)
 
     def fake_refresh(access_token, refresh_token, **kwargs):
         # The POST to the token endpoint must happen with the lock held.
@@ -270,7 +274,7 @@ def test_write_through_fires_on_every_refresh_not_just_first(
     # ``X.Y`` is reassigned).  Patch CP's bindings separately so the
     # ``_sync_device_code_entry_to_auth_store`` method — whose __globals__
     # are ``agent.credential_pool.__dict__`` — sees the mocked paths.
-    monkeypatch.setattr(CP, "_global_auth_file_path", lambda: root_path)
+    monkeypatch.setattr(CP, "global_auth_file_path", lambda: root_path)
     monkeypatch.setattr(CP, "_same_path", lambda a, b: a == b)
     # Let _write_through_provider_state_to_global_root run for real so it
     # persists the rotated token pair to the root auth.json — the test

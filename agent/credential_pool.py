@@ -25,21 +25,23 @@ import threev0_cli.auth as auth_mod
 from threev0_cli.auth import (
     CODEX_ACCESS_TOKEN_REFRESH_SKEW_SECONDS,
     PROVIDER_REGISTRY,
-    _auth_store_lock,
     _codex_access_token_is_expiring,
     _decode_jwt_claims,
-    _global_auth_file_path,
-    _load_auth_store,
-    _load_provider_state,
-    _load_provider_state_with_source,
     _resolve_kimi_base_url,
     _resolve_zai_base_url,
     _same_path,
-    _save_auth_store,
-    _save_provider_state,
-    _store_provider_state,
     read_credential_pool,
     write_credential_pool,
+)
+from threev0_cli.auth_store import (
+    auth_store_lock,
+    global_auth_file_path,
+    load_auth_store,
+    load_provider_state,
+    load_provider_state_with_source,
+    save_auth_store,
+    save_provider_state,
+    store_provider_state,
 )
 
 logger = logging.getLogger(__name__)
@@ -613,7 +615,7 @@ def _write_through_provider_state_to_global_root(
     the non-pool xAI refresh path) for the credential-pool refresh path.
     """
     try:
-        global_path = auth_mod._global_auth_file_path()
+        global_path = global_auth_file_path()
     except Exception:
         return
     if global_path is None:
@@ -912,7 +914,7 @@ class CredentialPool:
         with a ``last_error_reset_at`` that can be many hours in the future.
         Meanwhile the user may run ``3v0 model`` / ``3v0 auth`` which
         performs a fresh device-code login and writes new tokens to
-        ``auth.json`` under ``_auth_store_lock``.  Without this sync the pool
+        ``auth.json`` under ``auth_store_lock``.  Without this sync the pool
         entry stays frozen until ``last_error_reset_at`` elapses — even
         though fresh credentials are sitting on disk — and every request
         fails with "no available entries (all exhausted or empty)".
@@ -924,9 +926,9 @@ class CredentialPool:
         if self.provider != "openai-codex" or entry.source not in ("device_code", "manual:device_code"):
             return entry
         try:
-            with _auth_store_lock():
-                auth_store = _load_auth_store()
-                state = _load_provider_state(auth_store, "openai-codex")
+            with auth_store_lock():
+                auth_store = load_auth_store()
+                state = load_provider_state(auth_store, "openai-codex")
             if not isinstance(state, dict):
                 return entry
             tokens = state.get("tokens")
@@ -998,7 +1000,7 @@ class CredentialPool:
         xAI OAuth refresh tokens are single-use.  When another 3V0 process
         (or another profile sharing the same auth.json) refreshes the token,
         it writes the new pair to ``providers["xai-oauth"]["tokens"]`` under
-        ``_auth_store_lock``.  Without this resync, our in-memory pool entry
+        ``auth_store_lock``.  Without this resync, our in-memory pool entry
         keeps the consumed refresh_token and the next ``_refresh_entry`` call
         would replay it and get a ``refresh_token_reused``-style 4xx.
 
@@ -1009,9 +1011,9 @@ class CredentialPool:
         if self.provider != "xai-oauth" or entry.source != "device_code":
             return entry
         try:
-            with _auth_store_lock():
-                auth_store = _load_auth_store()
-                state = _load_provider_state(auth_store, "xai-oauth")
+            with auth_store_lock():
+                auth_store = load_auth_store()
+                state = load_provider_state(auth_store, "xai-oauth")
             if not isinstance(state, dict):
                 return entry
             tokens = state.get("tokens")
@@ -1095,16 +1097,16 @@ class CredentialPool:
         Nous OAuth refresh tokens are single-use.  When another process
         (e.g. a concurrent cron) refreshes the token via
         ``resolve_nous_runtime_credentials``, it writes fresh tokens to
-        auth.json under ``_auth_store_lock``.  The pool entry's tokens
+        auth.json under ``auth_store_lock``.  The pool entry's tokens
         become stale.  This method detects that and adopts the newer pair,
         avoiding a "refresh token reuse" revocation on the Nous Portal.
         """
         if self.provider != "nous" or entry.source != "device_code":
             return entry
         try:
-            with _auth_store_lock():
-                auth_store = _load_auth_store()
-                state = _load_provider_state(auth_store, "nous")
+            with auth_store_lock():
+                auth_store = load_auth_store()
+                state = load_provider_state(auth_store, "nous")
             if not state:
                 return entry
             store_refresh = state.get("refresh_token", "")
@@ -1175,7 +1177,7 @@ class CredentialPool:
 
         ``set_active=False`` on every write: a pool sync-back is a
         token-rotation side effect, not the user choosing a provider.
-        Using ``_save_provider_state`` (which sets ``active_provider``)
+        Using ``save_provider_state`` (which sets ``active_provider``)
         here would mean every Nous/Codex/xAI refresh in a multi-provider
         setup silently flips the ``active_provider`` flag — the next
         ``3v0`` invocation that defaults to the active provider
@@ -1190,8 +1192,8 @@ class CredentialPool:
         if entry.source != "device_code":
             return
         try:
-            with _auth_store_lock():
-                auth_store = _load_auth_store()
+            with auth_store_lock():
+                auth_store = load_auth_store()
                 _wt_provider_id = {
                     "nous": "nous",
                     "openai-codex": "openai-codex",
@@ -1203,32 +1205,32 @@ class CredentialPool:
                 # #74339: the old key-presence check decided write-through
                 # on whether the profile had ``providers.<id>`` BEFORE the
                 # save — correct for the first refresh but self-sealing
-                # because ``_store_provider_state`` unconditionally creates
+                # because ``store_provider_state`` unconditionally creates
                 # that key inside the same function.  Once the profile has
                 # the key, every subsequent refresh silently disables the
                 # root write-through and root keeps a revoked refresh token.
                 #
-                # Fix: use ``_load_provider_state_with_source`` to learn
+                # Fix: use ``load_provider_state_with_source`` to learn
                 # where the state was resolved from.  When the grant was
                 # resolved from the global root, write back *only* to root
-                # and skip ``_store_provider_state`` for the profile so the
+                # and skip ``store_provider_state`` for the profile so the
                 # profile does not accrue a shadowing ``providers.<id>``
                 # key that blocks both the root fallback and the write-through
                 # on subsequent calls.
                 if self.provider == "nous":
-                    state, source_path = _load_provider_state_with_source(
+                    state, source_path = load_provider_state_with_source(
                         auth_store, "nous"
                     )
                     if state is None:
                         return
                 elif self.provider == "openai-codex":
-                    state, source_path = _load_provider_state_with_source(
+                    state, source_path = load_provider_state_with_source(
                         auth_store, "openai-codex"
                     )
                     if not isinstance(state, dict):
                         return
                 elif self.provider == "xai-oauth":
-                    state, source_path = _load_provider_state_with_source(
+                    state, source_path = load_provider_state_with_source(
                         auth_store, "xai-oauth"
                     )
                     if not isinstance(state, dict):
@@ -1236,7 +1238,7 @@ class CredentialPool:
                 else:
                     return
 
-                global_root = _global_auth_file_path()
+                global_root = global_auth_file_path()
                 is_from_root = bool(
                     source_path is not None
                     and global_root is not None
@@ -1284,11 +1286,11 @@ class CredentialPool:
 
                 if is_from_root and _wt_provider_id:
                     # Grant was resolved from root — write back to root
-                    # only.  Do NOT call _store_provider_state on the
+                    # only.  Do NOT call store_provider_state on the
                     # profile auth_store (it would create a shadowing
                     # providers.<id> key that disables write-through on
                     # the next refresh — #74339).
-                    # _load_provider_state has root fallback, so the
+                    # load_provider_state has root fallback, so the
                     # profile can always read fresh tokens from root
                     # without needing its own providers block.
                     _write_through_provider_state_to_global_root(
@@ -1297,10 +1299,10 @@ class CredentialPool:
                 else:
                     # Profile genuinely owns this provider — write to
                     # the profile store as normal.
-                    _store_provider_state(
+                    store_provider_state(
                         auth_store, self.provider, state, set_active=False
                     )
-                    _save_auth_store(auth_store)
+                    save_auth_store(auth_store)
         except Exception as exc:
             logger.debug("Failed to sync %s pool entry back to auth store: %s", self.provider, exc)
 
@@ -1325,7 +1327,7 @@ class CredentialPool:
                 if self.provider == "openai-codex"
                 else self._sync_xai_oauth_entry_from_pool_store
             )
-            with _auth_store_lock(
+            with auth_store_lock(
                 timeout_seconds=self._single_use_refresh_lock_timeout()
             ):
                 synced = sync_entry(entry)
@@ -1515,9 +1517,9 @@ class CredentialPool:
                         "xAI OAuth refresh token is terminally invalid; clearing local token state"
                     )
                     try:
-                        with _auth_store_lock():
-                            auth_store = _load_auth_store()
-                            state = _load_provider_state(auth_store, "xai-oauth") or {}
+                        with auth_store_lock():
+                            auth_store = load_auth_store()
+                            state = load_provider_state(auth_store, "xai-oauth") or {}
                             if isinstance(state, dict):
                                 tokens = state.get("tokens") or {}
                                 if isinstance(tokens, dict):
@@ -1535,8 +1537,8 @@ class CredentialPool:
                                             "relogin_required": True,
                                             "at": datetime.now(timezone.utc).isoformat(),
                                         }
-                                        _save_provider_state(auth_store, "xai-oauth", state)
-                                        _save_auth_store(auth_store)
+                                        save_provider_state(auth_store, "xai-oauth", state)
+                                        save_auth_store(auth_store)
                     except Exception as clear_exc:
                         logger.debug(
                             "Failed to clear terminal xAI OAuth state: %s", clear_exc
@@ -1590,9 +1592,9 @@ class CredentialPool:
                         "Codex OAuth refresh token is terminally invalid; clearing local token state"
                     )
                     try:
-                        with _auth_store_lock():
-                            auth_store = _load_auth_store()
-                            state = _load_provider_state(auth_store, "openai-codex") or {}
+                        with auth_store_lock():
+                            auth_store = load_auth_store()
+                            state = load_provider_state(auth_store, "openai-codex") or {}
                             if isinstance(state, dict):
                                 tokens = state.get("tokens") or {}
                                 if isinstance(tokens, dict):
@@ -1610,8 +1612,8 @@ class CredentialPool:
                                             "relogin_required": True,
                                             "at": datetime.now(timezone.utc).isoformat(),
                                         }
-                                        _save_provider_state(auth_store, "openai-codex", state)
-                                        _save_auth_store(auth_store)
+                                        save_provider_state(auth_store, "openai-codex", state)
+                                        save_auth_store(auth_store)
                     except Exception as clear_exc:
                         logger.debug(
                             "Failed to clear terminal Codex OAuth state: %s", clear_exc
@@ -1656,9 +1658,9 @@ class CredentialPool:
                 if auth_mod._is_terminal_nous_refresh_error(exc):
                     logger.debug("Nous refresh token is terminally invalid; clearing local token state")
                     try:
-                        with _auth_store_lock():
-                            auth_store = _load_auth_store()
-                            state = _load_provider_state(auth_store, "nous") or {
+                        with auth_store_lock():
+                            auth_store = load_auth_store()
+                            state = load_provider_state(auth_store, "nous") or {
                                 "client_id": entry.client_id,
                                 "portal_base_url": entry.portal_base_url,
                                 "inference_base_url": entry.inference_base_url,
@@ -1679,8 +1681,8 @@ class CredentialPool:
                                     exc,
                                     reason="credential_pool_refresh_failure",
                                 )
-                                _save_provider_state(auth_store, "nous", state)
-                                _save_auth_store(auth_store)
+                                save_provider_state(auth_store, "nous", state)
+                                save_auth_store(auth_store)
                     except Exception as clear_exc:
                         logger.debug("Failed to clear terminal Nous OAuth state: %s", clear_exc)
 
@@ -1806,7 +1808,7 @@ class CredentialPool:
     def _refresh_pending_entries(self, pending: List[tuple]) -> None:
         """Refresh deferred single-use-token entries outside the lock.
 
-        Each entry is refreshed under the cross-process ``_auth_store_lock``
+        Each entry is refreshed under the cross-process ``auth_store_lock``
         (which can block for 20+ seconds) and then merged into the pool.
         On failure the entry is silently skipped.
         """
@@ -2501,7 +2503,7 @@ def _normalize_pool_priorities(provider: str, entries: List[PooledCredential]) -
 def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tuple[bool, Set[str]]:
     changed = False
     active_sources: Set[str] = set()
-    auth_store = _load_auth_store()
+    auth_store = load_auth_store()
 
     # Shared suppression gate — used at every upsert site so
     # `3v0 auth remove <provider> <N>` is stable across all source types.
@@ -2590,7 +2592,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
                 )
 
     elif provider == "nous":
-        state = _load_provider_state(auth_store, "nous")
+        state = load_provider_state(auth_store, "nous")
         has_runtime_material = bool(
             isinstance(state, dict)
             and (
@@ -2807,7 +2809,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
         if _is_suppressed(provider, "device_code"):
             return changed, active_sources
 
-        state = _load_provider_state(auth_store, "openai-codex")
+        state = load_provider_state(auth_store, "openai-codex")
         tokens = state.get("tokens") if isinstance(state, dict) else None
         # 3V0 owns its own Codex auth state — we do NOT auto-import from
         # ~/.codex/auth.json at pool-load time.  OAuth refresh tokens are
@@ -2839,7 +2841,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
         # (``providers["xai-oauth"]``).  Surface them in the pool too so
         # ``3v0 auth list`` reflects the logged-in state and so the pool
         # is the single source of truth for refresh during runtime resolution.
-        state = _load_provider_state(auth_store, "xai-oauth")
+        state = load_provider_state(auth_store, "xai-oauth")
         tokens = state.get("tokens") if isinstance(state, dict) else None
         if isinstance(tokens, dict) and tokens.get("access_token"):
             # Device code is the only supported xAI OAuth flow; the singleton is
@@ -3156,7 +3158,7 @@ def load_pool(provider: str) -> CredentialPool:
         # A profile may be reading this provider from the global-root fallback.
         # Keep that fallback read-only: only the store that owns these rows may
         # rewrite them. Loading the default/root profile will heal global rows.
-        active_pool = _load_auth_store().get("credential_pool")
+        active_pool = load_auth_store().get("credential_pool")
         active_entries = active_pool.get(provider) if isinstance(active_pool, dict) else None
         raw_needs_auth_normalization = bool(active_entries)
 

@@ -229,18 +229,18 @@ def _remove_threev0_pkce(provider: str, removed) -> RemovalResult:
 
 def _clear_auth_store_provider(provider: str) -> bool:
     """Delete auth_store.providers[provider].  Returns True if deleted."""
-    from threev0_cli.auth import (
-        _auth_store_lock,
-        _load_auth_store,
-        _save_auth_store,
+    from threev0_cli.auth_store import (
+        auth_store_lock,
+        load_auth_store,
+        save_auth_store,
     )
 
-    with _auth_store_lock():
-        auth_store = _load_auth_store()
+    with auth_store_lock():
+        auth_store = load_auth_store()
         providers_dict = auth_store.get("providers")
         if isinstance(providers_dict, dict) and provider in providers_dict:
             del providers_dict[provider]
-            _save_auth_store(auth_store)
+            save_auth_store(auth_store)
             return True
     return False
 
