@@ -129,3 +129,44 @@ class TestCombinedGuards:
             error = get_read_block_error(str(cache))
             assert error is not None
             assert "internal 3V0 cache" in error
+
+
+class TestCredentialStoreClassifier:
+    """is_credential_store_path is the single source of credential-store
+    shapes. It feeds both get_read_block_error (per-location) and the
+    reference-expansion guard (home-spelled) — a shape added here must be
+    recognized everywhere so the #86213 drift class can't return."""
+
+    def test_classifies_credential_files(self):
+        from agent.file_safety import is_credential_store_path
+
+        for name in (
+            "auth.json",
+            "auth.lock",
+            ".anthropic_oauth.json",
+            "webhook_subscriptions.json",
+        ):
+            assert is_credential_store_path(f"/any/.3v0/{name}")
+            assert is_credential_store_path(f"/home/user/.3V0/{name}")
+
+    def test_classifies_mcp_tokens_dir(self):
+        from agent.file_safety import is_credential_store_path
+
+        assert is_credential_store_path("/tmp/x/mcp-tokens/github.json")
+        assert is_credential_store_path("/tmp/x/.3v0/mcp-tokens/github.json")
+
+    def test_classifies_auth_google_oauth_path(self):
+        from agent.file_safety import is_credential_store_path
+
+        assert is_credential_store_path("/home/user/.3V0/auth/google_oauth.json")
+
+    def test_does_not_classify_arbitrary_project_files(self):
+        from agent.file_safety import is_credential_store_path
+
+        # A project-local auth.json IS credential-shaped (the classifier is
+        # shape-only); the per-location decision (allowed outside home/root)
+        # is get_read_block_error's job. Only non-credential files are not
+        # classified at all.
+        assert not is_credential_store_path("/home/user/.ssh/config")
+        assert not is_credential_store_path("/tmp/project/README.md")
+        assert not is_credential_store_path("/workspace/src/main.py")

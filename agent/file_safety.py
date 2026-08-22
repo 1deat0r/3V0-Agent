@@ -237,9 +237,8 @@ def is_write_approval_required(path: str) -> bool:
 # NOTE: 3V0 credential-store basenames (auth.json, .mcp-tokens, etc.) are
 # deliberately NOT in this set — an `auth.json` in an arbitrary project is
 # legitimately readable (see test_file_safety_credentials). Those stores are
-# blocked per-location under the resolved home/root, AND for any
-# home-spelled/symlinked variant by the reference-expansion guard
-# (_ensure_reference_path_allowed in agent/context_references.py).
+# blocked per-location under the resolved home/root, and for any
+# home-spelled variant via is_credential_store_path().
 _BLOCKED_PROJECT_ENV_BASENAMES: set[str] = {
     ".env",
     ".env.local",
@@ -249,6 +248,47 @@ _BLOCKED_PROJECT_ENV_BASENAMES: set[str] = {
     ".env.staging",
     ".envrc",
 }
+
+# 3V0 credential / secret stores. The single source of truth for what counts
+# as a credential store — consumed by the read-deny path below AND by the
+# reference-expansion guard (agent/context_references.py). Keeping this list
+# here (not re-declared in callers) is what stopped the case-variant bypass
+# class (#86213): the old duplicate list in context_references drifted.
+CREDENTIAL_FILE_NAMES: tuple[str, ...] = (
+    "auth.json",
+    "auth.lock",
+    ".anthropic_oauth.json",
+    ".env",
+    "webhook_subscriptions.json",
+    os.path.join("auth", "google_oauth.json"),
+    # Bitwarden Secrets Manager disk cache: stores plaintext secret values
+    # to avoid re-fetching across back-to-back CLI invocations. The file
+    # was introduced by #31968 but not added to this guard.
+    os.path.join("cache", "bws_cache.json"),
+)
+
+
+def is_credential_store_path(path: str | os.PathLike) -> bool:
+    """True when ``path`` names a 3V0 credential store (exact file) or a
+    file inside a ``mcp-tokens/`` directory.
+
+    Path-shape classifier only — it does NOT require the file to sit under
+    the resolved home/root. Read-deny callers decide location separately:
+    ``get_read_block_error`` blocks these only under the canon home/root
+    (per-location contract), while the reference-expansion guard blocks any
+    home-spelled variant (case-insensitive ``.3v0`` / mcp-tokens) to close
+    the #86213 bypass. Sharing the classifier prevents the two sites'
+    lists from drifting again.
+    """
+    resolved = os.path.realpath(os.path.expanduser(str(path)))
+    name = os.path.basename(resolved)
+    if os.path.basename(os.path.dirname(resolved)) == "auth" and name == "google_oauth.json":
+        return True
+    if name in CREDENTIAL_FILE_NAMES:
+        return True
+    if "mcp-tokens" in Path(resolved).parts:
+        return True
+    return False
 
 
 def get_read_block_error(path: str) -> Optional[str]:
@@ -330,21 +370,11 @@ def get_read_block_error(path: str) -> Optional[str]:
             )
 
     # Credential / secret stores. Exact-file matches under either
-    # EV0_HOME or <root>.
-    credential_file_names = (
-        "auth.json",
-        "auth.lock",
-        ".anthropic_oauth.json",
-        ".env",
-        "webhook_subscriptions.json",
-        os.path.join("auth", "google_oauth.json"),
-        # Bitwarden Secrets Manager disk cache: stores plaintext secret values
-        # to avoid re-fetching across back-to-back CLI invocations. The file
-        # was introduced by #31968 but not added to this guard.
-        os.path.join("cache", "bws_cache.json"),
-    )
+    # EV0_HOME or <root>. Names come from the shared classifier's
+    # module-level constant (CREDENTIAL_FILE_NAMES) so this list cannot
+    # drift from agent/context_references.py again (#86213).
     for hd in threev0_dirs:
-        for name in credential_file_names:
+        for name in CREDENTIAL_FILE_NAMES:
             try:
                 blocked = (hd / name).resolve()
             except Exception:
