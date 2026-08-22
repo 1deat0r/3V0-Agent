@@ -208,13 +208,21 @@ async def test_blocks_canonical_read_denylist_credential_stores(tmp_path: Path, 
     threev0_home = tmp_path / ".3V0"
     (threev0_home).mkdir(parents=True)
 
-    auth_json = threev0_home / "auth.json"
-    auth_json.write_text('{"openai": "sk-AUTHJSON-SECRET"}\n', encoding="utf-8")
+    # The @file: refs below are relative to cwd (tmp_path) and spell the home
+    # dir lowercase (`.3v0`) as users type it; on case-sensitive filesystems
+    # that is a DIFFERENT directory than get_threev0_home()'s `.3V0`. Create
+    # the lowercase dir so the refs actually resolve to the stores, which is
+    # the whole point of the test (the denylist must catch them).
+    ref_home = tmp_path / ".3v0"
+    ref_home.mkdir(parents=True)
 
-    oauth = threev0_home / ".anthropic_oauth.json"
+    auth_json = ref_home / "auth.json"
+    auth_json.write_text('{"openai": "sk-AUT...CRET"}\n', encoding="utf-8")
+
+    oauth = ref_home / ".anthropic_oauth.json"
     oauth.write_text('{"access_token": "OAUTH-SECRET"}\n', encoding="utf-8")
 
-    mcp_token = threev0_home / "mcp-tokens" / "github.json"
+    mcp_token = ref_home / "mcp-tokens" / "github.json"
     mcp_token.parent.mkdir(parents=True)
     mcp_token.write_text('{"token": "MCP-TOKEN-SECRET"}\n', encoding="utf-8")
 

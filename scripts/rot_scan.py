@@ -87,7 +87,7 @@ def main() -> int:
 
     # 2. Dead deps (alias-aware)
     try:
-        data = tomllib.loads((REPO / "pyproject.toml").read_text())
+        data = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))
         deps = data["project"]["dependencies"]
     except (OSError, KeyError, tomllib.TOMLDecodeError):
         deps = []

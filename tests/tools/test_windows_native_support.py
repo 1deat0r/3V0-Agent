@@ -715,7 +715,7 @@ class TestLocalEnvironmentWindowsTempDir:
         source = (root / "tools" / "environments" / "local.py").read_text(encoding="utf-8")
         assert "if _IS_WINDOWS:" in source
         assert "get_threev0_home" in source
-        assert 'cache_dir = get_ev0_home() / "cache" / "terminal"' in source
+        assert 'cache_dir = get_threev0_home() / "cache" / "terminal"' in source
 
 
 class TestLocalEnvironmentPathInjectionGated:
