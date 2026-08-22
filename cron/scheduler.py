@@ -1715,13 +1715,22 @@ def _plugin_cron_env_var(platform_name: str) -> str:
 def _is_known_delivery_platform(platform_name: str) -> bool:
     """Whether ``platform_name`` is a valid cron delivery target.
 
-    Hardcoded built-ins in ``_KNOWN_DELIVERY_PLATFORMS`` are checked first;
-    plugin platforms registered via ``PlatformEntry`` are accepted if they
+    Built-in platforms are validated against the canonical ``Platform``
+    enum (gateway/config.py) instead of a parallel hand-maintained set —
+    the separate ``_KNOWN_DELIVERY_PLATFORMS`` static list drifted and
+    silently excluded whatsapp_cloud from cron delivery (pass-4 C1).
+    Plugin platforms registered via ``PlatformEntry`` are accepted if they
     provide a ``cron_deliver_env_var``.
     """
     name = platform_name.lower()
-    if name in _KNOWN_DELIVERY_PLATFORMS:
-        return True
+    try:
+        from gateway.config import Platform
+        if name in {p.value for p in Platform}:
+            return True
+    except Exception:
+        # Fall back to the static list if the enum is unavailable.
+        if name in _KNOWN_DELIVERY_PLATFORMS:
+            return True
     return bool(_plugin_cron_env_var(name))
 
 

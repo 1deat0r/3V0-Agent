@@ -13,6 +13,7 @@ from cron.scheduler import (
     SILENT_MARKER,
     _build_job_prompt,
     _deliver_result,
+    _is_known_delivery_platform,
     _merge_mcp_into_per_job_toolsets,
     _resolve_cron_enabled_toolsets,
     _resolve_delivery_target,
@@ -2555,4 +2556,36 @@ class TestSetCronSessionTitle:
         out = _set_cron_session_title(db, "sess-1", "Nightly Synthesis")
         assert out == "Nightly Synthesis #2"
         db.get_next_title_in_lineage.assert_called_once_with("Nightly Synthesis")
+
+
+class TestKnownDeliveryPlatform:
+    """Pass-4 C1: delivery-platform membership must come from the Platform enum.
+
+    Previously a hand-maintained ``_KNOWN_DELIVERY_PLATFORMS`` list silently
+    excluded whatsapp_cloud (present in the home-env-var table but absent from
+    the membership list) — a connected WhatsApp Cloud gateway never appeared in
+    cron_delivery_targets(). The fix validates against gateway.config.Platform
+    so built-in membership can't drift from the canonical enum.
+    """
+
+    def test_whatsapp_cloud_is_known_delivery_platform(self):
+        assert _is_known_delivery_platform("whatsapp_cloud") is True
+
+    def test_all_platform_enum_values_are_known(self):
+        from gateway.config import Platform
+
+        for platform in Platform:
+            assert _is_known_delivery_platform(platform.value) is True
+
+    def test_bogus_platform_rejected(self):
+        assert _is_known_delivery_platform("bogus_platform") is False
+
+    def test_plugin_platform_with_cron_env_var_accepted(self, monkeypatch):
+        from cron import scheduler
+        from unittest.mock import patch
+
+        with patch.object(
+            scheduler, "_plugin_cron_env_var", return_value="LINE_HOME_CHANNEL"
+        ):
+            assert _is_known_delivery_platform("line") is True
 
