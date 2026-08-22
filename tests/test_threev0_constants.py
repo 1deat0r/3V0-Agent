@@ -1121,3 +1121,37 @@ class TestLocalLmDefaultUrls:
 
         assert LOCAL_OLLAMA_DEFAULT_URL == "http://localhost:11434"
         assert LOCAL_OLLAMA_DEFAULT_V1_URL == "http://localhost:11434/v1"
+
+
+class TestRunningUnderPytest:
+    """Ticket #13: the SHARED test-context detection."""
+
+    def test_false_when_no_markers(self, monkeypatch):
+        from threev0_constants import running_under_pytest
+
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        monkeypatch.delenv("PYTEST_VERSION", raising=False)
+        monkeypatch.delenv("EV0_TEST_ISOLATION", raising=False)
+        assert running_under_pytest() is False
+
+    def test_true_when_any_marker(self, monkeypatch):
+        from threev0_constants import running_under_pytest
+
+        monkeypatch.setenv("EV0_TEST_ISOLATION", "1")
+        assert running_under_pytest() is True
+
+        monkeypatch.delenv("EV0_TEST_ISOLATION", raising=False)
+        monkeypatch.setenv("PYTEST_VERSION", "8.0")
+        assert running_under_pytest() is True
+
+    def test_threev0_state_delegates_to_shared(self, monkeypatch):
+        from threev0_state import _running_under_pytest
+        from threev0_constants import running_under_pytest as shared
+
+        assert _running_under_pytest.__doc__ is not None
+        assert "threev0_constants.running_under_pytest" in _running_under_pytest.__doc__
+        # Behavior identical to the shared helper.
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        monkeypatch.delenv("PYTEST_VERSION", raising=False)
+        monkeypatch.delenv("EV0_TEST_ISOLATION", raising=False)
+        assert _running_under_pytest() is shared() is False

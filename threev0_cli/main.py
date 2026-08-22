@@ -8093,8 +8093,10 @@ def _pytest_owns_live_checkout(root: Path) -> bool:
     reinstall against the executing venv. Sandboxed tests point at a
     tmp_path and are unaffected (same posture as
     ``managed_scope._under_pytest``)."""
+    from threev0_constants import running_under_pytest
+
     return (
-        "PYTEST_CURRENT_TEST" in os.environ
+        running_under_pytest()
         and root == Path(__file__).resolve().parent.parent
     )
 

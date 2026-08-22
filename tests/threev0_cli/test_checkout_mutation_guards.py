@@ -35,6 +35,8 @@ class TestPredicate:
 
     def test_false_outside_pytest(self, monkeypatch):
         monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        monkeypatch.delenv("PYTEST_VERSION", raising=False)
+        monkeypatch.delenv("EV0_TEST_ISOLATION", raising=False)
         assert er._pytest_owns_live_checkout(CHECKOUT_ROOT) is False
         assert main_mod._pytest_owns_live_checkout(CHECKOUT_ROOT) is False
 

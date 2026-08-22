@@ -1934,7 +1934,7 @@ _ensure_ssl_certs()
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Resolve 3V0 home directory (respects EV0_HOME override)
-from threev0_constants import get_threev0_home, get_threev0_home_override
+from threev0_constants import get_threev0_home, get_threev0_home_override, running_under_pytest
 from utils import atomic_json_write, base_url_hostname, is_truthy_value
 _threev0_home = get_threev0_home()
 
@@ -14197,7 +14197,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     ),
                 }
 
-            if not os.environ.get("PYTEST_CURRENT_TEST"):
+            if not running_under_pytest():
                 arm_shutdown_watchdog(
                     resolve_shutdown_watchdog_delay(self._restart_drain_timeout),
                     done_event=_watchdog_done,

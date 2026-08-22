@@ -1689,9 +1689,10 @@ def warm_openrouter_reasoning_caps_async() -> None:
     therefore test behavior, timing-dependent.
     """
     global _openrouter_caps_warm_started
+    from threev0_constants import running_under_pytest
     if _openrouter_caps_warm_started or _openrouter_reasoning_caps_cache is not None:
         return
-    if os.environ.get("PYTEST_CURRENT_TEST"):
+    if running_under_pytest():
         return
     _openrouter_caps_warm_started = True
     threading.Thread(

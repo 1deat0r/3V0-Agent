@@ -91,6 +91,7 @@ from threev0_constants import (
     LOCAL_LM_STUDIO_DEFAULT_URL,
     LOCAL_LM_STUDIO_DEFAULT_V1_URL,
     OPENROUTER_BASE_URL,
+    running_under_pytest,
     secure_parent_dir,
 )
 from agent.credential_persistence import sanitize_borrowed_credential_payload
@@ -1056,7 +1057,7 @@ def _auth_file_path() -> Path:
     # tests that forgot to monkeypatch EV0_HOME, tests invoked without the
     # hermetic conftest, or sandbox escapes via threads/subprocesses. In
     # production (no PYTEST_CURRENT_TEST) this is a single dict lookup.
-    if os.environ.get("PYTEST_CURRENT_TEST"):
+    if running_under_pytest():
         real_home_auth = (Path.home() / ".3V0" / "auth.json").resolve(strict=False)
         try:
             resolved = path.resolve(strict=False)
@@ -1134,7 +1135,7 @@ def _load_global_auth_store() -> Dict[str, Any]:
         cached_path, cached_mtime, cached_store = _global_auth_store_cache
         if cached_path == cache_key[0] and cached_mtime == cache_key[1]:
             return cached_store
-    if os.environ.get("PYTEST_CURRENT_TEST"):
+    if running_under_pytest():
         real_home_env = os.environ.get("HOME", "")
         if real_home_env:
             real_root = Path(real_home_env) / ".3V0" / "auth.json"
@@ -4666,7 +4667,7 @@ def _write_through_xai_oauth_to_global_root(state: Dict[str, Any]) -> None:
     # ~/.3V0/auth.json even when EV0_HOME points at a profile path
     # (mirrors the read-side guard in _load_global_auth_store). Uses the
     # unmodified HOME env, not Path.home() which fixtures may monkeypatch.
-    if os.environ.get("PYTEST_CURRENT_TEST"):
+    if running_under_pytest():
         real_home_env = os.environ.get("HOME", "")
         if real_home_env:
             real_root = Path(real_home_env) / ".3V0" / "auth.json"
@@ -5397,7 +5398,7 @@ def _nous_shared_store_path() -> Path:
     # does not do this automatically — mirror the _auth_file_path() guard
     # so forgetting to set it fails loudly instead of writing to the real
     # shared store).
-    if os.environ.get("PYTEST_CURRENT_TEST"):
+    if running_under_pytest():
         from threev0_constants import get_default_threev0_root
         real_home_shared = (
             get_default_threev0_root() / "shared" / NOUS_SHARED_STORE_FILENAME

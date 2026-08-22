@@ -46,7 +46,9 @@ def _under_pytest() -> bool:
     that exercise managed scope set ``EV0_MANAGED_DIR`` explicitly, which is
     still honored (the override path below runs before this guard takes effect).
     """
-    return "PYTEST_CURRENT_TEST" in os.environ
+    from threev0_constants import running_under_pytest
+
+    return running_under_pytest()
 
 
 def get_managed_dir() -> Optional[Path]:

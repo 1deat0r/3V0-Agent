@@ -218,7 +218,7 @@ _COMMAND_SPINNER_FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧
 
 # Load .env from ~/.3V0/.env first, then project root as dev fallback.
 # User-managed env files should override stale shell exports on restart.
-from threev0_constants import get_threev0_home, display_threev0_home
+from threev0_constants import get_threev0_home, display_threev0_home, running_under_pytest
 from threev0_cli.browser_connect import (
     DEFAULT_BROWSER_CDP_URL,
     is_browser_debug_ready,
@@ -1090,7 +1090,7 @@ def _arm_exit_watchdog(timeout_s: float | None = None, *, from_signal: bool = Fa
         return
     # Never arm under pytest: tests invoke _run_cleanup() directly and a
     # 30s-delayed os._exit(0) would silently kill the test worker.
-    if os.environ.get("PYTEST_CURRENT_TEST"):
+    if running_under_pytest():
         return
 
     def _watchdog():

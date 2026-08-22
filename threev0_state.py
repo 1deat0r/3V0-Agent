@@ -475,12 +475,15 @@ _TEST_ISOLATION_MARKER_ENV = "EV0_TEST_ISOLATION"
 
 
 def _running_under_pytest() -> bool:
-    """True when this process (or a parent test process) is a pytest run."""
-    return bool(
-        os.environ.get("PYTEST_CURRENT_TEST")
-        or os.environ.get("PYTEST_VERSION")
-        or os.environ.get(_TEST_ISOLATION_MARKER_ENV)
-    )
+    """True when this process (or a parent test process) is a pytest run.
+
+    Delegates to the shared definition (threev0_constants.running_under_pytest,
+    ticket #13) — this used to carry own list of marker env vars that could
+    drift from the rest of the runtime.
+    """
+    from threev0_constants import running_under_pytest as _shared
+
+    return _shared()
 
 
 #: Names that identify a pytest launcher in a process command line.  Matched

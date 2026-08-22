@@ -344,8 +344,10 @@ def _pytest_owns_live_checkout(root: Path) -> bool:
     REAL ``ensurepip`` + ``pip install --force-reinstall`` from inside a
     running test suite. Tests that sandbox ``project_root`` to a tmp_path are
     unaffected (same posture as ``managed_scope._under_pytest``)."""
+    from threev0_constants import running_under_pytest
+
     return (
-        "PYTEST_CURRENT_TEST" in os.environ
+        running_under_pytest()
         and root == Path(__file__).resolve().parent.parent
     )
 

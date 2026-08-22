@@ -36,6 +36,25 @@ LOCAL_LM_STUDIO_DEFAULT_V1_URL: str = LOCAL_LM_STUDIO_DEFAULT_URL + "/v1"
 LOCAL_OLLAMA_DEFAULT_V1_URL: str = LOCAL_OLLAMA_DEFAULT_URL + "/v1"
 
 
+# Test-context marker env vars (ticket #13). Sharing ONE spelling of "are we
+# under pytest?" prevents the two-mechanism drift the review found (10+ sites
+# checked PYTEST_CURRENT_TEST; threev0_state also accepted EV0_TEST_ISOLATION
+# and PYTEST_VERSION). Prod code should call running_under_pytest(), not
+# re-check these env vars directly.
+_TEST_MARKER_ENV_VARS = ("PYTEST_CURRENT_TEST", "PYTEST_VERSION", "EV0_TEST_ISOLATION")
+
+
+def running_under_pytest() -> bool:
+    """Return True when this process is (or parent-scope) a test run.
+
+    The single definition of "am I under test" for runtime code paths that
+    need to relax production-only guards (home-path isolation, credential
+    lookup, heartbeat timing). Checks the pytest marker env vars set by the
+    pytest runner. Fail-closed: unknown environments return False.
+    """
+    return any(os.environ.get(var) for var in _TEST_MARKER_ENV_VARS)
+
+
 def set_threev0_home_override(path: str | Path | None) -> Token:
     """Set a context-local 3V0 home override and return its reset token.
 

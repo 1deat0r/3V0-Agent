@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from threev0_constants import OPENROUTER_BASE_URL
+from threev0_constants import OPENROUTER_BASE_URL, running_under_pytest
 from threev0_cli.config import load_env
 from agent.secret_scope import get_secret as _get_secret
 from agent.credential_persistence import (
@@ -623,7 +623,7 @@ def _write_through_provider_state_to_global_root(
     # ~/.3V0/auth.json even when EV0_HOME points at a profile path
     # (mirrors the read-side guard in _load_global_auth_store). Uses the
     # unmodified HOME env, not Path.home() which fixtures may monkeypatch.
-    if os.environ.get("PYTEST_CURRENT_TEST"):
+    if running_under_pytest():
         real_home_env = os.environ.get("HOME", "")
         if real_home_env:
             real_root = Path(real_home_env) / ".3V0" / "auth.json"
