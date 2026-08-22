@@ -60,15 +60,22 @@ def _get_platform_default_threev0_home() -> Path:
 
 
 def _threev0_home_from_env() -> Path:
-    """Resolve EV0_HOME from the process environment only.
+    """Resolve the 3V0 home from the process environment only.
 
-    Reads the ``EV0_HOME`` env var, falling back to the platform-native
-    default.  Deliberately ignores the context-local override installed by
-    :func:`set_ev0_home_override`, so this reflects the process/launch
-    scope rather than a per-task profile.  Shared by :func:`get_ev0_home`
-    and :func:`get_process_ev0_home` so the two never drift.
+    Reads the canonical ``3V0_HOME`` env var, falling back to the legacy
+    ``EV0_HOME`` alias (ADR-0006 Phase R2: after the gateway restart the
+    spawners all dual-write; the legacy read is retained until every
+    launcher has been migrated).  Falls back to the platform-native default.
+    Deliberately ignores the context-local override installed by
+    :func:`set_threev0_home_override`, so this reflects the process/launch
+    scope rather than a per-task profile.  Shared by :func:`get_threev0_home`
+    so callers never drift.
     """
-    val = os.environ.get("EV0_HOME", "").strip()
+    val = os.environ.get("3V0_HOME", "").strip()
+    if not val:
+        val = os.environ.get("THREEV0_HOME", "").strip()  # valid systemd spelling
+    if not val:
+        val = os.environ.get("EV0_HOME", "").strip()  # legacy alias (ADR-0006 R2)
     if val:
         return Path(val)
     return _get_platform_default_threev0_home()
@@ -133,7 +140,11 @@ def get_threev0_home() -> Path:
     if override:
         return Path(override)
 
-    if not os.environ.get("EV0_HOME", "").strip():
+    if not (
+        os.environ.get("3V0_HOME", "").strip()
+        or os.environ.get("THREEV0_HOME", "").strip()
+        or os.environ.get("EV0_HOME", "").strip()
+    ):
         _warn_profile_fallback_once()
 
     return _threev0_home_from_env()
