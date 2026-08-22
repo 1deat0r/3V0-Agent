@@ -2,6 +2,11 @@
 """
 Batch Agent Runner
 
+Standalone eval/benchmark runner (ticket #10 review): no production entry
+point imports this module; it is the consumer of toolset_distributions and
+kept alongside mini_swe_runner for benchmark reproduction. Do not treat it
+as part of the shipped agent surface.
+
 This module provides parallel batch processing capabilities for running the agent
 across multiple prompts from a dataset. It includes:
 - Dataset loading and batching

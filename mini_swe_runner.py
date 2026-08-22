@@ -6,6 +6,10 @@ A runner that uses 3V0-Agent's built-in execution environments
 (local, docker, modal) and outputs trajectories in the 3V0-Agent format
 compatible with batch_runner.py and trajectory_compressor.py.
 
+LEGACY eval tooling (ticket #10 review): no production entry point imports
+this module; it is kept for benchmark reproduction alongside batch_runner.
+Do not treat it as part of the shipped agent surface.
+
 Features:
 - Uses 3V0-Agent's Docker, Modal, or Local environments for command execution
 - Outputs trajectories in 3V0 format (from/value pairs with <tool_call>/<tool_response> XML)
