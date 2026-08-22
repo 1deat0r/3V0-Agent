@@ -234,15 +234,13 @@ def is_write_approval_required(path: str) -> bool:
 # These are blocked because .env files routinely contain API keys,
 # database passwords, and other credentials.
 #
-# Credential-store basenames (auth.json, .anthropic_oauth.json, etc.) are
-# included here too, NOT just under the resolved EV0_HOME/<root> paths: a
-# relative reference like `@file:.3v0/auth.json` resolves to a different
-# directory than get_threev0_home()'s case-sensitive `.3V0`, and a
-# spelling/case variant of the home dir must not bypass the store denylist
-# (regression #86213). Block by basename anywhere, matching the module
-# docstring's claim that these stores are refused.
+# NOTE: 3V0 credential-store basenames (auth.json, .mcp-tokens, etc.) are
+# deliberately NOT in this set — an `auth.json` in an arbitrary project is
+# legitimately readable (see test_file_safety_credentials). Those stores are
+# blocked per-location under the resolved home/root, AND for any
+# home-spelled/symlinked variant by the reference-expansion guard
+# (_ensure_reference_path_allowed in agent/context_references.py).
 _BLOCKED_PROJECT_ENV_BASENAMES: set[str] = {
-    # project-local environment files
     ".env",
     ".env.local",
     ".env.development",
@@ -250,12 +248,6 @@ _BLOCKED_PROJECT_ENV_BASENAMES: set[str] = {
     ".env.test",
     ".env.staging",
     ".envrc",
-    # 3V0 credential stores (by basename, anywhere — see above)
-    "auth.json",
-    "auth.lock",
-    ".anthropic_oauth.json",
-    "webhook_subscriptions.json",
-    "bws_cache.json",
 }
 
 
@@ -367,22 +359,7 @@ def get_read_block_error(path: str) -> Optional[str]:
                 )
 
     # mcp-tokens/: directory prefix match — anything inside is OAuth
-    # token material. Block ANY directory named mcp-tokens (not just under
-    # the resolved home/root): a case/spelling variant of the home dir must
-    # not bypass the MCP token denylist (regression #86213).
-    if "mcp-tokens" in resolved.parts:
-        # exact dir or a file inside it
-        try:
-            idx = resolved.parts.index("mcp-tokens")
-            exact_dir = Path(*resolved.parts[: idx + 1]).resolve()
-        except Exception:
-            exact_dir = None
-        if exact_dir is not None and (resolved == exact_dir or resolved.is_relative_to(exact_dir)):
-            return (
-                f"Access denied: {path} is a 3V0 MCP token file "
-                "and cannot be read directly. (Defense-in-depth — not a "
-                "security boundary; the terminal tool can still bypass.)"
-            )
+    # token material.
     for hd in threev0_dirs:
         try:
             mcp_tokens = (hd / "mcp-tokens").resolve()

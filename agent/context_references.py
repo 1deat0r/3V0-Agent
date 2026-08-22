@@ -494,6 +494,32 @@ def _ensure_reference_path_allowed(path: Path) -> None:
     if path in blocked_exact:
         raise ValueError("path is a sensitive credential file and cannot be attached")
 
+    # Home-spelled credential stores regardless of home-dir case: `.3v0` vs
+    # `.3V0` on a case-sensitive FS are DIFFERENT directories, and a ref like
+    # `@file:.3v0/auth.json` (as users type it) resolves to the lowercase
+    # dir — bypassing the exact threev0_home denylist below. Treat any path
+    # that passes through a `.3v0`/`.3V0` (case-insensitive) directory as a
+    # home path for the credential-store check (regression #86213).
+    if any(part.lower() == ".3v0" for part in path.parts):
+        for name in ("auth.json", "auth.lock", ".anthropic_oauth.json",
+                     "webhook_subscriptions.json",
+                     os.path.join("auth", "google_oauth.json")):
+            if (path.name == name
+                    or (name == os.path.join("auth", "google_oauth.json")
+                        and path.parent.name == "auth"
+                        and path.name == "google_oauth.json")):
+                raise ValueError(
+                    "path is a sensitive credential or internal 3V0 path and cannot be attached"
+                )
+        if "mcp-tokens" in path.parts:
+            raise ValueError(
+                "path is a sensitive credential or internal 3V0 path and cannot be attached"
+            )
+        if path.name == ".env":
+            raise ValueError(
+                "path is a sensitive credential or internal 3V0 path and cannot be attached"
+            )
+
     for blocked_dir in blocked_dirs:
         try:
             path.relative_to(blocked_dir)
