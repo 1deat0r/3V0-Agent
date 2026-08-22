@@ -119,4 +119,13 @@ def collect_runtime_readiness(
     return {"status": overall, "checks": checks}
 
 
+def probe_state_db(home: Path) -> dict[str, Any]:
+    """Public facade over the private state-db probe (ticket #15).
+
+    web_server was importing ``_probe_state_db`` directly; the dashboard
+    should read gateway readiness through the public name.
+    """
+    return _probe_state_db(home)
+
+
 __all__ = ["collect_runtime_readiness"]

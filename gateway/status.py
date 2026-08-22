@@ -853,6 +853,14 @@ def _pid_exists(pid: int) -> bool:
             return False
 
 
+def pid_exists(pid: int) -> bool:
+    """Public facade for the live-PID check (ticket #15).
+
+    Prevents web_server (and other dashboard consumers) from reaching
+    into the private ``_pid_exists`` (ticket #15).
+    """
+    return _pid_exists(pid)
+
 
 def _release_file_lock(handle) -> None:
     try:

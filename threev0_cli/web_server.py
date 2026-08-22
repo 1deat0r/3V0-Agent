@@ -3531,10 +3531,10 @@ async def get_status(profile: Optional[str] = None):
             "dashboard": DASHBOARD_HEALTH.snapshot(),
         }
         try:
-            from gateway.readiness import _probe_state_db
+            from gateway.readiness import probe_state_db
 
             storage_check = await asyncio.get_running_loop().run_in_executor(
-                None, functools.partial(_probe_state_db, get_threev0_home())
+                None, functools.partial(probe_state_db, get_threev0_home())
             )
             components["storage"] = {"status": storage_check.get("status", "degraded")}
         except Exception:
@@ -18352,7 +18352,7 @@ def _is_serve_orphaned(
             )
 
         if pid_exists is None:
-            from gateway.status import _pid_exists
+            from gateway.status import pid_exists as _pid_exists
 
             pid_exists = _pid_exists
         return not bool(pid_exists(int(desktop_pid)))
