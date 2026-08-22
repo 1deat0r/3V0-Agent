@@ -991,19 +991,21 @@ def _enforce_macos_synchronous_full(conn: sqlite3.Connection) -> None:
         pass
 
 
+# is_sqlite_wal_reset_vulnerable: single source of truth lives in
+# threev0_cli.sqlite_runtime (imported above as _is_sqlite_wal_reset_vulnerable).
+# Re-export under the public name so the two module paths never drift
+# (architecture-review pass 2, C4 — the version ranges 3.7.0-3.51.2 with
+# backports 3.50.7 / 3.44.6 are defined ONCE, in sqlite_runtime).
 def is_sqlite_wal_reset_vulnerable(
     version_info: Optional[tuple] = None,
 ) -> bool:
     """Return True when the linked SQLite library has the WAL-reset bug.
 
-    Upstream documents the bug in versions 3.7.0 through 3.51.2, fixed in
-    3.51.3+, with backports 3.50.7 and 3.44.6:
-    https://sqlite.org/wal.html#walresetbug
-
-    Pre-WAL libraries (< 3.7.0) cannot hit the race and are treated as safe.
+    Delegates to :func:`threev0_cli.sqlite_runtime.is_sqlite_wal_reset_vulnerable` —
+    the single source of truth for the version-range policy. This public
+    re-export preserves the call signature (default to the linked SQLite).
     """
-    info = version_info if version_info is not None else sqlite3.sqlite_version_info
-    return _is_sqlite_wal_reset_vulnerable(info)
+    return _is_sqlite_wal_reset_vulnerable(version_info)
 
 
 def sqlite_source_id() -> str:

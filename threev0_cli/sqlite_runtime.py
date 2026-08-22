@@ -9,10 +9,11 @@ from __future__ import annotations
 
 import json
 import os
+import sqlite3
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Optional
 
 
 def _version_tuple(parts: Iterable[object]) -> tuple[int, int, int]:
@@ -22,9 +23,19 @@ def _version_tuple(parts: Iterable[object]) -> tuple[int, int, int]:
 
 
 def is_sqlite_wal_reset_vulnerable(
-    version_info: tuple[int, ...],
+    version_info: Optional[tuple[int, ...]] = None,
 ) -> bool:
-    """Return whether *version_info* contains SQLite's WAL-reset bug."""
+    """Return whether the linked SQLite has the WAL-reset bug.
+
+    ``version_info`` defaults to the running interpreter's linked SQLite
+    (``sqlite3.sqlite_version_info``). This is the SINGLE source of truth
+    for the version-range policy — threev0_state re-exports this function
+    (see threev0_state.is_sqlite_wal_reset_vulnerable); the two must never
+    hold separate copies of the 3.7.0–3.51.2 / 3.50.7 / 3.44.6 ranges
+    (architecture-review pass 2, C4).
+    """
+    if version_info is None:
+        version_info = sqlite3.sqlite_version_info
     info = _version_tuple(version_info)
     if info < (3, 7, 0):
         return False
