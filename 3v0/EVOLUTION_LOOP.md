@@ -2031,3 +2031,32 @@ real-task failure. SkillForge (arXiv 2608.18933, research digest kernel #6).
   into a real SKILL.md via the review loop, then verification against a
   known-answer check before keeping it; and `skill_promote`/`skill_demote`
   tool actions for explicit ranking influence.
+## SkillForge — authoring pass: proposal -> SKILL.md store-first (2026-08-23)
+Turn a SkillForge proposal into a real, store-first skill — the "verified"
+half of the create-leg.
+
+- **`core/forge_skill.py`** (new, pure + deterministic): `build_skill_md`
+  turns a proposal into a well-formed SKILL.md body (frontmatter with
+  escaped description, When to use, Method listing each public callable with
+  its docstring, References to the source module). YAML-safe (embedded
+  quotes escaped); a no-callable proposal degrades to a hand-completable
+  scaffold.
+- **`scripts/run_skill_forge.py`** gains `--author <path>` (emit the body)
+  and `--write <path>` (author + write store-first via `record_skills.py
+  --action skill_update --write`, the exact threev0_record backend). The
+  `--write` gate audits the DISTILLED PROCEDURE TEXT — the authored body
+  PLUS the source callables' docstrings — because a docstring can document
+  a destructive command even when the distilled free text doesn't repeat
+  the literal. A blocking result refuses the write; the store is never
+  touched. Caution content passes (the review/synthesis is the approving
+  context).
+- **Verified**: `--write 3v0/core/safe_evolve.py` -> the authored safe-evolve
+  skill lands in the store (temp THREEV0_SKILL_STORE). A module whose
+  docstring documents `rm -rf /` is refused with
+  `safe_evolve blocked: BLOCKED: filesystem_destroy`.
+- **Invariant kept**: README core-module listing + scripts section updated
+  (coherence enforces lockstep).
+- **Tests**: 3 unit (`test_skill_forge.py::TestForgeSkillMd`); full native
+  suite green.
+- **Still ahead (optional)**: verification against a known-answer check before
+  KEEPING a generated skill; `skill_promote`/`skill_demote` tool actions.

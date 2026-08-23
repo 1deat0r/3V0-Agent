@@ -116,5 +116,6 @@ def synthesize_proposal(
         "description": description,
         "overview": overview_from_doc(mod_doc),
         "public_callables": names,
+        "callable_docs": {n: d for n, d in api},
         "proposal_id": f"forge-{_slugify(source_path.stem)}-{digest}",
     }

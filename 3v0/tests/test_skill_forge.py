@@ -19,6 +19,7 @@ from core.skill_forge import (  # noqa: E402
     synthesize_proposal,
     _slugify,
 )
+from core.forge_skill import build_skill_md  # noqa: E402
 
 
 def _write_module(tmp: Path, code: str) -> Path:
@@ -78,6 +79,41 @@ class TestSynthesizeProposal(unittest.TestCase):
         self.assertEqual(_slugify("My_Module"), "my-module")
         self.assertEqual(_slugify("core.memdb"), "core-memdb")
         self.assertEqual(_slugify(""), "skill")
+
+
+class TestForgeSkillMd(unittest.TestCase):
+    def _prop(self, name="mymod", desc="Compute averages.", callables=("avg", "sma")) -> dict:
+        return {
+            "name": name,
+            "category": "core",
+            "description": desc,
+            "overview": "Compute moving averages deterministically.",
+            "public_callables": list(callables),
+            "callable_docs": {"avg": "Rolling average.", "sma": "Alias."},
+            "proposal_id": "forge-mymod-abc",
+            "source": "3v0/core/mymod.py",
+        }
+
+    def test_builds_frontmatter_and_body(self) -> None:
+        md = build_skill_md(self._prop())
+        self.assertIn("name: mymod", md)
+        self.assertIn('description: "Compute averages."', md)
+        self.assertIn("## Method", md)
+        self.assertIn("- avg — Rolling average.", md)
+        self.assertIn("- sma — Alias.", md)
+        self.assertIn("## References", md)
+        self.assertIn("Source: `3v0/core/mymod.py`", md)
+
+    def test_bare_name_and_empty_description(self) -> None:
+        md = build_skill_md(self._prop(name="some/category/mymod", desc=""))
+        # nested category path stripped to the bare name
+        self.assertIn("name: mymod", md)
+        self.assertIn("description: ''", md)
+
+    def test_no_callables_degrades_gracefully(self) -> None:
+        prop = self._prop(callables=())
+        md = build_skill_md(prop)
+        self.assertIn("complete the method by hand", md)
 
 
 if __name__ == "__main__":
