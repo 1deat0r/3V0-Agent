@@ -26,9 +26,17 @@ export const scheduleResumeScrollToBottom = (
       if (!manuallyScrolledAfterResume && (index === 0 || scroll.isSticky())) {
         scroll.scrollToBottom()
 
+        // The delay-0 tick scrolls the resumed transcript into place WITHOUT a
+        // full force-redraw: Ink's normal re-render has already painted the
+        // freshly-set content, and an evict+forceRedraw here races that first
+        // frame — the visible full-screen repaint on every resume. The
+        // 80/240ms follow-ups still force-redraw (via `refreshSessionView`
+        // below) when sticky scroll needs correcting, so correctness holds.
         if (index === 0) {
-          refreshSessionView()
+          return
         }
+
+        refreshSessionView()
       }
     }, delay)
   )

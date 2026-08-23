@@ -54,11 +54,15 @@ describe('scheduleResumeScrollToBottom', () => {
 
     vi.advanceTimersByTime(0)
     expect(scrollToBottom).toHaveBeenCalledTimes(1)
-    expect(evictInkCachesMock).toHaveBeenCalledWith('all')
-    expect(forceRedrawMock).toHaveBeenCalledTimes(1)
+    // The delay-0 tick scrolls only — Ink's normal re-render painted the
+    // resumed transcript, so an evict+forceRedraw here would race that frame
+    // (the visible resume flash). No force-redraw at 0ms.
+    expect(evictInkCachesMock).not.toHaveBeenCalled()
+    expect(forceRedrawMock).toHaveBeenCalledTimes(0)
 
     vi.advanceTimersByTime(80)
     expect(scrollToBottom).toHaveBeenCalledTimes(2)
+    // The 80ms sticky-scroll correction DOES force-redraw (correctness).
     expect(forceRedrawMock).toHaveBeenCalledTimes(1)
 
     sticky = false
@@ -109,11 +113,13 @@ describe('scheduleResumeScrollToBottom', () => {
 
     vi.advanceTimersByTime(0)
     expect(scrollToBottom).toHaveBeenCalledTimes(1)
-    expect(forceRedrawMock).toHaveBeenCalledTimes(1)
+    // No force-redraw at 0ms — the immediate snap scrolls; the normal
+    // re-render paints the content (no mid-frame repaint flash).
+    expect(forceRedrawMock).toHaveBeenCalledTimes(0)
 
     vi.advanceTimersByTime(80)
     expect(scrollToBottom).toHaveBeenCalledTimes(1)
-    expect(forceRedrawMock).toHaveBeenCalledTimes(1)
+    expect(forceRedrawMock).toHaveBeenCalledTimes(0)
 
     sticky = true
     cancel()
