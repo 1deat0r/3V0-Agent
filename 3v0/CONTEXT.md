@@ -97,6 +97,12 @@ from a body module's public API (AST, deterministic, never imports);
 `record_skills.py`, gated by `safe_evolve`. Skills the loop grows, not just
 fixes.
 
+**Skill rank**:
+Explicit display-rank control — `skill_promote`/`skill_demote` (`record_skill_ranking.py`
+via `threev0_record`) set a skill's `meta.rank_mode` to `by_usage` (kept full,
+usage-ranked) or `default` (names-only tail), alongside the automatic
+usage-aware ranking. Auditable per-skill influence.
+
 **Profile**:
 The 3V0 profile's derived view of the store (MEMORY.md / USER.md /
 SKILL.md). A projection, never the origin.

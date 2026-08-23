@@ -600,9 +600,11 @@ _THREEV0_RECORD_SCHEMA = {
         "fact, optionally superseding an old one (flagged and recoverable, "
         "never erased), or retract one by id. Skills: replace a skill's full "
         "SKILL.md (skill_update), decommission it with no successor "
-        "(skill_retract), or fold it into an umbrella (skill_absorb). The "
-        "store is the canonical origin; the 3V0 profile (MEMORY.md/"
-        "USER.md, or the SKILL.md) is re-exported as a derived view after "
+        "(skill_retract), fold it into an umbrella (skill_absorb), or set its "
+        "display ranking (skill_promote -> by_usage; skill_demote -> default, "
+        "the names-only tail). The store is the canonical origin; the 3V0 "
+        "profile (MEMORY.md/USER.md, or the SKILL.md) is re-exported as a "
+        "derived view after "
         "the write. Use threev0_store to read the store first (e.g. to find "
         "a fact_id to supersede, or a skill name to decommission). "
         "Corrections go here, not through the 3V0 memory/skill_manage "
@@ -613,7 +615,7 @@ _THREEV0_RECORD_SCHEMA = {
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["record", "retract", "skill_update", "skill_retract", "skill_absorb"],
+                "enum": ["record", "retract", "skill_update", "skill_retract", "skill_absorb", "skill_promote", "skill_demote"],
                 "description": (
                     "record: add a fact, optionally superseding an old one. "
                     "retract: remove an active fact by id (recoverable, no "
@@ -621,7 +623,10 @@ _THREEV0_RECORD_SCHEMA = {
                     "SKILL.md (superseding the active version). "
                     "skill_retract: decommission a skill with no successor. "
                     "skill_absorb: fold a skill into an umbrella (via "
-                    "absorbed_into)."
+                    "absorbed_into). skill_promote: set a skill's display "
+                    "rank to by_usage (kept full, usage-ranked). "
+                    "skill_demote: set a skill's display rank to default "
+                    "(enters the names-only tail regardless of usage)."
                 ),
             },
             "kind": {
@@ -757,6 +762,41 @@ def _handle_store_record(args=None, **_) -> str:
     return proc.stdout or "{}"
 
 
+def _handle_skill_ranking(a: Dict[str, Any], body_root: Path) -> str:
+    """Serve a skill_promote / skill_demote by shelling out to
+    scripts/record_skill_ranking.py (JSON out). Same direct-actuator
+    contract as _handle_skill_record."""
+    global _warned_missing_body
+
+    script = _script_path(body_root, "record_skill_ranking.py")
+    if not script.exists():
+        return json.dumps({"error": f"record_skill_ranking.py not found at {script}"})
+
+    action = str(a.get("action", "")).strip()
+    name = str(a.get("name", "")).strip()
+    if not name:
+        return json.dumps({"error": "name is required for skill ranking actions"})
+
+    argv = [sys.executable, str(script), "--json", "--write", "--action", action, "--name", name]
+    if a.get("source"):
+        argv += ["--source", str(a["source"])]
+
+    try:
+        proc = subprocess.run(argv, capture_output=True, text=True, timeout=30)
+    except Exception as e:  # noqa: BLE001 - write path must still return something
+        return json.dumps({"error": f"skill ranking failed: {e}"})
+
+    if proc.returncode != 0:
+        out = (proc.stdout or "").strip()
+        if out:
+            return out
+        return json.dumps({
+            "error": "skill ranking error",
+            "stderr": (proc.stderr or "").strip(),
+        })
+    return proc.stdout or "{}"
+
+
 def _handle_skill_record(a: Dict[str, Any]) -> str:
     """Serve a store-first skill write by shelling out to
     scripts/record_skills.py (JSON out). Same direct-actuator contract as
@@ -772,6 +812,11 @@ def _handle_skill_record(a: Dict[str, Any]) -> str:
                 "Set THREEV0_BODY or write the body-path marker."
             ),
         })
+
+    # Ranking actions route to record_skill_ranking.py (a meta-only write,
+    # never a lineage/content change).
+    if str(a.get("action", "")).strip() in {"skill_promote", "skill_demote"}:
+        return _handle_skill_ranking(a, body_root)
 
     script = _script_path(body_root, "record_skills.py")
     if not script.exists():

@@ -95,9 +95,11 @@ code.
   edit/write_file/remove_file/delete) onto the skill store, with supersession
   and absorb/retract terminals.
 - `core/skill_outcome.py` — skill outcome capture: extracts which skills a
-  session loaded via `skill_view` and persists the review model's
+  session loaded via `skill_view`, persists the review model's
   success/failure/unknown judgment onto the store's usage `meta` (bounded
-  `outcome_history`). The outcome axis the ranker/curator can weight.
+  `outcome_history`), and backs explicit ranking assignments
+  (`set_skill_ranks` — skill_promote/skill_demote via `record_skill_ranking.py`).
+  The outcome + rank axis the ranker/curator can weight.
 - `core/skill_curate.py` — skill curation: decides (deterministically, no LLM)
   which skills the outcome history marks as failing (`rewrite` vs `retire`),
   so the review model can author a fix. Pure gauge on top of `skill_outcome`.
@@ -229,6 +231,11 @@ code.
   `skill_absorb`), then project the derived SKILL.md (write/remove). `--json`
   emits a machine-readable result; backs the skill actions of
   `threev0_record` and the session-end review driver.
+- `scripts/record_skill_ranking.py` — explicit skill ranking (the
+  skill_promote/skill_demote actions): set a skill's `meta.rank_mode` to
+  `by_usage` (kept full, usage-ranked) or `default` (names-only tail),
+  store-first under the lock, no lineage change. Backs the same
+  `threev0_record` actions.
 - `scripts/ingest.py` — replay a memory-tool write into the store under lock
   (JSON on stdin). Called by the `native-store-bridge` plugin.
 - `scripts/ingest_skills.py` — replay a `skill_manage` write into the skill

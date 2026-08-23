@@ -2073,3 +2073,20 @@ the method it distills independently verifies.
   that verifies as `keep` (their own tests pass) — the distilled methods are
   genuinely working. The 10 uncovered modules report `no_tests`.
 - **Tests**: 2 driver tests (keep / no_tests); full native suite green.
+## Skill ranking — explicit promote/demote tool actions (the final garnish, 2026-08-23)
+Gives the agent explicit, auditable ranking influence on top of the automatic
+usage-aware ranking (M3/M4) and the outcome/curation loop.
+
+- **`core/skill_outcome.set_skill_ranks`** — pure `skill name -> rank_mode`
+  assignment written through the store's `set_skill_meta` under `mutate()`
+  (meta-only, no lineage change; missing/no-head skills skipped).
+- **`scripts/record_skill_ranking.py`** — the CLI: `--action skill_promote`
+  (rank_mode=by_usage, kept full) / `--action skill_demote` (rank_mode=default,
+  names-only tail), store-first, `--json`/`--write`, `THREEV0_SKILL_STORE`
+  override. Fixed a real deadlock: never nest `mutate()` (flock is not
+  reentrant) — the existence check reads without the lock and
+  `set_skill_ranks` takes it.
+- **`threev0_record`** gains `skill_promote` / `skill_demote` actions routed
+  to the new script — so the agent can explicitly keep a skill prominent or
+  sink one, auditably, alongside the automatic ranking.
+- **Tests**: 4 unit + 2 CLI; full native suite green (627).

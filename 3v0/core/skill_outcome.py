@@ -29,6 +29,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from .skills import META_RANK_MODE  # noqa: E402  (imported lazily-safe at module level)
+
 VALID_OUTCOMES = {"success", "failure", "unknown"}
 _RESERVED = {"last_outcome", "last_outcome_at", "outcome_source", "outcome_history"}
 
@@ -150,3 +152,31 @@ def mark_skill_outcome(
 def _now_iso() -> str:
     from datetime import datetime, timezone
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def set_skill_ranks(
+    store: Any,
+    assignments: Dict[str, str],
+    *,
+    source: str = "threev0_record",
+) -> Dict[str, Dict[str, Any]]:
+    """Explicitly pin a skill's display rank via ``meta.rank_mode``.
+
+    ``assignments`` maps skill name -> rank_mode ("by_usage" |= "default" —
+    any string is accepted; the ranker treats a value other than "by_usage"
+    as the default posture). Writes through ``set_skill_meta`` on each active
+    head (under ``mutate()``). Returns ``{skill: meta_after}`` for skills
+    with an active head; missing/no-head skills are skipped (never crash).
+    """
+    result: Dict[str, Dict[str, Any]] = {}
+    if not assignments:
+        return result
+    with store.mutate():
+        for name, mode in assignments.items():
+            if not isinstance(mode, str) or not mode.strip():
+                continue
+            if store.latest_active(name) is None:
+                continue
+            store.set_skill_meta(name, **{META_RANK_MODE: mode.strip()})
+            result[name] = dict(store.skill_meta(name))
+    return result

@@ -14,6 +14,14 @@ import unittest
 REPO_ROOT = Path = __import__("pathlib").Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "3v0"))
 
+import json
+import subprocess
+from core.skill_outcome import set_skill_ranks  # noqa: E402
+from core.skills import META_RANK_MODE, SkillStore  # noqa: E402
+
+REPO_ROOT_RANK = __import__("pathlib").Path(__file__).resolve().parents[2]
+RANK_SCRIPT = REPO_ROOT_RANK / "3v0" / "scripts" / "record_skill_ranking.py"
+
 from core.skill_outcome import (  # noqa: E402
     extract_loaded_skills,
     mark_skill_outcome,
@@ -123,6 +131,60 @@ class TestMarkSkillOutcome(unittest.TestCase):
     def test_empty_outcomes_is_noop(self) -> None:
         s, path = _store()
         self.assertEqual(mark_skill_outcome(s, "s1", {}), {})
+
+
+class TestSetSkillRanks(unittest.TestCase):
+    def test_promote_sets_by_usage(self) -> None:
+        s, path = _store()
+        res = set_skill_ranks(s, {"foo": "by_usage"})
+        self.assertIn("foo", res)
+        self.assertEqual(s.skill_meta("foo")[META_RANK_MODE], "by_usage")
+
+    def test_demote_sets_default(self) -> None:
+        s, path = _store()
+        set_skill_ranks(s, {"foo": "default"})
+        self.assertEqual(s.skill_meta("foo")[META_RANK_MODE], "default")
+
+    def test_missing_skill_skipped(self) -> None:
+        s, path = _store()
+        self.assertEqual(set_skill_ranks(s, {"nope": "by_usage"}), {})
+        self.assertEqual(s.skill_meta("nope"), {})
+
+    def test_empty_assignment_is_noop(self) -> None:
+        s, path = _store()
+        self.assertEqual(set_skill_ranks(s, {}), {})
+
+
+class TestRecordSkillRankingCli(unittest.TestCase):
+    def _store_path(self):
+        return os.path.join(tempfile.mkdtemp(), "skills.json")
+
+    def test_promote_write_persists(self) -> None:
+        path = self._store_path()
+        s = SkillStore(path)
+        s.add("foo", "create", "a", content="c")
+        del s
+        env = dict(os.environ, THREEV0_SKILL_STORE=path)
+        proc = subprocess.run(
+            [sys.executable, str(RANK_SCRIPT), "--action", "skill_promote", "--name", "foo", "--write", "--json"],
+            capture_output=True, text=True, env=env, timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        out = json.loads(proc.stdout)
+        self.assertTrue(out["applied"])
+        self.assertEqual(out["rank_mode"], "by_usage")
+        s2 = SkillStore(path)
+        self.assertEqual(s2.skill_meta("foo")[META_RANK_MODE], "by_usage")
+
+    def test_demote_missing_skill_refuses(self) -> None:
+        path = self._store_path()
+        env = dict(os.environ, THREEV0_SKILL_STORE=path)
+        proc = subprocess.run(
+            [sys.executable, str(RANK_SCRIPT), "--action", "skill_demote", "--name", "nope", "--write", "--json"],
+            capture_output=True, text=True, env=env, timeout=30,
+        )
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("no active version", proc.stdout)
 
 
 if __name__ == "__main__":
