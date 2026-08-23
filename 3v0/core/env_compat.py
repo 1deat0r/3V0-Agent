@@ -25,10 +25,13 @@ _PREFIXES = ("3V0_", "EV0_")
 
 
 def branded_env(name: str, default: Optional[str] = None) -> Optional[str]:
-    """Return the first truthy value of 3V0_/THREEV0_/EV0_<name>.
+    """Return the first truthy value of ``3V0_<name>``, then legacy ``EV0_<name>``.
 
     ``name`` is the logical suffix, e.g. ``branded_env("HOME")`` resolves
-    ``3V0_HOME``, then legacy ``EV0_HOME``.
+    ``3V0_HOME``, then legacy ``EV0_HOME``. Only *truthy* values win (an
+    empty string falls through to the next leg). ``THREEV0_*`` is NOT
+    consulted — per ADR-0006 the namespace is exactly two spellings:
+    ``3V0_`` (canonical) and ``EV0_`` (legacy read-compat).
     """
     for prefix in _PREFIXES:
         value = os.environ.get(f"{prefix}{name}")
