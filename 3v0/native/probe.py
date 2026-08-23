@@ -161,6 +161,72 @@ def apply_trend(recent_runs: list[dict], th: dict, min_repeats: int = 2) -> dict
             "advisory": True, "min_repeats_required": min_repeats}
 
 
+def null_control(live: list[dict], null: list[dict], th: dict) -> dict:
+    """Compare a cadence run against a FROZEN-AGENT NULL control (Phantom Gains).
+
+    The §3 calibration floor is the variance of the *grader alone* under a
+    no-change condition. Claiming "evolution" means differencing a live run
+    against a reference — exactly the operation that manufactures phantom gains
+    when the reference is the live run's own earlier self (differencing two
+    noisy estimates, cf. Phantom Gains `2608.20290`). This control pushes a
+    **frozen snapshot of the agent** (fixed commit/body; same pinned grader;
+    same frozen bank) through the identical pipeline as the null, then reports
+    each live run as its **delta vs. that frozen null** — never as an absolute
+    number. A directional claim survives only if the live rate differs from the
+    null rate by more than the pre-registered band width (calibration mean
+    +/- sigma*sd) AND is reproducible across >=2 consecutive live runs (the §3
+    gate, enforced by ``apply_trend``).
+
+    ``null`` = the frozen-agent control's verdicts; ``th`` = the dict returned
+    by ``thresholds()`` (pre-registered band bounds; the sigma that produced it
+    is already baked into the band, so it is not re-taken here).
+    Returns, per band: ``live_rate``, ``null_rate``, ``delta`` (live - null),
+    ``band_width``, and a ``signal`` in:
+    - ``off`` — both rates inside the calibrated noise band (indistinguishable);
+    - ``null-drift`` — the null itself is outside the band, so the control is
+      stale and the comparison is INVALID (re-freeze the null, do not claim);
+    - ``growth-hint`` / ``regression-suspect`` — live outside the band while
+      null is inside; a *candidate* that only becomes advisory after the >=2-run
+      reproducibility gate. Advisory only (§6); never gates revert/continue.
+    """
+    lstat = band_stats(live)
+    nstat = band_stats(null)
+    out = {}
+    bands = BAND_ORDER if all(b in BAND_ORDER for b in lstat) else lstat
+    for band in bands:
+        l = lstat.get(band)
+        n = nstat.get(band)
+        if l is None or l["rate"] is None or n is None or n["rate"] is None:
+            continue
+        live_rate, null_rate = l["rate"], n["rate"]
+        delta = live_rate - null_rate
+        tc = th.get(band)
+        if tc is None:
+            # No calibrated band for this one -> cannot bound noise; skip rather
+            # than emit an ungrounded signal.
+            continue
+        width = tc["hi"] - tc["lo"]
+        null_off = not (tc["lo"] <= null_rate <= tc["hi"])
+        live_off = not (tc["lo"] <= live_rate <= tc["hi"])
+        if not live_off and not null_off:
+            signal = "off"
+        elif null_off:
+            signal = "null-drift"   # control stale -> comparison invalid
+        else:
+            # live outside noise, null inside: a candidate; the `apply_trend`
+            # gate turns it into a confirmed advisory flag.
+            signal = "growth-hint" if delta > 0 else "regression-suspect"
+        out[band] = {
+            "live_rate": round(live_rate, 3),
+            "null_rate": round(null_rate, 3),
+            "delta": round(delta, 3),
+            "band_width": round(width, 3),
+            "signal": signal,
+        }
+    return {"per_band": out, "advisory": True,
+            "note": "delta vs frozen-null; directional claims need >=2 consecutive live runs"}
+
+
 def record_run(path: Path | str, run_meta: dict, verdicts: list[dict]) -> dict:
     """Append a run (meta + verdicts) to the git-versioned results store."""
     p = Path(path)

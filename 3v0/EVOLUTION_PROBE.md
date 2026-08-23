@@ -56,6 +56,18 @@ It is one weak signal feeding a larger judgment — not a verdict, and never a g
 - **Power honesty**: with n=5-8/band and binary outcomes, only large (>=30pp) persistent
   band shifts are resolvable from noise. Small drift is UNDETECTABLE; the monitor says
   "no measured change," never "no change occurred." This limit is stated, not hidden.
+- **Frozen-agent null control (Phantom Gains, `2608.20290`; `native.probe.null_control`)**:
+  claim "evolution" only ever as a **delta vs. a frozen null**, never as an absolute score.
+  A **frozen snapshot of the agent** (fixed commit/body; same pinned grader; same frozen
+  bank) runs through the identical pipeline and is recorded as a null-control run
+  (`kind:"null-control"`, or the calibration-seed runs at a pinned commit). Each cadence
+  run is reported as a live-vs-null per-band delta; a directional signal is accepted only
+  when the LIVE rate is outside the calibrated band while the FROZEN NULL is inside it.
+  If the NULL ITSELF falls outside the band (`null-drift`), the control is stale and the
+  comparison is INVALID — re-freeze the null before trusting any live number. This closes
+  the hole §3's grader-only calibration leaves open: that calibration bounds the grader's
+  noise, but differencing two noisy estimates of the AGENT still manufactures phantom
+  change unless one endpoint is fixed. The frozen null is that fixed endpoint.
 
 ## 4. Grading — pinned and independently regraded
 - One grader model+version+temperature=0+seed, fixed for the life of the bank; identity
@@ -96,11 +108,15 @@ It is one weak signal feeding a larger judgment — not a verdict, and never a g
   second-best continuous proxy.
 
 ## 9. Rollout (blocked on the above fixes)
-1. Author the first bank + rubric by an INDEPENDENT subagent; freeze+commit.
-2. Run calibration phase (§3): K=5 noise-floor estimate; pre-register thresholds.
+1. Author the first bank + rubric by an INDEPENDENT subagent; freeze+commit. (DONE)
+2. Run calibration phase (§3): K=5 noise-floor estimate; pre-register thresholds. (DONE)
 3. Certify grader against known-answer subset (§5) to the pre-registered floor.
-4. First baseline probe run; then cadence at milestones (manual).
-5. At bank lifetime end, regenerate fresh (non-comparable line, flagged).
+   (DONE; grader_cert_v1 6/6>=0.9)
+4. **Freeze the null control**: pin the calibration-seed / first baseline attempt set at a
+   fixed commit and record it as the frozen-agent null (`native.probe.null_control`).
+   Every subsequent cadence run is compared to THIS null, not to its own earlier self.
+5. First baseline probe run against the null; then cadence at milestones (manual).
+6. At bank lifetime end, regenerate fresh (non-comparable line, flagged and re-null'd).
 
 ## 10. What this monitor now honestly asserts
 - Strong: "3V0 is not regressing below the layered floor" (baseline.sh + suite + verify).

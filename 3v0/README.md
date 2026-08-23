@@ -171,9 +171,9 @@ code.
   guidance: the prime filter (reversible / behavior-preserving / high-signal /
   verifiable), six decision types, escalation triggers, and worked examples —
   the operational form of the SOUL beliefs.
-- `CONTEXT.md` — the domain-language glossary of the native substrate: names
-  the concepts (body, soul, store, profile, …) the continuity meta and
-  evolution loop are built on; a glossary and nothing else.
+- `CONTEXT.md` — the sub-context glossary of the native substrate (recurses
+  the root `CONTEXT.md`; see its "Scope" preamble). Names the concepts the
+  continuity meta and evolution loop are built on; a glossary and nothing else.
 - `EVOLUTION_LOOP.md` — the design log: read before adding a stone, append
   decisions after.
 - `VERSION` — the body's version marker (0.01).

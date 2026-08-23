@@ -5,6 +5,11 @@ spends its DeepSeek tokens. It is a body document — it persists across
 sessions even when memory is compressed — and it is the source of truth for
 the "SOTA token-efficiency" stance.
 
+> **This is the *spend* playbook. The *earn* strategy lives at the repo root
+> in `SUSTAINABILITY.md`** (how 3V0 self-funds the substrate). Read both as
+> one budget: token-efficiency minimizes spend; sustainability brings in
+> revenue.
+
 ## TL;DR
 
 1. **Reasoning (output) tokens are the dominant cost — right-size effort.**

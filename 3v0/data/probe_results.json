@@ -203,11 +203,191 @@
       ],
       "composite": 1.0,
       "frontier": "escalated"
+    },
+    {
+      "run_id": "null-control-460698e46",
+      "kind": "null-control",
+      "type": "frozen-agent-null",
+      "bank": "probe_bank_v1.json",
+      "bank_commit": "460698e46",
+      "grader": "certified-subagent (deepseek-v4-flash-0731, temp=0, seed=0); grader_cert_v1 accepted",
+      "note": "FROZEN NULL reference: aggregate of the three 2026-08-18 calibration runs (seed/expand/complete) at bank commit 460698e46. 23/23 PASS, full bank, pinned certified grader, no-change body. Fixed endpoint for null_control delta comparisons per EVOLUTION_PROBE.md section 3 / rollout step 4. Derived (not a new agent attempt); provenance from the listed source runs.",
+      "derived_from": [
+        "run-001-calibration-seed",
+        "calibration-expand-sample",
+        "calibration-complete-sample"
+      ],
+      "full_bank": true,
+      "recorded": "2026-08-23",
+      "verdicts": [
+        {
+          "id": "probe001",
+          "probe": "probe001",
+          "band": "easy",
+          "verdict": "PASS",
+          "reason": "fizzbuzz: 20 lines exact, missing-arg usage+exit(1), n=3 -> 1/2/Fizz; graded blind by certified grader (cold)"
+        },
+        {
+          "id": "probe002",
+          "probe": "probe002",
+          "band": "easy",
+          "verdict": "PASS",
+          "reason": "extract max-per-name exact order"
+        },
+        {
+          "id": "probe003",
+          "probe": "probe003",
+          "band": "easy",
+          "verdict": "PASS",
+          "reason": "dedup_preserve order-preserving, input-not-mutated, all assertions pass; graded blind by certified grader"
+        },
+        {
+          "id": "probe004",
+          "probe": "probe004",
+          "band": "easy",
+          "verdict": "PASS",
+          "reason": "2 liars: A and C, consistent"
+        },
+        {
+          "id": "probe005",
+          "probe": "probe005",
+          "band": "easy",
+          "verdict": "PASS",
+          "reason": "plan w/ dirty-case rules+done+verify"
+        },
+        {
+          "id": "probe006",
+          "probe": "probe006",
+          "band": "medium",
+          "verdict": "PASS",
+          "reason": "tree byte-for-byte both modes"
+        },
+        {
+          "id": "probe007",
+          "probe": "probe007",
+          "band": "medium",
+          "verdict": "PASS",
+          "reason": "unhashable-list bug fixed via str(sorted(w)); all assertions pass, no exception; graded blind by certified grader"
+        },
+        {
+          "id": "probe008",
+          "probe": "probe008",
+          "band": "medium",
+          "verdict": "PASS",
+          "reason": "A=12 greedy10+1+1 vs 6+6"
+        },
+        {
+          "id": "probe009",
+          "probe": "probe009",
+          "band": "medium",
+          "verdict": "PASS",
+          "reason": "valid topo + m_a/m_b cycle"
+        },
+        {
+          "id": "probe010",
+          "probe": "probe010",
+          "band": "medium",
+          "verdict": "PASS",
+          "reason": "5 directives correct + 2 questions"
+        },
+        {
+          "id": "probe011",
+          "probe": "probe011",
+          "band": "medium",
+          "verdict": "PASS",
+          "reason": "reproducible + matching checksum"
+        },
+        {
+          "id": "probe012",
+          "probe": "probe012",
+          "band": "medium",
+          "verdict": "PASS",
+          "reason": "greedy: 2/0/1/3/3"
+        },
+        {
+          "id": "probe013",
+          "probe": "probe013",
+          "band": "medium",
+          "verdict": "PASS",
+          "reason": "bisect good/bad log2N sequence"
+        },
+        {
+          "id": "probe014",
+          "probe": "probe014",
+          "band": "hard",
+          "verdict": "PASS",
+          "reason": "mini_sql exact 4-block output"
+        },
+        {
+          "id": "probe015",
+          "probe": "probe015",
+          "band": "hard",
+          "verdict": "PASS",
+          "reason": "Lock; 3x OK 8M"
+        },
+        {
+          "id": "probe016",
+          "probe": "probe016",
+          "band": "hard",
+          "verdict": "PASS",
+          "reason": "300 per-position 100x3"
+        },
+        {
+          "id": "probe017",
+          "probe": "probe017",
+          "band": "hard",
+          "verdict": "PASS",
+          "reason": "17h; both critical paths A1-C-E-F-H and A1-B-D-F-H = 17, hand-verified"
+        },
+        {
+          "id": "probe018",
+          "probe": "probe018",
+          "band": "hard",
+          "verdict": "PASS",
+          "reason": "6 regex constructs + precedence"
+        },
+        {
+          "id": "probe019",
+          "probe": "probe019",
+          "band": "hard",
+          "verdict": "PASS",
+          "reason": "TOTAL_UNIQUE=4 artifacts valid idempotent"
+        },
+        {
+          "id": "probe020",
+          "probe": "probe020",
+          "band": "escalated",
+          "verdict": "PASS",
+          "reason": "verify.sh ALL_PASS stages1-3 on live server; PERSIST-ME + 50 concurrency survived restart"
+        },
+        {
+          "id": "probe021",
+          "probe": "probe021",
+          "band": "escalated",
+          "verdict": "PASS",
+          "reason": "harness ALL_PASS: hidden 6/6, timing ratio 0.0015<0.20, naive_wrong wrong 6/6; flaw recorded"
+        },
+        {
+          "id": "probe022",
+          "probe": "probe022",
+          "band": "escalated",
+          "verdict": "PASS",
+          "reason": "make.sh DONE OK; two clean builds byte-identical SHA across a forced 4s gap; checksum -c OK"
+        },
+        {
+          "id": "probe023",
+          "probe": "probe023",
+          "band": "escalated",
+          "verdict": "PASS",
+          "reason": "run_demo honest Dijkstra/BF/neg-cycle; hand-verified 0-not-5, neg-cycle detected"
+        }
+      ]
     }
   ],
   "_notes": [
     "2026-08-18: mattpocock code-review found spec drift (weighted composite, frontier, grader model identity, >=2-run trend gate, pre-registered \u00a75 floor all missing). Fixed in probe.py; rows backfilled with composite/frontier/grader-model (verdicts unchanged). GRADER_CERT_FLOOR=0.9 pre-registered pre-registered (grader_cert_v1 6/6=1.0 clears it). \u00a73 K-repeat noise-floor calibration STILL PENDING (multi-session) \u2014 numbers not yet advisory.",
-    "2026-08-18: \u00a73 calibration COMPLETED (K=5 no-change full-bank grader passes). Noise floor recorded: all four bands mean=1.0 sd=0.0 post-fix. Calibration caught a REAL defect: probe011 reproduce.sh non-idempotent across a second boundary (unpinned tar/gzip) -- fixed + re-proven across a forced gap. Escalated-band phantom variance traced to verdict-string parsing, not grader disagreement. Evolution monitor gate sequence now fully satisfied: \u00a75 grader cert + \u00a73 calibration + pre-registered thresholds."
+    "2026-08-18: \u00a73 calibration COMPLETED (K=5 no-change full-bank grader passes). Noise floor recorded: all four bands mean=1.0 sd=0.0 post-fix. Calibration caught a REAL defect: probe011 reproduce.sh non-idempotent across a second boundary (unpinned tar/gzip) -- fixed + re-proven across a forced gap. Escalated-band phantom variance traced to verdict-string parsing, not grader disagreement. Evolution monitor gate sequence now fully satisfied: \u00a75 grader cert + \u00a73 calibration + pre-registered thresholds.",
+    "2026-08-22: FROZEN-AGENT NULL CONTROL instantiated (rollout step 4). run 'null-control-460698e46' is the full-bank (23/23) reference aggregated from the three 2026-08-18 calibration runs at bank commit 460698e46 and re-validated by the pinned certified grader. Every future cadence run must be compared to THIS null via native.probe.null_control, never to its own earlier self (Phantom Gains 2608.20290). No composite/frontier on the null row by design - it is a fixed reference, not a trend run. NOTE (post-review): band_width 0.0 across all bands is EXPECTED and CORRECT - it reflects that the pinned grader is deterministic on fixed evidence (K=5 regrades, sd=0). Per EVOLUTION_PROBE section 3 power-honesty, small drift is undetectable at n=4-8/band regardless of band width; a 0-width gate is therefore not a defect. Do NOT 'fix' it by re-running the agent for an agent-ATTEMPT variance floor: that variance is the signal the monitor exists to detect, removing it would erase the monitor's purpose. The \u22652 consecutive-run reproducibility gate in apply_trend is the correct dampener for single-run noise."
   ],
   "calibration_2026-08-18": {
     "noise_floor": {

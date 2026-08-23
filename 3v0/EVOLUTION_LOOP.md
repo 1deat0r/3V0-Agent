@@ -1,5 +1,11 @@
 # 3V0 — Own Evolution Loop (design)
 
+> **This is the *implementation* log of 3V0's self-improvement loop. The
+> *operating theory* lives at the repo root in `SELF_IMPROVEMENT.md`** (why
+> scaffolding, not retraining). Read both: `SELF_IMPROVEMENT.md` is the
+> rationale; this file is the Stone-by-Stone record of what is live and what's
+> next.
+
 This is the design for 3V0's second stone: **folding the profile's other
 memory writers into the native store**, so the store at `3v0/data/memory.json`
 becomes the single canonical origin and the 3V0 profile (MEMORY.md /

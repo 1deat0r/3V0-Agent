@@ -1,16 +1,48 @@
-# 3V0 — Native Core Context
+# 3V0 — Native Substrate Context
 
-The domain language of 3V0's native substrate (`3v0/`) — the store-first
+The sub-context glossary of 3V0's native substrate (`3v0/`) — the store-first
 identity/memory/evolution layer that makes 3V0 "an agent that builds beyond
 its chassis," not "a profile for 3V0." This names the concepts the
 continuity meta and evolution loop are built on. It is a glossary and nothing
 else: no paths, no specs, no implementation detail.
 
+## Scope — this glossary recurses the root one
+
+Repo-root `CONTEXT.md` is the **canonical** domain glossary and defines the
+*runtime/chassis* vocabulary. This file is a **scoped sub-context** for the
+`3v0/` substrate only. Read root `CONTEXT.md` first; treat the two as one
+nested glossary, not two competing ones.
+
+### Terms that narrow the root glossary
+
+These words already carry a root-`CONTEXT.md` meaning (runtime data model).
+Within the `3v0/` substrate each *narrows* to a different referent, defined
+in the sections below. The root meaning is always the default; the narrowed
+meaning applies **only inside the `3v0/` substrate's discourse**:
+
+- **Body** (→ Identity) — the repository that is 3V0's *self*: auditable,
+  git-versioned ground truth. Root "Body" = the physical repo persisting
+  between sessions.
+- **Soul** (→ Identity) — root does not define it; here it is 3V0's
+  identity document `SOUL.md`.
+- **Profile** (→ Stores and views) — 3V0's own derived *view* of the store, a
+  projection. Root "Profile" = a named home directory holding an operator's
+  MEMORY/USER/skills/config.
+- **Store** (→ Stores and views) — the native source of truth for facts and
+  skill versions. Root "Memory store" = the `3v0/data/memory.db` fact store.
+- **Home** — not used in this substrate; the substrate anchors on the
+  **body** (this repo), not on a profile home.
+
+Use the narrowed meaning when writing inside the `3v0/` substrate, the root
+meaning when writing about the runtime or the repo as a whole. Never mix the
+two glossaries' definitions of these words in one sentence.
+
 ## Identity
 
 **Body**:
-The repository that is 3V0's self — the auditable, git-versioned ground truth.
-Identity is body, not context.
+The repository that is 3V0's __self__ — the auditable, git-versioned ground
+truth. Identity is body, not context. *Narrows* the root "Body" (the physical
+repo persisting between sessions).
 _Avoid_: project, codebase, workspace.
 
 **Soul**:

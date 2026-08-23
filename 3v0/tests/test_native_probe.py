@@ -105,6 +105,68 @@ class TrendTest(unittest.TestCase):
         self.assertEqual(tr["flagged"], [])
 
 
+class NullControlTest(unittest.TestCase):
+    """Frozen-agent null control (Phantom Gains): a live run is asserted only
+    as its delta vs. a frozen null, gated by the calibrated noise band."""
+
+    def test_live_identical_to_null_is_off(self):
+        # Wide-open calibration band makes every rate inside noise.
+        th = {b: {"mean": 0.5, "lo": 0.0, "hi": 1.0} for b in probe.BAND_ORDER}
+        live = verdicts({"easy": ["PASS", "PASS"], "hard": ["PASS"]})
+        null = verdicts({"easy": ["PASS", "PASS"], "hard": ["PASS"]})
+        r = probe.null_control(live, null, th)
+        for band, d in r["per_band"].items():
+            self.assertEqual(d["signal"], "off", band)
+        self.assertAlmostEqual(r["per_band"]["easy"]["delta"], 0.0)
+        self.assertTrue(r["advisory"])
+
+    def test_live_growth_beyond_null_is_candidate(self):
+        th = {b: {"mean": 0.5, "lo": 0.4, "hi": 0.6} for b in probe.BAND_ORDER}
+        null = verdicts({"easy": ["PASS", "FAIL"]})     # 0.5 inside band
+        live = verdicts({"easy": ["PASS", "PASS"]})     # 1.0 outside band
+        r = probe.null_control(live, null, th)
+        self.assertEqual(r["per_band"]["easy"]["signal"], "growth-hint")
+        self.assertAlmostEqual(r["per_band"]["easy"]["delta"], 0.5)
+
+    def test_live_regression_beyond_null_is_candidate(self):
+        th = {b: {"mean": 0.5, "lo": 0.4, "hi": 0.6} for b in probe.BAND_ORDER}
+        null = verdicts({"easy": ["PASS", "FAIL"]})     # 0.5 inside band
+        live = verdicts({"easy": ["FAIL", "FAIL"]})     # 0.0 below band
+        r = probe.null_control(live, null, th)
+        self.assertEqual(r["per_band"]["easy"]["signal"], "regression-suspect")
+        self.assertAlmostEqual(r["per_band"]["easy"]["delta"], -0.5)
+
+    def test_null_drift_invalidates_comparison(self):
+        # If the FROZEN NULL itself falls outside the calibrated band, the
+        # control is stale -> comparison invalid, never a directional claim.
+        th = {b: {"mean": 0.5, "lo": 0.4, "hi": 0.6} for b in probe.BAND_ORDER}
+        null = verdicts({"easy": ["PASS", "PASS"]})     # 1.0, drifted
+        live = verdicts({"easy": ["PASS", "FAIL"]})     # 0.5 inside
+        r = probe.null_control(live, null, th)
+        self.assertEqual(r["per_band"]["easy"]["signal"], "null-drift")
+
+    def test_uncalibrated_band_is_skipped(self):
+        # A band with no thresholds entry cannot bound noise -> skip, no signal.
+        live = verdicts({"easy": ["PASS", "PASS"]})
+        null = verdicts({"easy": ["PASS", "FAIL"]})
+        th = {"easy": {"mean": 0.5, "lo": 0.0, "hi": 1.0}}   # no "hard" entry
+        r = probe.null_control(live, null, th)
+        self.assertIn("per_band", r)
+        self.assertNotIn("hard", r["per_band"])
+        self.assertEqual(r["per_band"]["easy"]["signal"], "off")
+
+    def test_composes_with_calibrate_and_thresholds(self):
+        # Rollout shape: calibrate -> thresholds -> null_control.
+        repeats = [verdicts({"easy": ["PASS", "PASS", "PASS", "PASS"]}),
+                   verdicts({"easy": ["PASS", "PASS", "PASS", "FAIL"]})]
+        cal = probe.calibrate(repeats)
+        th = probe.thresholds(cal)
+        null = verdicts({"easy": ["PASS", "PASS", "PASS", "PASS"]})
+        live = verdicts({"easy": ["PASS", "PASS", "PASS", "PASS"]})
+        r = probe.null_control(live, null, th)
+        self.assertEqual(r["per_band"]["easy"]["signal"], "off")
+
+
 class RecordTest(unittest.TestCase):
     def test_record_run_appends(self):
         with tempfile.TemporaryDirectory() as d:
