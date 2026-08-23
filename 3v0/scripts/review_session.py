@@ -95,6 +95,7 @@ from core.memory import KINDS  # noqa: E402
 from core.store import open_store  # noqa: E402
 from core.projects import ProjectSpec, resolve_project  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
+from core.skill_outcome import extract_loaded_skills, mark_skill_outcome  # noqa: E402
 from core.decide_skills import SKILL_DECISION_ACTIONS  # noqa: E402
 from core.session_db import candidate_rows, load_session, session_columns  # noqa: E402
 from core.review_decide import (  # noqa: E402
@@ -118,6 +119,29 @@ _skill_temporal_refusal = skill_temporal_refusal
 _store_block = store_block
 _skills_block = skills_block
 _SKILL_ACTIONS = SKILL_DECISION_ACTIONS
+
+
+def _loaded_outcomes_block(loaded: List[str]) -> str:
+    """The LOADED SKILLS (outcome) section fed to the review model.
+
+    Lists the skills actually loaded this session (via skill_view) so the
+    model can mark each success/failure/unknown from the transcript evidence.
+    Empty when nothing was loaded or when there's no skill axis.
+    """
+    if not loaded:
+        return ""
+    lines = "\n".join(f"  - {name}" for name in loaded)
+    return (
+        "7. SKILL OUTCOME: the session loaded these skills via skill_view. "
+        "From the transcript, for each, judge whether it SUCCEEDED (the task "
+        "it guides completed), FAILED (the skill was wrong, misleading, or "
+        "obsolete and cost the session), or was UNKNOWN (no clear signal). "
+        "Emit a parallel 'skill_outcomes' object {\"skill_name\": "
+        "\"success\"|\"failure\"|\"unknown\"}. Be conservative: default to "
+        "unknown when unsure — this feeds durable curation, not a grade.\n\n"
+        "LOADED SKILLS (outcome):\n"
+        f"{lines}\n"
+    )
 
 
 def _build_transcript(messages: List[Dict[str, str]], cap: Optional[int] = None) -> str:
@@ -739,11 +763,20 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
             if skill_store
             else "ACTIVE SKILLS: (none — memory-only project)\n"
         )
+        # Outcome capture: which skills did this session actually load? The
+        # model marks success/failure/unknown from the transcript evidence
+        # (advisory — the same discipline as the rest of the review), and the
+        # driver persists it onto the store's meta.
+        loaded = extract_loaded_skills(session["messages"])
+        outcomes_part = (
+            _loaded_outcomes_block(loaded) if (skill_store and loaded) else ""
+        )
         prompt = (
             f"Session {session_id} (title: {session['title'] or 'untitled'}) "
             f"just ended.\n\n"
             f"{_store_block(store)}\n\n"
             f"{skills_part}\n\n"
+            f"{outcomes_part}"
             f"SESSION TRANSCRIPT (compacted; tool outputs truncated):\n"
             f"{transcript}\n\n"
             f"Decide the store-first corrections described in your charter and "
@@ -760,9 +793,24 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
             decisions = []
         result = _apply_decisions(decisions, store, session.get("as_of"), skill_store)
 
+        # Persist the model's skill-outcome judgments (best-effort; a failure
+        # here is a log line, never a review failure).
+        raw_outcomes = answer.get("skill_outcomes") if isinstance(answer, dict) else None
+        skill_outcomes: Dict[str, str] = {}
+        if isinstance(raw_outcomes, dict) and skill_store is not None:
+            skill_outcomes = {
+                str(k): str(v) for k, v in raw_outcomes.items() if isinstance(v, str)
+            }
+            try:
+                mark_skill_outcome(skill_store, session_id, skill_outcomes)
+            except Exception as e:  # noqa: BLE001 - best-effort observer
+                _log_run(f"review {session_id}: outcome capture failed: {e}")
+
         entry = {
             "session_id": session_id,
             "at": now,
+            "skill_outcomes": skill_outcomes,
+            "loaded_skills": loaded,
             "source": session["source"],
             "model": CONFIG.model,
             "summary": str(answer.get("summary", ""))[:300] if isinstance(answer, dict) else "",

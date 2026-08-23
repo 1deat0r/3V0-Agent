@@ -94,6 +94,10 @@ code.
 - `core/skill_bridge.py` — map a 3V0 `skill_manage` write (create/patch/
   edit/write_file/remove_file/delete) onto the skill store, with supersession
   and absorb/retract terminals.
+- `core/skill_outcome.py` — skill outcome capture: extracts which skills a
+  session loaded via `skill_view` and persists the review model's
+  success/failure/unknown judgment onto the store's usage `meta` (bounded
+  `outcome_history`). The outcome axis the ranker/curator can weight.
 - `core/skill_io.py` — single owner of skill-name → SKILL.md path/content
   mapping (locate/write/remove, `.archive/` excluded), shared by
   seed/ingest/sync_skills.

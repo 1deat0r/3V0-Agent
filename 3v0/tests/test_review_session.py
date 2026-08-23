@@ -448,6 +448,65 @@ class TestFakeLLMSkillDecisions(Env):
         self.assertEqual(entries[0]["refused"], 1)
 
 
+class TestSkillOutcomeCapture(Env):
+    """Outcome capture: the driver reads which skills a session loaded via
+    skill_view, asks the model to mark success/failure/unknown, and persists
+    it onto the store's meta + records it in the review log."""
+
+    def _seed_session_with_skill_view(self, skills: list[str]) -> str:
+        """Seed a session whose transcript includes a skill_view tool message
+        for each skill (as a JSON result with the resolved name)."""
+        # Reuse the base seeding for gating, then append skill_view tool rows.
+        sid = _seed_session_db(self.db_path, source="tui", user_messages=4)
+        conn = sqlite3.connect(str(self.db_path))
+        for name in skills:
+            payload = json.dumps({"success": True, "name": name})
+            conn.execute(
+                "INSERT INTO messages (session_id, role, content, tool_name) "
+                "VALUES (?, 'assistant', ?, 'skill_view')",
+                (sid, payload),
+            )
+        conn.commit()
+        conn.close()
+        return sid
+
+    def test_outcome_capture_persists_and_logs(self):
+        _seed_skill(self.skill_store_path, self.skills_dir, "foo")
+        _seed_skill(self.skill_store_path, self.skills_dir, "bar")
+        sid = self._seed_session_with_skill_view(["foo", "bar"])
+        # The model marks foo succeeded, bar unknown — but only stores truth.
+        self.decisions_file.write_text(
+            json.dumps({
+                "summary": "outcome capture",
+                "decisions": [],
+                "skill_outcomes": {"foo": "success", "bar": "unknown"},
+            }),
+            encoding="utf-8",
+        )
+        _run_driver(sid, self.env)
+
+        store = SkillStore(self.skill_store_path)
+        self.assertEqual(store.skill_meta("foo")["last_outcome"], "success")
+        self.assertIn("last_outcome_at", store.skill_meta("foo"))
+        self.assertEqual(store.skill_meta("bar")["last_outcome"], "unknown")
+        # No skill was decommissioned — outcomes are meta-only, append-only.
+        self.assertIsNotNone(store.latest_active("foo"))
+        self.assertIsNotNone(store.latest_active("bar"))
+
+        entries = self.log_entries()
+        self.assertEqual(entries[0]["loaded_skills"], ["foo", "bar"])
+        self.assertEqual(entries[0]["skill_outcomes"]["foo"], "success")
+
+    def test_outcome_capture_guard_holds_without_store(self):
+        # The driver's `skill_store is not None` guard means a memory-only
+        # project never calls mark_skill_outcome. Assert that contract as a
+        # unit: calling mark_skill_outcome on a store with no active head is a
+        # safe no-op (returns {}), so a guard slip can never crash the review.
+        from core.skill_outcome import mark_skill_outcome
+        empty = SkillStore(os.path.join(self.tmp.name, "empty-skills.json"))
+        self.assertEqual(mark_skill_outcome(empty, "s1", {"foo": "success"}), {})
+
+
 class TestUnitHelpers(unittest.TestCase):
     def test_tolerant_json_fences_and_prose(self):
         mod = DRIVER_MOD

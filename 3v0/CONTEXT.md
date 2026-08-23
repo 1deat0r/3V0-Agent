@@ -76,6 +76,13 @@ sidecar into the store's usage `meta` (`touch_skill`/`set_skill_meta`) by the
 skill-index ranking (`skills.skill_rank_mode: by_usage`) via the shared
 `META_*` vocabulary.
 
+**Skill outcome**:
+The outcome axis of skill feedback — the session-end review marks each skill
+that session loaded (via `skill_view`) as `success|failure|unknown` from the
+transcript evidence, persisted onto the store's `meta`
+(`core/skill_outcome.mark_skill_outcome`). The raw signal the ranker/curator
+can weight beyond recency.
+
 **Profile**:
 The 3V0 profile's derived view of the store (MEMORY.md / USER.md /
 SKILL.md). A projection, never the origin.

@@ -1956,3 +1956,28 @@ own seams; no behavior change unless the opt-in flag is set.
 - **Still ahead — part 3 (M4 remainder)**: `skill_promote`/`skill_demote`
   tool actions for explicit, auditable ranking influence (optional; the
   config + auto-ranking already deliver the token + signal win).
+## Skill outcome — session-end outcome capture (2026-08-23)
+Adds the outcome axis to the read-feedback loop: not just "was the skill
+loaded" (usage), but "did it work". The session-end review already runs
+(`review_session.py`); it now also:
+
+- **Extracts loaded skills** (`core/skill_outcome.extract_loaded_skills`) from
+  the session's `skill_view` tool messages (ordered, deduped, resolved name —
+  including qualified plugin forms normalized to the canonical name).
+- **Asks the review model** to mark each loaded skill `success|failure|unknown`
+  from the transcript evidence (advisory — same discipline as the rest of the
+  review; conservative default to unknown), via a new "SKILL OUTCOME" charter
+  section.
+- **Persists** the judgments (`core/skill_outcome.mark_skill_outcome`) onto the
+  store's usage `meta` — `last_outcome`/`last_outcome_at`/`outcome_source` +
+  bounded `outcome_history` (most recent first, cap 12) — appending nothing to
+  lineage. The ranker/curator can now weight by outcome, not just recency.
+- **Logs** `loaded_skills` + `skill_outcomes` on the review log entry.
+
+Best-effort by construction: a memory-only project (no skill store) skips the
+persist step; a failure there is a log line, never a review failure. Tests: 9
+unit (`test_skill_outcome.py`) + 2 E2E (`test_review_session.py`); full native
+suite green.
+- **Still ahead**: a curation pass that *acts* on the outcome axis (TextGrad
+  patch of failed skills via `safe_evolve`, baseline-verified), and — optional —
+  `skill_promote`/`skill_demote` tool actions for explicit ranking influence.
