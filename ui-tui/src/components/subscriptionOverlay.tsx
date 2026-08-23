@@ -430,7 +430,7 @@ function OverviewScreen({ onClose, onPatch, overlay, t }: ScreenProps) {
 
   for (const tier of freePlans) {
     // NAS sends a bare decimal string; tolerate pre-grouped ("1,000") too.
-    const credits = Number((tier.monthly_credits ?? '').replace(/,/g, ''))
+    const credits = Number(String(tier.monthly_credits ?? '').replace(/,/g, ''))
     const suffix = Number.isFinite(credits) && credits > 0 ? ` · $${credits.toLocaleString('en-US')} credits/mo` : ''
 
     rows.push({
@@ -629,7 +629,7 @@ function ConfirmScreen({ onClose, onPatch, overlay, t }: ScreenProps) {
 
     void ctx.fetchCard().then(card => {
       if (!cancelled && card && (card.resolved_via === 'subPin' || card.resolved_via === 'customerDefault')) {
-        setChargeCard(card.masked)
+        setChargeCard(card.masked ?? null)
       }
     })
 
