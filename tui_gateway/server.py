@@ -32,6 +32,7 @@ from threev0_constants import (
     set_threev0_home_override,
 )
 from threev0_cli.env_loader import load_threev0_dotenv
+from env_compat import branded_env
 from utils import is_truthy_value
 from tools.environments.local import threev0_subprocess_env
 from agent.replay_cleanup import sanitize_replay_history
@@ -157,7 +158,7 @@ _cfg_mtime: float | None = None
 _cfg_path = None
 _session_resume_lock = threading.Lock()
 try:
-    _slash_timeout = float(os.environ.get("EV0_TUI_SLASH_TIMEOUT_S") or "45")
+    _slash_timeout = float(branded_env("TUI_SLASH_TIMEOUT_S") or "45")
 except (ValueError, TypeError):
     _slash_timeout = 45.0
 _SLASH_WORKER_TIMEOUT_S = max(5.0, _slash_timeout)
@@ -174,7 +175,7 @@ _SLASH_WORKER_TIMEOUT_S = max(5.0, _slash_timeout)
 # Set to 0 to disable (park forever, pre-fix behaviour).
 try:
     _ws_orphan_reap_grace = float(
-        os.environ.get("EV0_TUI_WS_ORPHAN_REAP_GRACE_S") or "20"
+        branded_env("TUI_WS_ORPHAN_REAP_GRACE_S") or "20"
     )
 except (ValueError, TypeError):
     _ws_orphan_reap_grace = 20.0
@@ -326,7 +327,7 @@ _LONG_HANDLERS = frozenset(
 
 try:
     _rpc_pool_workers = max(
-        2, int(os.environ.get("EV0_TUI_RPC_POOL_WORKERS") or "8")
+        2, int(branded_env("TUI_RPC_POOL_WORKERS") or "8")
     )
 except (ValueError, TypeError):
     _rpc_pool_workers = 8
@@ -1216,7 +1217,7 @@ def _shutdown_sessions() -> None:
 # hours-scale because last_active freezes during a long turn and on passive
 # viewing — running/pending/starting/live-transport are hard exemptions instead.
 try:
-    _SESSION_TTL_S = float(os.environ.get("EV0_TUI_SESSION_TTL_S") or 6 * 3600)
+    _SESSION_TTL_S = float(branded_env("TUI_SESSION_TTL_S") or 6 * 3600)
 except (TypeError, ValueError):
     _SESSION_TTL_S = float(6 * 3600)
 _SESSION_TTL_S = max(0.0, _SESSION_TTL_S)
@@ -1718,7 +1719,7 @@ _compute_host_supervisor_lock = threading.Lock()
 
 
 def _inside_compute_host_child() -> bool:
-    return os.environ.get("EV0_COMPUTE_HOST_CHILD") == "1"
+    return branded_env("COMPUTE_HOST_CHILD") == "1"
 
 
 def _turn_isolation_enabled(cfg: dict | None = None) -> bool:
@@ -3819,8 +3820,7 @@ def _ensure_skin_watcher() -> None:
 
 def _resolve_model() -> str:
     env = (
-        os.environ.get("EV0_MODEL", "")
-        or os.environ.get("EV0_INFERENCE_MODEL", "")
+        branded_env("MODEL", "") or branded_env("INFERENCE_MODEL", "")
     ).strip()
     if env:
         return env
@@ -3859,8 +3859,8 @@ def _resolve_session_platform() -> str:
       * neither set → "tui"
         (standalone ``3v0 --tui``.)
     """
-    if is_truthy_value(os.environ.get("EV0_DESKTOP")) and not is_truthy_value(
-        os.environ.get("EV0_DESKTOP_TERMINAL")
+    if is_truthy_value(branded_env("DESKTOP")) and not is_truthy_value(
+        branded_env("DESKTOP_TERMINAL")
     ):
         return "desktop"
     return "tui"
@@ -3917,13 +3917,12 @@ def _config_model_target() -> tuple[str, str]:
 
 def _resolve_startup_runtime() -> tuple[str, str | None]:
     model = _resolve_model()
-    explicit_provider = os.environ.get("EV0_TUI_PROVIDER", "").strip()
+    explicit_provider = (branded_env("TUI_PROVIDER") or "").strip()
     if explicit_provider:
         return model, explicit_provider
 
     explicit_model = (
-        os.environ.get("EV0_MODEL", "")
-        or os.environ.get("EV0_INFERENCE_MODEL", "")
+        branded_env("MODEL", "") or branded_env("INFERENCE_MODEL", "")
     ).strip()
     if not explicit_model:
         return model, None
@@ -3938,7 +3937,7 @@ def _resolve_startup_runtime() -> tuple[str, str | None]:
                 if isinstance(cfg, dict)
                 else ""
             )
-            or os.environ.get("EV0_INFERENCE_PROVIDER", "").strip().lower()
+            or (branded_env("INFERENCE_PROVIDER") or "").strip().lower()
             or "auto"
         )
         detected = detect_static_provider_for_model(explicit_model, current_provider)
@@ -4445,7 +4444,7 @@ def _load_memory_notifications() -> str:
 
 
 def _load_tool_progress_mode() -> str:
-    env = os.environ.get("EV0_TUI_TOOL_PROGRESS", "").strip().lower()
+    env = (branded_env("TUI_TOOL_PROGRESS") or "").strip().lower()
     if env in {"off", "new", "all", "verbose"}:
         return env
     raw = (_load_cfg().get("display") or {}).get("tool_progress", "all")
@@ -4482,7 +4481,7 @@ def _load_enabled_toolsets(platform: str | None = None) -> list[str] | None:
     session_platform = platform or _resolve_session_platform()
     explicit = [
         item.strip()
-        for item in os.environ.get("EV0_TUI_TOOLSETS", "").split(",")
+        for item in (branded_env("TUI_TOOLSETS") or "").split(",")
         if item.strip()
     ]
     cfg = None
@@ -5383,7 +5382,7 @@ def _get_usage(agent) -> dict:
         pass
     # Dev-only live credits-spent readout (L0 usage-aware-credits). Gated on
     # EV0_DEV_CREDITS so the payload stays clean when the flag is off.
-    if is_truthy_value(os.environ.get("EV0_DEV_CREDITS")):
+    if is_truthy_value(branded_env("DEV_CREDITS")):
         try:
             spent = agent.get_credits_spent_micros()
             if spent is not None:
@@ -6445,7 +6444,7 @@ def _apply_personality_to_session(
 
 def _cfg_max_turns(cfg: dict, default: int) -> int:
     try:
-        env_max = int(os.environ.get("EV0_TUI_MAX_TURNS", "") or 0)
+        env_max = int(branded_env("TUI_MAX_TURNS") or 0)
         if env_max > 0:
             return env_max
     except (TypeError, ValueError):
@@ -6455,7 +6454,7 @@ def _cfg_max_turns(cfg: dict, default: int) -> int:
 
 
 def _parse_tui_skills_env() -> list[str]:
-    raw = os.environ.get("EV0_TUI_SKILLS", "")
+    raw = branded_env("TUI_SKILLS") or ""
     skills: list[str] = []
     seen: set[str] = set()
     for part in raw.replace("\n", ",").split(","):
@@ -7016,10 +7015,10 @@ def _make_agent(
         session_id=session_id or key,
         session_db=session_db if session_db is not None else _get_db(),
         ephemeral_system_prompt=system_prompt or None,
-        checkpoints_enabled=is_truthy_value(os.environ.get("EV0_TUI_CHECKPOINTS")),
-        pass_session_id=is_truthy_value(os.environ.get("EV0_TUI_PASS_SESSION_ID")),
-        skip_context_files=is_truthy_value(os.environ.get("EV0_IGNORE_RULES")),
-        skip_memory=is_truthy_value(os.environ.get("EV0_IGNORE_RULES")),
+        checkpoints_enabled=is_truthy_value(branded_env("TUI_CHECKPOINTS")),
+        pass_session_id=is_truthy_value(branded_env("TUI_PASS_SESSION_ID")),
+        skip_context_files=is_truthy_value(branded_env("IGNORE_RULES")),
+        skip_memory=is_truthy_value(branded_env("IGNORE_RULES")),
         fallback_model=_load_fallback_model(),
         **_agent_cbs(sid),
     )
@@ -9045,7 +9044,7 @@ _PET_REFERENCE_MIME_EXT = {
 try:
     _PET_REFERENCE_MAX_BYTES = max(
         1,
-        int(os.environ.get("EV0_PET_REFERENCE_MAX_BYTES") or str(16 * 1024 * 1024)),
+        int(branded_env("PET_REFERENCE_MAX_BYTES") or str(16 * 1024 * 1024)),
     )
 except (TypeError, ValueError):
     _PET_REFERENCE_MAX_BYTES = 16 * 1024 * 1024
@@ -12096,7 +12095,7 @@ def _(rid, params: dict) -> dict:
                         _session_info(agent, session),
                     )
             else:
-                current = is_truthy_value(os.environ.get("EV0_YOLO_MODE"))
+                current = is_truthy_value(branded_env("YOLO_MODE"))
                 enable = _resolve_toggle(current)
                 if enable:
                     os.environ["EV0_YOLO_MODE"] = "1"
@@ -13981,12 +13980,12 @@ def _voice_mode_enabled() -> bool:
     avoids the TUI auto-starting in REC the next time the user opens it
     just because they happened to enable voice in a prior session.
     """
-    return os.environ.get("EV0_VOICE", "").strip() == "1"
+    return (branded_env("VOICE") or "").strip() == "1"
 
 
 def _voice_tts_enabled() -> bool:
     """Whether agent replies should be spoken back via TTS (runtime only)."""
-    return os.environ.get("EV0_VOICE_TTS", "").strip() == "1"
+    return (branded_env("VOICE_TTS") or "").strip() == "1"
 
 
 def _any_session_running() -> bool:
