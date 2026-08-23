@@ -21,12 +21,15 @@ import { patchUiState } from './uiStore.js'
 const STATUSBAR_ALIAS: Record<string, StatusBarMode> = {
   bottom: 'bottom',
   off: 'off',
-  on: 'top',
+  // Tide: `on`/`true` = statusbar enabled -> the default bottom position.
+  on: 'bottom',
   top: 'top'
 }
 
-export const normalizeStatusBar = (raw: unknown): StatusBarMode =>
-  raw === false ? 'off' : typeof raw === 'string' ? (STATUSBAR_ALIAS[raw.trim().toLowerCase()] ?? 'top') : 'top'
+// Tide redesign: status defaults to the BOTTOM (content-first, no top-status
+  // clutter). An explicit `display.tui_statusbar: top` still pins top.
+  export const normalizeStatusBar = (raw: unknown): StatusBarMode =>
+    raw === false ? 'off' : typeof raw === 'string' ? (STATUSBAR_ALIAS[raw.trim().toLowerCase()] ?? 'bottom') : 'bottom'
 
 const BUSY_MODES = new Set<BusyInputMode>(['interrupt', 'queue', 'steer'])
 

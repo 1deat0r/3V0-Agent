@@ -95,14 +95,14 @@ describe('applyDisplay', () => {
     expect($uiState.get().destructiveSlashConfirm).toBe(false)
   })
 
-  it('coerces legacy true + "on" alias to top', () => {
+  it('coerces legacy true + "on" alias to bottom (Tide default)', () => {
     const setBell = vi.fn()
 
     applyDisplay({ config: { display: { tui_statusbar: true as unknown as 'on' } } }, setBell)
-    expect($uiState.get().statusBar).toBe('top')
+    expect($uiState.get().statusBar).toBe('bottom')
 
     applyDisplay({ config: { display: { tui_statusbar: 'on' } } }, setBell)
-    expect($uiState.get().statusBar).toBe('top')
+    expect($uiState.get().statusBar).toBe('bottom')
   })
 
   it('applies v1 parity defaults when display fields are missing', () => {
@@ -114,7 +114,7 @@ describe('applyDisplay', () => {
     expect(setBell).toHaveBeenCalledWith(false)
     expect(s.inlineDiffs).toBe(true)
     expect(s.showReasoning).toBe(false)
-    expect(s.statusBar).toBe('top')
+    expect(s.statusBar).toBe('bottom')
     expect(s.streaming).toBe(true)
     expect(s.sections).toEqual({})
   })
@@ -214,10 +214,10 @@ describe('applyDisplay', () => {
 })
 
 describe('normalizeStatusBar', () => {
-  it('maps legacy bool + on alias to top/off', () => {
-    expect(normalizeStatusBar(true)).toBe('top')
+  it('maps legacy bool + on alias to bottom/off (Tide default)', () => {
+    expect(normalizeStatusBar(true)).toBe('bottom')
     expect(normalizeStatusBar(false)).toBe('off')
-    expect(normalizeStatusBar('on')).toBe('top')
+    expect(normalizeStatusBar('on')).toBe('bottom')
   })
 
   it('passes through the canonical enum', () => {
@@ -226,17 +226,17 @@ describe('normalizeStatusBar', () => {
     expect(normalizeStatusBar('bottom')).toBe('bottom')
   })
 
-  it('defaults missing/unknown values to top', () => {
-    expect(normalizeStatusBar(undefined)).toBe('top')
-    expect(normalizeStatusBar(null)).toBe('top')
-    expect(normalizeStatusBar('sideways')).toBe('top')
-    expect(normalizeStatusBar(42)).toBe('top')
+  it('defaults missing/unknown values to bottom', () => {
+    expect(normalizeStatusBar(undefined)).toBe('bottom')
+    expect(normalizeStatusBar(null)).toBe('bottom')
+    expect(normalizeStatusBar('sideways')).toBe('bottom')
+    expect(normalizeStatusBar(42)).toBe('bottom')
   })
 
   it('trims whitespace and folds case', () => {
     expect(normalizeStatusBar(' Bottom ')).toBe('bottom')
     expect(normalizeStatusBar('TOP')).toBe('top')
-    expect(normalizeStatusBar('  on  ')).toBe('top')
+    expect(normalizeStatusBar('  on  ')).toBe('bottom')
     expect(normalizeStatusBar('OFF')).toBe('off')
   })
 })
