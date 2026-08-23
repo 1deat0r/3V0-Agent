@@ -369,52 +369,50 @@ export function buildPalette(seeds: ThemeSeeds, isLight: boolean): ThemeColors {
   }
 }
 
+// "Tide" — the restrained 3V0 identity. ONE accent (sky) + neutral surface
+// + a semantic trio. No gold, no crimson, no per-surface rainbow. The sky
+// accent is 3V0's electric mark, used only for the prompt/selection/thinking/
+// good-status. Everything else recedes. (Redesign step 1.)
 export const DARK_SEEDS: ThemeSeeds = {
-  accent: '#FFBF00',
-  // The classic 3V0 navy surfaces are IDENTITY, not derivation drift —
-  // keep them as explicit fill seeds (the ladder derives them for skins
-  // that don't care).
-  activeRow: '#333355',
-  bg: '#101014',
-  border: '#CD7F32',
-  error: '#ef5350',
-  ok: '#4caf50',
-  primary: '#FFD700',
-  prompt: '#FFF8DC',
-  selection: '#3a3a55',
-  shellDollar: '#4dabf7',
-  statusBad: '#FF8C00',
-  statusCritical: '#FF6B6B',
-  statusGood: '#8FBC8F',
-  statusWarn: '#FFD700',
-  surface: '#1a1a2e',
-  text: '#FFF8DC',
-  warn: '#ffa726'
+  accent: '#7DD3E8',        // the single sky accent
+  activeRow: '#22303C',     // selection row fill (derived-ish surface tone)
+  bg: '#0E1116',            // near-black cool grey canvas
+  border: '#3c424c',        // hairline rail/border (neutral, derived-consistent)
+  error: '#E06570',
+  ok: '#7ACB8E',
+  primary: '#7DD3E8',       // primary == accent (one hue)
+  prompt: '#E6E9EF',
+  selection: '#22303C',
+  shellDollar: '#7DD3E8',
+  statusBad: '#E06570',
+  statusCritical: '#E06570',
+  statusGood: '#7ACB8E',
+  statusWarn: '#E0A458',
+  surface: '#141922',       // one step off canvas
+  text: '#E6E9EF',
+  warn: '#E0A458'
 }
 
-// Light-terminal seeds: darker golds/ambers that stay legible on white.
-// The classic light-mode 3V0 look was never hand-authored: for years the
-// TUI emitted the DARK golds and hosts with xterm's minimumContrastRatio
-// (Cursor defaults to 4.5) lifted them against white — hue and saturation
-// kept, luminance clamped. These seeds are those exact lifts
-// (liftForContrast(dark, '#ffffff', 4.5)), so hosts WITHOUT a contrast pass
-// render the same thing Cursor always showed. Text/prompt stay ink — body
-// copy historically rendered in the terminal's default near-black fg.
+// Light-terminal "Tide" mirror: deep-sky accent, cool-near-white canvas,
+// ink text, same semantic trio. Contrast floors kept (accent deep enough on
+// white).
 export const LIGHT_SEEDS: ThemeSeeds = {
-  accent: '#956E00',
-  bg: '#ffffff',
-  border: '#A56628',
-  error: '#C14240',
-  ok: '#367E39',
-  primary: '#867000',
-  prompt: '#2B2014',
-  shellDollar: '#377BB3',
-  statusBad: '#A65A00',
-  statusCritical: '#B94D4D',
-  statusGood: '#5C7A5C',
-  statusWarn: '#867000',
-  text: '#3D2F13',
-  warn: '#956115'
+  accent: '#0E7490',        // deep sky that reads on white
+  bg: '#F7F8FA',            // cool near-white canvas
+  border: '#DCE2EA',        // hairline (neutral, derived-consistent)
+  error: '#C24A55',
+  ok: '#2E8B57',
+  primary: '#0E7490',
+  prompt: '#20262E',
+  selection: '#D8E8EF',
+  shellDollar: '#0E7490',
+  statusBad: '#C24A55',
+  statusCritical: '#B43B46',
+  statusGood: '#2E8B57',
+  statusWarn: '#9A6A1F',
+  surface: '#FFFFFF',
+  text: '#20262E',
+  warn: '#9A6A1F'
 }
 
 export const DARK_THEME: Theme = {
@@ -624,17 +622,19 @@ export function deriveTones(seeds: {
   const surface = mix(bg, desaturate(accent, 0.15), isLight ? 0.045 : 0.09)
 
   return {
-    // Light knobs are fitted to the lift canon (xterm minimumContrastRatio
-    // 4.5 of the classic dark golds against white — see LIGHT_SEEDS), not
-    // to ink blends: muted #946C08 ≈ desat(accent .05), label #8E6B13 ≈
-    // desat(mix(accent, text, .03), .15), statusFg #6F6F6F ≈ gray 30% lift.
-    muted: isLight ? desaturate(accent, 0.05) : desaturate(mix(accent, bg, 0.19), 0.16),
-    label: isLight ? desaturate(mix(accent, text, 0.03), 0.15) : desaturate(mix(accent, bg, 0.13), 0.16),
+    // Tide restraint: the neutral ladder (muted/label/border) comes from the
+    // text↔bg GREY gamma — NOT hue-shifted toward the accent — so the accent
+    // stays the single color and the surface recedes. Only the identity
+    // fills (activeRow/selection) carry a faint accent tint. (Redesign.)
+    muted: isLight ? desaturate(mix(text, bg, isLight ? 0.62 : 0.55), 0.55)
+                   : desaturate(mix(text, bg, 0.62), 0.55),
+    label: isLight ? desaturate(mix(text, bg, 0.46), 0.5)
+                   : desaturate(mix(text, bg, 0.46), 0.5),
     statusFg: grayOf(mix(text, bg, isLight ? 0.3 : 0.24)),
     surface,
-    activeRow: mix(surface, accent, 0.25),
-    selection: isLight && seeds.shellDollar ? mix(bg, seeds.shellDollar, 0.2) : mix(surface, accent, 0.28),
-    border: mix(accent, bg, 0.25)
+    activeRow: mix(surface, accent, 0.2),
+    selection: isLight && seeds.shellDollar ? mix(bg, seeds.shellDollar, 0.2) : mix(surface, accent, 0.22),
+    border: mix(text, bg, isLight ? 0.82 : 0.82)
   }
 }
 
