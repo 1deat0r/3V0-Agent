@@ -83,6 +83,12 @@ transcript evidence, persisted onto the store's `meta`
 (`core/skill_outcome.mark_skill_outcome`). The raw signal the ranker/curator
 can weight beyond recency.
 
+**Skill curation**:
+The action on the outcome axis — `core/skill_curate` flags skills whose
+stored history is failing (rewrite vs retire), the review model authors a fix,
+and `safe_evolve` gates the authored content (a blocking unsafe patch is
+dropped). The "skills that actually get better" stage of the loop.
+
 **Profile**:
 The 3V0 profile's derived view of the store (MEMORY.md / USER.md /
 SKILL.md). A projection, never the origin.

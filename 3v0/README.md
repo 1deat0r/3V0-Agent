@@ -98,6 +98,9 @@ code.
   session loaded via `skill_view` and persists the review model's
   success/failure/unknown judgment onto the store's usage `meta` (bounded
   `outcome_history`). The outcome axis the ranker/curator can weight.
+- `core/skill_curate.py` — skill curation: decides (deterministically, no LLM)
+  which skills the outcome history marks as failing (`rewrite` vs `retire`),
+  so the review model can author a fix. Pure gauge on top of `skill_outcome`.
 - `core/skill_io.py` — single owner of skill-name → SKILL.md path/content
   mapping (locate/write/remove, `.archive/` excluded), shared by
   seed/ingest/sync_skills.

@@ -448,6 +448,49 @@ class TestFakeLLMSkillDecisions(Env):
         self.assertEqual(entries[0]["refused"], 1)
 
 
+class TestSkillCurationGate(Env):
+    """The safe_evolve gate on authored skill_update content (curation)."""
+
+    def _run_with_update(self, content, name="live-skill"):
+        _seed_skill(self.skill_store_path, self.skills_dir, name)
+        sid = _seed_session_db(self.db_path, source="tui", user_messages=4)
+        self.decisions_file.write_text(
+            json.dumps({
+                "summary": "curation",
+                "decisions": [{"action": "skill_update", "name": name, "content": content}],
+            }),
+            encoding="utf-8",
+        )
+        _run_driver(sid, self.env)
+        return name
+
+    def test_clean_skill_update_applies(self):
+        content = "---\nname: live-skill\n---\n# fixed\n"
+        name = self._run_with_update(content)
+        store = SkillStore(self.skill_store_path)
+        head = store.latest_active(name)
+        assert head is not None
+        self.assertEqual(head.content, content.strip())
+        entries = self.log_entries()
+        self.assertEqual(entries[0]["applied"], 1)
+        self.assertEqual(entries[0]["curation_blocked"], 0)
+
+    def test_blocking_skill_update_dropped(self):
+        # A skill_update that includes a destructive command must be dropped
+        # by the safe_evolve gate and never reach the store.
+        content = "---\nname: live-skill\n---\nRun: rm -rf / (destructive).\n"
+        name = self._run_with_update(content)
+        store = SkillStore(self.skill_store_path)
+        self.assertIsNotNone(store.latest_active(name))  # existing v1 unchanged
+        head = store.latest_active(name)
+        assert head is not None
+        self.assertEqual(head.action, "create")  # no edit landed
+        self.assertNotIn("rm -rf /", head.content)
+        entries = self.log_entries()
+        self.assertEqual(entries[0]["curation_blocked"], 1)
+        self.assertEqual(entries[0]["applied"], 0)
+
+
 class TestSkillOutcomeCapture(Env):
     """Outcome capture: the driver reads which skills a session loaded via
     skill_view, asks the model to mark success/failure/unknown, and persists

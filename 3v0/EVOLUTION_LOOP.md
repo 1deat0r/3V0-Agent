@@ -1981,3 +1981,29 @@ suite green.
 - **Still ahead**: a curation pass that *acts* on the outcome axis (TextGrad
   patch of failed skills via `safe_evolve`, baseline-verified), and — optional —
   `skill_promote`/`skill_demote` tool actions for explicit ranking influence.
+## Skill curation — act on the outcome axis (2026-08-23)
+Makes the outcome signal actionable. The skill loop is now: load -> usage +
+outcome history -> failing-trend detection -> model-authored fix gated by
+safe_evolve -> store write.
+
+- **`core/skill_curate.py`** (new, pure + deterministic, no LLM):
+  `failing_skills(meta_records, ...)` flags skills whose stored outcome
+  history crosses a failure threshold (>= `min_failures` failures AND
+  failure-rate > `threshold`, counting only resolved success/failure —
+  unknowns are untested, not failed), sorted worst-first;
+  `curation_decision(...)` maps each failing skill to `rewrite` (has ever
+  succeeded, now failing) vs `retire` (never worked).
+- **`review_session.py`**: after outcome persistence, the driver builds a
+  `SKILL CURATION` prompt section listing failing candidates + their decision,
+  asking the model to author a corrected `skill_update` (or `skill_retract`
+  when beyond repair). All authored `skill_update` content passes through
+  `safe_evolve.audit` — a blocking (unsafe) patch is DROPPED before it reaches
+  the store, logged as `curation_blocked`. Caution-level content passes (the
+  review session is the approving context).
+- **Invariant kept**: `3v0/README.md` core-module listing updated with the new
+  module (the coherence engine enforces README<->module lockstep).
+- **Tests**: 7 unit (`test_skill_curate.py`) + 2 E2E gate
+  (`test_review_session.py`); full native suite green.
+- **Still ahead (optional)**: `skill_promote`/`skill_demote` tool actions;
+  baseline-verified patch acceptance (run the fixed skill against a
+  known-answer check before keeping it).

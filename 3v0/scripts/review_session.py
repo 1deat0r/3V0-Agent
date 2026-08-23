@@ -96,6 +96,8 @@ from core.store import open_store  # noqa: E402
 from core.projects import ProjectSpec, resolve_project  # noqa: E402
 from core.skills import SkillStore  # noqa: E402
 from core.skill_outcome import extract_loaded_skills, mark_skill_outcome  # noqa: E402
+from core.skill_curate import curation_decision, failing_skills  # noqa: E402
+from core.safe_evolve import audit as _safe_evolve_audit  # noqa: E402
 from core.decide_skills import SKILL_DECISION_ACTIONS  # noqa: E402
 from core.session_db import candidate_rows, load_session, session_columns  # noqa: E402
 from core.review_decide import (  # noqa: E402
@@ -140,6 +142,57 @@ def _loaded_outcomes_block(loaded: List[str]) -> str:
         "\"success\"|\"failure\"|\"unknown\"}. Be conservative: default to "
         "unknown when unsure — this feeds durable curation, not a grade.\n\n"
         "LOADED SKILLS (outcome):\n"
+        f"{lines}\n"
+    )
+
+
+def _gate_skill_update_content(decisions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Run safe_evolve.audit on every authored skill_update; drop blocking ones.
+
+    A decision whose authored SKILL.md is unsafe (blocking) is DROPPED — it
+    must never reach the store. The dropped decisions' reasons are returned
+    via the caller (``_blocked_curation``). Caution content passes (the review
+    session is the approving context). Returns a new list; the input is not
+    mutated.
+    """
+    out: List[Dict[str, Any]] = []
+    for d in decisions:
+        if not isinstance(d, dict):
+            out.append(d)
+            continue
+        action = d.get("action")
+        if action == "skill_update":
+            content = str(d.get("content") or "")
+            audit = _safe_evolve_audit(content)
+            if audit.blocking:
+                continue
+        out.append(d)
+    return out
+
+
+def _curation_block(meta_records: Dict[str, Any]) -> str:
+    """The SKILL CURATION section fed to the review model.
+
+    Lists skills the session's own outcome history marks as failing (from
+    ``curation_decision``), with their decision (rewrite/retire), so the model
+    can author a fix. Empty when nothing is failing.
+    """
+    decisions = curation_decision(meta_records)
+    if not decisions:
+        return ""
+    lines = "\n".join(
+        f"  - {name} ({decision})" for name, decision in sorted(decisions.items())
+    )
+    return (
+        "SKILL CURATION: these skills have a FAILING outcome trend in their "
+        "stored history (this session's review just added to it). For each, "
+        "author a corrected full SKILL.md via 'skill_update' (the fix, not a "
+        "decommission), OR if the skill has never worked, 'skill_retract' it. "
+        "Emit these as skill decisions in 'decisions'. The authored content "
+        "must be safe: no destructive/privileged commands, no credential "
+        "access. When you are not confident of the correct fix, prefer "
+        "'skill_retract' over shipping a wrong patch.\n\n"
+        "CURATION CANDIDATES:\n"
         f"{lines}\n"
     )
 
@@ -771,12 +824,22 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
         outcomes_part = (
             _loaded_outcomes_block(loaded) if (skill_store and loaded) else ""
         )
+        # Skill curation: skills the outcome history marks as failing. Feed
+        # their decision (rewrite/retire) so the model can author a fix.
+        meta_records = {}
+        if skill_store is not None and loaded:
+            for name in loaded:
+                meta_records[name] = skill_store.skill_meta(name)
+        curation_part = (
+            _curation_block(meta_records) if meta_records else ""
+        )
         prompt = (
             f"Session {session_id} (title: {session['title'] or 'untitled'}) "
             f"just ended.\n\n"
             f"{_store_block(store)}\n\n"
             f"{skills_part}\n\n"
             f"{outcomes_part}"
+            f"{curation_part}"
             f"SESSION TRANSCRIPT (compacted; tool outputs truncated):\n"
             f"{transcript}\n\n"
             f"Decide the store-first corrections described in your charter and "
@@ -791,6 +854,20 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
         decisions = answer.get("decisions") if isinstance(answer, dict) else None
         if not isinstance(decisions, list):
             decisions = []
+        # Safe-evolve gate: any authored skill_update content that is unsafe
+        # (blocking) is dropped BEFORE it reaches the store/record_skills.
+        # Caution-level content is allowed through (the review is the
+        # approving authority); this is the conservative blocking gate.
+        n_blocked = 0
+        if decisions:
+            n_before = len(decisions)
+            decisions = _gate_skill_update_content(decisions)
+            n_blocked = n_before - len(decisions)
+            if n_blocked:
+                _log_run(
+                    f"review {session_id}: safe_evolve blocked {n_blocked} "
+                    f"unsafe skill_update(s)"
+                )
         result = _apply_decisions(decisions, store, session.get("as_of"), skill_store)
 
         # Persist the model's skill-outcome judgments (best-effort; a failure
@@ -811,6 +888,7 @@ def review_one(session_id: str, *, respect_cooldown: bool = True) -> str:
             "at": now,
             "skill_outcomes": skill_outcomes,
             "loaded_skills": loaded,
+            "curation_blocked": n_blocked,
             "source": session["source"],
             "model": CONFIG.model,
             "summary": str(answer.get("summary", ""))[:300] if isinstance(answer, dict) else "",
