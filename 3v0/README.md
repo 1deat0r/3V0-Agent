@@ -87,7 +87,9 @@ code.
 - `core/skills.py` — provenance-aware, versioned skill-lineage store: every
   skill create/rewrite/decommission is a version with supersession,
   absorption, and recoverable history, plus an append-only operational
-  (curator) `states` record (active/stale/archived). The skill axis of the
+  (curator) `states` record (active/stale/archived) and usage-feedback
+  metadata (`touch_skill`/`set_skill_meta` — the retrieval-culture record
+  behind the usage-aware skill-index ranking). The skill axis of the
   evolution loop.
 - `core/skill_bridge.py` — map a 3V0 `skill_manage` write (create/patch/
   edit/write_file/remove_file/delete) onto the skill store, with supersession
@@ -266,9 +268,11 @@ code.
   mirrors every successful `memory`- and `skill_manage`-tool write into the
   matching native store via a `post_tool_call` hook, registers the
   `threev0_store` read-only query tool and the `threev0_record` store-first
-  write tool (memory AND skill decisions), and spawns the session-end review
-  driver on the `on_session_end` hook. Installed in the profile's `plugins/`
-  and enabled in `config.yaml`; see `EVOLUTION_LOOP.md`.
+  write tool (memory AND skill decisions), replays skill read/use feedback
+  into the store via the `on_skill_lifecycle` hook (the read-feedback bridge,
+  `ingest_skill_usage.py`), and spawns the session-end review driver on the
+  `on_session_end` hook. Installed in the profile's `plugins/` and enabled in
+  `config.yaml`; see `EVOLUTION_LOOP.md`.
 - `deploy/3v0-review.service` — systemd *user* unit (Stone 9) that supervises
   the own-clock daemon (`review_session.py --daemon`); systemd is only the
   supervisor — the clock is 3V0's own. Stone 15 added

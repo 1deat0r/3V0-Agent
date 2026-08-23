@@ -928,6 +928,15 @@ skills:
   #   - ~/.agents/skills
   #   - /home/shared/team-skills
 
+  # Skill-index ranking mode. When set to "by_usage", the <available_skills>
+  # index in the system prompt ranks skills by usage recency (most-recently-
+  # used first) and collapses never-used skills to a names-only tail line
+  # ("not used recently"), so the descriptions that earn their keep get the
+  # headline position. Every skill stays visible and loadable via
+  # skill_view/skills_list — this never hides anything. Default (unset or any
+  # other value) keeps the index sorted exactly as before.
+  # skill_rank_mode: by_usage
+
 # =============================================================================
 # Agent Behavior
 # =============================================================================

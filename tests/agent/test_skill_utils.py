@@ -9,6 +9,7 @@ from agent.skill_utils import (
     extract_skill_conditions,
     get_disabled_skill_names,
     get_external_skills_dirs,
+    get_skill_rank_mode,
     is_excluded_skill_path,
     is_external_skill_path,
     is_skill_support_path,
@@ -29,6 +30,39 @@ from agent.skill_utils import (
 
 
 
+
+
+class TestGetSkillRankMode:
+    def test_empty_when_unset(self, monkeypatch, tmp_path):
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text("skills:\n  disabled: []\n", encoding="utf-8")
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
+        from agent import skill_utils
+        skill_utils._raw_config_cache_clear()
+        assert get_skill_rank_mode() == ""
+
+    def test_by_usage_when_configured(self, monkeypatch, tmp_path):
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
+            "skills:\n  skill_rank_mode: by_usage\n", encoding="utf-8"
+        )
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
+        from agent import skill_utils
+        skill_utils._raw_config_cache_clear()
+        assert get_skill_rank_mode() == "by_usage"
+
+    def test_ignore_wrong_value(self, monkeypatch, tmp_path):
+        threev0_home = tmp_path / ".3V0"
+        threev0_home.mkdir()
+        (threev0_home / "config.yaml").write_text(
+            "skills:\n  skill_rank_mode: alphabetical\n", encoding="utf-8"
+        )
+        monkeypatch.setenv("EV0_HOME", str(threev0_home))
+        from agent import skill_utils
+        skill_utils._raw_config_cache_clear()
+        assert get_skill_rank_mode() == ""
 
 
 def test_skill_config_helpers_share_raw_config_parse_cache(tmp_path, monkeypatch):

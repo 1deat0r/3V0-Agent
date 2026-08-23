@@ -316,6 +316,59 @@ class TestBuildSkillsSystemPrompt:
         assert "Write threads" in full
 
 
+    def test_usage_ranking_orders_by_recency_and_demotes_unused(
+        self, monkeypatch, tmp_path
+    ):
+        """skill_rank_mode='by_usage' ranks used skills by recency and collapses
+        never-used skills to a names-only tail. Default (None) is unchanged."""
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
+        # Create two skills in one category; one used recently, one never.
+        for name in ("alpha", "beta"):
+            d = tmp_path / "skills" / "tools" / name
+            d.mkdir(parents=True)
+            (d / "SKILL.md").write_text(
+                f"---\nname: {name}\ndescription: {name} desc\n---\n"
+            )
+        # Exercise the disk snapshot path first (a cold build).
+        build_skills_system_prompt()
+
+        # Usage sidecar: alpha used recently, beta never.
+        (tmp_path / "skills" / ".usage.json").write_text(
+            '{"alpha": {"use_count": 2, "last_used_at": "2026-08-22T10:00:00Z"}}',
+            encoding="utf-8",
+        )
+
+        ranked = build_skills_system_prompt(skill_rank_mode="by_usage")
+        assert "alpha: alpha desc" in ranked   # used -> full entry at top
+        assert "beta" in ranked               # never-used still visible
+        assert "beta: beta desc" not in ranked  # but demoted to names-only
+        assert "not used recently" in ranked   # the demotion note is present
+
+        # Ordering: alpha (recently used) renders BEFORE the never-used tail.
+        assert ranked.index("alpha") < ranked.index("not used recently")
+
+    def test_usage_ranking_default_is_unchanged_and_never_demotes(
+        self, monkeypatch, tmp_path
+    ):
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
+        for name in ("alpha", "beta"):
+            d = tmp_path / "skills" / "tools" / name
+            d.mkdir(parents=True)
+            (d / "SKILL.md").write_text(
+                f"---\nname: {name}\ndescription: {name} desc\n---\n"
+            )
+        # A sidecar exists but skill_rank_mode is NOT set: index is unchanged
+        # (full entries for both, no names-only).
+        (tmp_path / "skills" / ".usage.json").write_text(
+            '{"alpha": {"use_count": 2, "last_used_at": "2026-08-22T10:00:00Z"}}',
+            encoding="utf-8",
+        )
+        result = build_skills_system_prompt()
+        assert "alpha: alpha desc" in result
+        assert "beta: beta desc" in result
+        assert "not used recently" not in result
+
+
 
     def test_excludes_disabled_skills(self, monkeypatch, tmp_path):
         """Skills in the user's disabled list should not appear in the system prompt."""
@@ -912,6 +965,41 @@ class TestBuildSkillsSystemPromptConditional:
         assert "openhue" not in result
 
 
+
+    def test_config_gate_for_by_usage(self, monkeypatch, tmp_path):
+        """skills.skill_rank_mode=by_usage in config.yaml activates the
+        usage-aware ranking; omission leaves the index unchanged."""
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
+        # Two skills, one used, one never.
+        for name, used in (("alpha", True), ("beta", False)):
+            d = tmp_path / "skills" / "tools" / name
+            d.mkdir(parents=True)
+            (d / "SKILL.md").write_text(
+                f"---\nname: {name}\ndescription: {name} desc\n---\n"
+            )
+        (tmp_path / "skills" / ".usage.json").write_text(
+            '{"alpha": {"use_count": 2, "last_used_at": "2026-08-22T10:00:00Z"}}',
+            encoding="utf-8",
+        )
+
+        # Without the config flag: full entries everywhere, no demotion.
+        build_skills_system_prompt()  # cold build to exercise the cache
+        result_off = build_skills_system_prompt()
+        assert "alpha: alpha desc" in result_off
+        assert "beta: beta desc" in result_off
+        assert "not used recently" not in result_off
+
+        # With the config flag: by_usage activation.
+        (tmp_path / "config.yaml").write_text(
+            "skills:\n  skill_rank_mode: by_usage\n", encoding="utf-8"
+        )
+        # The skill_utils raw-config cache is keyed by stat; a new mtime reads
+        # the fresh file inside build_skills_system_prompt.
+        result_on = build_skills_system_prompt()
+        assert "alpha: alpha desc" in result_on
+        assert "beta" in result_on
+        assert "beta: beta desc" not in result_on
+        assert "not used recently" in result_on
 
     def test_no_args_shows_all_skills(self, monkeypatch, tmp_path):
         """Backward compat: calling with no args shows everything."""

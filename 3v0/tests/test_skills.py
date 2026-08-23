@@ -116,6 +116,74 @@ class TestSkillStore(unittest.TestCase):
             self.assertEqual(s2.latest_active("foo").content, "v2")
 
 
+class TestSkillUsage(unittest.TestCase):
+    """Usage feedback (M1 of the skill-rank loop): touch_skill/skill_meta.
+
+    Metadata rides on the *latest active version* (the evolving usage record)
+    and is append-only — it never creates a new SkillVersion and never
+    supersedes or decommissions. Lineage invariants are untouched.
+    """
+
+    def test_skill_meta_defaults_empty(self) -> None:
+        s, _ = _store()
+        self.assertEqual(s.skill_meta("nope"), {})
+        s.add("foo", "create", "a", content="c")
+        self.assertEqual(s.skill_meta("foo"), {})
+
+    def test_touch_records_use_and_last_used(self) -> None:
+        s, _ = _store()
+        s.add("foo", "create", "a", content="c")
+        ev = s.touch_skill("foo", source="skill_view")
+        self.assertEqual(ev["uses"], 1)
+        self.assertIn("last_used", ev)
+        # a second touch advances the counter and refreshes the timestamp
+        ev2 = s.touch_skill("foo", source="skill_view")
+        self.assertEqual(ev2["uses"], 2)
+        self.assertGreaterEqual(ev2["last_used"], ev["last_used"])
+
+    def test_touch_missing_skill_is_a_noop(self) -> None:
+        s, _ = _store()
+        self.assertIsNone(s.touch_skill("nope", source="skill_view"))
+
+    def test_set_skill_meta_merges_fields(self) -> None:
+        s, _ = _store()
+        s.add("foo", "create", "a", content="c")
+        s.set_skill_meta("foo", rank_mode="by_usage")
+        s.set_skill_meta("foo", priority=1.0)
+        self.assertEqual(s.skill_meta("foo")["rank_mode"], "by_usage")
+        self.assertEqual(s.skill_meta("foo")["priority"], 1.0)
+
+    def test_meta_persists_roundtrip(self) -> None:
+        s1, path = _store()
+        s1.add("foo", "create", "a", content="c")
+        s1.touch_skill("foo", source="skill_view")
+        # a fresh instance sees the persisted usage
+        s2 = SkillStore(path)
+        self.assertEqual(s2.skill_meta("foo")["uses"], 1)
+
+    def test_touch_under_mutate_reloads_fresh_state(self) -> None:
+        s1, path = _store()
+        s1.add("foo", "create", "a", content="c")
+        s2 = SkillStore(path)  # constructed; pre-touch
+        # s2 touches under the cross-process lock, so it sees s1's persisted write
+        with s2.mutate():
+            ev = s2.touch_skill("foo", source="skill_view")
+            self.assertEqual(ev["uses"], 1)
+        # s1 reloads under its own lock and sees the touch
+        with s1.mutate():
+            self.assertEqual(s1.skill_meta("foo")["uses"], 1)
+
+    def test_meta_never_creates_versions_or_changes_active(self) -> None:
+        s, _ = _store()
+        v1 = s.add("foo", "create", "a", content="c")
+        s.touch_skill("foo", source="skill_view")
+        s.set_skill_meta("foo", rank_mode="by_usage")
+        # lineage untouched: still exactly the one create version, still active
+        self.assertEqual([x.id for x in s.versions("foo")], [v1.id])
+        self.assertTrue(v1.active)
+        self.assertEqual(s.latest_active("foo"), v1)
+
+
 class TestSkillState(unittest.TestCase):
     def test_state_defaults_active(self) -> None:
         s, _ = _store()

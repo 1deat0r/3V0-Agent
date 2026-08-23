@@ -47,6 +47,14 @@ from .memory import locked
 ACTIONS = ("create", "patch", "edit", "write_file", "remove_file", "delete")  # canonical skill_manage actions
 _VALID_ACTIONS = set(ACTIONS)  # set for O(1) membership + sorted() in the error message
 
+# Reserved keys under SkillVersion.meta — the usage-feedback vocabulary. Never
+# repurpose a reserved key for a custom field; the resolver (ranking/demotion)
+# depends on these exact names, so they act as a frozen contract.
+META_USES = "uses"              # int  — total retrieval/load count
+META_LAST_USED = "last_used"    # str  — ISO-8601 timestamp of the last use
+META_RANK_MODE = "rank_mode"    # str  — display posture: "by_usage" | default
+_STANDARD_META_KEYS = {META_USES, META_LAST_USED, META_RANK_MODE}
+
 # Operational (curator) states, tracked alongside content lineage. Orthogonal to
 # ``SkillVersion.active``: an archived skill still has an active content version
 # (it was never retracted/absorbed), but is not live in the profile.
@@ -81,6 +89,10 @@ class SkillVersion:
     superseded_by: str = ""     # "" active | version id | RETRACTED | ABSORBED
     absorbed_into: str = ""     # umbrella name when superseded_by == ABSORBED
     note: str = ""
+    # Usage/meta feedback record (evolving, attached to the active head —
+    # see touch_skill / set_skill_meta). Freer-form than `states` so the
+    # culture/rank layer stays unconstrained; standard keys are pinned above.
+    meta: dict[str, object] = field(default_factory=dict)
 
     @property
     def active(self) -> bool:
@@ -323,6 +335,67 @@ class SkillStore:
         if persist:
             self._save()
         return event
+
+    # -- usage feedback (retrieval-culture metadata) -----------------------
+    #
+    # Usage is recorded on the *latest active version* (the live head of the
+    # chain). It is annotated read feedback — an evolving counter that rides the
+    # current version without creating new lineage versions. This is the
+    # memory-axis analogue of the retrieval store's access_count/last_accessed:
+    # the skill axis's own "used" signal, so ranking can reward what earns its
+    # keep and demote what never fires.
+    def skill_meta(self, name: str) -> dict[str, object]:
+        """The usage/meta record for ``name``'s active head ({} when none).
+
+        Defaults to empty for a missing skill or one with no recorded meta. The
+        standard keys are the pinned ``META_*`` constants; callers may store
+        extra fields via ``set_skill_meta``, but must not reuse a reserved key
+        for a different type (the ranker treats it as e.g. an int counter).
+        """
+        head = self.latest_active(name)
+        if head is None:
+            return {}
+        return dict(head.meta)
+
+    def set_skill_meta(self, name: str, persist: bool = True, **fields: object) -> dict[str, object]:
+        """Merge ``fields`` into the active head's meta (no new version).
+
+        Returns the head's full meta after the merge, or {} when the skill has
+        no active head. An empty-field call is a read-only no-op (same cost as
+        ``skill_meta``). This is the display/retrieval-culture actuator used by
+        ``skill_promote`` / ``skill_demote``; it never supersedes or
+        decommissions.
+        """
+        head = self.latest_active(name)
+        if head is None:
+            return {}
+        head.meta.update(fields)
+        if persist:
+            self._save()
+        return dict(head.meta)
+
+    def touch_skill(self, name: str, source: str = "", persist: bool = True) -> dict[str, object] | None:
+        """Record a use of ``name`` (bump ``uses``, refresh ``last_used``).
+
+        The canonical read feedback call — the resolver invokes it when the
+        model loads a skill via ``skill_view`` (or the /skill-name fast path),
+        so "actually needed and fetched" is the signal, never a mere listing.
+        Returns the head's meta after the touch, or None when the skill has no
+        active head (missing or decommissioned). ``source`` is recorded as a
+        retire time for diagnosis; it is not a lineage version.
+        """
+        head = self.latest_active(name)
+        if head is None:
+            return None
+        now = iso_time(time.time())
+        meta = head.meta
+        meta[META_USES] = int(meta.get(META_USES, 0)) + 1
+        meta[META_LAST_USED] = now
+        if source:
+            meta["last_used_source"] = source
+        if persist:
+            self._save()
+        return dict(meta)
 
     # -- concurrency -------------------------------------------------------
     def reload(self) -> None:

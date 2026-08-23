@@ -68,6 +68,14 @@ The native JSON source of truth (facts and skill versions). Canonical,
 append-only, auditable in the body.
 _Avoid_: database, backend.
 
+**Skill-usage feedback**:
+The read half of the skill axis — a skill event (a real load via
+`skill_view`, or a view/patch) is replayed from the profile's `.usage.json`
+sidecar into the store's usage `meta` (`touch_skill`/`set_skill_meta`) by the
+`native-store-bridge`'s `on_skill_lifecycle` hook. Feeds the usage-aware
+skill-index ranking (`skills.skill_rank_mode: by_usage`) via the shared
+`META_*` vocabulary.
+
 **Profile**:
 The 3V0 profile's derived view of the store (MEMORY.md / USER.md /
 SKILL.md). A projection, never the origin.

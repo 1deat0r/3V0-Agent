@@ -1906,3 +1906,53 @@ accuracy, 0 errors). Objective-surrogate grading is TRUSTED on these tasks.
 Next gate: §3 calibration (run bank K times under no-change to measure noise floor)
 before any trend is read. Certification set is small -> operator-anchored subset
 (subset of bank graded by a human) remains the calibration anchor per design.
+## Skill-rank loop, part 1 — foundation + read-feedback (2026-08-23)
+Closes the read-side gap in the skill axis: skills had *lineage + audit but no
+usage reward and no read-side forgetting*. The memory axis canonically tracks
+retrieval `access_count`/`last_accessed`; the skill axis never recorded "what
+earned its keep". This is part 1 of the usage-aware ranking upgrade:
+
+- **M1 — foundation (`core/skills.py`)**: `SkillVersion.meta` (evolving usage
+  record on the active head) + `touch_skill` / `set_skill_meta` / `skill_meta`
+  under the existing cross-process `mutate()` lock. Append-only: never creates
+  a version, never supersedes. Pinned `META_*` key constants.
+- **M2 — read feedback (`3v0/scripts/ingest_skill_usage.py` +
+  `on_skill_lifecycle` hook)**: the `native-store-bridge` plugin now replays
+  the profile's already-live `.usage.json` lifecycle events (loaded/viewed/
+  patched/edited — fired by `tools/skill_usage.py` on real `skill_view`) into
+  the store's usage front-end. Best-effort subprocess, mirrors the write-ingest
+  posture; `THREEV0_SKILL_STORE` override for tests. Uses the sidecar's
+  authoritative counter; a lone patch never counts as a use (curator semantics).
+- **Tests**: 6 new in `test_ingest_skill_usage.py` + 7 in `test_skills.py`;
+  590 green native suite.
+- **Still ahead — part 2 (M3)**: usage-aware ranking + evidence-budget names-only
+  demotion in `build_skills_system_prompt`; **part 3 (M4)**: config gate
+  (`skills.skill_rank_mode`) + `skill_promote`/`skill_demote` tool actions.
+## Skill-rank loop, part 2 — usage-aware ranking + config gate (2026-08-23)
+Part 2 of the usage-aware ranking upgrade (M3 + M4). No code beyond the loop's
+own seams; no behavior change unless the opt-in flag is set.
+
+- **M3 — ranking + demotion (`agent/skill_prompt_rank.py` +
+  `agent/prompt_builder.py`)**: the skill index (`<available_skills>`) gains a
+  usage-aware rank mode. New pure module `rank_and_demote` / `should_apply`
+  (deterministic, no I/O). When active, used skills sort most-recent-first
+  within their category and never-used skills collapse to a single
+  `[not used recently; load via skill_view]` names-only tail. Adheres to the
+  invariant "never hide, demote": every skill name stays reachable. The
+  usage comes from the existing `.usage.json` sidecar (already produced by
+  `skill_view`), loaded best-effort with graceful degradation.
+- **M4 — config gate (`agent/skill_utils.py` + `agent/system_prompt.py`)**:
+  a `skills.skill_rank_mode: by_usage` config key activates the rank mode —
+  resolved by the new `get_skill_rank_mode` (self-cached, no heavy CLI
+  imports, same seam as `get_disabled_skill_names`) and forwarded by
+  `build_skills_system_prompt` (which also falls back to the config key when
+  the param is omitted, so a bare call behaves identically). Default
+  (unset / wrong value) leaves the index rendering exactly as before.
+- **One shell commit each** — drive-by product update.
+- **Tests**: 9 new in `tests/test_skill_prompt_rank.py` (pure ranker),
+  2 in `tests/agent/test_prompt_builder.py` (index rendering + config gate),
+  3 in `tests/agent/test_skill_utils.py` (config resolution). Full native +
+  targeted agent suites green.
+- **Still ahead — part 3 (M4 remainder)**: `skill_promote`/`skill_demote`
+  tool actions for explicit, auditable ranking influence (optional; the
+  config + auto-ranking already deliver the token + signal win).

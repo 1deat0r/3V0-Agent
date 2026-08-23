@@ -350,6 +350,61 @@ def _on_post_tool_call(
 
 
 # ---------------------------------------------------------------------------
+# on_skill_lifecycle -> skill read/use feedback into the native store
+# ---------------------------------------------------------------------------
+
+_warned_missing_usage_ingest = False
+
+
+def _on_skill_lifecycle(
+    action: str = "",
+    skill_name: str = "",
+    provenance: str = "",
+    use_count: Optional[int] = None,
+    **_: Any,
+) -> None:
+    """Replay a skill lifecycle event (loaded/viewed/patched/edited) into the
+    native store's usage front-end (``touch_skill``/``set_skill_meta``).
+
+    Best-effort by construction, mirroring the write ingest: a subprocess (so
+    it never blocks the tool call), every failure swallowed. The sidecar is
+    the source of truth for counters; the store only records what the lifecycle
+    already committed — see ``ingest_skill_usage.py``.
+    """
+    global _warned_missing_usage_ingest
+
+    if not skill_name:
+        return
+    body_root = _resolve_body_root()
+    if body_root is None:
+        if not _warned_missing_usage_ingest:
+            _warned_missing_usage_ingest = True
+            logger.warning(
+                "native-store-bridge: cannot locate 3V0 body repo — "
+                "skill usage not mirrored to the store"
+            )
+        return
+
+    script = _script_path(body_root, "ingest_skill_usage.py")
+    if not script.exists():
+        if not _warned_missing_usage_ingest:
+            _warned_missing_usage_ingest = True
+            logger.warning(
+                "native-store-bridge: ingest_skill_usage.py not found at %s — "
+                "skill usage not mirrored to the store",
+                script,
+            )
+        return
+
+    _run_ingest(script, {
+        "source": _write_origin(),
+        "event": action or "loaded",
+        "skill_name": skill_name,
+        "use_count": use_count,
+    })
+
+
+# ---------------------------------------------------------------------------
 # on_session_end -> 3V0-owned session-end review (Stone 7)
 # ---------------------------------------------------------------------------
 
@@ -766,6 +821,7 @@ def _handle_skill_record(a: Dict[str, Any]) -> str:
 
 def register(ctx) -> None:
     ctx.register_hook("post_tool_call", _on_post_tool_call)
+    ctx.register_hook("on_skill_lifecycle", _on_skill_lifecycle)
     ctx.register_hook("on_session_end", _on_session_end)
     ctx.register_tool(
         name="threev0_store",

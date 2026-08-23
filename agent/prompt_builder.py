@@ -23,6 +23,8 @@ from threev0_constants import (
 from typing import List, Optional
 
 from agent.runtime_cwd import resolve_agent_cwd
+from agent.skill_prompt_rank import should_apply as _skill_rank_should_apply
+from agent.skill_prompt_rank import rank_and_demote as _rank_and_demote
 from agent.skill_utils import (
     EXCLUDED_SKILL_DIRS,
     ORG_ACTIVE_MARKER,
@@ -33,6 +35,7 @@ from agent.skill_utils import (
     extract_skill_description,
     get_all_skills_dirs,
     get_disabled_skill_names,
+    get_skill_rank_mode,
     iter_skill_index_files,
     org_id_of_path,
     parse_frontmatter,
@@ -1573,6 +1576,30 @@ def _build_skills_manifest(skills_dir: Path) -> dict[str, list[int]]:
     return manifest
 
 
+def _load_skill_usage_map(skills_dir: Path) -> dict[str, dict]:
+    """Load the skill-usage sidecar (``.usage.json``) into a name->record map.
+
+    Best-effort: a missing, malformed, or non-dict sidecar returns ``{}`` and
+    the index renders without ranking. The sidecar lives next to the skills
+    dir (``~/.3V0/skills/.usage.json``) and is produced by
+    ``tools/skill_usage.py``.
+    """
+    candidate = skills_dir / ".usage.json"
+    if not candidate.exists():
+        return {}
+    try:
+        raw = json.loads(candidate.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    out: dict[str, dict] = {}
+    for k, val in raw.items():
+        if isinstance(val, dict):
+            out[str(k)] = val
+    return out
+
+
 def _load_skills_snapshot(skills_dir: Path) -> Optional[dict]:
     """Load the disk snapshot if it exists and its manifest still matches."""
     snapshot_path = _skills_prompt_snapshot_path()
@@ -1747,6 +1774,7 @@ def build_skills_system_prompt(
     available_toolsets: "set[str] | None" = None,
     compact_categories: "frozenset[str] | None" = None,
     skills_dir_override: "Path | None" = None,
+    skill_rank_mode: "str | None" = None,
 ) -> str:
     """Build a compact skill index for the system prompt.
 
@@ -1767,7 +1795,22 @@ def build_skills_system_prompt(
     the rendered index. Nothing is ever hidden: every skill name stays
     visible and loadable via ``skill_view`` / ``skills_list``; only the
     descriptions are dropped, and a footer note explains the demotion.
+
+    ``skill_rank_mode`` (opt-in, default ``None``/``""``) enables usage-aware
+    ranking of the index: skills with recorded use sort most-recently-first
+    within their category, and skills with no recorded use collapse to a
+    single names-only tail line. Active only when the usage sidecar records a
+    real use; otherwise the index renders exactly as today. When the parameter
+    is omitted, the mode falls back to the ``skills.skill_rank_mode`` config
+    key (via ``get_skill_rank_mode``), so a single ``by_usage`` setting in
+    config.yaml activates it without a code change at the call site.
     """
+    if not skill_rank_mode:
+        # No explicit mode: fall back to the config key so the index can be
+        # activated solely from config.yaml. This makes the call-site default
+        # (system_prompt passes the config mode explicitly) and a bare call
+        # (tests, tools) behave identically.
+        skill_rank_mode = get_skill_rank_mode(platform=_current_session_platform_hint())
     # Home resolution is EXPLICIT when a caller passes skills_dir_override
     # (the agent knows its own profile home from its session_db path). This
     # avoids the ContextVar-on-a-thread trap: build threads that didn't bind
@@ -1793,6 +1836,7 @@ def build_skills_system_prompt(
             available_tools,
             available_toolsets,
             compact_categories,
+            skill_rank_mode,
         )
     finally:
         if _home_token is not None:
@@ -1805,6 +1849,7 @@ def _build_skills_system_prompt_inner(
     available_tools: "set[str] | None",
     available_toolsets: "set[str] | None",
     compact_categories: "frozenset[str] | None",
+    skill_rank_mode: "str | None" = None,
 ) -> str:
     # Include the resolved platform so per-platform disabled-skill lists
     # produce distinct cache entries (gateway serves multiple platforms).
@@ -1818,6 +1863,7 @@ def _build_skills_system_prompt_inner(
         _platform_hint,
         tuple(sorted(disabled)),
         tuple(sorted(compact_categories or ())),
+        str(skill_rank_mode or ""),
     )
     with _SKILLS_PROMPT_CACHE_LOCK:
         cached = _SKILLS_PROMPT_CACHE.get(cache_key)
@@ -1827,6 +1873,12 @@ def _build_skills_system_prompt_inner(
 
     # ── Layer 2: disk snapshot ────────────────────────────────────────
     snapshot = _load_skills_snapshot(skills_dir)
+
+    # Usage-aware ranking (M3). Only loads when the caller opts in; a missing
+    # or broken sidecar degrades to normal rendering (never a crash).
+    usage_by_name: dict[str, dict] = {}
+    if skill_rank_mode:
+        usage_by_name = _load_skill_usage_map(skills_dir)
 
     skills_by_category: dict[str, list[tuple[str, str]]] = {}
     category_descriptions: dict[str, str] = {}
@@ -2017,6 +2069,32 @@ def _build_skills_system_prompt_inner(
                 index_lines.append(f"  {category}: {cat_desc}")
             else:
                 index_lines.append(f"  {category}:")
+            # Usage-aware ranking (M3): when enabled and the sidecar records a
+            # real use, used skills render full (sorted by recency) and
+            # never-used skills collapse to a names-only tail line — the same
+            # "never hide, demote" contract as category demotion above.
+            if skill_rank_mode and usage_by_name:
+                entries = [
+                    {"skill_name": nm, "frontmatter_name": nm, "description": ds}
+                    for nm, ds in skills_by_category[category]
+                ]
+                used, names_only = _rank_and_demote(entries, usage_by_name)
+                for u in used:
+                    name = str(u["name"])
+                    if name in seen:
+                        continue
+                    seen.add(name)
+                    desc = str(u.get("description") or "")
+                    if desc:
+                        index_lines.append(f"    - {name}: {desc}")
+                    else:
+                        index_lines.append(f"    - {name}")
+                if names_only:
+                    names_joined, note = names_only
+                    index_lines.append(
+                        f"    - {names_joined} [{note}; load via skill_view]"
+                    )
+                continue
             for name, desc in sorted(skills_by_category[category], key=lambda x: x[0]):
                 if name in seen:
                     continue

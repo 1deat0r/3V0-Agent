@@ -472,6 +472,28 @@ def get_disabled_skill_names(platform: str | None = None) -> Set[str]:
     return global_disabled
 
 
+def get_skill_rank_mode(platform: str | None = None) -> str:
+    """Read the skill-index ranking mode from config.yaml.
+
+    Returns ``"by_usage"`` when ``skills.skill_rank_mode = by_usage`` is set
+    under the resolved platform (or globally), else ``""`` (the default —
+    usage-aware ranking off, index renders as today). Mirrors
+    ``get_disabled_skill_names``'s config read (direct, self-cached, no heavy
+    CLI imports).
+    """
+    parsed = _load_raw_config()
+    if not parsed:
+        return ""
+    skills_cfg = parsed.get("skills")
+    if not isinstance(skills_cfg, dict):
+        return ""
+
+    mode = skills_cfg.get("skill_rank_mode")
+    if not isinstance(mode, str) or mode != "by_usage":
+        return ""
+    return "by_usage"
+
+
 def parse_config_string_list(value) -> List[str]:
     """Normalize a config value that may hold a JSON-array string into a list.
 
