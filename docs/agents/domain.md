@@ -4,9 +4,16 @@ How the engineering skills should consume this repo's domain documentation when 
 
 ## Before exploring, read these
 
-- **`CONTEXT.md`** at the repo root, or
+- **`AGENTS.md`** — the normative development guide. Its "How to use this
+  file" map tells you which rules are always-on vs which reference to fetch
+  on demand from **`docs/dev-guide/`** (the disclosed subsystem guides).
+- **`CONTEXT.md`** at the repo root — the canonical domain glossary
+  (runtime/chassis); `3v0/CONTEXT.md` is the scoped sub-glossary for the
+  native substrate (recurses the root glossary — read both as one).
 - **`CONTEXT-MAP.md`** at the repo root if it exists — it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
-- **`3v0/docs/adr/`** — this repo's ADRs live in the native-core docs directory (not root `docs/adr/`), matching the 3v0 native-store layout. Read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
+- **ADRs live in two places** — the runtime/chassis ledger is `docs/ADR.md`
+  (dated, unnumbered); the `3v0/` native substrate uses the numbered series
+  `3v0/docs/adr/`. See the banner at the top of `docs/ADR.md` for which to use.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
@@ -16,8 +23,12 @@ Single-context repo (this repo — the 3V0 agent body):
 
 ```
 /
-├── CONTEXT.md
-├── 3v0/docs/adr/                ← ADRs live here (native-store layout)
+├── AGENTS.md                   ← normative spine + "how to use" map
+├── CONTEXT.md                  ← canonical glossary (runtime/chassis)
+├── docs/dev-guide/             ← disclosed subsystem reference (AGENTS.md → these)
+├── docs/ADR.md                 ← runtime/chassis ADR ledger
+├── 3v0/CONTEXT.md              ← scoped sub-glossary (native substrate)
+├── 3v0/docs/adr/               ← native-substrate numbered ADRs
 │   ├── 0001-store-first-memory.md
 │   ├── 0002-check-before-heal.md
 │   └── ...

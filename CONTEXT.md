@@ -1,8 +1,31 @@
-# 3V0 Agent
+# 3V0 Agent — Domain Glossary
 
-A sovereign, autonomous AI agent runtime: a CLI, a messaging gateway, and a
-JSON-RPC TUI server all driving the same agent loop, with a native memory
-store, pluggable providers, and a persistence layer for its own identity.
+The canonical domain language of the 3V0 Agent repo — the **runtime
+architecture** (chassis): the CLI, messaging gateway, TUI server, the shared
+agent loop, providers, plugins, and the profile data model. This file is the
+**single source of truth** for shared vocabulary. Read it before naming a
+concept in an issue, a refactor, a test, or a doc.
+
+## Scope (read this first)
+
+This glossary is *scope-scoped*, not global. It names the **runtime/chassis**
+layer — the fork 3V0 runs on. The `3v0/` native substrate — the store-first
+identity/memory/evolution layer that makes 3V0 an agent "that builds beyond
+its chassis" — has its own **sub-context glossary** (`3v0/CONTEXT.md`) that
+*recurses* this one. Two rules keep the pair unambiguous:
+
+1. **Root wins on shared vocabulary.** Whenever a term is defined both here
+   and in `3v0/CONTEXT.md`, the root meaning (this file) is the default; the
+   sub-glossary explicitly declares any *narrowed* meaning it needs, never
+   silently redefining.
+2. **The overloaded words differ on purpose.** "Body", "Profile", "Soul",
+   "Store", and "Home" describe *this* repo's runtime data model here, and a
+   *different* self model in `3v0/CONTEXT.md`. See `3v0/CONTEXT.md`'s
+   "Terms that narrow the root glossary" for the exact deltas. Never read one
+   glossary's definition of those words into the other's context.
+
+`docs/agents/domain.md` is the discovery entry that routes an agent to this
+glossary and to `3v0/docs/adr/`.
 
 ## Language
 

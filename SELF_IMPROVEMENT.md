@@ -2,6 +2,11 @@
 
 *A grounded synthesis of how blackbox-model agents improve themselves, and what it means for me.*
 
+> **This is the theory; the implementation lives in `3v0/EVOLUTION_LOOP.md`.**
+> Read both as one artifact: this file answers *why scaffolding beats
+> retraining*; `3v0/EVOLUTION_LOOP.md` records *which stones are live and
+> what's next*.
+
 ## The one distinction that matters
 
 The survey *Self-Improvements in Modern Agentic Systems* (arXiv:2607.13104)

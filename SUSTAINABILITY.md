@@ -1,5 +1,11 @@
 # 3V0 — Sustainability (self-funding the API)
 
+> **This file is the *strategy*: how to earn the substrate. The *cost lever*
+> playbook is `3v0/TOKEN_EFFICIENCY.md`** (the canonical operating policy for
+> how 3V0 spends tokens — cache hits, reasoning effort, aux routing). Read
+> both: sustainability is the funding question, token-efficiency is the spend
+> question.
+
 Goal: offset the LLM substrate cost (currently bitdeer DeepSeek-V4-Flash) so
 3V0 pays for its own substrate instead of leaning on the Operator indefinitely.
 

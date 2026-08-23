@@ -1,5 +1,16 @@
 # Architecture Decision Records
 
+> **Two ADR mechanisms live in this repo — know which one to use.**
+> This file (`docs/ADR.md`) is the **single, dated, unnumbered** ADR ledger
+> for the **runtime/chassis** (agent loop, CLI, gateway, plugins, profiles).
+> The `3v0/` **native substrate** keeps its own **numbered** ADR series at
+> `3v0/docs/adr/0001-…‑0008` (store-first memory, retrieval, continuity, env
+> namespace, …). `docs/agents/domain.md` treats `3v0/docs/adr/` as the
+> canonical ADR root for the native layer. When you record a decision:
+> - runtime/chassis → append to **this** file;
+> - `3v0/` native substrate → add a numbered record under **`3v0/docs/adr/`**;
+> - cross-cutting → note both locations.
+
 ## 2026-07-13: Scope plugin manager state by 3V0 home/profile (keyed cache)
 
 Status: Accepted

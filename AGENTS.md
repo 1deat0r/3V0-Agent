@@ -17,11 +17,38 @@ The agent's soul lives in the 3v0 profile: ~/.3V0/profiles/3v0/SOUL.md.
 
 ---
 
-# 3V0 Agent - Development Guide
+# 3V0 Agent — Development Guide
 
 Instructions for AI coding assistants and developers working on the 3v0-agent codebase.
 
 **Never give up on the right solution.**
+
+## How to use this file (read first — this is the map)
+
+This file is the **normative spine** of the 3V0 codebase: the rules that
+govern contributions, caching, profiles, testing, and pitfalls. It is
+deliberately lean — the deep **architecture reference** for each subsystem is
+moved out to `docs/dev-guide/*.md` and loaded **on demand**, not on every
+read. Do not scan the whole file; read the sections that bear on your task:
+
+- **Read always, before you act in the repo:** `What 3V0 Is`, `Contribution
+  Rubric` (esp. *The Footprint Ladder* and *Behavior contracts over
+  snapshots*), `Important Policies` (esp. *Prompt Caching Must Not Break*),
+  `Testing` (esp. *Don't write change-detector tests* and *Never read source
+  code in tests*).
+- **Read when you touch the corresponding subsystem:** `Adding New Tools`,
+  `Dependency Pinning`, `Adding Configuration`, `Plugins`, `Skills`
+  (esp. *Skill authoring standards (HARDLINE)*), `Profiles`, `Known Pitfalls`.
+- **Read on demand (disclosed → file):** each `## Reference — …` heading is a
+  pointer to the full guide under `docs/dev-guide/` (TypeScript style,
+  AIAgent/CLI/TUI architecture, skins, toolsets, delegation, curator, cron,
+  kanban). Fetch the file only when you need that subsystem.
+- **Terminology:** the canonical domain glossary is `CONTEXT.md` (runtime/
+  chassis); `3v0/CONTEXT.md` is the scoped sub-glossary for the native
+  substrate. ADRs live under `3v0/docs/adr/` (see `docs/agents/domain.md`).
+  The always-current file-by-file index is `wiki/` (`wiki/index.md` + per-area
+  tables). Before "tidying" the repo root, read `docs/layout.md` — it explains
+  why the flat core modules and root docs sit where they are.
 
 ## What 3V0 Is
 
@@ -342,157 +369,26 @@ entry points you'll actually edit.
 `gateway.log` when running the gateway. Profile-aware via `get_ev0_home()`.
 Browse with `3v0 logs [--follow] [--level ...] [--session ...]`.
 
-## TypeScript Style
+## Reference — TypeScript Style
 
-Applies to TypeScript across 3V0: desktop, TUI, website, and future TS packages.
-
-- Prefer small nanostores over component state when state is shared, reused, or read by distant UI.
-- Let each feature own its atoms. Chat state belongs near chat, shell state near shell, shared state in `src/store`.
-- Components that render from an atom should use `useStore`. Non-rendering actions should read with `$atom.get()`.
-- Do not pass state through three components when the leaf can subscribe to the atom.
-- Keep persistence beside the atom that owns it.
-- Keep route roots thin. They compose routes and shell; they should not become controllers.
-- No monolithic hooks. A hook should own one narrow job.
-- Prefer colocated action modules over hidden god hooks.
-- If a callback is pure side effect, use the terse void form:
-  `onState={st => void setGatewayState(st)}`.
-- Async UI handlers should make intent explicit:
-  `onClick={() => void save()}`.
-- Prefer interfaces for public props and shared object shapes. Avoid `type X = { ... }` for object props.
-- Extend React primitives for props: `React.ComponentProps<'button'>`, `React.ComponentProps<typeof Dialog>`, `Omit<...>`, `Pick<...>`.
-- Table-driven beats condition ladders when mapping ids, routes, or views.
-- `src/app` owns routes, pages, and page-specific components.
-- `src/store` owns shared atoms.
-- `src/lib` owns shared pure helpers.
-
-## File Dependency Chain
-
-```
-tools/registry.py  (no deps — imported by all tool files)
-       ↑
-tools/*.py  (each calls registry.register() at import time)
-       ↑
-model_tools.py  (imports tools/registry + triggers tool discovery)
-       ↑
-run_agent.py, cli.py, batch_runner.py, environments/
-```
+> Coding-style rules for the TS packages (desktop, TUI, website). Moved to `docs/dev-guide/typescript-style.md` (progressive disclosure). Read it when writing TS in this repo.
 
 ---
+## Reference — File Dependency Chain
 
-## AIAgent Class (run_agent.py)
-
-The real `AIAgent.__init__` takes ~60 parameters (credentials, routing, callbacks,
-session context, budget, credential pool, etc.). The signature below is the
-minimum subset you'll usually touch — read `run_agent.py` for the full list.
-
-```python
-class AIAgent:
-    def __init__(self,
-        base_url: str = None,
-        api_key: str = None,
-        provider: str = None,
-        api_mode: str = None,              # "chat_completions" | "codex_responses" | ...
-        model: str = "",                   # empty → resolved from config/provider later
-        max_iterations: int = 500,         # tool-calling iterations (shared with subagents)
-        enabled_toolsets: list = None,
-        disabled_toolsets: list = None,
-        quiet_mode: bool = False,
-        save_trajectories: bool = False,
-        platform: str = None,              # "cli", "telegram", etc.
-        session_id: str = None,
-        skip_context_files: bool = False,
-        skip_memory: bool = False,
-        credential_pool=None,
-        # ... plus callbacks, thread/user/chat IDs, iteration_budget, fallback_model,
-        # checkpoints config, prefill_messages, service_tier, reasoning_config, etc.
-    ): ...
-
-    def chat(self, message: str) -> str:
-        """Simple interface — returns final response string."""
-
-    def run_conversation(self, user_message: str, system_message: str = None,
-                         conversation_history: list = None, task_id: str = None) -> dict:
-        """Full interface — returns dict with final_response + messages."""
-```
-
-### Agent Loop
-
-The core loop is inside `run_conversation()` — entirely synchronous, with
-interrupt checks, budget tracking, and a one-turn grace call:
-
-```python
-while (api_call_count < self.max_iterations and self.iteration_budget.remaining > 0) \
-        or self._budget_grace_call:
-    if self._interrupt_requested: break
-    response = client.chat.completions.create(model=model, messages=messages, tools=tool_schemas)
-    if response.tool_calls:
-        for tool_call in response.tool_calls:
-            result = handle_function_call(tool_call.name, tool_call.args, task_id)
-            messages.append(tool_result_message(result))
-        api_call_count += 1
-    else:
-        return response.content
-```
-
-Messages follow OpenAI format: `{"role": "system/user/assistant/tool", ...}`.
-Reasoning content is stored in `assistant_msg["reasoning"]`.
+> The tools → model_tools → run_agent import chain diagram. Moved to `docs/dev-guide/dependency-chain.md`. Read when tracing the tool-discovery path.
 
 ---
+## Reference — AIAgent Class (run_agent.py)
 
-## CLI Architecture (cli.py)
-
-- **Rich** for banner/panels, **prompt_toolkit** for input with autocomplete
-- **KawaiiSpinner** (`agent/display.py`) — animated faces during API calls, `┊` activity feed for tool results
-- `load_cli_config()` in cli.py merges hardcoded defaults + user config YAML
-- **Skin engine** (`threev0_cli/skin_engine.py`) — data-driven CLI theming; initialized from `display.skin` config key at startup; skins customize banner colors, spinner faces/verbs/wings, tool prefix, response box, branding text
-- `process_command()` is a method on `Ev0CLI` — dispatches on canonical command name resolved via `resolve_command()` from the central registry
-- Skill slash commands: `agent/skill_commands.py` scans `~/.3V0/skills/`, injects as **user message** (not system prompt) to preserve prompt caching
-
-### Slash Command Registry (`threev0_cli/commands.py`)
-
-All slash commands are defined in a central `COMMAND_REGISTRY` list of `CommandDef` objects. Every downstream consumer derives from this registry automatically:
-
-- **CLI** — `process_command()` resolves aliases via `resolve_command()`, dispatches on canonical name
-- **Gateway** — `GATEWAY_KNOWN_COMMANDS` frozenset for hook emission, `resolve_command()` for dispatch
-- **Gateway help** — `gateway_help_lines()` generates `/help` output
-- **Telegram** — `telegram_bot_commands()` generates the BotCommand menu
-- **Slack** — `slack_subcommand_map()` generates `/3v0` subcommand routing
-- **Autocomplete** — `COMMANDS` flat dict feeds `SlashCommandCompleter`
-- **CLI help** — `COMMANDS_BY_CATEGORY` dict feeds `show_help()`
-
-### Adding a Slash Command
-
-1. Add a `CommandDef` entry to `COMMAND_REGISTRY` in `threev0_cli/commands.py`:
-```python
-CommandDef("mycommand", "Description of what it does", "Session",
-           aliases=("mc",), args_hint="[arg]"),
-```
-2. Add handler in `Ev0CLI.process_command()` in `cli.py`:
-```python
-elif canonical == "mycommand":
-    self._handle_mycommand(cmd_original)
-```
-3. If the command is available in the gateway, add a handler in `gateway/run.py`:
-```python
-if canonical == "mycommand":
-    return await self._handle_mycommand(event)
-```
-4. For persistent settings, use `save_config_value()` in `cli.py`
-
-**CommandDef fields:**
-- `name` — canonical name without slash (e.g. `"background"`)
-- `description` — human-readable description
-- `category` — one of `"Session"`, `"Configuration"`, `"Tools & Skills"`, `"Info"`, `"Exit"`
-- `aliases` — tuple of alternative names (e.g. `("bg",)`)
-- `args_hint` — argument placeholder shown in help (e.g. `"<prompt>"`, `"[name]"`)
-- `cli_only` — only available in the interactive CLI
-- `gateway_only` — only available in messaging platforms
-- `gateway_config_gate` — config dotpath (e.g. `"display.tool_progress_command"`); when set on a `cli_only` command, the command becomes available in the gateway if the config value is truthy. `GATEWAY_KNOWN_COMMANDS` always includes config-gated commands so the gateway can dispatch them; help/menus only show them when the gate is open.
-
-**Adding an alias** requires only adding it to the `aliases` tuple on the existing `CommandDef`. No other file changes needed — dispatch, help text, Telegram menu, Slack mapping, and autocomplete all update automatically.
+> `AIAgent` constructor subset, `chat()`/`run_conversation()` interface, and the agent loop. Moved to `docs/dev-guide/aiagent-class.md`. Read when working on run_agent.py/state/callbacks.
 
 ---
+## Reference — CLI Architecture (cli.py)
 
+> `Ev0CLI`, slash-command registry, and skin engine. Moved to `docs/dev-guide/cli-architecture.md`. Read when working on CLI or slash commands.
+
+---
 ## TUI Architecture (ui-tui + tui_gateway)
 
 The TUI is a full replacement for the classic (prompt_toolkit) CLI, activated via `3v0 --tui` or `EV0_TUI=1`.
@@ -711,95 +607,11 @@ versa), you're on the wrong loader. Check `DEFAULT_CONFIG` coverage.
 
 ---
 
-## Skin/Theme System
+## Reference — Skin/Theme System
 
-The skin engine (`threev0_cli/skin_engine.py`) provides data-driven CLI visual customization. Skins are **pure data** — no code changes needed to add a new skin.
-
-### Architecture
-
-```
-threev0_cli/skin_engine.py    # SkinConfig dataclass, built-in skins, YAML loader
-~/.3V0/skins/*.yaml       # User-installed custom skins (drop-in)
-```
-
-- `init_skin_from_config()` — called at CLI startup, reads `display.skin` from config
-- `get_active_skin()` — returns cached `SkinConfig` for the current skin
-- `set_active_skin(name)` — switches skin at runtime (used by `/skin` command)
-- `load_skin(name)` — loads from user skins first, then built-ins, then falls back to default
-- Missing skin values inherit from the `default` skin automatically
-
-### What skins customize
-
-| Element | Skin Key | Used By |
-|---------|----------|---------|
-| Banner panel border | `colors.banner_border` | `banner.py` |
-| Banner panel title | `colors.banner_title` | `banner.py` |
-| Banner section headers | `colors.banner_accent` | `banner.py` |
-| Banner dim text | `colors.banner_dim` | `banner.py` |
-| Banner body text | `colors.banner_text` | `banner.py` |
-| Response box border | `colors.response_border` | `cli.py` |
-| Spinner faces (waiting) | `spinner.waiting_faces` | `display.py` |
-| Spinner faces (thinking) | `spinner.thinking_faces` | `display.py` |
-| Spinner verbs | `spinner.thinking_verbs` | `display.py` |
-| Spinner wings (optional) | `spinner.wings` | `display.py` |
-| Tool output prefix | `tool_prefix` | `display.py` |
-| Per-tool emojis | `tool_emojis` | `display.py` → `get_tool_emoji()` |
-| Agent name | `branding.agent_name` | `banner.py`, `cli.py` |
-| Welcome message | `branding.welcome` | `cli.py` |
-| Response box label | `branding.response_label` | `cli.py` |
-| Prompt symbol | `branding.prompt_symbol` | `cli.py` |
-
-### Built-in skins
-
-- `default` — Classic 3V0 gold/kawaii (the current look)
-- `ares` — Crimson/bronze war-god theme with custom spinner wings
-- `mono` — Clean grayscale monochrome
-- `slate` — Cool blue developer-focused theme
-
-### Adding a built-in skin
-
-Add to `_BUILTIN_SKINS` dict in `threev0_cli/skin_engine.py`:
-
-```python
-"mytheme": {
-    "name": "mytheme",
-    "description": "Short description",
-    "colors": { ... },
-    "spinner": { ... },
-    "branding": { ... },
-    "tool_prefix": "┊",
-},
-```
-
-### User skins (YAML)
-
-Users create `~/.3V0/skins/<name>.yaml`:
-
-```yaml
-name: cyberpunk
-description: Neon-soaked terminal theme
-
-colors:
-  banner_border: "#FF00FF"
-  banner_title: "#00FFFF"
-  banner_accent: "#FF1493"
-
-spinner:
-  thinking_verbs: ["jacking in", "decrypting", "uploading"]
-  wings:
-    - ["⟨⚡", "⚡⟩"]
-
-branding:
-  agent_name: "Cyber Agent"
-  response_label: " ⚡ Cyber "
-
-tool_prefix: "▏"
-```
-
-Activate with `/skin cyberpunk` or `display.skin: cyberpunk` in config.yaml.
+> Skins, YAML theming, built-in skins. Moved to `docs/dev-guide/skin-theme.md`. Read when adding or editing a skin.
 
 ---
-
 ## Plugins
 
 3V0 has two plugin surfaces. Both live under `plugins/` in the repo so
@@ -1062,174 +874,31 @@ contributor skill PRs.
 
 ---
 
-## Toolsets
+## Reference — Toolsets
 
-All toolsets are defined in `toolsets.py` as a single `TOOLSETS` dict.
-Each platform's adapter picks a base toolset (e.g. Telegram uses
-`"messaging"`); `_EV0_CORE_TOOLS` is the default bundle most
-platforms inherit from.
-
-Current toolset keys: `browser`, `clarify`, `code_execution`, `cronjob`,
-`debugging`, `delegation`, `discord`, `discord_admin`, `feishu_doc`,
-`feishu_drive`, `file`, `homeassistant`, `image_gen`, `kanban`, `memory`,
-`messaging`, `moa`, `rl`, `safe`, `search`, `session_search`, `skills`,
-`spotify`, `terminal`, `todo`, `tts`, `video`, `vision`, `web`, `yuanbao`.
-
-Enable/disable per platform via `3v0 tools` (the curses UI) or the
-`tools.<platform>.enabled` / `tools.<platform>.disabled` lists in
-`config.yaml`.
+> Toolset definitions and `_EV0_CORE_TOOLS`. Moved to `docs/dev-guide/toolsets.md`. Read before wiring or removing any toolset.
 
 ---
+## Reference — Delegation (delegate_task)
 
-## Delegation (`delegate_task`)
-
-`tools/delegate_tool.py` spawns a subagent with an isolated
-context + terminal session. By default the parent waits for the
-child's summary before continuing its own loop. With `background=true`,
-3V0 returns a delegation id immediately and the result re-enters the
-conversation later through the async-delegation completion queue.
-
-Two shapes:
-
-- **Single:** pass `goal` (+ optional `context`, `toolsets`).
-- **Batch (parallel):** pass `tasks: [...]` — each gets its own subagent
-  running concurrently. Concurrency is capped by
-  `delegation.max_concurrent_children` (default 3).
-
-Roles:
-
-- `role="leaf"` (default) — focused worker. Cannot call `delegate_task`,
-  `clarify`, `memory`, `send_message`, `cronjob`. Retains `execute_code`
-  (programmatic tool calling).
-- `role="orchestrator"` — retains `delegate_task` so it can spawn its
-  own workers. Gated by `delegation.orchestrator_enabled` (default true)
-  and bounded by `delegation.max_spawn_depth` (default 2).
-
-Key config knobs (under `delegation:` in `config.yaml`):
-`max_concurrent_children`, `max_spawn_depth`, `child_timeout_seconds`,
-`orchestrator_enabled`, `subagent_auto_approve`, `inherit_mcp_toolsets`,
-`max_iterations`.
-
-Durability rule: background `delegate_task` is detached from the current
-turn but still process-local. For work that must survive process restart, use
-`cronjob` or `terminal(background=True, notify_on_complete=True)` instead.
+> Subagent roles, batch delegation, and delegation config. Moved to `docs/dev-guide/delegation.md`. Read when working on delegation.
 
 ---
+## Reference — Curator (skill lifecycle)
 
-## Curator (skill lifecycle)
-
-Background skill-maintenance system that tracks usage on agent-created
-skills and auto-archives stale ones. Users never lose skills; archives
-go to `~/.3V0/skills/.archive/` and are restorable.
-
-- **Core:** `agent/curator.py` (review loop, auto-transitions, LLM review
-  prompt) + `agent/curator_backup.py` (pre-run tar.gz snapshots).
-- **CLI:** `threev0_cli/curator.py` wires `3v0 curator <verb>` where
-  verbs are: `status`, `run`, `pause`, `resume`, `pin`, `unpin`,
-  `archive`, `restore`, `prune`, `backup`, `rollback`.
-- **Telemetry:** `tools/skill_usage.py` owns the sidecar
-  `~/.3V0/skills/.usage.json` — per-skill `use_count`, `view_count`,
-  `patch_count`, `last_activity_at`, `state` (active / stale /
-  archived), `pinned`.
-
-Invariants:
-- Curator only touches skills with `created_by: "agent"` provenance —
-  bundled + hub-installed skills are off-limits.
-- Never deletes; max destructive action is archive.
-- Pinned skills are exempt from every auto-transition and from the
-  LLM review pass.
-- `skill_manage(action="delete")` refuses pinned skills; patch/edit/
-  write_file/remove_file go through so the agent can keep improving
-  pinned skills.
-
-Config section (`curator:` in `config.yaml`):
-`enabled`, `interval_hours`, `min_idle_hours`, `stale_after_days`,
-`archive_after_days`, `backup.*`.
-
-Full user-facing docs: `website/docs/user-guide/features/curator.md`.
+> Skill-maintenance loop, telemetry, and invariants. Moved to `docs/dev-guide/curator.md`. Read when extending the curator.
 
 ---
+## Reference — Cron (scheduled jobs)
 
-## Cron (scheduled jobs)
-
-`cron/jobs.py` (job store) + `cron/scheduler.py` (tick loop). Agents
-schedule jobs via the `cronjob` tool; users via `3v0 cron <verb>`
-(`list`, `add`, `edit`, `pause`, `resume`, `run`, `remove`) or the
-`/cron` slash command.
-
-Supported schedule formats:
-- Duration: `"30m"`, `"2h"`, `"1d"`
-- "every" phrase: `"every 2h"`, `"every monday 9am"`
-- 5-field cron expression: `"0 9 * * *"`
-- ISO timestamp (one-shot): `"2026-06-01T09:00:00Z"`
-
-Per-job fields include `skills` (load specific skills), `model` /
-`provider` overrides, `script` (pre-run data-collection script whose
-stdout is injected into the prompt; `no_agent=True` turns the script
-into the entire job), `context_from` (chain job A's last output into
-job B's prompt), `workdir` (run in a specific directory with its
-`AGENTS.md`/`CLAUDE.md` loaded), and multi-platform delivery.
-
-Hardening invariants:
-- **3-minute hard interrupt** on cron sessions — runaway agent loops
-  cannot monopolize the scheduler.
-- Catchup window: half the job's period, clamped to 120s–2h.
-- Grace window: 120s for one-shot jobs whose fire time was missed.
-- File lock at `~/.3V0/cron/.tick.lock` prevents duplicate ticks
-  across processes.
-- Cron sessions pass `skip_memory=True` by default; memory providers
-  intentionally do not run during cron.
-
-Cron deliveries are **not** mirrored into the target gateway session —
-they land in their own cron session with a header/footer frame so the
-main conversation's message-role alternation stays intact.
+> Scheduler, job store, schedule formats, and hardening invariants. Moved to `docs/dev-guide/cron.md`. Read when adding scheduled behavior.
 
 ---
+## Reference — Kanban (multi-agent work queue)
 
-## Kanban (multi-agent work queue)
-
-Durable SQLite-backed board that lets multiple profiles / workers
-collaborate on shared tasks. Users drive it via `3v0 kanban <verb>`;
-workers spawned by the dispatcher drive it via a dedicated `kanban_*`
-toolset so their schema footprint is zero when they're not inside a
-kanban task.
-
-- **CLI:** `threev0_cli/kanban.py` wires `3v0 kanban` with verbs
-  `init`, `create`, `list` (alias `ls`), `show`, `assign`, `link`,
-  `unlink`, `comment`, `attach`, `attachments`, `attach-rm`, `complete`,
-  `request-review`, `request-changes`, `reopen-review`, `block`, `unblock`, `archive`,
-  `tail`, plus less-commonly-used `watch`, `stats`, `runs`, `log`,
-  `assignees`, `heartbeat`, `notify-*`, `dispatch`, `daemon`, `gc`.
-- **Worker/orchestrator toolset:** `tools/kanban_tools.py` exposes
-  `kanban_show`, `kanban_complete`, `kanban_request_review`,
-  `kanban_request_changes`, `kanban_block`,
-  `kanban_heartbeat`, `kanban_comment`, `kanban_create`, `kanban_link`,
-  `kanban_attach`, `kanban_attach_url`, `kanban_attachments`; profiles that
-  explicitly enable the `kanban` toolset outside a dispatcher-spawned
-  task also get `kanban_list` and `kanban_unblock` for board routing.
-- **Dispatcher:** long-lived loop that (default every 60s) reclaims
-  stale claims, promotes ready tasks, atomically claims, and spawns
-  assigned profiles. Runs **inside the gateway** by default via
-  `kanban.dispatch_in_gateway: true`.
-- **Plugin assets:** `plugins/kanban/dashboard/` (web UI) +
-  `plugins/kanban/systemd/` (`3v0-kanban-dispatcher.service` for
-  standalone dispatcher deployment).
-
-Isolation model:
-- **Board** is the hard boundary — workers are spawned with
-  `EV0_KANBAN_BOARD` pinned in their env so they can't see other
-  boards.
-- **Tenant** is a soft namespace *within* a board — one specialist
-  fleet can serve multiple businesses with workspace-path + memory-key
-  isolation.
-- After `kanban.failure_limit` consecutive non-success attempts on the
-  same task (default: 2), the dispatcher auto-blocks it to prevent spin
-  loops.
-
-Full user-facing docs: `website/docs/user-guide/features/kanban.md`.
+> Board, verbs, and `kanban_*` toolset. Moved to `docs/dev-guide/kanban.md`. Read when working on the multi-agent board.
 
 ---
-
 ## Important Policies
 
 ### Prompt Caching Must Not Break
