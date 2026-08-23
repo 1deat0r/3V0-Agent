@@ -901,6 +901,13 @@ contributor skill PRs.
 ---
 ## Important Policies
 
+### Push every commit as it lands
+
+Every commit is pushed to `public` in the same step it is made:
+`timeout 90 git push public main` and retry on timeout (the push can
+silently succeed on retry). Local-only commits are treated as lost work —
+never accumulate unpushed arcs. (Operator directive, 2026-08-23.)
+
 ### Prompt Caching Must Not Break
 
 3V0-Agent ensures caching remains valid throughout a conversation. **Do NOT implement changes that would:**
