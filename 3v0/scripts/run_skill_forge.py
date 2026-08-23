@@ -65,6 +65,12 @@ def main() -> int:
         "(gated by safe_evolve)",
     )
     group.add_argument(
+        "--verify", metavar="PATH",
+        help="author + verify the generated skill against the module's OWN "
+        "tests (ground truth the skill distills); report keep/revise, no "
+        "store write",
+    )
+    group.add_argument(
         "--all", action="store_true",
         help="synthesize proposals for every core module that has public "
         "callables",
@@ -85,6 +91,44 @@ def main() -> int:
     if args.module:
         _one(Path(args.module), compact=args.json)
         return 0
+
+    if args.verify:
+        path = Path(args.verify)
+        if not path.exists():
+            print(json.dumps({"error": f"module not found: {path}"}))
+            return 1
+        prop = synthesize_proposal(path)
+        if prop is None:
+            print(json.dumps({"skipped": str(path)}))
+            return 1
+        body = build_skill_md(prop)
+        # The module's OWN tests are the ground truth the skill distills: does
+        # the method actually work? Run them; the verdict gates "keep".
+        module_stem = path.stem
+        test_path = REPO_ROOT / "3v0" / "tests" / f"test_{module_stem}.py"
+        if not test_path.exists():
+            print(json.dumps({
+                "verdict": "no_tests",
+                "name": prop["name"],
+                "reason": f"no test file for {module_stem}",
+            }))
+            return 0
+        proc = subprocess.run(
+            [sys.executable, "-m", "pytest", str(test_path), "-q", "-p", "no:cacheprovider"],
+            capture_output=True, text=True, timeout=120,
+        )
+        # Keep when the module's tests pass (the distilled method is verified
+        # working); otherwise revise.
+        passed = proc.returncode == 0
+        print(json.dumps({
+            "verdict": "keep" if passed else "revise",
+            "name": prop["name"],
+            "module": module_stem,
+            "tests": test_path.name,
+            "returncode": proc.returncode,
+            "tail": (proc.stdout or proc.stderr or "").strip()[-200:],
+        }))
+        return 0 if passed else 1
 
     if args.author or args.write:
         path = Path(args.author or args.write)

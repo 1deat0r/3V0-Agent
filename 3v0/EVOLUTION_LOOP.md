@@ -2060,3 +2060,16 @@ half of the create-leg.
   suite green.
 - **Still ahead (optional)**: verification against a known-answer check before
   KEEPING a generated skill; `skill_promote`/`skill_demote` tool actions.
+## SkillForge — verification: keep only what independently verifies (2026-08-23)
+The Voyager/baseline discipline made real: a generated skill is KEPT only when
+the method it distills independently verifies.
+
+- **`scripts/run_skill_forge.py --verify <path>`** (new): author the SKILL.md
+  body, then run the SOURCE MODULE'S OWN test file — the ground truth the
+  skill distills. Verdict: `keep` (tests pass — the method works) | `revise`
+  (tests fail) | `no_tests` (no dedicated test file). No store write; the
+  verdict is the keep-gate the --write path then enforces.
+- **Measured**: all 33 test-covered core modules produce a generated skill
+  that verifies as `keep` (their own tests pass) — the distilled methods are
+  genuinely working. The 10 uncovered modules report `no_tests`.
+- **Tests**: 2 driver tests (keep / no_tests); full native suite green.

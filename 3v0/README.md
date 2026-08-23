@@ -240,10 +240,12 @@ code.
   (called by the plugin; also runnable directly).
 - `scripts/run_skill_forge.py` — the SkillForge driver (create-half): emit a
   deterministic skill proposal (`--module`), author the SKILL.md body
-  (`--author`), or author + write it store-first via `record_skills.py`
+  (`--author`), author + write it store-first via `record_skills.py`
   (`--write`, gated by `safe_evolve` on the distilled procedure text — the
   authored body PLUS the source callables' docstrings; a blocking skill is
-  refused). ``--all`` emits proposals for every core module as NDJSON.
+  refused), or verify it against the module's own tests before keeping
+  (`--verify`: keep only when the distilled method's tests pass). ``--all``
+  emits proposals for every core module as NDJSON.
 - `scripts/review_session.py` — the Stone 7 session-end review driver: a
   detached subprocess (spawned by the plugin's `on_session_end` hook) that
   reads the just-ended session, asks DeepSeek-v4-pro for store-first

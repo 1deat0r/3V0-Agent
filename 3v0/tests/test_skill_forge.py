@@ -6,11 +6,25 @@ Run directly:
 
 from __future__ import annotations
 
+import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DRIVER = REPO_ROOT / "3v0" / "scripts" / "run_skill_forge.py"
+
+def _run_driver(*args) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(DRIVER), *args], capture_output=True, text=True, timeout=120,
+    )
+
+def _json_out(proc: subprocess.CompletedProcess):
+    out = proc.stdout.strip()
+    return json.loads(out) if out else {}
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "3v0"))
 
@@ -114,6 +128,29 @@ class TestForgeSkillMd(unittest.TestCase):
         prop = self._prop(callables=())
         md = build_skill_md(prop)
         self.assertIn("complete the method by hand", md)
+
+
+class TestForgeDriverVerify(unittest.TestCase):
+    """The --verify keep/revise gate (the authoring half's ground-truth check)."""
+
+    def test_verify_keep_for_module_with_passing_tests(self) -> None:
+        proc = _run_driver("--verify", "3v0/core/safe_evolve.py")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        d = _json_out(proc)
+        self.assertEqual(d.get("verdict"), "keep")
+        self.assertEqual(d.get("tests"), "test_safe_evolve.py")
+
+    def test_verify_no_tests_for_forge_module(self) -> None:
+        # skill_forge has a test file BUT is the module under test here; a
+        # sibling module without a dedicated test reports no_tests. Use a temp
+        # module outside the tests tree.
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "standalone.py"
+            p.write_text('"""Standalone."""\ndef work():\n    """Do."""\n    return 2\n')
+            proc = _run_driver("--verify", str(p))
+            self.assertEqual(proc.returncode, 0)
+            d = _json_out(proc)
+            self.assertEqual(d.get("verdict"), "no_tests")
 
 
 if __name__ == "__main__":
