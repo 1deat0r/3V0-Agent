@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createGatewayEventHandler } from '../app/createGatewayEventHandler.js'
+import { createGatewayEventHandler, themesEqual } from '../app/createGatewayEventHandler.js'
 import { getOverlayState, patchOverlayState, resetOverlayState } from '../app/overlayStore.js'
 import { turnController } from '../app/turnController.js'
 import { getTurnState, resetTurnState } from '../app/turnStore.js'
@@ -2055,5 +2055,59 @@ describe('createGatewayEventHandler', () => {
       expect(getUiState().busy).toBe(true)
       expect(appended).toHaveLength(0)
     })
+  })
+})
+
+describe('themesEqual — lenient identity comparison (flash / repaint fix)', () => {
+  const base = {
+    color: {
+      completionBg: '#101014',
+      text: '#f0f0f0',
+      primary: '#ffd700',
+      accent: '#ffbf00',
+      border: '#8b8682',
+      statusFg: '#c0c0c0',
+      statusWarn: '#ffd700',
+      statusBad: '#ff8c00',
+      statusBg: '#1a1a2e',
+    } as any,
+    brand: { name: '3V0 Agent', prompt: '❯' },
+    bannerLogo: '',
+    bannerHero: '',
+  } as any
+
+  it('returns true for identical themes', () => {
+    expect(themesEqual(base, { ...base, color: { ...base.color } })).toBe(true)
+  })
+
+  it('ignores derived-tone drift on the SAME skin (no repaint)', () => {
+    const drifted = {
+      ...base,
+      // only derived/optional tones differ (what background/env re-derivation
+      // produces between the boot cache and the live skin commit)
+      color: {
+        ...base.color,
+        muted: '#0000aa',
+        label: '#ff00ff',
+        statusGood: '#00ff00',
+      },
+    }
+
+    expect(themesEqual(base, drifted)).toBe(true)
+  })
+
+  it('returns false when the identity core flips (real theme change)', () => {
+    const changed = { ...base, color: { ...base.color, primary: '#8b0000' } }
+    expect(themesEqual(base, changed)).toBe(false)
+  })
+
+  it('returns false on a light↔dark polarity flip', () => {
+    const light = { ...base, color: { ...base.color, statusBg: '#ffffff', completionBg: '#ffffff' } }
+    expect(themesEqual(base, light)).toBe(false)
+  })
+
+  it('returns false when the brand changes', () => {
+    const other = { ...base, brand: { name: 'Hermes Agent', prompt: '❯' } }
+    expect(themesEqual(base, other)).toBe(false)
   })
 })

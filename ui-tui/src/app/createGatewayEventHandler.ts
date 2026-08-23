@@ -136,13 +136,36 @@ const commitTheme = (theme: Theme) => {
   }
 }
 
-const themesEqual = (a: Theme, b: Theme) => {
+export const themesEqual = (a: Theme, b: Theme) => {
   if (a === b) {
     return true
   }
 
-  for (const key of Object.keys(a.color) as (keyof Theme['color'])[]) {
-    if (a.color[key] !== b.color[key]) {
+  // Polarity is identity: a light↔dark flip must repaint regardless. The
+  // completion/status surfaces track the resolved background, so they carry
+  // polarity.
+  if (a.color.statusBg !== b.color.statusBg || a.color.completionBg !== b.color.completionBg) {
+    return false
+  }
+
+  // Compare the IDENTITY core, not every derived byte. `fromSkin` re-derives
+  // secondary tones live (background probe, env, adaptation), so two commits
+  // of the SAME skin can differ in a derived tone without being a real theme
+  // change; byte-comparing every color key made the anti-tearing forceRedraw
+  // fire on EVERY launch even with matching branding. A genuine switch (skin
+  // change, light↔dark polarity, palette swap) always flips this core.
+  const core = [
+    a.color.completionBg, a.color.text, a.color.primary, a.color.accent, a.color.border,
+    a.color.statusFg, a.color.statusWarn, a.color.statusBad,
+  ] as (string | undefined)[]
+
+  const coreB = [
+    b.color.completionBg, b.color.text, b.color.primary, b.color.accent, b.color.border,
+    b.color.statusFg, b.color.statusWarn, b.color.statusBad,
+  ] as (string | undefined)[]
+
+  for (let i = 0; i < core.length; i++) {
+    if (core[i] !== coreB[i]) {
       return false
     }
   }
