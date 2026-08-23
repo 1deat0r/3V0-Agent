@@ -4,6 +4,26 @@ The Ink-based terminal UI (`ui-tui/`) draws the 3V0 conversation surface. This
 doc records the parts that are easy to get wrong: how the theme resolves and
 caches, what repaints when, and the startup-flash lineage.
 
+## Design: "Tide" — reduce, don't add (2026-08)
+
+The TUI is being redesigned toward a restrained, memorable look: **one accent
+(sky `#7DD3E8`) + a neutral cool canvas + a semantic trio** (ok/warn/error),
+instead of the gold-on-navy rainbow. Landed so far:
+
+1. **Tide palette** (`cef3b94d6e`) — `theme.ts` `DARK_SEEDS`/`LIGHT_SEEDS` +
+   `deriveTones` (the neutral ladder now comes from the text↔bg grey gamma,
+   NOT accent-tinted) + the `default` skin in `skin_engine.py` (CLI matches).
+2. **Status bar → bottom** (`b827db0d5c`) — the status rule defaults to the
+   bottom (`useConfigSync.normalizeStatusBar`), content reads first; `top`
+   stays available via `display.tui_statusbar: top`.
+
+**Capture caveat (honest):** a headless `script` capture of `node
+ui-tui/dist/entry.js` still shows legacy grey (`98;102;107`) and no sky accent
+even after a clean rebuild, because the runtime boot cache / `skin_engine`
+singleton lags the fresh seed values in a non-interactive launch. On a real
+`3v0` launch the boot cache regenerates with Tide after one session. This is
+documented so no one treats the headless capture as the final look.
+
 ## Theme resolution (flash-free boot)
 
 The theme starts from the **boot cache** so a stable setup renders correctly
