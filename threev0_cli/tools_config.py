@@ -2362,7 +2362,14 @@ def _exempt_explicit_platform_native(
 #: schemas to a user with no Nous credential — the same split Home Assistant
 #: uses. Probing the portal from this path would put a network call on every
 #: CLI start, gateway session and cron tick.
-_RECENTLY_SHIPPED_TOOLSETS = frozenset({"bfl"})
+# Toolsets that shipped recently enough that an existing saved per-platform
+# list should gain them on upgrade (auto-on) — parity with staying on a
+# composite. Currently empty: ``bfl`` was the last member, but it is now a
+# standard OPT-IN toolset (moved out of _EV0_CORE_TOOLS, narrow waist), so it
+# no longer auto-ships on the composite and its parity guard here would skip
+# it anyway. Re-add a toolset here only when it is added to the default core
+# surface and existing saved lists should pick it up without a manual toggle.
+_RECENTLY_SHIPPED_TOOLSETS = frozenset()
 
 
 def _enable_recently_shipped_toolsets(

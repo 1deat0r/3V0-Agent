@@ -23,6 +23,7 @@ Columns: path · kind · purpose · why · related
 | `docs/agents/triage-labels.md` | doc | Triage Labels | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/agents/domain.md; docs/agents/issue-tracker.md |
 | `docs/billing-lifecycle.md` | doc | Billing lifecycle doc | Account/billing | agent/billing_view.py |
 | `docs/chronos-managed-cron-contract.md` | doc | Managed cron contract | Scheduled tasks spec | cron/scheduler_provider.py |
+| `docs/core-tools-audit.md` | doc | Core Tools — Narrow-Waist Audit (2026-08-23) | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/3v0-kanban-v1-spec.pdf; docs/ADR.md; docs/agents/domain.md; docs/agents/issue-tracker.md; docs/agents/triage-labels.md; docs/billing-lifecycle.md; docs/chronos-managed-cron-contract.md |
 | `docs/design/kanban-dialogs/index.html` | asset | File `index.html` | Repository content; see related files / area page for the enclosing subsystem | docs/design/kanban-dialogs/ |
 | `docs/design/profile-builder.md` | doc | Profile Builder — Dashboard-Native, Full-Featured Profile Creation | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/design/kanban-dialogs/index.html |
 | `docs/kanban/multi-gateway.md` | doc | Multi-gateway deployment | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/kanban/ |

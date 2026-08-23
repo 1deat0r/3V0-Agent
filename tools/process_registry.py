@@ -3044,10 +3044,32 @@ def _handle_process(args, **kw):
     return tool_error(f"Unknown process action: {action}. Use: list, poll, log, wait, kill, write, submit, close")
 
 
+def check_process_requirements() -> bool:
+    """Gate the ``process`` tool on the same availability as ``terminal``.
+
+    ``process`` and ``terminal`` are one process surface (background process
+    management vs the main terminal), so they must share a lifecycle gate.
+    ``terminal`` fetched no ``check_fn`` here historically, so in a degraded
+    environment where ``terminal`` is unavailable (e.g. an ssh/docker env with
+    no working backend) ``process`` would still ship and mislead the model.
+    Delegate to ``terminal``'s gate (lazily, to avoid importing the whole
+    terminal module at registry-build time). The registry TTL-caches the
+    result process-wide, so this is not per-call work.
+    """
+    try:
+        from tools.terminal_tool import check_terminal_requirements
+        return check_terminal_requirements()
+    except Exception:
+        # Fail closed: if we can't resolve the terminal gate, don't advertise a
+        # process tool whose backing terminal may be unavailable.
+        return False
+
+
 registry.register(
     name="process",
     toolset="terminal",
     schema=PROCESS_SCHEMA,
     handler=_handle_process,
+    check_fn=check_process_requirements,
     emoji="⚙️",
 )

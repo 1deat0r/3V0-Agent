@@ -42,12 +42,13 @@ _EV0_CORE_TOOLS = [
     # blind to a desktop client talking to a remote/cloud backend.
     # File manipulation
     "read_file", "write_file", "patch", "search_files",
-    # Vision + image generation
-    "vision_analyze", "image_generate",
-    # BFL FLUX 3 video generation
-    "bfl_flux3_text_to_video", "bfl_flux3_image_to_video",
-    "bfl_flux3_keyframes_to_video", "bfl_flux3_video_continuation",
-    "bfl_flux3_get_result", "bfl_flux3_prompting_guide",
+    # Vision (image understanding is a first-class core affordance). Image
+    # *generation*, BFL FLUX3 video, text-to-speech, and computer_use are NOT
+    # here: they are niche, opt-in toolsets (image_gen / bfl / tts /
+    # computer_use) that ship only when the user enables them via 3v0 tools —
+    # keeping several KB of rarely-used schema off every session (narrow
+    # waist). See AGENTS.md "Reference — Toolsets".
+    "vision_analyze",
     # Skills
     "skills_list", "skill_view", "skill_manage",
     # Browser automation
@@ -57,8 +58,6 @@ _EV0_CORE_TOOLS = [
     "browser_vision", "browser_console", "browser_cdp", "browser_dialog",
     # replaces other tools when browser.backend is "browser-use"
     "browser_exec",
-    # Text-to-speech
-    "text_to_speech",
     # Planning & memory
     "todo", "memory",
     # NOTE: the desktop Project tools (project_list/create/switch) are
@@ -87,8 +86,6 @@ _EV0_CORE_TOOLS = [
     "kanban_comment", "kanban_create", "kanban_link",
     "kanban_unblock",
     "kanban_attach", "kanban_attach_url", "kanban_attachments",
-    # Computer use (macOS, gated on cua-driver being installed via check_fn)
-    "computer_use",
 ]
 
 # Webhook events may originate from untrusted third-party content (for example,
