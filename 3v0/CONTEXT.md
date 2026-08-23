@@ -89,6 +89,12 @@ stored history is failing (rewrite vs retire), the review model authors a fix,
 and `safe_evolve` gates the authored content (a blocking unsafe patch is
 dropped). The "skills that actually get better" stage of the loop.
 
+**Skill forge**:
+The create-half — `core/skill_forge` distills a reusable-skill *proposal*
+from a body module's public API (AST, deterministic, never imports). The
+driver (`scripts/run_skill_forge.py`) emits it; a follow-on pass ships the
+fleshed SKILL.md store-first. Skills the loop grows, not just fixes.
+
 **Profile**:
 The 3V0 profile's derived view of the store (MEMORY.md / USER.md /
 SKILL.md). A projection, never the origin.

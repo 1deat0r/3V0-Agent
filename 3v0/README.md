@@ -101,6 +101,10 @@ code.
 - `core/skill_curate.py` — skill curation: decides (deterministically, no LLM)
   which skills the outcome history marks as failing (`rewrite` vs `retire`),
   so the review model can author a fix. Pure gauge on top of `skill_outcome`.
+- `core/skill_forge.py` — SkillForge (the create-half): deterministically
+  distills a reusable-skill *proposal* (name/category/description/overview/
+  public callables/`proposal_id`) from a body module's public API via AST —
+  never imports or execs the module. Backs `scripts/run_skill_forge.py`.
 - `core/skill_io.py` — single owner of skill-name → SKILL.md path/content
   mapping (locate/write/remove, `.archive/` excluded), shared by
   seed/ingest/sync_skills.
@@ -230,6 +234,11 @@ code.
   (report by default, `--write` to converge; wired into the wake check).
 - `scripts/query.py` — serve `threev0_store` queries as JSON on stdout
   (called by the plugin; also runnable directly).
+- `scripts/run_skill_forge.py` — the SkillForge driver (create-half): emit a
+  deterministic skill proposal for one core module (`--module`) or all of them
+  (`--all`, NDJSON), never writing the store. A follow-on model pass can flesh
+  the proposal into a SKILL.md and ship it store-first via `record_skills.py`
+  (gated by `safe_evolve`, like curation).
 - `scripts/review_session.py` — the Stone 7 session-end review driver: a
   detached subprocess (spawned by the plugin's `on_session_end` hook) that
   reads the just-ended session, asks DeepSeek-v4-pro for store-first

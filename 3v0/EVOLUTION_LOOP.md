@@ -2007,3 +2007,27 @@ safe_evolve -> store write.
 - **Still ahead (optional)**: `skill_promote`/`skill_demote` tool actions;
   baseline-verified patch acceptance (run the fixed skill against a
   known-answer check before keeping it).
+## SkillForge — the create-half (2026-08-23)
+Completes the skill axis's third leg (read -> react -> CREATE): proactively
+distill reusable skills from the body's own core/, instead of waiting for a
+real-task failure. SkillForge (arXiv 2608.18933, research digest kernel #6).
+
+- **`core/skill_forge.py`** (new, pure + deterministic, AST-only): given a
+  module path, `synthesize_proposal` returns a skill *proposal* — name
+  (kebab-cased from the stem), category (from the module's dir), description
+  + overview (from the module docstring / first callable doc), `public_callables`
+  (top-level public defs/classes, docstrings via ast.get_docstring), and a
+  dedupe-able `proposal_id` (sha256 over resolved path + callables). Never
+  imports or execs the module — no side effects, no module-registration traps.
+- **`scripts/run_skill_forge.py`** (new): the CLI driver — `--module <path>`
+  for one proposal (pretty JSON), `--all` for every core module (compact
+  NDJSON for streaming). 42/43 core modules yield a proposal. Does NOT write
+  the store: a follow-on model pass fleshes the proposal into a SKILL.md and
+  ships it via `record_skills.py`, gated by `safe_evolve` (like curation).
+- **Invariant kept**: `3v0/README.md` core-module listing + scripts section
+  updated (coherence enforces README<->module lockstep).
+- **Tests**: 6 unit (`test_skill_forge.py`); full native suite green.
+- **Still ahead (optional)**: the model-authoring pass that turns a proposal
+  into a real SKILL.md via the review loop, then verification against a
+  known-answer check before keeping it; and `skill_promote`/`skill_demote`
+  tool actions for explicit ranking influence.
