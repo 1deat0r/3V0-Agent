@@ -1,0 +1,13 @@
+{
+  "name": "@3v0/shared",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    "./billing": "./src/billing.ts",
+    "./skin": "./src/skin.ts",
+    "./charge-settlement": "./src/charge-settlement.ts",
+    ".": "./src/index.ts"
+  }
+}

@@ -6,7 +6,8 @@
   "workspaces": [
     "ui-tui",
     "ui-tui/packages/*",
-    "web"
+    "web",
+    "apps/*"
   ],
   "scripts": {
     "postinstall": "echo '\u2705 Node dependencies installed. Run: python run_agent.py --help'",
