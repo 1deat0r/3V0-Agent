@@ -59,3 +59,4 @@ Columns: path · kind · purpose · why · related
 | `docs/security/network-egress-isolation.md` | doc | Network Egress Isolation for Docker Deployments | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/security/ |
 | `docs/session-lifecycle.md` | doc | Session lifecycle doc | Messaging sessions | gateway/session.py |
 | `docs/streaming-tts.md` | doc | Streaming TTS doc | Voice streaming | tools/tts_streaming.py |
+| `docs/tui.md` | doc | TUI — theme, boot, and repaint architecture | Human/agent-readable documentation; the wiki keeps it pointer-capped | docs/3v0-kanban-v1-spec.pdf; docs/ADR.md; docs/agents/domain.md; docs/agents/issue-tracker.md; docs/agents/triage-labels.md; docs/audit/AUDIT_PLAN.md; docs/audit/SUMMARY.md; docs/audit/VERDICTS-1.md |

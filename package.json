@@ -1,7 +1,7 @@
 {
   "name": "3v0-agent",
   "version": "1.0.0",
-  "description": "An AI agent with advanced tool-calling capabilities, featuring a flexible toolsets system for organizing and managing tools.",
+  "description": "3V0 Agent — a self-improving AI agent with a built-in learning loop: it creates and evolves skills from experience, persists knowledge, and grows a deepening model of you across sessions. Terminal TUI, messaging gateway, and cron automations.",
   "private": true,
   "workspaces": [
     "ui-tui",

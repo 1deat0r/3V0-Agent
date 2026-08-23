@@ -444,8 +444,10 @@ const ComposerPane = memo(function ComposerPane({
         )}
       </Box>
 
-      {!composer.empty && !ui.sid && <Text color={ui.theme.color.muted}>◈ {ui.status}</Text>}
-
+      {/* Pre-session status is shown by the bottom StatusRulePane already; a bare
+          ◈ status line here raced the first frame (before the session/skin) and
+          flashed as a lone "…/◈" before the full chrome painted. Removed the
+          redundant pre-session line — the status bar owns that message. */}
       <AmbientDock placement="dock-bottom" />
       <StatusRulePane at="bottom" composer={composer} status={status} />
     </NoSelect>
