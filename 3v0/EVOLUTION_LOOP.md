@@ -2118,3 +2118,14 @@ cache-prefix `<available_skills>`.
 - **Optional next**: flip `skills.skill_rank_mode: by_usage` +
   `skill_index_budget` ON for the 3V0 profile and quantify the real prompt
   savings; a periodic forge sweep now has a bounded index to grow into.
+## Skill-index budget — ENABLED for the 3V0 profile (2026-08-23)
+The operator-facing enablement of the evidence budget (feat dcb63ffe2b).
+- `~/.3V0/profiles/3v0/config.yaml` now sets `skills.skill_rank_mode: by_usage`
+  + `skills.skill_index_budget: 2500`.
+- **Measured on the real profile (132 skills)**: the `<available_skills>` index
+  went from 11,889 chars (127 full entries, zero budget) to 6,538 chars —
+  a **45% reduction**. The description portion is budget-capped at 2,086 chars
+  (≤ 2500), with only 26 full-description entries; 20 never-used skills collapse
+  to a names-only tail. Every skill name stays visible/loadable.
+- Reversible: unset `skill_rank_mode` / `skill_index_budget` to restore the full
+  index. The config is profile data, not body code.
