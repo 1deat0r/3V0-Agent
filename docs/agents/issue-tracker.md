@@ -31,12 +31,17 @@ Create a GitHub issue.
 
 ## Active backlog
 
-18 open `ready-for-agent` tickets (issues #7–#24) published by the
-pass-5 `to-tickets` run from the four architecture-review passes. Two wide
-refactors are sequenced as expand–contract chains with native GitHub
-blocking edges: ENV-FUNNEL (#19–#21) and ADAPTERS (#22–#24). Frontier
-(work now): #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #19, #22 —
-everything without an open blocker.
+Seven open `ready-for-agent` tickets remain from the pass-5 architecture
+review: retry-policy consolidation (#17), turn-runner frame extraction
+(#18), and two expand–contract chains with native blocking edges —
+ENV-FUNNEL (#19 expand CLOSED by 81840e3e5f; #20 migrate in progress,
+per-batch progress in issue comments; #21 contract) and ADAPTERS
+(#22–#24). Frontier (work now): #17, #18, #20, #22 — everything without
+an open blocker.
+
+The mechanical gate for the ENV-FUNNEL contract phase (#21) is
+`python3 scripts/env_funnel_scan.py --check` over the default prod scope;
+the scanner also sizes each migrate batch (branded reads per area).
 
 ## When a skill says "fetch the relevant ticket"
 
