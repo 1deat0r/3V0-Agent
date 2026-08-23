@@ -57,6 +57,77 @@ def should_apply(usage: Dict[str, Dict[str, object]]) -> bool:
     return False
 
 
+def _entry_chars(entry: RankedEntry) -> int:
+    """The full-description line length for one used-skill entry (name + desc)."""
+    name = str(entry.get("name", ""))
+    desc = str(entry.get("description") or "")
+    # "    - name: desc" — 8 leading spaces + name + ": " + desc
+    return 8 + len(name) + 2 + len(desc)
+
+
+def _entry_value(entry: RankedEntry) -> Tuple[float, int]:
+    """A deterministic composite *value* for greedy budget selection.
+
+    Heavier than the recency sort: recency (epoch) dominates, then a
+    never-failed bonus (a skill whose resolved outcomes are all success ranks
+    above one with failures), then the use count. Returns (negated_epoch,
+    -success_bonus) so "more recent + less failing" sorts higher under
+    ascending sort; the caller sorts descending by value.
+    """
+    rec = entry.get("usage") or {}
+    last = str(rec.get(KEY_LAST_USED) or "")
+
+    def _epoch(iso: str) -> float:
+        try:
+            from datetime import datetime, timezone
+            return datetime.fromisoformat(iso.replace("Z", "+00:00")).timestamp()
+        except Exception:
+            return 0.0
+
+    # resolved outcome trend: success-only => +bonus; any failure => 0.
+    history = rec.get("outcome_history")
+    if isinstance(history, list):
+        outcomes = [
+            (h.get("outcome") if isinstance(h, dict) else None) for h in history
+        ]
+        resolved = [o for o in outcomes if o in ("success", "failure")]
+        failure = any(o == "failure" for o in resolved)
+    else:
+        failure = False
+
+    uses = int(rec.get(KEY_USE_COUNT, 0) or 0)
+    return (_epoch(last), -1 if failure else 0, -uses)
+
+
+def fit_budget(
+    used: List[RankedEntry],
+    budget_chars: int,
+) -> Tuple[List[RankedEntry], List[str]]:
+    """Greedily select the used entries that fit a description budget.
+
+    Returns ``(kept, demoted_names)``. Entries are sorted by value
+    (recency-dominant, failure-penalized) and accepted while the cumulative
+    full-description cost stays <= ``budget_chars``. The rest — and any that
+    don't fit — become the names-only tail (still visible, never hidden).
+    Deterministic, pure; a non-positive budget keeps nothing.
+    """
+    if budget_chars <= 0 or not used:
+        return [], [str(u.get("name", "")) for u in used]
+
+    ordered = sorted(used, key=_entry_value, reverse=True)
+    kept: List[RankedEntry] = []
+    demoted: List[str] = []
+    spent = 0
+    for u in ordered:
+        cost = _entry_chars(u)
+        if spent + cost <= budget_chars:
+            kept.append(u)
+            spent += cost
+        else:
+            demoted.append(str(u.get("name", "")))
+    return kept, demoted
+
+
 def _usage_for(name: str, usage: Dict[str, Dict[str, object]]) -> Optional[Dict[str, object]]:
     """The usage record for ``name``, or None when unused (missing/invalid)."""
     rec = usage.get(name)

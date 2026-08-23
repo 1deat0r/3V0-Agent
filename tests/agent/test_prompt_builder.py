@@ -2,6 +2,7 @@
 
 import builtins
 import importlib
+import json
 import logging
 import os
 import sys
@@ -346,6 +347,57 @@ class TestBuildSkillsSystemPrompt:
 
         # Ordering: alpha (recently used) renders BEFORE the never-used tail.
         assert ranked.index("alpha") < ranked.index("not used recently")
+
+    def test_usage_budget_demotes_over_budget_skills(self, monkeypatch, tmp_path):
+        """With a budget set, used skills value-rank and the over-budget ones
+        collapse to the names-only tail (still visible)."""
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
+        for name in ("alpha", "beta"):
+            d = tmp_path / "skills" / "tools" / name
+            d.mkdir(parents=True)
+            (d / "SKILL.md").write_text(
+                f"---\nname: {name}\ndescription: {name} desc\n---\n"
+            )
+        (tmp_path / "skills" / ".usage.json").write_text(
+            '{"alpha": {"use_count": 2, "last_used_at": "2026-08-22T10:00:00Z"},'
+            ' "beta": {"use_count": 1, "last_used_at": "2026-08-20T10:00:00Z"}}',
+            encoding="utf-8",
+        )
+        # Tiny budget fits neither full description; both become names-only.
+        tiny = build_skills_system_prompt(skill_rank_mode="by_usage", skill_index_budget=10)
+        assert "alpha: alpha desc" not in tiny
+        assert "beta: beta desc" not in tiny
+        assert "alpha" in tiny and "beta" in tiny  # names still visible
+
+    def test_global_budget_demotes_across_categories(self, monkeypatch, tmp_path):
+        """The budget is GLOBAL (across categories): a budget below the total
+        index cost collapses later-used skills to a names-only tail, and every
+        name stays visible."""
+        monkeypatch.setenv("EV0_HOME", str(tmp_path))
+        for i, name in enumerate(("alpha", "beta", "gamma")):
+            cat = "tools" if i % 2 == 0 else "devops"
+            d = tmp_path / "skills" / cat / name
+            d.mkdir(parents=True)
+            (d / "SKILL.md").write_text(
+                f"---\nname: {name}\ndescription: {name} does something useful\n---\n"
+            )
+        # usage recency: alpha latest, beta mid, gamma oldest
+        (tmp_path / "skills" / ".usage.json").write_text(
+            '{"alpha": {"use_count": 3, "last_used_at": "2026-08-22T10:00:00Z"},'
+            ' "beta": {"use_count": 2, "last_used_at": "2026-08-20T10:00:00Z"},'
+            ' "gamma": {"use_count": 1, "last_used_at": "2026-08-10T10:00:00Z"}}',
+            encoding="utf-8",
+        )
+        # A budget that fits alpha's single full line (~41 chars: "    - alpha: ...")
+        # but not alpha's line PLUS beta's (~80 chars). Since it's GLOBAL across
+        # the two categories, alpha (most recent) keeps its description but
+        # beta/gamma (in value order) collapse to a names-only tail.
+        budgeted = build_skills_system_prompt(skill_rank_mode="by_usage", skill_index_budget=50)
+        assert "alpha: alpha does something useful" in budgeted
+        assert "beta: beta does something useful" not in budgeted
+        assert "gamma: gamma does something useful" not in budgeted
+        # Names still visible (names-only tail / demotion).
+        assert "beta" in budgeted and "gamma" in budgeted
 
     def test_usage_ranking_default_is_unchanged_and_never_demotes(
         self, monkeypatch, tmp_path

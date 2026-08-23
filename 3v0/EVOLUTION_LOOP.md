@@ -2090,3 +2090,31 @@ usage-aware ranking (M3/M4) and the outcome/curation loop.
   to the new script — so the agent can explicitly keep a skill prominent or
   sink one, auditably, alongside the automatic ranking.
 - **Tests**: 4 unit + 2 CLI; full native suite green (627).
+## Skill-index evidence budget (2026-08-23)
+The cost half of the read loop. The signal side (usage counters, outcome
+history, curation, forge, promote/demote) was built across the prior stones;
+this one makes the index PAY for what it shows — a hard token budget on the
+cache-prefix `<available_skills>`.
+
+- **`agent/skill_prompt_rank.py`**: new `fit_budget(used, budget_chars)` — a
+  pure, deterministic greed that value-ranks used entries (recency-dominant,
+  RESOLVED-OUTCOME-failure-penalized via `outcome_history`) and keeps only the
+  top-value entries that fit the char budget.
+- **`agent/prompt_builder.py`**: `build_skills_system_prompt` gains
+  `skill_index_budget` (chars). When set (>0) AND `skill_rank_mode='by_usage'`,
+  a pre-pass collects ALL used entries across categories, value-sorts +
+  budget-selects them GLOBALLY (not per-category), and each category renders
+  only its kept entries full; the rest join the names-only tail.
+  Never hides a name. The budget is in the prompt-cache key, so a different
+  budget produces a distinct cache entry.
+- **`agent/skill_utils.py` + `agent/system_prompt.py` + `run_agent.py`**: new
+  `get_skill_index_budget()` reads `skills.skill_index_budget` (the self-cache
+  config seam). Wired through the real system-prompt build.
+- **Measured**: 40-skill synthetic index — `by_usage` alone 1966 chars;
+  budget 1000 chars -> 1424 (‑27.6%); budget 600 -> 1260 (‑35.9%). Every
+  skill name still visible.
+- **Tests**: 3 pure `fit_budget` + 2 render (global-budget) + config resolution;
+  full native + agent suites green.
+- **Optional next**: flip `skills.skill_rank_mode: by_usage` +
+  `skill_index_budget` ON for the 3V0 profile and quantify the real prompt
+  savings; a periodic forge sweep now has a bounded index to grow into.

@@ -494,6 +494,27 @@ def get_skill_rank_mode(platform: str | None = None) -> str:
     return "by_usage"
 
 
+def get_skill_index_budget() -> int:
+    """Read the skill-index description budget from config.yaml (chars).
+
+    ``skills.skill_index_budget`` — the hard evidence budget on the
+    usage-ranked index. Returns the int (clamped >= 0), or 0 when unset /
+    non-positive (no cap). Mirrors the other skill config reads.
+    """
+    parsed = _load_raw_config()
+    if not parsed:
+        return 0
+    skills_cfg = parsed.get("skills")
+    if not isinstance(skills_cfg, dict):
+        return 0
+    budget = skills_cfg.get("skill_index_budget")
+    try:
+        b = int(budget)
+    except (TypeError, ValueError):
+        return 0
+    return max(b, 0)
+
+
 def parse_config_string_list(value) -> List[str]:
     """Normalize a config value that may hold a JSON-array string into a list.
 

@@ -25,6 +25,7 @@ from typing import List, Optional
 from agent.runtime_cwd import resolve_agent_cwd
 from agent.skill_prompt_rank import should_apply as _skill_rank_should_apply
 from agent.skill_prompt_rank import rank_and_demote as _rank_and_demote
+from agent.skill_prompt_rank import fit_budget as _fit_budget
 from agent.skill_utils import (
     EXCLUDED_SKILL_DIRS,
     ORG_ACTIVE_MARKER,
@@ -1775,6 +1776,7 @@ def build_skills_system_prompt(
     compact_categories: "frozenset[str] | None" = None,
     skills_dir_override: "Path | None" = None,
     skill_rank_mode: "str | None" = None,
+    skill_index_budget: "int | None" = None,
 ) -> str:
     """Build a compact skill index for the system prompt.
 
@@ -1804,6 +1806,13 @@ def build_skills_system_prompt(
     is omitted, the mode falls back to the ``skills.skill_rank_mode`` config
     key (via ``get_skill_rank_mode``), so a single ``by_usage`` setting in
     config.yaml activates it without a code change at the call site.
+
+    ``skill_index_budget`` (chars, 0 to disable) is the hard evidence budget
+    on the index: when set (and usage-aware ranking is active), each used
+    skill's full description entry is value-ranked (recency-dominant,
+    failure-penalized) and greedy-selected up to the budget; over-budget
+    skills collapse to the names-only tail. Never hides anything. When omitted
+    or 0, there is no budget cap (today's behavior).
     """
     if not skill_rank_mode:
         # No explicit mode: fall back to the config key so the index can be
@@ -1837,6 +1846,7 @@ def build_skills_system_prompt(
             available_toolsets,
             compact_categories,
             skill_rank_mode,
+            skill_index_budget,
         )
     finally:
         if _home_token is not None:
@@ -1850,6 +1860,7 @@ def _build_skills_system_prompt_inner(
     available_toolsets: "set[str] | None",
     compact_categories: "frozenset[str] | None",
     skill_rank_mode: "str | None" = None,
+    skill_index_budget: "int | None" = None,
 ) -> str:
     # Include the resolved platform so per-platform disabled-skill lists
     # produce distinct cache entries (gateway serves multiple platforms).
@@ -1864,6 +1875,7 @@ def _build_skills_system_prompt_inner(
         tuple(sorted(disabled)),
         tuple(sorted(compact_categories or ())),
         str(skill_rank_mode or ""),
+        int(skill_index_budget or 0),
     )
     with _SKILLS_PROMPT_CACHE_LOCK:
         cached = _SKILLS_PROMPT_CACHE.get(cache_key)
@@ -2057,6 +2069,27 @@ def _build_skills_system_prompt_inner(
         result = ""
     else:
         index_lines = []
+        # GLOBAL hard evidence budget across the whole index: pre-pass value-
+        # sorts ALL used entries across categories, budget-selects the kept
+        # set (value-order), then each category renders only its kept entries
+        # full; the rest (unselected or unused) go to a names-only tail. Every
+        # name stays visible.
+        budget_used = bool(skill_index_budget and skill_index_budget > 0)
+        budget_kept_names: set[str] = set()
+        if budget_used and skill_rank_mode and usage_by_name:
+            all_used: list[dict] = []
+            for category in skills_by_category:
+                if category in demoted:
+                    continue
+                entries = [
+                    {"skill_name": nm, "frontmatter_name": nm, "description": ds}
+                    for nm, ds in skills_by_category[category]
+                ]
+                used, _ = _rank_and_demote(entries, usage_by_name)
+                all_used.extend(used)
+            kept, demoted = _fit_budget(all_used, skill_index_budget)
+            budget_kept_names = {str(u.get("name", "")) for u in kept}
+
         for category in sorted(skills_by_category.keys()):
             # Deduplicate and sort skills within each category
             seen = set()
@@ -2079,6 +2112,22 @@ def _build_skills_system_prompt_inner(
                     for nm, ds in skills_by_category[category]
                 ]
                 used, names_only = _rank_and_demote(entries, usage_by_name)
+                # Apply the GLOBAL budget selection: keep only entries the
+                # pre-pass chose; the rest join the names-only tail.
+                budget_demoted: list[str] = []
+                if budget_used:
+                    kept_in_cat = [u for u in used if str(u.get("name", "")) in budget_kept_names]
+                    budget_demoted = [
+                        str(u.get("name", "")) for u in used
+                        if str(u.get("name", "")) not in budget_kept_names
+                    ]
+                    used = kept_in_cat
+                if budget_demoted:
+                    names_only_names, _note = names_only or ("", "not used recently")
+                    names_only = (
+                        (names_only_names + ", " if names_only_names else "") + ", ".join(budget_demoted),
+                        "not used recently / over index budget",
+                    )
                 for u in used:
                     name = str(u["name"])
                     if name in seen:

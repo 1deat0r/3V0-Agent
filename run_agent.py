@@ -173,6 +173,7 @@ from agent.prompt_builder import (  # noqa: F401  # re-exported via _ra() / mock
     load_soul_md,
 )
 from agent.skill_utils import get_skill_rank_mode  # noqa: F401  # re-exported for _ra() / test patches
+from agent.skill_utils import get_skill_index_budget  # noqa: F401  # re-exported for _ra() / test patches
 from agent.process_bootstrap import _get_proxy_from_env  # noqa: F401
 from agent.message_sanitization import (  # noqa: F401
     _SURROGATE_RE,

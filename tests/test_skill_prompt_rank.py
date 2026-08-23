@@ -16,7 +16,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from agent.skill_prompt_rank import should_apply, rank_and_demote  # noqa: E402
+from agent.skill_prompt_rank import should_apply, rank_and_demote, fit_budget  # noqa: E402
+from agent.skill_prompt_rank import _entry_chars  # noqa: E402  (test helper)
 
 USAGE_NEVER = {}
 USAGE_USED = {
@@ -103,6 +104,50 @@ class TestRankAndDemote(unittest.TestCase):
         used, names_only = rank_and_demote([_entry("alpha"), _entry("beta")], usage)
         self.assertEqual([u["name"] for u in used], ["beta", "alpha"])
         self.assertIsNone(names_only)
+
+
+class TestFitBudget(unittest.TestCase):
+    def _used(self, names: list[str], usage: dict) -> list:
+        return rank_and_demote([_entry(n) for n in names], usage)[0]
+
+    def test_keeps_top_value_under_budget(self) -> None:
+        usage = {
+            "recent": {"use_count": 1, "last_used_at": "2026-08-22T10:00:00Z"},
+            "old": {"use_count": 1, "last_used_at": "2026-08-10T10:00:00Z"},
+        }
+        used = self._used(["recent", "old"], usage)
+        # A budget that fits only the recent entry.
+        budget = _entry_chars(used[0])
+        kept, demoted = fit_budget(used, budget)
+        self.assertEqual([u["name"] for u in kept], ["recent"])
+        self.assertEqual(demoted, ["old"])
+
+    def test_failure_penalized_below_success(self) -> None:
+        # same usage recency, but beta has a failure in its outcome history
+        usage = {
+            "alpha": {"use_count": 1, "last_used_at": "2026-08-20T10:00:00Z",
+                      "outcome_history": [{"outcome": "success"}]},
+            "beta": {"use_count": 1, "last_used_at": "2026-08-20T10:00:00Z",
+                     "outcome_history": [{"outcome": "failure"}]},
+        }
+        used = self._used(["alpha", "beta"], usage)
+        # fit_budget keeps the highest value (alpha, failure-free) first.
+        budget = _entry_chars(used[0])
+        kept, demoted = fit_budget(used, budget)
+        self.assertEqual([u["name"] for u in kept], ["alpha"])
+        self.assertEqual(demoted, ["beta"])
+
+    def test_nonpositive_budget_keeps_nothing(self) -> None:
+        usage = {"alpha": {"use_count": 1, "last_used_at": "2026-08-20T10:00:00Z"}}
+        used = self._used(["alpha"], usage)
+        kept, demoted = fit_budget(used, 0)
+        self.assertEqual(kept, [])
+        self.assertEqual(demoted, ["alpha"])
+
+    def test_empty_used(self) -> None:
+        kept, demoted = fit_budget([], 1000)
+        self.assertEqual(kept, [])
+        self.assertEqual(demoted, [])
 
 
 if __name__ == "__main__":

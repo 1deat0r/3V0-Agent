@@ -937,6 +937,14 @@ skills:
   # other value) keeps the index sorted exactly as before.
   # skill_rank_mode: by_usage
 
+  # Skill-index description budget in characters. When set (>0) together with
+  # skill_rank_mode: by_usage, the index's full-description entries are
+  # value-selected (usage recency, then failure-penalized) across ALL
+  # categories up to this total char budget; over-budget skills collapse to a
+  # names-only tail (still visible). Caps the cache-prefix token cost of the
+  # index. Default (unset or 0) keeps no cap.
+  # skill_index_budget: 2000
+
 # =============================================================================
 # Agent Behavior
 # =============================================================================

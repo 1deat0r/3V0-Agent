@@ -513,6 +513,7 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
             compact_categories=_compact_cats or None,
             skills_dir_override=_agent_skills_dir(agent),
             skill_rank_mode=_r.get_skill_rank_mode(platform=agent.platform),
+            skill_index_budget=_r.get_skill_index_budget(),
         )
     else:
         skills_prompt = ""
