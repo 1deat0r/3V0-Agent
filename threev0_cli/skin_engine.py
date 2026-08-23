@@ -128,7 +128,7 @@ BUILT-IN SKINS
 ==============
 
 - ``default`` — Classic 3V0 gold/kawaii (the current look)
-- ``ares``    — Crimson/bronze war-god theme with custom spinner wings
+- ``ares``    — Crimson/bronze high-contrast theme with custom spinner wings
 - ``mono``    — Clean grayscale monochrome
 - ``slate``   — Cool blue developer-focused theme
 - ``daylight`` — Light background theme with dark text and blue accents
@@ -285,7 +285,7 @@ _BUILTIN_SKINS: Dict[str, Dict[str, Any]] = {
     },
     "ares": {
         "name": "ares",
-        "description": "War-god theme — crimson and bronze",
+        "description": "Crimson and bronze — high-contrast command line",
         "colors": {
             "banner_border": "#A93333",
             "banner_title": "#C7A96B",
@@ -331,20 +331,21 @@ _BUILTIN_SKINS: Dict[str, Dict[str, Any]] = {
             ],
         },
         "branding": {
-            "agent_name": "Ares Agent",
-            "welcome": "Welcome to Ares Agent! Type your message or /help for commands.",
-            "goodbye": "Farewell, warrior! ⚔",
-            "response_label": " ⚔ Ares ",
-            "prompt_symbol": "⚔",
-            "help_header": "(⚔) Available Commands",
+            "agent_name": "3V0 Agent",
+            "welcome": "Welcome to 3V0 Agent! Type your message or /help for commands.",
+            "goodbye": "Goodbye! ⚕",
+            "response_label": " ⚕ 3V0 ",
+            "prompt_symbol": "❯",
+            "help_header": "(❯) Available Commands",
         },
         "tool_prefix": "╎",
-        "banner_logo": """[bold #A3261F] █████╗ ██████╗ ███████╗███████╗       █████╗  ██████╗ ███████╗███╗   ██╗████████╗[/]
-[bold #B73122]██╔══██╗██╔══██╗██╔════╝██╔════╝      ██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝[/]
-[#C93C24]███████║██████╔╝█████╗  ███████╗█████╗███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║[/]
-[#D84A28]██╔══██║██╔══██╗██╔══╝  ╚════██║╚════╝██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║[/]
-[#E15A2D]██║  ██║██║  ██║███████╗███████║      ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║[/]
-[#EB6C32]╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝      ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝[/]""",
+        "banner_logo": """[bold #A3261F] ████████████        ██      ██        ████████[/]
+[bold #B73122]████    ████        ██      ██      ██      ██[/]
+[#C93C24]        ████          ██  ██      ██      ██[/]
+[#D84A28]    ████████          ██  ██      ██      ██[/]
+[#E15A2D]        ████            ██      ██      ██[/]
+[#EB6C32]████    ████            ██      ██      ██[/]
+[#F5A623]  ████████            ██        ████████[/]""",
         "banner_hero": """[#9F1C1C]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣤⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
 [#9F1C1C]⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⠟⠻⣿⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
 [#C7A96B]⠀⠀⠀⠀⠀⠀⠀⣠⣾⡿⠋⠀⠀⠀⠙⢿⣷⣄⠀⠀⠀⠀⠀⠀⠀[/]
@@ -357,8 +358,8 @@ _BUILTIN_SKINS: Dict[str, Dict[str, Any]] = {
 [#6B1717]⠀⠀⠀⠘⢿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⡿⠃⠀⠀⠀[/]
 [#C7A96B]⠀⠀⠀⠀⠈⠻⣿⣷⣦⣤⣀⣀⣤⣤⣶⣿⠿⠋⠀⠀⠀⠀[/]
 [#C7A96B]⠀⠀⠀⠀⠀⠀⠀⠉⠛⠿⠿⠿⠿⠛⠉⠀⠀⠀⠀⠀⠀⠀[/]
-[#DD4A3A]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⚔⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[dim #6B1717]⠀⠀⠀⠀⠀⠀⠀⠀war god online⠀⠀⠀⠀⠀⠀⠀⠀[/]""",
+[#DD4A3A]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀🥚⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
+[dim #6B1717]⠀⠀⠀⠀⠀⠀⠀⠀3V0 building you more tools⠀⠀⠀⠀⠀⠀⠀⠀[/]""",
     },
     "mono": {
         "name": "mono",
