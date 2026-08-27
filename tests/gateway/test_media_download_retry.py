@@ -91,17 +91,17 @@ def _make_stream_client(*, responses=None, side_effect=None):
 
 
 class TestCacheImageFromBytes:
-    """Tests for gateway.platforms.base.cache_image_from_bytes"""
+    """Tests for gateway.platforms.policy.media_store.cache_image_from_bytes"""
 
     def test_caches_valid_jpeg(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("gateway.platforms.base.IMAGE_CACHE_DIR", tmp_path / "img")
+        monkeypatch.setattr("gateway.platforms.policy.media_store.IMAGE_CACHE_DIR", tmp_path / "img")
         from gateway.platforms.base import cache_image_from_bytes
         path = cache_image_from_bytes(b"\xff\xd8\xff fake jpeg data", ".jpg")
         assert path.endswith(".jpg")
 
 
     def test_rejects_html_content(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("gateway.platforms.base.IMAGE_CACHE_DIR", tmp_path / "img")
+        monkeypatch.setattr("gateway.platforms.policy.media_store.IMAGE_CACHE_DIR", tmp_path / "img")
         from gateway.platforms.base import cache_image_from_bytes
         with pytest.raises(ValueError, match="non-image data"):
             cache_image_from_bytes(b"<!DOCTYPE html><html><title>Slack</title></html>", ".png")
@@ -113,11 +113,11 @@ class TestCacheImageFromBytes:
 
 @patch("tools.url_safety.is_safe_url", return_value=True)
 class TestCacheImageFromUrl:
-    """Tests for gateway.platforms.base.cache_image_from_url"""
+    """Tests for gateway.platforms.policy.media_store.cache_image_from_url"""
 
     def test_success_on_first_attempt(self, _mock_safe, tmp_path, monkeypatch):
         """A clean 200 response caches the image and returns a path."""
-        monkeypatch.setattr("gateway.platforms.base.IMAGE_CACHE_DIR", tmp_path / "img")
+        monkeypatch.setattr("gateway.platforms.policy.media_store.IMAGE_CACHE_DIR", tmp_path / "img")
 
         mock_client = _make_stream_client(
             responses=[_make_stream_response(b"\xff\xd8\xff fake jpeg")]
@@ -136,7 +136,7 @@ class TestCacheImageFromUrl:
 
     def test_retries_on_timeout_then_succeeds(self, _mock_safe, tmp_path, monkeypatch):
         """A timeout on the first attempt is retried; second attempt succeeds."""
-        monkeypatch.setattr("gateway.platforms.base.IMAGE_CACHE_DIR", tmp_path / "img")
+        monkeypatch.setattr("gateway.platforms.policy.media_store.IMAGE_CACHE_DIR", tmp_path / "img")
 
         mock_client = _make_stream_client(
             responses=[_make_timeout_error(), _make_stream_response(b"\xff\xd8\xff image data")]
@@ -160,7 +160,7 @@ class TestCacheImageFromUrl:
 class TestCacheImageFromUrlConnectGuard:
     def test_blocks_private_dns_answer_at_connect_time(self, tmp_path, monkeypatch):
         """A hostname that rebinds after preflight must not reach TCP connect."""
-        monkeypatch.setattr("gateway.platforms.base.IMAGE_CACHE_DIR", tmp_path / "img")
+        monkeypatch.setattr("gateway.platforms.policy.media_store.IMAGE_CACHE_DIR", tmp_path / "img")
         for proxy_var in (
             "HTTP_PROXY",
             "HTTPS_PROXY",
@@ -211,11 +211,11 @@ class TestCacheImageFromUrlConnectGuard:
 
 @patch("tools.url_safety.is_safe_url", return_value=True)
 class TestCacheAudioFromUrl:
-    """Tests for gateway.platforms.base.cache_audio_from_url"""
+    """Tests for gateway.platforms.policy.media_store.cache_audio_from_url"""
 
     def test_success_on_first_attempt(self, _mock_safe, tmp_path, monkeypatch):
         """A clean 200 response caches the audio and returns a path."""
-        monkeypatch.setattr("gateway.platforms.base.AUDIO_CACHE_DIR", tmp_path / "audio")
+        monkeypatch.setattr("gateway.platforms.policy.media_store.AUDIO_CACHE_DIR", tmp_path / "audio")
 
         mock_client = _make_stream_client(
             responses=[_make_stream_response(b"\x00\x01 fake audio")]
@@ -234,7 +234,7 @@ class TestCacheAudioFromUrl:
 
     def test_retries_on_timeout_then_succeeds(self, _mock_safe, tmp_path, monkeypatch):
         """A timeout on the first attempt is retried; second attempt succeeds."""
-        monkeypatch.setattr("gateway.platforms.base.AUDIO_CACHE_DIR", tmp_path / "audio")
+        monkeypatch.setattr("gateway.platforms.policy.media_store.AUDIO_CACHE_DIR", tmp_path / "audio")
 
         mock_client = _make_stream_client(
             responses=[_make_timeout_error(), _make_stream_response(b"audio data")]
@@ -287,7 +287,7 @@ class TestSSRFRedirectGuard:
 
     def test_image_blocks_private_redirect(self, tmp_path, monkeypatch):
         """cache_image_from_url rejects a redirect to a private IP."""
-        monkeypatch.setattr("gateway.platforms.base.IMAGE_CACHE_DIR", tmp_path / "img")
+        monkeypatch.setattr("gateway.platforms.policy.media_store.IMAGE_CACHE_DIR", tmp_path / "img")
 
         redirect_resp = self._make_redirect_response(
             "http://169.254.169.254/latest/meta-data"
@@ -390,7 +390,7 @@ class TestSlackDownloadSlackFile:
 
     def test_success_on_first_attempt(self, tmp_path, monkeypatch):
         """Successful download on first try returns a cached file path."""
-        monkeypatch.setattr("gateway.platforms.base.IMAGE_CACHE_DIR", tmp_path / "img")
+        monkeypatch.setattr("gateway.platforms.policy.media_store.IMAGE_CACHE_DIR", tmp_path / "img")
         adapter = _make_slack_adapter()
 
         fake_response = MagicMock()
@@ -415,7 +415,7 @@ class TestSlackDownloadSlackFile:
 
     def test_rejects_html_response(self, tmp_path, monkeypatch):
         """An HTML sign-in page from Slack is rejected, not cached as image."""
-        monkeypatch.setattr("gateway.platforms.base.IMAGE_CACHE_DIR", tmp_path / "img")
+        monkeypatch.setattr("gateway.platforms.policy.media_store.IMAGE_CACHE_DIR", tmp_path / "img")
         adapter = _make_slack_adapter()
 
         fake_response = MagicMock()

@@ -65,7 +65,7 @@ def _allowed_media_path(tmp_path, monkeypatch, name):
     media_file.parent.mkdir(parents=True, exist_ok=True)
     media_file.write_bytes(b"media")
     monkeypatch.setattr(
-        "gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS",
+        "gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS",
         (root,),
     )
     return media_file.resolve()

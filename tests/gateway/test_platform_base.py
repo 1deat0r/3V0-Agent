@@ -28,8 +28,8 @@ def test_media_delivery_denies_encrypted_bitwarden_cache(tmp_path, monkeypatch):
 
     threev0_home = tmp_path / ".3V0"
     threev0_home.mkdir()
-    monkeypatch.setattr(base, "_EV0_HOME", threev0_home)
-    monkeypatch.setattr(base, "_EV0_ROOT", threev0_home)
+    monkeypatch.setattr("gateway.platforms.policy.media_delivery._EV0_HOME", threev0_home)
+    monkeypatch.setattr("gateway.platforms.policy.media_delivery._EV0_ROOT", threev0_home)
     path = threev0_home / "cache" / "bws_cache.enc.json"
     path.parent.mkdir()
     path.write_text("encrypted-secret-cache")
@@ -46,12 +46,12 @@ class TestInboundMediaSizeCap:
     def test_default_cap_is_128_mib(self, monkeypatch):
         # No config override -> default. Patch loader to return empty config.
         import gateway.platforms.base as base
-        monkeypatch.setattr(base, "get_inbound_media_max_bytes", lambda: base.DEFAULT_INBOUND_MEDIA_MAX_BYTES)
+        monkeypatch.setattr("gateway.platforms.policy.inbound_media.get_inbound_media_max_bytes", lambda: base.DEFAULT_INBOUND_MEDIA_MAX_BYTES)
         assert base.DEFAULT_INBOUND_MEDIA_MAX_BYTES == 128 * 1024 * 1024
 
     def test_image_bytes_rejected_when_oversized(self, monkeypatch):
         import gateway.platforms.base as base
-        monkeypatch.setattr(base, "get_inbound_media_max_bytes", lambda: 16)
+        monkeypatch.setattr("gateway.platforms.policy.inbound_media.get_inbound_media_max_bytes", lambda: 16)
         with pytest.raises(ValueError, match="Inbound image payload is too large"):
             cache_image_from_bytes(self._PNG, ext=".png")
 
@@ -79,7 +79,7 @@ class TestSafeUrlForLog:
 class TestCacheAudioFromBytes:
     def test_sniffs_mp4_quicktime_audio_even_when_ext_is_ogg(self, tmp_path):
         payload = b"\x00\x00\x00\x14ftypqt  " + b"\x00" * 32
-        with patch("gateway.platforms.base.AUDIO_CACHE_DIR", tmp_path):
+        with patch("gateway.platforms.policy.media_store.AUDIO_CACHE_DIR", tmp_path):
             result = cache_audio_from_bytes(payload, ext=".ogg")
 
         saved = tmp_path / os.path.basename(result)
@@ -402,7 +402,7 @@ class TestExtensionlessMediaDelivery:
 
     def _patch_allow_root(self, monkeypatch, root):
         monkeypatch.setattr(
-            "gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS",
+            "gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS",
             (str(root),),
         )
         monkeypatch.delenv("EV0_MEDIA_DELIVERY_STRICT", raising=False)
@@ -433,7 +433,7 @@ class TestUniversalMediaEgress:
 
     def _patch_allow_root(self, monkeypatch, root):
         monkeypatch.setattr(
-            "gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS",
+            "gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS",
             (str(root),),
         )
         monkeypatch.delenv("EV0_MEDIA_DELIVERY_STRICT", raising=False)
@@ -472,7 +472,7 @@ class TestUniversalMediaEgress:
 class TestMediaDeliveryPathValidation:
     def _patch_roots(self, monkeypatch, *roots):
         monkeypatch.setattr(
-            "gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS",
+            "gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS",
             tuple(roots),
         )
         # All tests in this class cover strict-mode behavior (allowlist +
@@ -578,7 +578,7 @@ class TestMediaDeliveryDefaultMode:
         # validate_media_delivery_path in these tests is the
         # default-mode "anything not denied" branch.
         monkeypatch.setattr(
-            "gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS",
+            "gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS",
             tuple(roots),
         )
         # Pin strict OFF — the public default. Tests that exercise the
@@ -624,11 +624,11 @@ class TestMediaDeliveryDefaultMode:
         secret.write_text('{"access_token": "live-bearer-abc123"}')
         monkeypatch.setenv("HOME", str(fake_home))
         monkeypatch.setattr(
-            "gateway.platforms.base._EV0_HOME",
+            "gateway.platforms.policy.media_delivery._EV0_HOME",
             threev0_dir,
         )
         monkeypatch.setattr(
-            "gateway.platforms.base._EV0_ROOT",
+            "gateway.platforms.policy.media_delivery._EV0_ROOT",
             threev0_dir,
         )
 
@@ -650,8 +650,8 @@ class TestMediaDeliveryDefaultMode:
         token = threev0_dir / "google_token.json"
         token.write_text('{"access_token": "***", "refresh_token": "***"}')
         monkeypatch.setenv("HOME", str(fake_home))
-        monkeypatch.setattr("gateway.platforms.base._EV0_HOME", threev0_dir)
-        monkeypatch.setattr("gateway.platforms.base._EV0_ROOT", threev0_dir)
+        monkeypatch.setattr("gateway.platforms.policy.media_delivery._EV0_HOME", threev0_dir)
+        monkeypatch.setattr("gateway.platforms.policy.media_delivery._EV0_ROOT", threev0_dir)
 
         assert BasePlatformAdapter.validate_media_delivery_path(str(token)) is None
 
@@ -672,8 +672,8 @@ class TestMediaDeliveryDefaultMode:
         artifact = threev0_dir / "adhoc_report.pdf"
         artifact.write_bytes(b"%PDF-1.4")  # fresh mtime
         monkeypatch.setenv("HOME", str(fake_home))
-        monkeypatch.setattr("gateway.platforms.base._EV0_HOME", threev0_dir)
-        monkeypatch.setattr("gateway.platforms.base._EV0_ROOT", threev0_dir)
+        monkeypatch.setattr("gateway.platforms.policy.media_delivery._EV0_HOME", threev0_dir)
+        monkeypatch.setattr("gateway.platforms.policy.media_delivery._EV0_ROOT", threev0_dir)
 
         assert BasePlatformAdapter.validate_media_delivery_path(str(artifact)) == str(artifact.resolve())
 
@@ -710,7 +710,7 @@ class TestMediaDeliveryDefaultMode:
         monkeypatch.setenv("HOME", str(fake_home))
         # $HOME is itself on the denied-prefix list, mirroring /root.
         monkeypatch.setattr(
-            "gateway.platforms.base._MEDIA_DELIVERY_DENIED_PREFIXES",
+            "gateway.platforms.policy.media_delivery._MEDIA_DELIVERY_DENIED_PREFIXES",
             (str(fake_home),),
         )
 
@@ -744,11 +744,11 @@ class TestMediaDeliveryDefaultMode:
         fake_home.mkdir(parents=True)
         monkeypatch.setenv("HOME", str(fake_home))
         monkeypatch.setattr(
-            "gateway.platforms.base._MEDIA_DELIVERY_DENIED_PREFIXES",
+            "gateway.platforms.policy.media_delivery._MEDIA_DELIVERY_DENIED_PREFIXES",
             (str(denied_root),),
         )
         monkeypatch.setattr(
-            "gateway.platforms.base._EV0_ROOT", threev0_root
+            "gateway.platforms.policy.media_delivery._EV0_ROOT", threev0_root
         )
 
         assert (
@@ -774,7 +774,7 @@ class TestMediaDeliveryDefaultMode:
         link.symlink_to(key)
         monkeypatch.setenv("HOME", str(fake_home))
         monkeypatch.setattr(
-            "gateway.platforms.base._MEDIA_DELIVERY_DENIED_PREFIXES",
+            "gateway.platforms.policy.media_delivery._MEDIA_DELIVERY_DENIED_PREFIXES",
             (str(fake_home),),
         )
 
@@ -1151,7 +1151,7 @@ class TestMediaDeliveryDiagnosability:
         outside.write_bytes(b"OggS")
         with patch.dict(os.environ, {"EV0_MEDIA_DELIVERY_STRICT": "1",
                                      "EV0_MEDIA_TRUST_RECENT_FILES": "0"}),\
-                patch("gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS", ()):
+                patch("gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS", ()):
             with caplog.at_level("WARNING"):
                 out = BasePlatformAdapter.filter_media_delivery_paths([(str(outside), False)])
         assert out == []

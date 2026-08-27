@@ -26,10 +26,10 @@ from gateway.platforms.base import (
 def _redirect_cache(tmp_path, monkeypatch):
     """Point the module-level DOCUMENT_CACHE_DIR to a fresh tmp_path."""
     monkeypatch.setattr(
-        "gateway.platforms.base.DOCUMENT_CACHE_DIR", tmp_path / "doc_cache"
+        "gateway.platforms.policy.media_store.DOCUMENT_CACHE_DIR", tmp_path / "doc_cache"
     )
     monkeypatch.setattr(
-        "gateway.platforms.base.AUDIO_CACHE_DIR", tmp_path / "audio_cache"
+        "gateway.platforms.policy.media_store.AUDIO_CACHE_DIR", tmp_path / "audio_cache"
     )
 
 

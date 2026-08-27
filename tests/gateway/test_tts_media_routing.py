@@ -59,7 +59,7 @@ def _allowed_media_path(tmp_path, monkeypatch, name):
     media_file.parent.mkdir(parents=True, exist_ok=True)
     media_file.write_bytes(b"media")
     monkeypatch.setattr(
-        "gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS",
+        "gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS",
         (root,),
     )
     return media_file.resolve()
@@ -104,7 +104,7 @@ async def test_streaming_delivery_blocks_media_path_outside_allowed_roots(tmp_pa
     secret = tmp_path / "outside.pdf"
     secret.write_bytes(b"%PDF secret")
     monkeypatch.setattr(
-        "gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS",
+        "gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS",
         (allowed_root,),
     )
     # This test exercises the strict-allowlist path; force strict mode on

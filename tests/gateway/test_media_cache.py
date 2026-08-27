@@ -54,7 +54,7 @@ class TestCacheMediaBytes:
 
     def test_image_dispatch(self, monkeypatch, tmp_path):
         monkeypatch.setattr(
-            "gateway.platforms.base.get_image_cache_dir", lambda: tmp_path
+            "gateway.platforms.policy.media_store.get_image_cache_dir", lambda: tmp_path
         )
         path = cache_media_bytes(self.PNG, "image/png")
         assert path.endswith(".png")
@@ -62,7 +62,7 @@ class TestCacheMediaBytes:
 
     def test_document_dispatch_uses_filename_hint(self, monkeypatch, tmp_path):
         monkeypatch.setattr(
-            "gateway.platforms.base.get_document_cache_dir", lambda: tmp_path
+            "gateway.platforms.policy.media_store.get_document_cache_dir", lambda: tmp_path
         )
         path = cache_media_bytes(b"%PDF-1.4", "application/pdf",
                                  filename_hint="report.pdf")

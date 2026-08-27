@@ -145,13 +145,13 @@ def adapter():
 def _redirect_cache(tmp_path, monkeypatch):
     """Point document/video cache to tmp_path so tests don't touch ~/.3v0."""
     monkeypatch.setattr(
-        "gateway.platforms.base.DOCUMENT_CACHE_DIR", tmp_path / "doc_cache"
+        "gateway.platforms.policy.media_store.DOCUMENT_CACHE_DIR", tmp_path / "doc_cache"
     )
     monkeypatch.setattr(
-        "gateway.platforms.base.VIDEO_CACHE_DIR", tmp_path / "video_cache"
+        "gateway.platforms.policy.media_store.VIDEO_CACHE_DIR", tmp_path / "video_cache"
     )
     monkeypatch.setattr(
-        "gateway.platforms.base.AUDIO_CACHE_DIR", tmp_path / "audio_cache"
+        "gateway.platforms.policy.media_store.AUDIO_CACHE_DIR", tmp_path / "audio_cache"
     )
 
 

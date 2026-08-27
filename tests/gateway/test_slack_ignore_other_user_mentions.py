@@ -139,7 +139,7 @@ def adapter():
 @pytest.fixture(autouse=True)
 def _redirect_cache(tmp_path, monkeypatch):
     monkeypatch.setattr(
-        "gateway.platforms.base.DOCUMENT_CACHE_DIR", tmp_path / "doc_cache"
+        "gateway.platforms.policy.media_store.DOCUMENT_CACHE_DIR", tmp_path / "doc_cache"
     )
     # Keep gating driven by config.extra, not ambient env.
     monkeypatch.delenv("SLACK_IGNORE_OTHER_USER_MENTIONS", raising=False)

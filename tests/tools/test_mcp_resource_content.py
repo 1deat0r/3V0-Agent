@@ -33,7 +33,7 @@ def doc_cache(tmp_path, monkeypatch):
     """Point the document cache at a temp dir."""
     import gateway.platforms.base as base
 
-    monkeypatch.setattr(base, "DOCUMENT_CACHE_DIR", tmp_path)
+    monkeypatch.setattr("gateway.platforms.policy.media_store.DOCUMENT_CACHE_DIR", tmp_path)
     monkeypatch.setenv("EV0_DOCUMENT_CACHE_DIR", str(tmp_path))
     # _resolve_cache_dir consults the module constant; patching the constant
     # is sufficient because the import-default comparison detects the change.
@@ -119,7 +119,7 @@ class TestAudioBlock:
         import gateway.platforms.base as base
         from tools.mcp_tool import _cache_mcp_audio_block
 
-        monkeypatch.setattr(base, "AUDIO_CACHE_DIR", tmp_path)
+        monkeypatch.setattr("gateway.platforms.policy.media_store.AUDIO_CACHE_DIR", tmp_path)
         block = SimpleNamespace(
             data=base64.b64encode(b"RIFFfakewav").decode(),
             mimeType="audio/wav",

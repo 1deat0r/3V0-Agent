@@ -121,7 +121,7 @@ def _allowed_file(tmp_path, monkeypatch, name: str):
     f = root / name
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_bytes(b"payload")
-    monkeypatch.setattr("gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS", (root,))
+    monkeypatch.setattr("gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS", (root,))
     return f.resolve()
 
 

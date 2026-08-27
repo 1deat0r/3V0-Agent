@@ -53,7 +53,7 @@ def _no_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
     # runner (and on a developer's Mac), where a real scutil-configured proxy
     # would otherwise leak into the assertion.
     monkeypatch.setattr(
-        "gateway.platforms.base._detect_macos_system_proxy", lambda: None
+        "gateway.platforms.policy.net._detect_macos_system_proxy", lambda: None
     )
 
 

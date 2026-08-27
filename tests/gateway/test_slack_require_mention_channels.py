@@ -57,7 +57,7 @@ CHANNEL_ID = "C_FORCED"
 @pytest.fixture(autouse=True)
 def _clean_env(monkeypatch, tmp_path):
     monkeypatch.setattr(
-        "gateway.platforms.base.DOCUMENT_CACHE_DIR", tmp_path / "doc_cache"
+        "gateway.platforms.policy.media_store.DOCUMENT_CACHE_DIR", tmp_path / "doc_cache"
     )
     for var in (
         "SLACK_REQUIRE_MENTION",

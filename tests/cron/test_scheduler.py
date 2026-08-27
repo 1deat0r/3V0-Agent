@@ -328,7 +328,7 @@ class TestDeliverResultWrapping:
         media_file.parent.mkdir(parents=True, exist_ok=True)
         media_file.write_bytes(data)
         monkeypatch.setattr(
-            "gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS",
+            "gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS",
             (root,),
         )
         return media_file.resolve()
@@ -1767,7 +1767,7 @@ class TestSendMediaViaAdapter:
         media_file.parent.mkdir(parents=True, exist_ok=True)
         media_file.write_bytes(data)
         monkeypatch.setattr(
-            "gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS",
+            "gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS",
             (root,),
         )
         return media_file.resolve()
@@ -2126,7 +2126,7 @@ class TestSendMediaTimeoutCancelsFuture:
         slow.write_bytes(b"slow")
         fast.write_bytes(b"fast")
         monkeypatch.setattr(
-            "gateway.platforms.base.MEDIA_DELIVERY_SAFE_ROOTS",
+            "gateway.platforms.policy.media_delivery.MEDIA_DELIVERY_SAFE_ROOTS",
             (root,),
         )
         media_files = [

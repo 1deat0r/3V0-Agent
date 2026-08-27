@@ -138,7 +138,7 @@ class TestSendTelegramStandaloneProxy:
         # keeps this assertion true on the macOS runner too, where a real
         # scutil proxy would otherwise be picked up.
         monkeypatch.setattr(
-            "gateway.platforms.base._detect_macos_system_proxy", lambda: None
+            "gateway.platforms.policy.net._detect_macos_system_proxy", lambda: None
         )
 
         bot = _make_bot()

@@ -24,7 +24,7 @@ from gateway.platforms.base import (
 def _redirect_cache(tmp_path, monkeypatch):
     """Point the module-level AUDIO_CACHE_DIR to a fresh tmp_path."""
     monkeypatch.setattr(
-        "gateway.platforms.base.AUDIO_CACHE_DIR", tmp_path / "audio_cache"
+        "gateway.platforms.policy.media_store.AUDIO_CACHE_DIR", tmp_path / "audio_cache"
     )
 
 
@@ -95,7 +95,7 @@ class TestUnifiedMediaCacheCleanup:
         )
 
         monkeypatch.setattr(
-            "gateway.platforms.base.SCREENSHOT_CACHE_DIR", tmp_path / "screenshots"
+            "gateway.platforms.policy.media_store.SCREENSHOT_CACHE_DIR", tmp_path / "screenshots"
         )
         cache_dir = get_screenshot_cache_dir()
         old_file = cache_dir / "old.png"
