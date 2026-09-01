@@ -26,6 +26,7 @@ loaded, so there is no import cycle).
 import hashlib
 import json
 import logging
+from env_compat import branded_env
 import os
 import shlex
 import shutil
@@ -833,7 +834,7 @@ def _print_update_completion(message: str) -> None:
     with an action id, a terminal receipt line the Desktop can match after
     the dashboard restarts (see #47359 / #58764)."""
     print(message)
-    action_id = os.environ.get("EV0_ACTION_ID", "")
+    action_id = (branded_env("ACTION_ID") or "")
     if len(action_id) == 32 and all(char in "0123456789abcdef" for char in action_id):
         print(f"=== 3v0-update completed {action_id} ===")
 

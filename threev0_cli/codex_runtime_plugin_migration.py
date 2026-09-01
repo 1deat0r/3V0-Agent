@@ -37,6 +37,7 @@ What's NOT migrated (intentional):
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -579,7 +580,7 @@ def _build_threev0_tools_mcp_entry() -> dict:
     # a sibling test's monkeypatch.setenv("EV0_HOME", tmp_path) would
     # otherwise leak a transient pytest tempdir into the user's real
     # ~/.codex/config.toml and silently brick codex once the tempdir is GC'd.
-    threev0_home = os.environ.get("EV0_HOME") or ""
+    threev0_home = branded_env("HOME") or ""
     if threev0_home and _looks_like_test_tempdir(threev0_home):
         threev0_home = ""
     if threev0_home:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import codecs
 import io
+from env_compat import branded_env
 import os
 import sys
 import threading
@@ -487,7 +488,7 @@ def load_threev0_dotenv(
     """
     loaded: list[Path] = []
 
-    home_path = Path(threev0_home or os.getenv("EV0_HOME", Path.home() / ".3V0"))
+    home_path = Path(threev0_home or branded_env("HOME") or (Path.home() / ".3V0"))
     user_env = home_path / ".env"
     project_env_path = Path(project_env) if project_env else None
 

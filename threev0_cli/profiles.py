@@ -21,6 +21,7 @@ Usage::
 
 import json
 import logging
+from env_compat import branded_env
 import os
 import re
 import shlex
@@ -1747,7 +1748,7 @@ def _cleanup_gateway_service(name: str, profile_dir: Path) -> None:
 
     # Derive service name for this profile
     # Temporarily set EV0_HOME so _profile_suffix resolves correctly
-    old_home = os.environ.get("EV0_HOME")
+    old_home = branded_env("HOME")
     try:
         os.environ["EV0_HOME"] = str(profile_dir)
         os.environ["3V0_HOME"] = str(profile_dir)  # canonical (ADR-0006)

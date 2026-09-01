@@ -23,6 +23,7 @@ Everything is best-effort and read-only.
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import re
 from pathlib import Path
@@ -116,7 +117,7 @@ def _in_container() -> bool:
     """Best-effort container detection (Docker / Podman / generic OCI)."""
     if os.path.exists("/.dockerenv"):
         return True
-    if os.environ.get("EV0_DESKTOP_CHILD_PID"):
+    if branded_env("DESKTOP_CHILD_PID"):
         return False  # desktop child, not a server container
     try:
         cgroup = Path("/proc/1/cgroup").read_text(encoding="utf-8", errors="replace")

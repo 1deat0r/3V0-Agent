@@ -25,6 +25,7 @@ toward the slow path, which then does the authoritative parse).
 
 from __future__ import annotations
 
+from env_compat import branded_env
 import os
 import sys
 
@@ -106,7 +107,7 @@ def active_profile_may_override_home(threev0_root: str) -> bool:
 
 
 def _resolved_home() -> str:
-    threev0_home = os.environ.get("3V0_HOME", "").strip() or os.environ.get("EV0_HOME", "").strip()
+    threev0_home = (branded_env("HOME") or "").strip()
     if threev0_home:
         return threev0_home
     return os.path.join(os.path.expanduser("~"), ".3V0")
@@ -121,12 +122,12 @@ def container_mode_may_be_active() -> bool:
     host's version instead of the container's. Hence: any profile
     ambiguity → assume container mode may be active.
     """
-    if os.environ.get("EV0_DEV") == "1":
+    if branded_env("DEV") == "1":
         return False
     if is_container_startup_environment():
         return False
 
-    threev0_home = os.environ.get("3V0_HOME", "").strip() or os.environ.get("EV0_HOME", "").strip()
+    threev0_home = (branded_env("HOME") or "").strip()
     if threev0_home:
         if os.path.exists(os.path.join(threev0_home, ".container-mode")):
             return True
@@ -208,7 +209,7 @@ def try_fast_version(argv: list[str] | None = None) -> bool:
     if argv is None:
         argv = sys.argv[1:]
     is_termux = is_termux_env()
-    if is_termux and os.environ.get("EV0_TERMUX_DISABLE_FAST_CLI") == "1":
+    if is_termux and branded_env("TERMUX_DISABLE_FAST_CLI") == "1":
         return False
     if is_termux:
         if not is_termux_fast_version_argv(argv):

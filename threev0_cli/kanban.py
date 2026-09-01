@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import json
+from env_compat import branded_env
 import os
 import shlex
 import sys
@@ -1237,7 +1238,7 @@ def _is_delegated_child_cli_mutation(args: argparse.Namespace) -> bool:
 
         return is_delegated_child_process_context()
     except Exception:
-        return bool(os.environ.get("EV0_DELEGATED_CHILD_CONTEXT"))
+        return bool(branded_env("DELEGATED_CHILD_CONTEXT"))
 
 
 # ---------------------------------------------------------------------------
@@ -2200,9 +2201,9 @@ def _cmd_attach_rm(args: argparse.Namespace) -> int:
 
 
 def _worker_run_id_for(task_id: str) -> Optional[int]:
-    if os.environ.get("EV0_KANBAN_TASK") != task_id:
+    if branded_env("KANBAN_TASK") != task_id:
         return None
-    raw = os.environ.get("EV0_KANBAN_RUN_ID")
+    raw = branded_env("KANBAN_RUN_ID")
     if not raw:
         return None
     try:

@@ -7,6 +7,7 @@ Handles: 3v0 gateway [run|start|stop|restart|status|install|uninstall|setup]
 import asyncio
 import json
 import logging
+from env_compat import branded_env
 import os
 import shlex
 import shutil
@@ -1125,6 +1126,10 @@ def _sync_threev0_home_from_systemd_unit(system: bool) -> None:
         unit_home = _read_systemd_unit_environment(system=True).get("EV0_HOME", "").strip()
     if not unit_home:
         return
+    # Documented funnel exception (ticket #20/#21): the EV0_HOME-first leg
+    # order is load-bearing — EV0_HOME is the var sudo strips, so reading it
+    # first detects the sudo-stripped env even when a stale 3V0_HOME
+    # persists. Not expressible as a single branded_env("HOME") call.
     current = os.environ.get("EV0_HOME", "").strip() or os.environ.get("3V0_HOME", "").strip()
     if current == unit_home:
         return
@@ -2037,7 +2042,7 @@ def _windows_gateway_should_absorb_console_controls() -> bool:
     if not is_windows():
         return False
 
-    detached = os.getenv("EV0_GATEWAY_DETACHED", "").strip().lower()
+    detached = (branded_env("GATEWAY_DETACHED") or "").strip().lower()
     if detached in {"1", "true", "yes", "on"}:
         return True
 
@@ -3120,7 +3125,7 @@ def _threev0_home_for_target_user(target_home_dir: str) -> str:
       /root/.3V0/profiles/coder     → /home/alice/.3V0/profiles/coder
       /opt/custom-3v0               → /opt/custom-3v0  (kept as-is)
     """
-    current_threev0_raw = os.environ.get("3V0_HOME", "").strip() or os.environ.get("EV0_HOME", "").strip()
+    current_threev0_raw = (branded_env("HOME") or "").strip()
     current_ev0 = (
         Path(current_threev0_raw).expanduser()
         if current_threev0_raw
@@ -3747,7 +3752,7 @@ def _print_system_scope_remediation(action: str) -> None:
 
 def _get_restart_drain_timeout() -> float:
     """Return the configured gateway restart drain timeout in seconds."""
-    raw = os.getenv("EV0_RESTART_DRAIN_TIMEOUT", "").strip()
+    raw = (branded_env("RESTART_DRAIN_TIMEOUT") or "").strip()
     if not raw:
         cfg = read_raw_config()
         agent_cfg = cfg.get("agent", {}) if isinstance(cfg, dict) else {}
@@ -3761,7 +3766,7 @@ def _get_restart_drain_timeout() -> float:
 
 def _get_restart_after_turn_timeout() -> float:
     """Return the in-band restart wait-for-idle timeout in seconds (#77184)."""
-    env_raw = os.getenv("EV0_RESTART_AFTER_TURN_TIMEOUT")
+    env_raw = branded_env("RESTART_AFTER_TURN_TIMEOUT")
     if env_raw is not None and str(env_raw).strip() != "":
         return parse_restart_after_turn_timeout(env_raw)
     cfg = read_raw_config()
@@ -5524,7 +5529,7 @@ def _guard_official_docker_root_gateway() -> None:
     """Refuse gateway startup when the official Docker privilege drop was bypassed."""
     if not hasattr(os, "geteuid") or os.geteuid() != 0:
         return
-    if _truthy_env(os.getenv("EV0_ALLOW_ROOT_GATEWAY")):
+    if _truthy_env(branded_env("ALLOW_ROOT_GATEWAY")):
         return
     if not _is_official_docker_checkout():
         return
@@ -5576,7 +5581,7 @@ def run_gateway(verbose: int = 0, quiet: bool = False, replace: bool = False, fo
         _stdin_is_tty = False
     _console_window_attached = _windows_console_window_attached()
     _gateway_detached = (
-        os.getenv("EV0_GATEWAY_DETACHED", "").strip().lower()
+        (branded_env("GATEWAY_DETACHED") or "").strip().lower()
         in {"1", "true", "yes", "on"}
     )
     _breakaway = _windows_gateway_breakaway_state()
@@ -5654,7 +5659,7 @@ def run_gateway(verbose: int = 0, quiet: bool = False, replace: bool = False, fo
     from datetime import datetime as _dt, timezone as _tz
 
     def _exit_diag(tag: str, **extra: object) -> None:
-        if os.environ.get("EV0_GATEWAY_EXIT_DIAG", "1") != "1":
+        if branded_env("GATEWAY_EXIT_DIAG", "1") != "1":
             return
         try:
             from threev0_constants import get_threev0_home as _ghh
@@ -5724,13 +5729,13 @@ def run_gateway(verbose: int = 0, quiet: bool = False, replace: bool = False, fo
             pass
         # Env vars override config for escape-hatch use.
         try:
-            _env_starts = os.getenv("EV0_GATEWAY_MAX_STARTS")
+            _env_starts = branded_env("GATEWAY_MAX_STARTS")
             if _env_starts is not None:
                 _max_starts = int(_env_starts)
         except ValueError:
             pass
         try:
-            _env_win = os.getenv("EV0_GATEWAY_START_WINDOW_S")
+            _env_win = branded_env("GATEWAY_START_WINDOW_S")
             if _env_win is not None:
                 _win = float(_env_win)
         except ValueError:
@@ -7419,10 +7424,10 @@ def _maybe_redirect_run_to_s6_supervision(args) -> bool:
     Returns True iff dispatched (caller should ``return``).
     """
     no_supervise = getattr(args, "no_supervise", False) or\
-        os.environ.get("EV0_GATEWAY_NO_SUPERVISE", "").lower() in ("1", "true", "yes")
+        (branded_env("GATEWAY_NO_SUPERVISE") or "").lower() in ("1", "true", "yes")
     if no_supervise:
         return False
-    if os.environ.get("EV0_S6_SUPERVISED_CHILD"):
+    if branded_env("S6_SUPERVISED_CHILD"):
         # We ARE the supervised child s6-supervise is running. Fall
         # through to the foreground code path so the gateway actually
         # starts.

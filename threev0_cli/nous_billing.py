@@ -26,6 +26,7 @@ Design rules:
 from __future__ import annotations
 
 import json
+from env_compat import branded_env
 import os
 import urllib.error
 import urllib.parse
@@ -176,7 +177,7 @@ def resolve_portal_base_url(state: Optional[dict[str, Any]] = None) -> str:
     ``EV0_PORTAL_BASE_URL`` → ``NOUS_PORTAL_BASE_URL`` → stored auth-state
     ``portal_base_url`` → registry default. Trailing slash stripped.
     """
-    env = os.getenv("EV0_PORTAL_BASE_URL") or os.getenv("NOUS_PORTAL_BASE_URL")
+    env = branded_env("PORTAL_BASE_URL") or os.getenv("NOUS_PORTAL_BASE_URL")
     if env and env.strip():
         return env.strip().rstrip("/")
     if state:

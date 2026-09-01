@@ -4,6 +4,7 @@ Doctor command for 3v0 CLI.
 Diagnoses issues with 3V0 Agent setup.
 """
 
+from env_compat import branded_env
 import os
 import sys
 import subprocess
@@ -246,7 +247,7 @@ def _is_kanban_worker_env_gate(item: dict) -> bool:
     """Return True when Kanban is unavailable only because this is not a worker process."""
     if item.get("name") != "kanban":
         return False
-    if os.environ.get("EV0_KANBAN_TASK"):
+    if branded_env("KANBAN_TASK"):
         return False
 
     tools = item.get("tools") or []
@@ -255,7 +256,7 @@ def _is_kanban_worker_env_gate(item: dict) -> bool:
 
 def _doctor_tool_availability_detail(toolset: str) -> str:
     """Optional explanatory suffix for toolsets whose doctor status needs context."""
-    if toolset == "kanban" and not os.environ.get("EV0_KANBAN_TASK"):
+    if toolset == "kanban" and not branded_env("KANBAN_TASK"):
         return "(runtime-gated; loaded only for dispatcher-spawned workers)"
     return ""
 
@@ -890,7 +891,7 @@ def managed_scope_check() -> None:
         f"Managed scope active: {n_cfg} config key(s), {n_env} env key(s) "
         f"pinned by {managed_dir}"
     )
-    if os.environ.get("EV0_MANAGED_DIR", "").strip():
+    if (branded_env("MANAGED_DIR") or "").strip():
         check_info(f"managed dir set via EV0_MANAGED_DIR={managed_dir}")
 
 

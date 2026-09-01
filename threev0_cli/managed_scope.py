@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import copy
 import logging
+from env_compat import branded_env
 import os
 import threading
 from pathlib import Path
@@ -64,7 +65,7 @@ def get_managed_dir() -> Optional[Path]:
     A non-existent directory at either tier resolves to None (no managed scope),
     which is the common case and must be cheap + side-effect-free.
     """
-    override = os.environ.get("EV0_MANAGED_DIR", "").strip()
+    override = (branded_env("MANAGED_DIR") or "").strip()
     if override:
         p = Path(override)
         return p if p.is_dir() else None

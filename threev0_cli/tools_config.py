@@ -11,6 +11,7 @@ the `platform_toolsets` key.
 
 import json as _json
 import logging
+from env_compat import branded_env
 import os
 import shutil
 import subprocess
@@ -767,7 +768,7 @@ TOOLSET_ENV_REQUIREMENTS = {
 
 def _cua_driver_cmd() -> str:
     """Return the configured cua-driver override, or the bare default name."""
-    return os.environ.get("EV0_CUA_DRIVER_CMD", "").strip() or "cua-driver"
+    return (branded_env("CUA_DRIVER_CMD") or "").strip() or "cua-driver"
 
 
 def _cua_version_summary(raw: str, *, limit: int = 120) -> str:
@@ -1042,7 +1043,7 @@ def install_cua_driver(
     # An explicit override is authoritative even when it is currently broken.
     # Do not install or replace the standard system driver: that cannot repair
     # the configured path and would mutate an unrelated installation.
-    override = os.environ.get("EV0_CUA_DRIVER_CMD", "").strip()
+    override = (branded_env("CUA_DRIVER_CMD") or "").strip()
     if override and not binary:
         _print_warning(
             "    EV0_CUA_DRIVER_CMD does not resolve to an executable: "
@@ -1118,7 +1119,7 @@ def install_cua_driver(
             f"    Found cua-driver {version}, but 3V0 cannot use its current "
             f"runtime contract: {reason}."
         )
-        if os.environ.get("EV0_CUA_DRIVER_CMD", "").strip():
+        if (branded_env("CUA_DRIVER_CMD") or "").strip():
             _print_info(
                 "    Update the binary selected by EV0_CUA_DRIVER_CMD, or unset "
                 "the override and run: 3v0 computer-use install --upgrade"

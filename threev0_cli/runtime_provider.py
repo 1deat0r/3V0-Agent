@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import re
 from urllib.parse import urlparse
@@ -1042,7 +1043,7 @@ def canonical_custom_identity(
         except Exception:
             candidate = ""
     if not candidate:
-        candidate = os.environ.get("EV0_INFERENCE_PROVIDER", "").strip()
+        candidate = (branded_env("INFERENCE_PROVIDER") or "").strip()
 
     candidate_norm = _normalize_custom_provider_name(candidate)
     # A bare/non-routable candidate cannot heal a bare custom override.

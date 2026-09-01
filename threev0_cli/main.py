@@ -70,6 +70,7 @@ from threev0_cli._subprocess_compat import suppress_platform_ver_console
 
 suppress_platform_ver_console()
 
+from env_compat import branded_env
 import os
 import sys
 
@@ -285,7 +286,7 @@ def _config_default_interface_early() -> str:
         return _EARLY_INTERFACE_CACHE[0]
     value = "cli"
     try:
-        home = os.environ.get("EV0_HOME")
+        home = branded_env("HOME")
         if home:
             cfg_path = os.path.join(home, "config.yaml")
         else:
@@ -328,7 +329,7 @@ def _wants_tui_early(argv: "list[str] | None" = None) -> bool:
         argv = sys.argv[1:]
     if "--cli" in argv:
         return False
-    if os.environ.get("EV0_TUI") == "1" or "--tui" in argv:
+    if branded_env("TUI") == "1" or "--tui" in argv:
         return True
     try:
         if not (sys.stdin.isatty() and sys.stdout.isatty()):
@@ -347,7 +348,7 @@ def _wants_tui_early(argv: "list[str] | None" = None) -> bool:
 # `entry.tsx`; this is just the earlier cousin. ``EV0_TUI_NO_EARLY_DISABLE``
 # escapes the behaviour for diagnostics.
 def _suppress_mouse_residue_early() -> None:
-    if os.environ.get("EV0_TUI_NO_EARLY_DISABLE") == "1":
+    if branded_env("TUI_NO_EARLY_DISABLE") == "1":
         return
     if not _wants_tui_early():
         return
@@ -630,7 +631,7 @@ def _apply_profile_override() -> None:
     # still read active_profile — the user may have switched profiles via
     # `3v0 profile use` and the gateway should honour that choice.
     # See issue #22502.
-    threev0_home_env = os.environ.get("EV0_HOME", "")
+    threev0_home_env = (branded_env("HOME") or "")
     if profile_name is None and threev0_home_env:
         if Path(threev0_home_env).parent.name == "profiles":
             return
@@ -647,7 +648,7 @@ def _apply_profile_override() -> None:
     # would silently redirect the default gateway into that profile — yielding a
     # duplicate gateway for the active profile and no real default gateway. See
     # the "Docker & Profiles & Dashboard" report.
-    if profile_name is None and not os.environ.get("EV0_S6_SUPERVISED_CHILD"):
+    if profile_name is None and not branded_env("S6_SUPERVISED_CHILD"):
         try:
             from threev0_constants import get_default_threev0_root
 
@@ -912,7 +913,7 @@ def _termux_bundled_skills_stamp_path() -> Path:
 def _termux_bundled_skills_sync_needed() -> bool:
     if not _is_termux_startup_environment():
         return True
-    if os.environ.get("EV0_TERMUX_FORCE_SKILLS_SYNC") == "1":
+    if branded_env("TERMUX_FORCE_SKILLS_SYNC") == "1":
         return True
     try:
         stamp = _termux_bundled_skills_stamp_path()
@@ -952,7 +953,7 @@ def _sync_bundled_skills_for_startup() -> bool:
 def _termux_should_prefetch_update_check() -> bool:
     if not _is_termux_startup_environment():
         return True
-    return os.environ.get("EV0_TERMUX_PREFETCH_UPDATES") == "1"
+    return branded_env("TERMUX_PREFETCH_UPDATES") == "1"
 
 
 def _relative_time(ts) -> str:
@@ -2164,7 +2165,7 @@ def _tui_need_rebuild(root: Path) -> bool:
     check still rebuilds immediately after source updates, dependency updates,
     or local edits. Set ``EV0_TUI_FORCE_BUILD=1`` to force the old behaviour.
     """
-    force = (os.environ.get("EV0_TUI_FORCE_BUILD") or "").strip().lower()
+    force = (branded_env("TUI_FORCE_BUILD") or "").strip().lower()
     if force in {"1", "true", "yes", "on"}:
         return True
 
@@ -2198,7 +2199,7 @@ def _ensure_tui_node() -> None:
     """
     if shutil.which("node") and shutil.which("npm"):
         return
-    if os.environ.get("EV0_SKIP_NODE_BOOTSTRAP"):
+    if branded_env("SKIP_NODE_BOOTSTRAP"):
         return
 
     helper = PROJECT_ROOT / "scripts" / "lib" / "node-bootstrap.sh"
@@ -2292,7 +2293,7 @@ def _ensure_tui_workspace(tui_dir: Path) -> None:
         return
 
     if _restore_tui_workspace(tui_dir):
-        if not os.environ.get("EV0_QUIET"):
+        if not branded_env("QUIET"):
             print(f"Restored missing TUI workspace: {tui_dir}")
         return
 
@@ -2325,7 +2326,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
 
     def _node_bin(bin: str) -> str:
         if bin == "node":
-            env_node = os.environ.get("EV0_NODE")
+            env_node = branded_env("NODE")
             if env_node and os.path.isfile(env_node) and os.access(env_node, os.X_OK):
                 return env_node
         # find_node_executable() prefers the managed $EV0_HOME/node tree,
@@ -2348,7 +2349,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
         return path
 
     # Footgun: --dev against a prebuilt bundle that has no source/node_modules.
-    ext_dir = os.environ.get("EV0_TUI_DIR")
+    ext_dir = branded_env("TUI_DIR")
     if tui_dev and ext_dir:
         print(
             f"Error: --dev is incompatible with EV0_TUI_DIR={ext_dir}\n"
@@ -2404,7 +2405,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
         and _tui_need_npm_install(tui_dir)
     ):
         npm = _node_bin("npm")
-        if not os.environ.get("EV0_QUIET"):
+        if not branded_env("QUIET"):
             print("Installing TUI dependencies…")
         npm_cwd = _workspace_root(tui_dir)
         # --workspace ui-tui avoids resolving apps/desktop (Electron + node-pty).
@@ -2840,7 +2841,7 @@ def _pin_kanban_board_env() -> None:
     calls hit board B (#20074). Pinning at chat boot mirrors what the
     dispatcher already does for spawned workers.
     """
-    if os.environ.get("EV0_KANBAN_BOARD"):
+    if branded_env("KANBAN_BOARD"):
         return
     try:
         from threev0_cli.kanban_db import get_current_board
@@ -2902,7 +2903,7 @@ def _resolve_use_tui(args) -> bool:
             return False
     except Exception:
         return False
-    if os.environ.get("EV0_TUI") == "1":
+    if branded_env("TUI") == "1":
         return True
     try:
         from threev0_cli.config import load_config
@@ -3540,7 +3541,7 @@ def select_provider_and_model(args=None):
         config_provider = model_cfg.get("provider")
 
     effective_provider = (
-        config_provider or os.getenv("EV0_INFERENCE_PROVIDER") or "auto"
+        config_provider or branded_env("INFERENCE_PROVIDER") or "auto"
     )
     compatible_custom_providers = get_compatible_custom_providers(config)
     def _named_custom_provider_map(cfg) -> dict[str, dict[str, str]]:
@@ -10648,8 +10649,8 @@ def cmd_dashboard(args):
     # EV0_WEB_DIST overrides (dev / custom builds) must still work.
     # The desktop-spawned backend itself (EV0_DESKTOP=1) keeps its dist.
     # Intentionally headless `serve` re-sets EV0_SERVE_HEADLESS below.
-    if os.environ.get("EV0_DESKTOP") != "1":
-        _inherited_web_dist = os.environ.get("EV0_WEB_DIST", "")
+    if branded_env("DESKTOP") != "1":
+        _inherited_web_dist = (branded_env("WEB_DIST") or "")
         if _is_electron_packaged_web_dist(_inherited_web_dist):
             os.environ.pop("EV0_WEB_DIST", None)
     if not _headless_backend:
@@ -10679,7 +10680,7 @@ def cmd_dashboard(args):
         and not getattr(args, "isolated", False)
         and not getattr(args, "open_profile", "")
         # Desktop pool backends are intentionally per-profile.
-        and os.environ.get("EV0_DESKTOP") != "1"
+        and branded_env("DESKTOP") != "1"
     ):
         url = f"http://{args.host or '127.0.0.1'}:{args.port}/?profile={_launch_profile}"
         if _dashboard_listening(args.host, args.port):
@@ -10819,9 +10820,10 @@ def cmd_dashboard(args):
         # --build-mode skip trusts the caller to have pre-built the web UI.
         # Verify the dist actually exists; otherwise the server will start
         # and serve 404s with no obvious cause (issue #23817).
+        _env_web_dist = branded_env("WEB_DIST")
         _dist_root = (
-            Path(os.environ["EV0_WEB_DIST"])
-            if "EV0_WEB_DIST" in os.environ
+            Path(_env_web_dist)
+            if _env_web_dist
             else PROJECT_ROOT / "threev0_cli" / "web_dist"
         )
         if not (_dist_root / "index.html").exists():
@@ -10851,8 +10853,9 @@ def cmd_dashboard(args):
         # same way the --skip-build branch does — otherwise the server starts
         # and serves 404s with no obvious cause (same failure mode as #23817,
         # via the env-var path).
-        _dist_root = Path(os.environ["EV0_WEB_DIST"]).expanduser()
-        if not (_dist_root / "index.html").exists():
+        _env_web_dist = branded_env("WEB_DIST")
+        _dist_root = Path(_env_web_dist).expanduser() if _env_web_dist else None
+        if _dist_root is None or not (_dist_root / "index.html").exists():
             print(f"✗ EV0_WEB_DIST is set but no web dist found at: {_dist_root}")
             print("  Pre-build first:  npm install --workspace web && npm run build -w web")
             print("  Or unset EV0_WEB_DIST to build and use the default web UI dist.")
@@ -11155,7 +11158,7 @@ _AGENT_SUBCOMMANDS = {
 
 
 def _is_tui_chat_launch(args) -> bool:
-    return bool(getattr(args, "tui", False) or os.environ.get("EV0_TUI") == "1")
+    return bool(getattr(args, "tui", False) or branded_env("TUI") == "1")
 
 
 def _command_has_dedicated_mcp_startup(args) -> bool:
@@ -11307,7 +11310,7 @@ def _try_fast_chat_launch() -> bool:
     ``_try_termux_fast_cli_launch`` minus the Termux-specific deferred
     startup; kept separate so phone-tuned behavior doesn't leak to desktops.
     """
-    if os.environ.get("EV0_DISABLE_FAST_CHAT_LAUNCH") == "1":
+    if branded_env("DISABLE_FAST_CHAT_LAUNCH") == "1":
         return False
     argv = sys.argv[1:]
     if "-h" in argv or "--help" in argv:
@@ -11370,7 +11373,7 @@ def _try_termux_fast_cli_launch() -> bool:
     """Run obvious Termux non-TUI chat/oneshot/version paths on a light parser."""
     if not _is_termux_startup_environment():
         return False
-    if os.environ.get("EV0_TERMUX_DISABLE_FAST_CLI") == "1":
+    if branded_env("TERMUX_DISABLE_FAST_CLI") == "1":
         return False
 
     argv = sys.argv[1:]

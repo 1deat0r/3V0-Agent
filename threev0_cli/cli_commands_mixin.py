@@ -15,6 +15,7 @@ Import discipline (mirrors gateway/slash_commands.py, PR #41886):
 from __future__ import annotations
 
 import json
+from env_compat import branded_env
 import os
 import sys
 import threading
@@ -1241,7 +1242,7 @@ class CLICommandsMixin:
         try:
             self._session_db.create_session(
                 session_id=new_session_id,
-                source=os.environ.get("EV0_SESSION_SOURCE", "cli"),
+                source=branded_env("SESSION_SOURCE", "cli"),
                 model=self.model,
                 model_config={
                     "max_iterations": self.max_turns,

@@ -29,6 +29,7 @@ sort it out.  Python doesn't get that luxury.
 
 from __future__ import annotations
 
+from env_compat import branded_env
 import os
 import sys
 
@@ -105,7 +106,7 @@ def configure_windows_stdio() -> bool:
         _CONFIGURED = True
         return False
 
-    if os.environ.get("EV0_DISABLE_WINDOWS_UTF8") in {"1", "true", "True", "yes"}:
+    if branded_env("DISABLE_WINDOWS_UTF8") in {"1", "true", "True", "yes"}:
         _CONFIGURED = True
         return False
 

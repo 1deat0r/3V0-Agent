@@ -13,6 +13,7 @@ the verify-on-stop guard the same way a passing canonical test command does.
 from __future__ import annotations
 
 import json
+from env_compat import branded_env
 import os
 import sys
 from pathlib import Path
@@ -138,7 +139,7 @@ def _record_evidence(root: Path, recipe, result, *, partial: bool) -> None:
             tails.append(readiness_line)
         record_verify_run(
             root=root,
-            session_id=os.environ.get("EV0_SESSION_ID"),
+            session_id=branded_env("SESSION_ID"),
             ok=result.ok,
             command="3v0 verify",
             scope="targeted" if partial else "full",

@@ -22,6 +22,7 @@ Env var fallbacks (used when the corresponding arg is not passed):
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import sys
 from contextlib import redirect_stderr, redirect_stdout
@@ -202,7 +203,7 @@ def run_oneshot(
     # not host it), and silently picking the provider's catalog default hides
     # the mismatch.  Require the caller to be explicit.  Validate BEFORE the
     # stderr redirect so the message actually reaches the terminal.
-    env_model_early = os.getenv("EV0_INFERENCE_MODEL", "").strip()
+    env_model_early = (branded_env("INFERENCE_MODEL") or "").strip()
     if provider and not ((model or "").strip() or env_model_early):
         sys.stderr.write(
             "3v0 -z: --provider requires --model (or EV0_INFERENCE_MODEL). "
@@ -350,7 +351,7 @@ def _run_agent(
         else:
             cfg_model = str(_raw or "")
 
-    env_model = os.getenv("EV0_INFERENCE_MODEL", "").strip()
+    env_model = (branded_env("INFERENCE_MODEL") or "").strip()
     effective_model = (model or "").strip() or env_model or cfg_model
 
     # Resolve effective provider: explicit arg → (auto-detect from model if
@@ -389,7 +390,7 @@ def _run_agent(
                     cfg_provider = str(model_cfg.get("provider") or "").strip().lower()
                 current_provider = (
                     cfg_provider
-                    or os.getenv("EV0_INFERENCE_PROVIDER", "").strip().lower()
+                    or (branded_env("INFERENCE_PROVIDER") or "").strip().lower()
                     or "auto"
                 )
                 detected = detect_provider_for_model(explicit_model, current_provider)

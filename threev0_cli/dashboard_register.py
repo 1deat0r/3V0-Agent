@@ -25,6 +25,7 @@ so this client never needs to know the namespace convention.
 from __future__ import annotations
 
 import json
+from env_compat import branded_env
 import os
 import random
 import sys
@@ -268,9 +269,7 @@ def cmd_dashboard_register(args) -> None:
     # already exists in .env); a portal merely inferred from the stored login
     # keeps the older, more conservative write-only-if-absent behaviour so we
     # don't clutter .env for the common production case.
-    portal_override = getattr(args, "portal_url", None) or os.environ.get(
-        "EV0_DASHBOARD_PORTAL_URL"
-    )
+    portal_override = getattr(args, "portal_url", None) or branded_env("DASHBOARD_PORTAL_URL")
     custom_portal_supplied = bool(
         isinstance(portal_override, str) and portal_override.strip()
     )

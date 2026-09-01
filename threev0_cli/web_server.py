@@ -29,6 +29,7 @@ import json
 import logging
 import math
 import mimetypes
+from env_compat import branded_env
 import os
 import queue
 import re
@@ -134,7 +135,8 @@ except ImportError:
             f"Install with: {sys.executable} -m pip install 'fastapi' 'uvicorn[standard]'"
         )
 
-WEB_DIST = Path(os.environ["EV0_WEB_DIST"]) if "EV0_WEB_DIST" in os.environ else Path(__file__).parent / "web_dist"
+_env_web_dist = branded_env("WEB_DIST")
+WEB_DIST = Path(_env_web_dist) if _env_web_dist else Path(__file__).parent / "web_dist"
 _log = logging.getLogger(__name__)
 
 
@@ -390,7 +392,7 @@ async def _lifespan(app: "FastAPI"):
     # dashboard` is unaffected — it relies on its own gateway.
     cron_stop: "threading.Event | None" = None
     cron_thread: "threading.Thread | None" = None
-    if os.getenv("EV0_DESKTOP") == "1":
+    if branded_env("DESKTOP") == "1":
         # Before forking a fresh gateway, reap any orphan left by a previous
         # serve session. Graceful shutdown reaps the managed child, but an
         # abnormal exit (crash, SIGKILL, power loss, forced update) reparents
@@ -433,7 +435,7 @@ async def _lifespan(app: "FastAPI"):
         selftest_task.cancel()
         auto_archive_task.cancel()
         await PTY_REGISTRY.close_all()
-        if os.getenv("EV0_DESKTOP") == "1":
+        if branded_env("DESKTOP") == "1":
             _terminate_desktop_managed_gateway()
 
 
@@ -496,7 +498,7 @@ app.include_router(_memory_oauth_router)
 
 
 def _resolve_session_token() -> str:
-    return os.environ.get("EV0_DASHBOARD_SESSION_TOKEN") or secrets.token_urlsafe(32)
+    return branded_env("DASHBOARD_SESSION_TOKEN") or secrets.token_urlsafe(32)
 
 
 _SESSION_TOKEN = _resolve_session_token()
@@ -2301,7 +2303,7 @@ def _local_dashboard_request(request: Request) -> bool:
 
 
 def _default_threev0_root_is_opt_data() -> bool:
-    raw = os.environ.get("EV0_HOME", "").strip()
+    raw = (branded_env("HOME") or "").strip()
     if not raw:
         return False
     try:
@@ -10763,7 +10765,7 @@ async def _start_device_code_flow(
         import httpx
         pconfig = PROVIDER_REGISTRY["nous"]
         portal_base_url = (
-            os.getenv("EV0_PORTAL_BASE_URL")
+            branded_env("PORTAL_BASE_URL")
             or os.getenv("NOUS_PORTAL_BASE_URL")
             or pconfig.portal_base_url
         ).rstrip("/")
@@ -15763,7 +15765,7 @@ def _resolve_client_ws_host() -> Optional[str]:
        run in the same container.
     3. Any other bind host (loopback or LAN IP) — preserved verbatim.
     """
-    explicit = os.environ.get("EV0_DASHBOARD_WS_HOST", "").strip()
+    explicit = (branded_env("DASHBOARD_WS_HOST") or "").strip()
     if explicit:
         return explicit
 
@@ -16909,7 +16911,7 @@ def mount_spa(application: FastAPI):
     # `3v0 serve` is the headless backend: it must NEVER serve the browser
     # SPA, even if a dist is lying around from a prior `dashboard`/build. Take
     # the no-frontend path so only the JSON-RPC/WS/API surface is reachable.
-    _headless = os.environ.get("EV0_SERVE_HEADLESS") == "1"
+    _headless = branded_env("SERVE_HEADLESS") == "1"
     if _headless or not WEB_DIST.exists():
         _msg = (
             "Headless backend (3v0 serve): web UI disabled — use "
@@ -18250,7 +18252,7 @@ def _write_dashboard_ready_file(actual_port: int) -> None:
     so Electron passes ``EV0_DESKTOP_READY_FILE`` and waits for this JSON.
     Normal CLI/dashboard launches still use the stdout READY line below.
     """
-    target = os.environ.get("EV0_DESKTOP_READY_FILE")
+    target = branded_env("DESKTOP_READY_FILE")
     if not target:
         return
 
@@ -18371,9 +18373,9 @@ def _start_parent_death_watchdog() -> None:
     Desktop versions that provide only ``EV0_PARENT_PID`` retain PID-only
     tracking.
     """
-    raw_pid = os.environ.get("EV0_PARENT_PID")
-    start_marker = os.environ.get("EV0_PARENT_START_MARKER")
-    nonce = os.environ.get("EV0_PARENT_NONCE")
+    raw_pid = branded_env("PARENT_PID")
+    start_marker = branded_env("PARENT_START_MARKER")
+    nonce = branded_env("PARENT_NONCE")
 
     try:
         desktop_pid = int(raw_pid or "")
@@ -18394,7 +18396,7 @@ def _start_parent_death_watchdog() -> None:
         return
 
     try:
-        poll = max(0.5, float(os.environ.get("EV0_SERVE_WATCHDOG_POLL_S", "2.0")))
+        poll = max(0.5, float(branded_env("SERVE_WATCHDOG_POLL_S", "2.0")))
     except (TypeError, ValueError):
         poll = 2.0
 
@@ -18634,7 +18636,7 @@ def start_server(
             # Clear corpses left by a previous unclean Desktop exit before we
             # stack another backend + MCP tree (EMFILE / missing tabs).
             # Parent-death watchdog only protects *this* process going forward.
-            if os.getenv("EV0_DESKTOP") == "1":
+            if branded_env("DESKTOP") == "1":
                 try:
                     from threev0_cli.dashboard_procs import (
                         _reap_orphaned_desktop_local_serves,

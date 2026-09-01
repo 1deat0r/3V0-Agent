@@ -12,6 +12,7 @@ one-way at import time (main.py imports this module, never the reverse).
 patches on ``threev0_cli.main`` resolve unchanged.
 """
 
+from env_compat import branded_env
 import os
 import subprocess
 import sys
@@ -336,7 +337,7 @@ def _kill_stale_dashboard_processes(
     # backend child, it sets EV0_DESKTOP_CHILD_PID so that the update
     # path can skip killing the desktop-managed process.  (#37532)
     exclude: set[int] | None = None
-    raw_pid = os.environ.get("EV0_DESKTOP_CHILD_PID")
+    raw_pid = branded_env("DESKTOP_CHILD_PID")
     if raw_pid:
         # The desktop may manage several backends (one per active profile) and
         # passes them comma-separated; a lone int still parses for back-compat.
@@ -691,7 +692,7 @@ def _process_ppid(pid: int) -> int | None:
 
 def _exclude_pids_from_env() -> set[int]:
     """PIDs Desktop marks as live backends (EV0_DESKTOP_CHILD_PID)."""
-    raw = os.environ.get("EV0_DESKTOP_CHILD_PID", "")
+    raw = (branded_env("DESKTOP_CHILD_PID") or "")
     out: set[int] = set()
     for part in raw.split(","):
         part = part.strip()
@@ -732,7 +733,7 @@ _HEX16 = _HEX32
 
 def _threev0_home_dir() -> Path:
     """Resolved 3V0 home (EV0_HOME override or ~/.3V0)."""
-    override = os.environ.get("EV0_HOME", "").strip()
+    override = (branded_env("HOME") or "").strip()
     if override:
         return Path(override).expanduser()
     return Path.home() / ".3V0"

@@ -21,15 +21,14 @@ Uses stdlib ``urllib`` only, matching ``debug.py`` style — no third-party deps
 """
 
 import json
+from env_compat import branded_env
 import os
 import urllib.request
 
 # Base URL of the Nous account service that mints the signed upload URL.
 # Overridable via env so the feature can be pointed at staging / a local dev
 # NAS instance during testing.
-NAS_BASE = os.environ.get(
-    "EV0_DIAGNOSTICS_BASE_URL", "https://portal.nousresearch.com"
-)
+NAS_BASE = branded_env("DIAGNOSTICS_BASE_URL", "https://portal.nousresearch.com")
 
 # Network timeout for each request (seconds). The upload itself can be larger
 # (a gzipped log bundle), so the PUT gets a more generous window.

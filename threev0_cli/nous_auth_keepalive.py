@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import threading
 from typing import Optional
@@ -31,7 +32,7 @@ def _timeout_seconds(value: Optional[float]) -> float:
     if value is not None:
         return float(value)
     try:
-        return float(os.getenv("EV0_NOUS_TIMEOUT_SECONDS", "15"))
+        return float(branded_env("NOUS_TIMEOUT_SECONDS", "15"))
     except (TypeError, ValueError):
         return 15.0
 

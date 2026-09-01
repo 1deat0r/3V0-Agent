@@ -17,6 +17,7 @@ This module provides:
 import copy
 import json
 import logging
+from env_compat import branded_env
 import os
 import platform
 import re
@@ -356,7 +357,7 @@ _IGNORED_MANAGED_VALUES = frozenset({"brew", "homebrew"})
 
 def get_managed_system() -> Optional[str]:
     """Return the package manager owning this install, if any."""
-    raw = os.getenv("EV0_MANAGED", "").strip()
+    raw = (branded_env("MANAGED") or "").strip()
     if raw:
         normalized = raw.lower()
         if normalized in _IGNORED_MANAGED_VALUES:
@@ -615,7 +616,7 @@ def format_docker_update_message() -> str:
 def format_managed_message(action: str = "modify this 3V0 installation") -> str:
     """Build a user-facing error for managed installs."""
     managed_system = get_managed_system() or "a package manager"
-    raw = os.getenv("EV0_MANAGED", "").strip().lower()
+    raw = (branded_env("MANAGED") or "").strip().lower()
 
     if managed_system == "NixOS":
         env_hint = "true" if raw in _MANAGED_TRUE_VALUES else raw or "true"
@@ -651,7 +652,7 @@ def get_container_exec_info() -> Optional[dict]:
     container.enable = true. It tells the host CLI to exec into the container
     instead of running locally.
     """
-    if os.environ.get("EV0_DEV") == "1":
+    if branded_env("DEV") == "1":
         return None
 
     from threev0_constants import is_container
@@ -722,8 +723,8 @@ def _resolve_threev0_uid_gid() -> tuple[Optional[int], Optional[int]]:
     """
     if sys.platform == "win32":
         return None, None
-    uid_str = os.environ.get("EV0_UID", "").strip()
-    gid_str = os.environ.get("EV0_GID", "").strip()
+    uid_str = (branded_env("UID") or "").strip()
+    gid_str = (branded_env("GID") or "").strip()
     try:
         uid = int(uid_str) if uid_str else None
     except ValueError:
@@ -785,7 +786,7 @@ def _secure_dir(path):
     if is_managed():
         return
     try:
-        mode_str = os.environ.get("EV0_HOME_MODE", "").strip()
+        mode_str = (branded_env("HOME_MODE") or "").strip()
         mode = int(mode_str, 8) if mode_str else 0o700
     except ValueError:
         mode = 0o700
@@ -805,7 +806,7 @@ def _is_container() -> bool:
     permissions.
     """
     # Explicit opt-out
-    if os.environ.get("EV0_CONTAINER") or os.environ.get("EV0_SKIP_CHMOD"):
+    if branded_env("CONTAINER") or branded_env("SKIP_CHMOD"):
         return True
     # Docker / Podman marker file
     if os.path.exists("/.dockerenv"):

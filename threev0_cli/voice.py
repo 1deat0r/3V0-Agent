@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import logging
+from env_compat import branded_env
 import os
 import sys
 import threading
@@ -249,7 +250,7 @@ def _debug(msg: str) -> None:
     broken stderr pipe must not kill the whole gateway — the main
     command pipe (stdin+stdout) is what actually matters.
     """
-    if os.environ.get("EV0_VOICE_DEBUG", "").strip() != "1":
+    if (branded_env("VOICE_DEBUG") or "").strip() != "1":
         return
     try:
         print(f"[voice] {msg}", file=sys.stderr, flush=True)

@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import json
 import logging
+from env_compat import branded_env
 import os
 import re
 from dataclasses import dataclass
@@ -133,7 +134,7 @@ def _profile_author() -> str:
     """Mirror of ``threev0_cli.kanban._profile_author``. Kept local to
     avoid a circular import when kanban.py imports this module."""
     return (
-        os.environ.get("EV0_PROFILE")
+        branded_env("PROFILE")
         or os.environ.get("USER")
         or "specifier"
     )

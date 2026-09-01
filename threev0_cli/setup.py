@@ -14,6 +14,7 @@ Config files are stored in ~/.3V0/ for easy access.
 import importlib.util
 import json
 import logging
+from env_compat import branded_env
 import os
 import re
 import shutil
@@ -290,7 +291,7 @@ def is_noninteractive() -> bool:
     installed (the start path asks "Install it now?" with no one to answer).
     Honour the explicit env flag here so callers fall back to their default.
     """
-    return os.environ.get("EV0_NONINTERACTIVE", "").strip().lower() in {
+    return (branded_env("NONINTERACTIVE") or "").strip().lower() in {
         "1",
         "true",
         "yes",

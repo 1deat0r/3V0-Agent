@@ -30,6 +30,7 @@ from __future__ import annotations
 import ctypes
 import locale
 import logging
+from env_compat import branded_env
 import os
 import re
 import shlex
@@ -253,9 +254,9 @@ def _launch_elevated_install(
     start_on_login: bool | None = None,
 ) -> bool:
     """Launch an elevated gateway install via UAC and return True on handoff."""
-    old_start_now = os.environ.get("EV0_GATEWAY_INSTALL_START_NOW")
-    old_start_on_login = os.environ.get("EV0_GATEWAY_INSTALL_START_ON_LOGIN")
-    old_handoff = os.environ.get("EV0_GATEWAY_ELEVATED_HANDOFF")
+    old_start_now = branded_env("GATEWAY_INSTALL_START_NOW")
+    old_start_on_login = branded_env("GATEWAY_INSTALL_START_ON_LOGIN")
+    old_handoff = branded_env("GATEWAY_ELEVATED_HANDOFF")
     try:
         if start_now is not None:
             os.environ["EV0_GATEWAY_INSTALL_START_NOW"] = "1" if start_now else "0"

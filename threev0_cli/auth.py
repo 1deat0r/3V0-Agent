@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import logging
+from env_compat import branded_env
 import os
 import shutil
 import shlex
@@ -1032,7 +1033,7 @@ def _token_fingerprint(token: Any) -> Optional[str]:
 
 
 def _oauth_trace_enabled() -> bool:
-    raw = os.getenv("EV0_OAUTH_TRACE", "").strip().lower()
+    raw = (branded_env("OAUTH_TRACE") or "").strip().lower()
     return raw in {"1", "true", "yes", "on"}
 
 
@@ -2463,7 +2464,7 @@ def _nous_portal_env_override() -> Optional[str]:
     neither env var is set/blank.
     """
     return _optional_base_url(
-        os.getenv("EV0_PORTAL_BASE_URL") or os.getenv("NOUS_PORTAL_BASE_URL")
+        branded_env("PORTAL_BASE_URL") or os.getenv("NOUS_PORTAL_BASE_URL")
     )
 
 
@@ -2847,7 +2848,7 @@ def resolve_qwen_runtime_credentials(
             code="qwen_access_token_missing",
         )
 
-    base_url = os.getenv("EV0_QWEN_BASE_URL", "").strip().rstrip("/") or DEFAULT_QWEN_BASE_URL
+    base_url = (branded_env("QWEN_BASE_URL") or "").strip().rstrip("/") or DEFAULT_QWEN_BASE_URL
     return {
         "provider": "qwen-oauth",
         "base_url": base_url,
@@ -4128,7 +4129,7 @@ def resolve_codex_runtime_credentials(
         pool_token = _pool_codex_access_token()
         if pool_token:
             base_url = (
-                os.getenv("EV0_CODEX_BASE_URL", "").strip().rstrip("/")
+                (branded_env("CODEX_BASE_URL") or "").strip().rstrip("/")
                 or DEFAULT_CODEX_BASE_URL
             )
             return {
@@ -4158,7 +4159,7 @@ def resolve_codex_runtime_credentials(
                 pool_token = _pool_codex_access_token()
                 if pool_token:
                     base_url = (
-                        os.getenv("EV0_CODEX_BASE_URL", "").strip().rstrip("/")
+                        (branded_env("CODEX_BASE_URL") or "").strip().rstrip("/")
                         or DEFAULT_CODEX_BASE_URL
                     )
                     return {
@@ -4219,7 +4220,7 @@ def resolve_codex_runtime_credentials(
                 access_token = str(tokens.get("access_token", "") or "").strip()
 
     base_url = (
-        os.getenv("EV0_CODEX_BASE_URL", "").strip().rstrip("/")
+        (branded_env("CODEX_BASE_URL") or "").strip().rstrip("/")
         or DEFAULT_CODEX_BASE_URL
     )
 
@@ -4272,7 +4273,7 @@ def _codex_usage_probe_url(base_url: Optional[str]) -> str:
     normalized = str(base_url or "").strip().rstrip("/")
     if not normalized:
         normalized = (
-            os.getenv("EV0_CODEX_BASE_URL", "").strip().rstrip("/")
+            (branded_env("CODEX_BASE_URL") or "").strip().rstrip("/")
             or DEFAULT_CODEX_BASE_URL
         )
     if normalized.endswith("/codex"):
@@ -5167,7 +5168,7 @@ def resolve_xai_oauth_runtime_credentials(
                     raise
 
     base_url = _xai_validate_inference_base_url(
-        os.getenv("EV0_XAI_BASE_URL", "").strip().rstrip("/")
+        (branded_env("XAI_BASE_URL") or "").strip().rstrip("/")
         or os.getenv("XAI_BASE_URL", "").strip().rstrip("/"),
         fallback=DEFAULT_XAI_OAUTH_BASE_URL,
     )
@@ -5222,7 +5223,7 @@ def _resolve_verify(
     effective_ca = (
         ca_bundle
         or tls_state.get("ca_bundle")
-        or os.getenv("EV0_CA_BUNDLE")
+        or branded_env("CA_BUNDLE")
         or os.getenv("SSL_CERT_FILE")
         or os.getenv("REQUESTS_CA_BUNDLE")
     )
@@ -5383,7 +5384,7 @@ def _nous_shared_auth_dir() -> Path:
     ``<EV0_HOME>/shared/``. Sits outside any named profile so all
     profiles under the same root share the store.
     """
-    override = os.getenv("EV0_SHARED_AUTH_DIR", "").strip()
+    override = (branded_env("SHARED_AUTH_DIR") or "").strip()
     if override:
         return Path(override).expanduser()
     from threev0_constants import get_default_threev0_root
@@ -6348,7 +6349,7 @@ def resolve_nous_runtime_credentials(
             """Resolve every routing value that shared OAuth state can replace."""
             portal_url = (
                 _optional_base_url(state.get("portal_base_url"))
-                or os.getenv("EV0_PORTAL_BASE_URL")
+                or branded_env("PORTAL_BASE_URL")
                 or os.getenv("NOUS_PORTAL_BASE_URL")
                 or DEFAULT_NOUS_PORTAL_URL
             ).rstrip("/")
@@ -7130,11 +7131,11 @@ def get_external_process_provider_status(provider_id: str) -> Dict[str, Any]:
         return {"configured": False}
 
     command = (
-        os.getenv("EV0_COPILOT_ACP_COMMAND", "").strip()
+        (branded_env("COPILOT_ACP_COMMAND") or "").strip()
         or os.getenv("COPILOT_CLI_PATH", "").strip()
         or "copilot"
     )
-    raw_args = os.getenv("EV0_COPILOT_ACP_ARGS", "").strip()
+    raw_args = (branded_env("COPILOT_ACP_ARGS") or "").strip()
     args = shlex.split(raw_args) if raw_args else ["--acp", "--stdio"]
     base_url = os.getenv(pconfig.base_url_env_var, "").strip() if pconfig.base_url_env_var else ""
     if not base_url:
@@ -7361,11 +7362,11 @@ def resolve_external_process_provider_credentials(provider_id: str) -> Dict[str,
         base_url = pconfig.inference_base_url
 
     command = (
-        os.getenv("EV0_COPILOT_ACP_COMMAND", "").strip()
+        (branded_env("COPILOT_ACP_COMMAND") or "").strip()
         or os.getenv("COPILOT_CLI_PATH", "").strip()
         or "copilot"
     )
-    raw_args = os.getenv("EV0_COPILOT_ACP_ARGS", "").strip()
+    raw_args = (branded_env("COPILOT_ACP_ARGS") or "").strip()
     args = shlex.split(raw_args) if raw_args else ["--acp", "--stdio"]
     resolved_command = shutil.which(command) if command else None
     if not resolved_command and not base_url.startswith("acp+tcp://"):
@@ -7928,7 +7929,7 @@ def _login_openai_codex(
                 do_import = "n"
             if do_import in {"y", "yes"}:
                 _save_codex_tokens(cli_tokens)
-                base_url = os.getenv("EV0_CODEX_BASE_URL", "").strip().rstrip("/") or DEFAULT_CODEX_BASE_URL
+                base_url = (branded_env("CODEX_BASE_URL") or "").strip().rstrip("/") or DEFAULT_CODEX_BASE_URL
                 config_path = _update_config_for_provider("openai-codex", base_url)
                 print()
                 print("Credentials imported. Note: if Codex CLI refreshes its token,")
@@ -8187,7 +8188,7 @@ def _xai_oauth_device_code_login(
             code="xai_device_token_invalid",
         )
     base_url = _xai_validate_inference_base_url(
-        os.getenv("EV0_XAI_BASE_URL", "").strip().rstrip("/")
+        (branded_env("XAI_BASE_URL") or "").strip().rstrip("/")
         or os.getenv("XAI_BASE_URL", "").strip().rstrip("/"),
         fallback=DEFAULT_XAI_OAUTH_BASE_URL,
     )
@@ -8390,7 +8391,7 @@ def _codex_device_code_login() -> Dict[str, Any]:
 
     # Return tokens for the caller to persist (no longer writes to ~/.codex/)
     base_url = (
-        os.getenv("EV0_CODEX_BASE_URL", "").strip().rstrip("/")
+        (branded_env("CODEX_BASE_URL") or "").strip().rstrip("/")
         or DEFAULT_CODEX_BASE_URL
     )
 
@@ -8930,7 +8931,7 @@ def _nous_device_code_login(
     pconfig = PROVIDER_REGISTRY["nous"]
     portal_base_url = (
         portal_base_url
-        or os.getenv("EV0_PORTAL_BASE_URL")
+        or branded_env("PORTAL_BASE_URL")
         or os.getenv("NOUS_PORTAL_BASE_URL")
         or pconfig.portal_base_url
     ).rstrip("/")
@@ -9145,7 +9146,7 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
     insecure = bool(getattr(args, "insecure", False))
     ca_bundle = (
         getattr(args, "ca_bundle", None)
-        or os.getenv("EV0_CA_BUNDLE")
+        or branded_env("CA_BUNDLE")
         or os.getenv("SSL_CERT_FILE")
     )
 

@@ -73,6 +73,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import json
+from env_compat import branded_env
 import os
 import re
 import random
@@ -178,7 +179,7 @@ def _assert_not_delegated_child_mutation() -> None:
 
         delegated = is_delegated_child_process_context()
     except Exception:
-        delegated = bool(os.environ.get("EV0_DELEGATED_CHILD_CONTEXT"))
+        delegated = bool(branded_env("DELEGATED_CHILD_CONTEXT"))
     if delegated:
         raise PermissionError(
             "delegate_task child contexts cannot mutate Kanban tasks or boards"
@@ -398,7 +399,7 @@ def _resolve_claim_ttl_seconds(ttl_seconds: Optional[int] = None) -> int:
     if ttl_seconds is not None:
         return max(1, int(ttl_seconds))
 
-    raw = os.environ.get("EV0_KANBAN_CLAIM_TTL_SECONDS", "").strip()
+    raw = (branded_env("KANBAN_CLAIM_TTL_SECONDS") or "").strip()
     if raw:
         try:
             parsed = int(raw)
@@ -438,7 +439,7 @@ def _resolve_crash_grace_seconds() -> int:
     non-integer, or negative. A value of 0 restores immediate-reclaim
     behaviour (useful for tests).
     """
-    raw = os.environ.get("EV0_KANBAN_CRASH_GRACE_SECONDS", "").strip()
+    raw = (branded_env("KANBAN_CRASH_GRACE_SECONDS") or "").strip()
     if raw:
         try:
             parsed = int(raw)
@@ -458,9 +459,7 @@ def _resolve_rate_limit_cooldown_seconds() -> int:
     the next tick) — useful for tests that want to assert the task becomes
     spawnable again immediately.
     """
-    raw = os.environ.get(
-        "EV0_KANBAN_RATE_LIMIT_COOLDOWN_SECONDS", ""
-    ).strip()
+    raw = (branded_env("KANBAN_RATE_LIMIT_COOLDOWN_SECONDS") or "").strip()
     if raw:
         try:
             parsed = int(raw)
@@ -579,7 +578,7 @@ def kanban_home() -> Path:
     profile's ``EV0_HOME`` would silently fork the board per profile,
     which breaks the dispatcher / worker handoff.
     """
-    override = os.environ.get("EV0_KANBAN_HOME", "").strip()
+    override = (branded_env("KANBAN_HOME") or "").strip()
     if override:
         return Path(override).expanduser()
     from threev0_constants import get_default_threev0_root
@@ -631,7 +630,7 @@ def get_current_board() -> str:
         except ValueError:
             pass
 
-    env = os.environ.get("EV0_KANBAN_BOARD", "").strip()
+    env = (branded_env("KANBAN_BOARD") or "").strip()
     if env:
         try:
             normed = _normalize_board_slug(env)
@@ -724,7 +723,7 @@ def kanban_db_path(board: Optional[str] = None) -> Path:
     3. Board ``default`` → ``<root>/kanban.db`` (back-compat path).
        Other boards → ``<root>/kanban/boards/<slug>/kanban.db``.
     """
-    override = os.environ.get("EV0_KANBAN_DB", "").strip()
+    override = (branded_env("KANBAN_DB") or "").strip()
     if override:
         return Path(override).expanduser()
     slug = _normalize_board_slug(board)
@@ -746,7 +745,7 @@ def workspaces_root(board: Optional[str] = None) -> Path:
     that existing scratch workspaces from before the boards feature are
     preserved. Other boards use ``<root>/kanban/boards/<slug>/workspaces/``.
     """
-    override = os.environ.get("EV0_KANBAN_WORKSPACES_ROOT", "").strip()
+    override = (branded_env("KANBAN_WORKSPACES_ROOT") or "").strip()
     if override:
         return Path(override).expanduser()
     slug = _normalize_board_slug(board)
@@ -776,7 +775,7 @@ def attachments_root(board: Optional[str] = None) -> Path:
     directly. Remote backends (Docker/Modal) need this directory mounted;
     see the kanban docs.
     """
-    override = os.environ.get("EV0_KANBAN_ATTACHMENTS_ROOT", "").strip()
+    override = (branded_env("KANBAN_ATTACHMENTS_ROOT") or "").strip()
     if override:
         return Path(override).expanduser()
     slug = _normalize_board_slug(board)
@@ -1560,7 +1559,7 @@ def _resolve_busy_timeout_ms() -> int:
     expected.  A long busy timeout lets SQLite serialize writers via WAL rather
     than surfacing transient ``database is locked`` failures during bursts.
     """
-    raw = os.environ.get("EV0_KANBAN_BUSY_TIMEOUT_MS", "").strip()
+    raw = (branded_env("KANBAN_BUSY_TIMEOUT_MS") or "").strip()
     if raw:
         try:
             parsed = int(raw)
@@ -5801,7 +5800,7 @@ def _managed_scratch_path_info(p: Path) -> tuple[bool, Optional[str]]:
     except OSError:
         return False, None
     roots: list[tuple[Path, Optional[str]]] = []
-    override = os.environ.get("EV0_KANBAN_WORKSPACES_ROOT", "").strip()
+    override = (branded_env("KANBAN_WORKSPACES_ROOT") or "").strip()
     if override:
         try:
             roots.append((Path(override).expanduser().resolve(strict=False), None))
@@ -10233,7 +10232,7 @@ def _resolve_threev0_argv() -> list[str]:
     """
     import shutil
 
-    env_bin = os.environ.get("EV0_BIN", "").strip()
+    env_bin = (branded_env("BIN") or "").strip()
     if env_bin:
         if _looks_like_path(env_bin):
             return _threev0_path_argv(env_bin)

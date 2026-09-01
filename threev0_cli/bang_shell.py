@@ -17,6 +17,7 @@ composer, so :func:`bang_shell_enabled` gates the feature off there.
 
 from __future__ import annotations
 
+from env_compat import branded_env
 import os
 import subprocess
 from typing import Optional
@@ -73,7 +74,7 @@ def bang_shell_enabled() -> bool:
         return False
     if env_var_enabled("EV0_CRON_SESSION"):
         return False
-    if (os.getenv("EV0_SESSION_PLATFORM") or "").strip():
+    if (branded_env("SESSION_PLATFORM") or "").strip():
         return False
     return True
 

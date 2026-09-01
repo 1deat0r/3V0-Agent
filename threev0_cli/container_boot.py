@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import logging
+from env_compat import branded_env
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -40,8 +41,8 @@ def container_threev0_home() -> Path:
     keeps the container deployment semantics intact (code-review pass).
     """
     raw = (
-        os.environ.get("3V0_HOME", "").strip()
-        or os.environ.get("EV0_HOME", "").strip()
+        (branded_env("HOME") or "").strip()
+        or (branded_env("HOME") or "").strip()
     )
     if not raw:
         return Path("/opt/data")
@@ -251,7 +252,7 @@ def _maybe_migrate_legacy_gateway_run_state(
     if state_file.exists():
         return None
 
-    if os.environ.get("EV0_GATEWAY_NO_SUPERVISE", "").lower() in ("1", "true", "yes"):
+    if (branded_env("GATEWAY_NO_SUPERVISE") or "").lower() in ("1", "true", "yes"):
         return None
 
     argv = tuple(container_argv) if container_argv is not None else _read_container_argv()
