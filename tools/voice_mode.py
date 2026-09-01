@@ -12,6 +12,7 @@ Dependencies (optional):
 import difflib
 import logging
 import math
+from env_compat import branded_env
 import os
 import platform
 import re
@@ -2004,7 +2005,7 @@ DEFAULT_BARGE_MULTIPLIER = 3.0
 
 
 def _voice_debug_enabled() -> bool:
-    return os.environ.get("EV0_VOICE_DEBUG", "").strip() == "1"
+    return (branded_env("VOICE_DEBUG") or "").strip() == "1"
 
 
 def _vad_log(msg: str) -> None:

@@ -42,6 +42,7 @@ import atexit
 import base64
 import json
 import logging
+from env_compat import branded_env
 import os
 import re
 import struct
@@ -333,8 +334,8 @@ def _get_backend(session_id: str = "") -> ComputerUseBackend:
                 if sid == "":
                     _backend = None
             else:
-                backend_name = os.environ.get(
-                    "EV0_COMPUTER_USE_BACKEND", "cua"
+                backend_name = branded_env(
+                    "COMPUTER_USE_BACKEND", "cua"
                 ).lower()
                 if backend_name in {"cua", "cua-driver", ""}:
                     from tools.computer_use.cua_backend import CuaDriverBackend

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from env_compat import branded_env
 import os
 import re
 import shlex
@@ -730,6 +731,6 @@ def _block_message(operation: str, root: Path) -> str:
 
 def _scratch_dir_hint() -> str:
     """Disk-backed scratch location suggested to agents for temporary clones."""
-    threev0_home = os.environ.get("EV0_HOME", "").strip()
+    threev0_home = (branded_env("HOME") or "").strip()
     base = Path(threev0_home).expanduser() if threev0_home else Path.home() / ".3V0"
     return str(base / "scratch")

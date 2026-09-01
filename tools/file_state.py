@@ -32,6 +32,7 @@ loop detection, which is a different concern.
 """
 from __future__ import annotations
 
+from env_compat import branded_env
 import os
 import threading
 import time
@@ -268,7 +269,7 @@ def get_registry() -> FileStateRegistry:
 
 def _disabled() -> bool:
     # Re-read each call so tests can toggle via monkeypatch.setenv.
-    return os.environ.get("EV0_DISABLE_FILE_STATE_GUARD", "").strip() == "1"
+    return (branded_env("DISABLE_FILE_STATE_GUARD") or "").strip() == "1"
 
 
 def _fmt_ts(ts: float) -> str:

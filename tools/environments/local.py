@@ -2,6 +2,7 @@
 
 import logging
 import ntpath
+from env_compat import branded_env
 import os
 import platform
 import re
@@ -732,7 +733,7 @@ def _find_bash() -> str:
 
     candidates: list[str] = []
 
-    custom = os.environ.get("EV0_GIT_BASH_PATH")
+    custom = branded_env("GIT_BASH_PATH")
     if custom and os.path.isfile(custom):
         candidates.append(custom)
 

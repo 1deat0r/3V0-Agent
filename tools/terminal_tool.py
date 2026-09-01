@@ -36,6 +36,7 @@ Usage:
 import importlib.util
 import json
 import logging
+from env_compat import branded_env
 import os
 import platform
 import re
@@ -302,7 +303,7 @@ def _get_sudo_password_cache_scope() -> str:
 
         session_key = get_session_env("EV0_SESSION_KEY", "")
     except Exception:
-        session_key = os.getenv("EV0_SESSION_KEY", "")
+        session_key = (branded_env("SESSION_KEY") or "")
     if session_key:
         return f"session:{session_key}"
 

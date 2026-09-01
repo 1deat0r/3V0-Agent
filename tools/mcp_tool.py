@@ -103,6 +103,7 @@ import inspect
 import json
 import logging
 import math
+from env_compat import branded_env
 import os
 import random
 import re
@@ -819,8 +820,8 @@ def _resolve_stdio_command(command: str, env: dict) -> tuple[str, dict]:
             resolved_command = which_hit
         elif resolved_command in {"npx", "npm", "node"}:
             threev0_home = os.path.expanduser(
-                os.getenv(
-                    "EV0_HOME", os.path.join(os.path.expanduser("~"), ".3V0")
+                branded_env(
+                    "HOME", os.path.join(os.path.expanduser("~"), ".3V0")
                 )
             )
             candidates = [

@@ -31,6 +31,7 @@ Remote execution additionally requires Python 3 in the terminal backend.
 import base64
 import json
 import logging
+from env_compat import branded_env
 import os
 import platform
 import re
@@ -1148,7 +1149,7 @@ def _execute_remote(
             f"EV0_RPC_TOKEN={shlex.quote(rpc_token)} "
             f"PYTHONDONTWRITEBYTECODE=1"
         )
-        tz = os.getenv("EV0_TIMEZONE", "").strip()
+        tz = (branded_env("TIMEZONE") or "").strip()
         if tz:
             env_prefix += f" TZ={shlex.quote(tz)}"
 
@@ -1458,7 +1459,7 @@ def execute_code(
         # code reflects the correct wall-clock time.  Only TZ is set —
         # EV0_TIMEZONE is an internal 3V0 setting and must not leak
         # into child processes.
-        _tz_name = os.getenv("EV0_TIMEZONE", "").strip()
+        _tz_name = (branded_env("TIMEZONE") or "").strip()
         if _tz_name:
             child_env["TZ"] = _tz_name
         child_env.pop("EV0_TIMEZONE", None)

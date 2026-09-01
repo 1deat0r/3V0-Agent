@@ -27,6 +27,7 @@ Limitations:
 
 import ipaddress
 import logging
+from env_compat import branded_env
 import os
 import socket
 import asyncio
@@ -249,7 +250,7 @@ def _resolve_allow_private_urls() -> bool:
     """Resolve the effective private-URL toggle from the active config scope."""
 
     # 1. Env var override (highest priority)
-    env_val = os.getenv("EV0_ALLOW_PRIVATE_URLS", "").strip().lower()
+    env_val = (branded_env("ALLOW_PRIVATE_URLS") or "").strip().lower()
     if env_val in {"true", "1", "yes"}:
         return True
     if env_val in {"false", "0", "no"}:

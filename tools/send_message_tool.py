@@ -8,6 +8,7 @@ human-friendly channel names to IDs. Works in both CLI and gateway contexts.
 import asyncio
 import json
 import logging
+from env_compat import branded_env
 import os
 import re
 import time
@@ -2139,7 +2140,7 @@ def _check_send_message():
     reply with more than the ~200-char first-line truncation the kanban
     notifier applies.
     """
-    if os.environ.get("EV0_KANBAN_TASK"):
+    if branded_env("KANBAN_TASK"):
         return True
     from gateway.session_context import get_session_env
     platform = get_session_env("EV0_SESSION_PLATFORM", "")

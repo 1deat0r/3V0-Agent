@@ -72,6 +72,7 @@ import time
 import threading
 
 from threev0_constants import get_threev0_home, display_threev0_home
+from env_compat import branded_env
 import os
 import re
 from enum import Enum
@@ -656,7 +657,7 @@ def _is_skill_disabled(name: str, platform: str = None) -> bool:
         from threev0_cli.config import load_config
         config = load_config()
         skills_cfg = config.get("skills", {})
-        resolved_platform = platform or os.getenv("EV0_PLATFORM") or _get_session_platform()
+        resolved_platform = platform or branded_env("PLATFORM") or _get_session_platform()
         global_disabled = skills_cfg.get("disabled", [])
         if resolved_platform:
             platform_disabled = cfg_get(skills_cfg, "platform_disabled", resolved_platform)

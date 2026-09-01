@@ -29,6 +29,7 @@ Toggle via ``agent.bot_mode_protocol`` in config.yaml (default True).
 
 from __future__ import annotations
 
+from env_compat import branded_env
 import os
 import threading
 from pathlib import Path
@@ -148,7 +149,7 @@ def get_bot_mode_protocol_section(home: str | os.PathLike | None = None, *, forc
     not the ambient EV0_HOME — build threads can lose the ContextVar
     override and the env var would then name the wrong profile.
     """
-    resolved = str(home) if home else (os.getenv("EV0_HOME") or os.path.expanduser("~/.3V0"))
+    resolved = str(home) if home else (branded_env("HOME") or os.path.expanduser("~/.3V0"))
     with _lock:
         if force_refresh or resolved not in _cached:
             try:
@@ -188,7 +189,7 @@ def capability_fingerprint(home: str | os.PathLike | None = None) -> str:
     import hashlib
     import json
 
-    resolved = Path(str(home) if home else (os.getenv("EV0_HOME") or os.path.expanduser("~/.3V0")))
+    resolved = Path(str(home) if home else (branded_env("HOME") or os.path.expanduser("~/.3V0")))
     surface: dict = {}
     try:
         # Canonical loader (managed overlay + env expansion + normalization),

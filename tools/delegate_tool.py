@@ -24,6 +24,7 @@ import logging
 import re
 
 logger = logging.getLogger(__name__)
+from env_compat import branded_env
 import os
 import threading
 import time
@@ -4383,7 +4384,7 @@ def _load_config() -> dict:
     flag is set we keep ``cli.CLI_CONFIG`` authoritative to preserve the
     flag's contract of suppressing user config.yaml settings.
     """
-    prefer_legacy = os.environ.get("EV0_IGNORE_USER_CONFIG") == "1"
+    prefer_legacy = branded_env("IGNORE_USER_CONFIG") == "1"
     if not prefer_legacy:
         try:
             from threev0_cli.config import load_config_readonly

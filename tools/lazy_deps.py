@@ -68,6 +68,7 @@ Adding a new backend:
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import re
 import shutil
@@ -529,7 +530,7 @@ def _allow_lazy_installs() -> bool:
     # (2) Sealed-venv env var: blocks ONLY when there is no safe durable
     # target to redirect into. With a target set, the install goes to the
     # data volume (append-only on sys.path), so the seal is preserved.
-    if os.environ.get("EV0_DISABLE_LAZY_INSTALLS") == "1":
+    if branded_env("DISABLE_LAZY_INSTALLS") == "1":
         return _lazy_install_target() is not None
 
     return True
@@ -1056,7 +1057,7 @@ def install_specs(specs: list[str] | tuple[str, ...], *, timeout: int = 300) -> 
 
     if not _allow_lazy_installs():
         target = _lazy_install_target()
-        if os.environ.get("EV0_DISABLE_LAZY_INSTALLS") == "1" and target is None:
+        if branded_env("DISABLE_LAZY_INSTALLS") == "1" and target is None:
             reason = (
                 "runtime installs are disabled on this deployment: the agent "
                 "environment is immutable and no writable install target is "

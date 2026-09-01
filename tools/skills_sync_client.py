@@ -58,6 +58,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+from env_compat import branded_env
 import os
 import time
 import stat as _stat
@@ -315,7 +316,7 @@ def resolve_sync_base_url() -> Optional[str]:
     env var and config key exist to point a dev/staging build at another
     plane. Returns None only if the default is somehow blanked out.
     """
-    env = os.getenv("EV0_SYNC_BASE_URL")
+    env = branded_env("SYNC_BASE_URL")
     if env and env.strip():
         return env.strip().rstrip("/")
     try:
@@ -700,7 +701,7 @@ def stable_device_id() -> str:
     # the env.
     import os
 
-    env_name = (os.environ.get("EV0_SYNC_DEVICE_NAME") or "").strip()
+    env_name = (branded_env("SYNC_DEVICE_NAME") or "").strip()
     val = env_name if env_name else _default_device_label()
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
