@@ -3,6 +3,27 @@
 Replaces fixed exponential backoff with jittered delays to prevent
 thundering-herd retry spikes when multiple sessions hit the same
 rate-limited provider concurrently.
+
+This module is the ONE home for shared retry policy (delay computation,
+``Retry-After`` parsing, provider-aware rate-limit tiers). Deliberate
+per-surface policies that intentionally do NOT route through it (each is
+documented at its definition):
+
+- ``tools/environments/vercel_sandbox.py::_retry_vercel_call`` — fixed-step
+  linear ladder + Vercel-specific transient classification; timing is part
+  of the sandbox's tested contract.
+- ``gateway/run.py::_reconnect_backoff`` — deterministic exponential ladder
+  (no jitter on purpose): the delay is surfaced to users ("next retry in
+  Ns") and stamped into reconnect-queue state, so it must be reproducible.
+- ``threev0_cli/gateway.py::_retry_launchctl_bootstrap_until_registered`` —
+  fixed 2s poll for service registration, not a backoff policy.
+- ``tools/code_execution_tool.py`` ``retry`` stub — generated sandbox text
+  (``_TOOL_STUBS``); the execute_code sandbox has no ``agent`` package.
+
+The native substrate keeps its own stdlib-only knob:
+``3v0/core/backoff.py::retry_call`` (consumed by ``3v0/core/semantic.py``).
+It must not import ``agent/`` — the native runtime is deliberately
+independent of the agent tree (see ``3v0/CONTEXT.md``).
 """
 
 import random

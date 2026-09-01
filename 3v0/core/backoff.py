@@ -5,6 +5,13 @@ unavailability as 403 or 5xx. retry_call backs off with increasing waits
 (base, base*factor, ... up to cap + jitter) on retryable statuses, so a
 transient block self-heals instead of failing the call. Hard auth (401) and
 other non-retryable 4xx raise immediately.
+
+Disposition (ticket #17): this stays a NATIVE-substrate module — stdlib
+only, no ``agent/`` imports by design (the native runtime is deliberately
+independent of the agent tree). It is NOT a duplicate of
+``agent/retry_utils.py``; that module owns retry policy for the agent/gateway
+surfaces, this owns it for the native engine (consumer:
+``3v0/core/semantic.py``).
 """
 from __future__ import annotations
 
