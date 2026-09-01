@@ -39,8 +39,8 @@ from pathlib import Path as _Path
 
 sys.path.insert(0, str(_Path(__file__).resolve().parents[3]))
 
-from agent.secret_scope import UnscopedSecretError, get_secret
 from gateway.config import Platform, PlatformConfig
+from gateway.platforms.adapter_helpers import get_scoped_secret
 from gateway.platforms.helpers import MessageDeduplicator
 from gateway.platforms.base import (
     BasePlatformAdapter,
@@ -1824,10 +1824,8 @@ class SlackAdapter(BasePlatformAdapter):
         # default profile's Socket Mode app (#59739). Only an UNSCOPED read
         # under multiplex (default-profile startup loop, background reconnect
         # rebuild) falls back to process env, which is that profile's own.
-        try:
-            app_token = get_secret("SLACK_APP_TOKEN")
-        except UnscopedSecretError:
-            app_token = os.getenv("SLACK_APP_TOKEN")
+        # (Canonical shared copy of that pattern, ticket #23.)
+        app_token = get_scoped_secret("SLACK_APP_TOKEN")
 
         if not raw_token:
             logger.error(
@@ -9132,7 +9130,9 @@ async def _standalone_send(
     # Profile-scoped read: under multiplex os.environ may hold ANOTHER
     # profile's bot token (first-writer-wins env bridges), so honor the
     # secret scope's verdict instead of reading the process env directly.
-    raw_token = getattr(pconfig, "token", None) or get_secret("SLACK_BOT_TOKEN", "")
+    raw_token = (
+        getattr(pconfig, "token", None) or get_scoped_secret("SLACK_BOT_TOKEN") or ""
+    )
 
     # ``SLACK_BOT_TOKEN`` can be a comma-separated list in multi-workspace
     # gateways, and OAuth installs persist per-workspace tokens in

@@ -147,6 +147,7 @@ from gateway.platforms.helpers import (
     ThreadParticipationTracker,
     convert_table_to_bullets,
 )
+from gateway.platforms.adapter_helpers import overflow_split_and_deliver
 from utils import atomic_json_write, env_float, env_int
 from gateway.platforms.base import (
     BasePlatformAdapter,
@@ -3863,6 +3864,11 @@ class DiscordAdapter(BasePlatformAdapter):
         treating a clipped reply as complete — dropping chunks the user already
         saw would be the worse outcome.  Only a first-chunk edit failure
         returns ``success=False`` (a real adapter problem, not overflow).
+
+        Chunk assembly, threading, and the partial-overflow contract are the
+        shared core (``overflow_split_and_deliver``); the reply-reference
+        quirk (``to_reference`` with a duck-typed id fallback, then the
+        drop-anchor retry) lives in the continuation callback.
         """
         formatted = self.format_message(content)
         chunks = self._cap_split_chunks(
@@ -3874,21 +3880,13 @@ class DiscordAdapter(BasePlatformAdapter):
             await msg.edit(content=chunks[0] if chunks else formatted)
             return SendResult(success=True, message_id=message_id)
 
-        # Step 1 — edit the existing message with the first chunk.
-        try:
-            await msg.edit(content=chunks[0])
-        except Exception as e:
-            logger.error(
-                "[%s] Overflow split: first-chunk edit failed: %s",
-                self.name, e, exc_info=True,
-            )
-            return SendResult(success=False, error=str(e))
+        prev_msg = msg  # reply-threading anchor for the next continuation
 
-        # Step 2 — send each remaining chunk threaded as a reply to the prior.
-        continuation_ids: list[str] = []
-        delivered = 1
-        prev_msg = msg
-        for chunk in chunks[1:]:
+        async def _edit_first(first_chunk: str) -> None:
+            await msg.edit(content=first_chunk)
+
+        async def _send_continuation(chunk: str, prev_message_id: Optional[str]) -> str:
+            nonlocal prev_msg
             reference = None
             if hasattr(prev_msg, "to_reference"):
                 try:
@@ -3911,45 +3909,23 @@ class DiscordAdapter(BasePlatformAdapter):
                     "[%s] Overflow continuation send failed (%s); retrying without reply reference",
                     self.name, send_err,
                 )
-                try:
-                    sent = await channel.send(content=chunk, reference=None)
-                except Exception as retry_err:
-                    logger.warning(
-                        "[%s] Overflow split: stopped at %d/%d chunks delivered: %s",
-                        self.name, delivered, len(chunks), retry_err,
-                    )
-                    last_id = continuation_ids[-1] if continuation_ids else message_id
-                    return SendResult(
-                        success=True,
-                        message_id=last_id,
-                        continuation_message_ids=tuple(continuation_ids),
-                        raw_response={
-                            "partial_overflow": True,
-                            "delivered_chunks": delivered,
-                            "total_chunks": len(chunks),
-                            "last_message_id": last_id,
-                            "continuation_message_ids": tuple(continuation_ids),
-                        },
-                    )
-            new_id = str(sent.id)
-            continuation_ids.append(new_id)
-            delivered += 1
+                sent = await channel.send(content=chunk, reference=None)
             prev_msg = sent
+            return str(sent.id)
 
-        last_id = continuation_ids[-1] if continuation_ids else message_id
-        # Keep the history-backfill fast path pointed at the final visible
-        # chunk so a later non-streaming send threads below the full reply.
-        if not _looks_like_nonconversational_history_message(content):
-            self._last_self_message_id[str(channel.id)] = last_id
-        logger.debug(
-            "[%s] Overflow split delivered %d chunks; last_id=%s",
-            self.name, delivered, last_id,
+        result = await overflow_split_and_deliver(
+            chunks,
+            original_message_id=message_id,
+            edit_first=_edit_first,
+            send_continuation=_send_continuation,
+            adapter_name=self.name,
         )
-        return SendResult(
-            success=True,
-            message_id=last_id,
-            continuation_message_ids=tuple(continuation_ids),
-        )
+        if result.success and not (result.raw_response or {}).get("partial_overflow"):
+            # Keep the history-backfill fast path pointed at the final visible
+            # chunk so a later non-streaming send threads below the full reply.
+            if not _looks_like_nonconversational_history_message(content):
+                self._last_self_message_id[str(channel.id)] = result.message_id
+        return result
 
     async def _send_file_attachment(
         self,

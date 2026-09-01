@@ -107,6 +107,8 @@ async def overflow_split_and_deliver(
     send_continuation: Callable[[str, Optional[str]], Awaitable[Optional[str]]],
     adapter_name: str = "",
     error_fn: Callable[[Exception], str] = str,
+    partial_success: bool = True,
+    delivered_prefix_fn: Optional[Callable[[Sequence[str]], str]] = None,
 ):
     """Deliver pre-chunked overflow across an edit + threaded continuations.
 
@@ -129,15 +131,28 @@ async def overflow_split_and_deliver(
         adapter_name: for log prefixes.
         error_fn: renders an exception for ``SendResult.error`` (e.g.
             Telegram's redacting formatter).
+        partial_success: policy for a mid-stream continuation failure.
+            True (default) reports ``success=True`` with the
+            ``raw_response["partial_overflow"]`` payload so the stream
+            consumer can deliver the missing tail (dropping chunks the user
+            already saw is the worse outcome).  False reports the stricter
+            ``success=False`` contract (``error="overflow_continuation_failed"``,
+            ``retryable=True``) — required when the consumer only honors the
+            partial payload on a failed result (Telegram's got_done path
+            suppresses fallback delivery on a successful edit, so a clipped
+            topic reply would be marked final).
+        delivered_prefix_fn: optional renderer for the text the user already
+            sees, ``raw_response["delivered_prefix"]``; called with the
+            delivered (original, unsuffixed) chunk texts.  Telegram's stream
+            consumer prefers it over re-deriving the visible prefix.
 
     Returns:
         ``SendResult`` with ``message_id`` = LAST visible message id and
         ``continuation_message_ids`` = every extra id in send order.  On a
-        mid-stream continuation failure, success is still True with a
-        ``raw_response["partial_overflow"]`` payload so the stream consumer
-        can deliver the missing tail (dropping chunks the user already saw
-        is the worse outcome).  Only a first-chunk edit failure returns
-        success=False — a real adapter problem, not overflow.
+        mid-stream continuation failure the ``partial_overflow`` payload is
+        always present and ``success`` follows the ``partial_success``
+        policy.  Only a first-chunk edit failure returns ``success=False``
+        with no payload — a real adapter problem, not overflow.
     """
     from gateway.platforms.base import SendResult  # lazy: avoid cycle
 
@@ -156,7 +171,7 @@ async def overflow_split_and_deliver(
 
     # Step 2 — send each remaining chunk threaded to the previous one.
     continuation_ids: list[str] = []
-    delivered = 1
+    delivered_chunks: list[str] = [chunks[0]]
     prev_id = original_message_id
     for chunk in chunks[1:]:
         try:
@@ -164,30 +179,42 @@ async def overflow_split_and_deliver(
         except Exception as send_err:
             logger.warning(
                 "[%s] Overflow split: stopped at %d/%d chunks delivered: %s",
-                adapter_name, delivered, len(chunks), send_err,
+                adapter_name, len(delivered_chunks), len(chunks), send_err,
             )
             last_id = continuation_ids[-1] if continuation_ids else original_message_id
+            payload = {
+                "partial_overflow": True,
+                "delivered_chunks": len(delivered_chunks),
+                "total_chunks": len(chunks),
+                "last_message_id": last_id,
+                "continuation_message_ids": tuple(continuation_ids),
+            }
+            if delivered_prefix_fn is not None:
+                payload["delivered_prefix"] = delivered_prefix_fn(delivered_chunks)
+            if partial_success:
+                return SendResult(
+                    success=True,
+                    message_id=last_id,
+                    continuation_message_ids=tuple(continuation_ids),
+                    raw_response=payload,
+                )
             return SendResult(
-                success=True,
+                success=False,
                 message_id=last_id,
+                error="overflow_continuation_failed",
+                retryable=True,
+                raw_response=payload,
                 continuation_message_ids=tuple(continuation_ids),
-                raw_response={
-                    "partial_overflow": True,
-                    "delivered_chunks": delivered,
-                    "total_chunks": len(chunks),
-                    "last_message_id": last_id,
-                    "continuation_message_ids": tuple(continuation_ids),
-                },
             )
-        delivered += 1
         if new_id is not None:
             prev_id = new_id
             continuation_ids.append(str(new_id))
+        delivered_chunks.append(chunk)
 
     last_id = continuation_ids[-1] if continuation_ids else original_message_id
     logger.debug(
         "[%s] Overflow split delivered %d chunks; last_id=%s",
-        adapter_name, delivered, last_id,
+        adapter_name, len(delivered_chunks), last_id,
     )
     return SendResult(
         success=True,

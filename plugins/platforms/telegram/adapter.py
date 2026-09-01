@@ -281,6 +281,11 @@ sys.path.insert(0, str(_Path(__file__).resolve().parents[3]))
 
 from gateway.authz_mixin import _coerce_allow_set
 from gateway.config import Platform, PlatformConfig
+from gateway.platforms.adapter_helpers import (
+    TypingCooldownMixin,
+    get_scoped_secret,
+    overflow_split_and_deliver,
+)
 from gateway.platforms.base import (
     BasePlatformAdapter,
     MessageEvent,
@@ -632,7 +637,7 @@ class _PollingLifecycleAbort(RuntimeError):
     """Internal control flow for polling startup fenced by teardown."""
 
 
-class TelegramAdapter(BasePlatformAdapter):
+class TelegramAdapter(BasePlatformAdapter, TypingCooldownMixin):
     """
     Telegram bot adapter.
 
@@ -756,8 +761,8 @@ class TelegramAdapter(BasePlatformAdapter):
         # can happen on every keep-typing tick while the agent is waiting on a
         # long model call. Back off per chat so a short Telegram-side outage
         # does not spam the API/logs or burn the keep-typing budget.
-        self._telegram_typing_cooldown_until: Dict[str, float] = {}
-        self._telegram_typing_cooldown_seconds: float = self._coerce_float_extra(
+        # (Cooldown map lives in TypingCooldownMixin._typing_cooldown_until.)
+        self._typing_cooldown_seconds: float = self._coerce_float_extra(
             "typing_cooldown_seconds",
             30.0,
             min_value=1.0,
@@ -4623,16 +4628,10 @@ class TelegramAdapter(BasePlatformAdapter):
                 # #59739): a scoped read honors the profile's own secret;
                 # only an UNSCOPED read under multiplex (default-profile
                 # startup loop) falls back to the process env, which is that
-                # profile's own value.
-                from agent.secret_scope import (
-                    UnscopedSecretError,
-                    get_secret,
-                )
-
-                try:
-                    webhook_secret = (get_secret("TELEGRAM_WEBHOOK_SECRET") or "").strip()
-                except UnscopedSecretError:
-                    webhook_secret = os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip()
+                # profile's own value. (Canonical shared copy, ticket #23.)
+                webhook_secret = (
+                    get_scoped_secret("TELEGRAM_WEBHOOK_SECRET") or ""
+                ).strip()
                 if not webhook_secret:
                     raise RuntimeError(
                         "TELEGRAM_WEBHOOK_SECRET is required when "
@@ -5710,14 +5709,19 @@ class TelegramAdapter(BasePlatformAdapter):
         Edit the original ``message_id`` with chunk 1 (with the platform's
         usual ``(1/N)`` suffix preserved), then send the remaining chunks as
         new messages threaded as replies to the previous chunk so the user
-        sees them grouped.  Returns ``SendResult(success=True,
-        message_id=<last-chunk-id>, continuation_message_ids=(...))`` so the
-        stream consumer can keep editing the most recent visible message
-        and the gateway has full visibility into every message id we put on
-        screen.
+        sees them grouped.  Returns the last visible message id in
+        ``SendResult.message_id`` plus every continuation id, so the stream
+        consumer can keep editing the most recent visible message and the
+        gateway has full visibility into every message id we put on screen.
 
-        Falls back to ``SendResult(success=False)`` only if even the first-
-        chunk edit fails — that's a real adapter problem, not an overflow.
+        Platform quirks (MarkdownV2 first-chunk fallback, the "message is
+        not modified" no-op, the reply-anchor drop-and-retry) live in the
+        two callbacks; chunk assembly, threading, and the partial-overflow
+        contract are the shared core.  Telegram uses the stricter
+        ``partial_success=False`` contract on purpose: the stream consumer
+        treats a successful edit as final delivery on got_done, which would
+        suppress fallback delivery and leave the topic clipped after the
+        last delivered chunk.
         """
         chunks = self.truncate_message(
             content, self.MAX_MESSAGE_LENGTH, len_fn=utf16_len,
@@ -5727,65 +5731,53 @@ class TelegramAdapter(BasePlatformAdapter):
             # if truncate_message returned a single chunk just edit normally.
             chunks = [content]
 
-        # Step 1 — edit the existing message with the first chunk.
-        first_chunk = chunks[0]
-        try:
-            if finalize:
-                # Use format_message + parse_mode for the final chunk;
-                # mirror edit_message's main happy-path.
-                formatted = _separate_chunk_indicator_from_fence(
-                    self.format_message(first_chunk)
-                )
-                try:
-                    await self._bot.edit_message_text(
-                        chat_id=normalize_telegram_chat_id(chat_id),
-                        message_id=int(message_id),
-                        text=formatted,
-                        parse_mode=ParseMode.MARKDOWN_V2,
+        thread_id = self._metadata_thread_id(metadata)
+
+        async def _edit_first(first_chunk: str) -> None:
+            try:
+                if finalize:
+                    # Use format_message + parse_mode for the final chunk;
+                    # mirror edit_message's main happy-path.
+                    formatted = _separate_chunk_indicator_from_fence(
+                        self.format_message(first_chunk)
                     )
-                except Exception as fmt_err:
-                    if "not modified" not in str(fmt_err).lower():
-                        logger.warning(
-                            "[%s] Overflow split: MarkdownV2 first-chunk edit "
-                            "failed, falling back to plain text: %s",
-                            self.name, _redact_telegram_error_text(fmt_err),
-                        )
+                    try:
                         await self._bot.edit_message_text(
                             chat_id=normalize_telegram_chat_id(chat_id),
                             message_id=int(message_id),
-                            text=_strip_mdv2(first_chunk),
+                            text=formatted,
+                            parse_mode=ParseMode.MARKDOWN_V2,
                         )
-            else:
-                await self._bot.edit_message_text(
-                    chat_id=normalize_telegram_chat_id(chat_id),
-                    message_id=int(message_id),
-                    text=first_chunk,
-                )
-        except Exception as e:
-            err_str = str(e).lower()
-            if "not modified" in err_str:
-                # First chunk identical to current text — fall through to
-                # send continuations.
-                pass
-            else:
-                logger.error(
-                    "[%s] Overflow split: first-chunk edit failed: %s",
-                    self.name, _redact_telegram_error_text(e), exc_info=True,
-                )
-                return SendResult(success=False, error=_redact_telegram_error_text(e))
+                    except Exception as fmt_err:
+                        if "not modified" not in str(fmt_err).lower():
+                            logger.warning(
+                                "[%s] Overflow split: MarkdownV2 first-chunk edit "
+                                "failed, falling back to plain text: %s",
+                                self.name, _redact_telegram_error_text(fmt_err),
+                            )
+                            await self._bot.edit_message_text(
+                                chat_id=normalize_telegram_chat_id(chat_id),
+                                message_id=int(message_id),
+                                text=_strip_mdv2(first_chunk),
+                            )
+                else:
+                    await self._bot.edit_message_text(
+                        chat_id=normalize_telegram_chat_id(chat_id),
+                        message_id=int(message_id),
+                        text=first_chunk,
+                    )
+            except Exception as e:
+                if "not modified" in str(e).lower():
+                    # First chunk identical to current text — fall through to
+                    # send continuations (not an error; swallow for the core).
+                    return
+                raise
 
-        # Step 2 — send each remaining chunk as a continuation message,
-        # threaded as a reply to the previous so the user sees them as a
-        # contiguous block.  We call self._bot.send_message directly so the
-        # continuation skips ``self.send``'s own pre-chunking pass (chunks
-        # are already correctly sized).  Best-effort MarkdownV2 with plain
-        # fallback, mirroring send().
-        continuation_ids: list[str] = []
-        delivered_chunks = [first_chunk]
-        prev_id = message_id
-        thread_id = self._metadata_thread_id(metadata)
-        for chunk in chunks[1:]:
-            sent_msg = None
+        async def _send_continuation(chunk: str, prev_id: Optional[str]) -> str:
+            # We call self._bot.send_message directly so the continuation
+            # skips ``self.send``'s own pre-chunking pass (chunks are already
+            # correctly sized).  Best-effort MarkdownV2 with plain fallback,
+            # mirroring send().
             reply_to_id = int(prev_id) if prev_id else None
             thread_kwargs = self._thread_kwargs_for_send(
                 chat_id,
@@ -5793,6 +5785,8 @@ class TelegramAdapter(BasePlatformAdapter):
                 metadata,
                 reply_to_message_id=reply_to_id,
             )
+            sent_msg = None
+            failure: Optional[Exception] = None
             for use_markdown in (True, False) if finalize else (False,):
                 try:
                     if use_markdown:
@@ -5842,6 +5836,7 @@ class TelegramAdapter(BasePlatformAdapter):
                                 self.name, _redact_telegram_error_text(_retry_err),
                             )
                             sent_msg = None
+                            failure = _retry_err
                             break
                     if use_markdown:
                         # try plain text on next loop iteration
@@ -5851,51 +5846,23 @@ class TelegramAdapter(BasePlatformAdapter):
                         self.name, _redact_telegram_error_text(send_err),
                     )
                     sent_msg = None
+                    failure = send_err
                     break
             if sent_msg is None:
-                # Continuation failed — the user has chunk 1 + however many
-                # continuations succeeded, but NOT the full response.  Do not
-                # report success: the stream consumer treats a successful edit
-                # as final delivery on got_done, which would suppress fallback
-                # delivery and leave the Telegram topic clipped after the last
-                # delivered chunk.
-                logger.warning(
-                    "[%s] Overflow split: stopped at %d/%d chunks delivered",
-                    self.name, 1 + len(continuation_ids), len(chunks),
-                )
-                delivered_prefix = "".join(
-                    re.sub(r" \(\d+/\d+\)$", "", delivered)
-                    for delivered in delivered_chunks
-                )
-                return SendResult(
-                    success=False,
-                    message_id=prev_id,
-                    error="overflow_continuation_failed",
-                    retryable=True,
-                    raw_response={
-                        "partial_overflow": True,
-                        "delivered_chunks": 1 + len(continuation_ids),
-                        "total_chunks": len(chunks),
-                        "last_message_id": prev_id,
-                        "delivered_prefix": delivered_prefix,
-                        "continuation_message_ids": tuple(continuation_ids),
-                    },
-                    continuation_message_ids=tuple(continuation_ids),
-                )
-            new_id = str(getattr(sent_msg, "message_id", "")) or prev_id
-            continuation_ids.append(new_id)
-            delivered_chunks.append(chunk)
-            prev_id = new_id
+                raise failure or RuntimeError("overflow continuation send failed")
+            return str(getattr(sent_msg, "message_id", "")) or prev_id
 
-        last_id = continuation_ids[-1] if continuation_ids else message_id
-        logger.debug(
-            "[%s] Overflow split delivered %d chunks; last_id=%s",
-            self.name, 1 + len(continuation_ids), last_id,
-        )
-        return SendResult(
-            success=True,
-            message_id=last_id,
-            continuation_message_ids=tuple(continuation_ids),
+        return await overflow_split_and_deliver(
+            chunks,
+            original_message_id=message_id,
+            edit_first=_edit_first,
+            send_continuation=_send_continuation,
+            adapter_name=self.name,
+            error_fn=_redact_telegram_error_text,
+            partial_success=False,
+            delivered_prefix_fn=lambda delivered: "".join(
+                re.sub(r" \(\d+/\d+\)$", "", d) for d in delivered
+            ),
         )
 
     async def delete_message(self, chat_id: str, message_id: str) -> bool:
@@ -8196,28 +8163,9 @@ class TelegramAdapter(BasePlatformAdapter):
 
     def _record_typing_cooldown(self, chat_id: str, exc: Exception) -> None:
         """Suppress Telegram typing refreshes for this chat after transient failures."""
-        if not hasattr(self, "_telegram_typing_cooldown_until"):
-            self._telegram_typing_cooldown_until = {}
-        loop = asyncio.get_running_loop()
-        retry_after = getattr(exc, "retry_after", None)
-        try:
-            delay = float(retry_after) if retry_after is not None else self._telegram_typing_cooldown_seconds
-        except (TypeError, ValueError):
-            delay = self._telegram_typing_cooldown_seconds
-        delay = max(1.0, min(delay, 300.0))
-        self._telegram_typing_cooldown_until[str(chat_id)] = loop.time() + delay
-
-    def _typing_in_cooldown(self, chat_id: str) -> bool:
-        if not hasattr(self, "_telegram_typing_cooldown_until"):
-            self._telegram_typing_cooldown_until = {}
-            self._telegram_typing_cooldown_seconds = 30.0
-        until = self._telegram_typing_cooldown_until.get(str(chat_id))
-        if until is None:
-            return False
-        if asyncio.get_running_loop().time() < until:
-            return True
-        self._telegram_typing_cooldown_until.pop(str(chat_id), None)
-        return False
+        # TypingCooldownMixin owns the map/clamp; extract the server's
+        # retry_after from the exception at this seam.
+        super()._record_typing_cooldown(chat_id, getattr(exc, "retry_after", None))
 
     async def send_typing(self, chat_id: str, metadata: Optional[Dict[str, Any]] = None) -> None:
         """Send typing indicator."""
@@ -8235,7 +8183,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 action="typing",
                 message_thread_id=message_thread_id,
             )
-            self._telegram_typing_cooldown_until.pop(str(chat_id), None)
+            self._clear_typing_cooldown(chat_id)
         except Exception as e:
             # For DM topic lanes, Telegram may reject message_thread_id.
             # Fall back to sending typing without thread_id so the typing
@@ -8246,7 +8194,7 @@ class TelegramAdapter(BasePlatformAdapter):
                         chat_id=normalize_telegram_chat_id(chat_id),
                         action="typing",
                     )
-                    self._telegram_typing_cooldown_until.pop(str(chat_id), None)
+                    self._clear_typing_cooldown(chat_id)
                     return
                 except Exception as fallback_exc:
                     if self._is_transient_typing_error(fallback_exc):
