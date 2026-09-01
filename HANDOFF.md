@@ -74,18 +74,39 @@ without operator direction.
   a strict failure (`partial_success=False`) so the stream consumer's
   fallback-tail path fires — success=True had marked clipped replies as
   final. Parity with telegram.
-- **#23 and #17 closed** on the tracker with full evidence comments.
+- **#20 ENV-FUNNEL migrate COMPLETE + closed** (`30424a23bf` gateway,
+  `abafb8eb1b` tools, `3e8ba6daa0` agent, `5b298c78c1` threev0_cli,
+  `240fb980af` cli.py + core loop): **338 branded reads → branded_env**
+  via the root env_compat bridge; per-scope `--check` gates green;
+  10,438-test sweep on the core-loop batches. Legged-read exceptions
+  documented (sudo-stripped-env detection in the systemd home sync).
+- **#20/#17 closed; #23 closed** — with evidence comments.
+- `1cc8ab11e0` **provider-loader seam fix** (found via pre-existing test
+  failures): the fff1f44c50 loader extraction orphaned the family
+  `_get_user_plugins_dir` seams — discovery bypassed them, 3
+  memory-provider tests failed on main and isolation tests silently read
+  the real home. Delegators now pass their seam through.
+- **Venv repair**: the reboot-ed venv lost extras — `anthropic==0.87.0`
+  and `agent-client-protocol==0.9.0` reinstalled at exact uv.lock pins
+  (LATEST-version installs break the pydantic serializer-warning canary —
+  always install the locked pin). 6 further pre-existing failures fixed;
+  tests/agent back to 0 failed.
+- **Known-flake A/B discipline used throughout**: skin engine/palette,
+  update yes-flag unicode-TTY, kanban review surface, tool-progress
+  scrollback, exit-watchdog failures are pre-existing — verified
+  identical on the unmodified tree via `git stash` A/B before blaming
+  any batch.
 
 **NEXT work queue (tracked tickets, `ready-for-agent` on the fork):**
-1. **#20 ENV-FUNNEL migrate** — remaining batches (gateway adapters,
-   tools/, agent/, plugins/) after the landed tui_gateway batch.
-2. **#24** (adapter registry contract) and **#21** (env funnel contract)
-   — both unblocked now that #23/#17 are done.
-3. **#18** (turn-runner assembly frame; #7 done so unblocked) — the big
-   structural prize.
-4. picker_prewarm flake: NOT reproduced (8/8 green + every suite run today;
-   per-file subprocess isolation makes the old cross-test theory moot) —
-   only revisit if it reproduces in a canonical full-suite run.
+1. **#21 ENV-FUNNEL contract** — now unblocked: collapse the remaining
+   write-half sites (kanban/session/redact bridges), delete dead
+   fallback shims (e.g. gateway `_float_env`), full suite green.
+2. **#24** (adapter registry contract) and **#18** (turn-runner assembly
+   frame) — both unblocked.
+3. Known pre-existing failures (A/B-verified, NOT new): skin
+   engine/palette (5), update yes-flag unicode-TTY (3), kanban review
+   surface (1), cli tool-progress scrollback (7) + exit-watchdog (2).
+   picker_prewarm did NOT reproduce.
 
 ## Archived kickoff (2026-08-22, wake #12 — full-suite triage + Phase R2 cutover)
 
