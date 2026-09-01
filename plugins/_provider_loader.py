@@ -109,6 +109,7 @@ def find_provider_dir(
     bundled_dir: Path,
     is_provider_dir: ProviderDirPredicate,
     *,
+    user_dir: Optional[Callable[[], Optional[Path]]] = None,
     project_dir: Optional[Callable[[], Optional[Path]]] = None,
     extra_resolver: Optional[Callable[[str], Optional[Path]]] = None,
 ) -> Optional[Path]:
@@ -117,11 +118,18 @@ def find_provider_dir(
     Checks bundled first, then user-installed, then (optionally) project-local
     and an ``extra_resolver`` (e.g. pip entry-point resolution). Bundled takes
     precedence on name collisions.
+
+    ``user_dir`` is the calling family's own user-plugins-dir seam (e.g.
+    ``plugins.memory._get_user_plugins_dir``): delegators MUST pass it so the
+    family module's attribute stays authoritative — tests (and the family's
+    own override) patch there, and a direct call to this module's
+    ``get_user_plugins_dir`` would bypass them (#fff1f44c50 regression).
     """
     bundled = bundled_dir / name
     if bundled.is_dir() and (bundled / "__init__.py").exists():
         return bundled
-    for source_dir in (get_user_plugins_dir(), project_dir() if project_dir else None):
+    resolve_user = user_dir if user_dir is not None else get_user_plugins_dir
+    for source_dir in (resolve_user(), project_dir() if project_dir else None):
         if not source_dir:
             continue
         candidate = source_dir / name

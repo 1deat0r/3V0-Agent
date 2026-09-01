@@ -158,6 +158,7 @@ def find_provider_dir(name: str) -> Optional[Path]:
         name,
         _MEMORY_PLUGINS_DIR,
         _is_memory_provider_dir,
+        user_dir=_get_user_plugins_dir,
         project_dir=_get_project_plugins_dir,
         extra_resolver=_entry_point_package_dir_any,
     )

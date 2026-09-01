@@ -92,7 +92,9 @@ def find_provider_dir(name: str) -> Optional[Path]:
     """
     from plugins._provider_loader import find_provider_dir as _impl
 
-    return _impl(name, _CRON_PLUGINS_DIR, _is_cron_provider_dir)
+    return _impl(
+        name, _CRON_PLUGINS_DIR, _is_cron_provider_dir, user_dir=_get_user_plugins_dir
+    )
 
 
 # ---------------------------------------------------------------------------
