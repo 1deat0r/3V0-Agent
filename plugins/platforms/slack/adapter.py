@@ -7189,20 +7189,15 @@ class SlackAdapter(BasePlatformAdapter):
                     exc_info=True,
                 )
 
-        if os.getenv("SLACK_ALLOW_ALL_USERS", "").lower() in {"true", "1", "yes"}:
-            return True
-
         def _env(name: str) -> str:
             # Multiplex: profile .env is in secret_scope, not process environ.
-            try:
-                from agent.secret_scope import get_secret
+            # Fail-closed semantics (#86905 class): a scope miss returns the
+            # default — NEVER an os.environ borrow, which under multiplex may
+            # hold ANOTHER profile's allowlist/opt-in.
+            return (get_scoped_secret(name) or "").strip()
 
-                val = get_secret(name)
-                if val is not None and str(val).strip():
-                    return str(val).strip()
-            except Exception:
-                pass
-            return (os.getenv(name) or "").strip()
+        if _env("SLACK_ALLOW_ALL_USERS").lower() in {"true", "1", "yes"}:
+            return True
 
         allowed_ids = set()
         platform_allowlist = _env("SLACK_ALLOWED_USERS")
