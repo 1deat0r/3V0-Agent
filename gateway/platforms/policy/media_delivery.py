@@ -4,6 +4,8 @@ Extracted verbatim from ``gateway.platforms.base`` (issue #22 expand step).
 """
 
 import sys
+
+from env_compat import branded_env
 from pathlib import Path as _Path
 sys.path.insert(0, str(_Path(__file__).resolve().parents[3]))
 from pathlib import Path
@@ -147,10 +149,10 @@ def _profile_cache_roots() -> List[Path]:
 
 def _kanban_attachment_roots() -> List[Path]:
     """Return durable Kanban attachment roots without importing kanban_db."""
-    override = os.environ.get("EV0_KANBAN_ATTACHMENTS_ROOT", "").strip()
+    override = (branded_env("KANBAN_ATTACHMENTS_ROOT") or "").strip()
     if override:
         return [Path(override).expanduser()]
-    home_override = os.environ.get("EV0_KANBAN_HOME", "").strip()
+    home_override = (branded_env("KANBAN_HOME") or "").strip()
     root = Path(home_override).expanduser() if home_override else _EV0_ROOT
     roots = [root / "kanban" / "attachments"]
     boards_root = root / "kanban" / "boards"

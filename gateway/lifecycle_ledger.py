@@ -38,6 +38,8 @@ gateway lifecycle it is observing.
 
 from __future__ import annotations
 
+from env_compat import branded_env
+
 import json
 import logging
 import os
@@ -60,7 +62,7 @@ _LOW_MEM_AVAILABLE_FRACTION = 0.05  # < 5% of MemTotal available
 
 def _process_threev0_home() -> Path:
     """EV0_HOME for process-level identity files (ignore task overrides)."""
-    val = os.environ.get("EV0_HOME", "").strip()
+    val = (branded_env("HOME") or "").strip()
     if val:
         return Path(val)
     from threev0_constants import get_threev0_home

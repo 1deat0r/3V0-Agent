@@ -36,6 +36,8 @@ needs to replace the import + call site:
     platform = get_session_env("EV0_SESSION_PLATFORM", "")
 """
 
+from env_compat import branded_env
+
 from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Any, Iterator
@@ -445,7 +447,7 @@ def session_is_messaging_surface() -> bool:
     """
     import os
 
-    platform = os.getenv("EV0_PLATFORM") or get_session_env("EV0_SESSION_PLATFORM", "")
+    platform = branded_env("PLATFORM") or get_session_env("EV0_SESSION_PLATFORM", "")
     source = get_session_env("EV0_SESSION_SOURCE", "")
     for identity in (platform, source):
         identity = str(identity or "").strip().lower()
@@ -502,7 +504,7 @@ def async_delivery_supported() -> bool:
     # disappear after the quiet turn returns, so a completion queued later has
     # no durable consumer even though an ordinary CLI session can drain that
     # queue. Force tools onto their existing synchronous/polling fallbacks.
-    if os.environ.get("EV0_KANBAN_TASK"):
+    if branded_env("KANBAN_TASK"):
         return False
 
     value = _SESSION_ASYNC_DELIVERY.get()

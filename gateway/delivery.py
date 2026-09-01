@@ -16,6 +16,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
+from env_compat import branded_env
 from threev0_cli.config import get_threev0_home
 
 logger = logging.getLogger(__name__)
@@ -448,11 +449,11 @@ class DeliveryRouter:
     def _filter_silence_narration_enabled(self) -> bool:
         """Whether the outbound silence-narration filter is active.
 
-        ``EV0_FILTER_SILENCE_NARRATION`` env var overrides config when set;
-        otherwise the ``gateway.filter_silence_narration`` config flag wins
-        (default True).
+        ``EV0_FILTER_SILENCE_NARRATION`` (canonical ``3V0_`` spelling via
+        branded_env) overrides config when set; otherwise the
+        ``gateway.filter_silence_narration`` config flag wins (default True).
         """
-        env = os.getenv("EV0_FILTER_SILENCE_NARRATION")
+        env = branded_env("FILTER_SILENCE_NARRATION")
         if env is not None:
             return env.strip().lower() in ("1", "true", "yes", "on")
         return bool(getattr(self.config, "filter_silence_narration", True))

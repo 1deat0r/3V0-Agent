@@ -40,6 +40,8 @@ Requires:
 - aiohttp (already available in the gateway)
 """
 
+from env_compat import branded_env
+
 import asyncio
 import errno
 import hashlib
@@ -327,7 +329,7 @@ def _resolve_request_runtime_agent_kwargs(provider: str, target_model: Optional[
 
     model_cfg = _get_model_config()
     max_tokens = None
-    env_max_tokens = os.environ.get("EV0_MAX_TOKENS")
+    env_max_tokens = branded_env("MAX_TOKENS")
     if env_max_tokens:
         try:
             max_tokens = int(env_max_tokens)

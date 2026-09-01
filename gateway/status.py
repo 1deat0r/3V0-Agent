@@ -11,6 +11,8 @@ that will be useful when we add named profiles (multiple agents running
 concurrently under distinct configurations).
 """
 
+from env_compat import branded_env
+
 import copy
 import hashlib
 import json
@@ -138,7 +140,7 @@ def _get_process_threev0_home() -> Path:
     profile directory when a profile-context task happens to be active at write
     time.  See issue #56986.
     """
-    val = os.environ.get("EV0_HOME", "").strip()
+    val = (branded_env("HOME") or "").strip()
     if val:
         return Path(val)
     return _get_platform_default_threev0_home()
@@ -177,7 +179,7 @@ def _get_runtime_status_path() -> Path:
 
 def _get_lock_dir() -> Path:
     """Return the machine-local directory for token-scoped gateway locks."""
-    override = os.getenv("EV0_GATEWAY_LOCK_DIR")
+    override = branded_env("GATEWAY_LOCK_DIR")
     if override:
         return Path(override)
     state_home = Path(os.getenv("XDG_STATE_HOME", Path.home() / ".local" / "state"))

@@ -23,6 +23,8 @@ This module provides:
 
 from __future__ import annotations
 
+from env_compat import branded_env
+
 import asyncio
 import faulthandler
 import json
@@ -211,7 +213,7 @@ def start_loop_liveness_watchdog(
 
 def _process_threev0_home() -> Path:
     """EV0_HOME for process-level identity files (ignore profile overrides)."""
-    val = os.environ.get("EV0_HOME", "").strip()
+    val = (branded_env("HOME") or "").strip()
     if val:
         return Path(val)
     return get_threev0_home()

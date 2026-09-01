@@ -8,6 +8,8 @@ Handles:
 - Dynamic system prompt injection (agent knows its context)
 """
 
+from env_compat import branded_env
+
 import asyncio
 import hashlib
 import logging
@@ -48,7 +50,7 @@ def auto_continue_freshness_window() -> float:
     disables the freshness gate (restores the pre-fix "always fresh" behaviour
     for users who want to opt out).
     """
-    raw = os.environ.get("EV0_AUTO_CONTINUE_FRESHNESS")
+    raw = branded_env("AUTO_CONTINUE_FRESHNESS")
     if raw is None or raw == "":
         return float(_AUTO_CONTINUE_FRESHNESS_SECS_DEFAULT)
     try:

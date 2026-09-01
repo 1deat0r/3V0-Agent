@@ -17,6 +17,8 @@ the async helper, never in the synchronous probe.
 
 from __future__ import annotations
 
+from env_compat import branded_env
+
 import json
 import os
 import signal
@@ -168,7 +170,7 @@ def snapshot_shutdown_context(received_signal: Any = None) -> Dict[str, Any]:
     # _PLANNED_STOP_MARKER_FILENAME); we use string literals here so the
     # signal-handler path stays import-light.
     try:
-        threev0_home_str = os.environ.get("EV0_HOME")
+        threev0_home_str = branded_env("HOME")
         if threev0_home_str:
             takeover_path = Path(threev0_home_str) / ".gateway-takeover.json"
             if takeover_path.exists():

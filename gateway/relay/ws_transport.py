@@ -29,6 +29,8 @@ least two Class-1 platforms validate it.
 
 from __future__ import annotations
 
+from env_compat import branded_env
+
 import asyncio
 import json
 import logging
@@ -90,7 +92,7 @@ def _env_disconnect_budget_s() -> float:
     variable, same default). Callers above the transport use this to
     apportion the budget across go_idle / monitor teardown / drain."""
     budget = 5.0  # _ADAPTER_DISCONNECT_TIMEOUT_SECS_DEFAULT in gateway/run.py
-    raw = os.getenv("EV0_GATEWAY_ADAPTER_DISCONNECT_TIMEOUT", "").strip()
+    raw = (branded_env("GATEWAY_ADAPTER_DISCONNECT_TIMEOUT") or "").strip()
     if raw:
         try:
             budget = max(0.0, float(raw))

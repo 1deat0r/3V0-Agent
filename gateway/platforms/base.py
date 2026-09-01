@@ -5,6 +5,8 @@ All platform adapters (Telegram, Discord, WhatsApp, Weixin, and more) inherit fr
 and implement the required methods.
 """
 
+from env_compat import branded_env
+
 import asyncio
 import inspect
 import ipaddress
@@ -1229,7 +1231,7 @@ class BasePlatformAdapter(ABC):
         # pre-sync read matches the single-knob default rather than silently
         # queueing.
         self._busy_text_mode: str = (
-            os.environ.get("EV0_GATEWAY_BUSY_TEXT_MODE", "interrupt").strip().lower()
+            branded_env("GATEWAY_BUSY_TEXT_MODE", "interrupt").strip().lower()
             or "interrupt"
         )
         self._busy_text_debounce_seconds: float = _float_env(
@@ -4356,7 +4358,7 @@ class BasePlatformAdapter(ABC):
           EV0_HUMAN_DELAY_MIN_MS: minimum delay in ms (default 800, custom mode)
           EV0_HUMAN_DELAY_MAX_MS: maximum delay in ms (default 2500, custom mode)
         """
-        mode = os.getenv("EV0_HUMAN_DELAY_MODE", "off").lower()
+        mode = branded_env("HUMAN_DELAY_MODE", "off").lower()
         if mode == "off":
             return 0.0
         if mode == "natural":
@@ -4364,11 +4366,11 @@ class BasePlatformAdapter(ABC):
             return random.uniform(min_ms / 1000.0, max_ms / 1000.0)
         # custom mode — tolerate malformed env vars instead of crashing.
         try:
-            min_ms = int(os.getenv("EV0_HUMAN_DELAY_MIN_MS", "800"))
+            min_ms = int(branded_env("HUMAN_DELAY_MIN_MS", "800"))
         except (TypeError, ValueError):
             min_ms = 800
         try:
-            max_ms = int(os.getenv("EV0_HUMAN_DELAY_MAX_MS", "2500"))
+            max_ms = int(branded_env("HUMAN_DELAY_MAX_MS", "2500"))
         except (TypeError, ValueError):
             max_ms = 2500
         return random.uniform(min_ms / 1000.0, max_ms / 1000.0)

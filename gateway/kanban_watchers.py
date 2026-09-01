@@ -10,6 +10,8 @@ behavior-neutral move that lifts ~1,000 LOC out of run.py.
 
 from __future__ import annotations
 
+from env_compat import branded_env
+
 import asyncio
 import logging
 import os
@@ -1206,7 +1208,7 @@ class GatewayKanbanWatchersMixin:
         except Exception:
             logger.warning("kanban dispatcher: config loader unavailable; disabled")
             return
-        env_override = os.environ.get("EV0_KANBAN_DISPATCH_IN_GATEWAY", "").strip().lower()
+        env_override = (branded_env("KANBAN_DISPATCH_IN_GATEWAY") or "").strip().lower()
         if env_override in {"0", "false", "no", "off"}:
             logger.info("kanban dispatcher: disabled via EV0_KANBAN_DISPATCH_IN_GATEWAY env")
             return
@@ -1609,7 +1611,7 @@ class GatewayKanbanWatchersMixin:
                 # pattern as the dashboard specify endpoint. The
                 # decomposer module connects with no board kwarg and
                 # relies on the env var.
-                prev_env = os.environ.get("EV0_KANBAN_BOARD")
+                prev_env = branded_env("KANBAN_BOARD")
                 try:
                     os.environ["EV0_KANBAN_BOARD"] = slug
                     try:
