@@ -55,17 +55,37 @@ canonical-chain code (`threev0_constants`) is in place, so setting
 now serves the default profile by operator choice; do not touch the unit
 without operator direction.
 
+**Shipped this wake (all pushed; local == public):**
+- `fac5488935` wake-machinery alignment (undeployed-profile no-ops, n/a
+  invariants, ghost claims retired, anchor updated).
+- `78023bc09e` **#23 big-three migrate**: telegram/discord/slack onto the
+  shared adapter helpers; shared core gained `partial_success` +
+  `delivered_prefix_fn` policy knobs (telegram's stricter contract kept,
+  zero behavior change); new helper unit tests + discord partial
+  regression; full tests/gateway 5,750 green.
+- `a76aaef0dd` slack interactive-auth fail-closed fix (#86905 class, own
+  commit + scope tests) — found during the migration.
+- `c2d0b335cb` **#23 remaining adapters**: 16 hand-copied scoped-secret
+  helpers retired (AST-verified identical before the splice); −236 lines.
+- `8321c18757` **#17 audit**: inventory was stale — consolidation already
+  true on main; retry-policy map documented at `agent/retry_utils`;
+  `3v0/core/backoff.py` disposition recorded (native substrate).
+- `9dbf2c607a` **discord tail-loss fix**: overflow partial delivery is now
+  a strict failure (`partial_success=False`) so the stream consumer's
+  fallback-tail path fires — success=True had marked clipped replies as
+  final. Parity with telegram.
+- **#23 and #17 closed** on the tracker with full evidence comments.
+
 **NEXT work queue (tracked tickets, `ready-for-agent` on the fork):**
-1. **#23 ADAPTERS migrate** — adopt the shared helpers (shipped in #22) in
-   telegram/discord/slack first, then the rest.
-2. **#17 retry consolidation** — 10 bespoke retry()/backoff sites onto
-   `agent/retry_utils`; record `3v0/core/backoff.py` disposition.
-3. **#20 ENV-FUNNEL migrate** — remaining batches (gateway adapters, tools/,
-   agent/, plugins/) after the landed tui_gateway batch.
-4. Then #24 (adapter registry contract), #21 (env funnel contract), #18
-   (turn-runner assembly frame; #7 done so unblocked).
-5. Known flake: `tests/threev0_cli/test_picker_prewarm.py` (pre-existing race).
-   Known blocked: ci workflow watch-list one-liner (OAuth workflow scope).
+1. **#20 ENV-FUNNEL migrate** — remaining batches (gateway adapters,
+   tools/, agent/, plugins/) after the landed tui_gateway batch.
+2. **#24** (adapter registry contract) and **#21** (env funnel contract)
+   — both unblocked now that #23/#17 are done.
+3. **#18** (turn-runner assembly frame; #7 done so unblocked) — the big
+   structural prize.
+4. picker_prewarm flake: NOT reproduced (8/8 green + every suite run today;
+   per-file subprocess isolation makes the old cross-test theory moot) —
+   only revisit if it reproduces in a canonical full-suite run.
 
 ## Archived kickoff (2026-08-22, wake #12 — full-suite triage + Phase R2 cutover)
 
