@@ -3858,12 +3858,16 @@ class DiscordAdapter(BasePlatformAdapter):
         the most recent visible message and can clean up every chunk on a
         fresh-final.
 
-        On a mid-stream continuation send failure we still report success with
-        however many continuations landed AND a ``partial_overflow``
-        raw_response so the consumer can deliver the missing tail rather than
-        treating a clipped reply as complete — dropping chunks the user already
-        saw would be the worse outcome.  Only a first-chunk edit failure
-        returns ``success=False`` (a real adapter problem, not overflow).
+        On a mid-stream continuation send failure we report a strict failure
+        (``success=False``, ``error="overflow_continuation_failed"``,
+        ``retryable=True``) that still carries the ``partial_overflow``
+        raw_response — last delivered id, chunk counts, continuation ids —
+        so the stream consumer can deliver the missing tail instead of
+        treating a clipped reply as complete.  Reporting success would
+        suppress that fallback and silently drop the tail (parity with the
+        Telegram contract).  Only a first-chunk edit failure returns
+        ``success=False`` without the payload (a real adapter problem, not
+        overflow).
 
         Chunk assembly, threading, and the partial-overflow contract are the
         shared core (``overflow_split_and_deliver``); the reply-reference
@@ -3919,6 +3923,11 @@ class DiscordAdapter(BasePlatformAdapter):
             edit_first=_edit_first,
             send_continuation=_send_continuation,
             adapter_name=self.name,
+            # Stricter contract (parity with Telegram): the stream consumer
+            # only honors the partial_overflow payload on a FAILED result —
+            # a success=True would mark the clipped reply as final delivery
+            # and silently drop the tail the user never received.
+            partial_success=False,
         )
         if result.success and not (result.raw_response or {}).get("partial_overflow"):
             # Keep the history-backfill fast path pointed at the final visible

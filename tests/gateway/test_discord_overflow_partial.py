@@ -49,12 +49,14 @@ def discord_adapter() -> DiscordAdapter:
 
 
 @pytest.mark.asyncio
-async def test_edit_overflow_split_partial_success_after_some_continuations_land(
+async def test_edit_overflow_split_partial_failure_after_some_continuations_land(
     discord_adapter,
 ):
-    """Discord's contract: a mid-split continuation failure still reports
-    success=True with the partial_overflow payload pointing at the last
-    delivered continuation."""
+    """Discord's contract (parity with Telegram): a mid-split continuation
+    failure reports a strict failure carrying the partial_overflow payload
+    pointing at the last delivered continuation — the stream consumer only
+    honors that payload on a FAILED result, so reporting success would mark
+    the clipped reply as final and silently drop the tail."""
     content = "word " * 120  # forces several 160-char chunks
     channel = SimpleNamespace(id=555, send=AsyncMock())
     msg = SimpleNamespace(id=201, edit=AsyncMock())
@@ -68,7 +70,9 @@ async def test_edit_overflow_split_partial_success_after_some_continuations_land
 
     result = await discord_adapter._edit_overflow_split(channel, msg, "201", content)
 
-    assert result.success is True
+    assert result.success is False
+    assert result.error == "overflow_continuation_failed"
+    assert result.retryable is True
     assert result.message_id == "202"
     assert result.raw_response["partial_overflow"] is True
     assert result.raw_response["delivered_chunks"] == 2
