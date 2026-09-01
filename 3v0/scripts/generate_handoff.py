@@ -62,9 +62,11 @@ HANDOFF_PATH = BODY / "HANDOFF.md"
 CONTINUITY_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "continuity_check.py"
 DRIFT_SCRIPT = REPO_ROOT / "3v0" / "scripts" / "drift_check.py"
 
-# The own-clock review daemons (systemd user services). Mirrors the trio named
-# in HANDOFF.md / memory; add a service here when onboarding a new project.
-DAEMONS = ("3v0-review", "f1nance-review", "axiom-review")
+# The own-clock review daemons (systemd user services). Add a unit here when
+# a project's review daemon is onboarded. EMPTY since the 2026-08-24 →
+# 2026-09-02 operator consolidation retired the trio (see CONTINUITY.md
+# Identity) — rendering degrades to "(none configured)".
+DAEMONS: tuple = ()
 
 
 def _git(args: list, cwd: Path = BODY) -> tuple:

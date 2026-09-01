@@ -288,19 +288,20 @@ def render_handoff(ctx: dict) -> str:
     parts.append("")
     parts.append("## Store")
     parts.append(_render_store(ctx))
-    parts.append("")
-    parts.append("## Daemons")
-    parts.append(_render_daemons(ctx))
+    daemons = ctx.get("daemons")
+    if daemons:
+        parts.append("")
+        parts.append("## Daemons")
+        parts.append(_render_daemons(ctx))
     parts.append("")
     parts.append("## Startup (canonical)")
-    parts.append(
-        "\n".join(
-            [
-                "1. `systemctl --user status 3v0-review f1nance-review axiom-review`",
-                "2. `bash scripts/handoff_check.sh`",
-                "3. `python3 3v0/scripts/continuity_check.py` (and `--heal` / `--accept`)",
-            ]
+    startup = []
+    if daemons:
+        startup.append(
+            "1. `systemctl --user status " + " ".join(sorted(daemons)) + "`"
         )
-    )
+    startup.append("1. `bash scripts/handoff_check.sh`")
+    startup.append("2. `python3 3v0/scripts/continuity_check.py` (and `--heal` / `--accept`)")
+    parts.append("\n".join(startup))
     parts.append("")
     return "\n".join(parts)

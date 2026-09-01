@@ -87,6 +87,15 @@ class TestRenderHandoff(unittest.TestCase):
                        "## Open loops", "## Store", "## Daemons", "## Startup (canonical)"):
             self.assertIn(header, md, header)
 
+    def test_no_daemons_omits_section_and_systemctl_step(self):
+        # The operator consolidation retired the review-daemon trio: with an
+        # empty daemon set the section disappears and the canonical startup
+        # drops the systemctl probe instead of naming dead units.
+        md = render_handoff(_ctx(daemons={}))
+        self.assertNotIn("## Daemons", md)
+        self.assertNotIn("systemctl --user status", md)
+        self.assertIn("handoff_check.sh", md)
+
     def test_banner_marks_mechanical_state_canonical(self):
         md = render_handoff(_ctx())
         self.assertIn(GENERATED_BANNER, md)
