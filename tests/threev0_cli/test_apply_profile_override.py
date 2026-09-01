@@ -36,6 +36,12 @@ def _run_apply_profile_override(
         (threev0_root / "profiles" / active_profile).mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    # Both spellings must be isolated: _apply_profile_override writes the
+    # 3V0_HOME canonical alias alongside EV0_HOME (R2), and that direct
+    # os.environ write is NOT rolled back by monkeypatch — a leaked
+    # 3V0_HOME from a sibling test is authoritative once reads go through
+    # branded_env (canonical first).
+    monkeypatch.delenv("3V0_HOME", raising=False)
     if threev0_home is not None:
         monkeypatch.setenv("EV0_HOME", threev0_home)
     else:

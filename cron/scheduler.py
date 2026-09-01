@@ -15,6 +15,7 @@ import contextlib
 import contextvars
 import json
 import logging
+from env_compat import branded_env
 import os
 import re
 import shutil
@@ -651,7 +652,7 @@ def _inflight_min_allowance_minutes() -> float:
                 return val
     except Exception:
         pass
-    raw = os.getenv("EV0_CRON_INFLIGHT_MAX_MINUTES", "").strip()
+    raw = (branded_env("CRON_INFLIGHT_MAX_MINUTES") or "").strip()
     if raw:
         try:
             val = float(raw)
@@ -1134,7 +1135,7 @@ def _cron_inactivity_seconds() -> float:
     the two sites cannot drift apart — the lock bound must stay at or above
     the inactivity limit or waiters would fail while a healthy holder runs.
     """
-    raw = os.getenv("EV0_CRON_TIMEOUT", "").strip()
+    raw = (branded_env("CRON_TIMEOUT") or "").strip()
     if not raw:
         return 600.0
     try:
@@ -2950,7 +2951,7 @@ def _get_script_timeout() -> int:
         except Exception:
             logger.warning("Invalid patched _SCRIPT_TIMEOUT=%r; using env/config/default", _SCRIPT_TIMEOUT)
 
-    env_value = os.getenv("EV0_CRON_SCRIPT_TIMEOUT", "").strip()
+    env_value = (branded_env("CRON_SCRIPT_TIMEOUT") or "").strip()
     if env_value:
         try:
             timeout = int(float(env_value))
@@ -3947,7 +3948,7 @@ def _preflight_check_provider_key(job: dict, cfg: dict) -> Optional[str]:
         or str((_cron_cfg or {}).get("model_provider") or "").strip()
         or None
     )
-    model = job.get("model") or os.getenv("EV0_MODEL") or ""
+    model = job.get("model") or branded_env("MODEL") or ""
 
     from threev0_cli.auth import AuthError
 
@@ -4473,7 +4474,7 @@ def run_job(
         # Resolve timeout: env override → config.yaml → default 10s.
         # Mirrors the script_timeout_seconds resolution pattern.
         _session_db_timeout: float | None = None
-        _raw_env_timeout = os.getenv("EV0_CRON_SESSION_DB_TIMEOUT", "").strip()
+        _raw_env_timeout = (branded_env("CRON_SESSION_DB_TIMEOUT") or "").strip()
         if _raw_env_timeout:
             try:
                 _session_db_timeout = float(_raw_env_timeout)
@@ -4780,7 +4781,7 @@ def run_job(
         # re-read from storage every tick so a ``cronjob action=update
         # model=...`` after a failed run takes effect on the next tick — there
         # is no in-memory cache.
-        model = job.get("model") or os.getenv("EV0_MODEL") or ""
+        model = job.get("model") or branded_env("MODEL") or ""
 
         # cron.model / cron.model_provider: a deliberate cron-fleet default
         # so unattended jobs stop shadowing chat `/model` switches. When an
@@ -4838,7 +4839,7 @@ def run_job(
             raise RuntimeError(
                 f"Cron job '{job_name}' has no model configured "
                 f"(job.model={job.get('model')!r}, "
-                f"EV0_MODEL={os.getenv('EV0_MODEL', '')!r}, "
+                f"EV0_MODEL={(branded_env('MODEL') or '')!r}, "
                 "config.yaml model.default missing or empty). "
                 f"Set a per-job model via "
                 f"`cronjob action=update job_id={job_id} model=<name>` or set a "
@@ -4864,7 +4865,7 @@ def run_job(
         prefill_messages = None
         agent_cfg = _cfg.get("agent", {}) if isinstance(_cfg.get("agent", {}), dict) else {}
         prefill_file = (
-            os.getenv("EV0_PREFILL_MESSAGES_FILE", "")
+            (branded_env("PREFILL_MESSAGES_FILE") or "")
             or _cfg.get("prefill_messages_file", "")
             or agent_cfg.get("prefill_messages_file", "")
         )
@@ -6529,7 +6530,7 @@ def tick(
         # Set EV0_CRON_MAX_PARALLEL=1 to restore old serial behaviour.
         _max_workers: Optional[int] = None
         try:
-            _env_par = os.getenv("EV0_CRON_MAX_PARALLEL", "").strip()
+            _env_par = (branded_env("CRON_MAX_PARALLEL") or "").strip()
             if _env_par:
                 _max_workers = int(_env_par) or None
         except (ValueError, TypeError):

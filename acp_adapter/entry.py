@@ -32,6 +32,7 @@ else:
 import argparse
 import asyncio
 import logging
+from env_compat import branded_env
 import os
 import sys
 from pathlib import Path
@@ -257,7 +258,7 @@ def main(argv: list[str] | None = None) -> None:
     # that path is unaffected.)  Moved from model_tools.py module scope
     # to avoid freezing the gateway's loop on lazy import (#16856).
     # Metadata-only hosts can opt out of unrelated global MCP startup.
-    if os.environ.get("EV0_ACP_SKIP_CONFIGURED_MCP", "").strip() != "1":
+    if (branded_env("ACP_SKIP_CONFIGURED_MCP") or "").strip() != "1":
         try:
             from threev0_cli.mcp_startup import start_background_mcp_discovery
 

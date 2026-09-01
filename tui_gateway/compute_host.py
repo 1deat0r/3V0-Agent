@@ -11,6 +11,7 @@ import argparse
 import concurrent.futures
 import contextlib
 import json
+from env_compat import branded_env
 import os
 import signal
 import subprocess
@@ -163,7 +164,7 @@ class ComputeHost:
         self._heartbeat_secs = (
             float(heartbeat_secs)
             if heartbeat_secs is not None
-            else float(os.environ.get("EV0_COMPUTE_HOST_HEARTBEAT_SECS") or "15")
+            else float(branded_env("COMPUTE_HOST_HEARTBEAT_SECS") or "15")
         )
         if self._heartbeat_secs > 0:
             threading.Thread(target=self._heartbeat_loop, name="compute-host-heartbeat", daemon=True).start()
@@ -820,7 +821,7 @@ def _rss_mb(pid: int) -> float:
 
 def _default_workers() -> int:
     try:
-        return max(2, int(os.environ.get("EV0_TUI_RPC_POOL_WORKERS") or "8"))
+        return max(2, int(branded_env("TUI_RPC_POOL_WORKERS") or "8"))
     except (TypeError, ValueError):
         return 8
 

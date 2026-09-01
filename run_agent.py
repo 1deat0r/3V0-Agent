@@ -38,6 +38,7 @@ import hashlib
 import json
 import logging
 logger = logging.getLogger(__name__)
+from env_compat import branded_env
 import os
 import re
 import sys
@@ -96,7 +97,7 @@ def _session_source_for_agent(platform: Optional[str]) -> str:
 
         source = get_session_env("EV0_SESSION_SOURCE", "")
     except Exception:
-        source = os.environ.get("EV0_SESSION_SOURCE", "")
+        source = (branded_env("SESSION_SOURCE") or "")
     source = str(source or "").strip()
     if source:
         return source
@@ -1417,7 +1418,7 @@ class AIAgent:
         if cfg is not None:
             return cfg, False
 
-        env_timeout = os.getenv("EV0_API_CALL_STALE_TIMEOUT")
+        env_timeout = branded_env("API_CALL_STALE_TIMEOUT")
         if env_timeout is not None:
             return float(env_timeout), False
 
@@ -2781,7 +2782,7 @@ class AIAgent:
 
     @staticmethod
     def _hook_payload_max_chars() -> int:
-        raw = os.getenv("EV0_PLUGIN_PAYLOAD_MAX_CHARS", "50000")
+        raw = branded_env("PLUGIN_PAYLOAD_MAX_CHARS", "50000")
         try:
             return max(1000, int(raw))
         except (TypeError, ValueError):
@@ -3936,7 +3937,7 @@ class AIAgent:
         self._last_activity_ts = time.time()
         self._last_activity_desc = bound_activity_description(desc)
         self._last_activity_provenance = normalize_activity_provenance(provenance)
-        if os.environ.get("EV0_KANBAN_TASK"):
+        if branded_env("KANBAN_TASK"):
             try:
                 from tools.kanban_tools import (
                     heartbeat_current_worker_from_env,
@@ -4102,7 +4103,7 @@ class AIAgent:
         headers = getattr(http_response, "headers", None)
         if not headers:
             return
-        _dev = is_truthy_value(os.environ.get("EV0_DEV_CREDITS"))
+        _dev = is_truthy_value(branded_env("DEV_CREDITS"))
 
         # ── Parse (fail-open → miss; never overwrite good state with None) ──
         try:

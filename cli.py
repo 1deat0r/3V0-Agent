@@ -25,6 +25,7 @@ except ModuleNotFoundError:
 
 import logging
 import copy
+from env_compat import branded_env
 import os
 import shutil
 import sys
@@ -373,7 +374,7 @@ def _resolve_prefill_messages_file(config: Dict[str, Any]) -> str:
     ``agent.prefill_messages_file`` remains a legacy fallback for older CLI and
     godmode-generated configs.
     """
-    env_path = os.getenv("EV0_PREFILL_MESSAGES_FILE", "").strip()
+    env_path = (branded_env("PREFILL_MESSAGES_FILE") or "").strip()
     if env_path:
         return env_path
     top_level = str(config.get("prefill_messages_file", "") or "").strip()
@@ -431,7 +432,7 @@ def load_cli_config() -> Dict[str, Any]:
 
     # --ignore-user-config: force-skip the user config.yaml (still honor project
     # config as a fallback so defaults stay sensible).
-    ignore_user_config = os.environ.get("EV0_IGNORE_USER_CONFIG") == "1"
+    ignore_user_config = branded_env("IGNORE_USER_CONFIG") == "1"
 
     # Use user config if it exists, otherwise project config
     if user_config_path.exists() and not ignore_user_config:
@@ -1011,10 +1012,10 @@ def _prepare_deferred_agent_startup() -> None:
     global _deferred_agent_startup_done
     if _deferred_agent_startup_done:
         return
-    if os.environ.get("EV0_DEFER_AGENT_STARTUP") != "1":
+    if branded_env("DEFER_AGENT_STARTUP") != "1":
         return
     _deferred_agent_startup_done = True
-    _accept_hooks = os.environ.get("EV0_ACCEPT_HOOKS", "").lower() in {
+    _accept_hooks = (branded_env("ACCEPT_HOOKS") or "").lower() in {
         "1",
         "true",
         "yes",
@@ -1083,7 +1084,7 @@ def _arm_exit_watchdog(timeout_s: float | None = None, *, from_signal: bool = Fa
     """
     if timeout_s is None:
         try:
-            timeout_s = float(os.getenv("EV0_EXIT_WATCHDOG_S", "30"))
+            timeout_s = float(branded_env("EXIT_WATCHDOG_S", "30"))
         except (TypeError, ValueError):
             timeout_s = 30.0
     if timeout_s <= 0:
@@ -1164,7 +1165,7 @@ def _arm_exit_watchdog_on_shutdown_signal() -> None:
         return
     _signal_watchdog_armed = True
     try:
-        base = float(os.getenv("EV0_EXIT_WATCHDOG_S", "30"))
+        base = float(branded_env("EXIT_WATCHDOG_S", "30"))
     except (TypeError, ValueError):
         base = 30.0
     if base <= 0:
@@ -2891,7 +2892,7 @@ def _detect_light_mode() -> bool:
                 _LIGHT_MODE_CACHE = result
                 return result
         # 2. Theme hint
-        theme = (os.environ.get("EV0_TUI_THEME") or "").strip().lower()
+        theme = (branded_env("TUI_THEME") or "").strip().lower()
         if theme == "light":
             result = True
             _LIGHT_MODE_CACHE = result
@@ -2900,7 +2901,7 @@ def _detect_light_mode() -> bool:
             _LIGHT_MODE_CACHE = result
             return result
         # 3. Explicit bg hex
-        bg_hint = os.environ.get("EV0_TUI_BACKGROUND") or ""
+        bg_hint = branded_env("TUI_BACKGROUND") or ""
         bg_lum = _luminance_from_hex(bg_hint)
         if bg_lum is not None:
             result = bg_lum >= 0.5
@@ -4403,7 +4404,7 @@ def _build_compact_banner() -> str:
         line1 = f"{agent_name} - AI Agent Framework"
         tiny_line = agent_name
 
-    if os.environ.get("EV0_FAST_STARTUP_BANNER") == "1":
+    if branded_env("FAST_STARTUP_BANNER") == "1":
         from threev0_cli import __release_date__ as _release_date
         from threev0_cli import __version__ as _version
 
@@ -4831,7 +4832,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # model (#56828). A ``moa:`` prefix wins over an explicit ``--provider``.
         _moa_provider_override, self.model = _normalize_moa_model(self.model)
         # Read max_tokens from config (env var override: EV0_MAX_TOKENS)
-        _env_mt = os.environ.get("EV0_MAX_TOKENS")
+        _env_mt = branded_env("MAX_TOKENS")
         if _env_mt:
             try:
                 self.max_tokens = int(_env_mt)
@@ -4869,7 +4870,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             or provider
             or _nested_provider
             or CLI_CONFIG["model"].get("provider")
-            or os.getenv("EV0_INFERENCE_PROVIDER")
+            or branded_env("INFERENCE_PROVIDER")
             or "auto"
         )
         # `--provider <custom>` without `-m` must use that entry's
@@ -4923,9 +4924,9 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             # other paths may bypass it. This fallback is therefore the only
             # safety net for configs that still carry the root key.
             self.max_turns = CLI_CONFIG["max_turns"]
-        elif os.getenv("EV0_MAX_ITERATIONS"):
+        elif branded_env("MAX_ITERATIONS"):
             try:
-                self.max_turns = int(os.getenv("EV0_MAX_ITERATIONS", ""))
+                self.max_turns = int((branded_env("MAX_ITERATIONS") or ""))
             except (TypeError, ValueError):
                 self.max_turns = 500
         else:
@@ -4959,7 +4960,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # by `3v0 chat --ignore-rules` in threev0_cli/main.py. When true we
         # pass skip_context_files=True and skip_memory=True to AIAgent so
         # AGENTS.md/SOUL.md/.cursorrules and persistent memory are not loaded.
-        self.ignore_rules = ignore_rules or os.environ.get("EV0_IGNORE_RULES") == "1"
+        self.ignore_rules = ignore_rules or branded_env("IGNORE_RULES") == "1"
         
         # Ephemeral system prompt: env var takes precedence, then
         # display.personality / agent.system_prompt from config.
@@ -4970,7 +4971,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         )
 
         self.system_prompt = (
-            os.getenv("EV0_EPHEMERAL_SYSTEM_PROMPT", "")
+            (branded_env("EPHEMERAL_SYSTEM_PROMPT") or "")
             or resolve_ephemeral_system_prompt(CLI_CONFIG)
         )
         self.personalities = available_personalities(CLI_CONFIG)
@@ -8137,7 +8138,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # On the snapshot fast path (warm launch), the check walks every
         # check_fn (~180ms) — run it in the background refresh thread instead
         # and let its output land above the prompt (patch_stdout-safe).
-        if os.environ.get("EV0_DEFER_AGENT_STARTUP") != "1":
+        if branded_env("DEFER_AGENT_STARTUP") != "1":
             if getattr(self, "_defer_tool_warnings", False):
                 threading.Thread(
                     target=self._show_tool_availability_warnings,
@@ -8732,7 +8733,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
     def _show_status(self):
         """Show compact startup status line."""
         # Avoid pulling the full tool registry into the bare Termux prompt path.
-        if os.environ.get("EV0_DEFER_AGENT_STARTUP") == "1":
+        if branded_env("DEFER_AGENT_STARTUP") == "1":
             tool_status = "tools deferred"
         else:
             tools = get_tool_definitions(enabled_toolsets=self.enabled_toolsets, quiet_mode=True)
@@ -9405,7 +9406,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                     self.agent._session_db_created = False
                     self._session_db.create_session(
                         session_id=self.session_id,
-                        source=os.environ.get("EV0_SESSION_SOURCE", "cli"),
+                        source=branded_env("SESSION_SOURCE", "cli"),
                         model=self.model,
                         model_config={
                             "max_iterations": self.max_turns,
@@ -16510,7 +16511,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # main thread simply blocks on the remaining import work instead of
         # redoing it. Skipped when agent startup is explicitly deferred
         # (Termux) — that path defers heavy work on purpose.
-        if os.environ.get("EV0_DEFER_AGENT_STARTUP") != "1":
+        if branded_env("DEFER_AGENT_STARTUP") != "1":
             def _prewarm_agent_runtime() -> None:
                 try:
                     import run_agent  # noqa: F401  (imports model_tools + tool registry)
@@ -16529,7 +16530,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         # won't affect the running process — we just want the operator to
         # see that they're running without the safety net.
         try:
-            _redact_raw = os.getenv("EV0_REDACT_SECRETS", "true")
+            _redact_raw = branded_env("REDACT_SECRETS", "true")
             if _redact_raw.lower() not in {"1", "true", "yes", "on"}:
                 self._console_print(
                     "[bold red]⚠  Secret redaction is DISABLED[/] "
@@ -16698,10 +16699,10 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         self._voice_last_tts_text = ""  # most recently spoken TTS text (echo guard, #75780)
         self._voice_barge_phase = None  # "generation" or "playback" phase of the last barge trip
 
-        if os.environ.get("EV0_DEFER_AGENT_STARTUP") != "1":
+        if branded_env("DEFER_AGENT_STARTUP") != "1":
             self._install_tool_callbacks()
 
-        if os.environ.get("EV0_DEFER_AGENT_STARTUP") != "1":
+        if branded_env("DEFER_AGENT_STARTUP") != "1":
             self._ensure_tirith_security()
         
         # Key bindings for the input area
@@ -19184,7 +19185,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                         _signal_agent, f"received signal {signum}"
                     )
                     try:
-                        _grace = float(os.getenv("EV0_SIGTERM_GRACE", "1.5"))
+                        _grace = float(branded_env("SIGTERM_GRACE", "1.5"))
                     except (TypeError, ValueError):
                         _grace = 1.5
                     if _grace > 0:
@@ -19861,7 +19862,7 @@ def main(
             if _agent is not None:
                 request_hard_interrupt(_agent, f"received signal {signum}")
                 try:
-                    _grace = float(os.getenv("EV0_SIGTERM_GRACE", "1.5"))
+                    _grace = float(branded_env("SIGTERM_GRACE", "1.5"))
                 except (TypeError, ValueError):
                     _grace = 1.5
                 if _grace > 0:
@@ -19880,7 +19881,7 @@ def main(
         # first so the final debug trace isn't lost; SIGALRM deadman guards
         # the flush against any rare blocking-I/O case (the reporter measured
         # flush in <1ms; the alarm is a failsafe, not the common path).
-        if os.environ.get("EV0_KANBAN_TASK"):
+        if branded_env("KANBAN_TASK"):
             try:
                 import signal as _sig_mod
                 if hasattr(_sig_mod, "SIGALRM"):
@@ -19937,7 +19938,7 @@ def main(
             # path or URL into a kanban task body never get it routed to the
             # model's vision input.
             single_query_image_urls: list[str] = []
-            _kanban_task_id = os.environ.get("EV0_KANBAN_TASK", "").strip()
+            _kanban_task_id = (branded_env("KANBAN_TASK") or "").strip()
             if _kanban_task_id:
                 try:
                     from threev0_cli import kanban_db as _kb
@@ -20084,7 +20085,7 @@ def main(
                         # out (→ sticky block). Gated on the env vars the
                         # dispatcher sets in `_default_spawn`; a no-op for every
                         # normal worker and every non-kanban `-q` run.
-                        if os.environ.get("EV0_KANBAN_GOAL_MODE") == "1":
+                        if branded_env("KANBAN_GOAL_MODE") == "1":
                             try:
                                 _run_kanban_goal_loop_q(cli, response)
                             except Exception as _goal_exc:
@@ -20108,7 +20109,7 @@ def main(
                         _exit_code = 0
                         if isinstance(result, dict) and result.get("failed"):
                             _exit_code = 1
-                            if os.environ.get("EV0_KANBAN_TASK") and result.get(
+                            if branded_env("KANBAN_TASK") and result.get(
                                 "failure_reason"
                             ) in ("rate_limit", "billing"):
                                 try:

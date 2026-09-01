@@ -31,6 +31,7 @@ a JSON object falls back to env / built-in defaults.
 from __future__ import annotations
 
 import json
+from env_compat import branded_env
 import os
 import threading
 import time
@@ -39,7 +40,7 @@ from typing import Any, Callable, Optional
 
 def synth_turn_armed() -> bool:
     """True when the synthetic-turn test seam is armed via env."""
-    return os.environ.get("EV0_ISO_CERTIFY_SYNTH_TURN") == "1"
+    return branded_env("ISO_CERTIFY_SYNTH_TURN") == "1"
 
 
 def _env_float(name: str, default: float) -> float:

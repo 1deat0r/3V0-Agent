@@ -21,6 +21,7 @@ import errno
 import hashlib
 import json
 import logging
+from env_compat import branded_env
 import os
 import queue
 import random
@@ -2608,7 +2609,7 @@ END;
 
 def fts5_cjk_so_path() -> Path:
     """Location of the cjk_unicode61 loadable extension."""
-    env = os.getenv("EV0_FTS5_CJK_SO")
+    env = branded_env("FTS5_CJK_SO")
     if env:
         return Path(env).expanduser()
     return get_threev0_home() / "lib" / "libfts5_cjk.so"
@@ -2616,7 +2617,7 @@ def fts5_cjk_so_path() -> Path:
 
 def _cjk_fts_config_enabled() -> bool:
     """config.yaml ``sessions.cjk_fts`` (default on), via its env bridge."""
-    return os.getenv("EV0_CJK_FTS", "1").strip().lower() not in (
+    return branded_env("CJK_FTS", "1").strip().lower() not in (
         "0", "false", "off", "no",
     )
 

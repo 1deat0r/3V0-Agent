@@ -8,6 +8,7 @@ import base64
 import contextvars
 import json
 import logging
+from env_compat import branded_env
 import os
 from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor
@@ -1902,7 +1903,7 @@ class Ev0ACPAgent(acp.Agent):
             # the new task so clients can render a per-session board). Save
             # and restore around the agent call so a re-used executor thread
             # never leaks one session's id into the next session's tools.
-            previous_session_id = os.environ.get("EV0_SESSION_ID")
+            previous_session_id = branded_env("SESSION_ID")
             os.environ["EV0_SESSION_ID"] = session_id
             # Auto-titling fires inside the turn prologue now; give the agent
             # this session's notifier so a new title reaches the client as a

@@ -1441,10 +1441,11 @@ def _(rid, params: dict) -> dict:
         cfg = _load_cfg()
         model = _resolve_model()
         from agent.secret_scope import get_secret
+        from env_compat import branded_env
 
         api_key = get_secret("EV0_API_KEY", "") or cfg.get("api_key", "")
         masked = f"****{api_key[-4:]}" if len(api_key) > 4 else "(not set)"
-        base_url = os.environ.get("EV0_BASE_URL", "") or cfg.get("base_url", "")
+        base_url = (branded_env("BASE_URL") or "") or cfg.get("base_url", "")
 
         sections = [
             {

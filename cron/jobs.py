@@ -15,6 +15,7 @@ import shutil
 import tempfile
 import threading
 import time
+from env_compat import branded_env
 import os
 import re
 import uuid
@@ -222,7 +223,7 @@ def _oneshot_run_claim_ttl_seconds() -> float:
     - positive N → ``max(N * headroom, ONESHOT_RUN_CLAIM_TTL_SECONDS)`` so a
       tiny configured timeout can never expire a claim mid-run.
     """
-    raw = os.getenv("EV0_CRON_TIMEOUT", "").strip()
+    raw = (branded_env("CRON_TIMEOUT") or "").strip()
     timeout = _DEFAULT_CRON_INACTIVITY_TIMEOUT
     if raw:
         try:
@@ -2588,7 +2589,7 @@ def _machine_id() -> str:
     Uses ``EV0_MACHINE_ID`` if set, else hostname + pid. The CAS correctness
     comes from the file lock + the fresh-claim check, not from this value.
     """
-    explicit = os.getenv("EV0_MACHINE_ID", "").strip()
+    explicit = (branded_env("MACHINE_ID") or "").strip()
     if explicit:
         return explicit
     try:
