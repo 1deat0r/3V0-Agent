@@ -57,6 +57,7 @@ import inspect
 import json
 import logging
 import math
+from env_compat import branded_env
 import os
 import tempfile
 import time
@@ -3532,7 +3533,7 @@ def compress_context(
                         parent_session_id=old_session_id,
                         child_session_id=new_session_id,
                         source=agent.platform
-                        or os.environ.get("EV0_SESSION_SOURCE", "cli"),
+                        or branded_env("SESSION_SOURCE", "cli"),
                         model=agent.model,
                         model_config=agent._session_init_model_config,
                         system_prompt=new_system_prompt,

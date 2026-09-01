@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from env_compat import branded_env
 import os
 from pathlib import Path
 from typing import Optional
@@ -94,7 +95,7 @@ def get_safe_write_roots() -> set[str]:
     """Return resolved EV0_WRITE_SAFE_ROOT paths. Supports multiple directories
     separated by ``os.pathsep`` (``:`` on Unix, ``;`` on Windows).
     E.g., ``/opt/data:/var/www/html`` on Unix, ``C:\\data;D:\\www`` on Windows."""
-    env = os.getenv("EV0_WRITE_SAFE_ROOT", "")
+    env = (branded_env("WRITE_SAFE_ROOT") or "")
     if not env:
         return set()
     roots: set[str] = set()

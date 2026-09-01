@@ -52,6 +52,7 @@ import hashlib
 import inspect
 import json
 import logging
+from env_compat import branded_env
 import os
 import re
 import threading
@@ -965,7 +966,7 @@ def build_or_headers(or_config: dict | None = None) -> dict:
             or_config = {}
 
     # Determine cache enabled: env var overrides config.
-    env_cache = os.environ.get("EV0_OPENROUTER_CACHE", "").strip().lower()
+    env_cache = (branded_env("OPENROUTER_CACHE") or "").strip().lower()
     if env_cache:
         cache_enabled = env_cache in _TRUTHY_ENV_VALUES
     else:
@@ -977,7 +978,7 @@ def build_or_headers(or_config: dict | None = None) -> dict:
     headers["X-OpenRouter-Cache"] = "true"
 
     # Determine TTL: env var overrides config.
-    env_ttl = os.environ.get("EV0_OPENROUTER_CACHE_TTL", "").strip()
+    env_ttl = (branded_env("OPENROUTER_CACHE_TTL") or "").strip()
     if env_ttl:
         if env_ttl.isdigit():
             ttl = int(env_ttl)
@@ -1290,7 +1291,7 @@ def _is_anthropic_compatible_host(url: str) -> bool:
 
 def _nous_min_key_ttl_seconds() -> int:
     try:
-        return max(60, int(os.getenv("EV0_NOUS_MIN_KEY_TTL_SECONDS", "1800")))
+        return max(60, int(branded_env("NOUS_MIN_KEY_TTL_SECONDS", "1800")))
     except (TypeError, ValueError):
         return 1800
 
@@ -2433,7 +2434,7 @@ def _resolve_xai_oauth_for_aux() -> Optional[Tuple[str, str]]:
                     or ""
                 ).strip()
                 base_url = _xai_validate_inference_base_url(
-                    os.getenv("EV0_XAI_BASE_URL", "").strip().rstrip("/")
+                    (branded_env("XAI_BASE_URL") or "").strip().rstrip("/")
                     or os.getenv("XAI_BASE_URL", "").strip().rstrip("/")
                     or str(getattr(entry, "runtime_base_url", None) or "").strip().rstrip("/")
                     or str(getattr(entry, "base_url", None) or "").strip().rstrip("/"),

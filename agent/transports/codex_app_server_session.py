@@ -25,6 +25,7 @@ call is synchronous and behaves like AIAgent's existing chat_completions loop.
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import threading
 import time
@@ -288,7 +289,7 @@ class CodexAppServerSession:
         self._codex_home = codex_home
         self._permission_profile = (
             permission_profile or _EV0_TO_CODEX_PERMISSION_PROFILE.get(
-                os.environ.get("EV0_TERMINAL_SECURITY_MODE", "auto"),
+                branded_env("TERMINAL_SECURITY_MODE", "auto"),
                 "workspace-write",
             )
         )

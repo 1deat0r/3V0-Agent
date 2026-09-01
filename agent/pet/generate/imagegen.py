@@ -14,6 +14,7 @@ producing an ungrounded, drifting pet.
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -44,7 +45,7 @@ def _forced_provider_from_env() -> str | None:
     active/default provider resolution for pet generation only. Unknown values are
     ignored so existing users are unaffected.
     """
-    forced = os.environ.get("EV0_PET_IMAGE_PROVIDER", "").strip().lower()
+    forced = (branded_env("PET_IMAGE_PROVIDER") or "").strip().lower()
     return forced if forced in _REF_CAPABLE else None
 
 

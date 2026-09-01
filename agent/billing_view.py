@@ -15,6 +15,7 @@ We keep them as :class:`decimal.Decimal` end-to-end and only format for display.
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import uuid
 from dataclasses import dataclass
@@ -414,7 +415,7 @@ def _dev_fixture_billing_state() -> Optional[BillingState]:
     Mirrors ``EV0_DEV_CREDITS_FIXTURE``; the usage *bar* still comes from
     ``EV0_DEV_CREDITS_FIXTURE`` (set both to pair a bar with a billing state).
     """
-    name = (os.getenv("EV0_DEV_BILLING_FIXTURE") or "").strip().lower()
+    name = (branded_env("DEV_BILLING_FIXTURE") or "").strip().lower()
     if not name:
         return None
 

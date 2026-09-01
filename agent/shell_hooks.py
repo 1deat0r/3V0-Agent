@@ -137,6 +137,7 @@ from __future__ import annotations
 import difflib
 import json
 import logging
+from env_compat import branded_env
 import os
 import re
 import shlex
@@ -1066,7 +1067,7 @@ def _resolve_effective_accept(
     """
     if accept_hooks_arg:
         return True
-    env = os.environ.get("EV0_ACCEPT_HOOKS", "").strip().lower()
+    env = (branded_env("ACCEPT_HOOKS") or "").strip().lower()
     if env in {"1", "true", "yes", "on"}:
         return True
     cfg_val = cfg.get("hooks_auto_accept", False)

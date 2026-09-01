@@ -23,6 +23,7 @@ keep the exact logger name (``"agent.conversation_loop"``).
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 
 from agent.codex_responses_adapter import _summarize_user_message_for_log
@@ -202,7 +203,7 @@ def finalize_turn(
         # We route through ``_record_task_failure(outcome="timed_out")``
         # rather than ``kanban_block`` so this counts toward the dispatcher's
         # consecutive-failure circuit breaker (#29747 gap 2).
-        _kanban_task = os.environ.get("EV0_KANBAN_TASK")
+        _kanban_task = branded_env("KANBAN_TASK")
         if _kanban_task:
             _record_kanban_budget_exhausted(
                 _kanban_task, api_call_count, agent.max_iterations, logger,
@@ -216,7 +217,7 @@ def finalize_turn(
         # ``_record_task_failure`` (compare-and-swap receipt path) which
         # is a no-op if another path closed it — the CAS invariant in
         # ``_end_run`` (``WHERE ended_at IS NULL``) guarantees idempotence.
-        _kanban_task = os.environ.get("EV0_KANBAN_TASK")
+        _kanban_task = branded_env("KANBAN_TASK")
         if _kanban_task:
             _record_kanban_budget_exhausted(
                 _kanban_task, api_call_count, agent.max_iterations, logger,

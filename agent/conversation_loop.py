@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import logging
+from env_compat import branded_env
 import os
 import random
 import re
@@ -8041,7 +8042,7 @@ def run_conversation(
                     logger.info(
                         "kanban stop-loop nudge issued (attempt %d) task=%s",
                         agent._kanban_stop_nudges,
-                        os.environ.get("EV0_KANBAN_TASK", ""),
+                        (branded_env("KANBAN_TASK") or ""),
                     )
                     agent._emit_status(
                         "⚠️ Kanban worker tried to exit without "

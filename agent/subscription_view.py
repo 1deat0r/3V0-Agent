@@ -19,6 +19,7 @@ Until it ships, the fail-open contract handles 404s — the builder returns
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 from dataclasses import dataclass
 from decimal import Decimal
@@ -464,7 +465,7 @@ def dev_fixture_subscription_state() -> Optional[SubscriptionState]:
     Returns ``None`` when the env var is unset/empty (the real portal path runs).
     Throwaway scaffolding — mirrors ``EV0_DEV_CREDITS_FIXTURE``.
     """
-    name = (os.getenv("EV0_DEV_SUBSCRIPTION_FIXTURE") or "").strip().lower()
+    name = (branded_env("DEV_SUBSCRIPTION_FIXTURE") or "").strip().lower()
     if not name:
         return None
 

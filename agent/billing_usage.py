@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import logging
 import math
+from env_compat import branded_env
 import os
 from dataclasses import dataclass
 from typing import Any, Optional
@@ -267,7 +268,7 @@ def _dev_fixture_usage_model() -> Optional[UsageModel]:
     Recognized names: ``free | healthy | low | topup | depleted``. Returns
     ``None`` when the env var is unset (real portal path runs).
     """
-    name = (os.getenv("EV0_DEV_CREDITS_FIXTURE") or "").strip().lower()
+    name = (branded_env("DEV_CREDITS_FIXTURE") or "").strip().lower()
     if not name:
         return None
 

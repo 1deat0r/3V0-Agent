@@ -32,6 +32,7 @@ pt, ru, hu, ar.  Unknown values fall back to en.
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import threading
 from functools import lru_cache
@@ -102,7 +103,7 @@ def _locales_dir() -> Path:
     ``_load_catalog`` error messages informative -- it logs the path it
     looked at -- rather than raising.
     """
-    override = os.getenv("EV0_BUNDLED_LOCALES", "").strip()
+    override = (branded_env("BUNDLED_LOCALES") or "").strip()
     if override:
         candidate = Path(override)
         if candidate.is_dir():
@@ -220,7 +221,7 @@ def reset_language_cache() -> None:
 
 def get_language() -> str:
     """Resolve the active language using env > config > default order."""
-    env_lang = os.environ.get("EV0_LANGUAGE")
+    env_lang = branded_env("LANGUAGE")
     if env_lang:
         return _normalize_lang(env_lang)
     cfg_lang = _config_language_cached()

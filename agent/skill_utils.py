@@ -7,6 +7,7 @@ tool registration or provider resolution.
 
 import ast
 import logging
+from env_compat import branded_env
 import os
 import re
 import sys
@@ -306,7 +307,7 @@ def _detect_environment(env: str) -> bool:
         # kanban toolset. Mirror the same signals the kanban tools themselves
         # gate on (``tools/kanban_tools.py``) so the offer filter agrees with
         # tool availability.
-        if os.getenv("EV0_KANBAN_TASK") or os.getenv("EV0_KANBAN_BOARD"):
+        if branded_env("KANBAN_TASK") or branded_env("KANBAN_BOARD"):
             # ...but only when this execution actually owns the dispatcher's
             # task. A delegate_task child or a cron job fired in-process from a
             # worker sees the worker's vars without being that worker.
@@ -459,7 +460,7 @@ def get_disabled_skill_names(platform: str | None = None) -> Set[str]:
     from gateway.session_context import get_session_env
     resolved_platform = (
         platform
-        or os.getenv("EV0_PLATFORM")
+        or branded_env("PLATFORM")
         or get_session_env("EV0_SESSION_PLATFORM")
     )
     global_disabled = _normalize_string_set(skills_cfg.get("disabled"))

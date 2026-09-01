@@ -13,6 +13,7 @@ loop continues instead of exiting.
 
 from __future__ import annotations
 
+from env_compat import branded_env
 import os
 from typing import Any, Iterable, Optional
 
@@ -28,10 +29,10 @@ def kanban_stop_nudge_enabled() -> bool:
     On when ``EV0_KANBAN_TASK`` is set (dispatcher-spawned worker), unless
     ``EV0_KANBAN_STOP_NUDGE`` explicitly disables it.
     """
-    env = os.environ.get("EV0_KANBAN_STOP_NUDGE")
+    env = branded_env("KANBAN_STOP_NUDGE")
     if env is not None and env.strip().lower() in {"0", "false", "no", "off"}:
         return False
-    task = (os.environ.get("EV0_KANBAN_TASK") or "").strip()
+    task = (branded_env("KANBAN_TASK") or "").strip()
     return bool(task)
 
 
@@ -85,7 +86,7 @@ def build_kanban_stop_nudge(
     if session_called_kanban_terminal(messages):
         return None
 
-    tid = (task_id or os.environ.get("EV0_KANBAN_TASK") or "").strip() or "this task"
+    tid = (task_id or branded_env("KANBAN_TASK") or "").strip() or "this task"
     return (
         "[System: You are a 3V0 kanban worker. A plain-text reply is NOT a "
         "terminal state for the board.\n\n"

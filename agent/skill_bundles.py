@@ -43,6 +43,7 @@ Public API
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import re
 from pathlib import Path
@@ -69,7 +70,7 @@ def _bundles_dir() -> Path:
     Honors ``EV0_BUNDLES_DIR`` for tests; falls back to
     ``<EV0_HOME>/skill-bundles``.
     """
-    override = os.environ.get("EV0_BUNDLES_DIR")
+    override = branded_env("BUNDLES_DIR")
     if override:
         return Path(override).expanduser()
     return get_threev0_home() / "skill-bundles"

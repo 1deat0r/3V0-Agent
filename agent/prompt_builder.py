@@ -6,6 +6,7 @@ assemble pieces, then combines them with memory and ephemeral prompts.
 
 import json
 import logging
+from env_compat import branded_env
 import os
 import sys
 import threading
@@ -1405,7 +1406,7 @@ def build_environment_hints() -> str:
     # it's part of the stable, cache-safe system prompt. The env var is the
     # build-time/embedder mechanism (set in a container ENV); config.yaml
     # ``agent.environment_hint`` is the user-facing surface. Env var wins.
-    extra = (os.getenv("EV0_ENVIRONMENT_HINT") or "").strip()
+    extra = (branded_env("ENVIRONMENT_HINT") or "").strip()
     if not extra:
         try:
             from threev0_cli.config import load_config_readonly
@@ -1756,7 +1757,7 @@ def _skill_should_show(
 
 def _current_session_platform_hint() -> str:
     """Return the active platform without importing the gateway package on CLI startup."""
-    platform = os.environ.get("EV0_PLATFORM") or os.environ.get("EV0_SESSION_PLATFORM")
+    platform = branded_env("PLATFORM") or branded_env("SESSION_PLATFORM")
     if platform:
         return platform
 

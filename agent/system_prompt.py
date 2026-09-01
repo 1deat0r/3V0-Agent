@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import logging
+from env_compat import branded_env
 import os
 import re
 from typing import Any, Dict, List, Optional
@@ -151,7 +152,7 @@ def _tui_embedded_pane_clarifier(hint: str) -> str:
         return hint
     if _TUI_EMBEDDED_PANE_CLARIFIER in hint:
         return hint
-    if not is_truthy_value(os.getenv("EV0_DESKTOP_TERMINAL")):
+    if not is_truthy_value(branded_env("DESKTOP_TERMINAL")):
         return hint
     return hint + _TUI_EMBEDDED_PANE_CLARIFIER
 

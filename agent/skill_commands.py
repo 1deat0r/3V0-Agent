@@ -6,6 +6,7 @@ can invoke skills via /skill-name commands.
 
 import json
 import logging
+from env_compat import branded_env
 import os
 import re
 from pathlib import Path
@@ -201,11 +202,11 @@ def _resolve_skill_commands_platform() -> Optional[str]:
         from gateway.session_context import get_session_env
 
         resolved_platform = (
-            os.getenv("EV0_PLATFORM")
+            branded_env("PLATFORM")
             or get_session_env("EV0_SESSION_PLATFORM")
         )
     except Exception:
-        resolved_platform = os.getenv("EV0_PLATFORM")
+        resolved_platform = branded_env("PLATFORM")
     return resolved_platform or None
 
 

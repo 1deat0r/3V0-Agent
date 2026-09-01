@@ -33,6 +33,7 @@ the raw strings the server sent (never re-parsed to float).
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import re
 import time
@@ -709,9 +710,9 @@ def dev_fixture_credits_state() -> Optional[CreditsState]:
     container env, a launch plist, …) can never surface fabricated balances/notices
     on a real account.
     """
-    if not is_truthy_value(os.environ.get("EV0_DEV_CREDITS")):
+    if not is_truthy_value(branded_env("DEV_CREDITS")):
         return None
-    raw = os.environ.get("EV0_DEV_CREDITS_FIXTURE", "").strip()
+    raw = (branded_env("DEV_CREDITS_FIXTURE") or "").strip()
     if not raw:
         return None
     name = raw

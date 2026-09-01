@@ -7,6 +7,7 @@ opaque ``FileNotFoundError: [Errno 2] No such file or directory`` failures.
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import ssl
 from pathlib import Path
@@ -26,7 +27,7 @@ _SKIP_VALUES = {"1", "true", "yes", "on"}
 
 
 def _skip_ssl_guard_enabled() -> bool:
-    return os.getenv("EV0_SKIP_SSL_GUARD", "").strip().lower() in _SKIP_VALUES
+    return (branded_env("SKIP_SSL_GUARD") or "").strip().lower() in _SKIP_VALUES
 
 
 def _repair_hint() -> str:

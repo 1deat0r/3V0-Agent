@@ -5,6 +5,7 @@ Used by AIAgent._execute_tool_calls for CLI feedback.
 """
 
 import logging
+from env_compat import branded_env
 import os
 import re
 import sys
@@ -1235,7 +1236,7 @@ class KawaiiSpinner:
         wings = skin.get_spinner_wings() if skin else []
 
         while self.running:
-            if os.getenv("EV0_SPINNER_PAUSE"):
+            if branded_env("SPINNER_PAUSE"):
                 time.sleep(0.1)
                 continue
             frame = self.spinner_frames[self.frame_idx % len(self.spinner_frames)]

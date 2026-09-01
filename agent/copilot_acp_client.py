@@ -9,6 +9,7 @@ back into the minimal shape 3V0 expects from an OpenAI client.
 from __future__ import annotations
 
 import json
+from env_compat import branded_env
 import os
 import queue
 import re
@@ -61,14 +62,14 @@ def _is_gh_copilot_deprecation_message(stderr_text: str) -> bool:
 
 def _resolve_command() -> str:
     return (
-        os.getenv("EV0_COPILOT_ACP_COMMAND", "").strip()
+        (branded_env("COPILOT_ACP_COMMAND") or "").strip()
         or os.getenv("COPILOT_CLI_PATH", "").strip()
         or "copilot"
     )
 
 
 def _resolve_args() -> list[str]:
-    raw = os.getenv("EV0_COPILOT_ACP_ARGS", "").strip()
+    raw = (branded_env("COPILOT_ACP_ARGS") or "").strip()
     if not raw:
         return ["--acp", "--stdio"]
     return shlex.split(raw)

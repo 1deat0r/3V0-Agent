@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from env_compat import branded_env
 import os
 import ssl
 from pathlib import Path
@@ -47,7 +48,7 @@ def resolve_httpx_verify(
 
     effective_ca = (
         (ca_bundle or "").strip()
-        or os.getenv("EV0_CA_BUNDLE", "").strip()
+        or (branded_env("CA_BUNDLE") or "").strip()
         or os.getenv("SSL_CERT_FILE", "").strip()
         or os.getenv("REQUESTS_CA_BUNDLE", "").strip()
         or os.getenv("CURL_CA_BUNDLE", "").strip()
