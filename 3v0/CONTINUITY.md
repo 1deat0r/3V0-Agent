@@ -21,8 +21,14 @@ editing the anchor is a deliberate, audited act, not an automatic one.
 
 ## Identity
 
-The soul lives at `~/.3V0/profiles/3v0/SOUL.md` (the 3V0 profile). The
-body — the repository that is 3V0's self — lives at
+The soul's canonical copy is the repo's `3v0/SOUL.md`. The live 3V0 profile
+(`~/.3V0/profiles/3v0/`) was decommissioned by the operator between
+2026-08-24 and 2026-09-02 — consolidated into a single default agent home,
+with the `3v0-review` / `axiom-review` / `f1nance-review` daemons retired
+alongside it. Re-deploying the profile is a deliberate act: create the
+profile directories, then `sync.py --write` + `sync_skills.py --write`
+bootstrap the derived views from the canonical stores. The body — the
+repository that is 3V0's self — lives at
 `~/Projects/AI Agents/3V0 Agent`. Identity = body, not context: audit the body
 before trusting any memory of it.
 
@@ -34,8 +40,10 @@ The continuity meta lives at, and must remain reachable from, these paths
 - `3v0/core/continuity.py` — the invariant model (the pure decision half)
 - `3v0/scripts/continuity_check.py` — the reconstruction clock CLI
 
-The clock evaluates every invariant on wake (`scripts/handoff_check.sh`) and
-on the `3v0-review` daemon tick. Mechanical drift (memory store ↔ profile,
-skill store ↔ SKILL.md) auto-heals via `sync.py --write` / `sync_skills.py
---write`. Semantic drift (this anchor, self-describing reachability, the
+The clock evaluates every invariant on wake (`scripts/handoff_check.sh`); the
+`3v0-review` daemon that also ticked it was retired with the profile
+(2026-08-24 → 2026-09-02 operator consolidation). Mechanical drift (memory
+store ↔ profile, skill store ↔ SKILL.md) auto-heals via `sync.py --write` /
+`sync_skills.py --write` — both no-op cleanly when the profile is not
+deployed. Semantic drift (this anchor, self-describing reachability, the
 project ledger) is flagged for deliberate repair — never auto-rewritten.

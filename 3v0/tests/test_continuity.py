@@ -119,6 +119,22 @@ class TestMemoryProfile(unittest.TestCase):
         self.assertTrue(r.drift)
         self.assertIn("unreadable", r.detail)
 
+    def test_undeployed_profile_is_ok(self):
+        # No profile memories dir = no second artifact to disagree with the
+        # store; the check is n/a, not drift (the store is canonical).
+        r = check_memory_profile(_ctx(profile_deployed=False))
+        self.assertFalse(r.drift)
+        self.assertIn("not deployed", r.detail)
+
+    def test_undeployed_profile_overrides_store_diff(self):
+        # Even a full store-vs-nothing delta must not flag when the profile
+        # is deliberately absent.
+        r = check_memory_profile(
+            _ctx(profile_deployed=False,
+                 memory={"imported": 0, "dropped": 0, "exported": 14})
+        )
+        self.assertFalse(r.drift)
+
 
 class TestSkillsStore(unittest.TestCase):
     def test_clean_ok(self):
@@ -140,6 +156,16 @@ class TestSkillsStore(unittest.TestCase):
 
     def test_unreadable_store_drifts(self):
         self.assertTrue(check_skills_store(_ctx(skills={"error": "boom"})).drift)
+
+    def test_undeployed_skills_dir_is_ok(self):
+        ctx = _ctx(
+            skills_profile_deployed=False,
+            skills={"imported": 0, "edited": 0, "dropped": 0,
+                    "exported": 10, "unresolved": 0, "state_changes": 0},
+        )
+        r = check_skills_store(ctx)
+        self.assertFalse(r.drift)
+        self.assertIn("absent", r.detail)
 
 
 class TestLedger(unittest.TestCase):
@@ -177,9 +203,11 @@ class TestGithubLoops(unittest.TestCase):
         self.assertTrue(r.drift)
         self.assertIn("unverifiable", r.detail)
 
-    def test_empty_registry_drifts(self):
+    def test_empty_registry_is_ok(self):
+        # Empty is a steady state: no tracked claim can disagree with live.
         r = check_github_loops(_ctx(github_loops={}))
-        self.assertTrue(r.drift)
+        self.assertFalse(r.drift)
+        self.assertIn("empty", r.detail)
 
     def test_unreadable_registry_drifts(self):
         r = check_github_loops(_ctx(github_loops={}, github_loops_error="no such file"))

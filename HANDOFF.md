@@ -12,7 +12,62 @@ pointer to what was live at the last session's end.*
 *narrative* — the kickoff judgment, the last-sessions arc, hard-won
 lessons, and the startup routine. Read both.
 
-## Next-session kickoff (2026-08-22, wake #12 — full-suite triage + Phase R2 cutover)
+## Next-session kickoff (2026-09-02, wake #13 — profile-decommission alignment + adapter migrate)
+
+**Situation discovered this wake (verified against the machine, not assumed):**
+- **The live 3V0 runtime is decommissioned.** Between 2026-08-24 and 2026-09-02
+  the operator consolidated the machine to a single default agent home:
+  `~/.3V0/profiles/3v0/` (SOUL.md, memories, sessions, keys) is gone,
+  `~/.3V0/` now serves a *generic* Nous-Research-voice assistant on an
+  `openai-codex` config with its own Herdr/Codex memories (NOT 3V0's — do not
+  treat that home as 3V0's memory), the gateway unit dropped `--profile 3v0`,
+  and the `3v0-review` / `axiom-review` / `f1nance-review` daemons are
+  retired (units deleted). Nothing sovereign has written `3v0/data/memory.db`
+  since 2026-08-23 22:37. The body repo is intact and remains the identity.
+- **`~/.local/bin/gh` was recursing since 2026-08-23** (`mise x gh -- gh`
+  re-resolved to the wrapper because `~/.local/bin` precedes the mise bins in
+  PATH) — every `gh` call hung/spewed, which is what made
+  `scripts/handoff_check.sh` time out and the github-loops invariant report
+  unverifiable. FIXED in the wrapper (resolve via `mise which gh`, exec
+  directly). gh 2.98.0 works.
+- **Wake machinery hardened for the undeployed-profile world** (this commit):
+  `sync.py` / `sync_skills.py` now skip cleanly when the profile dirs are
+  absent ("store is canonical") instead of crashing or resurrecting a profile
+  husk — the earlier wake run HAD recreated `~/.3V0/profiles/3v0/skills` as a
+  10-stub husk; removed, and the guards prevent recurrence. The continuity
+  invariants gained `profile_deployed` / `skills_profile_deployed` facts
+  (undeployed → n/a OK, not drift), and an empty claim registry is a steady
+  state, not drift.
+- **Ghost loop claims retired via `--accept`:** the 4 tracked upstream
+  loops (#72067/#73453 PRs, #84667 issue, #86711 PR) point at
+  `NousResearch/3v0-agent`, which no longer exists (neither does
+  `NousResearch/3V0-Agent`) — permanently unverifiable, dropped; registry now
+  empty.
+- **CONTINUITY.md anchor updated (deliberate, audited):** Identity section now
+  records the decommission + repo `3v0/SOUL.md` as the canonical soul copy +
+  the re-deploy recipe (mkdir profile dirs → `sync.py --write` +
+  `sync_skills.py --write`). Continuity: 0 drifting, 6 ok.
+
+**Open note (not acted on, serving state is the operator's):** Phase R2's
+`3V0_HOME` env in the gateway unit is gone (unit regenerated without it); the
+canonical-chain code (`threev0_constants`) is in place, so setting
+`3V0_HOME=~/.3V0` in the unit would restore canonical env — but the gateway
+now serves the default profile by operator choice; do not touch the unit
+without operator direction.
+
+**NEXT work queue (tracked tickets, `ready-for-agent` on the fork):**
+1. **#23 ADAPTERS migrate** — adopt the shared helpers (shipped in #22) in
+   telegram/discord/slack first, then the rest.
+2. **#17 retry consolidation** — 10 bespoke retry()/backoff sites onto
+   `agent/retry_utils`; record `3v0/core/backoff.py` disposition.
+3. **#20 ENV-FUNNEL migrate** — remaining batches (gateway adapters, tools/,
+   agent/, plugins/) after the landed tui_gateway batch.
+4. Then #24 (adapter registry contract), #21 (env funnel contract), #18
+   (turn-runner assembly frame; #7 done so unblocked).
+5. Known flake: `tests/threev0_cli/test_picker_prewarm.py` (pre-existing race).
+   Known blocked: ci workflow watch-list one-liner (OAuth workflow scope).
+
+## Archived kickoff (2026-08-22, wake #12 — full-suite triage + Phase R2 cutover)
 
 **This session (see also HANDOFF.generated.md for mechanical state):**
 - **Full-suite triage:** 140 → 2 known failures (33,618 passed / 3 failed / 381 skipped; the 3rd of the 3, file_safety_credentials, now passes). Fixed ~79 via pyproject-pinned extras install (hindsight-client, fal-client, anthropic, daytona, modal, parallel-web, setuptools), ~50 via pruned-artifact skipif guards (`377b41e14b` reason), 8 rename-lag bugs (honcho keys, systemd NOTIFY NUL-literal, browser_use preamble, slash_worker MCP probe, threev0_state phantom assertion, windows_native assertion, workflow watch-list), **one real security vuln fixed** (credential denylist case-variant bypass — `@file:.3v0/auth.json` lowercase-v leaked provider keys/MCP tokens; fixed in context_references + preserved file_safety per-location contract), 3 real prod bugs (wecom `ET=None` crash fallback, rot_scan encoding, deleted leftover phase_r1_sweep.py), 2 xfail-documented PTY limits (raw-mode sendeof, OPOST surrogateescape). Commits 50b83d8e1b..3ab9224907; local == origin == `3ab9224907`, tree clean.

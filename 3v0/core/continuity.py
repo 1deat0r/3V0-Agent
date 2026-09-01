@@ -92,7 +92,12 @@ def _sum_counts(counts: dict, keys: tuple) -> int:
 def check_memory_profile(ctx: dict) -> InvariantResult:
     """Memory store <-> profile (MEMORY.md / USER.md) consistent: the
     reconciler reports no imported / dropped / exported for either kind, and
-    the store was readable."""
+    the store was readable. When the profile is not deployed (its memories
+    directory absent — e.g. the operator runs 3V0 without a profile), there
+    is no second artifact to disagree with the store and the check is n/a:
+    the store is canonical either way."""
+    if ctx.get("profile_deployed") is False:
+        return InvariantResult(False, "profile not deployed — store<->profile n/a")
     errors = []
     diffs = []
     for kind in ("memory", "user"):
@@ -111,7 +116,10 @@ def check_memory_profile(ctx: dict) -> InvariantResult:
 
 def check_skills_store(ctx: dict) -> InvariantResult:
     """Skill store <-> SKILL.md consistent: the reconciler reports no content
-    or state deltas, and the store was readable."""
+    or state deltas, and the store was readable. An undeployed profile skills
+    dir is the same n/a case as memory-profile."""
+    if ctx.get("skills_profile_deployed") is False:
+        return InvariantResult(False, "profile skills dir absent — store<->SKILL.md n/a")
     counts = ctx.get("skills") or {}
     if counts.get("error"):
         return InvariantResult(True, f"skill store unreadable: {counts['error']}")
@@ -146,7 +154,9 @@ def check_github_loops(ctx: dict) -> InvariantResult:
         return InvariantResult(True, f"claim registry unreadable: {err}")
     loops = ctx.get("github_loops") or {}
     if not loops:
-        return InvariantResult(True, "claim registry empty (no loops tracked)")
+        # An empty registry is a steady state, not drift: nothing is tracked,
+        # so no claim can disagree with live GitHub.
+        return InvariantResult(False, "claim registry empty (nothing tracked)")
     problems = []
     for lid in sorted(loops):
         loop = loops[lid]

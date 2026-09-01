@@ -179,6 +179,7 @@ def _collect() -> dict:
     ctx["model_reachable"] = {p: (BODY / p).exists() for p in _MODEL_PATHS}
 
     # memory store <-> profile
+    ctx["profile_deployed"] = PROFILE_MEM.is_dir()
     mem_md = _read(PROFILE_MEM / "MEMORY.md")
     user_md = _read(PROFILE_MEM / "USER.md")
     try:
@@ -203,6 +204,7 @@ def _collect() -> dict:
     # skill store <-> SKILL.md
     try:
         skills_dir = profile_skills_dir()
+        ctx["skills_profile_deployed"] = skills_dir.is_dir()
         sstore = SkillStore(SKILL_STORE_PATH)
         with sstore.mutate():
             rep = sync_skills(

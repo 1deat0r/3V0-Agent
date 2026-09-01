@@ -62,6 +62,15 @@ def main() -> int:
     args = ap.parse_args()
 
     skills_dir = profile_skills_dir()
+    if not skills_dir.is_dir():
+        # Not deployed: no operational skills dir to reconcile against.
+        # Creating it is the deliberate deploy act — a wake routine must not
+        # resurrect the profile directory tree on its own.
+        print(
+            f"profile skills dir absent ({skills_dir}) — "
+            "nothing to sync (store is canonical)"
+        )
+        return 0
     store = SkillStore(STORE_PATH)
 
     with store.mutate():

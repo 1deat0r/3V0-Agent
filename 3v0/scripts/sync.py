@@ -44,9 +44,23 @@ def main() -> int:
     )
     args = ap.parse_args()
 
+    if not PROFILE_MEM.is_dir():
+        # Not deployed: there is no profile to converge. Creating the dir is
+        # the deliberate deploy act — never resurrect the island from a wake
+        # routine (the store is canonical either way).
+        print(f"profile absent ({PROFILE_MEM}) — nothing to sync (store is canonical)")
+        return 0
+
     store = open_store(STORE_PATH)
-    mem_md = (PROFILE_MEM / "MEMORY.md").read_text(encoding="utf-8")
-    user_md = (PROFILE_MEM / "USER.md").read_text(encoding="utf-8")
+
+    def _read(path: Path) -> str:
+        try:
+            return path.read_text(encoding="utf-8")
+        except OSError:
+            return ""  # deployed dir, missing file -> bootstrap as empty
+
+    mem_md = _read(PROFILE_MEM / "MEMORY.md")
+    user_md = _read(PROFILE_MEM / "USER.md")
 
     reports: dict[str, SyncReport] = {}
     with store.mutate():

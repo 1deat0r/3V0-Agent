@@ -101,6 +101,22 @@ class TestMemoryProfileFault(unittest.TestCase):
             self.assertTrue(inv["drift"], inv)
             self.assertIn("store != profile", inv["detail"])
 
+    def test_undeployed_profile_is_ok_not_drift(self):
+        # The operator runs 3V0 without a profile: the memories dir does not
+        # exist. There is no second artifact, so the invariant is n/a (OK) —
+        # and, critically, a stale-full store must not read as drift.
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            store = d / "memory.json"
+            MemoryStore(store).add("store-only fact", "memory", "fault-inject")
+            report = _run_check(
+                THREEV0_STORE=str(store),
+                THREEV0_PROFILE_MEM=str(d / "does-not-exist"),
+            )
+            inv = _invariant(report, "memory-profile")
+            self.assertFalse(inv["drift"], inv)
+            self.assertIn("not deployed", inv["detail"])
+
 
 class TestSkillsStoreFault(unittest.TestCase):
     def test_store_ahead_of_disk_drifts(self):
@@ -115,6 +131,19 @@ class TestSkillsStoreFault(unittest.TestCase):
             )
             inv = _invariant(report, "skills-store")
             self.assertTrue(inv["drift"], inv)
+
+    def test_undeployed_skills_dir_is_ok_not_drift(self):
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            sstore = d / "skills.json"
+            SkillStore(sstore).add("fault-skill", "create", "fault-inject", content="---\nname: fault-skill\n---\n")
+            report = _run_check(
+                THREEV0_SKILL_STORE=str(sstore),
+                THREEV0_SKILLS_DIR=str(d / "no-such-skills"),
+            )
+            inv = _invariant(report, "skills-store")
+            self.assertFalse(inv["drift"], inv)
+            self.assertIn("absent", inv["detail"])
 
 
 class TestAnchorFault(unittest.TestCase):
