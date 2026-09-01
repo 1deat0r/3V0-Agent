@@ -24,9 +24,6 @@ import re
 import smtplib
 import socket
 
-# Profile-scoped secret reader for multiplexing support (PR #50094)
-from agent.secret_scope import UnscopedSecretError as _UnscopedSecretError
-from agent.secret_scope import get_secret as _scoped_get_secret
 import ssl
 import uuid
 from email.header import decode_header
@@ -38,6 +35,7 @@ from email import encoders
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from gateway.platforms.adapter_helpers import get_scoped_secret
 from gateway.platforms.base import (
     BasePlatformAdapter,
     MessageEvent,
@@ -53,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_esecret(name: str, default: str = "") -> str:
-    """Scope-aware ``EMAIL_*`` read with the default-profile startup fallback.
+    """Scope-aware ``EMAIL_*`` read (canonical shared helper, ticket #23).
 
     Secondary profiles run under ``_profile_runtime_scope`` — the scope is
     authoritative and a scoped miss returns ``default`` (no cross-profile
@@ -64,11 +62,7 @@ def _get_esecret(name: str, default: str = "") -> str:
     Slack ``SLACK_APP_TOKEN`` read (#59739) and the WhatsApp
     ``_get_wsecret`` fix (5438e9c629).
     """
-    try:
-        val = _scoped_get_secret(name, default)
-    except _UnscopedSecretError:
-        val = os.getenv(name)
-    return val if val is not None else default
+    return get_scoped_secret(name, default)
 
 
 # Backwards-compatible alias for the name used by the original #59076 hunks.

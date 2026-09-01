@@ -35,28 +35,13 @@ import ssl
 import time
 from typing import Any, Dict, List, Optional
 
-from agent.secret_scope import UnscopedSecretError as _UnscopedSecretError
-from agent.secret_scope import get_secret as _scoped_get_secret
 
 
-def _get_scoped_secret(name, default=None):
-    """Scope-aware credential read with the default-profile startup fallback.
-
-    Secondary profiles construct their adapters under a profile secret
-    scope -- the scope is authoritative and a scoped miss returns ``default``
-    (no cross-profile borrow from ``os.environ``, which may hold another
-    profile's value). The DEFAULT profile's adapter constructs and sends
-    *unscoped* under multiplexing, where a bare ``get_secret`` would raise
-    ``UnscopedSecretError`` and crash this path; there ``os.environ`` is that
-    profile's own value, so fall back to it. Same pattern as the Slack
-    ``SLACK_APP_TOKEN`` read (#59739) and
-    ``gateway/platforms/whatsapp_common.py::_get_wsecret``.
-    """
-    try:
-        val = _scoped_get_secret(name, default)
-    except _UnscopedSecretError:
-        val = os.getenv(name)
-    return val if val is not None else default
+# Canonical shared copy (ticket #23) — was hand-duplicated per-adapter
+# (Slack pattern #59739 / whatsapp_common._get_wsecret).
+from gateway.platforms.adapter_helpers import (
+    get_scoped_secret as _get_scoped_secret,
+)
 
 
 logger = logging.getLogger(__name__)
