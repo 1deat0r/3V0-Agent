@@ -115,13 +115,16 @@ without operator direction.
   cached-vs-fresh + session-sync guards stay gateway-inline (single
   consumer — generalizing now would be speculative).
 
-**Wide-refactor series COMPLETE:** #17, #18, #20, #21, #23, #24 all
-closed with evidence. Wire-var decision RESOLVED (`59ecc73523`, tracker
-#25): wire vars ride the new `wire_env(bare)` accessor (3V0_ → EV0_ →
-bare; batch 1 IRC/NTFY/PHOTON/SIMPLEX landed, 75 reads; provider names
-+ OS globals are documented exceptions); the gateway
-agent-cache/session-sync frame generalizes when a second runner grows a
-cache. #25 tracks the TERMINAL_*/own-namespace batches.
+**Wide-refactor series COMPLETE:** #17, #18, #20, #21, #23, #24, #25 all
+closed with evidence. Wire-var decision RESOLVED (`59ecc73523` batch 1,
+`32b2ff0f02` batch 2, `f13e3f6a28` docs): wire vars ride the new
+`wire_env(bare)` accessor (3V0_ → EV0_ → bare; 113 reads across
+IRC/NTFY/PHOTON/SIMPLEX/TERMINAL_*/BROWSER_CDP_URL); the four adapter
+GATEWAY_ALLOW_ALL_USERS authz fallbacks got the scope-aware fail-closed
+fix (#86905 class); provider names + OS globals are documented
+exceptions in the scan. Remaining generalization: the gateway
+agent-cache/session-sync frame moves into agent/turn_assembly.py when a
+second runner grows a cache.
 
 **Known failures: ZERO.** The 19-failure pre-existing backlog was
 root-caused and fixed (commits 1cb1989f5 + 7e06358d8d + the
