@@ -138,6 +138,35 @@ pytest-marker scrub in the exit-watchdog child env). Full six-suite
 sweep: 2,327 files / 24,754 tests / 0 failed. picker_prewarm never
 reproduced (its 600s file-timeout in one sweep was turn-lease shadowing,
 also fixed).
+
+**FULL CANONICAL RUN (2026-09-02, post-#25, whole tests/ tree):
+3,008 files / 33,760 passed / 1 failed / 379 skipped in 450.6s.** The
+single failure is the KNOWN environment-blocked
+`tests/ci/test_live_comment.py::test_workflow_watch_list_names_a_workflow_that_exists`
+— needs an operator GitHub token with `workflow` scope (the one-line
+`.github/workflows/ci-review-comment.yml` watch-list fix is prepared;
+token regen is the operator's step). Everything else green at full
+scale. Triage ledger for the run's transient/repaired failures:
+- hindsight_provider ×3 + packaging_build_guard ×4 — reboot-lost venv
+  extras, reinstalled at exact uv.lock pins (hindsight-client==0.6.1,
+  setuptools==83.0.0).
+- threev0_home_profile_warning ×1 — REAL R2 bug found by the run:
+  the profile-fallback warning gate consulted only 3V0_HOME, so
+  legacy-only deployments (which set just EV0_HOME — including the
+  live gateway unit) got a false "EV0_HOME is unset" warning while
+  resolution honored their var. Gate now accepts either spelling
+  (748e00a62c).
+- audio_playback_guard ×1 + tui_gateway_server ×12 + cli_skin_
+  integration (root copy) ×2 — canonical-twin leak (3V0_VOICE_TTS
+  etc. surviving the conftest behavioral-var blanket that only
+  stripped legacy spellings); blanket now strips both spellings
+  (748e00a62c).
+- turn_lease ×1 → de-flaked: the 0.02s lease deadline misses under
+  32-worker contention; widened to 0.5s (5f307d4ba0).
+- cli_skin_integration (tests/cli copy) ×2 — stale glyph pins,
+  fixed same pass.
+- turn_lease/session flaky-retries — timing, recovered on the
+  runner's attempt 2.
 - `1cc8ab11e0` **provider-loader seam fix** (found via pre-existing test
   failures): the fff1f44c50 loader extraction orphaned the family
   `_get_user_plugins_dir` seams — discovery bypassed them, 3
