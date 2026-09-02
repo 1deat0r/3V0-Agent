@@ -126,7 +126,24 @@ exceptions in the scan. Remaining generalization: the gateway
 agent-cache/session-sync frame moves into agent/turn_assembly.py when a
 second runner grows a cache.
 
-**Known failures: ZERO.** The 19-failure pre-existing backlog was
+**Attempt-1 flake de-flake pass (2026-09-02, post-canonical):** the four
+flaky-recovered files root-caused — `test_turn_lease` full-dispatch had
+an outer `asyncio.wait_for(timeout=1)` racing the inner 0.5s lease budget
+under 32-worker load (flattening TurnLeaseTimeoutError to plain
+TimeoutError; outer widened to 5s, `f30d751bd2`); `test_transcription`
+progress-idle margins widened 0.04/0.1s → 0.25/0.9s (same commit family,
+`0eb896b82d`); `test_session` discord-id exclusion scoped to the cached
+IDs block (`0eb896b82d`); accretion_caps' attempt-1 errors were
+contention collateral of the (fixed) terminal NameError burning CPU in
+the same window. Validated: 3 consecutive clean tools+gateway sweeps.
+
+**Operator action needed — #26 (ready-for-human):** the one-line
+ci-review-comment watch-list fix (`Docker Build, Test, and Publish` →
+`CI`, line 71) requires pushing a `.github/workflows/*` change — blocked
+by the agent token lacking `workflow` scope. Applying it turns the last
+canonical-suite failure green (see #26 for the exact diff).
+
+**Known failures: ZERO (modulo #26).** The 19-failure pre-existing backlog was
 root-caused and fixed (commits 1cb1989f5 + 7e06358d8d + the
 skin-integration pin follow-up): one REAL production bug (the classic
 CLI tool-progress callback raised NameError on every tool event —
