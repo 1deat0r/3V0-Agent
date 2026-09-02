@@ -116,11 +116,12 @@ without operator direction.
   consumer — generalizing now would be speculative).
 
 **Wide-refactor series COMPLETE:** #17, #18, #20, #21, #23, #24 all
-closed with evidence. Open follow-up candidates from the tickets:
-~512 unprefixed wire-var reads need a
-documented-exception-vs-opt-in-bare-fallback decision; the gateway
+closed with evidence. Wire-var decision RESOLVED (`59ecc73523`, tracker
+#25): wire vars ride the new `wire_env(bare)` accessor (3V0_ → EV0_ →
+bare; batch 1 IRC/NTFY/PHOTON/SIMPLEX landed, 75 reads; provider names
++ OS globals are documented exceptions); the gateway
 agent-cache/session-sync frame generalizes when a second runner grows a
-cache.
+cache. #25 tracks the TERMINAL_*/own-namespace batches.
 
 **Known failures: ZERO.** The 19-failure pre-existing backlog was
 root-caused and fixed (commits 1cb1989f5 + 7e06358d8d + the
