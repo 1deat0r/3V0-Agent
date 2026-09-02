@@ -61,6 +61,11 @@ from agent.conversation_compression import (
 from agent.conversation_loop import INTERRUPT_WAITING_FOR_MODEL_PREFIX
 from agent.i18n import t
 from agent.interrupt_compat import request_hard_interrupt
+from agent.turn_assembly import (
+    checkpoint_agent_kwargs as _shared_checkpoint_agent_kwargs,
+    provider_routing_kwargs,
+    service_tier_from_raw as _service_tier_from_raw,
+)
 from agent.turn_context import (
     compression_made_progress,
 )
@@ -3435,30 +3440,10 @@ def _load_gateway_config(config_path: "Path | None" = None) -> dict:
 def _checkpoint_agent_kwargs(config: dict | None) -> dict:
     """Translate gateway checkpoint config into ``AIAgent`` constructor args.
 
-    The gateway reads raw YAML instead of ``load_config()``, so checkpoint
-    defaults must be supplied here.  Keep legacy ``checkpoints: true`` configs
-    working while giving every gateway-created agent the same limits.
+    Thin delegate: the transform lives in the shared turn-assembly frame
+    (``agent/turn_assembly.py``) so all three runners derive the same args.
     """
-    cp_cfg = config.get("checkpoints", {}) if isinstance(config, dict) else {}
-    if isinstance(cp_cfg, bool):
-        cp_cfg = {"enabled": cp_cfg}
-    elif not isinstance(cp_cfg, dict):
-        cp_cfg = {}
-
-    from threev0_cli.config import DEFAULT_CONFIG
-    defaults = DEFAULT_CONFIG["checkpoints"]
-    return {
-        "checkpoints_enabled": cp_cfg.get("enabled", defaults["enabled"]),
-        "checkpoint_max_snapshots": cp_cfg.get(
-            "max_snapshots", defaults["max_snapshots"],
-        ),
-        "checkpoint_max_total_size_mb": cp_cfg.get(
-            "max_total_size_mb", defaults["max_total_size_mb"],
-        ),
-        "checkpoint_max_file_size_mb": cp_cfg.get(
-            "max_file_size_mb", defaults["max_file_size_mb"],
-        ),
-    }
+    return _shared_checkpoint_agent_kwargs(config)
 
 
 def _load_gateway_runtime_config() -> dict:
@@ -5469,12 +5454,7 @@ class TurnRunner:
                 reasoning_config=reasoning_config,
                 service_tier=self._runner._service_tier,
                 request_overrides=turn_route.get("request_overrides"),
-                providers_allowed=pr.get("only"),
-                providers_ignored=pr.get("ignore"),
-                providers_order=pr.get("order"),
-                provider_sort=pr.get("sort"),
-                provider_require_parameters=pr.get("require_parameters", False),
-                provider_data_collection=pr.get("data_collection"),
+                **provider_routing_kwargs(pr),
                 session_id=ctx.session_id,
                 platform=platform_key,
                 user_id=ctx.source.user_id,
@@ -9118,15 +9098,9 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         Returns None when unset or unsupported.
         """
         cfg = _load_gateway_runtime_config()
-        raw = str(cfg_get(cfg, "agent", "service_tier", default="") or "").strip()
-
-        value = raw.lower()
-        if not value or value in {"normal", "default", "standard", "off", "none"}:
-            return None
-        if value in {"fast", "priority", "on"}:
-            return "priority"
-        logger.warning("Unknown service_tier '%s', ignoring", raw)
-        return None
+        return _service_tier_from_raw(
+            str(cfg_get(cfg, "agent", "service_tier", default="") or "")
+        )
 
     @staticmethod
     def _load_show_reasoning() -> bool:
@@ -21933,12 +21907,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     reasoning_config=reasoning_config,
                     service_tier=self._service_tier,
                     request_overrides=turn_route.get("request_overrides"),
-                    providers_allowed=pr.get("only"),
-                    providers_ignored=pr.get("ignore"),
-                    providers_order=pr.get("order"),
-                    provider_sort=pr.get("sort"),
-                    provider_require_parameters=pr.get("require_parameters", False),
-                    provider_data_collection=pr.get("data_collection"),
+                    **provider_routing_kwargs(pr),
                     session_id=task_id,
                     platform=platform_key,
                     user_id=source.user_id,

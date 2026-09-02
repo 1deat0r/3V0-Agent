@@ -24,6 +24,10 @@ except ModuleNotFoundError:
     pass
 
 import logging
+from agent.turn_assembly import (
+    provider_routing_kwargs,
+    service_tier_from_raw as _service_tier_from_raw,
+)
 import copy
 from env_compat import branded_env
 from env_compat import set_branded_env
@@ -401,14 +405,12 @@ def _parse_reasoning_config(effort) -> dict | None:
 
 
 def _parse_service_tier_config(raw: str) -> str | None:
-    """Parse a persisted service-tier preference into a Responses API value."""
-    value = str(raw or "").strip().lower()
-    if not value or value in {"normal", "default", "standard", "off", "none"}:
-        return None
-    if value in {"fast", "priority", "on"}:
-        return "priority"
-    logger.warning("Unknown service_tier '%s', ignoring", raw)
-    return None
+    """Parse a persisted service-tier preference into a Responses API value.
+
+    Thin delegate to the shared turn-assembly normalization (ticket #18) —
+    the gateway and TUI carry the same table there.
+    """
+    return _service_tier_from_raw(raw)
 
 def load_cli_config() -> Dict[str, Any]:
     """
@@ -5003,14 +5005,17 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             CLI_CONFIG["agent"].get("service_tier", "")
         )
         
-        # OpenRouter provider routing preferences
-        pr = CLI_CONFIG.get("provider_routing", {}) or {}
-        self._provider_sort = pr.get("sort")
-        self._providers_only = pr.get("only")
-        self._providers_ignore = pr.get("ignore")
-        self._providers_order = pr.get("order")
-        self._provider_require_params = pr.get("require_parameters", False)
-        self._provider_data_collection = pr.get("data_collection")
+        # OpenRouter provider routing preferences — shared transform
+        # (agent.turn_assembly), same mapping the gateway + TUI use.
+        _pr_kwargs = provider_routing_kwargs(
+            CLI_CONFIG.get("provider_routing", {}) or {}
+        )
+        self._provider_sort = _pr_kwargs["provider_sort"]
+        self._providers_only = _pr_kwargs["providers_allowed"]
+        self._providers_ignore = _pr_kwargs["providers_ignored"]
+        self._providers_order = _pr_kwargs["providers_order"]
+        self._provider_require_params = _pr_kwargs["provider_require_parameters"]
+        self._provider_data_collection = _pr_kwargs["provider_data_collection"]
 
         # OpenRouter Pareto Code router knob — coding-score floor (0.0-1.0).
         # Only applied when model.model == "openrouter/pareto-code".

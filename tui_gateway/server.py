@@ -33,6 +33,10 @@ from threev0_constants import (
 )
 from threev0_cli.env_loader import load_threev0_dotenv
 from env_compat import branded_env, set_branded_env, pop_branded_env
+from agent.turn_assembly import (
+    provider_routing_kwargs,
+    service_tier_from_raw as _service_tier_from_raw,
+)
 from utils import is_truthy_value
 from tools.environments.local import threev0_subprocess_env
 from agent.replay_cleanup import sanitize_replay_history
@@ -4395,16 +4399,9 @@ def _load_reasoning_config(model: str = "") -> dict | None:
 
 
 def _load_service_tier() -> str | None:
-    raw = (
-        str((_load_cfg().get("agent") or {}).get("service_tier", "") or "")
-        .strip()
-        .lower()
+    return _service_tier_from_raw(
+        (_load_cfg().get("agent") or {}).get("service_tier", "")
     )
-    if not raw or raw in {"normal", "default", "standard", "off", "none"}:
-        return None
-    if raw in {"fast", "priority", "on"}:
-        return "priority"
-    return None
 
 
 def _load_provider_routing() -> dict:
@@ -7003,14 +7000,10 @@ def _make_agent(
         ),
         enabled_toolsets=_load_enabled_toolsets(_resolve_agent_platform(platform_override)),
         # OpenRouter provider-routing prefs (config.yaml `provider_routing`).
-        # Mirrors the messaging gateway + CLI so the desktop/TUI honors the same
-        # routing instead of letting OpenRouter pick providers at random.
-        providers_allowed=_pr.get("only"),
-        providers_ignored=_pr.get("ignore"),
-        providers_order=_pr.get("order"),
-        provider_sort=_pr.get("sort"),
-        provider_require_parameters=_pr.get("require_parameters", False),
-        provider_data_collection=_pr.get("data_collection"),
+        # Shared transform (agent.turn_assembly) — mirrors the messaging
+        # gateway + CLI so the desktop/TUI honors the same routing instead of
+        # letting OpenRouter pick providers at random.
+        **provider_routing_kwargs(_pr),
         platform=_resolve_agent_platform(platform_override),
         session_id=session_id or key,
         session_db=session_db if session_db is not None else _get_db(),
