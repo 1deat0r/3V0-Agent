@@ -216,7 +216,11 @@ async def test_full_dispatch_rejects_lease_timeout_without_running_goal_hook(
     runner._post_turn_goal_continuation = AsyncMock()
 
     try:
-        response = await asyncio.wait_for(runner._handle_message(_event()), timeout=1)
+        # Outer wrapper 5s >> the 0.5s lease budget: under 32-worker load a
+        # 1s outer wait_for could fire before the lease timeout inside,
+        # cancelling the inner and flattening TurnLeaseTimeoutError into a
+        # plain TimeoutError (full-suite attempt-1 flake).
+        response = await asyncio.wait_for(runner._handle_message(_event()), timeout=5)
     finally:
         assert runner._turn_leases.release(holder) is True
 
