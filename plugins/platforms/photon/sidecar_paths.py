@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import filecmp
 import logging
+from env_compat import wire_env
 import os
 import shutil
 from pathlib import Path
@@ -101,7 +102,7 @@ def resolve_sidecar_dir(source_dir: Optional[Path] = None) -> Path:
     """
     source = Path(source_dir) if source_dir is not None else SOURCE_SIDECAR_DIR
 
-    override = os.getenv("PHOTON_SIDECAR_DIR")
+    override = wire_env("PHOTON_SIDECAR_DIR")
     if override:
         return Path(override)
 

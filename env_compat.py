@@ -35,5 +35,6 @@ _loader.exec_module(_module)
 branded_env = _module.branded_env
 set_branded_env = _module.set_branded_env
 pop_branded_env = _module.pop_branded_env
+wire_env = _module.wire_env
 
-__all__ = ["branded_env", "set_branded_env", "pop_branded_env"]
+__all__ = ["branded_env", "set_branded_env", "pop_branded_env", "wire_env"]

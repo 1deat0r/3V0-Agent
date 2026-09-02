@@ -28,6 +28,7 @@ import asyncio
 import base64
 import json
 import logging
+from env_compat import wire_env
 import os
 import re
 import secrets
@@ -408,10 +409,10 @@ def check_requirements() -> bool:
     if not HTTPX_AVAILABLE:
         logger.warning("photon: httpx not installed — pip install httpx")
         return False
-    if not shutil.which(os.getenv("PHOTON_NODE_BIN") or "node"):
+    if not shutil.which(wire_env("PHOTON_NODE_BIN") or "node"):
         logger.warning(
             "photon: node binary '%s' not found on PATH",
-            os.getenv("PHOTON_NODE_BIN") or "node",
+            wire_env("PHOTON_NODE_BIN") or "node",
         )
         return False
     if not sidecar_deps_installed():
@@ -536,7 +537,7 @@ def _reinstall_sidecar_deps() -> None:
 
 def validate_config(cfg: PlatformConfig) -> bool:
     extra = cfg.extra or {}
-    project_id = extra.get("project_id") or os.getenv("PHOTON_PROJECT_ID")
+    project_id = extra.get("project_id") or wire_env("PHOTON_PROJECT_ID")
     project_secret = extra.get("project_secret") or _get_scoped_secret("PHOTON_PROJECT_SECRET")
     if not project_id or not project_secret:
         # Fall back to auth.json
@@ -559,11 +560,11 @@ def _env_enablement() -> Optional[dict]:
     if not (project_id and project_secret):
         return None
     seed: dict = {"project_id": project_id, "project_secret": project_secret}
-    home = os.getenv("PHOTON_HOME_CHANNEL", "").strip()
+    home = (wire_env("PHOTON_HOME_CHANNEL") or "").strip()
     if home:
         seed["home_channel"] = {
             "chat_id": home,
-            "name": os.getenv("PHOTON_HOME_CHANNEL_NAME", "Home"),
+            "name": wire_env("PHOTON_HOME_CHANNEL_NAME", "Home"),
         }
     return seed
 
@@ -576,7 +577,7 @@ def _markdown_enabled() -> bool:
     ``PHOTON_MARKDOWN=false`` is the kill-switch back to stripped plain
     text without a release.
     """
-    return os.getenv("PHOTON_MARKDOWN", "true").strip().lower() not in {
+    return wire_env("PHOTON_MARKDOWN", "true").strip().lower() not in {
         "false", "0", "no",
     }
 
@@ -714,7 +715,7 @@ class PhotonAdapter(BasePlatformAdapter):
         # the spectrum-ts SDK authenticates with.
         stored_id, stored_sec = load_project_credentials()
         self._project_id: str = (
-            os.getenv("PHOTON_PROJECT_ID")
+            wire_env("PHOTON_PROJECT_ID")
             or extra.get("project_id")
             or stored_id
             or ""
@@ -728,7 +729,7 @@ class PhotonAdapter(BasePlatformAdapter):
 
         # Sidecar
         self._sidecar_port = _coerce_port(
-            extra.get("sidecar_port") or os.getenv("PHOTON_SIDECAR_PORT"),
+            extra.get("sidecar_port") or wire_env("PHOTON_SIDECAR_PORT"),
             _DEFAULT_SIDECAR_PORT,
         )
         self._sidecar_bind = _DEFAULT_SIDECAR_BIND
@@ -736,9 +737,9 @@ class PhotonAdapter(BasePlatformAdapter):
             _get_scoped_secret("PHOTON_SIDECAR_TOKEN") or secrets.token_hex(16)
         )
         self._autostart_sidecar = str(
-            os.getenv("PHOTON_SIDECAR_AUTOSTART", "true")
+            wire_env("PHOTON_SIDECAR_AUTOSTART", "true")
         ).lower() not in ("0", "false", "no")
-        self._node_bin = os.getenv("PHOTON_NODE_BIN") or shutil.which("node") or "node"
+        self._node_bin = wire_env("PHOTON_NODE_BIN") or shutil.which("node") or "node"
 
         # Presence watchdog. spectrum-ts only reconnects when its inbound
         # iterator throws or ends; a half-open ("zombie") gRPC socket makes the
@@ -761,21 +762,21 @@ class PhotonAdapter(BasePlatformAdapter):
         self._probe_interval = _coerce_float(
             _first_set(
                 extra.get("probe_interval_seconds"),
-                os.getenv("PHOTON_PROBE_INTERVAL_SECONDS"),
+                wire_env("PHOTON_PROBE_INTERVAL_SECONDS"),
             ),
             600.0,
         )
         self._probe_timeout = _coerce_float(
             _first_set(
                 extra.get("probe_timeout_seconds"),
-                os.getenv("PHOTON_PROBE_TIMEOUT_SECONDS"),
+                wire_env("PHOTON_PROBE_TIMEOUT_SECONDS"),
             ),
             10.0,
         )
         self._probe_max_failures = _coerce_int(
             _first_set(
                 extra.get("probe_max_failures"),
-                os.getenv("PHOTON_PROBE_MAX_FAILURES"),
+                wire_env("PHOTON_PROBE_MAX_FAILURES"),
             ),
             3,
         )
@@ -828,14 +829,14 @@ class PhotonAdapter(BasePlatformAdapter):
         # always processed. Config key wins, then env var.
         _require_mention = extra.get("require_mention")
         if _require_mention is None:
-            _require_mention = os.getenv("PHOTON_REQUIRE_MENTION")
+            _require_mention = wire_env("PHOTON_REQUIRE_MENTION")
         self.require_mention = str(_require_mention).strip().lower() in {
             "true", "1", "yes", "on",
         }
         self._mention_patterns = self._compile_mention_patterns(
             extra["mention_patterns"]
             if "mention_patterns" in extra
-            else os.getenv("PHOTON_MENTION_PATTERNS")
+            else wire_env("PHOTON_MENTION_PATTERNS")
         )
 
     # -- Group-mention gating (parity with BlueBubbles) -------------------
@@ -2248,7 +2249,7 @@ class PhotonAdapter(BasePlatformAdapter):
         return True
 
     def _reactions_enabled(self) -> bool:
-        return os.getenv("PHOTON_REACTIONS", "false").strip().lower() in {
+        return wire_env("PHOTON_REACTIONS", "false").strip().lower() in {
             "true", "1", "yes", "on",
         }
 
@@ -2779,7 +2780,7 @@ async def _standalone_send(
     if not HTTPX_AVAILABLE:
         return {"error": "httpx not installed"}
     port = _coerce_port(
-        (pconfig.extra or {}).get("sidecar_port") or os.getenv("PHOTON_SIDECAR_PORT"),
+        (pconfig.extra or {}).get("sidecar_port") or wire_env("PHOTON_SIDECAR_PORT"),
         _DEFAULT_SIDECAR_PORT,
     )
     token = _get_scoped_secret("PHOTON_SIDECAR_TOKEN")

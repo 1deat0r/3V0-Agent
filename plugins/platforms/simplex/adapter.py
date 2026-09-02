@@ -48,6 +48,7 @@ import asyncio
 import base64
 import json
 import logging
+from env_compat import wire_env, branded_env
 import os
 import random
 import re
@@ -153,7 +154,7 @@ class SimplexAdapter(BasePlatformAdapter):
         # Contact-request auto-accept (on by default — matches the way most
         # bot deployments expect to behave). Read from env first, then fall
         # back to the value seeded by ``_env_enablement``.
-        env_auto = os.getenv("SIMPLEX_AUTO_ACCEPT")
+        env_auto = wire_env("SIMPLEX_AUTO_ACCEPT")
         if env_auto is not None:
             self.auto_accept = env_auto.strip().lower() not in {"0", "false", "no", ""}
         else:
@@ -162,7 +163,7 @@ class SimplexAdapter(BasePlatformAdapter):
         # Group allowlist. Without ``SIMPLEX_GROUP_ALLOWED``, group messages
         # are ignored entirely (safer default — a bot in a group otherwise
         # processes every member's traffic). Use ``*`` to accept any group.
-        group_allowed_str = os.getenv("SIMPLEX_GROUP_ALLOWED", "") or extra.get(
+        group_allowed_str = (wire_env("SIMPLEX_GROUP_ALLOWED") or "") or extra.get(
             "group_allowed", ""
         )
         self.group_allow_from = set(_parse_comma_list(group_allowed_str))
@@ -192,7 +193,7 @@ class SimplexAdapter(BasePlatformAdapter):
         # Text message batching — concatenate rapid-fire messages into one
         # event before dispatching, mirroring Telegram's batching.
         self._text_batch_delay = float(
-            os.getenv("EV0_SIMPLEX_TEXT_BATCH_DELAY", "0.8")
+            branded_env("SIMPLEX_TEXT_BATCH_DELAY", "0.8")
         )
         self._pending_text_batches: Dict[str, MessageEvent] = {}
         self._pending_text_batch_tasks: Dict[str, asyncio.Task] = {}
@@ -1170,7 +1171,7 @@ def check_requirements() -> bool:
     so the gateway never instantiates the adapter when the dependency is
     missing or no daemon URL is configured.
     """
-    if not os.getenv("SIMPLEX_WS_URL"):
+    if not wire_env("SIMPLEX_WS_URL"):
         return False
     try:
         import websockets  # noqa: F401
@@ -1182,14 +1183,14 @@ def check_requirements() -> bool:
 def validate_config(config) -> bool:
     """Validate that the platform config has enough info to connect."""
     extra = getattr(config, "extra", {}) or {}
-    ws_url = os.getenv("SIMPLEX_WS_URL") or extra.get("ws_url", "")
+    ws_url = wire_env("SIMPLEX_WS_URL") or extra.get("ws_url", "")
     return bool(ws_url)
 
 
 def is_connected(config) -> bool:
     """Check whether SimpleX is configured (env or config.yaml)."""
     extra = getattr(config, "extra", {}) or {}
-    ws_url = os.getenv("SIMPLEX_WS_URL") or extra.get("ws_url", "")
+    ws_url = wire_env("SIMPLEX_WS_URL") or extra.get("ws_url", "")
     return bool(ws_url)
 
 
@@ -1205,24 +1206,24 @@ def _env_enablement() -> Optional[dict]:
     becomes a proper ``HomeChannel`` dataclass on the ``PlatformConfig``
     rather than being merged into ``extra``.
     """
-    ws_url = os.getenv("SIMPLEX_WS_URL", "").strip()
+    ws_url = (wire_env("SIMPLEX_WS_URL") or "").strip()
     if not ws_url:
         return None
     seed: dict = {"ws_url": ws_url}
 
-    auto_accept = os.getenv("SIMPLEX_AUTO_ACCEPT", "").strip().lower()
+    auto_accept = (wire_env("SIMPLEX_AUTO_ACCEPT") or "").strip().lower()
     if auto_accept:
         seed["auto_accept"] = auto_accept not in {"0", "false", "no"}
 
-    group_allowed = os.getenv("SIMPLEX_GROUP_ALLOWED", "").strip()
+    group_allowed = (wire_env("SIMPLEX_GROUP_ALLOWED") or "").strip()
     if group_allowed:
         seed["group_allowed"] = group_allowed
 
-    home = os.getenv("SIMPLEX_HOME_CHANNEL", "").strip()
+    home = (wire_env("SIMPLEX_HOME_CHANNEL") or "").strip()
     if home:
         seed["home_channel"] = {
             "chat_id": home,
-            "name": os.getenv("SIMPLEX_HOME_CHANNEL_NAME", "").strip() or home,
+            "name": (wire_env("SIMPLEX_HOME_CHANNEL_NAME") or "").strip() or home,
         }
     return seed
 
@@ -1255,7 +1256,7 @@ async def _standalone_send(
         return {"error": "websockets not installed. Run: pip install websockets"}
 
     extra = getattr(pconfig, "extra", {}) or {}
-    ws_url = os.getenv("SIMPLEX_WS_URL") or extra.get(
+    ws_url = wire_env("SIMPLEX_WS_URL") or extra.get(
         "ws_url", "ws://127.0.0.1:5225"
     )
     if not ws_url:

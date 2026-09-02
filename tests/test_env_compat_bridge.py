@@ -85,3 +85,12 @@ def test_pop_branded_env_removes_both_spellings(monkeypatch):
 def test_pop_branded_env_tolerates_missing_keys(monkeypatch):
     _scrub(monkeypatch)
     env_compat.pop_branded_env("NEVER_SET_AT_ALL")  # must not raise
+
+
+def test_wire_env_through_bridge(monkeypatch):
+    _scrub(monkeypatch)
+    monkeypatch.setenv("IRC_SERVER", "wire")
+    # The bridge re-exports the native wire accessor: bare fallback works.
+    assert env_compat.wire_env("IRC_SERVER") == "wire"
+    monkeypatch.setenv("3V0_IRC_SERVER", "canonical")
+    assert env_compat.wire_env("IRC_SERVER") == "canonical"

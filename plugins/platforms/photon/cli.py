@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import getpass
+from env_compat import wire_env
 import os
 import shutil
 import subprocess
@@ -385,7 +386,7 @@ def _cmd_status(_args: argparse.Namespace) -> int:
     # callback is the only sink that sees credential-derived strings, so
     # cli.py keeps zero taint flow according to CodeQL.
     photon_auth.print_credential_summary(print)
-    node_bin = os.getenv("PHOTON_NODE_BIN") or shutil.which("node")
+    node_bin = wire_env("PHOTON_NODE_BIN") or shutil.which("node")
     sidecar_installed = sidecar_deps_installed()
     print(f"  node binary         : {node_bin or '✗ missing (install Node 18+)'}")
     print(f"  sidecar deps        : {'✓ installed' if sidecar_installed else '✗ run `3v0 photon install-sidecar`'}")
@@ -420,7 +421,7 @@ def _telemetry_enabled() -> bool:
         from threev0_cli.config import get_env_value
         raw = get_env_value("PHOTON_TELEMETRY")
     except ImportError:
-        raw = os.getenv("PHOTON_TELEMETRY")
+        raw = wire_env("PHOTON_TELEMETRY")
     return (raw or "").strip().lower() in ("1", "true", "yes", "on")
 
 

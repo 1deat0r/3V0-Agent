@@ -80,5 +80,54 @@ class BrandedEnvTest(unittest.TestCase):
         self.assertEqual(set(os.environ), before)
 
 
+class WireEnvTest(unittest.TestCase):
+    """wire_env — the bare-fallback accessor for unprefixed wire vars.
+
+    Resolution: 3V0_<bare> -> EV0_<bare> -> <bare> (the documented wire
+    name last, forever). Decision record: the unprefixed wire-var follow-up
+    to tickets #20/#21 — platform settings (IRC_SERVER, NTFY_TOPIC, ...)
+    ride the brand chain while keeping their wire spelling working.
+    """
+
+    def setUp(self):
+        self.bare = "IRC_SERVER"
+        self._saved = {
+            k: os.environ.get(k)
+            for k in ("3V0_IRC_SERVER", "EV0_IRC_SERVER", "IRC_SERVER")
+        }
+        for k in ("3V0_IRC_SERVER", "EV0_IRC_SERVER", "IRC_SERVER"):
+            os.environ.pop(k, None)
+
+    def tearDown(self):
+        for k, v in self._saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+    def test_bare_name_still_resolves(self):
+        os.environ["IRC_SERVER"] = "irc.example.com"
+        self.assertEqual(env_compat.wire_env("IRC_SERVER"), "irc.example.com")
+
+    def test_legacy_spelling_wins_over_bare(self):
+        os.environ["IRC_SERVER"] = "wire"
+        os.environ["EV0_IRC_SERVER"] = "legacy"
+        self.assertEqual(env_compat.wire_env("IRC_SERVER"), "legacy")
+
+    def test_canonical_wins_over_both(self):
+        os.environ["IRC_SERVER"] = "wire"
+        os.environ["EV0_IRC_SERVER"] = "legacy"
+        os.environ["3V0_IRC_SERVER"] = "canonical"
+        self.assertEqual(env_compat.wire_env("IRC_SERVER"), "canonical")
+
+    def test_default_passthrough_when_unset(self):
+        self.assertEqual(env_compat.wire_env("IRC_SERVER", "fallback"), "fallback")
+        self.assertIsNone(env_compat.wire_env("IRC_SERVER"))
+
+    def test_empty_bare_value_falls_through(self):
+        os.environ["IRC_SERVER"] = ""
+        self.assertIsNone(env_compat.wire_env("IRC_SERVER"))
+
+
 if __name__ == "__main__":
     unittest.main()

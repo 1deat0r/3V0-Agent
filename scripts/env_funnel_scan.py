@@ -104,6 +104,13 @@ def classify_source(text: str) -> list[tuple[int, str, str]]:
         def visit_Call(self, node: ast.Call) -> None:
             func = node.func
             line = node.lineno
+            if isinstance(func, ast.Name) and func.id == "wire_env" and node.args:
+                # The sanctioned bare-fallback accessor (unprefixed wire-var
+                # decision, #20/#21 follow-up): counted as funnel-consumed.
+                var = _key_of(node.args[0])
+                findings.append((line, "wire_read", var))
+                self.generic_visit(node)
+                return
             if isinstance(func, ast.Attribute):
                 # os.environ.get(...), os.environ.setdefault(...), os.environ.pop(...)
                 if _is_os_environ(func.value) and func.attr in {"get", "setdefault", "pop"}:

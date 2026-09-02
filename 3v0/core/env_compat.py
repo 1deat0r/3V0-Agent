@@ -62,3 +62,26 @@ def pop_branded_env(name: str) -> None:
     :func:`set_branded_env`). Missing keys are fine."""
     os.environ.pop(f"3V0_{name}", None)
     os.environ.pop(f"EV0_{name}", None)
+
+
+def wire_env(bare: str, default: Optional[str] = None) -> Optional[str]:
+    """Read a per-wire platform setting through the brand chain, bare name last.
+
+    For the unprefixed wire vars platform adapters historically read raw
+    (``IRC_SERVER``, ``NTFY_TOPIC``, ``PHOTON_*``, ``SIMPLEX_WS_URL``, …).
+    Resolution order: ``3V0_<bare>`` → ``EV0_<bare>`` → ``<bare>`` — the
+    documented wire name keeps working forever, while operators who want
+    brand-namespaced overrides get them without touching the adapter
+    (ticket #20/#21 follow-up decision). Truthy-wins per leg, like
+    :func:`branded_env`.
+
+    Deliberately NOT for: genuinely global OS vars (``HOME``, ``PATH``,
+    ``TERM``, …) and industry-standard provider names (``OPENAI_API_KEY``,
+    ``OPENROUTER_API_KEY``, …) — those are documented wire exceptions and
+    keep their raw reads.
+    """
+    for prefix in ("3V0_", "EV0_", ""):
+        value = os.environ.get(f"{prefix}{bare}")
+        if value:
+            return value
+    return default

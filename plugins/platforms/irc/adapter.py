@@ -29,6 +29,7 @@ Or via environment variables (overrides config.yaml):
 
 import asyncio
 import logging
+from env_compat import wire_env
 import os
 import re
 import ssl
@@ -115,16 +116,16 @@ class IRCAdapter(BasePlatformAdapter):
         extra = getattr(config, "extra", {}) or {}
 
         # Connection settings (env vars override config.yaml)
-        self.server = os.getenv("IRC_SERVER") or extra.get("server", "")
+        self.server = wire_env("IRC_SERVER") or extra.get("server", "")
         try:
-            self.port = int(os.getenv("IRC_PORT") or extra.get("port", 6697))
+            self.port = int(wire_env("IRC_PORT") or extra.get("port", 6697))
         except (ValueError, TypeError):
             self.port = 6697
-        self.nickname = os.getenv("IRC_NICKNAME") or extra.get("nickname", "3v0-bot")
-        self.channel = os.getenv("IRC_CHANNEL") or extra.get("channel", "")
+        self.nickname = wire_env("IRC_NICKNAME") or extra.get("nickname", "3v0-bot")
+        self.channel = wire_env("IRC_CHANNEL") or extra.get("channel", "")
         self.use_tls = (
-            os.getenv("IRC_USE_TLS", "").lower() in {"1", "true", "yes"}
-            if os.getenv("IRC_USE_TLS")
+            (wire_env("IRC_USE_TLS") or "").lower() in {"1", "true", "yes"}
+            if wire_env("IRC_USE_TLS")
             else extra.get("use_tls", True)
         )
         self.server_password = _get_scoped_secret("IRC_SERVER_PASSWORD") or extra.get("server_password", "")
@@ -528,8 +529,8 @@ def check_requirements() -> bool:
 
     Only requires the server and channel — no external pip packages needed.
     """
-    server = os.getenv("IRC_SERVER", "")
-    channel = os.getenv("IRC_CHANNEL", "")
+    server = (wire_env("IRC_SERVER") or "")
+    channel = (wire_env("IRC_CHANNEL") or "")
     # Also accept config.yaml-only configuration (no env vars).
     # The gateway passes PlatformConfig; we just check env for the
     # 3v0 setup / requirements check path.
@@ -539,8 +540,8 @@ def check_requirements() -> bool:
 def validate_config(config) -> bool:
     """Validate that the platform config has enough info to connect."""
     extra = getattr(config, "extra", {}) or {}
-    server = os.getenv("IRC_SERVER") or extra.get("server", "")
-    channel = os.getenv("IRC_CHANNEL") or extra.get("channel", "")
+    server = wire_env("IRC_SERVER") or extra.get("server", "")
+    channel = wire_env("IRC_CHANNEL") or extra.get("channel", "")
     return bool(server and channel)
 
 
@@ -654,8 +655,8 @@ def interactive_setup() -> None:
 def is_connected(config) -> bool:
     """Check whether IRC is configured (env or config.yaml)."""
     extra = getattr(config, "extra", {}) or {}
-    server = os.getenv("IRC_SERVER") or extra.get("server", "")
-    channel = os.getenv("IRC_CHANNEL") or extra.get("channel", "")
+    server = wire_env("IRC_SERVER") or extra.get("server", "")
+    channel = wire_env("IRC_CHANNEL") or extra.get("channel", "")
     return bool(server and channel)
 
 
@@ -672,24 +673,24 @@ def _env_enablement() -> dict | None:
     the core hook — it becomes a proper ``HomeChannel`` dataclass on the
     ``PlatformConfig`` rather than being merged into ``extra``.
     """
-    server = os.getenv("IRC_SERVER", "").strip()
-    channel = os.getenv("IRC_CHANNEL", "").strip()
+    server = (wire_env("IRC_SERVER") or "").strip()
+    channel = (wire_env("IRC_CHANNEL") or "").strip()
     if not (server and channel):
         return None
     seed: dict = {
         "server": server,
         "channel": channel,
     }
-    port = os.getenv("IRC_PORT", "").strip()
+    port = (wire_env("IRC_PORT") or "").strip()
     if port:
         try:
             seed["port"] = int(port)
         except ValueError:
             pass
-    nickname = os.getenv("IRC_NICKNAME", "").strip()
+    nickname = (wire_env("IRC_NICKNAME") or "").strip()
     if nickname:
         seed["nickname"] = nickname
-    use_tls = os.getenv("IRC_USE_TLS", "").strip().lower()
+    use_tls = (wire_env("IRC_USE_TLS") or "").strip().lower()
     if use_tls:
         seed["use_tls"] = use_tls in {"1", "true", "yes"}
     # Passwords live in PlatformConfig.extra as well for back-compat with
@@ -701,11 +702,11 @@ def _env_enablement() -> dict | None:
     # Optional home-channel (usually the same as IRC_CHANNEL, but can be a
     # dedicated reports channel).  Defaults to IRC_CHANNEL so cron jobs
     # with ``deliver=irc`` have a sensible target without extra config.
-    home = os.getenv("IRC_HOME_CHANNEL") or channel
+    home = wire_env("IRC_HOME_CHANNEL") or channel
     if home:
         seed["home_channel"] = {
             "chat_id": home,
-            "name": os.getenv("IRC_HOME_CHANNEL_NAME", home),
+            "name": wire_env("IRC_HOME_CHANNEL_NAME", home),
         }
     return seed
 
@@ -753,19 +754,19 @@ async def _standalone_send(
     primitive.
     """
     extra = getattr(pconfig, "extra", {}) or {}
-    server = os.getenv("IRC_SERVER") or extra.get("server", "")
-    channel = os.getenv("IRC_CHANNEL") or extra.get("channel", "")
+    server = wire_env("IRC_SERVER") or extra.get("server", "")
+    channel = wire_env("IRC_CHANNEL") or extra.get("channel", "")
     if not server or not channel:
         return {"error": "IRC standalone send: IRC_SERVER and IRC_CHANNEL must be configured"}
 
-    port_value = os.getenv("IRC_PORT") or extra.get("port", 6697)
+    port_value = wire_env("IRC_PORT") or extra.get("port", 6697)
     try:
         port = int(port_value)
     except (TypeError, ValueError):
         return {"error": f"IRC standalone send: invalid port {port_value!r}"}
 
-    nickname = os.getenv("IRC_NICKNAME") or extra.get("nickname", "3v0-bot")
-    use_tls_env = os.getenv("IRC_USE_TLS")
+    nickname = wire_env("IRC_NICKNAME") or extra.get("nickname", "3v0-bot")
+    use_tls_env = wire_env("IRC_USE_TLS")
     if use_tls_env is not None:
         use_tls = use_tls_env.lower() in {"1", "true", "yes"}
     else:
