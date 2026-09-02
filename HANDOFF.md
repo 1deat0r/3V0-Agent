@@ -84,13 +84,37 @@ without operator direction.
   **branded_write/pop/del = 0 tree-wide**; `_float_env` resolves via
   `branded_env`; contract interaction (canonical twin shadows legacy-only
   monkeypatches) pinned in tests. 24,718-test sweep green.
-- **#20/#21/#17/#23 all closed** — the ENV-FUNNEL and ADAPTERS wide
-  refactors are done through contract; only #24 (adapter registry) and
-  #18 (turn-runner frame) remain open from the series.
+- **#24 ADAPTERS contract COMPLETE + closed** (`ea93ebf727`):
+  `gateway/platforms/builtin.py` registers the nine built-ins as
+  PlatformEntry records; `GatewayRunner._create_adapter`'s hand-rolled
+  if/elif chain (130 lines) deleted — `platform_registry` is the ONE
+  adapter loading path; `gateway_runner` injection now platform-generic.
+  Full messaging suite 649 files / 5,758 tests / 0 failed.
+- **#20/#21/#24/#17/#23 all closed** — the ENV-FUNNEL and ADAPTERS wide
+  refactor series is DONE. Only #18 (turn-runner assembly frame) remains
+  open from the series.
+- `1cc8ab11e0` **provider-loader seam fix** (found via pre-existing test
+  failures): the fff1f44c50 loader extraction orphaned the family
+  `_get_user_plugins_dir` seams — discovery bypassed them, 3
+  memory-provider tests failed on main and isolation tests silently read
+  the real home. Delegators now pass their seam through.
+- **Venv repair**: the reboot-ed venv lost extras — `anthropic==0.87.0`
+  and `agent-client-protocol==0.9.0` reinstalled at exact uv.lock pins
+  (LATEST-version installs break the pydantic serializer-warning canary —
+  always install the locked pin). 6 further pre-existing failures fixed;
+  tests/agent back to 0 failed.
+- **Known-flake A/B discipline used throughout**: skin engine/palette,
+  update yes-flag unicode-TTY, kanban review surface, tool-progress
+  scrollback, exit-watchdog failures are pre-existing — verified
+  identical on the unmodified tree via `git stash` A/B before blaming
+  any batch.
 
 **NEXT work queue (tracked tickets, `ready-for-agent` on the fork):**
-1. **#24** (adapter registry contract) and **#18** (turn-runner assembly
-   frame) — the last two open tickets of the wide-refactor series.
+1. **#18 turn-runner assembly frame** — the last open ticket of the
+   wide-refactor series (and the biggest structural prize): extract the
+   shared "assemble agent for a turn" frame (config → kwargs →
+   cached-vs-fresh agent, checkpointing, session-state sync) into one
+   module consumed by cli.py, gateway/run.py, and tui_gateway/server.py.
 2. Known pre-existing failures (A/B-verified, NOT new): skin
    engine/palette (5), update yes-flag unicode-TTY (3), kanban review
    surface (1), cli tool-progress scrollback (7) + exit-watchdog (2).
@@ -113,16 +137,6 @@ without operator direction.
   identical on the unmodified tree via `git stash` A/B before blaming
   any batch.
 
-**NEXT work queue (tracked tickets, `ready-for-agent` on the fork):**
-1. **#21 ENV-FUNNEL contract** — now unblocked: collapse the remaining
-   write-half sites (kanban/session/redact bridges), delete dead
-   fallback shims (e.g. gateway `_float_env`), full suite green.
-2. **#24** (adapter registry contract) and **#18** (turn-runner assembly
-   frame) — both unblocked.
-3. Known pre-existing failures (A/B-verified, NOT new): skin
-   engine/palette (5), update yes-flag unicode-TTY (3), kanban review
-   surface (1), cli tool-progress scrollback (7) + exit-watchdog (2).
-   picker_prewarm did NOT reproduce.
 
 ## Archived kickoff (2026-08-22, wake #12 — full-suite triage + Phase R2 cutover)
 
