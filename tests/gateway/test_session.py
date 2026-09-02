@@ -152,7 +152,13 @@ class TestBuildSessionContextPrompt:
             p3 = _prompt_for("3003")
 
         assert p1 == p2 == p3, "system prompt must be stable across message_id"
-        assert "1001" not in p1 and "2002" not in p2 and "3003" not in p3
+        # The contract scopes to the cached Discord IDs block: the whole
+        # prompt legitimately contains other digits (paths, model specs),
+        # so assert on the block rather than the full string — a stray
+        # "1001" elsewhere (e.g. inside an unrelated tmp path) is not a
+        # caching regression.
+        ids_block = p1.split("**Discord IDs", 1)[1].split("\n\n", 1)[0]
+        assert "1001" not in ids_block and "2002" not in ids_block and "3003" not in ids_block
         # Static pointer tells the agent where the volatile id actually lives.
         assert "provided per-turn in the incoming user message" in p1
 

@@ -1193,15 +1193,19 @@ class TestRunCommandSttIdleTimeout:
                 "import sys, time",
                 "for idx in range(4):",
                 "    print(f'tick {idx}', file=sys.stderr, flush=True)",
-                "    time.sleep(0.04)",
+                "    time.sleep(0.25)",
                 "print('done', flush=True)",
             ]),
             encoding="utf-8",
         )
 
+        # Widen the margin (gap 0.25s vs idle 0.9s — 3.6x) so 32-worker CPU
+        # contention cannot starve the child past the idle window; total
+        # runtime (1.0s) stays above the idle timeout so extension is still
+        # what is being tested.
         result = _run_command_stt(
             self._shell_command(sys.executable, "-u", str(script)),
-            timeout=0.1,
+            timeout=0.9,
         )
 
         assert result.returncode == 0
