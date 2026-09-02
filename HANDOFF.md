@@ -122,10 +122,18 @@ documented-exception-vs-opt-in-bare-fallback decision; the gateway
 agent-cache/session-sync frame generalizes when a second runner grows a
 cache.
 
-**Known pre-existing failures (A/B-verified, NOT new):** skin
-engine/palette (5), update yes-flag unicode-TTY (3), kanban review
-surface (1), cli tool-progress scrollback (7) + exit-watchdog (2).
-picker_prewarm did NOT reproduce.
+**Known failures: ZERO.** The 19-failure pre-existing backlog was
+root-caused and fixed (commits 1cb1989f5 + 7e06358d8d + the
+skin-integration pin follow-up): one REAL production bug (the classic
+CLI tool-progress callback raised NameError on every tool event —
+cc2b56b26a copy-paste miss), two audit/test staleness families (brand
+eradication + Tide palette pins; hairline-rail tier split out of the
+soft-text contrast floor), and three isolation gaps (live-gateway
+discovery in update tests; canonical-twin delenv coverage; incomplete
+pytest-marker scrub in the exit-watchdog child env). Full six-suite
+sweep: 2,327 files / 24,754 tests / 0 failed. picker_prewarm never
+reproduced (its 600s file-timeout in one sweep was turn-lease shadowing,
+also fixed).
 - `1cc8ab11e0` **provider-loader seam fix** (found via pre-existing test
   failures): the fff1f44c50 loader extraction orphaned the family
   `_get_user_plugins_dir` seams — discovery bypassed them, 3
