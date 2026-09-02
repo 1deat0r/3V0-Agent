@@ -46,7 +46,7 @@ class TestBuiltinSkins:
         assert skin.get_color("response_border") == "#C7A96B"
         assert skin.get_color("session_label") == "#C7A96B"
         assert skin.get_color("session_border") == "#6E584B"
-        assert skin.get_branding("agent_name") == "Ares Agent"
+        assert skin.get_branding("agent_name") == "3V0 Agent"  # brand eradication (bd8ea8b25b)
 
     def test_ares_has_spinner_customization(self):
         from threev0_cli.skin_engine import load_skin
@@ -115,7 +115,7 @@ class TestUserSkins:
         assert skin.get_branding("agent_name") == "Custom Agent"
         assert skin.tool_prefix == "▸"
         # Should inherit defaults for unspecified colors
-        assert skin.get_color("banner_border") == "#CD7F32"  # from default
+        assert skin.get_color("banner_border") == "#3c424c"  # from default (Tide seeds)
 
     def test_load_user_skin_invalid_section_types_fall_back_to_defaults(self, tmp_path, monkeypatch):
         from threev0_cli.skin_engine import load_skin
@@ -142,7 +142,7 @@ class TestUserSkins:
         skin = load_skin("broken")
 
         assert skin.name == "broken"
-        assert skin.get_color("banner_title") == "#FFD700"
+        assert skin.get_color("banner_title") == "#7DD3E8"  # Tide sky accent
         assert skin.get_branding("agent_name") == "3V0 Agent"
         assert skin.spinner.get("waiting_faces", []) == []
         assert skin.tool_emojis == {}
@@ -185,7 +185,7 @@ class TestCliBrandingHelpers:
         from threev0_cli.skin_engine import set_active_skin, get_active_goodbye
 
         set_active_skin("ares")
-        assert get_active_goodbye() == "Farewell, warrior! ⚔"
+        assert get_active_goodbye() == "Goodbye! ⚕"
 
     def test_prompt_toolkit_style_overrides_cover_tui_classes(self):
         from threev0_cli.skin_engine import set_active_skin, get_prompt_toolkit_style_overrides

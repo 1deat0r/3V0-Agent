@@ -102,14 +102,25 @@ while True:
 """
 
 
+def _real_process_env() -> dict:
+    """Child env that looks like a real CLI process.
+
+    ``running_under_pytest()`` checks THREE markers (PYTEST_CURRENT_TEST,
+    PYTEST_VERSION, EV0_TEST_ISOLATION) — popping only the first left the
+    subprocess detected as a test run, so ``_arm_exit_watchdog`` refused to
+    arm and the wedged child never self-exited.
+    """
+    env = dict(os.environ, EV0_EXIT_WATCHDOG_S="1", PYTHONPATH=_REPO_ROOT)
+    for marker in ("PYTEST_CURRENT_TEST", "PYTEST_VERSION", "EV0_TEST_ISOLATION"):
+        env.pop(marker, None)
+    return env
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX signals")
 def test_sigterm_on_wedged_process_forces_exit_within_leash():
     """E2E: a wedged process armed via the signal path self-exits at ~2×
     EV0_EXIT_WATCHDOG_S; without the signal it would live forever."""
-    env = dict(os.environ, EV0_EXIT_WATCHDOG_S="1", PYTHONPATH=_REPO_ROOT)
-    # _arm_exit_watchdog refuses to arm under pytest (it would kill the test
-    # worker); the subprocess must look like a real CLI.
-    env.pop("PYTEST_CURRENT_TEST", None)
+    env = _real_process_env()
     src = _WEDGE_SRC.format(repo=_REPO_ROOT)
     p = subprocess.Popen(
         [sys.executable, "-c", src],
@@ -141,8 +152,7 @@ def test_sigterm_on_wedged_process_forces_exit_within_leash():
 def test_signal_watchdog_is_skipped_once_cleanup_starts():
     """If cleanup starts after signal intent, the cleanup-owned watchdog should
     govern shutdown and the signal watchdog should not hard-kill midway."""
-    env = dict(os.environ, EV0_EXIT_WATCHDOG_S="1", PYTHONPATH=_REPO_ROOT)
-    env.pop("PYTEST_CURRENT_TEST", None)
+    env = _real_process_env()
     src = _CLEANUP_OVERLAP_SRC.format(repo=_REPO_ROOT)
     p = subprocess.Popen(
         [sys.executable, "-c", src],

@@ -66,12 +66,20 @@ STRONG_FG = (
     "status_bar_critical",
     "shell_dollar",
 )
-SOFT_FG = (
-    "banner_dim",
+HAIRLINE_FG = (
+    # Tide hairline rails: theme.ts DARK_SEEDS ships border '#3c424c'
+    # ("hairline rail/border (neutral, derived-consistent)") and
+    # deriveTones derives the same tier at mix(text, bg, 0.82) ≈ 1.7:1 —
+    # deliberately SUBTLE separators, not readable text. Floor only guards
+    # against truly invisible rails (pole-identical colors).
     "banner_border",
-    "ui_warn",
     "input_rule",
     "response_border",
+)
+HAIRLINE_MIN = 1.5
+SOFT_FG = (
+    "banner_dim",
+    "ui_warn",
     "status_bar_dim",
     "status_bar_warn",
     "session_label",
@@ -177,6 +185,11 @@ def test_base_palette_contrast_and_polarity(skin, palette, is_light):
             ratio = contrast(palette[key], pole)
             if ratio < SOFT_MIN:
                 problems.append(f"{key}={palette[key]} contrast {ratio:.2f} < {SOFT_MIN} vs {pole}")
+
+        for key in HAIRLINE_FG:
+            ratio = contrast(palette[key], pole)
+            if ratio < HAIRLINE_MIN:
+                problems.append(f"{key}={palette[key]} contrast {ratio:.2f} < {HAIRLINE_MIN} vs {pole}")
 
     status_bg = palette["status_bar_bg"]
     for key in ON_STATUS_BAR:

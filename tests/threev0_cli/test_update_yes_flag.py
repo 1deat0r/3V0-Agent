@@ -58,10 +58,12 @@ class TestUpdateYesConfigMigration:
     @patch("threev0_cli.config.get_missing_config_fields", return_value=[])
     @patch("threev0_cli.config.get_missing_env_vars", return_value=["NEW_KEY"])
     @patch("shutil.which", return_value=None)
+    @patch("threev0_cli.gateway.find_gateway_pids", return_value=[])
     @patch("subprocess.run")
     def test_yes_auto_migrates_without_input(
         self,
         mock_run,
+        _mock_find_gw,
         _mock_which,
         _mock_missing_env,
         _mock_missing_cfg,
@@ -99,10 +101,12 @@ class TestUpdateYesConfigMigration:
     @patch("threev0_cli.config.get_missing_config_fields", return_value=[])
     @patch("threev0_cli.config.get_missing_env_vars", return_value=["NEW_KEY"])
     @patch("shutil.which", return_value=None)
+    @patch("threev0_cli.gateway.find_gateway_pids", return_value=[])
     @patch("subprocess.run")
     def test_no_yes_flag_still_prompts_in_tty(
         self,
         mock_run,
+        _mock_find_gw,
         _mock_which,
         _mock_missing_env,
         _mock_missing_cfg,
@@ -159,10 +163,12 @@ class TestUnicodeDecodeErrorInUpdatePrompts:
     @patch("threev0_cli.config.get_missing_config_fields", return_value=[])
     @patch("threev0_cli.config.get_missing_env_vars", return_value=["NEW_KEY"])
     @patch("shutil.which", return_value=None)
+    @patch("threev0_cli.gateway.find_gateway_pids", return_value=[])
     @patch("subprocess.run")
     def test_unicode_decode_error_in_tty_skips_and_prints_hint(
         self,
         mock_run,
+        _mock_find_gw,
         _mock_which,
         _mock_missing_env,
         _mock_missing_cfg,
