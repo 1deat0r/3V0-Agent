@@ -155,8 +155,12 @@ async def test_agent_path_propagates_timed_out_lease_before_loading_transcript(
     # Both spellings: the runner's runtime-env sync dual-writes the canonical
     # twin at bootstrap, and branded_env reads 3V0_* first — patching only the
     # legacy leg would be silently shadowed (ticket #21 contract).
-    monkeypatch.setenv("EV0_TURN_LEASE_TIMEOUT", "0.02")
-    monkeypatch.setenv("3V0_TURN_LEASE_TIMEOUT", "0.02")
+    # 0.02s fails closed at full-suite parallelism: under 32-worker CPU
+    # contention the dispatch can miss the tiny window and the acquire then
+    # BLOCKS on the held lease (attempt-1 flake in full runs). 0.5s is still
+    # far below the 5s agent timeout it guards against.
+    monkeypatch.setenv("EV0_TURN_LEASE_TIMEOUT", "0.5")
+    monkeypatch.setenv("3V0_TURN_LEASE_TIMEOUT", "0.5")
 
     runner.session_store.load_transcript.side_effect = AssertionError(
         "transcript must not load after a turn-lease timeout"
@@ -195,8 +199,12 @@ async def test_full_dispatch_rejects_lease_timeout_without_running_goal_hook(
     # patches (ticket #21 contract).
     monkeypatch.setenv("EV0_AGENT_TIMEOUT", "5")
     monkeypatch.setenv("3V0_AGENT_TIMEOUT", "5")
-    monkeypatch.setenv("EV0_TURN_LEASE_TIMEOUT", "0.02")
-    monkeypatch.setenv("3V0_TURN_LEASE_TIMEOUT", "0.02")
+    # 0.02s fails closed at full-suite parallelism: under 32-worker CPU
+    # contention the dispatch can miss the tiny window and the acquire then
+    # BLOCKS on the held lease (attempt-1 flake in full runs). 0.5s is still
+    # far below the 5s agent timeout it guards against.
+    monkeypatch.setenv("EV0_TURN_LEASE_TIMEOUT", "0.5")
+    monkeypatch.setenv("3V0_TURN_LEASE_TIMEOUT", "0.5")
 
     runner.session_store.load_transcript.side_effect = AssertionError(
         "transcript must not load after a turn-lease timeout"
