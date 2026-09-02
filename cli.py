@@ -13542,21 +13542,21 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             # non-streaming calls never emit that, leaving verbose mode with no
             # committed line at all. "verbose" is strictly more than "all", so
             # it must commit at least the same line.
-            if function_name and self.tool_progress_mode in {"new", "all", "verbose"}:
+            if name and self.tool_progress_mode in {"new", "all", "verbose"}:
                 duration = kwargs.get("duration", 0.0)
                 # Pop stored args from tool.started for this function
-                stored = self._pending_tool_info.get(function_name)
+                stored = self._pending_tool_info.get(name)
                 stored_args = stored.pop(0) if stored else {}
                 if stored is not None and not stored:
-                    del self._pending_tool_info[function_name]
+                    del self._pending_tool_info[name]
                 # "new" mode: skip consecutive repeats of the same tool
-                if self.tool_progress_mode == "new" and function_name == self._last_scrollback_tool:
+                if self.tool_progress_mode == "new" and name == self._last_scrollback_tool:
                     self._invalidate()
                     return
-                self._last_scrollback_tool = function_name
+                self._last_scrollback_tool = name
                 try:
                     from agent.display import get_cute_tool_message
-                    line = get_cute_tool_message(function_name, stored_args, duration, result=kwargs.get("result"))
+                    line = get_cute_tool_message(name, stored_args, duration, result=kwargs.get("result"))
                     _cprint(f"  {line}")
                 except Exception:
                     pass
@@ -13589,10 +13589,10 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             return
         if event_type != "tool.started":
             return
-        if function_name and not function_name.startswith("_"):
+        if name and not name.startswith("_"):
             from agent.display import get_tool_emoji
-            emoji = get_tool_emoji(function_name)
-            label = preview or function_name
+            emoji = get_tool_emoji(name)
+            label = preview or name
             from agent.display import get_tool_preview_max_len
             _pl = get_tool_preview_max_len()
             if _pl > 0 and len(label) > _pl:
@@ -13600,8 +13600,8 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             self._spinner_text = f"{emoji} {label}"
             self._tool_start_time = time.monotonic()
             # Store args for stacked scrollback line on completion
-            self._pending_tool_info.setdefault(function_name, []).append(
-                function_args if function_args is not None else {}
+            self._pending_tool_info.setdefault(name, []).append(
+                args if args is not None else {}
             )
             self._invalidate()
 
