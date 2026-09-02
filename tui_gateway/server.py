@@ -32,7 +32,7 @@ from threev0_constants import (
     set_threev0_home_override,
 )
 from threev0_cli.env_loader import load_threev0_dotenv
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env, pop_branded_env
 from utils import is_truthy_value
 from tools.environments.local import threev0_subprocess_env
 from agent.replay_cleanup import sanitize_replay_history
@@ -3459,9 +3459,9 @@ def _clear_session_context(tokens: list) -> None:
 
 def _enable_gateway_prompts() -> None:
     """Route approvals through gateway callbacks instead of CLI input()."""
-    os.environ["EV0_GATEWAY_SESSION"] = "1"
-    os.environ["EV0_EXEC_ASK"] = "1"
-    os.environ["EV0_INTERACTIVE"] = "1"
+    set_branded_env("GATEWAY_SESSION", "1")
+    set_branded_env("EXEC_ASK", "1")
+    set_branded_env("INTERACTIVE", "1")
 
 
 # ── Blocking prompt factory ──────────────────────────────────────────
@@ -12098,10 +12098,10 @@ def _(rid, params: dict) -> dict:
                 current = is_truthy_value(branded_env("YOLO_MODE"))
                 enable = _resolve_toggle(current)
                 if enable:
-                    os.environ["EV0_YOLO_MODE"] = "1"
+                    set_branded_env("YOLO_MODE", "1")
                     nv = "1"
                 else:
-                    os.environ.pop("EV0_YOLO_MODE", None)
+                    pop_branded_env("YOLO_MODE")
                     nv = "0"
             return _ok(rid, {"key": key, "value": nv, "scope": "session"})
         except Exception as e:
@@ -14234,8 +14234,8 @@ def _full_duplex_listener() -> None:
                     # Bare stop phrase — in EITHER phase the user means
                     # "stop everything": the turn was already interrupted /
                     # TTS cut at trip time; now end the voice chat.
-                    os.environ["EV0_VOICE"] = "0"
-                    os.environ["EV0_VOICE_TTS"] = "0"
+                    set_branded_env("VOICE", "0")
+                    set_branded_env("VOICE_TTS", "0")
                     try:
                         from threev0_cli.voice import stop_continuous
 
@@ -14789,7 +14789,7 @@ def _(rid, params: dict) -> dict:
         # Runtime-only flag (CLI parity) — no _write_config_key, so the
         # next TUI launch starts with voice OFF instead of auto-REC from a
         # persisted stale toggle.
-        os.environ["EV0_VOICE"] = "1" if enabled else "0"
+        set_branded_env("VOICE", "1" if enabled else "0")
 
         stop_hint = ""
         if enabled:
@@ -14817,7 +14817,7 @@ def _(rid, params: dict) -> dict:
 
             # Clear TTS so it can be toggled independently after voice is off,
             # and silence any in-flight streaming speech.
-            os.environ["EV0_VOICE_TTS"] = "0"
+            set_branded_env("VOICE_TTS", "0")
             _tts_stream_stop(user_barge=False)
 
         return _ok(
@@ -14835,7 +14835,7 @@ def _(rid, params: dict) -> dict:
             return _err(rid, 4014, "enable voice mode first: /voice on")
         new_value = not _voice_tts_enabled()
         # Runtime-only flag (CLI parity) — see voice.toggle on/off above.
-        os.environ["EV0_VOICE_TTS"] = "1" if new_value else "0"
+        set_branded_env("VOICE_TTS", "1" if new_value else "0")
         if not new_value:
             _tts_stream_stop(user_barge=False)
         # Include ``record_key`` on every branch so a /voice tts toggle
@@ -14948,8 +14948,8 @@ def _(rid, params: dict) -> dict:
                 # (TUI, desktop) end the conversation instead of treating
                 # it as a no-speech timeout. The continuous loop has
                 # already halted before this callback fires.
-                os.environ["EV0_VOICE"] = "0"
-                os.environ["EV0_VOICE_TTS"] = "0"
+                set_branded_env("VOICE", "0")
+                set_branded_env("VOICE_TTS", "0")
                 try:
                     _tts_stream_stop(user_barge=False)
                 except Exception:

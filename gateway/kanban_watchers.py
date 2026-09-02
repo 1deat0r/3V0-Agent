@@ -10,7 +10,7 @@ behavior-neutral move that lifts ~1,000 LOC out of run.py.
 
 from __future__ import annotations
 
-from env_compat import branded_env
+from env_compat import branded_env, pop_branded_env, set_branded_env
 
 import asyncio
 import logging
@@ -1613,7 +1613,7 @@ class GatewayKanbanWatchersMixin:
                 # relies on the env var.
                 prev_env = branded_env("KANBAN_BOARD")
                 try:
-                    os.environ["EV0_KANBAN_BOARD"] = slug
+                    set_branded_env("KANBAN_BOARD", slug)
                     try:
                         triage_ids = _decomp.list_triage_ids()
                     except Exception as exc:
@@ -1657,9 +1657,9 @@ class GatewayKanbanWatchersMixin:
                             )
                 finally:
                     if prev_env is None:
-                        os.environ.pop("EV0_KANBAN_BOARD", None)
+                        pop_branded_env("KANBAN_BOARD")
                     else:
-                        os.environ["EV0_KANBAN_BOARD"] = prev_env
+                        set_branded_env("KANBAN_BOARD", prev_env)
             return successes
 
         logger.info(

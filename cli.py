@@ -26,6 +26,7 @@ except ModuleNotFoundError:
 import logging
 import copy
 from env_compat import branded_env
+from env_compat import set_branded_env
 import os
 import shutil
 import sys
@@ -49,7 +50,7 @@ from typing import List, Dict, Any, Optional, Mapping
 logger = logging.getLogger(__name__)
 
 # Suppress startup messages for clean CLI experience
-os.environ["EV0_QUIET"] = "1"  # Our own modules
+set_branded_env("QUIET", "1")  # Our own modules
 
 from threev0_cli.fallback_config import get_fallback_chain
 from threev0_cli.cli_agent_setup_mixin import CLIAgentSetupMixin
@@ -772,17 +773,15 @@ def load_cli_config() -> Dict[str, Any]:
     if isinstance(security_config, dict):
         redact = security_config.get("redact_secrets")
         if redact is not None:
-            os.environ["EV0_REDACT_SECRETS"] = str(redact).lower()
+            set_branded_env("REDACT_SECRETS", str(redact).lower())
 
     # Session-search index knobs (threev0_state reads the env carriers).
     sessions_config = defaults.get("sessions", {})
     if isinstance(sessions_config, dict):
         if "cjk_fts" in sessions_config:
-            os.environ["EV0_CJK_FTS"] = str(sessions_config["cjk_fts"])
+            set_branded_env("CJK_FTS", str(sessions_config["cjk_fts"]))
         if "search_slow_ms" in sessions_config:
-            os.environ["EV0_SEARCH_SLOW_MS"] = str(
-                sessions_config["search_slow_ms"]
-            )
+            set_branded_env("SEARCH_SLOW_MS", str(sessions_config['search_slow_ms']))
 
     return defaults
 
@@ -19643,7 +19642,7 @@ def main(
 
     # Signal to terminal_tool that we're in interactive mode
     # This enables interactive sudo password prompts with timeout
-    os.environ["EV0_INTERACTIVE"] = "1"
+    set_branded_env("INTERACTIVE", "1")
     
     # Handle gateway mode (messaging + cron)
     if gateway:
@@ -19925,7 +19924,7 @@ def main(
         # back to os.environ when the session-context layer isn't engaged) and
         # takes the deterministic approvals.single_query_mode path instead of
         # waiting the full timeout. See #86878.
-        os.environ["EV0_SINGLE_QUERY_SESSION"] = "1"
+        set_branded_env("SINGLE_QUERY_SESSION", "1")
         if not cli._claim_active_session("cli", stderr=bool(quiet)):
             sys.exit(1)
         try:

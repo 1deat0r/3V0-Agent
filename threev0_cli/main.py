@@ -70,7 +70,8 @@ from threev0_cli._subprocess_compat import suppress_platform_ver_console
 
 suppress_platform_ver_console()
 
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env, pop_branded_env
+from env_compat import set_branded_env
 import os
 import sys
 
@@ -682,8 +683,7 @@ def _apply_profile_override() -> None:
                 file=sys.stderr,
             )
             return
-        os.environ["EV0_HOME"] = threev0_home
-        os.environ["3V0_HOME"] = threev0_home  # canonical (ADR-0006); EV0_* legacy alias
+        set_branded_env("HOME", threev0_home)  # canonical + legacy alias (ADR-0006)
         # Strip the flag from argv so argparse doesn't choke
         if consume > 0 and profile_index is not None:
             start = profile_index + 1  # +1 because argv is sys.argv[1:]
@@ -744,7 +744,7 @@ try:
             if isinstance(_early_sec_cfg, dict):
                 _early_redact = _early_sec_cfg.get("redact_secrets")
                 if _early_redact is not None:
-                    os.environ["EV0_REDACT_SECRETS"] = str(_early_redact).lower()
+                    set_branded_env("REDACT_SECRETS", str(_early_redact).lower())
         _early_net_cfg = _early_cfg_raw.get("network", {})
         if isinstance(_early_net_cfg, dict) and _early_net_cfg.get("force_ipv4"):
             _FORCE_IPV4_EARLY = True
@@ -2846,7 +2846,7 @@ def _pin_kanban_board_env() -> None:
     try:
         from threev0_cli.kanban_db import get_current_board
 
-        os.environ["EV0_KANBAN_BOARD"] = get_current_board()
+        set_branded_env("KANBAN_BOARD", get_current_board())
     except Exception:
         pass
 
@@ -3121,7 +3121,7 @@ def cmd_chat(args):
     # _YOLO_MODE_FROZEN.  This redundant set is a safety net for callers
     # that invoke cmd_chat directly (e.g. subcommand dispatch).
     if getattr(args, "yolo", False):
-        os.environ["EV0_YOLO_MODE"] = "1"
+        set_branded_env("YOLO_MODE", "1")
 
     # --ignore-user-config: make load_cli_config() / load_config() skip the
     # user's ~/.3V0/config.yaml and return built-in defaults. Set BEFORE
@@ -3129,17 +3129,17 @@ def cmd_chat(args):
     # import time). Credentials in .env are still loaded — this flag only
     # ignores behavioral/config settings.
     if getattr(args, "ignore_user_config", False):
-        os.environ["EV0_IGNORE_USER_CONFIG"] = "1"
+        set_branded_env("IGNORE_USER_CONFIG", "1")
 
     # --ignore-rules: skip auto-injection of AGENTS.md/SOUL.md/.cursorrules
     # (rules), memory entries, and any preloaded skills coming from user config.
     # Maps to AIAgent(skip_context_files=True, skip_memory=True).
     if getattr(args, "ignore_rules", False):
-        os.environ["EV0_IGNORE_RULES"] = "1"
+        set_branded_env("IGNORE_RULES", "1")
 
     # --source: tag session source for filtering (e.g. 'tool' for third-party integrations)
     if getattr(args, "source", None):
-        os.environ["EV0_SESSION_SOURCE"] = args.source
+        set_branded_env("SESSION_SOURCE", args.source)
 
     _pin_kanban_board_env()
     _confirm_startup_expensive_model_override(args)
@@ -10652,9 +10652,9 @@ def cmd_dashboard(args):
     if branded_env("DESKTOP") != "1":
         _inherited_web_dist = (branded_env("WEB_DIST") or "")
         if _is_electron_packaged_web_dist(_inherited_web_dist):
-            os.environ.pop("EV0_WEB_DIST", None)
+            pop_branded_env("WEB_DIST")
     if not _headless_backend:
-        os.environ.pop("EV0_SERVE_HEADLESS", None)
+        pop_branded_env("SERVE_HEADLESS")
 
     # ── Unified profile launch routing ────────────────────────────────
     # The dashboard is a MACHINE management surface: it can read/write any
@@ -10812,7 +10812,7 @@ def cmd_dashboard(args):
     if _headless_backend:
         # Don't build the SPA, and tell mount_spa() (read at web_server import
         # below) to disable it even if a stray dist exists. Set it first.
-        os.environ["EV0_SERVE_HEADLESS"] = "1"
+        set_branded_env("SERVE_HEADLESS", "1")
     elif "EV0_WEB_DIST" not in os.environ and not getattr(args, "skip_build", False):
         if not _build_web_ui(PROJECT_ROOT / "web", fatal=True):
             sys.exit(1)
@@ -10863,7 +10863,7 @@ def cmd_dashboard(args):
         # Write the expanded path back: web_server reads EV0_WEB_DIST raw
         # at import (no expanduser), so a validated "~/dist" would otherwise
         # pass here and still 404 there.
-        os.environ["EV0_WEB_DIST"] = str(_dist_root)
+        set_branded_env("WEB_DIST", str(_dist_root))
         print(f"→ Using web dist from EV0_WEB_DIST: {_dist_root}")
 
     # Discover and load plugins so any DashboardAuthProvider plugin
@@ -11187,7 +11187,7 @@ def _prepare_agent_startup(args) -> None:
     # so the guarantee lives here where the import is actually triggered
     # (#60328).
     if getattr(args, "yolo", False):
-        os.environ["EV0_YOLO_MODE"] = "1"
+        set_branded_env("YOLO_MODE", "1")
     _apply_safe_mode(args)
 
     _sub_attr, _sub_set = _AGENT_SUBCOMMANDS.get(args.command, (None, None))
@@ -11275,9 +11275,9 @@ def _prepare_agent_startup(args) -> None:
 def _apply_safe_mode(args) -> None:
     if not getattr(args, "safe_mode", False):
         return
-    os.environ["EV0_SAFE_MODE"] = "1"
-    os.environ["EV0_IGNORE_USER_CONFIG"] = "1"
-    os.environ["EV0_IGNORE_RULES"] = "1"
+    set_branded_env("SAFE_MODE", "1")
+    set_branded_env("IGNORE_USER_CONFIG", "1")
+    set_branded_env("IGNORE_RULES", "1")
 
 
 def _set_chat_arg_defaults(args) -> None:
@@ -11348,7 +11348,7 @@ def _try_fast_chat_launch() -> bool:
         return False
 
     if getattr(args, "yolo", False):
-        os.environ["EV0_YOLO_MODE"] = "1"
+        set_branded_env("YOLO_MODE", "1")
     _prepare_agent_startup(args)
 
     if getattr(args, "oneshot", None):
@@ -11428,10 +11428,10 @@ def _try_termux_fast_cli_launch() -> bool:
             # Bare Termux CLI should reach the prompt first and do agent-only
             # discovery on the first submitted turn instead of before input.
             setattr(args, "compact", True)
-            os.environ["EV0_DEFER_AGENT_STARTUP"] = "1"
-            os.environ["EV0_FAST_STARTUP_BANNER"] = "1"
+            set_branded_env("DEFER_AGENT_STARTUP", "1")
+            set_branded_env("FAST_STARTUP_BANNER", "1")
             if getattr(args, "accept_hooks", False):
-                os.environ["EV0_ACCEPT_HOOKS"] = "1"
+                set_branded_env("ACCEPT_HOOKS", "1")
         else:
             _prepare_agent_startup(args)
         cmd_chat(args)
@@ -11700,7 +11700,8 @@ def _advertise_agent_env() -> None:
     terminal).
     """
     os.environ.setdefault("AI_AGENT", "3v0-agent")
-    os.environ.setdefault("EV0_AGENT", "true")
+    if not branded_env("AGENT"):
+        set_branded_env("AGENT", "true")
 
 
 def main():
@@ -13156,7 +13157,7 @@ def main():
     # If the env var is set only later (e.g. inside cmd_chat), the frozen
     # value is already False and --yolo silently does nothing.
     if getattr(args, "yolo", False):
-        os.environ["EV0_YOLO_MODE"] = "1"
+        set_branded_env("YOLO_MODE", "1")
 
     # Discover Python plugins and register shell hooks once, before any
     # command that can fire lifecycle hooks.  Both are idempotent; gated

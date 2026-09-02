@@ -57,7 +57,7 @@ import inspect
 import json
 import logging
 import math
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env
 import os
 import tempfile
 import time
@@ -1254,7 +1254,7 @@ def _adopt_live_compression_child(
 
         set_current_session_id(child_session_id)
     except Exception:
-        os.environ["EV0_SESSION_ID"] = child_session_id
+        set_branded_env("SESSION_ID", child_session_id)
     try:
         from threev0_logging import set_session_context
 
@@ -3555,7 +3555,7 @@ def compress_context(
 
                         set_current_session_id(agent.session_id)
                     except Exception:
-                        os.environ["EV0_SESSION_ID"] = agent.session_id
+                        set_branded_env("SESSION_ID", agent.session_id)
                     try:
                         from threev0_logging import set_session_context
 

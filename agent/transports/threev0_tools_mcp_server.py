@@ -47,6 +47,7 @@ from __future__ import annotations
 import inspect
 import json
 import logging
+from env_compat import branded_env, set_branded_env
 import os
 import sys
 from typing import Any, Optional
@@ -260,8 +261,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
 
     # Quiet mode: keep 3V0' own banners off stdout (which is the MCP wire).
-    os.environ.setdefault("EV0_QUIET", "1")
-    os.environ.setdefault("EV0_REDACT_SECRETS", "true")
+    if not branded_env("QUIET"):
+        set_branded_env("QUIET", "1")
+    if not branded_env("REDACT_SECRETS"):
+        set_branded_env("REDACT_SECRETS", "true")
 
     try:
         server = _build_server()

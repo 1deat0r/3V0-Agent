@@ -7,7 +7,7 @@ Handles: 3v0 gateway [run|start|stop|restart|status|install|uninstall|setup]
 import asyncio
 import json
 import logging
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env
 import os
 import shlex
 import shutil
@@ -1133,8 +1133,7 @@ def _sync_threev0_home_from_systemd_unit(system: bool) -> None:
     current = os.environ.get("EV0_HOME", "").strip() or os.environ.get("3V0_HOME", "").strip()
     if current == unit_home:
         return
-    os.environ["EV0_HOME"] = unit_home
-    os.environ["3V0_HOME"] = unit_home  # canonical (ADR-0006); EV0_* legacy alias
+    set_branded_env("HOME", unit_home)
 
 
 def _read_systemd_unit_properties(

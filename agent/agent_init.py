@@ -20,6 +20,7 @@ preserved.
 from __future__ import annotations
 
 import logging
+from env_compat import set_branded_env
 import os
 import re
 import sys
@@ -1583,7 +1584,7 @@ def init_agent(
         except Exception:
             delegated_child = False
         if not delegated_child:
-            os.environ["EV0_SESSION_ID"] = agent.session_id
+            set_branded_env("SESSION_ID", agent.session_id)
 
     # Session logs go into ~/.3V0/sessions/ alongside gateway sessions
     threev0_home = get_threev0_home()

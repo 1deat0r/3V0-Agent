@@ -30,6 +30,7 @@ class TestAdvertiseAgentEnv:
     def test_sets_both_vars_when_unset(self, monkeypatch):
         monkeypatch.delenv("AI_AGENT", raising=False)
         monkeypatch.delenv("EV0_AGENT", raising=False)
+        monkeypatch.delenv("3V0_AGENT", raising=False)
         _advertise_agent_env()
         assert os.environ["AI_AGENT"] == HARNESS_ID
         assert os.environ["EV0_AGENT"] == "true"
@@ -37,6 +38,7 @@ class TestAdvertiseAgentEnv:
     def test_does_not_clobber_outer_harness(self, monkeypatch):
         monkeypatch.setenv("AI_AGENT", "pi")
         monkeypatch.delenv("EV0_AGENT", raising=False)
+        monkeypatch.delenv("3V0_AGENT", raising=False)
         _advertise_agent_env()
         assert os.environ["AI_AGENT"] == "pi"
         assert os.environ["EV0_AGENT"] == "true"
@@ -44,6 +46,7 @@ class TestAdvertiseAgentEnv:
     def test_idempotent(self, monkeypatch):
         monkeypatch.delenv("AI_AGENT", raising=False)
         monkeypatch.delenv("EV0_AGENT", raising=False)
+        monkeypatch.delenv("3V0_AGENT", raising=False)
         _advertise_agent_env()
         _advertise_agent_env()
         assert os.environ["AI_AGENT"] == HARNESS_ID

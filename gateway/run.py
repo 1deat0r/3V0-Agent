@@ -1103,12 +1103,15 @@ def _as_thread_info(info: Any) -> Optional[Tuple[str, str]]:
 
 
 def _float_env(name: str, default: float) -> float:
-    """Read an env var as float, falling back to ``default`` on typos/empty.
+    """Read a branded env var as float, falling back to ``default`` on
+    typos/empty. ``name`` is the logical suffix (``"AGENT_TIMEOUT"``),
+    resolved through the canonical brand chain via :func:`branded_env` —
+    this shim no longer re-implements the resolution itself (ticket #21).
 
     A misconfigured env var (e.g. ``EV0_AGENT_TIMEOUT=abc``) must not
     crash the gateway or an agent turn.  Unset/empty also falls back.
     """
-    raw = os.environ.get(name)
+    raw = branded_env(name)
     if raw is None or raw == "":
         return float(default)
     try:
@@ -1935,7 +1938,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Resolve 3V0 home directory (respects EV0_HOME override)
 from threev0_constants import get_threev0_home, get_threev0_home_override, running_under_pytest
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env
 from utils import atomic_json_write, base_url_hostname, is_truthy_value
 _threev0_home = get_threev0_home()
 
@@ -2003,15 +2006,15 @@ def _bridge_max_turns_from_config(home: "Path") -> None:
 
     agent_cfg = cfg.get("agent", {})
     if isinstance(agent_cfg, dict) and "max_turns" in agent_cfg:
-        os.environ["EV0_MAX_ITERATIONS"] = str(agent_cfg["max_turns"])
+        set_branded_env("MAX_ITERATIONS", str(agent_cfg['max_turns']))
     # config-authoritative knobs for the session-search index (config.yaml
     # sessions.* wins over stale env; env stays the cross-process carrier).
     sessions_cfg = cfg.get("sessions", {})
     if isinstance(sessions_cfg, dict):
         if "cjk_fts" in sessions_cfg:
-            os.environ["EV0_CJK_FTS"] = str(sessions_cfg["cjk_fts"])
+            set_branded_env("CJK_FTS", str(sessions_cfg['cjk_fts']))
         if "search_slow_ms" in sessions_cfg:
-            os.environ["EV0_SEARCH_SLOW_MS"] = str(sessions_cfg["search_slow_ms"])
+            set_branded_env("SEARCH_SLOW_MS", str(sessions_cfg['search_slow_ms']))
 
 
 def _current_max_iterations() -> int:
@@ -2164,9 +2167,7 @@ _DOCKER_MEDIA_OUTPUT_CONTAINER_PATHS = {"/output", "/outputs"}
 # so an ambient process/.env value can never control lease safety on its own.
 from threev0_cli.config_defaults import DEFAULT_CONFIG as _DEFAULT_CONFIG
 
-os.environ["EV0_TURN_LEASE_TIMEOUT"] = str(
-    _DEFAULT_CONFIG["agent"]["gateway_turn_lease_timeout"]
-)
+set_branded_env("TURN_LEASE_TIMEOUT", str(_DEFAULT_CONFIG['agent']['gateway_turn_lease_timeout']))
 
 # Bridge config.yaml values into the environment so os.getenv() picks them up.
 # config.yaml is authoritative for terminal settings — overrides .env.
@@ -2309,57 +2310,45 @@ if _config_path.exists():
         _agent_cfg = _cfg.get("agent", {})
         if _agent_cfg and isinstance(_agent_cfg, dict):
             if "max_turns" in _agent_cfg:
-                os.environ["EV0_MAX_ITERATIONS"] = str(_agent_cfg["max_turns"])
+                set_branded_env("MAX_ITERATIONS", str(_agent_cfg['max_turns']))
             if "gateway_timeout" in _agent_cfg:
-                os.environ["EV0_AGENT_TIMEOUT"] = str(_agent_cfg["gateway_timeout"])
+                set_branded_env("AGENT_TIMEOUT", str(_agent_cfg['gateway_timeout']))
             if "gateway_turn_lease_timeout" in _agent_cfg:
-                os.environ["EV0_TURN_LEASE_TIMEOUT"] = str(
-                    _agent_cfg["gateway_turn_lease_timeout"]
-                )
+                set_branded_env("TURN_LEASE_TIMEOUT", str(_agent_cfg['gateway_turn_lease_timeout']))
             if "gateway_timeout_warning" in _agent_cfg:
-                os.environ["EV0_AGENT_TIMEOUT_WARNING"] = str(_agent_cfg["gateway_timeout_warning"])
+                set_branded_env("AGENT_TIMEOUT_WARNING", str(_agent_cfg['gateway_timeout_warning']))
             if "gateway_notify_interval" in _agent_cfg:
-                os.environ["EV0_AGENT_NOTIFY_INTERVAL"] = str(_agent_cfg["gateway_notify_interval"])
+                set_branded_env("AGENT_NOTIFY_INTERVAL", str(_agent_cfg['gateway_notify_interval']))
             if "session_stall_timeout" in _agent_cfg:
-                os.environ["EV0_SESSION_STALL_TIMEOUT"] = str(
-                    _agent_cfg["session_stall_timeout"]
-                )
+                set_branded_env("SESSION_STALL_TIMEOUT", str(_agent_cfg['session_stall_timeout']))
             if "reconnect_attention_after" in _agent_cfg:
                 # Internal bridge only — config.yaml (agent.reconnect_attention_after)
                 # is the documented, user-facing setting.
-                os.environ["EV0_RECONNECT_ATTENTION_AFTER_SECONDS"] = str(
-                    _agent_cfg["reconnect_attention_after"]
-                )
+                set_branded_env("RECONNECT_ATTENTION_AFTER_SECONDS", str(_agent_cfg['reconnect_attention_after']))
             if "restart_drain_timeout" in _agent_cfg:
-                os.environ["EV0_RESTART_DRAIN_TIMEOUT"] = str(_agent_cfg["restart_drain_timeout"])
+                set_branded_env("RESTART_DRAIN_TIMEOUT", str(_agent_cfg['restart_drain_timeout']))
             if "cron_drain_timeout" in _agent_cfg:
-                os.environ["EV0_CRON_DRAIN_TIMEOUT"] = str(_agent_cfg["cron_drain_timeout"])
+                set_branded_env("CRON_DRAIN_TIMEOUT", str(_agent_cfg['cron_drain_timeout']))
             if "gateway_auto_continue_freshness" in _agent_cfg:
-                os.environ["EV0_AUTO_CONTINUE_FRESHNESS"] = str(
-                    _agent_cfg["gateway_auto_continue_freshness"]
-                )
+                set_branded_env("AUTO_CONTINUE_FRESHNESS", str(_agent_cfg['gateway_auto_continue_freshness']))
             if "gateway_startup_restore_drain_timeout" in _agent_cfg:
-                os.environ["EV0_STARTUP_RESTORE_DRAIN_TIMEOUT"] = str(
-                    _agent_cfg["gateway_startup_restore_drain_timeout"]
-                )
+                set_branded_env("STARTUP_RESTORE_DRAIN_TIMEOUT", str(_agent_cfg['gateway_startup_restore_drain_timeout']))
         # config-authoritative knobs for the session-search index; same
         # bridge semantics as the agent settings above.
         _sessions_cfg = _cfg.get("sessions", {})
         if _sessions_cfg and isinstance(_sessions_cfg, dict):
             if "cjk_fts" in _sessions_cfg:
-                os.environ["EV0_CJK_FTS"] = str(_sessions_cfg["cjk_fts"])
+                set_branded_env("CJK_FTS", str(_sessions_cfg['cjk_fts']))
             if "search_slow_ms" in _sessions_cfg:
-                os.environ["EV0_SEARCH_SLOW_MS"] = str(
-                    _sessions_cfg["search_slow_ms"]
-                )
+                set_branded_env("SEARCH_SLOW_MS", str(_sessions_cfg['search_slow_ms']))
         _display_cfg = _cfg.get("display", {})
         if _display_cfg and isinstance(_display_cfg, dict):
             if "busy_input_mode" in _display_cfg:
-                os.environ["EV0_GATEWAY_BUSY_INPUT_MODE"] = str(_display_cfg["busy_input_mode"])
+                set_branded_env("GATEWAY_BUSY_INPUT_MODE", str(_display_cfg['busy_input_mode']))
             if "busy_text_mode" in _display_cfg:
-                os.environ["EV0_GATEWAY_BUSY_TEXT_MODE"] = str(_display_cfg["busy_text_mode"])
+                set_branded_env("GATEWAY_BUSY_TEXT_MODE", str(_display_cfg['busy_text_mode']))
             if "busy_ack_enabled" in _display_cfg:
-                os.environ["EV0_GATEWAY_BUSY_ACK_ENABLED"] = str(_display_cfg["busy_ack_enabled"])
+                set_branded_env("GATEWAY_BUSY_ACK_ENABLED", str(_display_cfg['busy_ack_enabled']))
             # This process-level env var is documented as an override for
             # service managers, so preserve it when already set. Other display
             # bridges stay config-authoritative for backwards compatibility.
@@ -2367,27 +2356,23 @@ if _config_path.exists():
                 "busy_steer_ack_enabled" in _display_cfg
                 and "EV0_GATEWAY_BUSY_STEER_ACK_ENABLED" not in os.environ
             ):
-                os.environ["EV0_GATEWAY_BUSY_STEER_ACK_ENABLED"] = str(
-                    _display_cfg["busy_steer_ack_enabled"]
-                )
+                set_branded_env("GATEWAY_BUSY_STEER_ACK_ENABLED", str(_display_cfg['busy_steer_ack_enabled']))
         # Timezone: bridge config.yaml → EV0_TIMEZONE env var.
         _tz_cfg = _cfg.get("timezone", "")
         if _tz_cfg and isinstance(_tz_cfg, str):
-            os.environ["EV0_TIMEZONE"] = _tz_cfg.strip()
+            set_branded_env("TIMEZONE", _tz_cfg.strip())
         # Security settings
         _security_cfg = _cfg.get("security", {})
         if isinstance(_security_cfg, dict):
             _redact = _security_cfg.get("redact_secrets")
             if _redact is not None:
-                os.environ["EV0_REDACT_SECRETS"] = str(_redact).lower()
+                set_branded_env("REDACT_SECRETS", str(_redact).lower())
         # Gateway settings (media delivery allowlist + recency trust + strict mode)
         _gateway_cfg = _cfg.get("gateway", {})
         if isinstance(_gateway_cfg, dict):
             _strict = _gateway_cfg.get("strict")
             if _strict is not None:
-                os.environ["EV0_MEDIA_DELIVERY_STRICT"] = (
-                    "1" if _strict else "0"
-                )
+                set_branded_env("MEDIA_DELIVERY_STRICT", '1' if _strict else '0')
             _allow_dirs = _gateway_cfg.get("media_delivery_allow_dirs")
             if _allow_dirs:
                 if isinstance(_allow_dirs, str):
@@ -2397,15 +2382,13 @@ if _config_path.exists():
                 else:
                     _allow_dirs_str = ""
                 if _allow_dirs_str:
-                    os.environ["EV0_MEDIA_ALLOW_DIRS"] = _allow_dirs_str
+                    set_branded_env("MEDIA_ALLOW_DIRS", _allow_dirs_str)
             _trust_recent = _gateway_cfg.get("trust_recent_files")
             if _trust_recent is not None:
-                os.environ["EV0_MEDIA_TRUST_RECENT_FILES"] = (
-                    "1" if _trust_recent else "0"
-                )
+                set_branded_env("MEDIA_TRUST_RECENT_FILES", '1' if _trust_recent else '0')
             _trust_recent_seconds = _gateway_cfg.get("trust_recent_files_seconds")
             if _trust_recent_seconds is not None:
-                os.environ["EV0_MEDIA_TRUST_RECENT_SECONDS"] = str(_trust_recent_seconds)
+                set_branded_env("MEDIA_TRUST_RECENT_SECONDS", str(_trust_recent_seconds))
             # Bridge gateway.platform_connect_timeout → the internal env var the
             # connect path + Discord adapter ready-wait both read (#19776).
             # Unlike the agent.*/display.* bridges above (config-authoritative),
@@ -2415,9 +2398,7 @@ if _config_path.exists():
                 "platform_connect_timeout" in _gateway_cfg
                 and not (branded_env("GATEWAY_PLATFORM_CONNECT_TIMEOUT") or "").strip()
             ):
-                os.environ["EV0_GATEWAY_PLATFORM_CONNECT_TIMEOUT"] = str(
-                    _gateway_cfg["platform_connect_timeout"]
-                )
+                set_branded_env("GATEWAY_PLATFORM_CONNECT_TIMEOUT", str(_gateway_cfg['platform_connect_timeout']))
     except Exception as _bridge_err:
         # Previously this was silent (`except Exception: pass`), which
         # hid partial bridge failures and let .env defaults shadow
@@ -2461,7 +2442,7 @@ except Exception as _bootstrap_exc:
     print(f"  Warning: deprecation check failed: {_bootstrap_exc}", file=sys.stderr)
 
 # Gateway runs in quiet mode - suppress debug output and use cwd directly (no temp dirs)
-os.environ["EV0_QUIET"] = "1"
+set_branded_env("QUIET", '1')
 
 # EV0_EXEC_ASK is set in start_gateway(), not at import time. Importing this
 # module from CLI tools (e.g. send_message → _gateway_runner_ref) must not flip
@@ -4001,9 +3982,7 @@ _RECONNECT_BACKOFF_CAP = 300
 # sidecar all present as "retrying" forever without this signal.
 # User-facing setting: agent.reconnect_attention_after in config.yaml
 # (bridged to this env var above). 0 disables.
-_RECONNECT_ATTENTION_AFTER_SECONDS = _float_env(
-    "EV0_RECONNECT_ATTENTION_AFTER_SECONDS", 7200
-)
+_RECONNECT_ATTENTION_AFTER_SECONDS = _float_env("RECONNECT_ATTENTION_AFTER_SECONDS", 7200)
 
 
 def _reconnect_backoff(attempt: int) -> int:
@@ -11275,7 +11254,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         turns, never wedged. Fail-open per agent: an unreadable activity
         summary means "not wedged".
         """
-        timeout = _float_env("EV0_AGENT_TIMEOUT", 1800)
+        timeout = _float_env("AGENT_TIMEOUT", 1800)
         if timeout <= 0:
             return 0
         wedged = 0
@@ -11931,7 +11910,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         exact = 0
         fallback = 0
         try:
-            agent_timeout = max(1.0, _float_env("EV0_AGENT_TIMEOUT", 1800))
+            agent_timeout = max(1.0, _float_env("AGENT_TIMEOUT", 1800))
             marker_max_age = max(60 * 60, int(agent_timeout * 2))
             exact = await self.async_session_store.recover_interrupted_turns(
                 max_age_seconds=marker_max_age
@@ -13491,7 +13470,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
 
     def _session_stall_timeout_seconds(self) -> float:
         """Return configured stall timeout (seconds); 0 disables the watchdog."""
-        return _float_env("EV0_SESSION_STALL_TIMEOUT", 300)
+        return _float_env("SESSION_STALL_TIMEOUT", 300)
 
     def _iter_gateway_adapters(self):
         """Yield every live platform adapter (default + multiplex profiles)."""
@@ -16482,7 +16461,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         # wall-clock age alone isn't sufficient.  Evict only when the agent
         # has been *idle* beyond the inactivity threshold (or when the agent
         # object has no activity tracker and wall-clock age is extreme).
-        _raw_stale_timeout = _float_env("EV0_AGENT_TIMEOUT", 1800)
+        _raw_stale_timeout = _float_env("AGENT_TIMEOUT", 1800)
         _quick_state = self._peek_session_state(_quick_key)
         _stale_ts = _quick_state.turn.started_ts if _quick_state else 0
         if _quick_state is not None and _quick_state.turn.agent is not None and _stale_ts:
@@ -18674,9 +18653,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     session_entry.session_id,
                     owner_key=_quick_key,
                     generation=run_generation,
-                    timeout=_float_env(
-                        "EV0_TURN_LEASE_TIMEOUT", DEFAULT_LEASE_WAIT
-                    ),
+                    timeout=_float_env("TURN_LEASE_TIMEOUT", DEFAULT_LEASE_WAIT),
                 )
             except TurnLeaseTimeoutError:
                 # The broad session-context cleanup finally starts later in this
@@ -22344,7 +22321,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         if not callable(wait_fn) or not source.chat_id:
             return None
         # 0 means the operator disabled the turn limit; the backstop still needs one.
-        timeout = _float_env("EV0_AGENT_TIMEOUT", 1800) or 1800
+        timeout = _float_env("AGENT_TIMEOUT", 1800) or 1800
         try:
             return _as_thread_info(await wait_fn(str(source.chat_id), timeout))
         except Exception:
@@ -28192,7 +28169,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         # Config: agent.gateway_notify_interval in config.yaml, or
         # EV0_AGENT_NOTIFY_INTERVAL env var.  Default 180s (3 min).
         # 0 = disable notifications.
-        _NOTIFY_INTERVAL_RAW = _float_env("EV0_AGENT_NOTIFY_INTERVAL", 180)
+        _NOTIFY_INTERVAL_RAW = _float_env("AGENT_NOTIFY_INTERVAL", 180)
         _NOTIFY_INTERVAL = _NOTIFY_INTERVAL_RAW if _NOTIFY_INTERVAL_RAW > 0 else None
         _long_running_mode = _display_surface_mode(
             "long_running_notifications",
@@ -28342,9 +28319,9 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             # Config: agent.gateway_timeout in config.yaml, or
             # EV0_AGENT_TIMEOUT env var (env var takes precedence).
             # Default 1800s (30 min inactivity).  0 = unlimited.
-            _agent_timeout_raw = _float_env("EV0_AGENT_TIMEOUT", 1800)
+            _agent_timeout_raw = _float_env("AGENT_TIMEOUT", 1800)
             _agent_timeout = _agent_timeout_raw if _agent_timeout_raw > 0 else None
-            _agent_warning_raw = _float_env("EV0_AGENT_TIMEOUT_WARNING", 900)
+            _agent_warning_raw = _float_env("AGENT_TIMEOUT_WARNING", 900)
             _agent_warning = _agent_warning_raw if _agent_warning_raw > 0 else None
             _warning_fired = False
 
@@ -29626,7 +29603,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
     # Enable interactive exec approval for dangerous commands on messaging
     # platforms. Set here (not at module import) so incidental imports of
     # gateway.run from CLI/tool code do not poison EV0_EXEC_ASK.
-    os.environ["EV0_EXEC_ASK"] = "1"
+    set_branded_env("EXEC_ASK", '1')
 
     from threev0_cli.resource_limits import apply_nofile_soft_limit
 
@@ -30289,7 +30266,8 @@ def main():
     # public agent-harness registry id (``3v0-agent``) — standard-var
     # matching is exact. setdefault so an outer harness is never clobbered.
     os.environ.setdefault("AI_AGENT", "3v0-agent")
-    os.environ.setdefault("EV0_AGENT", "true")
+    if not branded_env("AGENT"):
+        set_branded_env("AGENT", "true")
 
     # Force UTF-8 stdio on Windows — gateway logs and startup banner would
     # otherwise UnicodeEncodeError on cp1252 consoles.  No-op on POSIX.

@@ -33,5 +33,7 @@ _module = importlib.util.module_from_spec(_spec)
 _loader.exec_module(_module)
 
 branded_env = _module.branded_env
+set_branded_env = _module.set_branded_env
+pop_branded_env = _module.pop_branded_env
 
-__all__ = ["branded_env"]
+__all__ = ["branded_env", "set_branded_env", "pop_branded_env"]

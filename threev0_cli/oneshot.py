@@ -22,7 +22,7 @@ Env var fallbacks (used when the corresponding arg is not passed):
 from __future__ import annotations
 
 import logging
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env
 import os
 import sys
 from contextlib import redirect_stderr, redirect_stdout
@@ -219,8 +219,8 @@ def run_oneshot(
 
     # Auto-approve any shell / tool approvals.  Non-interactive by
     # definition — a prompt would hang forever.
-    os.environ["EV0_YOLO_MODE"] = "1"
-    os.environ["EV0_ACCEPT_HOOKS"] = "1"
+    set_branded_env("YOLO_MODE", "1")
+    set_branded_env("ACCEPT_HOOKS", "1")
 
     # One-shot prints a single final response and exits: there is no later turn
     # for a detached subagent's completion to re-enter, and nothing here drains

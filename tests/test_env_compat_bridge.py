@@ -46,3 +46,42 @@ def test_bridge_is_the_native_core_function_not_a_copy():
     # if this ever regresses to a duplicated implementation, drift between
     # the native core and the prod funnel becomes possible again.
     assert env_compat.branded_env.__module__ == "_threev0_core_env_compat"
+
+
+def test_set_branded_env_writes_both_spellings(monkeypatch):
+    _scrub(monkeypatch)
+    env_compat.set_branded_env("BRIDGE_PROBE", "from-write")
+    # Both legs observable raw — spawned processes and raw readers see the
+    # legacy alias, in-tree branded_env readers see the canonical one.
+    import os
+
+    assert os.environ["3V0_BRIDGE_PROBE"] == "from-write"
+    assert os.environ["EV0_BRIDGE_PROBE"] == "from-write"
+    assert env_compat.branded_env("BRIDGE_PROBE") == "from-write"
+    assert os.environ["EV0_BRIDGE_PROBE"] == "from-write"
+
+
+def test_set_branded_env_overwrites_previous_value(monkeypatch):
+    _scrub(monkeypatch)
+    env_compat.set_branded_env("BRIDGE_PROBE", "first")
+    env_compat.set_branded_env("BRIDGE_PROBE", "second")
+    import os
+
+    assert os.environ["EV0_BRIDGE_PROBE"] == "second"
+    assert env_compat.branded_env("BRIDGE_PROBE") == "second"
+
+
+def test_pop_branded_env_removes_both_spellings(monkeypatch):
+    _scrub(monkeypatch)
+    env_compat.set_branded_env("BRIDGE_PROBE", "gone")
+    env_compat.pop_branded_env("BRIDGE_PROBE")
+    import os
+
+    assert "3V0_BRIDGE_PROBE" not in os.environ
+    assert "EV0_BRIDGE_PROBE" not in os.environ
+    assert env_compat.branded_env("BRIDGE_PROBE") is None
+
+
+def test_pop_branded_env_tolerates_missing_keys(monkeypatch):
+    _scrub(monkeypatch)
+    env_compat.pop_branded_env("NEVER_SET_AT_ALL")  # must not raise

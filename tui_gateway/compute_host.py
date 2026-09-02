@@ -11,7 +11,7 @@ import argparse
 import concurrent.futures
 import contextlib
 import json
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env
 import os
 import signal
 import subprocess
@@ -827,7 +827,7 @@ def _default_workers() -> int:
 
 
 def run_host(stdin: Any = None, stdout: Any = None) -> None:
-    os.environ["EV0_COMPUTE_HOST_CHILD"] = "1"
+    set_branded_env("COMPUTE_HOST_CHILD", "1")
     stdin = stdin or sys.stdin
     host = ComputeHost(stdout=stdout or sys.stdout)
     shutting_down = threading.Event()

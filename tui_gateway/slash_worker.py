@@ -21,6 +21,7 @@ import contextlib
 import io
 import json
 import logging
+from env_compat import set_branded_env
 import os
 import sys
 import threading
@@ -131,8 +132,8 @@ def main():
     p.add_argument("--model", default="")
     args = p.parse_args()
 
-    os.environ["EV0_SESSION_KEY"] = args.session_key
-    os.environ["EV0_INTERACTIVE"] = "1"
+    set_branded_env("SESSION_KEY", args.session_key)
+    set_branded_env("INTERACTIVE", "1")
 
     # Start before the (hundreds-of-ms) Ev0CLI build — that window is itself
     # an orphan risk if the gateway dies mid-spawn.

@@ -287,8 +287,9 @@ def _(rid, params: dict) -> dict:
         except Exception:
             typed_stop = False
         if typed_stop:
-            os.environ["EV0_VOICE"] = "0"
-            os.environ["EV0_VOICE_TTS"] = "0"
+            from env_compat import set_branded_env
+            set_branded_env("VOICE", "0")
+            set_branded_env("VOICE_TTS", "0")
             try:
                 from threev0_cli.voice import stop_continuous
 

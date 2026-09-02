@@ -30,7 +30,7 @@ from __future__ import annotations
 import ctypes
 import locale
 import logging
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env
 import os
 import re
 import shlex
@@ -259,10 +259,10 @@ def _launch_elevated_install(
     old_handoff = branded_env("GATEWAY_ELEVATED_HANDOFF")
     try:
         if start_now is not None:
-            os.environ["EV0_GATEWAY_INSTALL_START_NOW"] = "1" if start_now else "0"
+            set_branded_env("GATEWAY_INSTALL_START_NOW", "1" if start_now else "0")
         if start_on_login is not None:
-            os.environ["EV0_GATEWAY_INSTALL_START_ON_LOGIN"] = "1" if start_on_login else "0"
-        os.environ["EV0_GATEWAY_ELEVATED_HANDOFF"] = "1"
+            set_branded_env("GATEWAY_INSTALL_START_ON_LOGIN", "1" if start_on_login else "0")
+        set_branded_env("GATEWAY_ELEVATED_HANDOFF", "1")
         extra_args = ["--elevated-handoff"]
         if force:
             extra_args.append("--force")

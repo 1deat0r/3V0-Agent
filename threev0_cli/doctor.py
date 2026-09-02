@@ -4,7 +4,7 @@ Doctor command for 3v0 CLI.
 Diagnoses issues with 3V0 Agent setup.
 """
 
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env
 import os
 import sys
 import subprocess
@@ -902,7 +902,8 @@ def run_doctor(args):
 
     # Doctor runs from the interactive CLI, so CLI-gated tool availability
     # checks (like cronjob management) should see the same context as `3v0`.
-    os.environ.setdefault("EV0_INTERACTIVE", "1")
+    if not branded_env("INTERACTIVE"):
+        set_branded_env("INTERACTIVE", "1")
 
     # Handle `3v0 doctor --ack <id>` as a fast path. Persist the ack and
     # return without running the rest of the diagnostics — the user has

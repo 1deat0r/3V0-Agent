@@ -14,7 +14,7 @@ import fnmatch
 import functools
 import hashlib
 import logging
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env, pop_branded_env
 import os
 import re
 import shlex
@@ -3010,7 +3010,7 @@ def _prompt_dangerous_approval_inner(command: str, description: str,
         # tests, sshd, etc.).
         pass
 
-    os.environ["EV0_SPINNER_PAUSE"] = "1"
+    set_branded_env("SPINNER_PAUSE", "1")
     try:
         # Resolve the active UI language once per prompt so we don't re-read
         # config/YAML inside the retry loop below.
@@ -3089,7 +3089,7 @@ def _prompt_dangerous_approval_inner(command: str, description: str,
         return "deny"
     finally:
         if "EV0_SPINNER_PAUSE" in os.environ:
-            del os.environ["EV0_SPINNER_PAUSE"]
+            pop_branded_env("SPINNER_PAUSE")
         print()
         sys.stdout.flush()
 

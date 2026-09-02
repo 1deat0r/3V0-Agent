@@ -36,7 +36,7 @@ Usage:
 import importlib.util
 import json
 import logging
-from env_compat import branded_env
+from env_compat import branded_env, set_branded_env, pop_branded_env
 import os
 import platform
 import re
@@ -560,7 +560,7 @@ def _prompt_for_sudo_password(timeout_seconds: int = 45) -> str:
             result["done"] = True
     
     try:
-        os.environ["EV0_SPINNER_PAUSE"] = "1"
+        set_branded_env("SPINNER_PAUSE", "1")
         time.sleep(0.2)
         
         print()
@@ -607,7 +607,7 @@ def _prompt_for_sudo_password(timeout_seconds: int = 45) -> str:
         return ""
     finally:
         if "EV0_SPINNER_PAUSE" in os.environ:
-            del os.environ["EV0_SPINNER_PAUSE"]
+            pop_branded_env("SPINNER_PAUSE")
 
 def _safe_command_preview(command: Any, limit: int = 200) -> str:
     """Return a log-safe preview for possibly-invalid command values."""

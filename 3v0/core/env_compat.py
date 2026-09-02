@@ -12,7 +12,10 @@ immediately without breaking the live runtime, which still speaks the
 legacy vars.
 
 New native-core code SHOULD use :func:`branded_env` instead of reading
-``os.environ.get("EV0_*")`` directly. Do NOT write legacy vars from new code.
+``os.environ.get("EV0_*")`` directly, and :func:`set_branded_env` /
+:func:`pop_branded_env` instead of writing/popping either spelling — the
+helpers keep the canonical and legacy aliases in lockstep (ticket #21
+contract: env_compat is the only sanctioned env access path).
 """
 
 from __future__ import annotations
@@ -38,3 +41,24 @@ def branded_env(name: str, default: Optional[str] = None) -> Optional[str]:
         if value:
             return value
     return default
+
+
+def set_branded_env(name: str, value: str) -> None:
+    """Set a branded env var under BOTH spellings (the sanctioned write path).
+
+    Writers must not pick a spelling: the canonical ``3V0_<name>`` and the
+    legacy ``EV0_<name>`` alias are set together, so every reader resolves
+    the same value regardless of which leg it consumes — in-tree readers
+    via :func:`branded_env`, spawned processes and raw ``os.environ``
+    readers via the legacy alias (contract: ticket #21). ``value`` must be
+    a ``str`` (``os.environ`` requirement, unchanged).
+    """
+    os.environ[f"3V0_{name}"] = value
+    os.environ[f"EV0_{name}"] = value
+
+
+def pop_branded_env(name: str) -> None:
+    """Remove a branded env var under BOTH spellings (counterpart to
+    :func:`set_branded_env`). Missing keys are fine."""
+    os.environ.pop(f"3V0_{name}", None)
+    os.environ.pop(f"EV0_{name}", None)

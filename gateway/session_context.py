@@ -36,7 +36,7 @@ needs to replace the import + call site:
     platform = get_session_env("EV0_SESSION_PLATFORM", "")
 """
 
-from env_compat import branded_env
+from env_compat import branded_env, pop_branded_env, set_branded_env
 
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -195,7 +195,7 @@ def set_current_session_id(session_id: str) -> None:
     except Exception:
         pass
 
-    os.environ["EV0_SESSION_ID"] = session_id
+    set_branded_env("SESSION_ID", session_id)
 
 
 @contextmanager

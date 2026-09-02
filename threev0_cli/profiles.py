@@ -22,6 +22,7 @@ Usage::
 import json
 import logging
 from env_compat import branded_env
+from env_compat import pop_branded_env, set_branded_env
 import os
 import re
 import shlex
@@ -1750,8 +1751,7 @@ def _cleanup_gateway_service(name: str, profile_dir: Path) -> None:
     # Temporarily set EV0_HOME so _profile_suffix resolves correctly
     old_home = branded_env("HOME")
     try:
-        os.environ["EV0_HOME"] = str(profile_dir)
-        os.environ["3V0_HOME"] = str(profile_dir)  # canonical (ADR-0006)
+        set_branded_env("HOME", str(profile_dir))  # canonical + legacy alias (ADR-0006)
         from threev0_cli.gateway import get_service_name, get_launchd_plist_path
 
         if _platform.system() == "Linux":
@@ -1786,11 +1786,9 @@ def _cleanup_gateway_service(name: str, profile_dir: Path) -> None:
         print(f"⚠ Service cleanup: {e}")
     finally:
         if old_home is not None:
-            os.environ["EV0_HOME"] = old_home
-            os.environ["3V0_HOME"] = old_home  # canonical (ADR-0006)
-        elif "EV0_HOME" in os.environ:
-            del os.environ["EV0_HOME"]
-            os.environ.pop("3V0_HOME", None)  # canonical twin (ADR-0006)
+            set_branded_env("HOME", old_home)  # canonical + legacy alias (ADR-0006)
+        else:
+            pop_branded_env("HOME")
 
 
 def _stop_gateway_process(profile_dir: Path) -> None:
