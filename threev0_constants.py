@@ -166,7 +166,15 @@ def get_threev0_home() -> Path:
     if override:
         return Path(override)
 
-    if not os.environ.get("3V0_HOME", "").strip():
+    # "Was a home explicitly provided?" must accept BOTH spellings: the
+    # warning fires only when NO home was provided, and legacy-only
+    # deployments (pre-R2 launchers, the current gateway unit) set just
+    # EV0_HOME — consulting only 3V0_HOME here warned "EV0_HOME is unset"
+    # on every such deployment while resolution honored their var fine.
+    if not (
+        os.environ.get("3V0_HOME", "").strip()
+        or os.environ.get("EV0_HOME", "").strip()
+    ):
         _warn_profile_fallback_once()
 
     return _threev0_home_from_env()

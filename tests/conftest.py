@@ -462,8 +462,17 @@ def _hermetic_environment(tmp_path, monkeypatch):
             monkeypatch.delenv(name, raising=False)
 
     # 2. Blank behavioral EV0_* vars that could change test semantics.
+    #    BOTH spellings: the sanctioned writer (set_branded_env, ticket #21)
+    #    dual-writes the canonical 3V0_* twin — blanking only the legacy
+    #    spelling would let the twin survive this boundary and shadow a
+    #    fresh legacy-only setenv under branded_env's canonical-first
+    #    resolution (audio-playback-guard regression).
     for name in _EV0_BEHAVIORAL_VARS:
         monkeypatch.delenv(name, raising=False)
+        if name.startswith("EV0_"):
+            # The canonical spelling of a full legacy var name: EV0_VOICE_TTS
+            # -> 3V0_VOICE_TTS (set_branded_env dual-writes both).
+            monkeypatch.delenv(f"3V0_{name[4:]}", raising=False)
 
     # Honcho's fallback host/config resolution legitimately reads the user's
     # global ~/.honcho/config.json. Keep HOME stable (subprocess tests depend
