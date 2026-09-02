@@ -74,13 +74,29 @@ without operator direction.
   a strict failure (`partial_success=False`) so the stream consumer's
   fallback-tail path fires — success=True had marked clipped replies as
   final. Parity with telegram.
-- **#20 ENV-FUNNEL migrate COMPLETE + closed** (`30424a23bf` gateway,
+- **#20 ENV-FUNNEL migrate COMPLETE** (`30424a23bf` gateway,
   `abafb8eb1b` tools, `3e8ba6daa0` agent, `5b298c78c1` threev0_cli,
   `240fb980af` cli.py + core loop): **338 branded reads → branded_env**
-  via the root env_compat bridge; per-scope `--check` gates green;
-  10,438-test sweep on the core-loop batches. Legged-read exceptions
-  documented (sudo-stripped-env detection in the systemd home sync).
-- **#20/#17 closed; #23 closed** — with evidence comments.
+  via the root env_compat bridge; per-scope `--check` gates green.
+- **#21 ENV-FUNNEL contract COMPLETE + closed** (`881963aad3`):
+  `set_branded_env`/`pop_branded_env` added to the native resolver and
+  bridge; all 97 raw branded writes + 6 pops + 3 dels converted —
+  **branded_write/pop/del = 0 tree-wide**; `_float_env` resolves via
+  `branded_env`; contract interaction (canonical twin shadows legacy-only
+  monkeypatches) pinned in tests. 24,718-test sweep green.
+- **#20/#21/#17/#23 all closed** — the ENV-FUNNEL and ADAPTERS wide
+  refactors are done through contract; only #24 (adapter registry) and
+  #18 (turn-runner frame) remain open from the series.
+
+**NEXT work queue (tracked tickets, `ready-for-agent` on the fork):**
+1. **#24** (adapter registry contract) and **#18** (turn-runner assembly
+   frame) — the last two open tickets of the wide-refactor series.
+2. Known pre-existing failures (A/B-verified, NOT new): skin
+   engine/palette (5), update yes-flag unicode-TTY (3), kanban review
+   surface (1), cli tool-progress scrollback (7) + exit-watchdog (2).
+   picker_prewarm did NOT reproduce.
+3. Open decision: ~512 unprefixed wire-var reads need
+   documented-exception-vs-opt-in-bare-fallback status.
 - `1cc8ab11e0` **provider-loader seam fix** (found via pre-existing test
   failures): the fff1f44c50 loader extraction orphaned the family
   `_get_user_plugins_dir` seams — discovery bypassed them, 3
