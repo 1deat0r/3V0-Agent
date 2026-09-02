@@ -4,6 +4,7 @@ Status command for 3v0 CLI.
 Shows the status of all 3V0 Agent components.
 """
 
+from env_compat import wire_env
 import os
 import sys
 import time
@@ -445,25 +446,25 @@ def show_status(args):
     print(color("◆ Terminal Backend", Colors.CYAN, Colors.BOLD))
 
     terminal_cfg = config.get("terminal", {}) if isinstance(config.get("terminal"), dict) else {}
-    terminal_env = os.getenv("TERMINAL_ENV", "")
+    terminal_env = (wire_env("TERMINAL_ENV") or "")
     if not terminal_env:
         terminal_env = terminal_cfg.get("backend", "local")
     print(f"  Backend:      {terminal_env}")
 
     if terminal_env == "ssh":
-        ssh_host = os.getenv("TERMINAL_SSH_HOST", "")
-        ssh_user = os.getenv("TERMINAL_SSH_USER", "")
+        ssh_host = (wire_env("TERMINAL_SSH_HOST") or "")
+        ssh_user = (wire_env("TERMINAL_SSH_USER") or "")
         print(f"  SSH Host:     {ssh_host or '(not set)'}")
         print(f"  SSH User:     {ssh_user or '(not set)'}")
     elif terminal_env == "docker":
-        docker_image = os.getenv("TERMINAL_DOCKER_IMAGE", "python:3.11-slim")
+        docker_image = wire_env("TERMINAL_DOCKER_IMAGE", "python:3.11-slim")
         print(f"  Docker Image: {docker_image}")
     elif terminal_env == "daytona":
-        daytona_image = os.getenv("TERMINAL_DAYTONA_IMAGE", "nikolaik/python-nodejs:python3.11-nodejs20")
+        daytona_image = wire_env("TERMINAL_DAYTONA_IMAGE", "nikolaik/python-nodejs:python3.11-nodejs20")
         print(f"  Daytona Image: {daytona_image}")
     elif terminal_env == "vercel_sandbox":
-        runtime = os.getenv("TERMINAL_VERCEL_RUNTIME") or terminal_cfg.get("vercel_runtime") or "node24"
-        persist = os.getenv("TERMINAL_CONTAINER_PERSISTENT")
+        runtime = wire_env("TERMINAL_VERCEL_RUNTIME") or terminal_cfg.get("vercel_runtime") or "node24"
+        persist = wire_env("TERMINAL_CONTAINER_PERSISTENT")
         if persist is None:
             persist_enabled = bool(terminal_cfg.get("container_persistent", True))
         else:

@@ -32,6 +32,7 @@ Usage:
 import codecs
 import json
 import logging
+from env_compat import wire_env
 import os
 import platform
 import shlex
@@ -124,7 +125,7 @@ def _worker_memory_max_bytes() -> int:
     consume memory up to the enclosing user slice or host limit.
     """
     override_bound: Optional[int] = None
-    override = os.getenv("TERMINAL_LOCAL_MEMORY_MAX_MB", "").strip()
+    override = (wire_env("TERMINAL_LOCAL_MEMORY_MAX_MB") or "").strip()
     if override:
         override_valid = False
         try:
@@ -1921,7 +1922,7 @@ class ProcessRegistry:
         from tools.interrupt import is_interrupted as _is_interrupted
 
         try:
-            default_timeout = int(os.getenv("TERMINAL_TIMEOUT", "180"))
+            default_timeout = int(wire_env("TERMINAL_TIMEOUT", "180"))
         except (ValueError, TypeError):
             default_timeout = 180
         max_timeout = default_timeout

@@ -6,7 +6,7 @@ assemble pieces, then combines them with memory and ephemeral prompts.
 
 import json
 import logging
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import sys
 import threading
@@ -1188,7 +1188,7 @@ def _probe_remote_backend(env_type: str) -> str | None:
     per process. Used only for non-local backends where the agent's tools
     operate on a different machine than the host 3V0 runs on.
     """
-    cwd_hint = os.getenv("TERMINAL_CWD", "")
+    cwd_hint = (wire_env("TERMINAL_CWD") or "")
     cache_key = (env_type, cwd_hint)
     cached = _BACKEND_PROBE_CACHE.get(cache_key)
     if cached is not None:
@@ -1334,7 +1334,7 @@ def build_environment_hints() -> str:
 
     hints: list[str] = []
 
-    backend = (os.getenv("TERMINAL_ENV") or "local").strip().lower()
+    backend = (wire_env("TERMINAL_ENV") or "local").strip().lower()
     is_remote_backend = backend in _REMOTE_TERMINAL_BACKENDS
 
     if not is_remote_backend:

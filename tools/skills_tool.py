@@ -72,7 +72,7 @@ import time
 import threading
 
 from threev0_constants import get_threev0_home, display_threev0_home
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import re
 from enum import Enum
@@ -493,7 +493,7 @@ def _is_gateway_surface() -> bool:
 
 
 def _get_terminal_backend_name() -> str:
-    return str(os.getenv("TERMINAL_ENV", "local")).strip().lower() or "local"
+    return str(wire_env("TERMINAL_ENV", "local")).strip().lower() or "local"
 
 
 def _is_env_var_persisted(

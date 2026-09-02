@@ -28,6 +28,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+from env_compat import wire_env
 import os
 import threading
 import uuid
@@ -124,7 +125,7 @@ def is_camofox_mode() -> bool:
     var suppressed Camofox, so ``CAMOFOX_URL`` + a config CDP override still
     routed navigation through Camofox.)
     """
-    if os.getenv("BROWSER_CDP_URL", "").strip():
+    if (wire_env("BROWSER_CDP_URL") or "").strip():
         return False
     if _config_cdp_url():
         return False

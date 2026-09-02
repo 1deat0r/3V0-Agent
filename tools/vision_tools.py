@@ -34,7 +34,7 @@ import asyncio
 import json
 from concurrent.futures import ThreadPoolExecutor
 import logging
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import uuid
 from pathlib import Path
@@ -1840,7 +1840,7 @@ def _video_to_base64_data_url(video_path: Path, mime_type: Optional[str] = None)
 
 
 def _terminal_backend_is_local() -> bool:
-    backend = os.getenv("TERMINAL_ENV", "local").strip().lower()
+    backend = wire_env("TERMINAL_ENV", "local").strip().lower()
     return backend in ("", "local")
 
 

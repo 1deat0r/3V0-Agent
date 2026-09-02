@@ -32,7 +32,7 @@ from threev0_constants import (
     set_threev0_home_override,
 )
 from threev0_cli.env_loader import load_threev0_dotenv
-from env_compat import branded_env, set_branded_env, pop_branded_env
+from env_compat import branded_env, set_branded_env, pop_branded_env, wire_env
 from agent.turn_assembly import (
     provider_routing_kwargs,
     service_tier_from_raw as _service_tier_from_raw,
@@ -1637,7 +1637,7 @@ def _default_session_cwd() -> str:
     than ``os.getcwd()`` when the in-memory gateway's process env has no bridged
     ``TERMINAL_CWD``.
     """
-    return _launch_configured_cwd() or os.getenv("TERMINAL_CWD") or os.getcwd()
+    return _launch_configured_cwd() or wire_env("TERMINAL_CWD") or os.getcwd()
 
 
 def write_json(obj: dict) -> bool:
@@ -2577,7 +2577,7 @@ def _completion_cwd(params: dict | None = None) -> str:
         # TERMINAL_CWD. Read the launch profile's config.yaml directly so a
         # configured terminal.cwd wins over a stale process env / launch dir.
         or _launch_configured_cwd()
-        or os.environ.get("TERMINAL_CWD")
+        or wire_env("TERMINAL_CWD")
         or os.getcwd()
     )
     try:
@@ -2619,7 +2619,7 @@ def _terminal_task_cwd_with_source(session: dict | None) -> tuple[str, str]:
       process-wide) and must never become a fresh session's bind mount —
       terminal_tool refuses ``cwd_source: "process"`` as a mount source.
     """
-    backend = (os.environ.get("TERMINAL_ENV") or "").strip().lower()
+    backend = (wire_env("TERMINAL_ENV") or "").strip().lower()
     if not backend or backend == "local":
         # Fall back to config when TERMINAL_ENV is unset (dashboard/TUI process
         # never calls apply_terminal_config_to_env on os.environ).
@@ -2638,7 +2638,7 @@ def _terminal_task_cwd_with_source(session: dict | None) -> tuple[str, str]:
         # session's picker wrote, not this session's choice.
         if session and session.get("explicit_cwd") and session.get("cwd"):
             return str(session["cwd"]), "session"
-        raw = os.environ.get("TERMINAL_CWD", "").strip()
+        raw = (wire_env("TERMINAL_CWD") or "").strip()
         if not raw:
             try:
                 terminal_cfg = _load_cfg().get("terminal", {})
@@ -2734,7 +2734,7 @@ def _heal_dead_cwd(cwd: str) -> str:
 
 
 def _is_local_terminal_backend() -> bool:
-    backend = (os.environ.get("TERMINAL_ENV") or "").strip().lower()
+    backend = (wire_env("TERMINAL_ENV") or "").strip().lower()
     return not backend or backend == "local"
 
 
@@ -2746,7 +2746,7 @@ def _effective_terminal_backend() -> str:
     skip that bridge, so fall back to the ``terminal.backend`` config key —
     the same rule ``_terminal_task_cwd`` uses.
     """
-    backend = (os.environ.get("TERMINAL_ENV") or "").strip().lower()
+    backend = (wire_env("TERMINAL_ENV") or "").strip().lower()
     if not backend or backend == "local":
         try:
             terminal_cfg = _load_cfg().get("terminal", {})
@@ -15048,7 +15048,7 @@ def _resolve_browser_cdp_url() -> str:
     actual WS normalization happens in ``browser_navigate`` on the
     next tool call.
     """
-    env_url = os.environ.get("BROWSER_CDP_URL", "").strip()
+    env_url = (wire_env("BROWSER_CDP_URL") or "").strip()
     if env_url:
         return env_url
     try:

@@ -1282,7 +1282,9 @@ class AccessPolicy:
         self._group_allow_from = group_allow_from
 
     def _open_dm_opted_in(self) -> bool:
-        if os.getenv("GATEWAY_ALLOW_ALL_USERS", "").lower() in {"true", "1", "yes"}:
+        # Scope-aware gate read (#86905 class) — see weixin._open_dm_opted_in.
+        from gateway.authz_mixin import _platform_gate_env
+        if _platform_gate_env("GATEWAY_ALLOW_ALL_USERS").lower() in {"true", "1", "yes"}:
             return True
         return os.getenv("YUANBAO_ALLOW_ALL_USERS", "").lower() in {"true", "1", "yes"}
 

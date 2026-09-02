@@ -24,7 +24,7 @@ import logging
 import re
 
 logger = logging.getLogger(__name__)
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import threading
 import time
@@ -1145,7 +1145,7 @@ def _resolve_workspace_hint(parent_agent) -> Optional[str]:
     guessing `/workspace/...` for local repo tasks.
     """
     candidates = [
-        os.getenv("TERMINAL_CWD"),
+        wire_env("TERMINAL_CWD"),
         getattr(
             getattr(parent_agent, "_subdirectory_hints", None), "working_dir", None
         ),

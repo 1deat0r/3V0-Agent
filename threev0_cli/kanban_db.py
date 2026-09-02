@@ -73,7 +73,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import json
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import re
 import random
@@ -10668,9 +10668,9 @@ def build_worker_context(conn: sqlite3.Connection, task_id: str) -> str:
     if task.max_runtime_seconds is not None:
         terminal_timeout = _worker_terminal_timeout_env(
             task.max_runtime_seconds,
-            os.environ.get("TERMINAL_TIMEOUT"),
+            wire_env("TERMINAL_TIMEOUT"),
         )
-        effective_terminal_timeout = terminal_timeout or os.environ.get("TERMINAL_TIMEOUT")
+        effective_terminal_timeout = terminal_timeout or wire_env("TERMINAL_TIMEOUT")
         lines.append(f"Max runtime: {task.max_runtime_seconds}s")
         if effective_terminal_timeout:
             lines.append(f"Terminal timeout: {effective_terminal_timeout}s")

@@ -5,7 +5,7 @@ Extracted verbatim from ``gateway.platforms.base`` (issue #22 expand step).
 
 import sys
 
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 from pathlib import Path as _Path
 sys.path.insert(0, str(_Path(__file__).resolve().parents[3]))
 from pathlib import Path
@@ -345,7 +345,7 @@ def _parse_docker_volume_mounts() -> List[Tuple[Path, Path]]:
     Named volumes and non-absolute hosts are skipped because they cannot be
     resolved on the gateway host for media delivery.
     """
-    raw = os.getenv("TERMINAL_DOCKER_VOLUMES", "").strip()
+    raw = (wire_env("TERMINAL_DOCKER_VOLUMES") or "").strip()
     if not raw:
         return []
     try:
@@ -393,9 +393,9 @@ def _parse_docker_volume_mounts() -> List[Tuple[Path, Path]]:
 
 def _default_docker_workspace_host_root() -> Optional[Path]:
     """Host path for Docker's default persistent ``/workspace`` mount."""
-    if os.getenv("TERMINAL_ENV", "").strip().lower() != "docker":
+    if (wire_env("TERMINAL_ENV") or "").strip().lower() != "docker":
         return None
-    if os.getenv("TERMINAL_CONTAINER_PERSISTENT", "true").strip().lower() not in {
+    if wire_env("TERMINAL_CONTAINER_PERSISTENT", "true").strip().lower() not in {
         "1",
         "true",
         "yes",
@@ -403,13 +403,13 @@ def _default_docker_workspace_host_root() -> Optional[Path]:
     }:
         return None
     # Explicit cwd mount takes over /workspace when enabled.
-    if os.getenv("TERMINAL_DOCKER_MOUNT_CWD_TO_WORKSPACE", "false").strip().lower() in {
+    if wire_env("TERMINAL_DOCKER_MOUNT_CWD_TO_WORKSPACE", "false").strip().lower() in {
         "1",
         "true",
         "yes",
         "on",
     }:
-        cwd = os.getenv("TERMINAL_CWD") or os.getcwd()
+        cwd = wire_env("TERMINAL_CWD") or os.getcwd()
         try:
             host = Path(os.path.expanduser(cwd)).resolve(strict=False)
         except (OSError, RuntimeError, ValueError):
@@ -433,9 +433,9 @@ def _docker_persistent_home_host_root() -> Optional[Path]:
     the workspace mount: the gateway's container sharing resolves to the
     ``default`` task sandbox.
     """
-    if os.getenv("TERMINAL_ENV", "").strip().lower() != "docker":
+    if (wire_env("TERMINAL_ENV") or "").strip().lower() != "docker":
         return None
-    if os.getenv("TERMINAL_CONTAINER_PERSISTENT", "true").strip().lower() not in {
+    if wire_env("TERMINAL_CONTAINER_PERSISTENT", "true").strip().lower() not in {
         "1",
         "true",
         "yes",
@@ -460,7 +460,7 @@ def _cache_dir_container_mounts() -> List[Tuple[Path, Path]]:
     longer prefixes than the ``/root`` home mount, so longest-prefix matching
     picks the cache translation over the home translation for them.
     """
-    if os.getenv("TERMINAL_ENV", "").strip().lower() != "docker":
+    if (wire_env("TERMINAL_ENV") or "").strip().lower() != "docker":
         return []
     try:
         from tools.credential_files import get_cache_directory_mounts

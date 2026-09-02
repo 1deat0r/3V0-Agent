@@ -11,6 +11,7 @@ contextvar; CLI/cron fall through to `TERMINAL_CWD`/launch cwd.
 """
 
 import logging
+from env_compat import wire_env
 import os
 from contextvars import ContextVar, Token
 from pathlib import Path
@@ -64,7 +65,7 @@ def resolve_agent_cwd() -> Path:
         if p.is_dir():
             return p
         logger.warning("configured working directory does not exist: %s", override)
-    raw = os.environ.get("TERMINAL_CWD", "").strip()
+    raw = (wire_env("TERMINAL_CWD") or "").strip()
     if raw:
         p = Path(raw).expanduser()
         if p.is_dir():
@@ -90,7 +91,7 @@ def resolve_context_cwd() -> Path | None:
         else:
             return p
         return None
-    raw = os.environ.get("TERMINAL_CWD", "").strip()
+    raw = (wire_env("TERMINAL_CWD") or "").strip()
     if raw:
         p = Path(raw).expanduser()
         if not p.is_dir():

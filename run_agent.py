@@ -38,7 +38,7 @@ import hashlib
 import json
 import logging
 logger = logging.getLogger(__name__)
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import re
 import sys
@@ -81,7 +81,7 @@ def _launch_cwd_for_session(source: str) -> Optional[str]:
     """
     if source != "cli":
         return None
-    backend = (os.environ.get("TERMINAL_ENV") or "local").strip().lower()
+    backend = (wire_env("TERMINAL_ENV") or "local").strip().lower()
     if backend and backend != "local":
         return None
     try:

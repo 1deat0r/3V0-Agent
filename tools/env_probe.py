@@ -30,6 +30,7 @@ Toggle via ``agent.environment_probe`` in config.yaml (default True).
 from __future__ import annotations
 
 import logging
+from env_compat import wire_env
 import os
 import shutil
 import subprocess
@@ -194,7 +195,7 @@ def _build_probe_line() -> str:
     """
     # Bail out if a remote terminal backend is configured; the host's
     # Python state isn't where the agent's tools run.
-    backend = (os.getenv("TERMINAL_ENV") or "local").strip().lower()
+    backend = (wire_env("TERMINAL_ENV") or "local").strip().lower()
     if backend in _REMOTE_BACKENDS:
         return ""
 

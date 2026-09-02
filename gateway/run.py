@@ -1943,7 +1943,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Resolve 3V0 home directory (respects EV0_HOME override)
 from threev0_constants import get_threev0_home, get_threev0_home_override, running_under_pytest
-from env_compat import branded_env, set_branded_env
+from env_compat import branded_env, set_branded_env, wire_env
 from utils import atomic_json_write, base_url_hostname, is_truthy_value
 _threev0_home = get_threev0_home()
 
@@ -2208,7 +2208,7 @@ if _config_path.exists():
         _terminal_cfg = _cfg.get("terminal", {})
         if _terminal_cfg and isinstance(_terminal_cfg, dict):
             _terminal_backend = str(
-                _terminal_cfg.get("backend") or os.environ.get("TERMINAL_ENV") or ""
+                _terminal_cfg.get("backend") or wire_env("TERMINAL_ENV") or ""
             ).strip().lower()
             _terminal_env_map = {
                 "backend": "TERMINAL_ENV",
@@ -2461,13 +2461,13 @@ set_branded_env("QUIET", '1')
 # mount-off vs docker mount-on).  MESSAGING_CWD is a backward-compat fallback.
 from gateway.cwd_placeholder import CWD_PLACEHOLDERS, resolve_placeholder_terminal_cwd
 
-_configured_cwd = os.environ.get("TERMINAL_CWD", "")
+_configured_cwd = (wire_env("TERMINAL_CWD") or "")
 if not _configured_cwd or _configured_cwd in CWD_PLACEHOLDERS:
     _resolved_cwd = resolve_placeholder_terminal_cwd(
         configured_cwd=_configured_cwd,
-        terminal_backend=os.environ.get("TERMINAL_ENV", ""),
+        terminal_backend=(wire_env("TERMINAL_ENV") or ""),
         messaging_cwd=os.getenv("MESSAGING_CWD"),
-        docker_mount_cwd_to_workspace=os.getenv(
+        docker_mount_cwd_to_workspace=wire_env(
             "TERMINAL_DOCKER_MOUNT_CWD_TO_WORKSPACE", "false"
         ).lower()
         in {"true", "1", "yes"},
@@ -6942,7 +6942,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         Docker, so users commonly need a dedicated export mount such as
         `host-dir:/output`.
         """
-        if os.getenv("TERMINAL_ENV", "").strip().lower() != "docker":
+        if (wire_env("TERMINAL_ENV") or "").strip().lower() != "docker":
             return
 
         connected = self.config.get_connected_platforms()
@@ -6950,7 +6950,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         if not messaging_platforms:
             return
 
-        raw_volumes = os.getenv("TERMINAL_DOCKER_VOLUMES", "").strip()
+        raw_volumes = (wire_env("TERMINAL_DOCKER_VOLUMES") or "").strip()
         volumes: List[str] = []
         if raw_volumes:
             try:
@@ -12098,6 +12098,11 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         # Also pick up plugin-registered platforms — each entry can declare
         # its own allowed_users_env / allow_all_env, so the warning stays
         # accurate as plugins like IRC come online.
+        #
+        # Documented raw-read exception (env funnel, tickets #20/#21): this
+        # is the process-level STARTUP advisory running as the default
+        # profile's own authority — raw os.getenv is its sanctioned path
+        # (per-turn gates use the scope-aware _platform_gate_env instead).
         _plugin_allowed_vars: tuple = ()
         _plugin_allow_all_vars: tuple = ()
         try:
@@ -17790,7 +17795,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                 from agent.context_references import preprocess_context_references_async
                 from agent.model_metadata import get_model_context_length_async
 
-                _msg_cwd = os.environ.get("TERMINAL_CWD", os.path.expanduser("~"))
+                _msg_cwd = wire_env("TERMINAL_CWD", os.path.expanduser("~"))
                 _msg_config_ctx = None
                 _msg_cfg = None
                 _msg_model_cfg = {}
@@ -19788,7 +19793,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
                     model=agent_result.get("model"),
                     context_tokens=agent_result.get("last_prompt_tokens", 0) or 0,
                     context_length=agent_result.get("context_length") or None,
-                    cwd=os.environ.get("TERMINAL_CWD", ""),
+                    cwd=(wire_env("TERMINAL_CWD") or ""),
                     turn_seconds=_turn_seconds,
                 )
             except Exception as _footer_err:

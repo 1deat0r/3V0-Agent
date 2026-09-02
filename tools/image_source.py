@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+from env_compat import wire_env
 import os
 import re
 from dataclasses import dataclass
@@ -215,7 +216,7 @@ def _is_local_terminal_backend() -> bool:
     Mirrors ``tools.browser_tool._is_local_backend`` and terminal_tool's own
     dispatch, which key off ``TERMINAL_ENV``.
     """
-    return os.getenv("TERMINAL_ENV", "local").strip().lower() in ("local", "")
+    return wire_env("TERMINAL_ENV", "local").strip().lower() in ("local", "")
 
 
 def _media_cache_roots() -> list:

@@ -203,7 +203,9 @@ class WhatsAppBehaviorMixin:
 
     # ------------------------------------------------------------------ gating
     def _open_dm_opted_in(self) -> bool:
-        if os.getenv("GATEWAY_ALLOW_ALL_USERS", "").lower() in {"true", "1", "yes"}:
+        # Scope-aware gate read (#86905 class) — see weixin._open_dm_opted_in.
+        from gateway.authz_mixin import _platform_gate_env
+        if _platform_gate_env("GATEWAY_ALLOW_ALL_USERS").lower() in {"true", "1", "yes"}:
             return True
         return (_get_wsecret("WHATSAPP_ALLOW_ALL_USERS", default="") or "").lower() in {"true", "1", "yes"}
 

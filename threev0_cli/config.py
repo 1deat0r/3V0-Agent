@@ -17,7 +17,7 @@ This module provides:
 import copy
 import json
 import logging
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import platform
 import re
@@ -2187,7 +2187,7 @@ def warn_deprecated_cwd_env_vars(config: Optional[Dict[str, Any]] = None) -> Non
     in config.yaml.  Prints a migration hint to stderr.
     """
     messaging_cwd = os.environ.get("MESSAGING_CWD")
-    terminal_cwd_env = os.environ.get("TERMINAL_CWD")
+    terminal_cwd_env = wire_env("TERMINAL_CWD")
 
     if config is None:
         try:

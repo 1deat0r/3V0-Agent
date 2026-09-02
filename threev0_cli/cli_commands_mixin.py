@@ -15,7 +15,7 @@ Import discipline (mirrors gateway/slash_commands.py, PR #41886):
 from __future__ import annotations
 
 import json
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import sys
 import threading
@@ -71,7 +71,7 @@ class CLICommandsMixin:
             print("  Or in config.yaml: checkpoints: { enabled: true }")
             return
 
-        cwd = os.getenv("TERMINAL_CWD", os.getcwd())
+        cwd = wire_env("TERMINAL_CWD", os.getcwd())
         parts = command.split()
         args = parts[1:] if len(parts) > 1 else []
 
@@ -177,7 +177,7 @@ class CLICommandsMixin:
             else:
                 paths.append(arg)
 
-        cwd = os.getenv("TERMINAL_CWD", os.getcwd())
+        cwd = wire_env("TERMINAL_CWD", os.getcwd())
 
         if mode == "session":
             self._print_session_diff(cwd, stat_only)
@@ -2191,7 +2191,7 @@ class CLICommandsMixin:
         sub = parts[1].lower().strip() if len(parts) > 1 else "status"
 
         _DEFAULT_CDP = DEFAULT_BROWSER_CDP_URL
-        current = os.environ.get("BROWSER_CDP_URL", "").strip()
+        current = (wire_env("BROWSER_CDP_URL") or "").strip()
 
         if sub == "use" or sub.startswith("use "):
             # /browser use [off] — toggle Browser Use mode (browser.backend),

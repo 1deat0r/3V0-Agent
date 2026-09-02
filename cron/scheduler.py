@@ -15,7 +15,7 @@ import contextlib
 import contextvars
 import json
 import logging
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import re
 import shutil
@@ -4680,7 +4680,7 @@ def run_job(
     # below can always restore it, even if an exception fires before we set the
     # override inside the try.  This read can't leak the lock (it precedes the
     # acquire) and is a no-op for workdir-less jobs (they never mutate the env).
-    _prior_terminal_cwd = os.environ.get("TERMINAL_CWD", "_UNSET_")
+    _prior_terminal_cwd = wire_env("TERMINAL_CWD", "_UNSET_")
 
     _holds_cwd_write = _job_workdir is not None
     _cwd_lock_timeout = _cwd_lock_timeout_seconds()

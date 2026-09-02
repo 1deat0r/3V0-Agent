@@ -7,6 +7,7 @@ No ANSI colors, no checkmarks — just data.
 """
 
 import json
+from env_compat import wire_env
 import os
 import platform
 import subprocess
@@ -322,7 +323,7 @@ def run_dump(args):
     # so os.environ reflects the real override here.
     terminal_cfg = config.get("terminal", {})
     config_backend = terminal_cfg.get("backend", "local")
-    env_backend = (os.environ.get("TERMINAL_ENV") or "").strip().lower()
+    env_backend = (wire_env("TERMINAL_ENV") or "").strip().lower()
     if env_backend and env_backend != str(config_backend).strip().lower():
         backend = (
             f"{env_backend}  (TERMINAL_ENV overrides config.yaml "

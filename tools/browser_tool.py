@@ -53,6 +53,7 @@ import atexit
 import functools
 import json
 import logging
+from env_compat import wire_env
 import os
 import signal
 import re
@@ -534,7 +535,7 @@ def _get_cdp_override_raw() -> str:
     "do not execute ``agent-browser --version`` here" rule in
     ``check_browser_requirements``: no side effects during schema build.
     """
-    env_override = os.environ.get("BROWSER_CDP_URL", "").strip()
+    env_override = (wire_env("BROWSER_CDP_URL") or "").strip()
     if env_override:
         return env_override
 
@@ -978,7 +979,7 @@ def _is_local_backend() -> bool:
         return False
     # When terminal runs in a container, browser on host can access
     # internal networks the terminal can't → treat as non-local.
-    terminal_backend = os.getenv("TERMINAL_ENV", "local").strip().lower()
+    terminal_backend = wire_env("TERMINAL_ENV", "local").strip().lower()
     return terminal_backend in ("local", "")
 
 

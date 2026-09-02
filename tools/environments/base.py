@@ -9,7 +9,7 @@ or a temp file (local).
 import codecs
 import json
 import logging
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import re
 import select
@@ -286,7 +286,7 @@ def get_sandbox_dir() -> Path:
 
     Configurable via TERMINAL_SANDBOX_DIR. Defaults to {EV0_HOME}/sandboxes/.
     """
-    custom = os.getenv("TERMINAL_SANDBOX_DIR")
+    custom = wire_env("TERMINAL_SANDBOX_DIR")
     if custom:
         p = Path(custom)
     else:

@@ -29,7 +29,7 @@ import json
 import logging
 import math
 import mimetypes
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 import os
 import queue
 import re
@@ -2176,7 +2176,7 @@ def _fs_find_git_root(start: Path) -> str | None:
 
 def _fs_default_cwd() -> str:
     cfg_terminal = load_config().get("terminal") or {}
-    raw = str(cfg_terminal.get("cwd") or os.environ.get("TERMINAL_CWD") or "").strip()
+    raw = str(cfg_terminal.get("cwd") or wire_env("TERMINAL_CWD") or "").strip()
     if raw and raw not in {".", "auto", "cwd"}:
         try:
             candidate = Path(raw).expanduser().resolve(strict=False)

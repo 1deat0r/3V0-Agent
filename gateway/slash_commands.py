@@ -20,6 +20,7 @@ import dataclasses
 import hashlib
 import inspect
 import logging
+from env_compat import wire_env
 import os
 import re
 import shlex
@@ -3294,7 +3295,7 @@ class GatewaySlashCommandsMixin:
             max_file_size_mb=cp_kwargs["checkpoint_max_file_size_mb"],
         )
 
-        cwd = os.getenv("TERMINAL_CWD", str(Path.home()))
+        cwd = wire_env("TERMINAL_CWD", str(Path.home()))
         arg = event.get_command_args().strip()
 
         if not arg:
@@ -3353,7 +3354,7 @@ class GatewaySlashCommandsMixin:
             elif low == "session":
                 mode = "session"
 
-        cwd = os.getenv("TERMINAL_CWD", str(Path.home()))
+        cwd = wire_env("TERMINAL_CWD", str(Path.home()))
 
         if mode == "session":
             return await self._gateway_session_diff(cwd, stat_only)

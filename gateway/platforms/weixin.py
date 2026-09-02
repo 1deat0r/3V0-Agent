@@ -1537,7 +1537,11 @@ class WeixinAdapter(BasePlatformAdapter):
             await self.handle_message(event)
 
     def _open_dm_opted_in(self) -> bool:
-        if os.getenv("GATEWAY_ALLOW_ALL_USERS", "").lower() in {"true", "1", "yes"}:
+        # Scope-aware gate read (#86905 class): under multiplex, a legacy
+        # os.getenv borrow here leaks the DEFAULT profile's opt-in into
+        # secondary profiles.
+        from gateway.authz_mixin import _platform_gate_env
+        if _platform_gate_env("GATEWAY_ALLOW_ALL_USERS").lower() in {"true", "1", "yes"}:
             return True
         return os.getenv("WEIXIN_ALLOW_ALL_USERS", "").lower() in {"true", "1", "yes"}
 

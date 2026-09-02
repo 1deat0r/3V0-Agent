@@ -29,7 +29,7 @@ from agent.turn_assembly import (
     service_tier_from_raw as _service_tier_from_raw,
 )
 import copy
-from env_compat import branded_env
+from env_compat import branded_env, wire_env
 from env_compat import set_branded_env
 import os
 import shutil
@@ -3592,7 +3592,7 @@ def _resolve_attachment_path(raw_path: str) -> Path | None:
             expanded = f"/mnt/{normalized[0].lower()}/{normalized[3:]}"
     path = Path(expanded)
     if not path.is_absolute():
-        base_dir = Path(os.getenv("TERMINAL_CWD", os.getcwd()))
+        base_dir = Path(wire_env("TERMINAL_CWD", os.getcwd()))
         path = base_dir / path
 
     try:
@@ -8061,7 +8061,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                 snapshot = None
 
             # Get terminal working directory (where commands will execute)
-            cwd = os.getenv("TERMINAL_CWD", os.getcwd())
+            cwd = wire_env("TERMINAL_CWD", os.getcwd())
 
             if snapshot is not None:
                 self._defer_tool_warnings = True
@@ -8987,9 +8987,9 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
     def show_config(self):
         """Display current configuration with kawaii ASCII art."""
         # Get terminal config from environment (which was set from cli-config.yaml)
-        terminal_env = os.getenv("TERMINAL_ENV", "local")
-        terminal_cwd = os.getenv("TERMINAL_CWD", os.getcwd())
-        terminal_timeout = os.getenv("TERMINAL_TIMEOUT", "60")
+        terminal_env = wire_env("TERMINAL_ENV", "local")
+        terminal_cwd = wire_env("TERMINAL_CWD", os.getcwd())
+        terminal_timeout = wire_env("TERMINAL_TIMEOUT", "60")
         
         user_config_path = _threev0_home / 'config.yaml'
         project_config_path = Path(__file__).parent / 'cli-config.yaml'
@@ -9025,9 +9025,9 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
         print("  -- Terminal --")
         print(f"  Environment:  {terminal_env}")
         if terminal_env == "ssh":
-            ssh_host = os.getenv("TERMINAL_SSH_HOST", "not set")
-            ssh_user = os.getenv("TERMINAL_SSH_USER", "not set")
-            ssh_port = os.getenv("TERMINAL_SSH_PORT", "22")
+            ssh_host = wire_env("TERMINAL_SSH_HOST", "not set")
+            ssh_user = wire_env("TERMINAL_SSH_USER", "not set")
+            ssh_port = wire_env("TERMINAL_SSH_PORT", "22")
             print(f"  SSH Target:   {ssh_user}@{ssh_host}:{ssh_port}")
         print(f"  Working Dir:  {terminal_cwd}")
         print(f"  Timeout:      {terminal_timeout}s")
@@ -11199,7 +11199,7 @@ class Ev0CLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
                     cc.print(_build_compact_banner())
                 else:
                     tools = get_tool_definitions(enabled_toolsets=self.enabled_toolsets, quiet_mode=True)
-                    cwd = os.getenv("TERMINAL_CWD", os.getcwd())
+                    cwd = wire_env("TERMINAL_CWD", os.getcwd())
                     ctx_len = None
                     if hasattr(self, 'agent') and self.agent and hasattr(self.agent, 'context_compressor'):
                         ctx_len = self.agent.context_compressor.context_length
