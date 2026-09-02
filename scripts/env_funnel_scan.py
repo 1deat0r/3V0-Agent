@@ -14,8 +14,26 @@ Classification kinds:
 - branded_bracket_read  x = os.environ["EV0_X"]      (KeyError-deliberate; case-by-case)
 - branded_write         os.environ["EV0_X"] = ... / setdefault                              (write-half, later)
 - branded_pop/del       os.environ.pop("EV0_X"...), del os.environ["EV0_X"]
-- unprefixed_*          bare wire/config vars (IRC_SERVER, TERMINAL_CWD, ...) — documented exceptions
+- unprefixed_*          bare wire/config vars — see the three sanctioned classes below
+- wire_read             wire_env("BARE_X") — the sanctioned bare-fallback accessor
+                        (resolution 3V0_<bare> -> EV0_<bare> -> <bare>; batch 1+2 of #25)
 - dynamic               non-constant key (f-string/variable) — manual review required
+
+UNPREFIXED WIRE-VAR DECISION (#20/#21/#25 — three sanctioned classes):
+1. WIRE VARS (platform/terminal adapters' own settings: IRC_*, NTFY_*,
+   PHOTON_*, SIMPLEX_*, TERMINAL_*, BROWSER_CDP_URL, ...): read via
+   wire_env — counted as `wire_read`, i.e. funnel-consumed. Authz gate
+   vars (GATEWAY_ALLOW_ALL_USERS / *_ALLOWED_USERS) use the scope-aware
+   _platform_gate_env instead (fail-closed, #86905).
+2. INDUSTRY-STANDARD PROVIDER NAMES (OPENAI_API_KEY, OPENROUTER_API_KEY,
+   OPENAI_BASE_URL, XAI_BASE_URL, NOUS_*): documented wire exceptions —
+   raw reads are sanctioned (renaming breaks interop).
+3. OS/GLOBAL VARS (HOME, PATH, TERM*, DISPLAY, WAYLAND_*, SSH_*, SUDO_*,
+   EDITOR, LANG, USER, ...): documented exceptions — the resolver must
+   never touch these.
+Also sanctioned raw: generated subprocess templates (sandbox RPC/retry
+stubs in tools/terminal_tool.py, code_execution_tool.py) and process-level
+default-profile startup advisories (gateway/run.py env-allowlist warning).
 
 Exit codes: 0 ok; 1 --check found branded reads in scope; 2 usage/IO error.
 Stdlib-only, no project imports (safe to run from anywhere).
